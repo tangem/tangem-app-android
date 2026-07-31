@@ -95,4 +95,75 @@ class UserTokensSaverTest {
 
             assert(onFailSendCalled) { "onFailSend callback should be called when API call fails" }
         }
+
+    @Test
+    fun `GIVEN response with duplicated tokens WHEN push THEN duplicates are dropped before the api call`() = runTest {
+        // GIVEN
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val userWallet = mockk<UserWallet.Cold> {
+            every { this@mockk.walletId } returns userWalletId
+            every { this@mockk.name } returns ""
+        }
+
+        val token = createToken()
+        val response = createResponse(tokens = listOf(token, token))
+        val uniqueResponse = createResponse(tokens = listOf(token))
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        coEvery { enricher(userWalletId, uniqueResponse) } returns uniqueResponse
+        coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Success(Unit)
+
+        // WHEN
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // THEN
+        coVerify(exactly = 1) { tangemTechApi.saveTokens(userWalletId.stringValue, uniqueResponse) }
+    }
+
+    @Test
+    fun `GIVEN tokens differing in account id only WHEN push THEN both of them are pushed`() = runTest {
+        // GIVEN
+        val userWalletId = UserWalletId("1234567890abcdef")
+        val userWallet = mockk<UserWallet.Cold> {
+            every { this@mockk.walletId } returns userWalletId
+            every { this@mockk.name } returns ""
+        }
+
+        val token = createToken()
+        val response = createResponse(tokens = listOf(token, token.copy(accountId = "other-account")))
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        coEvery { enricher(userWalletId, response) } returns response
+        coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Success(Unit)
+
+        // WHEN
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // THEN
+        coVerify(exactly = 1) { tangemTechApi.saveTokens(userWalletId.stringValue, response) }
+    }
+
+    private fun createResponse(tokens: List<UserTokensResponse.Token>): UserTokensResponse {
+        return UserTokensResponse(
+            version = 0,
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            tokens = tokens,
+            walletName = null,
+            walletType = WalletType.COLD,
+        )
+    }
+
+    private fun createToken(): UserTokensResponse.Token {
+        return UserTokensResponse.Token(
+            id = "ethereum",
+            accountId = "account",
+            networkId = "ethereum",
+            derivationPath = "m/44'/60'/0'/0/1",
+            name = "Ethereum",
+            symbol = "ETH",
+            decimals = 18,
+            contractAddress = null,
+        )
+    }
 }
