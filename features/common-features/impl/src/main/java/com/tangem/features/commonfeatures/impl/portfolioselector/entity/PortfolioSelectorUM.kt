@@ -37,7 +37,7 @@ sealed interface PortfolioSelectorItemUM {
         val name: TextReference,
         val deviceIcon: DeviceIconUM,
         val isSelected: Boolean,
-        val onClick: () -> Unit,
+        val onClick: (() -> Unit)?,
         override val groupPosition: GroupPosition = GroupPosition.Default,
     ) : PortfolioSelectorItemUM
 

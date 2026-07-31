@@ -178,8 +178,10 @@ private fun WalletNameRow(
     isMultiChoiceEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val onClick = model.onClick?.takeIf { isMultiChoiceEnabled }
+
     TangemRow(
-        modifier = modifier.clickable(onClick = model.onClick),
+        modifier = if (onClick != null) modifier.clickable(onClick = onClick) else modifier,
         contentLead = TangemRowContentLead.Start,
         titleSlot = {
             TangemRowText(model.name.resolveReference(), role = TangemRowTextRole.Title)
@@ -189,12 +191,10 @@ private fun WalletNameRow(
             )
         },
         endSlot = {
-            if (isMultiChoiceEnabled) {
+            if (onClick != null) {
                 TangemCheckmark(
                     checked = model.isSelected,
-                    onCheckedChange = {
-                        model.onClick()
-                    },
+                    onCheckedChange = { onClick() },
                 )
             }
         },
