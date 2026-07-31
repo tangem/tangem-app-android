@@ -84,6 +84,27 @@ internal class PolymarketL2HeaderBuilderTest {
         assertThat(actual.values.none { it.contains(CREDENTIALS.secret) }).isTrue()
     }
 
+    @Test
+    fun `GIVEN no method or timestamp WHEN build THEN signs GET with the current time in seconds`() {
+        // Arrange
+        val nowSeconds = System.currentTimeMillis() / 1_000L
+
+        // Act
+        val actual = builder.build(
+            ownerAddress = OWNER,
+            credentials = CREDENTIALS,
+            requestPath = "/balance-allowance/update",
+        )
+
+        // Assert
+        val timestamp = actual.getValue("POLY_TIMESTAMP")
+        assertThat(timestamp.toLong()).isAtLeast(nowSeconds - 60)
+        assertThat(timestamp.toLong()).isAtMost(nowSeconds + 60)
+        assertThat(actual["POLY_SIGNATURE"]).isEqualTo(
+            signer.sign(secret = CREDENTIALS.secret, message = timestamp + "GET" + "/balance-allowance/update"),
+        )
+    }
+
     private companion object {
         const val OWNER = "0xabc"
         val CREDENTIALS = PolymarketApiCredentials(
