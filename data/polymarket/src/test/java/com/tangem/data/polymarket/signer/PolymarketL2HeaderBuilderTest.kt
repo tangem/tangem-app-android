@@ -55,6 +55,21 @@ internal class PolymarketL2HeaderBuilderTest {
     }
 
     @Test
+    fun `GIVEN the balance sync path WHEN build THEN signs the path with no query string`() {
+        // Act
+        val actual = builder.build(
+            ownerAddress = OWNER,
+            credentials = CREDENTIALS,
+            timestamp = "1700000000",
+            method = "GET",
+            requestPath = "/balance-allowance/update",
+        )
+
+        // Assert
+        assertThat(actual["POLY_SIGNATURE"]).isEqualTo("HYThrzuMjEOc4dkcb09p7taGRQiJyCU75VyT_cIrXnE=")
+    }
+
+    @Test
     fun `GIVEN credentials WHEN build THEN the secret never appears in any header value`() {
         // Act
         val actual = builder.build(
