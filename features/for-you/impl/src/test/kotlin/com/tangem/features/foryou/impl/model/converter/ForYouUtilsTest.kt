@@ -215,7 +215,7 @@ internal class ForYouUtilsTest {
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.INSUFFICIENT_DATA, Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_APPLICABLE),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_AVAILABLE),
                     createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NOT_AVAILABLE),
                 ),
                 expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
@@ -223,26 +223,26 @@ internal class ForYouUtilsTest {
             // Net-positive score → Positive
             BadgeModel(
                 coinIndicators = createIndicators(
-                    createReading(CoinIndicators.Reading.Type.RSI, Signal.BULLISH, Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Type.MACD, Signal.BULLISH, Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.BEARISH),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NEGATIVE),
                 ),
                 expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
             ),
             // Net-negative score → Negative
             BadgeModel(
                 coinIndicators = createIndicators(
-                    createReading(CoinIndicators.Reading.Type.RSI, Signal.BULLISH, Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Type.MACD, Signal.BEARISH, Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.BEARISH),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NEGATIVE),
                 ),
                 expected = resourceReference(R.string.common_negative) to TangemBadgeColor.Red,
             ),
             // Balanced score → Neutral
             BadgeModel(
                 coinIndicators = createIndicators(
-                    createReading(CoinIndicators.Reading.Type.RSI, Signal.BULLISH, Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Type.MACD, Signal.BEARISH, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
                 ),
                 expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
             ),
@@ -256,33 +256,41 @@ internal class ForYouUtilsTest {
             // The only reading belongs to another timeframe → nothing scores for DAY → Neutral
             BadgeModel(
                 coinIndicators = createIndicators(
-                    createReading(CoinIndicators.Reading.Type.RSI, Signal.BULLISH, Timeframe.WEEK),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.WEEK),
                 ),
                 expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
             ),
             // WEEK selection picks the WEEK reading of RSI, not the DAY one
             BadgeModel(
                 coinIndicators = createIndicators(
-                    createReading(CoinIndicators.Reading.Type.RSI, Signal.BULLISH, Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Type.RSI, Signal.BEARISH, Timeframe.WEEK),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NEGATIVE, Timeframe.WEEK),
                 ),
                 timeframe = Timeframe.WEEK,
                 expected = resourceReference(R.string.common_negative) to TangemBadgeColor.Red,
             ),
-            // Timeframe-agnostic readings (null timeframe) count for any selected timeframe
+            // Social indicators are keyed by timeframe too: the MONTH reading scores for a MONTH selection
             BadgeModel(
                 coinIndicators = createIndicators(
-                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.BULLISH),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE, Timeframe.MONTH),
                 ),
                 timeframe = Timeframe.MONTH,
                 expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
+            ),
+            // …and no longer count outside it: a DAY-only SENTIMENT reading scores nothing for MONTH
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE, Timeframe.DAY),
+                ),
+                timeframe = Timeframe.MONTH,
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
             ),
         )
 
         @Test
         fun `GIVEN actionable readings WHEN forYouSentimentBadge THEN badge keeps the row title style`() {
             // Arrange
-            val indicators = createIndicators(createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.BULLISH))
+            val indicators = createIndicators(createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE))
 
             // Act
             val result = forYouSentimentBadge(coinIndicators = indicators, timeframe = Timeframe.DAY)
@@ -344,13 +352,13 @@ internal class ForYouUtilsTest {
     private fun createReading(
         type: CoinIndicators.Reading.Type,
         signal: CoinIndicators.Reading.Signal,
-        timeframe: CoinIndicators.Reading.Timeframe? = null,
+        timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
     ): CoinIndicators.Reading = CoinIndicators.Reading(
         type = type,
+        name = type.name,
         timeframe = timeframe,
         value = null,
         signal = signal,
-        subLabel = null,
         updatedAt = null,
     )
 }
