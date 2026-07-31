@@ -6,6 +6,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
+import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openTangemPayChangePin
@@ -35,6 +36,7 @@ class TangemPayPinTest : BaseTestCase() {
         val descriptionText = getResourceString(CoreResR.string.visa_onboarding_pin_code_description)
 
         setupHooks(
+            additionalBeforeSection = { resetWireMockScenarios() },
             additionalAfterSection = {
                 resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
                 resetWireMockScenarioState(pinSetupScenario)
@@ -63,6 +65,7 @@ class TangemPayPinTest : BaseTestCase() {
         val validationError = getResourceString(CoreResR.string.visa_onboarding_pin_validation_error_message)
 
         setupHooks(
+            additionalBeforeSection = { resetWireMockScenarios() },
             additionalAfterSection = {
                 resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
                 resetWireMockScenarioState(pinSetupScenario)
@@ -108,6 +111,7 @@ class TangemPayPinTest : BaseTestCase() {
     @Test
     fun pinEntryScreenClosesWithoutSavingAndReturnsToCardDetailsTest() {
         setupHooks(
+            additionalBeforeSection = { resetWireMockScenarios() },
             additionalAfterSection = {
                 resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
                 resetWireMockScenarioState(pinSetupScenario)
@@ -124,7 +128,7 @@ class TangemPayPinTest : BaseTestCase() {
             step("Enter repeated PIN '$repeatedPin'") {
                 onTangemPayChangePinScreen { inputField.performTextInput(repeatedPin) }
             }
-            step("Assert entered digits are kept in the input field") {
+            step("Assert PIN input field contains '$repeatedPin'") {
                 onTangemPayChangePinScreen { inputField.assertTextContainsSafe(repeatedPin) }
             }
             step("Click on 'Close' button") {
@@ -148,6 +152,7 @@ class TangemPayPinTest : BaseTestCase() {
             getResourceString(CoreResR.string.tangempay_card_details_change_pin_success_description)
 
         setupHooks(
+            additionalBeforeSection = { resetWireMockScenarios() },
             additionalAfterSection = {
                 resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
                 resetWireMockScenarioState(pinSetupScenario)
