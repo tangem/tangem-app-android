@@ -143,10 +143,10 @@ internal class DefaultCoinIndicatorsRepositoryTest {
         indicators = listOf(
             Indicator(
                 type = Indicator.Type.RSI,
+                name = "RSI",
                 timeframe = Indicator.Timeframe.H24,
                 value = null,
-                label = Indicator.Signal.BULLISH,
-                subLabel = null,
+                label = Indicator.Signal.POSITIVE,
                 updatedAt = null,
             ),
         ),
@@ -157,10 +157,10 @@ internal class DefaultCoinIndicatorsRepositoryTest {
         readings = List(readingCount) {
             CoinIndicators.Reading(
                 type = CoinIndicators.Reading.Type.RSI,
+                name = "RSI",
                 timeframe = CoinIndicators.Reading.Timeframe.DAY,
                 value = null,
                 signal = CoinIndicators.Reading.Signal.NEUTRAL,
-                subLabel = null,
                 updatedAt = null,
             )
         },
