@@ -195,14 +195,11 @@ abstract class BaseTestCase : TestCase(
                 "ACCOUNTS_FEATURE_ENABLED" to true,
                 "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
                 "VISA_ONBOARDING_ENABLED" to true,
-                // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
-                // build even when the app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < x.xx would
-                // disable them). On the releases/6.0 branch every toggle with version <= 6.0 ships enabled.
-                // 6.0
-                "TWI_1326_YIELD_MODE_SWAP_ENABLED" to true,
-                // 6.1
-                "TWI_1638_VA_MVP0_ENABLED" to true,
-                "TWI_1403_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED" to true,
+                // Version-gated toggles (numeric "X.Y" versions) are no longer forced here: VersionNameProvider
+                // now resolves the branch version even in CI's detached checkout (git → GITHUB_REF_NAME fallback),
+                // so the UI-test APK carries the branch version and such toggles ship enabled exactly as in a real
+                // build. Only override toggles whose config version is "undefined" (in development) or that a test
+                // needs flipped away from their shipped state.
             )
         )
     }
