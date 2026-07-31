@@ -3,6 +3,7 @@ package com.tangem.features.foryou.impl.tokensummary.model.transformer
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.CoinIndicators.Reading.Signal
+import com.tangem.domain.markets.CoinIndicators.Reading.Timeframe
 import com.tangem.domain.markets.CoinIndicators.Reading.Type
 import com.tangem.features.foryou.impl.tokensummary.entity.BottomButtonUM
 import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
@@ -27,14 +28,14 @@ internal class SetTokenSentimentTransformerTest {
 
         // Assert — value-less indicators disable the picker; the response did arrive, so there is just no outlook
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Empty)
-        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
+        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty.NoOutlook::class.java)
     }
 
     @Test
     fun `GIVEN indicators with a valued reading WHEN transform THEN period picker kept and sentiment is Content`() {
-        // Arrange — a single valued (timeframe-agnostic) reading is enough to keep the section populated
+        // Arrange — a single valued reading for the selected timeframe keeps the section populated
         val indicators = coinIndicators(
-            reading(type = Type.GALAXY_SCORE, value = BigDecimal("50"), signal = Signal.BULLISH),
+            reading(type = Type.GALAXY_SCORE, value = BigDecimal("50"), signal = Signal.POSITIVE),
         )
 
         // Act
@@ -65,7 +66,7 @@ internal class SetTokenSentimentTransformerTest {
 
         // Assert
         assertThat(result.periodPicker).isEqualTo(PeriodPickerUM.Empty)
-        assertThat(result.tokenSentiment).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
+        assertThat(result.tokenSentiment).isInstanceOf(TokenSentimentUM.Empty.NoOutlook::class.java)
     }
 
     private fun transform(coinIndicators: CoinIndicators?, prevPeriodPicker: PeriodPickerUM): TokenSummaryUm {
@@ -90,13 +91,13 @@ internal class SetTokenSentimentTransformerTest {
     private fun reading(
         type: Type,
         value: BigDecimal?,
-        signal: Signal = Signal.BULLISH,
+        signal: Signal = Signal.POSITIVE,
     ): CoinIndicators.Reading = CoinIndicators.Reading(
         type = type,
-        timeframe = null,
+        name = type.name,
+        timeframe = Timeframe.DAY,
         value = value,
         signal = signal,
-        subLabel = null,
         updatedAt = null,
     )
 }
