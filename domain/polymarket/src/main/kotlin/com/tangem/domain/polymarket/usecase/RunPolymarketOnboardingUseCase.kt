@@ -149,7 +149,7 @@ class RunPolymarketOnboardingUseCase(
             syncBalanceAllowance(ownerAddress = addresses.ownerAddress, credentials = credentials)
         } catch (cancellation: CancellationException) {
             throw cancellation
-        } catch (ignored: Throwable) {
+        } catch (ignored: Exception) {
             return
         }
     }

@@ -146,7 +146,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 method = HTTP_METHOD_GET,
                 requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
             )
-        }.getOrNull() ?: return@withContext PolymarketAuthError.Unknown(httpCode = null, detail = null).left()
+        }.getOrElse { return@withContext PolymarketAuthError.Unknown(httpCode = null, detail = it.message).left() }
 
         safeApiCallWithTimeout(
             timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
