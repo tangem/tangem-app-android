@@ -123,21 +123,26 @@ whenever an event arrives from an old build. Before spending work on a ticket, c
 crash site was already handled.
 
 The ticket summary carries the crashing symbol: `[Crashlytics] [New Fatal Issue] <fully.qualified.Class.method>`.
-Extract `<Class.method>` from it (last two dot-segments) and look for prior work on it:
+Keep the **full** symbol — `Class.method` alone collides across packages (several modules define a
+`Content`, a `Factory`, a `State`), and a collision here silently skips a live defect.
 
-1. Other CRASHAND tickets for the same symbol:
+1. Candidate CRASHAND tickets. Jira text search tokenises on dots, so query by the short form and then
+   **confirm on the full symbol**:
    - Tool: `mcp__atlassian__searchJiraIssuesUsingJql`
    - `jql`: `project = "CRASHAND" AND summary ~ "<Class.method>" AND key != <TICKET_KEY> ORDER BY created ASC`
    - `fields`: `["summary", "status", "resolution"]`
+   - Discard every hit whose summary does not contain the **exact** `<fully.qualified.Class.method>`.
 
-2. Commits that already reference that class:
+2. For each surviving candidate `<EARLIER_KEY>`, check whether its fix actually landed on `develop`:
    ```bash
-   git log --oneline --all --grep "<ClassName>" -i | head -20
+   git log --oneline origin/develop --grep "<EARLIER_KEY>"
    ```
+   A non-empty result is the proof — the earlier ticket's commit is on `develop`.
 
-If an earlier ticket exists **and** a commit referencing its key is already on `origin/develop`, treat
-this ticket as a duplicate: record `Skipped (duplicate of <EARLIER_KEY>)`, comment (unless `--dry-run`),
-and remove it from the processing list.
+Treat this ticket as a duplicate only when both hold: an earlier ticket carries the exact same symbol
+**and** the command above found its commit on `origin/develop`. Then record
+`Skipped (duplicate of <EARLIER_KEY>)`, comment (unless `--dry-run`), and remove it from the processing
+list.
 
 ```
 **Claude Report**
@@ -180,8 +185,9 @@ Extract from the response:
 - **Blame frame**: file name, line number, symbol (method name)
 - **Full stacktrace** (from `exceptions` field in events)
 - **Crashing build**: `version.displayName` (e.g. `6.0 (1789)`) and the git revision the build was made
-  from — `buildStamp.repositories.revision`. **Both are required by Step 3c2**; without the revision that
-  step falls back to comparing against `firstSeenVersion`.
+  from — `buildStamp.repositories.revision`. **Step 3c2 needs the revision**; if the event carries none,
+  that step cannot run and says so instead of guessing (there is no way to map a version name back to a
+  commit from the report alone).
 - **Crashed thread**: the `threads` entry marked `(crashed)`. A race diagnosis requires evidence of a
   second thread; a single main-thread stack is not one.
 
@@ -288,16 +294,23 @@ describing a race between a check that did not exist. Read the code **as it was 
    If the revision cannot be fetched, note `revision unavailable` and continue with the fix — but say so
    in the Jira comment instead of asserting a root cause.
 
-2. Compare the crashing method then and now:
+2. Diff the whole file between the crashing revision and `develop` — never a grepped window, which hides
+   changes that fall outside it or past the end of a long method:
    ```bash
-   git show <REVISION>:<FILE> 2>/dev/null | grep -n -A 15 "fun <methodName>"
-   grep -n -A 15 "fun <methodName>" <FILE>
+   git diff <REVISION>..origin/develop -- <FILE>
    ```
 
-3. If the method is byte-identical — the crash is reachable. Continue to Step 3d, and base the root cause
-   on this code.
+3. If the diff is empty, the file is untouched: the crash is reachable. Continue to Step 3d and base the
+   root cause on this code.
 
-4. If it changed, find what changed it and decide:
+4. If the diff is non-empty, decide whether it touched the crash site. Read the hunk headers — `git diff`
+   labels each with its enclosing declaration (`@@ … @@ fun methodName(`) — and check whether the crashing
+   method appears among them. If the hunks are large or the labels ambiguous, extract both versions of the
+   method and compare them directly:
+   ```bash
+   git show <REVISION>:<FILE> > "${TMPDIR:-/tmp}/crash_old.kt"   # then Read both and compare the methods
+   ```
+   Then find what changed it:
    ```bash
    git log --oneline <REVISION>..origin/develop -- <FILE>
    ```
