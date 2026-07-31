@@ -136,6 +136,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED",
         "version": "undefined"
     }
