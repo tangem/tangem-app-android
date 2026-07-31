@@ -18,20 +18,20 @@ data class CoinIndicators(
      * Single indicator reading for a coin
      *
      * @param type      indicator type
-     * @param timeframe reading timeframe for RSI and MACD; `null` for the timeframe-agnostic
-     *                  indicators (MA_CROSS, GALAXY_SCORE, SENTIMENT)
-     * @param value     RSI value; MACD histogram; galaxy/sentiment score (0–100).
-     *                  Always `null` for MA_CROSS and for non-signal states
+     * @param name      human-readable indicator name for display, as sent by the backend
+     * @param timeframe reading timeframe — present for every indicator type
+     * @param value     RSI value; MACD histogram; galaxy/sentiment score (0–100);
+     *                  MA_CROSS deviation of SMA50 from SMA200, in percent.
+     *                  `null` for non-signal states
      * @param signal    interpreted signal
-     * @param subLabel  RSI only: `Overbought` / `Oversold`. `null` otherwise
      * @param updatedAt timestamp of the last stored value, or `null`
      */
     data class Reading(
         val type: Type,
-        val timeframe: Timeframe?,
+        val name: String,
+        val timeframe: Timeframe,
         val value: BigDecimal?,
         val signal: Signal,
-        val subLabel: String?,
         val updatedAt: DateTime?,
     ) {
 
@@ -60,19 +60,16 @@ data class CoinIndicators(
          */
         enum class Signal {
 
-            BULLISH,
+            POSITIVE,
 
-            BEARISH,
+            NEGATIVE,
 
             NEUTRAL,
 
             /** Not enough history to compute the indicator (e.g. MA cross without SMA200) */
             INSUFFICIENT_DATA,
 
-            /** Indicator is not meaningful for the asset (stablecoins) */
-            NOT_APPLICABLE,
-
-            /** No fresh data (2+ consecutive sync misses) */
+            /** No data to interpret: not meaningful for the asset (stablecoins), or no fresh data */
             NOT_AVAILABLE,
         }
     }
