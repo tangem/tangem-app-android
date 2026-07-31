@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
  * A hot wallet counts as backed up once it has ANY backup — a seed phrase ([UserWallet.Hot.backedUp],
  * which tracks only that) OR a cloud backup. Restriction predicates (finalize banner, access-code gate,
- * incomplete badge, analytics, upgrade, ...) must read this rather than [UserWallet.Hot.backedUp] alone.
+ * incomplete badge, analytics, ...) must read this rather than [UserWallet.Hot.backedUp] alone.
  */
 class IsWalletBackedUpUseCase @Inject constructor(
     private val cloudBackupRepository: CloudBackupRepository,
