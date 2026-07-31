@@ -57,6 +57,7 @@ internal fun TangemPayChangePinScreen(
             title = resourceReference(R.string.visa_onboarding_pin_code_title),
             endContent = {
                 TangemButton(
+                    modifier = Modifier.testTag(TangemPayTestTags.PIN_CLOSE_BUTTON),
                     iconStart = TangemIconUM.Icon(imageVector = Icons.ic_cross_20),
                     onClick = onBackClick,
                     size = TangemButton.Size.X11,
@@ -77,7 +78,7 @@ internal fun TangemPayChangePinScreen(
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.testTag(TangemPayTestTags.PIN_SCREEN_TITLE),
+                modifier = Modifier.testTag(TangemPayTestTags.PIN_SCREEN_DESCRIPTION),
             )
             SpacerH(TangemTheme.dimens2.x6)
             PinCodeSection(state)
