@@ -38,7 +38,10 @@ internal class SecurityModeModel @Inject constructor(
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
         ?: error("Scan response is null")
 
-    /** Security option that is actually set on the card. Changes only after a successful [saveChanges] */
+    /**
+     * Security option that is set on the card at the moment the screen is opened. A successful [saveChanges] closes
+     * the screen, so this option stays valid for the whole lifetime of the model.
+     */
     private val actualSecurityOption = getCurrentSecurityOption(scannedScanResponse.card)
 
     val screenState = MutableStateFlow(value = getInitialState())
