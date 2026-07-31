@@ -381,27 +381,35 @@ class ManageCryptoCurrenciesUseCase(
         }
     }
 
+    /**
+     * Identity of a currency inside an account.
+     *
+     * The derivation path is compared by its raw value, not by the [Network.DerivationPath] subtype: the same path
+     * may be represented as [Network.DerivationPath.Card] for one currency and as [Network.DerivationPath.Custom]
+     * for another one, while both describe the very same address. Comparing the subtypes made such currencies look
+
+     */
     private data class TempID(
         val networkId: String,
-        val derivationPath: Network.DerivationPath,
+        val derivationPath: String?,
         val contractAddress: String?,
     ) {
 
         constructor(network: Network) : this(
             networkId = network.rawId,
-            derivationPath = network.derivationPath,
+            derivationPath = network.derivationPath.value,
             contractAddress = null,
         )
 
         constructor(currency: CryptoCurrency) : this(
             networkId = currency.network.rawId,
-            derivationPath = currency.network.derivationPath,
+            derivationPath = currency.network.derivationPath.value,
             contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
         )
 
         constructor(status: CryptoCurrencyStatus) : this(
             networkId = status.currency.network.rawId,
-            derivationPath = status.currency.network.derivationPath,
+            derivationPath = status.currency.network.derivationPath.value,
             contractAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress,
         )
     }
