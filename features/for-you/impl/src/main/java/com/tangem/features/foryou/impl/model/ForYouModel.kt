@@ -115,11 +115,6 @@ internal class ForYouModel @Inject constructor(
     private val selectedPortfolio: Flow<ForYouSelectedPortfolio> =
         portfolioSelectorController
             .selectedAccounts
-            .onEach {
-                bottomSheetNavigation.dismiss { isSuccess ->
-                    if (isSuccess) analyticsEventHandler.send(ForYouAnalyticsEvent.ApplySelected)
-                }
-            }
             .distinctUntilChanged()
             .flatMapLatest { selectedAccounts ->
                 val converter = ForYouSelectedPortfolioConverter(selectedAccounts)
@@ -193,6 +188,7 @@ internal class ForYouModel @Inject constructor(
         analyticsEventHandler.send(ForYouAnalyticsEvent.ScreenOpened)
 
         initDefaultPortfolioSelection()
+        closeSelectorOnSelectionApplied()
         createCoinIndicatorsFetchFlow().launchIn(modelScope)
 
         // Expand/collapse clicks bypass the conversion pipeline below: they only patch isExpanded on the
@@ -272,6 +268,16 @@ internal class ForYouModel @Inject constructor(
             )
         }
             .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
+    private fun closeSelectorOnSelectionApplied() {
+        portfolioSelectorController.selectedAccounts
+            .onEach {
+                bottomSheetNavigation.dismiss { isSuccess ->
+                    if (isSuccess) analyticsEventHandler.send(ForYouAnalyticsEvent.ApplySelected)
+                }
+            }
             .launchIn(modelScope)
     }
 
