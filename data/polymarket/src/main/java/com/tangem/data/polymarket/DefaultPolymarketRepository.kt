@@ -142,8 +142,6 @@ internal class DefaultPolymarketRepository @Inject constructor(
             l2HeaderBuilder.build(
                 ownerAddress = ownerAddress,
                 credentials = credentials,
-                timestamp = (System.currentTimeMillis() / MILLIS_IN_SECOND).toString(),
-                method = HTTP_METHOD_GET,
                 requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
             )
         }.getOrElse { return@withContext PolymarketAuthError.Unknown(httpCode = null, detail = it.message).left() }
@@ -165,8 +163,6 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
-        const val MILLIS_IN_SECOND = 1_000L
-        const val HTTP_METHOD_GET = "GET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"
 
         /** Polymarket's signature type for a contract-owned deposit wallet (ERC-1271 verification), not a plain EOA. */
