@@ -6,6 +6,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Immutable
@@ -30,17 +31,22 @@ internal sealed class TokenSentimentUM {
         /** Explains to the user why the sentiment is missing. */
         abstract val message: TextReference
 
-        override val indicators: ImmutableList<TokenIndicatorUM> = IndicatorType.entries
-            .map { TokenIndicatorUM.NoData(indicatorType = it) }
-            .toImmutableList()
-
-        /** Indicators never arrived from the backend — nothing about the token could be loaded. */
+        /**
+         * Indicators never arrived from the backend — nothing about the token could be loaded, not even the
+         * indicator names, so the list is empty and only [message] is shown.
+         */
         data object NoResponse : Empty() {
             override val message: TextReference = resourceReference(R.string.token_summary_can_not_load_token)
+            override val indicators: ImmutableList<TokenIndicatorUM> = persistentListOf()
         }
 
-        /** Indicators arrived, but none of them carries a reading — there is no outlook for this token. */
-        data object NoOutlook : Empty() {
+        /**
+         * Indicators arrived, but none of them carries a value — there is no outlook for this token. The rows keep
+         * the names that did arrive.
+         */
+        data class NoOutlook(
+            override val indicators: ImmutableList<TokenIndicatorUM>,
+        ) : Empty() {
             override val message: TextReference = resourceReference(R.string.token_summary_outlook_is_not_available)
         }
     }
