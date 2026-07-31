@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.foryou.impl.tokensummary.model.converter.SwapHoldingConverter
@@ -60,7 +61,9 @@ internal class SwapHoldingsDelegate @AssistedInject constructor(
     }
 
     private suspend fun collectHoldings(accountLists: List<AccountStatusList>): List<TokenSelectorEntry> {
-        val walletsById = userWalletsListRepository.userWalletsSync().associateBy(UserWallet::walletId)
+        val walletsById = userWalletsListRepository.userWalletsSync()
+            .filterNot(UserWallet::isLocked)
+            .associateBy(UserWallet::walletId)
 
         return accountLists.flatMap { accountList ->
             val wallet = walletsById[accountList.userWalletId] ?: return@flatMap emptyList()
