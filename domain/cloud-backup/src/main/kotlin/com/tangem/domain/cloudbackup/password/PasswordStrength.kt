@@ -6,5 +6,5 @@ enum class PasswordStrength {
     STRONG,
     ;
 
-    val isAcceptable: Boolean get() = this == MEDIUM || this == STRONG
+    val isAcceptable: Boolean get() = this == STRONG
 }
