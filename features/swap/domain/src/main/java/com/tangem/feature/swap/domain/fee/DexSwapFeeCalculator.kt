@@ -32,6 +32,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
+import com.tangem.feature.swap.domain.tron.toTransactionExtras
+import com.tangem.feature.swap.domain.tron.tronSwapPayload
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.BlockchainUtils.isPsbtSwapSupported
@@ -203,11 +205,14 @@ class DexSwapFeeCalculator(
     /**
      * TRON DEX swap fee ([REDACTED_TASK_KEY], gated by [SwapFeatureToggles.isTronDexSwapEnabled]).
      *
-     * The swap arrives in EVM format — a native-value contract call to the router [txTo] carrying
-     * raw [txData]. TRON has no EVM gas, so unlike [calculateEvmFee] there is no gas-limit bump and
-     * no eth-specific fallback: the fee (bandwidth + energy) is estimated directly for a
-     * [TransactionData.Uncompiled]. The `TronTransactionExtras` produced from [txData] is what makes
-     * the SDK build (and energy-estimate) the tx as a smart-contract call rather than a plain send.
+     * The provider ships a whole serialized transaction in `txData` rather than the plain call data
+     * an EVM payload carries, and it is either a router call or a deposit transfer — [tronSwapPayload]
+     * unpacks which, along with any memo to carry over. The extras it produces are what make the SDK
+     * build (and energy-estimate) the right shape; no extras at all means a plain send.
+     *
+     * TRON has no EVM gas, so unlike [calculateEvmFee] there is no gas-limit bump and no
+     * eth-specific fallback: the fee (bandwidth + energy) is estimated directly for a
+     * [TransactionData.Uncompiled].
      */
     private suspend fun Raise<GetFeeError>.calculateTronFee(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
@@ -216,10 +221,8 @@ class DexSwapFeeCalculator(
     ): DexFeeResult {
         val network = fromSwapCurrencyStatus.currency.network
         val txValue = transaction.txValue ?: raise(GetFeeError.UnknownError)
-        val extras = createTransactionExtrasUseCase(
-            data = transaction.txData,
-            network = network,
-        ).getOrNull() ?: raise(GetFeeError.UnknownError)
+        val payload = transaction.tronSwapPayload() ?: raise(GetFeeError.UnknownError)
+        val extras = payload.toTransactionExtras()
 
         val transactionData = TransactionData.Uncompiled(
             amount = createNativeAmountForDex(txValue, network),
