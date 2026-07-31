@@ -37,6 +37,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
@@ -327,6 +328,39 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(PolymarketAuthError.InvalidSignature.left())
+    }
+
+    @Test
+    fun `GIVEN a secret with non-url-safe base64 characters WHEN syncBalanceAllowance THEN returns Unknown without calling the api`() =
+        runTest {
+            // Arrange
+            val credentials = SYNC_CREDENTIALS.copy(secret = "abc+def/==")
+
+            // Act
+            val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = credentials)
+
+            // Assert
+            val error = result.leftOrNull() as? PolymarketAuthError.Unknown
+            assertThat(error).isNotNull()
+            assertThat(error?.httpCode).isNull()
+            assertThat(error?.detail).isNotNull()
+            coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN an empty secret WHEN syncBalanceAllowance THEN returns Unknown without calling the api`() = runTest {
+        // Arrange
+        val credentials = SYNC_CREDENTIALS.copy(secret = "")
+
+        // Act
+        val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = credentials)
+
+        // Assert
+        val error = result.leftOrNull() as? PolymarketAuthError.Unknown
+        assertThat(error).isNotNull()
+        assertThat(error?.httpCode).isNull()
+        assertThat(error?.detail).isNotNull()
+        coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
     }
 
     private fun hmac(message: String): String {
