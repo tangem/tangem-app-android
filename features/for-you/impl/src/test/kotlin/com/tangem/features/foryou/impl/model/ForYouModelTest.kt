@@ -520,7 +520,7 @@ internal class ForYouModelTest {
                 // Arrange
                 val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
                 stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
-                stubIndicators(createIndicators("BTC", daySignal = Signal.BULLISH, weekSignal = Signal.BULLISH))
+                stubIndicators(createIndicators("BTC", daySignal = Signal.POSITIVE, weekSignal = Signal.POSITIVE))
 
                 // Act
                 val model = createModel(testScope = this)
@@ -534,10 +534,10 @@ internal class ForYouModelTest {
 
         @Test
         fun `GIVEN Week period clicked WHEN advanced THEN badge reflects the WEEK reading`() = runTest {
-            // Arrange — bullish for DAY, bearish for WEEK
+            // Arrange — positive for DAY, negative for WEEK
             val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
             stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
-            stubIndicators(createIndicators("BTC", daySignal = Signal.BULLISH, weekSignal = Signal.BEARISH))
+            stubIndicators(createIndicators("BTC", daySignal = Signal.POSITIVE, weekSignal = Signal.NEGATIVE))
             val model = createModel(testScope = this)
             advanceUntilIdle()
             assertThat(model.assetBadge()?.text).isEqualTo(resourceReference(R.string.common_positive))
@@ -593,7 +593,7 @@ internal class ForYouModelTest {
                 // Arrange — a previous screen's fetch populated the session store; this refresh fails
                 val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
                 stubSelectedWallet(currencies = listOf(createStatus(currency, loadedValue(BigDecimal("100")))))
-                stubIndicators(createIndicators("BTC", daySignal = Signal.BULLISH, weekSignal = Signal.BULLISH))
+                stubIndicators(createIndicators("BTC", daySignal = Signal.POSITIVE, weekSignal = Signal.POSITIVE))
                 coEvery { fetchCoinIndicatorsUseCase(any(), any()) } returns RuntimeException("api down").left()
 
                 // Act
@@ -627,10 +627,10 @@ internal class ForYouModelTest {
         private fun createReading(signal: Signal, timeframe: CoinIndicators.Reading.Timeframe) =
             CoinIndicators.Reading(
                 type = CoinIndicators.Reading.Type.RSI,
+                name = "RSI",
                 timeframe = timeframe,
                 value = null,
                 signal = signal,
-                subLabel = null,
                 updatedAt = null,
             )
     }

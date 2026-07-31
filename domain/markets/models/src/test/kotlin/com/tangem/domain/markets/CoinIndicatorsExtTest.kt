@@ -21,8 +21,8 @@ internal class CoinIndicatorsExtTest {
         @Test
         fun `GIVEN RSI reading for DAY WHEN findReading DAY THEN that reading is returned`() {
             // Arrange
-            val day = reading(Type.RSI, Timeframe.DAY, Signal.BULLISH)
-            val week = reading(Type.RSI, Timeframe.WEEK, Signal.BEARISH)
+            val day = reading(Type.RSI, Timeframe.DAY, Signal.POSITIVE)
+            val week = reading(Type.RSI, Timeframe.WEEK, Signal.NEGATIVE)
             val indicators = coinIndicators(readings = listOf(day, week))
 
             // Act
@@ -35,7 +35,7 @@ internal class CoinIndicatorsExtTest {
         @Test
         fun `GIVEN RSI only for WEEK WHEN findReading DAY THEN null`() {
             // Arrange
-            val indicators = coinIndicators(readings = listOf(reading(Type.RSI, Timeframe.WEEK, Signal.BULLISH)))
+            val indicators = coinIndicators(readings = listOf(reading(Type.RSI, Timeframe.WEEK, Signal.POSITIVE)))
 
             // Act
             val actual = indicators.findReading(Type.RSI, Timeframe.DAY)
@@ -45,21 +45,21 @@ internal class CoinIndicatorsExtTest {
         }
 
         @Test
-        fun `GIVEN timeframe-agnostic reading WHEN findReading any timeframe THEN it matches`() {
-            // Arrange — SENTIMENT has a null timeframe, so it matches any selection
-            val sentiment = reading(Type.SENTIMENT, timeframe = null, signal = Signal.BULLISH)
+        fun `GIVEN SENTIMENT only for DAY WHEN findReading other timeframes THEN null`() {
+            // Arrange — every indicator carries a timeframe now, so the match is exact for all types
+            val sentiment = reading(Type.SENTIMENT, Timeframe.DAY, Signal.POSITIVE)
             val indicators = coinIndicators(readings = listOf(sentiment))
 
             // Act & Assert
             assertThat(indicators.findReading(Type.SENTIMENT, Timeframe.DAY)).isEqualTo(sentiment)
-            assertThat(indicators.findReading(Type.SENTIMENT, Timeframe.WEEK)).isEqualTo(sentiment)
-            assertThat(indicators.findReading(Type.SENTIMENT, Timeframe.MONTH)).isEqualTo(sentiment)
+            assertThat(indicators.findReading(Type.SENTIMENT, Timeframe.WEEK)).isNull()
+            assertThat(indicators.findReading(Type.SENTIMENT, Timeframe.MONTH)).isNull()
         }
 
         @Test
         fun `GIVEN no reading of the requested type WHEN findReading THEN null`() {
             // Arrange
-            val indicators = coinIndicators(readings = listOf(reading(Type.RSI, Timeframe.DAY, Signal.BULLISH)))
+            val indicators = coinIndicators(readings = listOf(reading(Type.RSI, Timeframe.DAY, Signal.POSITIVE)))
 
             // Act
             val actual = indicators.findReading(Type.MACD, Timeframe.DAY)
@@ -88,25 +88,25 @@ internal class CoinIndicatorsExtTest {
 
         private fun provideTestModels() = listOf(
             ScoreModel(
-                description = "all five bullish for DAY sum to +5",
-                readings = Type.entries.map { reading(it, timeframeFor(it), Signal.BULLISH) },
+                description = "all five positive for DAY sum to +5",
+                readings = Type.entries.map { reading(it, Timeframe.DAY, Signal.POSITIVE) },
                 timeframe = Timeframe.DAY,
                 expectedScore = 5,
             ),
             ScoreModel(
-                description = "all five bearish for DAY sum to -5",
-                readings = Type.entries.map { reading(it, timeframeFor(it), Signal.BEARISH) },
+                description = "all five negative for DAY sum to -5",
+                readings = Type.entries.map { reading(it, Timeframe.DAY, Signal.NEGATIVE) },
                 timeframe = Timeframe.DAY,
                 expectedScore = -5,
             ),
             ScoreModel(
                 description = "mixed signals net out",
                 readings = listOf(
-                    reading(Type.RSI, Timeframe.DAY, Signal.BULLISH),
-                    reading(Type.MACD, Timeframe.DAY, Signal.BULLISH),
-                    reading(Type.MA_CROSS, null, Signal.BEARISH),
-                    reading(Type.GALAXY_SCORE, null, Signal.NEUTRAL),
-                    reading(Type.SENTIMENT, null, Signal.BULLISH),
+                    reading(Type.RSI, Timeframe.DAY, Signal.POSITIVE),
+                    reading(Type.MACD, Timeframe.DAY, Signal.POSITIVE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.NEGATIVE),
+                    reading(Type.GALAXY_SCORE, Timeframe.DAY, Signal.NEUTRAL),
+                    reading(Type.SENTIMENT, Timeframe.DAY, Signal.POSITIVE),
                 ),
                 timeframe = Timeframe.DAY,
                 expectedScore = 2,
@@ -115,10 +115,10 @@ internal class CoinIndicatorsExtTest {
                 description = "non-actionable signals contribute zero",
                 readings = listOf(
                     reading(Type.RSI, Timeframe.DAY, Signal.INSUFFICIENT_DATA),
-                    reading(Type.MACD, Timeframe.DAY, Signal.NOT_APPLICABLE),
-                    reading(Type.MA_CROSS, null, Signal.NOT_AVAILABLE),
-                    reading(Type.GALAXY_SCORE, null, Signal.NEUTRAL),
-                    reading(Type.SENTIMENT, null, Signal.BULLISH),
+                    reading(Type.MACD, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.GALAXY_SCORE, Timeframe.DAY, Signal.NEUTRAL),
+                    reading(Type.SENTIMENT, Timeframe.DAY, Signal.POSITIVE),
                 ),
                 timeframe = Timeframe.DAY,
                 expectedScore = 1,
@@ -132,10 +132,10 @@ internal class CoinIndicatorsExtTest {
             ScoreModel(
                 description = "timeframe selects the matching RSI/MACD reading",
                 readings = listOf(
-                    reading(Type.RSI, Timeframe.DAY, Signal.BULLISH),
-                    reading(Type.RSI, Timeframe.WEEK, Signal.BEARISH),
-                    reading(Type.MACD, Timeframe.DAY, Signal.BULLISH),
-                    reading(Type.MACD, Timeframe.WEEK, Signal.BEARISH),
+                    reading(Type.RSI, Timeframe.DAY, Signal.POSITIVE),
+                    reading(Type.RSI, Timeframe.WEEK, Signal.NEGATIVE),
+                    reading(Type.MACD, Timeframe.DAY, Signal.POSITIVE),
+                    reading(Type.MACD, Timeframe.WEEK, Signal.NEGATIVE),
                 ),
                 timeframe = Timeframe.WEEK,
                 expectedScore = -2,
@@ -163,18 +163,18 @@ internal class CoinIndicatorsExtTest {
         private fun provideTestModels() = listOf(
             ScaleModel(
                 description = "all five loaded for DAY -> max 5",
-                readings = Type.entries.map { reading(it, timeframeFor(it), Signal.BULLISH) },
+                readings = Type.entries.map { reading(it, Timeframe.DAY, Signal.POSITIVE) },
                 timeframe = Timeframe.DAY,
                 expectedMax = 5,
             ),
             ScaleModel(
                 description = "one NOT_AVAILABLE indicator drops max to 4",
                 readings = listOf(
-                    reading(Type.RSI, Timeframe.DAY, Signal.BULLISH),
-                    reading(Type.MACD, Timeframe.DAY, Signal.BEARISH),
-                    reading(Type.MA_CROSS, null, Signal.BULLISH),
-                    reading(Type.GALAXY_SCORE, null, Signal.NEUTRAL),
-                    reading(Type.SENTIMENT, null, Signal.NOT_AVAILABLE),
+                    reading(Type.RSI, Timeframe.DAY, Signal.POSITIVE),
+                    reading(Type.MACD, Timeframe.DAY, Signal.NEGATIVE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.POSITIVE),
+                    reading(Type.GALAXY_SCORE, Timeframe.DAY, Signal.NEUTRAL),
+                    reading(Type.SENTIMENT, Timeframe.DAY, Signal.NOT_AVAILABLE),
                 ),
                 timeframe = Timeframe.DAY,
                 expectedMax = 4,
@@ -182,9 +182,9 @@ internal class CoinIndicatorsExtTest {
             ScaleModel(
                 description = "two missing readings drop max to 3",
                 readings = listOf(
-                    reading(Type.RSI, Timeframe.DAY, Signal.BULLISH),
-                    reading(Type.MACD, Timeframe.DAY, Signal.BEARISH),
-                    reading(Type.MA_CROSS, null, Signal.NEUTRAL),
+                    reading(Type.RSI, Timeframe.DAY, Signal.POSITIVE),
+                    reading(Type.MACD, Timeframe.DAY, Signal.NEGATIVE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.NEUTRAL),
                     // GALAXY_SCORE and SENTIMENT absent
                 ),
                 timeframe = Timeframe.DAY,
@@ -192,7 +192,7 @@ internal class CoinIndicatorsExtTest {
             ),
             ScaleModel(
                 description = "NEUTRAL counts as loaded (keeps its position)",
-                readings = Type.entries.map { reading(it, timeframeFor(it), Signal.NEUTRAL) },
+                readings = Type.entries.map { reading(it, Timeframe.DAY, Signal.NEUTRAL) },
                 timeframe = Timeframe.DAY,
                 expectedMax = 5,
             ),
@@ -200,10 +200,10 @@ internal class CoinIndicatorsExtTest {
                 description = "all non-actionable clamps to 1",
                 readings = listOf(
                     reading(Type.RSI, Timeframe.DAY, Signal.INSUFFICIENT_DATA),
-                    reading(Type.MACD, Timeframe.DAY, Signal.NOT_APPLICABLE),
-                    reading(Type.MA_CROSS, null, Signal.NOT_AVAILABLE),
-                    reading(Type.GALAXY_SCORE, null, Signal.INSUFFICIENT_DATA),
-                    reading(Type.SENTIMENT, null, Signal.NOT_APPLICABLE),
+                    reading(Type.MACD, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.GALAXY_SCORE, Timeframe.DAY, Signal.INSUFFICIENT_DATA),
+                    reading(Type.SENTIMENT, Timeframe.DAY, Signal.NOT_AVAILABLE),
                 ),
                 timeframe = Timeframe.DAY,
                 expectedMax = 1,
@@ -211,11 +211,11 @@ internal class CoinIndicatorsExtTest {
             ScaleModel(
                 description = "mix of missing + non-actionable counts only the loaded ones",
                 readings = listOf(
-                    reading(Type.RSI, Timeframe.DAY, Signal.BULLISH),
+                    reading(Type.RSI, Timeframe.DAY, Signal.POSITIVE),
                     reading(Type.MACD, Timeframe.DAY, Signal.INSUFFICIENT_DATA),
-                    reading(Type.MA_CROSS, null, Signal.NOT_APPLICABLE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.NOT_AVAILABLE),
                     // GALAXY_SCORE absent
-                    reading(Type.SENTIMENT, null, Signal.BEARISH),
+                    reading(Type.SENTIMENT, Timeframe.DAY, Signal.NEGATIVE),
                 ),
                 timeframe = Timeframe.DAY,
                 expectedMax = 2,
@@ -247,22 +247,17 @@ internal class CoinIndicatorsExtTest {
         override fun toString(): String = description
     }
 
-    private fun timeframeFor(type: Type): Timeframe? = when (type) {
-        Type.RSI, Type.MACD -> Timeframe.DAY
-        Type.MA_CROSS, Type.GALAXY_SCORE, Type.SENTIMENT -> null
-    }
-
     private fun coinIndicators(symbol: String = "BTC", readings: List<Reading>) = CoinIndicators(
         symbol = symbol,
         readings = readings,
     )
 
-    private fun reading(type: Type, timeframe: Timeframe?, signal: Signal) = Reading(
+    private fun reading(type: Type, timeframe: Timeframe, signal: Signal) = Reading(
         type = type,
+        name = type.name,
         timeframe = timeframe,
         value = null,
         signal = signal,
-        subLabel = null,
         updatedAt = null,
     )
 }
