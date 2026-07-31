@@ -36,9 +36,11 @@ internal object FeatureToggleArgs {
                 val name = parts[0].trim()
                 if (name.isEmpty()) return@mapNotNull null
 
-                val enabled = when (parts[1].trim().lowercase()) {
-                    "true" -> true
-                    "false" -> false
+                val rawValue = parts[1].trim()
+                val enabled = when {
+                    // equals(ignoreCase = true) is locale-independent, unlike lowercase()
+                    rawValue.equals("true", ignoreCase = true) -> true
+                    rawValue.equals("false", ignoreCase = true) -> false
                     else -> return@mapNotNull null
                 }
                 name to enabled
