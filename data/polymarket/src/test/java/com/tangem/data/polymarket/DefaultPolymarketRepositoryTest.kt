@@ -8,6 +8,9 @@ import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
+import com.tangem.data.polymarket.signer.Base64UrlCodec
+import com.tangem.data.polymarket.signer.PolymarketHmacSigner
+import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
@@ -40,6 +43,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.math.BigInteger
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
+import java.util.Base64 as JavaBase64
 
 internal class DefaultPolymarketRepositoryTest {
 
@@ -52,6 +58,11 @@ internal class DefaultPolymarketRepositoryTest {
     private val walletErrorResolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
     private val authErrorResolver = PolymarketAuthErrorResolver()
     private val dispatchers = TestingCoroutineDispatcherProvider()
+    private val jvmCodec = object : Base64UrlCodec {
+        override fun decode(value: String): ByteArray = JavaBase64.getUrlDecoder().decode(value)
+        override fun encode(bytes: ByteArray): String = JavaBase64.getUrlEncoder().encodeToString(bytes)
+    }
+    private val l2HeaderBuilder = PolymarketL2HeaderBuilder(PolymarketHmacSigner(jvmCodec))
 
     private val repository = DefaultPolymarketRepository(
         polymarketApi = api,
@@ -62,6 +73,7 @@ internal class DefaultPolymarketRepositoryTest {
         walletConverter = walletConverter,
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
+        l2HeaderBuilder = l2HeaderBuilder,
         dispatchers = dispatchers,
     )
 
@@ -276,6 +288,50 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(actual).isEqualTo(PolymarketApiCredentials(apiKey = "k", secret = "s", passphrase = "p").right())
     }
 
+    @Test
+    fun `GIVEN credentials WHEN syncBalanceAllowance THEN signs the path without query and sends the fixed params`() =
+        runTest {
+            // Arrange
+            val headers = slot<Map<String, String>>()
+            val assetType = slot<String>()
+            val signatureType = slot<Int>()
+            coEvery {
+                clobApi.updateBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
+            } returns ApiResponse.Success(Unit)
+
+            // Act
+            val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+            // Assert
+            assertThat(result).isEqualTo(Unit.right())
+            assertThat(assetType.captured).isEqualTo("COLLATERAL")
+            assertThat(signatureType.captured).isEqualTo(3)
+            assertThat(headers.captured["POLY_ADDRESS"]).isEqualTo(OWNER)
+            assertThat(headers.captured["POLY_API_KEY"]).isEqualTo(SYNC_CREDENTIALS.apiKey)
+            assertThat(headers.captured["POLY_PASSPHRASE"]).isEqualTo(SYNC_CREDENTIALS.passphrase)
+            val timestamp = headers.captured.getValue("POLY_TIMESTAMP")
+            assertThat(headers.captured["POLY_SIGNATURE"])
+                .isEqualTo(hmac(timestamp + "GET" + "/balance-allowance/update"))
+        }
+
+    @Test
+    fun `GIVEN a 401 WHEN syncBalanceAllowance THEN maps to InvalidSignature`() = runTest {
+        // Arrange
+        coEvery { clobApi.updateBalanceAllowance(any(), any(), any()) } returns httpError(Code.UNAUTHORIZED, body = null)
+
+        // Act
+        val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketAuthError.InvalidSignature.left())
+    }
+
+    private fun hmac(message: String): String {
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(JavaBase64.getUrlDecoder().decode(SYNC_CREDENTIALS.secret), "HmacSHA256"))
+        return JavaBase64.getUrlEncoder().encodeToString(mac.doFinal(message.toByteArray(Charsets.UTF_8)))
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> httpError(code: Code, body: String?): ApiResponse<T> =
         ApiResponse.Error(
@@ -290,5 +346,10 @@ internal class DefaultPolymarketRepositoryTest {
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
+        val SYNC_CREDENTIALS = PolymarketApiCredentials(
+            apiKey = "k",
+            secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+            passphrase = "p",
+        )
     }
 }
