@@ -193,16 +193,12 @@ abstract class BaseTestCase : TestCase(
     }
 
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
+        // Toggle states can be set from code here — base defaults for the UI-test build. Launch-time
+        // overrides (the `feature_toggles` GitHub Actions input / Allure TestOps launch parameter, delivered
+        // via the `featureToggles` instrumentation arg) merge on top and win. Keys must be current
+        // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
         val baseToggles = mapOf(
-            "SWAP_REDESIGN_ENABLED" to false,
-            "ACCOUNTS_FEATURE_ENABLED" to true,
-            "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
-            "VISA_ONBOARDING_ENABLED" to true,
-            // Version-gated toggles (numeric "X.Y" versions) are no longer forced here: VersionNameProvider
-            // now resolves the branch version even in CI's detached checkout (git → GITHUB_REF_NAME fallback),
-            // so the UI-test APK carries the branch version and such toggles ship enabled exactly as in a real
-            // build. Only override toggles whose config version is "undefined" (in development) or that a test
-            // needs flipped away from their shipped state.
+            "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty
