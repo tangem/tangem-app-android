@@ -25,6 +25,7 @@ import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.state.MultiWalletCreateWalletUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step
 import com.tangem.sdk.api.TangemSdkManager
@@ -51,6 +52,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val appsFlyerStore: AppsFlyerStore,
+    private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -112,6 +114,11 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                     }
 
                     cardRepository.startCardActivation(cardId = result.data.card.cardId)
+
+                    walletCardsBackupReporter.reportWalletCreated(
+                        scanResponse = multiWalletState.value.currentScanResponse,
+                        usedSeed = false,
+                    )
 
                     analyticsHandler.send(
                         event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
