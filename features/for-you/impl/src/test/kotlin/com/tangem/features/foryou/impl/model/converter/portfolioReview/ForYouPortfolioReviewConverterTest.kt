@@ -567,7 +567,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(
                 statuses = statuses,
                 totalFiatBalance = BigDecimal.ZERO,
-                coinIndicators = mapOf("BTC" to createIndicators("BTC", bullishReading())),
+                coinIndicators = mapOf("BTC" to createIndicators("BTC", positiveReading())),
             )
 
             // Assert
@@ -613,7 +613,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(
                 statuses = statuses,
                 totalFiatBalance = BigDecimal("100"),
-                coinIndicators = mapOf("BTC" to createIndicators("BTC", bullishReading())),
+                coinIndicators = mapOf("BTC" to createIndicators("BTC", positiveReading())),
             )
 
             // Assert
@@ -632,7 +632,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(
                 statuses = statuses,
                 totalFiatBalance = BigDecimal("100"),
-                coinIndicators = mapOf("ETH" to createIndicators("ETH", bullishReading())),
+                coinIndicators = mapOf("ETH" to createIndicators("ETH", positiveReading())),
             )
 
             // Assert
@@ -649,7 +649,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(
                 statuses = statuses,
                 totalFiatBalance = BigDecimal("100"),
-                coinIndicators = mapOf("BTC" to createIndicators("BTC", bullishReading())),
+                coinIndicators = mapOf("BTC" to createIndicators("BTC", positiveReading())),
             )
 
             // Assert
@@ -658,14 +658,14 @@ internal class ForYouPortfolioReviewConverterTest {
 
         @Test
         fun `GIVEN WEEK timeframe WHEN convert THEN badge reflects the WEEK reading`() {
-            // Arrange — bullish for DAY, bearish for WEEK
+            // Arrange — positive for DAY, negative for WEEK
             val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
             val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
             val indicators = mapOf(
                 "BTC" to createIndicators(
                     "BTC",
-                    createReading(CoinIndicators.Reading.Signal.BULLISH, CoinIndicators.Reading.Timeframe.DAY),
-                    createReading(CoinIndicators.Reading.Signal.BEARISH, CoinIndicators.Reading.Timeframe.WEEK),
+                    createReading(CoinIndicators.Reading.Signal.POSITIVE, CoinIndicators.Reading.Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Signal.NEGATIVE, CoinIndicators.Reading.Timeframe.WEEK),
                 ),
             )
 
@@ -688,7 +688,7 @@ internal class ForYouPortfolioReviewConverterTest {
             // Arrange — an actionable but zero-scoring reading yields the neutral (blue) badge
             val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
             val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
-            val neutral = createReading(CoinIndicators.Reading.Signal.NEUTRAL, timeframe = null)
+            val neutral = createReading(CoinIndicators.Reading.Signal.NEUTRAL)
 
             // Act
             val result = convert(
@@ -717,7 +717,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(
                 statuses = statuses,
                 totalFiatBalance = BigDecimal("300"),
-                coinIndicators = mapOf("USDC" to createIndicators("USDC", bullishReading())),
+                coinIndicators = mapOf("USDC" to createIndicators("USDC", positiveReading())),
             )
 
             // Assert — the same badge on the asset row and both child rows
@@ -741,7 +741,7 @@ internal class ForYouPortfolioReviewConverterTest {
                 )
             }
             val indicators = (1..5).associate { index ->
-                "A$index" to createIndicators("A$index", bullishReading())
+                "A$index" to createIndicators("A$index", positiveReading())
             }
 
             // Act
@@ -758,18 +758,19 @@ internal class ForYouPortfolioReviewConverterTest {
     private fun createIndicators(symbol: String, vararg readings: CoinIndicators.Reading): CoinIndicators =
         CoinIndicators(symbol = symbol, readings = readings.toList())
 
-    private fun bullishReading(): CoinIndicators.Reading =
-        createReading(signal = CoinIndicators.Reading.Signal.BULLISH, timeframe = null)
+    private fun positiveReading(): CoinIndicators.Reading =
+        createReading(signal = CoinIndicators.Reading.Signal.POSITIVE)
 
     private fun createReading(
         signal: CoinIndicators.Reading.Signal,
-        timeframe: CoinIndicators.Reading.Timeframe?,
+        timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
+        type: CoinIndicators.Reading.Type = CoinIndicators.Reading.Type.RSI,
     ): CoinIndicators.Reading = CoinIndicators.Reading(
-        type = if (timeframe == null) CoinIndicators.Reading.Type.SENTIMENT else CoinIndicators.Reading.Type.RSI,
+        type = type,
+        name = type.name,
         timeframe = timeframe,
         value = null,
         signal = signal,
-        subLabel = null,
         updatedAt = null,
     )
 

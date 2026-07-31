@@ -61,15 +61,15 @@ internal class TokenSentimentConverterTest {
         // Arrange — MA_CROSS is present but value-less, so its row must fall back to NoData
         val coinIndicators = createCoinIndicators(
             readings = listOf(
-                createReading(type = Type.GALAXY_SCORE, timeframe = null, value = BigDecimal("68"), signal = Signal.BULLISH),
-                createReading(type = Type.SENTIMENT, timeframe = null, value = BigDecimal("61"), signal = Signal.NEUTRAL),
-                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = BigDecimal("58.4"), signal = Signal.BULLISH),
-                createReading(type = Type.MACD, timeframe = Timeframe.DAY, value = BigDecimal("12.34"), signal = Signal.BULLISH),
+                createReading(type = Type.GALAXY_SCORE, timeframe = Timeframe.DAY, value = BigDecimal("68"), signal = Signal.POSITIVE),
+                createReading(type = Type.SENTIMENT, timeframe = Timeframe.DAY, value = BigDecimal("61"), signal = Signal.NEUTRAL),
+                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = BigDecimal("58.4"), signal = Signal.POSITIVE),
+                createReading(type = Type.MACD, timeframe = Timeframe.DAY, value = BigDecimal("12.34"), signal = Signal.POSITIVE),
                 createReading(
                     type = Type.MA_CROSS,
-                    timeframe = null,
+                    timeframe = Timeframe.DAY,
                     value = null,
-                    signal = Signal.BEARISH,
+                    signal = Signal.NEGATIVE,
                     updatedAt = DateTime(2026, 1, 20, 21, 24, DateTimeZone.UTC),
                 ),
             ),
@@ -82,7 +82,7 @@ internal class TokenSentimentConverterTest {
         val content = actual as TokenSentimentUM.Content
         assertThat(content.sentiment).isEqualTo(resourceReference(R.string.token_summary_positive_outlook_title))
         assertThat(content.totalScore).isEqualTo(2)
-        // All five indicators loaded (BULLISH/BEARISH/NEUTRAL), so the scale spans the full -5..5.
+        // All five indicators loaded (POSITIVE/NEGATIVE/NEUTRAL), so the scale spans the full -5..5.
         assertThat(content.scaleMax).isEqualTo(5)
         assertThat(content.lastUpdate).isEqualTo(expectedLastUpdate(DateTime(2026, 1, 20, 21, 24, DateTimeZone.UTC)))
         assertThat(content.indicators.map(::projection))
@@ -102,11 +102,11 @@ internal class TokenSentimentConverterTest {
         // Arrange — SENTIMENT is unavailable (can't load), so the scale shrinks from -5..5 to -4..4.
         val coinIndicators = createCoinIndicators(
             readings = listOf(
-                createReading(type = Type.GALAXY_SCORE, timeframe = null, value = BigDecimal("68"), signal = Signal.BULLISH),
-                createReading(type = Type.SENTIMENT, timeframe = null, value = null, signal = Signal.NOT_AVAILABLE),
-                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = BigDecimal("58.4"), signal = Signal.BULLISH),
-                createReading(type = Type.MACD, timeframe = Timeframe.DAY, value = BigDecimal("12.34"), signal = Signal.BEARISH),
-                createReading(type = Type.MA_CROSS, timeframe = null, value = null, signal = Signal.NEUTRAL),
+                createReading(type = Type.GALAXY_SCORE, timeframe = Timeframe.DAY, value = BigDecimal("68"), signal = Signal.POSITIVE),
+                createReading(type = Type.SENTIMENT, timeframe = Timeframe.DAY, value = null, signal = Signal.NOT_AVAILABLE),
+                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = BigDecimal("58.4"), signal = Signal.POSITIVE),
+                createReading(type = Type.MACD, timeframe = Timeframe.DAY, value = BigDecimal("12.34"), signal = Signal.NEGATIVE),
+                createReading(type = Type.MA_CROSS, timeframe = Timeframe.DAY, value = null, signal = Signal.NEUTRAL),
             ),
         )
 
@@ -114,7 +114,7 @@ internal class TokenSentimentConverterTest {
         val content = TokenSentimentConverter(timeframe = Timeframe.DAY)
             .convert(coinIndicators) as TokenSentimentUM.Content
 
-        // Assert — 4 loaded indicators (SENTIMENT excluded); score unchanged (2 bullish - 1 bearish).
+        // Assert — 4 loaded indicators (SENTIMENT excluded); score unchanged (2 positive - 1 negative).
         assertThat(content.scaleMax).isEqualTo(4)
         assertThat(content.totalScore).isEqualTo(1)
     }
@@ -124,10 +124,10 @@ internal class TokenSentimentConverterTest {
         // Arrange
         val coinIndicators = createCoinIndicators(
             readings = listOf(
-                createReading(type = Type.RSI, timeframe = Timeframe.DAY, signal = Signal.BULLISH),
-                createReading(type = Type.RSI, timeframe = Timeframe.WEEK, signal = Signal.BEARISH),
+                createReading(type = Type.RSI, timeframe = Timeframe.DAY, signal = Signal.POSITIVE),
+                createReading(type = Type.RSI, timeframe = Timeframe.WEEK, signal = Signal.NEGATIVE),
                 createReading(type = Type.RSI, timeframe = Timeframe.MONTH, signal = Signal.NEUTRAL),
-                createReading(type = Type.MACD, timeframe = Timeframe.DAY, signal = Signal.BULLISH),
+                createReading(type = Type.MACD, timeframe = Timeframe.DAY, signal = Signal.POSITIVE),
                 createReading(type = Type.MACD, timeframe = Timeframe.WEEK, signal = Signal.NEUTRAL),
             ),
         )
@@ -150,8 +150,7 @@ internal class TokenSentimentConverterTest {
         val types = listOf(Type.GALAXY_SCORE, Type.SENTIMENT, Type.RSI, Type.MACD, Type.MA_CROSS)
         val coinIndicators = createCoinIndicators(
             readings = types.zip(model.signals) { type, signal ->
-                val timeframe = if (type == Type.RSI || type == Type.MACD) Timeframe.DAY else null
-                createReading(type = type, timeframe = timeframe, signal = signal)
+                createReading(type = type, timeframe = Timeframe.DAY, signal = signal)
             },
         )
 
@@ -166,22 +165,22 @@ internal class TokenSentimentConverterTest {
 
     private fun provideTestModels() = listOf(
         ScoreModel(
-            signals = List(size = 5) { Signal.BULLISH },
+            signals = List(size = 5) { Signal.POSITIVE },
             expectedScore = 5,
             expectedOutlook = R.string.token_summary_positive_outlook_title,
         ),
         ScoreModel(
-            signals = List(size = 5) { Signal.BEARISH },
+            signals = List(size = 5) { Signal.NEGATIVE },
             expectedScore = -5,
             expectedOutlook = R.string.token_summary_negative_outlook_title,
         ),
         ScoreModel(
-            signals = listOf(Signal.BULLISH, Signal.BEARISH, Signal.NEUTRAL, Signal.NOT_AVAILABLE, Signal.BULLISH),
+            signals = listOf(Signal.POSITIVE, Signal.NEGATIVE, Signal.NEUTRAL, Signal.NOT_AVAILABLE, Signal.POSITIVE),
             expectedScore = 1,
             expectedOutlook = R.string.token_summary_positive_outlook_title,
         ),
         ScoreModel(
-            signals = listOf(Signal.BULLISH, Signal.BEARISH, Signal.NEUTRAL, Signal.NEUTRAL, Signal.NEUTRAL),
+            signals = listOf(Signal.POSITIVE, Signal.NEGATIVE, Signal.NEUTRAL, Signal.NEUTRAL, Signal.NEUTRAL),
             expectedScore = 0,
             expectedOutlook = R.string.token_summary_neutral_outlook_title,
         ),
@@ -206,11 +205,10 @@ internal class TokenSentimentConverterTest {
     }
 
     private fun provideSignalModels() = listOf(
-        SignalModel(Signal.BULLISH, R.string.common_positive, TangemBadge.Status.Success),
-        SignalModel(Signal.BEARISH, R.string.common_negative, TangemBadge.Status.Error),
+        SignalModel(Signal.POSITIVE, R.string.common_positive, TangemBadge.Status.Success),
+        SignalModel(Signal.NEGATIVE, R.string.common_negative, TangemBadge.Status.Error),
         SignalModel(Signal.NEUTRAL, R.string.common_neutral, TangemBadge.Status.Info),
         SignalModel(Signal.INSUFFICIENT_DATA, R.string.common_none, TangemBadge.Status.Neutral),
-        SignalModel(Signal.NOT_APPLICABLE, R.string.common_none, TangemBadge.Status.Neutral),
         SignalModel(Signal.NOT_AVAILABLE, R.string.common_none, TangemBadge.Status.Neutral),
     )
 
@@ -230,35 +228,42 @@ internal class TokenSentimentConverterTest {
     }
 
     @Test
-    fun `GIVEN no readings WHEN convert THEN result is NoOutlook with rows in indicator type order`() {
+    fun `GIVEN no readings WHEN convert THEN result is NoOutlook without rows`() {
         // Arrange
         val coinIndicators = createCoinIndicators(readings = emptyList())
 
         // Act
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
-        // Assert — a response without readings collapses to NoOutlook, whose rows still follow the indicator order
-        assertThat(actual).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
-        assertThat(actual.indicators.map(TokenIndicatorUM::indicatorType))
-            .containsExactlyElementsIn(IndicatorType.entries)
-            .inOrder()
+        // Assert — no readings means no names, so there is nothing to render besides the NoOutlook message
+        assertThat(actual).isInstanceOf(TokenSentimentUM.Empty.NoOutlook::class.java)
+        assertThat(actual.indicators).isEmpty()
     }
 
     @Test
-    fun `GIVEN readings present but all values null WHEN convert THEN result is NoOutlook`() {
+    fun `GIVEN readings present but all values null WHEN convert THEN NoOutlook keeps their named rows`() {
         // Arrange — readings exist for the timeframe but none carries a value
         val coinIndicators = createCoinIndicators(
             readings = listOf(
-                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = null, signal = Signal.BULLISH),
-                createReading(type = Type.GALAXY_SCORE, timeframe = null, value = null, signal = Signal.BEARISH),
+                createReading(type = Type.RSI, value = null, signal = Signal.POSITIVE, name = "RSI"),
+                createReading(
+                    type = Type.GALAXY_SCORE,
+                    value = null,
+                    signal = Signal.NEGATIVE,
+                    name = "Galaxy score",
+                ),
             ),
         )
 
         // Act
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
-        // Assert
-        assertThat(actual).isEqualTo(TokenSentimentUM.Empty.NoOutlook)
+        // Assert — the names did arrive, so the rows survive in indicator type order
+        assertThat(actual).isInstanceOf(TokenSentimentUM.Empty.NoOutlook::class.java)
+        assertThat(actual.indicators).containsExactly(
+            TokenIndicatorUM.NoData(indicatorType = IndicatorType.GalaxyScore, title = "Galaxy score"),
+            TokenIndicatorUM.NoData(indicatorType = IndicatorType.RSI, title = "RSI"),
+        ).inOrder()
     }
 
     @Test
@@ -266,37 +271,41 @@ internal class TokenSentimentConverterTest {
         // Arrange — RSI carries a value (keeps the whole thing Content); GalaxyScore is present but value-less
         val coinIndicators = createCoinIndicators(
             readings = listOf(
-                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = BigDecimal("50"), signal = Signal.BULLISH),
-                createReading(type = Type.GALAXY_SCORE, timeframe = null, value = null, signal = Signal.BULLISH),
+                createReading(type = Type.RSI, timeframe = Timeframe.DAY, value = BigDecimal("50"), signal = Signal.POSITIVE),
+                createReading(
+                    type = Type.GALAXY_SCORE,
+                    timeframe = Timeframe.DAY,
+                    value = null,
+                    signal = Signal.POSITIVE,
+                    name = "Galaxy score",
+                ),
             ),
         )
 
         // Act
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
-        // Assert — a present-but-value-less reading collapses to NoData, not a Content row
+        // Assert — a present-but-value-less reading collapses to NoData (keeping its name), not a Content row
         val content = actual as TokenSentimentUM.Content
         assertThat(content.row(IndicatorType.RSI)).isInstanceOf(TokenIndicatorUM.Content::class.java)
-        assertThat(content.row(IndicatorType.GalaxyScore)).isEqualTo(TokenIndicatorUM.NoData(IndicatorType.GalaxyScore))
+        assertThat(content.row(IndicatorType.GalaxyScore))
+            .isEqualTo(TokenIndicatorUM.NoData(IndicatorType.GalaxyScore, title = "Galaxy score"))
     }
 
     @Test
-    fun `GIVEN missing readings WHEN convert THEN rows are no data`() {
-        // Arrange
+    fun `GIVEN missing readings WHEN convert THEN those types get no row`() {
+        // Arrange — only RSI has a reading for the selected timeframe
         val coinIndicators = createCoinIndicators(
-            readings = listOf(createReading(type = Type.RSI, timeframe = Timeframe.DAY, signal = Signal.BULLISH)),
+            readings = listOf(createReading(type = Type.RSI, timeframe = Timeframe.DAY, signal = Signal.POSITIVE)),
         )
 
         // Act
         val actual = TokenSentimentConverter(timeframe = Timeframe.DAY).convert(coinIndicators)
 
-        // Assert
+        // Assert — a row is named by its reading, so a type without one is not rendered at all
         val content = actual as TokenSentimentUM.Content
         assertThat(content.row(IndicatorType.RSI)).isInstanceOf(TokenIndicatorUM.Content::class.java)
-        assertThat(content.row(IndicatorType.GalaxyScore)).isEqualTo(TokenIndicatorUM.NoData(IndicatorType.GalaxyScore))
-        assertThat(content.row(IndicatorType.Sentiment)).isEqualTo(TokenIndicatorUM.NoData(IndicatorType.Sentiment))
-        assertThat(content.row(IndicatorType.MACD)).isEqualTo(TokenIndicatorUM.NoData(IndicatorType.MACD))
-        assertThat(content.row(IndicatorType.MA_CROSS)).isEqualTo(TokenIndicatorUM.NoData(IndicatorType.MA_CROSS))
+        assertThat(content.indicators.map(TokenIndicatorUM::indicatorType)).containsExactly(IndicatorType.RSI)
     }
 
     @Test
@@ -311,7 +320,7 @@ internal class TokenSentimentConverterTest {
                 ),
                 createReading(
                     type = Type.GALAXY_SCORE,
-                    timeframe = null,
+                    timeframe = Timeframe.DAY,
                     updatedAt = DateTime(2026, 1, 20, 21, 24, DateTimeZone.UTC),
                 ),
             ),
@@ -339,8 +348,27 @@ internal class TokenSentimentConverterTest {
         assertThat((actual as TokenSentimentUM.Content).lastUpdate).isEqualTo(TextReference.EMPTY)
     }
 
+    @Test
+    fun `GIVEN reading with a backend name WHEN convert THEN row title is that name`() {
+        // Arrange
+        val coinIndicators = createCoinIndicators(
+            readings = listOf(createReading(type = Type.RSI, name = "Relative Strength Index")),
+        )
+
+        // Act
+        val content = TokenSentimentConverter(timeframe = Timeframe.DAY)
+            .convert(coinIndicators) as TokenSentimentUM.Content
+
+        // Assert
+        assertThat(content.namedRow(IndicatorType.RSI).title).isEqualTo("Relative Strength Index")
+    }
+
     private fun TokenSentimentUM.Content.row(indicatorType: IndicatorType): TokenIndicatorUM {
         return indicators.first { it.indicatorType == indicatorType }
+    }
+
+    private fun TokenSentimentUM.Content.namedRow(indicatorType: IndicatorType): TokenIndicatorUM.Named {
+        return row(indicatorType) as TokenIndicatorUM.Named
     }
 
     private fun TokenSentimentUM.Content.rowSentimentText(indicatorType: IndicatorType): TextReference {
@@ -379,18 +407,18 @@ internal class TokenSentimentConverterTest {
     @Suppress("LongParameterList")
     private fun createReading(
         type: Type = Type.RSI,
-        timeframe: Timeframe? = Timeframe.DAY,
+        timeframe: Timeframe = Timeframe.DAY,
         value: BigDecimal? = BigDecimal("72.21"),
-        signal: Signal = Signal.BULLISH,
-        subLabel: String? = null,
+        signal: Signal = Signal.POSITIVE,
         updatedAt: DateTime? = null,
+        name: String = type.name,
     ): CoinIndicators.Reading {
         return CoinIndicators.Reading(
             type = type,
+            name = name,
             timeframe = timeframe,
             value = value,
             signal = signal,
-            subLabel = subLabel,
             updatedAt = updatedAt,
         )
     }
