@@ -93,6 +93,8 @@ internal fun WalletTopBar(
         } else {
             null
         },
+        isEndButtonsGroupBackgroundShown = isWrappedBalanceShown,
+        fadeEnabled = isWrappedBalanceShown,
         contentColumn = {
             AnimatedVisibility(visible = wrappedBalance != null) {
                 wrappedBalance?.let { balance ->
