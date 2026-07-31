@@ -87,8 +87,10 @@
   <string name="add_and_manage_sheet_manage_title">Add tokens</string>
   <string name="add_and_manage_sheet_organize_subtitle">Sorting and grouping</string>
   <string name="add_and_manage_sheet_organize_title">Organize tokens</string>
+  <string name="add_crypto_account_subtitle">Organize funds across accounts</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
+  <string name="add_joint_account_subtitle">Manage shared funds together</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="addfunds_buy_row_description">Credit card or bank account</string>
   <string name="addfunds_fund_token">Fund token</string>
@@ -329,6 +331,7 @@
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
+  <string name="common_crypto_account">Crypto account</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Custom</string>
   <string name="common_day">day</string>
@@ -370,6 +373,9 @@
   <string name="common_forget">Forget</string>
   <string name="common_free">Free</string>
   <string name="common_from">From</string>
+  <string name="common_from_account">From account</string>
+  <string name="common_from_address">From address</string>
+  <string name="common_from_wallet">From wallet</string>
   <string name="common_from_wallet_name">From %s</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_get">Get</string>
@@ -394,6 +400,7 @@
   <string name="common_in">in</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
+  <string name="common_joint_account">Joint account</string>
   <string name="common_later">Later</string>
   <string name="common_learn_more">Learn more</string>
   <string name="common_left">%1$s left</string>
@@ -890,6 +897,7 @@
   <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
   <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
+  <string name="joint_account_onboarding_subtitle">A shared account that several people own together. Money moves only when enough members sign.</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Not enough balance</string>
@@ -1344,6 +1352,15 @@
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
   <string name="prediction_account_title">Prediction account</string>
+  <plurals name="prediction_event_more_outcomes">
+    <item quantity="one">+%d Outcome</item>
+    <item quantity="other">+%d Outcomes</item>
+  </plurals>
+  <string name="prediction_event_probability">Probability</string>
+  <string name="prediction_event_total_volume">Total volume:</string>
+  <string name="prediction_main_empty_events">No events yet</string>
+  <string name="prediction_main_subtitle">USDC on Polygon network</string>
+  <string name="prediction_main_title">Predictions</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
   <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
@@ -1797,6 +1814,8 @@
   <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
   <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Assets</string>
+  <string name="swap_token_selector_empty_filtered_message">You don\'t have any funded tokens on this wallet. Explore other wallets or change the filter</string>
+  <string name="swap_token_selector_filter_hide_zero_balance">Hide 0 balance</string>
   <string name="swap_via_provider">Swap via provider</string>
   <string name="swap_your_assets_title">Your assets</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
@@ -1893,7 +1912,7 @@
   <string name="tangempay_bank_transfer_fee_header">Fee for onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Received USD will be converted to USDC by 1:1 rate</string>
   <string name="tangempay_bank_transfer_intro_title">Bank transfer might take 1-2 business days</string>
-  <string name="tangempay_bank_transfer_legal">By using service, you agree with provider %1$s and %2$s</string>
+  <string name="tangempay_bank_transfer_legal">By using service, you agree with provider %1$s</string>
   <string name="tangempay_bank_transfer_show_details">Show details</string>
   <string name="tangempay_bank_transfer_success_subtitle">This may take a little time</string>
   <string name="tangempay_bank_transfer_success_title">Preparing your banking details</string>
@@ -1904,7 +1923,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
-  <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use card</string>
+  <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use new card</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">PIN code</string>
@@ -1932,6 +1951,9 @@
   <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Add card to Apple Pay</string>
   <string name="tangempay_card_details_pin_code">PIN code</string>
+  <string name="tangempay_card_details_protection_not_set_button">Set screen lock</string>
+  <string name="tangempay_card_details_protection_not_set_description">Unable to view your card data without a screen lock. \nSet one in your device settings.</string>
+  <string name="tangempay_card_details_protection_not_set_title">Screen lock is not set</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reissue_card">Replace card</string>
@@ -1940,7 +1962,7 @@
   <string name="tangempay_card_details_rename_card_placeholder">Card name</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Details</string>
-  <string name="tangempay_card_details_system_downgrade_subtitle">If it will remain below zero your %1$s cards will be closed on %2$s</string>
+  <string name="tangempay_card_details_system_downgrade_subtitle">If it remain below zero your %1$s cards will be closed on %2$s</string>
   <string name="tangempay_card_details_system_downgrade_title">Top up your account shortly</string>
   <string name="tangempay_card_details_title">Details</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
@@ -2108,6 +2130,21 @@
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="one">Up to %d business day</item>
+    <item quantity="other">Up to %d business days</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_fee">Delivery fee</string>
+  <string name="tangempay_order_type_delivery_time">Delivery time</string>
+  <string name="tangempay_order_type_delivery_time_instant">Instant</string>
+  <string name="tangempay_order_type_delivery_to">Deliver to</string>
+  <string name="tangempay_order_type_first_delivery_free">First delivery for free</string>
+  <string name="tangempay_order_type_issue_fee">Issue fee</string>
+  <string name="tangempay_order_type_not_enough_money">Not enough money</string>
+  <string name="tangempay_order_type_segment_plastic">Plastic</string>
+  <string name="tangempay_order_type_segment_virtual">Virtual</string>
+  <string name="tangempay_order_type_select">Select</string>
+  <string name="tangempay_order_type_title">Order new card</string>
   <string name="tangempay_other_networks_header">Other networks</string>
   <string name="tangempay_other_networks_subtitle">And then swap it to payment account with 1:1 rate and zero fees</string>
   <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
@@ -2216,12 +2253,17 @@
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Show QR code</string>
   <string name="token_summary_can_not_load_token">Can’t load data of the token</string>
+  <string name="token_summary_galaxy_score_description">It is an indicator that shows the overall health of a cryptocurrency by combining its price performance with how actively and positively it\'s being talked about on social media, developed by LunarCrush.</string>
   <string name="token_summary_go_to_swap_button">Go to swap</string>
   <string name="token_summary_last_update_subtitle">Last update: %1$s</string>
+  <string name="token_summary_ma_cross_description">It is an indicator that compares the average price of an asset over the last 50 days with its average price over the last 200 days to show whether it\'s in a longer-term uptrend or downtrend.</string>
+  <string name="token_summary_macd_description">It is an indicator that compares two price averages over different periods to show whether the asset\'s momentum is picking up or slowing down, and in which direction the trend may be shifting.</string>
   <string name="token_summary_negative_outlook_title">Negative outlook</string>
   <string name="token_summary_neutral_outlook_title">Neutral outlook</string>
   <string name="token_summary_outlook_is_not_available">Outlook for this token is not available</string>
   <string name="token_summary_positive_outlook_title">Positive outlook</string>
+  <string name="token_summary_rsi_description">It is an indicator that shows whether an asset\'s price has risen or fallen too quickly in the recent period, helping to spot when it might be overbought or oversold.</string>
+  <string name="token_summary_sentiment_description">It is an indicator that shows whether people online are talking about the asset in a mostly positive or mostly negative way, based on social media and news data collected by LunarCrush.</string>
   <string name="token_summary_title">Token summary</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
@@ -2271,6 +2313,12 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
+  <string name="tx_history_details_status_expired">Expired</string>
+  <string name="tx_history_onramp_status_awaiting_funds">Awaiting funds</string>
+  <string name="tx_history_onramp_status_failed">Failed</string>
+  <string name="tx_history_onramp_status_paused">Paused</string>
+  <string name="tx_history_onramp_status_refunded">Refunded</string>
+  <string name="tx_history_onramp_status_refunding">Refunding</string>
   <string name="tx_history_onramp_top_up">Top up</string>
   <string name="tx_history_onramp_topped_up">Topped up</string>
   <string name="tx_history_you_paid">You paid</string>
