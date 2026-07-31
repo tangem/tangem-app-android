@@ -19,6 +19,7 @@ import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -36,6 +37,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
@@ -111,6 +113,23 @@ internal class ForYouModel @Inject constructor(
         override val onBack: () -> Unit = { bottomSheetNavigation.dismiss() }
     }
 
+    private val availableAccountStatuses: SharedFlow<Map<UserWalletId, AccountStatusList>> = combine(
+        multiAccountStatusListSupplier.invokeAsMap(),
+        userWalletsListRepository.userWallets,
+    ) { accountLists, wallets ->
+        val unlockedWalletIds = wallets.orEmpty()
+            .filterNot { it.isLocked }
+            .mapTo(mutableSetOf()) { it.walletId }
+
+        accountLists.filterKeys { walletId -> walletId in unlockedWalletIds }
+    }
+        .distinctUntilChanged()
+        .shareIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            replay = 1,
+        )
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val selectedPortfolio: Flow<ForYouSelectedPortfolio> =
         portfolioSelectorController
@@ -118,7 +137,7 @@ internal class ForYouModel @Inject constructor(
             .distinctUntilChanged()
             .flatMapLatest { selectedAccounts ->
                 val converter = ForYouSelectedPortfolioConverter(selectedAccounts)
-                multiAccountStatusListSupplier.invokeAsMap().map(converter::convert)
+                availableAccountStatuses.map(converter::convert)
             }
 
     private val portfolioFilterConverter = ForYouPortfolioFilterConverter(
@@ -283,7 +302,7 @@ internal class ForYouModel @Inject constructor(
 
     private fun initDefaultPortfolioSelection() {
         modelScope.launch {
-            val accountList = multiAccountStatusListSupplier.invokeAsMap()
+            val accountList = availableAccountStatuses
                 .firstOrNull { it.availableAccountIds().isNotEmpty() }
                 ?: return@launch
 
@@ -313,7 +332,7 @@ internal class ForYouModel @Inject constructor(
      */
     private fun onClearPortfolioSelectionClick() {
         modelScope.launch {
-            val accountList = multiAccountStatusListSupplier.invokeAsMap()
+            val accountList = availableAccountStatuses
                 .firstOrNull { it.availableAccountIds().isNotEmpty() }
                 ?: return@launch
 
@@ -422,7 +441,7 @@ internal class ForYouModel @Inject constructor(
     }
 
     private suspend fun isCurrencyInPortfolio(rawCurrencyId: CryptoCurrency.RawID): Boolean {
-        return multiAccountStatusListSupplier.invokeAsMap().first().values.any { accountStatusList ->
+        return availableAccountStatuses.first().values.any { accountStatusList ->
             accountStatusList.flattenCurrencies().any { status ->
                 status.currency.id.rawCurrencyId == rawCurrencyId
             }
