@@ -60,6 +60,14 @@ class ApplicationInjectionExecutionRule(
                 versionField.set(toggle, newVersion)
             }
 
+            // Surface overrides that don't match any known toggle (e.g. a typo or a rawName from another
+            // platform) — they are ignored rather than failing the run.
+            val knownNames = FeatureToggles.entries.mapTo(mutableSetOf()) { it.rawName }
+            val unknown = toggleStates.keys - knownNames
+            if (unknown.isNotEmpty()) {
+                TangemLogger.e("Ignoring unknown feature toggle overrides (no matching rawName): $unknown")
+            }
+
             TangemLogger.i("FeatureToggles.values updated: $toggleStates")
 
         } catch (e: Exception) {
