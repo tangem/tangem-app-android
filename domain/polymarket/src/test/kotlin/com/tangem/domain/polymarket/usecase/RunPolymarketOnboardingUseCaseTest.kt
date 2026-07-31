@@ -37,6 +37,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase = mockk()
     private val deriveApiCredentials: DeriveApiCredentialsUseCase = mockk()
     private val submitApprovals: SubmitApprovalsUseCase = mockk()
+    private val syncBalanceAllowance: SyncBalanceAllowanceUseCase = mockk()
 
     private val useCase = RunPolymarketOnboardingUseCase(
         deriveAddresses = deriveAddresses,
@@ -47,6 +48,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
         getApiCredentials = getApiCredentials,
         deriveApiCredentials = deriveApiCredentials,
         submitApprovals = submitApprovals,
+        syncBalanceAllowance = syncBalanceAllowance,
     )
 
     @BeforeEach
@@ -60,6 +62,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
             getApiCredentials,
             deriveApiCredentials,
             submitApprovals,
+            syncBalanceAllowance,
         )
         coEvery { deriveAddresses(USER_WALLET_ID) } returns ADDRESSES.right()
         coEvery { getRelayerNonce(ADDRESSES) } returns NONCE.right()
@@ -70,6 +73,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
             PolymarketWalletStatus.APPROVALS_IN_PROGRESS.right()
         coEvery { deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP) } returns CREDENTIALS.right()
         coEvery { getApiCredentials(OWNER) } returns null
+        coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
     }
 
     @Test
@@ -101,6 +105,59 @@ internal class RunPolymarketOnboardingUseCaseTest {
         coVerifyOrder {
             deployDepositWallet(ADDRESSES)
             deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP)
+        }
+    }
+
+    @Test
+    fun `GIVEN a full run WHEN it reaches Ready THEN primes the cache with the derived credentials`() = runTest {
+        // Arrange
+        coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
+            walletState(PolymarketWalletStatus.NOT_CREATED).right(),
+            walletState(PolymarketWalletStatus.DEPLOYED).right(),
+            walletState(PolymarketWalletStatus.READY_TO_TRADE).right(),
+        )
+
+        // Act & Assert
+        useCase(USER_WALLET_ID).test {
+            skipItems(4)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            awaitComplete()
+        }
+        coVerify(exactly = 1) { syncBalanceAllowance(OWNER, CREDENTIALS) }
+    }
+
+    @Test
+    fun `GIVEN a wallet already onboarded WHEN collected THEN primes the cache with the stored credentials`() =
+        runTest {
+            // Arrange
+            coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+            coEvery { getWalletStatus(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+
+            // Act & Assert
+            useCase(USER_WALLET_ID).test {
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                awaitComplete()
+            }
+            coVerify(exactly = 1) { syncBalanceAllowance(OWNER, CREDENTIALS) }
+            coVerify(exactly = 0) { signOnboardingDigests(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the cache prime fails WHEN collected THEN still reports Ready`() = runTest {
+        // Arrange
+        coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+        coEvery { getWalletStatus(ADDRESSES) } returns
+            walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+        coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } returns
+            PolymarketOnboardingError.Network.left()
+
+        // Act & Assert
+        useCase(USER_WALLET_ID).test {
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            awaitComplete()
         }
     }
 
