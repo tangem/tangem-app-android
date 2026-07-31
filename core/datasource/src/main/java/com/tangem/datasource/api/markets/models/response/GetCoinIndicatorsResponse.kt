@@ -20,21 +20,20 @@ data class GetCoinIndicatorsResponse(
          * Single indicator reading for an asset
          *
          * @param type      indicator type
-         * @param timeframe `24h`/`7d`/`1m` for RSI and MACD; `null` for the timeframe-agnostic
-         *                  indicators (MA_CROSS, GALAXY_SCORE, SENTIMENT)
-         * @param value     RSI value; MACD histogram; galaxy/sentiment score (0–100).
-         *                  Always `null` for MA_CROSS and for `not_applicable`/`na`/`insufficient_data`
+         * @param timeframe `24h`/`7d`/`1m` — always present, for every indicator type
+         * @param value     RSI value; MACD histogram; galaxy/sentiment score (0–100);
+         *                  MA_CROSS deviation of SMA50 from SMA200, in percent.
+         *                  `null` for `not_available`/`insufficient_data`
          * @param label     interpreted signal
-         * @param subLabel  RSI only: `Overbought` / `Oversold`. `null` otherwise
          * @param updatedAt ISO-8601 timestamp of the last stored value, or `null`
          */
         @JsonClass(generateAdapter = true)
         data class Indicator(
             @Json(name = "type") val type: Type,
-            @Json(name = "timeframe") val timeframe: Timeframe?,
+            @Json(name = "name") val name: String,
+            @Json(name = "timeframe") val timeframe: Timeframe,
             @Json(name = "value") val value: BigDecimal?,
             @Json(name = "label") val label: Signal,
-            @Json(name = "subLabel") val subLabel: String?,
             @Json(name = "updatedAt") val updatedAt: DateTime?,
         ) {
 
@@ -67,24 +66,22 @@ data class GetCoinIndicatorsResponse(
             /**
              * Interpreted indicator signal
              *
-             * `bullish`/`bearish`/`neutral` — interpreted signal;
+             * `positive`/`negative`/`neutral` — interpreted signal;
              * `insufficient_data` — not enough history (e.g. MA cross without SMA200);
-             * `not_applicable` — indicator not meaningful for the asset (stablecoins);
-             * `na` — no fresh data (2+ consecutive sync misses)
+             * `not_available` — no data to interpret: indicator not meaningful for the asset
+             * (stablecoins), or no fresh data (2+ consecutive sync misses)
              */
             @JsonClass(generateAdapter = false)
             enum class Signal {
-                @Json(name = "bullish") BULLISH,
+                @Json(name = "positive") POSITIVE,
 
-                @Json(name = "bearish") BEARISH,
+                @Json(name = "negative") NEGATIVE,
 
                 @Json(name = "neutral") NEUTRAL,
 
                 @Json(name = "insufficient_data") INSUFFICIENT_DATA,
 
-                @Json(name = "not_applicable") NOT_APPLICABLE,
-
-                @Json(name = "na") NOT_AVAILABLE,
+                @Json(name = "not_available") NOT_AVAILABLE,
 
                 UNKNOWN,
             }
