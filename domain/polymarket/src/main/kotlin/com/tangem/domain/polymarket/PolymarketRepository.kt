@@ -69,4 +69,14 @@ interface PolymarketRepository {
     suspend fun createApiCredentials(
         headers: PolymarketL1Headers,
     ): Either<PolymarketAuthError, PolymarketApiCredentials>
+
+    /**
+     * Refresh the CLOB's cached collateral balance and allowance for the owner's deposit wallet
+     * (`GET clob.polymarket.com/balance-allowance/update`). Authenticated with the L2 HMAC headers derived
+     * from [credentials]; changes no on-chain or backend state.
+     */
+    suspend fun syncBalanceAllowance(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+    ): Either<PolymarketAuthError, Unit>
 }

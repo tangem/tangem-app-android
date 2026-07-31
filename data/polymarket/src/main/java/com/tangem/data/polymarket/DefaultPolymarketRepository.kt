@@ -9,6 +9,7 @@ import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
+import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
@@ -40,6 +41,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val walletConverter: PolymarketWalletConverter,
     private val walletErrorResolver: PolymarketWalletErrorResolver,
     private val authErrorResolver: PolymarketAuthErrorResolver,
+    private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
 
@@ -130,9 +132,39 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
+    override suspend fun syncBalanceAllowance(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+    ): Either<PolymarketAuthError, Unit> = withContext(dispatchers.io) {
+        val headers = l2HeaderBuilder.build(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            timestamp = (System.currentTimeMillis() / MILLIS_IN_SECOND).toString(),
+            method = HTTP_METHOD_GET,
+            requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
+        )
+        safeApiCall(
+            call = {
+                clobApi.updateBalanceAllowance(
+                    headers = headers,
+                    assetType = ASSET_TYPE_COLLATERAL,
+                    signatureType = SIGNATURE_TYPE_DEPOSIT_WALLET,
+                ).bind().right()
+            },
+            onError = { authErrorResolver.resolve(it).left() },
+        )
+    }
+
     private companion object {
 
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
+        const val MILLIS_IN_SECOND = 1_000L
+        const val HTTP_METHOD_GET = "GET"
+        const val ASSET_TYPE_COLLATERAL = "COLLATERAL"
+        const val SIGNATURE_TYPE_DEPOSIT_WALLET = 3
+
+        /** Signed by the HMAC without the query string, unlike the relative path Retrofit resolves. */
+        const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance/update"
     }
 }
