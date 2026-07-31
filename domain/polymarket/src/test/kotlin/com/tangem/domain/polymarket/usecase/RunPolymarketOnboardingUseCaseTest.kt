@@ -162,6 +162,22 @@ internal class RunPolymarketOnboardingUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the cache prime throws WHEN collected THEN still reports Ready`() = runTest {
+        // Arrange
+        coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+        coEvery { getWalletStatus(ADDRESSES) } returns
+            walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+        coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } throws IllegalArgumentException("bad secret")
+
+        // Act & Assert
+        useCase(USER_WALLET_ID).test {
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            awaitComplete()
+        }
+    }
+
+    @Test
     fun `GIVEN the status never settles WHEN collected THEN ends with StillWorking`() = runTest {
         // Arrange
         coEvery { getWalletStatus(ADDRESSES) } returns
