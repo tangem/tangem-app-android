@@ -32,6 +32,7 @@ import com.tangem.features.foryou.impl.components.state.AiInsightUM
 import com.tangem.features.foryou.impl.tokensummary.entity.*
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewBottomButton
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewContentSentiment
+import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewNoOutlookSentiment
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewTokenSummary
 import com.tangem.features.foryou.impl.ui.components.AiInsightContent
 import com.tangem.features.foryou.impl.ui.components.GradientScaleBar
@@ -233,14 +234,19 @@ private fun SentimentsContent(
 @Composable
 private fun IndicatorsList(
     indicators: ImmutableList<TokenIndicatorUM>,
-    onInfoClick: (IndicatorType) -> Unit,
+    onInfoClick: (TokenIndicatorUM.Loaded) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         indicators.forEach { indicator ->
             IndicatorRow(
                 indicator = indicator,
-                onInfoClick = { onInfoClick(indicator.indicatorType) },
+                // A skeleton row has no name and no description to open — nothing to click
+                onInfoClick = if (indicator is TokenIndicatorUM.Loaded) {
+                    { onInfoClick(indicator) }
+                } else {
+                    {}
+                },
             )
         }
     }
@@ -254,27 +260,7 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
         includeInnerPaddings = true,
         contentLead = TangemRowContentLead.Equal,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        titleSlot = {
-            Row(
-                modifier = Modifier
-                    .clickableSingle(onClick = onInfoClick)
-                    .padding(vertical = 3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = indicator.indicatorType.title,
-                    color = TangemTheme.colors3.text.primary,
-                    style = TangemTheme.typography3.caption.medium,
-                )
-                Icon(
-                    modifier = Modifier.size(16.dp),
-                    painter = painterResource(id = R.drawable.ic_information_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.tertiary,
-                )
-            }
-        },
+        titleSlot = { IndicatorRowTitle(indicator = indicator, onInfoClick = onInfoClick) },
         valueSlot = {
             when (indicator) {
                 is TokenIndicatorUM.Content -> {
@@ -308,6 +294,38 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
             }
         },
     )
+}
+
+/** Only a row built from a reading has a name — the skeleton row shimmers instead, with nothing to explain. */
+@Composable
+private fun IndicatorRowTitle(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, modifier: Modifier = Modifier) {
+    when (indicator) {
+        is TokenIndicatorUM.Loaded -> Row(
+            modifier = modifier
+                .clickableSingle(onClick = onInfoClick)
+                .padding(vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = indicator.title,
+                color = TangemTheme.colors3.text.primary,
+                style = TangemTheme.typography3.caption.medium,
+            )
+            Icon(
+                modifier = Modifier.size(16.dp),
+                painter = painterResource(id = R.drawable.ic_information_24),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.tertiary,
+            )
+        }
+        is TokenIndicatorUM.Loading -> RectangleShimmer(
+            modifier = modifier
+                .padding(vertical = 3.dp)
+                .size(width = 72.dp, height = 16.dp),
+            radius = 8.dp,
+        )
+    }
 }
 
 // region Preview
@@ -387,7 +405,7 @@ private fun TokenSummaryContentNoOutlookPreview() {
         TokenSummaryContent(
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Empty,
-                tokenSentiment = TokenSentimentUM.Empty.NoOutlook,
+                tokenSentiment = previewNoOutlookSentiment,
                 bottomButton = previewBottomButton(text = resourceReference(R.string.common_add_funds)),
             ),
             contentPadding = PaddingValues.Zero,
