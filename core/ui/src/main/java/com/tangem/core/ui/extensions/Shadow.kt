@@ -8,9 +8,21 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
+/**
+ * Draws a soft drop shadow behind the content.
+ *
+ * @param radius Blur size as authored in the design tool — a Figma / CSS `box-shadow` blur, i.e.
+ *   twice the Gaussian sigma. It is converted to the framework's blur radius internally. Values
+ *   too small to produce a visible blur render nothing.
+ * @param color Shadow color. Only its alpha and hue matter; the shape itself is never filled.
+ * @param shape Shape the shadow is cast from.
+ * @param spread Grows (positive) or shrinks (negative) the shadow relative to [shape].
+ * @param offset Shadow displacement.
+ * @param isAlphaContentClip Cuts [shape]'s own area out of the shadow. Enable it when the content
+ *   drawn on top is translucent, otherwise the blur shows through it.
+ */
 fun Modifier.softLayerShadow(
     radius: Dp = 8.dp,
     color: Color = Color.Black.copy(alpha = .23f),
@@ -19,10 +31,11 @@ fun Modifier.softLayerShadow(
     offset: DpOffset = DpOffset(x = 0.dp, y = 2.dp),
     isAlphaContentClip: Boolean = false,
 ): Modifier = this.drawWithCache {
-    val radiusPx = radius.toPx()
-    require(radiusPx > 0.0F)
+    val radiusPx = designBlurToShadowRadiusPx(radius.toPx())
+    if (radiusPx <= 0f) return@drawWithCache onDrawBehind {}
+
     val paint = Paint().apply {
-        this.color = color
+        this.color = color.copy(alpha = 0f)
 
         asFrameworkPaint().apply {
             isDither = true
@@ -38,7 +51,7 @@ fun Modifier.softLayerShadow(
     }
     val shapeOutline = shape.createOutline(
         size = size,
-        layoutDirection = LayoutDirection.Rtl,
+        layoutDirection = layoutDirection,
         density = this,
     )
     val shapePath = Path().apply {
@@ -85,6 +98,18 @@ fun Modifier.softLayerShadow(
 
 @Suppress("UnnecessaryParentheses")
 private fun spreadScale(spread: Float, size: Float): Float = 1.0F + ((spread / size) * 2.0F)
+
+/**
+ * Converts a design-tool blur value to the blur radius expected by `Paint.setShadowLayer`.
+ *
+ * A Figma / CSS `box-shadow` blur of `B` describes a Gaussian with `sigma = B / 2`, whereas the
+ * framework derives `sigma = 0.57735 * radius + 0.5`. Passing `B` straight through renders the
+ * shadow ~16% wider than designed.
+ */
+private fun designBlurToShadowRadiusPx(blurPx: Float): Float = (blurPx / 2f - BLUR_SIGMA_INTERCEPT) / BLUR_SIGMA_SLOPE
+
+private const val BLUR_SIGMA_SLOPE = 0.57735f
+private const val BLUR_SIGMA_INTERCEPT = 0.5f
 
 private fun DrawScope.clipShadowByPath(path: Path, block: DrawScope.() -> Unit) {
     clipPath(
