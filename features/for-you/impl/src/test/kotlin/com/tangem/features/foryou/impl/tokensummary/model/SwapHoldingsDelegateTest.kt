@@ -163,6 +163,45 @@ internal class SwapHoldingsDelegateTest {
             assertThat(delegate.state.value).isEqualTo(SwapHoldingsState.NotHeld)
             verify(exactly = 0) { getCryptoCurrencyActionsUseCase(any(), any(), any()) }
         }
+
+        @Test
+        fun `GIVEN the token is only held by a locked wallet WHEN resolved THEN it can only be added`() = runTest {
+            // Arrange — a swap cannot start from a wallet sitting behind the lock screen. The locked wallet's swap
+            // reason is stubbed on purpose: the holding must be dropped before the availability check, not stall on
+            // an unstubbed one
+            givenWallets(LOCKED_WALLET_ID, lockedIds = setOf(LOCKED_WALLET_ID))
+            givenPortfolios(LOCKED_WALLET_ID to listOf(loadedEthereum))
+            givenSwapReason(ScenarioUnavailabilityReason.None, walletId = LOCKED_WALLET_ID)
+            val delegate = createDelegate()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(delegate.state.value).isEqualTo(SwapHoldingsState.NotHeld)
+            verify(exactly = 0) { getCryptoCurrencyActionsUseCase(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the token is held by an unlocked and a locked wallet WHEN resolved THEN only the unlocked one is offered`() =
+            runTest {
+                // Arrange
+                givenWallets(WALLET_ID, LOCKED_WALLET_ID, lockedIds = setOf(LOCKED_WALLET_ID))
+                givenPortfolios(
+                    WALLET_ID to listOf(loadedEthereum),
+                    LOCKED_WALLET_ID to listOf(loadedEthereum),
+                )
+                // Stubbed so that a leaked locked holding would be reported as an extra offer rather than stall
+                givenSwapReason(ScenarioUnavailabilityReason.None, walletId = LOCKED_WALLET_ID)
+                val delegate = createDelegate()
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert — the chooser must not list the locked wallet's holding next to the reachable one
+                val expected = SwapHoldingsState.Resolved(holdings = listOf(holding(WALLET_ID, loadedEthereum)))
+                assertThat(delegate.state.value).isEqualTo(expected)
+            }
     }
 
     @Nested
@@ -364,7 +403,20 @@ internal class SwapHoldingsDelegateTest {
         }
     }
 
-    private fun givenWallets(vararg walletIds: UserWalletId) {
+    /**
+     * Declares which wallets the repository reports. Ids listed in [lockedIds] are reported as locked:
+     * [MockUserWalletFactory] builds unlocked wallets — `UserWallet.Cold.isLocked` is
+     * `scanResponse.card.wallets.isEmpty()` — so their card's wallets are emptied.
+     */
+    private fun givenWallets(vararg walletIds: UserWalletId, lockedIds: Set<UserWalletId> = emptySet()) {
+        lockedIds.forEach { id ->
+            val unlocked = MockUserWalletFactory.create().copy(walletId = id, isMultiCurrency = true)
+            wallets[id] = unlocked.copy(
+                scanResponse = unlocked.scanResponse.copy(
+                    card = unlocked.scanResponse.card.copy(wallets = emptyList()),
+                ),
+            )
+        }
         coEvery { userWalletsListRepository.userWalletsSync() } returns walletIds.map(::wallet)
     }
 
@@ -464,6 +516,7 @@ internal class SwapHoldingsDelegateTest {
     private companion object {
         val WALLET_ID = UserWalletId("01")
         val OTHER_WALLET_ID = UserWalletId("02")
+        val LOCKED_WALLET_ID = UserWalletId("03")
 
         fun loadedValue(amount: BigDecimal) = CryptoCurrencyStatus.Loaded(
             amount = amount,
