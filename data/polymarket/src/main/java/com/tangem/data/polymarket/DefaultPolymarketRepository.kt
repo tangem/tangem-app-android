@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
@@ -30,6 +31,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
 internal class DefaultPolymarketRepository @Inject constructor(
@@ -136,14 +138,18 @@ internal class DefaultPolymarketRepository @Inject constructor(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
     ): Either<PolymarketAuthError, Unit> = withContext(dispatchers.io) {
-        val headers = l2HeaderBuilder.build(
-            ownerAddress = ownerAddress,
-            credentials = credentials,
-            timestamp = (System.currentTimeMillis() / MILLIS_IN_SECOND).toString(),
-            method = HTTP_METHOD_GET,
-            requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
-        )
-        safeApiCall(
+        val headers = runCatching {
+            l2HeaderBuilder.build(
+                ownerAddress = ownerAddress,
+                credentials = credentials,
+                timestamp = (System.currentTimeMillis() / MILLIS_IN_SECOND).toString(),
+                method = HTTP_METHOD_GET,
+                requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
+            )
+        }.getOrNull() ?: return@withContext PolymarketAuthError.Unknown(httpCode = null, detail = null).left()
+
+        safeApiCallWithTimeout(
+            timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
             call = {
                 clobApi.updateBalanceAllowance(
                     headers = headers,
@@ -162,7 +168,11 @@ internal class DefaultPolymarketRepository @Inject constructor(
         const val MILLIS_IN_SECOND = 1_000L
         const val HTTP_METHOD_GET = "GET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"
+
+        /** Polymarket's signature type for a contract-owned deposit wallet (ERC-1271 verification), not a plain EOA. */
         const val SIGNATURE_TYPE_DEPOSIT_WALLET = 3
+
+        val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
 
         /** Signed by the HMAC without the query string, unlike the relative path Retrofit resolves. */
         const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance/update"
