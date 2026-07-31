@@ -287,6 +287,7 @@
   <string name="common_analytics">Análises</string>
   <string name="common_and">e</string>
   <string name="common_apply">Aplicar</string>
+  <string name="common_apply_selected">Aplicar os selecionados</string>
   <string name="common_approval">Aprovação</string>
   <string name="common_approve">Aprovar</string>
   <string name="common_approved">Aprovado</string>
@@ -473,6 +474,7 @@
   <string name="common_second_no_param">segundos</string>
   <string name="common_see_all">Veja tudo</string>
   <string name="common_seed_phrase">Frase-semente</string>
+  <string name="common_select_account">Selecione a conta</string>
   <string name="common_select_action">Selecione a ação</string>
   <string name="common_sell">Vender</string>
   <string name="common_send">Enviar</string>
@@ -1864,7 +1866,7 @@
   <string name="tangem_pay_terms_fees_limits">Termos, taxas e limites</string>
   <string name="tangem_pay_terms_limits">Termos e Limites</string>
   <string name="tangem_pay_transaction_declined_notification_text">O banco rejeitou esta solicitação de transação.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">O valor mínimo da transação é %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Transação mínima: %1$s</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">O limite mensal foi atingido.</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluído</string>
   <string name="tangem_pay_transaction_details_cashback_none">Sem reembolso</string>
@@ -1890,7 +1892,7 @@
   <string name="tangempay_bank_transfer_fee_header">Taxa de acesso à rampa</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Os USD recebidos serão convertidos para USDC na proporção de 1:1.</string>
   <string name="tangempay_bank_transfer_intro_title">A transferência bancária pode levar de 1 a 2 dias úteis</string>
-  <string name="tangempay_bank_transfer_legal">Ao utilizar o serviço, você concorda com o provedor. %1$s e %2$s</string>
+  <string name="tangempay_bank_transfer_legal">Ao utilizar o serviço, você concorda com o %1$s</string>
   <string name="tangempay_bank_transfer_show_details">Mostrar detalhes</string>
   <string name="tangempay_bank_transfer_success_subtitle">Isso pode levar um pouco de tempo.</string>
   <string name="tangempay_bank_transfer_success_title">Preparando seus dados bancários</string>
@@ -1929,6 +1931,9 @@
   <string name="tangempay_card_details_open_wallet_title">Adicionar cartão ao Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Adicionar cartão ao Apple Pay</string>
   <string name="tangempay_card_details_pin_code">Código PIN</string>
+  <string name="tangempay_card_details_protection_not_set_button">Definir bloqueio de tela</string>
+  <string name="tangempay_card_details_protection_not_set_description">Sem bloqueio de tela, os dados do cartão ficam ocultos.\nAtive-o nas configurações do dispositivo.</string>
+  <string name="tangempay_card_details_protection_not_set_title">Bloqueio de tela não definido</string>
   <string name="tangempay_card_details_receive_error_description">Problemas técnicos detectados. Tente novamente mais tarde ou entre em contato com o suporte.</string>
   <string name="tangempay_card_details_receive_error_title">Receber indisponível agora</string>
   <string name="tangempay_card_details_reissue_card">Substituir cartão</string>
@@ -1998,6 +2003,10 @@
   <string name="tangempay_cashback_widget_title">%1$s cashback em %2$s</string>
   <string name="tangempay_change_pin_code">Alterar código PIN</string>
   <string name="tangempay_changing_plan">Alterar seu plano</string>
+  <string name="tangempay_choose_network_fast_way">Caminho rápido</string>
+  <string name="tangempay_choose_network_other_ways">Outras maneiras</string>
+  <string name="tangempay_choose_network_row_error">Não foi possível obter o endereço. Tente novamente.</string>
+  <string name="tangempay_choose_network_row_loading">Preparando o endereço…</string>
   <string name="tangempay_come_back_if_forget_pin">Volte ao aplicativo se você se esquecer.</string>
   <string name="tangempay_common_card">Cartão</string>
   <string name="tangempay_common_error_loading">Erro ao carregar</string>
@@ -2101,6 +2110,9 @@
   <string name="tangempay_onboarding_setup_wallet_description">E vincularemos o Tangem Pay a essa carteira</string>
   <string name="tangempay_onboarding_setup_wallet_title">Vamos configurar uma carteira</string>
   <string name="tangempay_onboarding_title">Obtenha seu cartão Tangem Pay em minutos</string>
+  <string name="tangempay_other_networks_header">Outras redes</string>
+  <string name="tangempay_other_networks_subtitle">Em seguida, transfira para uma conta de pagamento com taxa de câmbio de 1:1 e sem tarifas.</string>
+  <string name="tangempay_other_networks_title">Envie USDT/USDC de qualquer blockchain para sua carteira Tangem.</string>
   <string name="tangempay_pay_support">Suporte de Pay</string>
   <string name="tangempay_payment_account">Conta de pagamento</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sessão expirada</string>
@@ -2129,7 +2141,7 @@
   <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s A taxa mensal será debitada da sua conta.</string>
   <string name="tangempay_select_plan_confirm_point_move_on_date">Sobre %1$s nós o transferiremos para %2$s plano</string>
   <string name="tangempay_select_plan_confirm_point_no_fee">Nenhuma taxa será cobrada.</string>
-  <string name="tangempay_select_plan_confirm_point_virtual_card">Você receberá sua versão virtual. %1$s em minutos</string>
+  <string name="tangempay_select_plan_confirm_point_virtual_card">Você receberá sua versão virtual %1$s em minutos</string>
   <string name="tangempay_select_plan_confirm_switch_title">Você está mudando para %1$s</string>
   <string name="tangempay_select_plan_confirm_title">Confirmar seleção</string>
   <string name="tangempay_select_plan_confirm_upgrade_title">Iremos emitir %1$s para você</string>
@@ -2153,6 +2165,7 @@
   <string name="tangempay_topup_bank_transfer_body">Receba USD fiduciário via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">Transferência bancária</string>
   <string name="tangempay_topup_receive_body">Envie USDC Polygon para o endereço da sua conta</string>
+  <string name="tangempay_topup_receive_body_multichain">Envie USDC ou USDT para o endereço da sua conta.</string>
   <string name="tangempay_topup_receive_title">De outra carteira ou exchange</string>
   <string name="tangempay_topup_swap_body">Recarregue sua conta com qualquer token da carteira</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
@@ -2209,6 +2222,7 @@
   <string name="token_summary_last_update_subtitle">Última atualização: %1$s</string>
   <string name="token_summary_negative_outlook_title">Perspectiva negativa</string>
   <string name="token_summary_neutral_outlook_title">Perspectiva neutra</string>
+  <string name="token_summary_outlook_is_not_available">O Outlook para este token não está disponível.</string>
   <string name="token_summary_positive_outlook_title">Perspectiva positiva</string>
   <string name="token_summary_title">Resumo do token</string>
   <string name="token_swap_changelly_promotion_message">Troque este token por outro em %1$s taxas de serviço a partir de fevereiro %2$s-%3$s.</string>
@@ -2221,6 +2235,8 @@
   <string name="tokens_list_unavailable_to_swap_source_header">Indisponível para troca</string>
   <string name="transaction_history_claiming_reward">Reivindicar recompensa</string>
   <string name="transaction_history_contract_address">contrato: %s</string>
+  <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
+  <string name="transaction_history_detail_page_amount_value" formatted="false">%1s %2s</string>
   <string name="transaction_history_disabling_yield_mode">Desativar o modo Yield</string>
   <string name="transaction_history_earned_from_stake">Ganhos com participação</string>
   <string name="transaction_history_empty_transactions">Você ainda não possui nenhuma transação.</string>
@@ -2257,6 +2273,12 @@
   <string name="twins_recreate_toolbar">Gêmeo Tangem</string>
   <string name="twins_recreate_warning">Essa ação é irreversível. Você não terá mais acesso à sua carteira antiga.</string>
   <string name="twins_scan_twin_with_number">Toque no cartão gêmeo com o número %s e não remova até o final da operação.</string>
+  <string name="tx_history_details_status_expired">Expirado</string>
+  <string name="tx_history_onramp_status_awaiting_funds">Aguardando fundos</string>
+  <string name="tx_history_onramp_status_failed">Falha</string>
+  <string name="tx_history_onramp_status_paused">Em pausa</string>
+  <string name="tx_history_onramp_status_refunded">Reembolsado</string>
+  <string name="tx_history_onramp_status_refunding">Reembolso</string>
   <string name="tx_history_onramp_top_up">Recarregar</string>
   <string name="tx_history_onramp_topped_up">Recarregado</string>
   <string name="tx_history_you_paid">Você pagou</string>
