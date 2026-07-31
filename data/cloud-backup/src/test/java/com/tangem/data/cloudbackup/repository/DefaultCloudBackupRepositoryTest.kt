@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.cloudbackup.CloudBackupJson
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
 import com.tangem.data.cloudbackup.crypto.CloudBackupFileData
@@ -48,12 +49,15 @@ internal class DefaultCloudBackupRepositoryTest {
     // don't pay the Argon2 cost and stay focused on the Drive API orchestration + error mapping.
     private val cipher: CloudBackupCipher = mockk()
 
+    private val featureTogglesManager: FeatureTogglesManager = mockk()
+
     private val repository = DefaultCloudBackupRepository(
         api = api,
         tokenProvider = tokenProvider,
         store = store,
         cipher = cipher,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        featureTogglesManager = featureTogglesManager,
     )
 
     private val secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false)
@@ -80,9 +84,10 @@ internal class DefaultCloudBackupRepositoryTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(api, tokenProvider, cipher)
+        clearMocks(api, tokenProvider, cipher, featureTogglesManager)
         coEvery { tokenProvider.getAccessToken(any()) } returns "token".right()
         every { cipher.encrypt(any(), any(), any(), any()) } returns fileData
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
     }
 
     @Test
@@ -157,6 +162,17 @@ internal class DefaultCloudBackupRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(CloudBackupError.InvalidBackupFile.left())
+    }
+
+    @Test
+    fun `GIVEN feature disabled WHEN isBackedUp THEN returns false despite the stored flag`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
+        store.setBackedUp(WALLET_ID, backedUp = true)
+
+        // Act & Assert
+        assertThat(repository.isBackedUp(WALLET_ID)).isFalse()
+        assertThat(repository.isBackedUpFlow(WALLET_ID).first()).isFalse()
     }
 
     @Test
