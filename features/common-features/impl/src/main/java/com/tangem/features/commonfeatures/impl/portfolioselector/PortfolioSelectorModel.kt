@@ -292,7 +292,7 @@ internal class PortfolioSelectorModel @Inject constructor(
             name = resourceReference(R.string.common_locked_wallets),
             deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
             isSelected = false,
-            onClick = {},
+            onClick = null,
         )
 
         return listOf(lockedWalletsTitle) + wallets
