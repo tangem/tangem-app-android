@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -38,7 +39,8 @@ import dev.chrisbanes.haze.HazeTint
  * Rendering modes:
  * - **Flat** (`isMaterial = false`, default): a solid [color] background clipped to [shape].
  * - **Material** (`isMaterial = true`): the [color] parameter is ignored. The surface adds a soft
- *   drop shadow and a gradient stroke (`material.border`), then renders a haze-blurred backdrop
+ *   drop shadow (omitted on dark backdrops, where it is not representable in 8 bits and would show
+ *   as a banding ring) and a gradient stroke (`material.border`), then renders a haze-blurred backdrop
  *   tinted with `material.fill.blur`. When `LocalHazeState.blurEnabled` is `false` (e.g.
  *   previews, low-end devices), the surface falls back to opaque `material.fill.solid` overlaid
  *   with translucent `material.tint.solid` so both layers remain visible.
@@ -57,6 +59,8 @@ import dev.chrisbanes.haze.HazeTint
  * @param onClick Click handler. `null` makes the surface non-interactive.
  * @param enabled Forwarded to the click handler.
 
+ * @param shadowRadius Blur size of the material drop shadow, expressed as a Figma `box-shadow`
+ *   blur. Ignored when [isMaterial] is `false`.
  * @param content Content rendered inside the clipped surface.
  */
 @Suppress("UnsafeCallOnNullableType", "")
@@ -118,16 +122,32 @@ fun TangemSurface(
  */
 @Composable
 private fun Modifier.materialShadow(shape: Shape, radius: Dp): Modifier {
+    // Approximates the backdrop: a material surface sitting on a non-root background keeps the
+    // root's verdict, which is accurate enough since only near-black backgrounds are rejected.
+    val backdrop by LocalRootBackgroundColor.current
+    if (!backdrop.canRenderShadow(MATERIAL_SHADOW_ALPHA)) return this
+
     val isBlurEnabled = LocalHazeState.current.blurEnabled
     return softLayerShadow(
         radius = radius,
-        color = Color.Black.copy(alpha = 0.12f),
+        color = Color.Black.copy(alpha = MATERIAL_SHADOW_ALPHA),
         shape = shape,
         spread = 0.dp,
         offset = DpOffset(x = 0.dp, y = 8.dp),
         isAlphaContentClip = isBlurEnabled,
     )
 }
+
+/**
+ * Whether a black shadow of [shadowAlpha] is representable over this color, i.e. whether it spans
+ * at least [MIN_SHADOW_QUANTIZATION_STEPS] steps of the 8-bit channel range.
+ */
+private fun Color.canRenderShadow(shadowAlpha: Float): Boolean =
+    maxOf(red, green, blue) * shadowAlpha * MAX_CHANNEL_VALUE >= MIN_SHADOW_QUANTIZATION_STEPS
+
+private const val MATERIAL_SHADOW_ALPHA = 0.12f
+private const val MIN_SHADOW_QUANTIZATION_STEPS = 3f
+private const val MAX_CHANNEL_VALUE = 255f
 
 /** Diagonal gradient stroke that wraps the material variant. */
 @Composable
