@@ -312,6 +312,9 @@ internal class DefaultPolymarketRepositoryTest {
             val timestamp = headers.captured.getValue("POLY_TIMESTAMP")
             assertThat(headers.captured["POLY_SIGNATURE"])
                 .isEqualTo(hmac(timestamp + "GET" + "/balance-allowance/update"))
+            val nowSeconds = System.currentTimeMillis() / 1_000L
+            assertThat(timestamp.toLong()).isAtLeast(nowSeconds - TIMESTAMP_TOLERANCE_SECONDS)
+            assertThat(timestamp.toLong()).isAtMost(nowSeconds + TIMESTAMP_TOLERANCE_SECONDS)
         }
 
     @Test
@@ -343,6 +346,7 @@ internal class DefaultPolymarketRepositoryTest {
         ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<T>
 
     private companion object {
+        const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
