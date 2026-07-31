@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -144,7 +145,13 @@ class RunPolymarketOnboardingUseCase(
 
     /** Best-effort refresh of the CLOB's cached balance and allowance; onboarding is complete either way. */
     private suspend fun primeBalanceCache(addresses: PolymarketAddresses, credentials: PolymarketApiCredentials) {
-        syncBalanceAllowance(ownerAddress = addresses.ownerAddress, credentials = credentials)
+        try {
+            syncBalanceAllowance(ownerAddress = addresses.ownerAddress, credentials = credentials)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (ignored: Throwable) {
+            return
+        }
     }
 
     private suspend fun <T> FlowCollector<PolymarketOnboardingProgress>.step(
