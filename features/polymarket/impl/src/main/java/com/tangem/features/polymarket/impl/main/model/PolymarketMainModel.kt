@@ -4,7 +4,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
@@ -37,11 +36,11 @@ internal class PolymarketMainModel @Inject constructor(
     private val getPolymarketEventsUseCase: GetPolymarketEventsUseCase,
 ) : Model() {
 
-    private val accessMode = paramsContainer.require<PolymarketAccessMode>()
+    private val params = paramsContainer.require<PolymarketMainParams>()
 
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
-            PolymarketMainUM(accessMode = accessMode, content = PolymarketMainUM.ContentUM.Loading),
+            PolymarketMainUM(accessMode = params.accessMode, content = PolymarketMainUM.ContentUM.Loading),
         )
 
     private val converter = PolymarketEventUMConverter(

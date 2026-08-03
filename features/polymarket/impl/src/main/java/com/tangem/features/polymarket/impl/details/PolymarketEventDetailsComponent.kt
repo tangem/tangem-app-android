@@ -19,6 +19,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionConfig
 
@@ -27,10 +28,14 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionConfig
  *
  * Hosts a `childSlot` for the Place-prediction bottom sheet; its [SlotNavigation] lives directly in the component
  * since this stub has no dedicated model yet.
+ *
+ * @param userWalletId wallet the feature was opened for. Carried for the real screen, which will need it for
+ *  balances and signing. Nothing reads it yet — this stub has no model.
  */
 internal class PolymarketEventDetailsComponent(
     appComponentContext: AppComponentContext,
     private val eventId: String,
+    @Suppress("UnusedPrivateProperty") private val userWalletId: UserWalletId,
     private val marketId: String? = null,
     private val assetId: String? = null,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {

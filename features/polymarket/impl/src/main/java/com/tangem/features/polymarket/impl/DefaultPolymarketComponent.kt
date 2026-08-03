@@ -84,11 +84,13 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         )
         is PolymarketRoute.Main -> PolymarketMainComponent(
             appComponentContext = factoryContext,
+            userWalletId = params.userWalletId,
             accessMode = configuration.accessMode,
         )
         is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
             appComponentContext = factoryContext,
             eventId = configuration.eventId,
+            userWalletId = params.userWalletId,
             marketId = configuration.marketId,
             assetId = configuration.assetId,
         )
