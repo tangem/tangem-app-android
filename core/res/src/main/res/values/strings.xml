@@ -1431,6 +1431,8 @@
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
   <string name="prediction_account_title">Prediction account</string>
+  <string name="prediction_region_restrictions_subtitle">Predictions – not supported in your region, you still can view events</string>
+  <string name="prediction_region_restrictions_title">Region restrictions</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
   <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
