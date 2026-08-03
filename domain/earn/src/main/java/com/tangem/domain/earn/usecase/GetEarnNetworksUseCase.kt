@@ -1,6 +1,5 @@
 package com.tangem.domain.earn.usecase
 
-import arrow.core.Either
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -26,7 +25,8 @@ class GetEarnNetworksUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
-    operator fun invoke(): Flow<EarnNetworks> {
+    /** Emits `null` until the networks are loaded, so callers can tell it apart from a loaded empty list */
+    operator fun invoke(): Flow<EarnNetworks?> {
         return combine(
             earnRepository.observeEarnNetworks(),
             observeMyNetworkIds(),
@@ -35,7 +35,7 @@ class GetEarnNetworksUseCase(
                 earnNetworks.map { network ->
                     network.copy(isAdded = network.networkId in myNetworkIds)
                 }
-            } ?: Either.Right(emptyList())
+            }
         }.distinctUntilChanged()
     }
 

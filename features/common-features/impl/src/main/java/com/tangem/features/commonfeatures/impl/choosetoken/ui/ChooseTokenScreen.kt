@@ -535,9 +535,9 @@ private fun AccountRow(
                     AccountRowComposables(
                         icon = { iconModifier ->
                             val iconSize = if (isExpandedState) {
-                                AccountIconSize.RedesignExtraSmall
+                                AccountIconSize.ExtraSmall
                             } else {
-                                AccountIconSize.RedesignedDefault
+                                AccountIconSize.Default
                             }
                             val sizedIcon = when (val icon = tokenRowUM.headIconUM) {
                                 is TangemIconUM.Currency -> icon.copy(

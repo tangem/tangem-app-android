@@ -1,7 +1,6 @@
 package com.tangem.features.feed.model.earn
 
 import androidx.compose.runtime.Stable
-import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -68,7 +67,7 @@ internal class EarnModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultEarnComponent.Params>()
-    private val earnNetworks = MutableStateFlow<EarnNetworks>(Either.Right(emptyList()))
+    private val earnNetworks = MutableStateFlow<EarnNetworks?>(null)
     private val earnListConfigProvider = Provider {
         createEarnTokensListConfig(
             selectedTypeFilter = stateController.value.earnFilterUM.selectedTypeFilter,
@@ -131,10 +130,10 @@ internal class EarnModel @Inject constructor(
         )
     }
 
-    private fun EarnFilter.resolveAgainst(networks: EarnNetworks): EarnFilter {
+    private fun EarnFilter.resolveAgainst(networks: EarnNetworks?): EarnFilter {
         val specific = earnFilterNetwork as? EarnFilterNetwork.Specific ?: return this
         if (specific.symbol.isNotEmpty()) return this
-        val loaded = networks.getOrNull()?.takeIf { it.isNotEmpty() } ?: return this
+        val loaded = networks?.getOrNull()?.takeIf { it.isNotEmpty() } ?: return this
         val match = loaded.firstOrNull { it.networkId.equals(specific.id, ignoreCase = true) }
         return copy(
             earnFilterNetwork = match?.let { earnNetwork ->
@@ -230,7 +229,7 @@ internal class EarnModel @Inject constructor(
 
     private fun reloadEarnNetworks() {
         modelScope.launch(dispatchers.default) {
-            if (earnNetworks.value.isLeft()) {
+            if (earnNetworks.value?.isLeft() != false) {
                 fetchEarnNetworks()
             }
         }
@@ -275,7 +274,7 @@ internal class EarnModel @Inject constructor(
                     isSelected = selectedFilter is EarnFilterNetworkUM.MyNetworks,
                 ),
             )
-            earnNetworks.value.onRight { networks ->
+            earnNetworks.value?.onRight { networks ->
                 networks.mapTo(this) { network ->
                     EarnFilterNetwork.Specific(
                         id = network.networkId,

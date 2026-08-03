@@ -105,7 +105,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverter(
         return TangemTokenRowUM.Content(
             id = account.accountId.value,
             headIconUM = TangemIconUM.Currency(
-                currencyIconState = AccountIconItemStateConverter(size = AccountIconSize.RedesignedDefault)
+                currencyIconState = AccountIconItemStateConverter(size = AccountIconSize.Default)
                     .convert(account),
             ),
             titleUM = TangemTokenRowUM.TitleUM.Content(
