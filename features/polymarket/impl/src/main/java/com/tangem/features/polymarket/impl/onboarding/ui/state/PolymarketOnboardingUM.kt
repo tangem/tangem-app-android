@@ -18,5 +18,10 @@ internal sealed interface PolymarketOnboardingUM {
     /** The region forbids trading and there is no wallet to fall back to — the sheet is shown over this. */
     data object RegionBlocked : PolymarketOnboardingUM
 
+    /**
+     * The entry decision could not be resolved, so the region is unknown. The gate holds here rather than
+     * falling through to the feed or to onboarding — an unresolved region must never be read as permission to
+     * trade — and the only way forward is [onRetryClick].
+     */
     data class Failed(val onRetryClick: () -> Unit) : PolymarketOnboardingUM
 }
