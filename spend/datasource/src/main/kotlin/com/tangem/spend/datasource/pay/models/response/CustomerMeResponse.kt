@@ -150,6 +150,9 @@ data class CustomerMeResponse(
         @Json(name = "risk") val risk: String,
         @Json(name = "review_answer") val reviewAnswer: String,
         @Json(name = "created_at") val createdAt: String,
+        @Json(name = "country") val country: String? = null,
+        @Json(name = "phone_mask") val phoneMask: String? = null,
+        @Json(name = "email") val email: String? = null,
     )
 
     @JsonClass(generateAdapter = true)
