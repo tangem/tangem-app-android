@@ -79,17 +79,12 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onEventClick(eventId: String) {
-        router.push(PolymarketRoute.EventDetails(eventId = eventId, accessMode = accessMode))
+        router.push(PolymarketRoute.EventDetails(eventId = eventId))
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
         router.push(
-            PolymarketRoute.EventDetails(
-                eventId = eventId,
-                marketId = marketId,
-                assetId = assetId,
-                accessMode = accessMode,
-            ),
+            PolymarketRoute.EventDetails(eventId = eventId, marketId = marketId, assetId = assetId),
         )
     }
 }
