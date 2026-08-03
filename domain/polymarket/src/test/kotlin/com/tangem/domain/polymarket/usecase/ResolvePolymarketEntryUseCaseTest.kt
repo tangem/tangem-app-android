@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketEntry
@@ -88,7 +89,7 @@ internal class ResolvePolymarketEntryUseCaseTest {
             isBlocked = false,
             depositWalletAddress = "0xDeposit",
             status = PolymarketWalletStatus.READY_TO_TRADE,
-            expected = PolymarketEntry.Trade,
+            expected = PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING),
         ),
         ResolveModel(
             isBlocked = true,
@@ -100,19 +101,19 @@ internal class ResolvePolymarketEntryUseCaseTest {
             isBlocked = true,
             depositWalletAddress = "0xDeposit",
             status = PolymarketWalletStatus.READY_TO_TRADE,
-            expected = PolymarketEntry.ReadOnly,
+            expected = PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY),
         ),
         ResolveModel(
             isBlocked = true,
             depositWalletAddress = "0xDeposit",
             status = PolymarketWalletStatus.DEPLOYED,
-            expected = PolymarketEntry.ReadOnly,
+            expected = PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY),
         ),
         ResolveModel(
             isBlocked = true,
             depositWalletAddress = "0xDeposit",
             status = PolymarketWalletStatus.APPROVALS_FAILED,
-            expected = PolymarketEntry.ReadOnly,
+            expected = PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY),
         ),
     )
 
