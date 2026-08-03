@@ -19,6 +19,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionConfig
 
@@ -33,6 +34,7 @@ internal class PolymarketEventDetailsComponent(
     private val eventId: String,
     private val marketId: String? = null,
     private val assetId: String? = null,
+    private val accessMode: PolymarketAccessMode,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val slotNavigation = SlotNavigation<PlacePredictionConfig>()
@@ -64,10 +66,12 @@ internal class PolymarketEventDetailsComponent(
             if (marketId != null) {
                 Text(text = "Preselected: $marketId / $assetId")
             }
-            Text(
-                text = "Place prediction",
-                modifier = Modifier.clickable(onClick = ::onPlacePrediction),
-            )
+            if (accessMode == PolymarketAccessMode.TRADING) {
+                Text(
+                    text = "Place prediction",
+                    modifier = Modifier.clickable(onClick = ::onPlacePrediction),
+                )
+            }
         }
 
         slotState.child?.instance?.BottomSheet()
