@@ -12,6 +12,7 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -76,7 +77,21 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
             params = TangemPayOrderCardTypeComponent.Params(
                 userWalletId = params.userWalletId,
                 onSelectVirtual = model::onSelectVirtual,
-                onSelectPlastic = {},
+                onSelectPlastic = { stackNavigation.pushNew(TangemPayOrderCardInnerRoute.Data) },
+            ),
+        )
+        TangemPayOrderCardInnerRoute.Data -> TangemPayOrderCardDataComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayOrderCardDataComponent.Params(
+                userWalletId = params.userWalletId,
+                onOrderSubmitted = { stackNavigation.pushNew(TangemPayOrderCardInnerRoute.Success) },
+                onClose = { router.pop() },
+            ),
+        )
+        TangemPayOrderCardInnerRoute.Success -> TangemPayOrderCardSuccessComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayOrderCardSuccessComponent.Params(
+                onDone = { router.pop() },
             ),
         )
     }
