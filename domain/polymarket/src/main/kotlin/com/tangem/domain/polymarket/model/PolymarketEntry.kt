@@ -12,11 +12,12 @@ sealed interface PolymarketEntry {
      */
     data class Onboard(val status: PolymarketWalletStatus) : PolymarketEntry
 
-    /** The region allows trading and the deposit wallet is ready. */
-    data object Trade : PolymarketEntry
-
-    /** The region forbids trading, but a deposit wallet exists — it stays viewable and withdrawable. */
-    data object ReadOnly : PolymarketEntry
+    /**
+     * Onboarding is complete and the feed is reachable. [accessMode] carries whether trading is permitted:
+     * a region that forbids trading still leaves an existing deposit wallet viewable and withdrawable, so
+     * it resolves here rather than being turned away.
+     */
+    data class Onboarded(val accessMode: PolymarketAccessMode) : PolymarketEntry
 
     /** The region forbids trading and there is no deposit wallet to fall back to. */
     data object RegionBlocked : PolymarketEntry
