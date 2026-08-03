@@ -45,25 +45,25 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
         derivationPath: Network.DerivationPath,
     ): Flow<Set<CryptoCurrencyWarning>> {
         val currency = currencyStatus.currency
+        val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)
 
         // don't add here notifications that require async requests
         return combine(
             flow = getCoinRelatedWarnings(
                 userWalletId = userWalletId,
                 currency = currency,
+                existentialDeposit = existentialDeposit,
             ),
             flow2 = flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
-            flow3 = flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
-            flow4 = flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
-            flow5 = if (currency is CryptoCurrency.Coin) {
+            flow3 = flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
+            flow4 = if (currency is CryptoCurrency.Coin) {
                 dynamicAddressesRepository.hasFundsOnAdditionalAddresses(userWalletId, currency.network)
             } else {
                 flowOf(false)
             },
-        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource, hasExtraFunds ->
+        ) { coinRelatedWarnings, maybeRentWarning, maybeFeeResource, hasExtraFunds ->
             setOfNotNull(
                 maybeRentWarning,
-                maybeEdWarning?.let { getExistentialDepositWarning(currency, it) },
                 maybeFeeResource?.let { getFeeResourceWarning(it) },
                 *coinRelatedWarnings.toTypedArray(),
                 getNetworkUnavailableWarning(currencyStatus),
@@ -80,6 +80,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     private suspend fun getCoinRelatedWarnings(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
+        existentialDeposit: BigDecimal?,
     ): Flow<List<CryptoCurrencyWarning>> {
         return singleAccountStatusListSupplier(userWalletId)
             .map { accountStatusList ->
@@ -99,6 +100,10 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
                             userWalletId = userWalletId,
                             coinStatus = coinStatus,
                             tokenStatus = tokenStatus,
+                        ),
+                        getExistentialDepositWarning(
+                            coinStatus = coinStatus,
+                            existentialDeposit = existentialDeposit,
                         ),
                     )
                 } else {
@@ -209,12 +214,19 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     }
 
     private fun getExistentialDepositWarning(
-        currency: CryptoCurrency,
-        amount: BigDecimal,
-    ): CryptoCurrencyWarning.ExistentialDeposit {
+        coinStatus: CryptoCurrencyStatus,
+        existentialDeposit: BigDecimal?,
+    ): CryptoCurrencyWarning.ExistentialDeposit? {
+        if (existentialDeposit == null) return null
+
+        val coinAmount = coinStatus.value.amount ?: return null
+        if (coinAmount > existentialDeposit) return null
+
+        val coin = coinStatus.currency
+
         return CryptoCurrencyWarning.ExistentialDeposit(
-            currencyName = currency.name,
-            edStringValueWithSymbol = "${amount.toPlainString()} ${currency.symbol}",
+            currencyName = coin.name,
+            edStringValueWithSymbol = "${existentialDeposit.toPlainString()} ${coin.symbol}",
         )
     }
 
