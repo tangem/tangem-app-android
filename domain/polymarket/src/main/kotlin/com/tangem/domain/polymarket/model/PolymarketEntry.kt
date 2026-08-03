@@ -8,7 +8,8 @@ sealed interface PolymarketEntry {
 
     /**
      * The region allows trading and onboarding is unfinished. [status] tells the caller which action is
-     * still owed, so the action button can be labelled without a second read.
+     * still owed, so the action button can be labelled without a second read. Nothing reads it yet — the
+     * onboarding model maps every [Onboard] onto a single Welcome state regardless of [status].
      */
     data class Onboard(val status: PolymarketWalletStatus) : PolymarketEntry
 

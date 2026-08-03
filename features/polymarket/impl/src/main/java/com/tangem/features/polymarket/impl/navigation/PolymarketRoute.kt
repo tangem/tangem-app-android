@@ -17,8 +17,10 @@ internal sealed interface PolymarketRoute : Route {
     /**
      * Discovery feed — reached once [Onboarding] resolves the entry decision.
      *
-     * @property accessMode whether trading is permitted; [PolymarketAccessMode.READ_ONLY] renders the
-     *  region-restrictions banner and withholds trading affordances
+     * @property accessMode whether trading is permitted. Nothing downstream reads it yet — the feed is
+     *  identical in every region and the place-prediction flow is still a stub. It is carried so the
+     *  account screen inherits the decision, and so the real place-prediction flow can refuse
+     *  [PolymarketAccessMode.READ_ONLY] without re-deriving it.
      */
     data class Main(val accessMode: PolymarketAccessMode) : PolymarketRoute
 
