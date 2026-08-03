@@ -264,7 +264,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, shouldShowTangemPayBlock)
             shouldShowTangemPayBlock
         }.mapLeft { error ->
-            if (error is VisaApiError.NotPaeraCustomer) {
+            if (error is VisaApiError.NotFound) {
                 tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, false)
             }
             error
