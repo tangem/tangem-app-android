@@ -8,9 +8,11 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ModelsEntryPoint
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
+import com.tangem.features.polymarket.impl.main.model.PolymarketMainParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import dagger.hilt.EntryPoints
 import io.mockk.CapturingSlot
@@ -25,14 +27,15 @@ import javax.inject.Provider
 
 /**
  * The feed is reached only after the gate resolves an access mode, so a model it cannot construct crashes the
- * feature on open. Its model reads [PolymarketAccessMode] out of the params container, which only reaches it if
- * the component hands the access mode to `getOrCreateModel`.
+ * feature on open. Its model reads [PolymarketMainParams] out of the params container, which only reaches it if
+ * the component hands the params to `getOrCreateModel`.
  */
 internal class PolymarketMainComponentTest {
 
     private val router: Router = mockk(relaxed = true)
     private val getPolymarketEventsUseCase = GetPolymarketEventsUseCase()
 
+    private val userWalletId = UserWalletId("011")
     private val accessMode = PolymarketAccessMode.READ_ONLY
 
     @AfterEach
@@ -41,16 +44,21 @@ internal class PolymarketMainComponentTest {
     }
 
     @Test
-    fun `GIVEN the feed is created WHEN its model is resolved THEN the access mode is handed over`() {
+    fun `GIVEN the feed is created WHEN its model is resolved THEN the params are handed over`() {
         // Arrange
         val paramsContainerSlot = slot<ParamsContainer>()
         val appComponentContext = createAppComponentContext(paramsContainerSlot = paramsContainerSlot)
 
         // Act
-        PolymarketMainComponent(appComponentContext = appComponentContext, accessMode = accessMode)
+        PolymarketMainComponent(
+            appComponentContext = appComponentContext,
+            userWalletId = userWalletId,
+            accessMode = accessMode,
+        )
 
         // Assert
-        assertThat(paramsContainerSlot.captured.require<PolymarketAccessMode>()).isEqualTo(accessMode)
+        assertThat(paramsContainerSlot.captured.require<PolymarketMainParams>())
+            .isEqualTo(PolymarketMainParams(userWalletId = userWalletId, accessMode = accessMode))
     }
 
     private fun createAppComponentContext(paramsContainerSlot: CapturingSlot<ParamsContainer>): AppComponentContext {
