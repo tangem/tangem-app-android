@@ -2,19 +2,34 @@ package com.tangem.features.polymarket.impl.main.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import kotlinx.collections.immutable.ImmutableList
 
-/** State of the Discovery feed screen. */
+/**
+ * State of the Discovery feed screen.
+ *
+ * @property accessMode what the user may do here. Nothing on this screen reads it yet — the feed looks the
+ *  same in every region. It is carried so the account screen, which renders the region-restrictions banner,
+ *  inherits it without re-deriving the decision.
+ * @property content the loading phase, which changes independently of [accessMode]
+ */
 @Immutable
-internal sealed interface PolymarketMainUM {
+internal data class PolymarketMainUM(
+    val accessMode: PolymarketAccessMode,
+    val content: ContentUM,
+) {
 
-    data object Loading : PolymarketMainUM
+    @Immutable
+    internal sealed interface ContentUM {
 
-    data class Content(val events: ImmutableList<PolymarketEventUM>) : PolymarketMainUM
+        data object Loading : ContentUM
 
-    data object Empty : PolymarketMainUM
+        data class Content(val events: ImmutableList<PolymarketEventUM>) : ContentUM
 
-    data class Error(val onRetryClick: () -> Unit) : PolymarketMainUM
+        data object Empty : ContentUM
+
+        data class Error(val onRetryClick: () -> Unit) : ContentUM
+    }
 }
 
 /**

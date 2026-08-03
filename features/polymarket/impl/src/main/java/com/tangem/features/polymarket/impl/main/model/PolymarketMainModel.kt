@@ -15,6 +15,7 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -39,7 +40,9 @@ internal class PolymarketMainModel @Inject constructor(
     private val accessMode = paramsContainer.require<PolymarketAccessMode>()
 
     val uiState: StateFlow<PolymarketMainUM>
-        field = MutableStateFlow<PolymarketMainUM>(PolymarketMainUM.Loading)
+        field = MutableStateFlow(
+            PolymarketMainUM(accessMode = accessMode, content = PolymarketMainUM.ContentUM.Loading),
+        )
 
     private val converter = PolymarketEventUMConverter(
         onEventClick = ::onEventClick,
@@ -54,22 +57,24 @@ internal class PolymarketMainModel @Inject constructor(
 
     private fun loadEvents() {
         modelScope.launch {
-            uiState.value = PolymarketMainUM.Loading
+            uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
 
-            val newState = withContext(dispatchers.default) {
+            val newContent = withContext(dispatchers.default) {
                 getPolymarketEventsUseCase().fold(
-                    ifLeft = { PolymarketMainUM.Error(onRetryClick = ::loadEvents) },
+                    ifLeft = { PolymarketMainUM.ContentUM.Error(onRetryClick = ::loadEvents) },
                     ifRight = { events ->
                         if (events.isEmpty()) {
-                            PolymarketMainUM.Empty
+                            PolymarketMainUM.ContentUM.Empty
                         } else {
-                            PolymarketMainUM.Content(events = converter.convertList(events).toImmutableList())
+                            PolymarketMainUM.ContentUM.Content(
+                                events = converter.convertList(events).toImmutableList(),
+                            )
                         }
                     },
                 )
             }
 
-            uiState.value = newState
+            uiState.update { it.copy(content = newContent) }
         }.saveIn(loadEventsJob)
     }
 
