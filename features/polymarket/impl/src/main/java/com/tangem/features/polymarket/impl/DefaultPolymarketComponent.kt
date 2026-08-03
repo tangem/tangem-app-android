@@ -79,12 +79,14 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     ): ComposableContentComponent = when (configuration) {
         is PolymarketRoute.Main -> PolymarketMainComponent(
             appComponentContext = factoryContext,
+            accessMode = configuration.accessMode,
         )
         is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
             appComponentContext = factoryContext,
             eventId = configuration.eventId,
             marketId = configuration.marketId,
             assetId = configuration.assetId,
+            accessMode = configuration.accessMode,
         )
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
