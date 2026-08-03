@@ -16,6 +16,9 @@ import com.tangem.features.polymarket.impl.main.ui.PolymarketMainScreen
  *
 
  * factory — its model is resolved from the model map by [getOrCreateModel].
+ *
+ * @param accessMode entry decision the gate already resolved; the model reads it back out of its params
+ *  container, so it must be handed over here.
  */
 internal class PolymarketMainComponent(
     appComponentContext: AppComponentContext,
