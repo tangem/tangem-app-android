@@ -261,7 +261,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return customerOrderRepository.getOrderData(userWalletId = account.userWalletId, orderId = orderId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId ${account.userWalletId} orderId: $orderId error: $error")
-                error.toStatusValueWhenHasTangemPay(account.userWalletId)
+                if (error is VisaApiError.OrderNotFound) {
+                    handleOrderNotFound(account = account)
+                } else {
+                    error.toStatusValueWhenHasTangemPay(account.userWalletId)
+                }
             },
             ifRight = { orderData ->
                 logger.i("proceedWithOrderId ${account.userWalletId}: $orderId status: ${orderData.status}")
@@ -298,6 +302,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             result.fold(
                 ifLeft = { error ->
                     logger.e("pollOrderStatus ${account.userWalletId} orderId: $orderId error: $error")
+                    if (error is VisaApiError.OrderNotFound) {
+                        return handleOrderNotFound(account = account)
+                    }
                     // Continue polling on transient errors
                 },
                 ifRight = { orderData ->
@@ -314,6 +321,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
 
         return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+    }
+
+    private suspend fun handleOrderNotFound(account: Account.Payment): PaymentAccountStatusValue {
+        onboardingRepository.clearOrderId(account.userWalletId)
+        return proceedWithoutOrder(account = account)
     }
 
     private suspend fun handleCanceledOrder(
@@ -470,8 +482,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      *    (idempotent) and eagerly fetches its bank credentials ([VirtualAccountOnramp.Available], or
      *    [VirtualAccountOnramp.BankCredentialsError] on failure).
      * 2. Otherwise, a VA order id is persisted locally — checks its status via `getOrderData`:
-     *    NEW/PROCESSING/COMPLETED (or a lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
-     *    clears the persisted id and falls through to eligibility.
+     *    NEW/PROCESSING/COMPLETED (or a transient lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
+     *    or a [VisaApiError.OrderNotFound] (the persisted id went stale) clears the persisted id and falls through
+     *    to eligibility.
      * 3. Otherwise (or after a CANCELED order) — surfaces [VirtualAccountOnramp.Eligible] when the wallet has
      *    the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
      */
@@ -503,7 +516,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             return customerOrderRepository.getOrderData(userWalletId = userWalletId, orderId = vaOrderId).fold(
                 ifLeft = { error ->
                     logger.e("getOrderData(va) failed for $vaOrderId: $error")
-                    VirtualAccountOnramp.Processing
+                    if (error is VisaApiError.OrderNotFound) {
+                        onboardingRepository.clearVirtualAccountOrderId(userWalletId)
+                        resolveEligibility(userWalletId)
+                    } else {
+                        VirtualAccountOnramp.Processing
+                    }
                 },
                 ifRight = { orderData ->
                     when (orderData.status) {
@@ -614,7 +632,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
     ): PaymentAccountStatusValue {
         return when (this) {
-            is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(userWalletId)
+            is VisaApiError.NotFound -> constructNotCreatedOrEmptyStatus(userWalletId)
             else -> toErrorValue()
         }
     }
@@ -623,7 +641,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
     ): PaymentAccountStatusValue {
         return when (this) {
-            is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(userWalletId)
+            is VisaApiError.NotFound -> constructNotCreatedOrEmptyStatus(userWalletId)
             else -> {
                 val previousValue = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value
                 if (previousValue != null && previousValue.hasAccountData()) {
