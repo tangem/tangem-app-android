@@ -17,6 +17,8 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
+import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
@@ -212,6 +214,7 @@ internal open class TxDetailsConverterTestBase {
         txInfo: OnChainTx? = null,
         externalTxUrl: String? = null,
         payoutAddress: String = PAYOUT_ADDRESS,
+        country: OnrampCountry? = null,
     ): ExpressTx.Onramp = ExpressTx.Onramp(
         tx = OnrampTransaction(
             txId = "onramp-1",
@@ -233,11 +236,23 @@ internal open class TxDetailsConverterTestBase {
                 decimals = 8,
                 cryptoCurrency = bitcoin,
             ),
-            country = null,
+            country = country,
             toAmount = BigDecimal("0.006"),
             toActualAmount = null,
         ),
         txInfo = txInfo,
+    )
+
+    /** A resolved onramp country carrying [flagUrl] as its flag image (the "paid from" flag shown on the fiat leg). */
+    protected fun onrampCountry(flagUrl: String): OnrampCountry = OnrampCountry(
+        id = "SE",
+        name = "Sweden",
+        code = "SE",
+        image = flagUrl,
+        alpha3 = "SWE",
+        continent = "Europe",
+        defaultCurrency = OnrampCurrency(name = "Swedish Krona", code = "SEK", image = null, precision = 2, unit = "SEK"),
+        onrampAvailable = true,
     )
 
     protected fun expressAsset(
