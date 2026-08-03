@@ -50,8 +50,10 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
+import com.tangem.google.auth.GoogleAuthActivityResultBridge
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
@@ -61,6 +63,7 @@ import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
+import com.tangem.tap.google.GoogleAuthLauncherHost
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
@@ -161,6 +164,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var passwordRequester: HotWalletPasswordRequester
 
+    @Inject
+    internal lateinit var googleAuthActivityResultBridge: GoogleAuthActivityResultBridge
+
+    @Inject
+    internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
+
     private val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -248,6 +257,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         setContent {
             CompositionLocalProvider(LocalUserInteractionTracker provides userInteractionTracker) {
+                if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+                    GoogleAuthLauncherHost(googleAuthActivityResultBridge)
+                }
                 routingComponent.Content(
                     Modifier
                         .fillMaxSize()
