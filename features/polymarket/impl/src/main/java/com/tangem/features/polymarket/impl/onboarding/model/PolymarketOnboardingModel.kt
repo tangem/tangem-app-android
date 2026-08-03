@@ -5,6 +5,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
+import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -62,11 +63,10 @@ internal class PolymarketOnboardingModel @Inject constructor(
             result.fold(
                 ifLeft = { uiState.value = PolymarketOnboardingUM.Failed(onRetryClick = ::resolveEntry) },
                 ifRight = { entry ->
-                    when (val step = entry.toGateStep()) {
-                        PolymarketGateStep.ShowWelcome -> uiState.value = PolymarketOnboardingUM.Welcome
-                        PolymarketGateStep.ShowRegionRestrictions ->
-                            uiState.value = PolymarketOnboardingUM.RegionBlocked
-                        is PolymarketGateStep.OpenFeed -> openFeed(accessMode = step.accessMode)
+                    when (entry) {
+                        is PolymarketEntry.Onboard -> uiState.value = PolymarketOnboardingUM.Welcome
+                        is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
+                        PolymarketEntry.RegionBlocked -> uiState.value = PolymarketOnboardingUM.RegionBlocked
                     }
                 },
             )
