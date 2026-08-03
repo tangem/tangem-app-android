@@ -7,8 +7,13 @@ import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
+import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -39,6 +44,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketMainModel::class)
     fun bindPolymarketMainModel(impl: PolymarketMainModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketOnboardingModel::class)
+    fun bindPolymarketOnboardingModel(impl: PolymarketOnboardingModel): Model
 }
 
 @Module
@@ -50,4 +60,21 @@ internal object PolymarketFeatureTogglesModule {
     fun providePolymarketFeatureToggles(featureTogglesManager: FeatureTogglesManager): PolymarketFeatureToggles {
         return DefaultPolymarketFeatureToggles(featureTogglesManager = featureTogglesManager)
     }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal object PolymarketDomainUseCasesModule {
+
+    @Provides
+    @Singleton
+    fun provideResolvePolymarketEntryUseCase(
+        checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+        derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
+        getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
+    ): ResolvePolymarketEntryUseCase = ResolvePolymarketEntryUseCase(
+        checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
+        derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
+        getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
+    )
 }
