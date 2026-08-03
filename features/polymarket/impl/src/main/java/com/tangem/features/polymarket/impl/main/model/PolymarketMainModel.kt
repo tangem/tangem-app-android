@@ -2,7 +2,9 @@ package com.tangem.features.polymarket.impl.main.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
@@ -28,10 +30,13 @@ import javax.inject.Inject
  */
 @ModelScoped
 internal class PolymarketMainModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventsUseCase: GetPolymarketEventsUseCase,
 ) : Model() {
+
+    private val accessMode = paramsContainer.require<PolymarketAccessMode>()
 
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow<PolymarketMainUM>(PolymarketMainUM.Loading)
@@ -69,11 +74,17 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun onEventClick(eventId: String) {
-        router.push(PolymarketRoute.EventDetails(eventId = eventId))
+        router.push(PolymarketRoute.EventDetails(eventId = eventId, accessMode = accessMode))
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
-        // The place-prediction flow is hosted by the event details screen, so the outcome is preselected there.
-        router.push(PolymarketRoute.EventDetails(eventId = eventId, marketId = marketId, assetId = assetId))
+        router.push(
+            PolymarketRoute.EventDetails(
+                eventId = eventId,
+                marketId = marketId,
+                assetId = assetId,
+                accessMode = accessMode,
+            ),
+        )
     }
 }
