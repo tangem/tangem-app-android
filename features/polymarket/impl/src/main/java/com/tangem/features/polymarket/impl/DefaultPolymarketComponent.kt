@@ -80,6 +80,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     ): ComposableContentComponent = when (configuration) {
         is PolymarketRoute.Onboarding -> PolymarketOnboardingComponent(
             appComponentContext = factoryContext,
+            params = params,
         )
         is PolymarketRoute.Main -> PolymarketMainComponent(
             appComponentContext = factoryContext,
