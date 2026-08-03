@@ -11,8 +11,11 @@ import com.tangem.domain.polymarket.model.PolymarketAccessMode
  */
 internal sealed interface PolymarketRoute : Route {
 
+    /** Entry gate — resolves region and wallet state, then shows onboarding or hands over to [Main]. */
+    data object Onboarding : PolymarketRoute
+
     /**
-     * Discovery feed — the entry screen of the feature.
+     * Discovery feed — reached once [Onboarding] resolves the entry decision.
      *
      * @property accessMode whether trading is permitted; [PolymarketAccessMode.READ_ONLY] renders the
      *  region-restrictions banner and withholds trading affordances
