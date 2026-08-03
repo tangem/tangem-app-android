@@ -17,12 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
-import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -34,56 +31,32 @@ import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun PolymarketMainScreen(
-    state: PolymarketMainUM,
-    accessMode: PolymarketAccessMode,
-    modifier: Modifier = Modifier,
-) {
-    Column(
+internal fun PolymarketMainScreen(state: PolymarketMainUM, modifier: Modifier = Modifier) {
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary),
     ) {
-        if (accessMode == PolymarketAccessMode.READ_ONLY) {
-            RegionRestrictionsBanner(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+        when (val content = state.content) {
+            PolymarketMainUM.ContentUM.Loading -> LoadingState(modifier = Modifier.fillMaxSize())
+            is PolymarketMainUM.ContentUM.Content -> ContentState(
+                modifier = Modifier.fillMaxSize(),
+                state = content,
             )
-        }
-        Box(modifier = Modifier.fillMaxSize()) {
-            when (state) {
-                PolymarketMainUM.Loading -> LoadingState(modifier = Modifier.fillMaxSize())
-                is PolymarketMainUM.Content -> ContentState(
-                    modifier = Modifier.fillMaxSize(),
-                    state = state,
-                )
-                PolymarketMainUM.Empty -> MessageState(
-                    modifier = Modifier.fillMaxSize(),
-                    text = "No events yet",
-                )
-                is PolymarketMainUM.Error -> ErrorState(
-                    modifier = Modifier.fillMaxSize(),
-                    onRetryClick = state.onRetryClick,
-                )
-            }
+            PolymarketMainUM.ContentUM.Empty -> MessageState(
+                modifier = Modifier.fillMaxSize(),
+                text = "No events yet",
+            )
+            is PolymarketMainUM.ContentUM.Error -> ErrorState(
+                modifier = Modifier.fillMaxSize(),
+                onRetryClick = content.onRetryClick,
+            )
         }
     }
 }
 
 @Composable
-private fun RegionRestrictionsBanner(modifier: Modifier = Modifier) {
-    TangemMessageBanner(
-        modifier = modifier,
-        title = resourceReference(R.string.prediction_region_restrictions_title),
-        description = resourceReference(R.string.prediction_region_restrictions_subtitle),
-        variant = TangemMessageBanner.Variant.Warning,
-        showGlowRing = false,
-    )
-}
-
-@Composable
-private fun ContentState(state: PolymarketMainUM.Content, modifier: Modifier = Modifier) {
+private fun ContentState(state: PolymarketMainUM.ContentUM.Content, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -161,20 +134,10 @@ private fun ErrorState(onRetryClick: () -> Unit, modifier: Modifier = Modifier) 
 private fun PolymarketMainScreenContentPreview() {
     TangemThemePreviewRedesign {
         PolymarketMainScreen(
-            state = PolymarketMainUM.Content(previewEvents()),
-            accessMode = PolymarketAccessMode.TRADING,
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun PolymarketMainScreenReadOnlyPreview() {
-    TangemThemePreviewRedesign {
-        PolymarketMainScreen(
-            state = PolymarketMainUM.Empty,
-            accessMode = PolymarketAccessMode.READ_ONLY,
+            state = PolymarketMainUM(
+                accessMode = PolymarketAccessMode.TRADING,
+                content = PolymarketMainUM.ContentUM.Content(previewEvents()),
+            ),
         )
     }
 }
