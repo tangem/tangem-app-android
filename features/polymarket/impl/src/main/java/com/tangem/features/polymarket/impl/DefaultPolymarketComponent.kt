@@ -91,7 +91,6 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             eventId = configuration.eventId,
             marketId = configuration.marketId,
             assetId = configuration.assetId,
-            accessMode = configuration.accessMode,
         )
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
