@@ -8,6 +8,7 @@ import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.swap.SwapRateFormatter
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -153,7 +154,9 @@ internal class ExpressTxToDetailsUMConverter(
             from = onramp.tx.fromFiat.toFiatAssetUM(
                 // The fiat side was paid from a card, not a portfolio address — no owner to resolve.
                 label = resourceReference(R.string.tx_history_you_paid),
-                isFaded = status is Status.Failed,
+                currencyIcon = onramp.tx.country?.image?.let { flagUrl ->
+                    CurrencyIconState.FiatIcon(url = flagUrl, fallbackResId = R.drawable.ic_currency_24)
+                },
             ),
             to = onramp.tx.toAsset.toAssetUM(
                 label = ownerLabel(toOwner, fallback = R.string.swapping_to_title, owned = R.string.common_to),
@@ -289,18 +292,23 @@ internal class ExpressTxToDetailsUMConverter(
 
     /**
      * Builds the fiat ("You paid") leg of an onramp. The paid fiat amount is exact and carries no sign — neither `+`/`−`
-     * nor the `~` estimate — so only the value is shown. Fiat has no `CryptoCurrency`, so it also has no icon.
+     * nor the `~` estimate — so only the value is shown. [currencyIcon] is the paid-from country flag, or `null` when the
+     * onramp carries no country. It never fades: the paid fiat stands as spent even on a failed onramp, where only the
+     * never-received crypto leg is struck.
      */
-    private fun Amount.toFiatAssetUM(label: TextReference, isFaded: Boolean): TxHistoryDetailsUM.AssetUM {
+    private fun Amount.toFiatAssetUM(
+        label: TextReference,
+        currencyIcon: CurrencyIconState?,
+    ): TxHistoryDetailsUM.AssetUM {
         val code = fiatCode
         val formatted = (value ?: BigDecimal.ZERO)
-            .format { fiat(fiatCurrencyCode = code, fiatCurrencySymbol = currencySymbol) }
+            .format { fiat(fiatCurrencyCode = code, fiatCurrencySymbol = currencySymbol, ignoreSymbolPosition = true) }
         return TxHistoryDetailsUM.AssetUM(
             label = label,
             owner = null,
             amount = stringReference(formatted.trim()),
-            currencyIcon = null,
-            isFaded = isFaded,
+            currencyIcon = currencyIcon,
+            isFaded = false,
         )
     }
 }
@@ -519,7 +527,9 @@ private fun OnrampTransaction.onrampRateRow(): TxHistoryDetailsUM.InfoRowUM? {
     val fiatCode = fromFiat.fiatCode
     val value = rateText(
         base = oneOf(cryptoSymbol),
-        quote = rate.format { fiat(fiatCurrencyCode = fiatCode, fiatCurrencySymbol = fromFiat.currencySymbol) },
+        quote = rate.format {
+            fiat(fiatCurrencyCode = fiatCode, fiatCurrencySymbol = fromFiat.currencySymbol, ignoreSymbolPosition = true)
+        },
     )
     return rateRowUM(value)
 }
