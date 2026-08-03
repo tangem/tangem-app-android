@@ -2,6 +2,7 @@ package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -280,9 +281,13 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Finished))
 
         // Assert
-        // "You paid" fiat carries no icon and no sign — the exact amount paid.
+        // "You paid" fiat has no sign — the exact amount paid. It also shows no icon here because this fixture has no
+        // country; the country-flag path is covered by the dedicated flag test below.
         assertThat(result.from?.currencyIcon).isNull()
         assertThat(result.from?.amount?.resolveString()).contains("SEK")
+        // The fiat leg is number-first ("100.00 SEK"), matching the crypto legs — not "SEK100.00".
+        assertThat(result.from?.amount?.resolveString()?.trim()).endsWith("SEK")
+        assertThat(result.from?.amount?.resolveString()?.first()?.isDigit()).isTrue()
         assertThat(result.from?.amount?.resolveString()).doesNotContain("-")
         assertThat(result.from?.amount?.resolveString()).doesNotContain("+")
         assertThat(result.from?.amount?.resolveString()).doesNotContain("~")
@@ -292,6 +297,29 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.to?.amount?.resolveString()).doesNotContain("-")
         assertThat(result.to?.amount?.resolveString()).doesNotContain("~")
         assertThat(result.to?.isFaded).isFalse()
+    }
+
+    @Test
+    fun `GIVEN onramp with known country WHEN convert THEN paid fiat shows the country flag icon`() {
+        // Act
+        val result = converter.convert(
+            expressOnramp(status = ExpressOnrampStatus.Finished, country = onrampCountry(flagUrl = "https://flags/se.png")),
+        )
+
+        // Assert — the "You paid" leg carries the paid-from country flag as a fiat icon pointing at the country image.
+        val icon = result.from?.currencyIcon
+        assertThat(icon).isInstanceOf(CurrencyIconState.FiatIcon::class.java)
+        assertThat((icon as CurrencyIconState.FiatIcon).url).isEqualTo("https://flags/se.png")
+    }
+
+    @Test
+    fun `GIVEN failed express onramp WHEN convert THEN paid fiat stays unfaded and only crypto leg is faded`() {
+        // Act
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Failed))
+
+        // Assert — the paid fiat stands as spent; only the never-received crypto leg is struck through.
+        assertThat(result.from?.isFaded).isFalse()
+        assertThat(result.to?.isFaded).isTrue()
     }
 
     @Test
@@ -478,6 +506,8 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rate).contains("≈")
         assertThat(rate).contains("BTC")
         assertThat(rate).contains("SEK")
+        // The fiat quote is number-first too ("… ≈ 16,666.67 SEK"), not "≈ SEK16,666.67".
+        assertThat(rate.trim()).endsWith("SEK")
     }
 
     // endregion
