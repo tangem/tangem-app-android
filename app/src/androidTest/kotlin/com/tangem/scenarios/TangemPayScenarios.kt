@@ -112,6 +112,17 @@ fun BaseTestCase.openTangemPayChangePin() {
     }
 }
 
+/** Opens the card page and taps the 'PIN code' row to reach the current-PIN sheet (requires a PIN already set). */
+fun BaseTestCase.openTangemPayViewPin() {
+    openTangemPayCardPage()
+    step("Click on 'PIN code' row") {
+        onTangemPayCardPageScreen { changePinRow.clickWithAssertion() }
+    }
+    step("Assert current PIN sheet is displayed") {
+        awaitSuccess { onTangemPayViewPinSheet { title.assertIsDisplayed() } }
+    }
+}
+
 /** Opens the card page and taps 'Change' on the daily limit block to reach the limit setup screen. */
 fun BaseTestCase.openTangemPayDailyLimitSetup() {
     openTangemPayCardPage()
