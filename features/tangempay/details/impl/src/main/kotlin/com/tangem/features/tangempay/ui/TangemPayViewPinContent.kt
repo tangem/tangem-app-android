@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerH
@@ -30,6 +31,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayViewPinUM
 
@@ -89,6 +91,7 @@ private fun PinSuccessContent(state: TangemPayViewPinUM.Content, modifier: Modif
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
+            modifier = Modifier.testTag(TangemPayTestTags.VIEW_PIN_TITLE),
             text = stringResourceSafe(R.string.tangempay_card_details_view_pin_code_title),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
@@ -113,7 +116,8 @@ private fun PinSuccessContent(state: TangemPayViewPinUM.Content, modifier: Modif
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens2.x4),
+                .padding(vertical = TangemTheme.dimens2.x4)
+                .testTag(TangemPayTestTags.VIEW_PIN_CHANGE_BUTTON),
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_change_pin_code),
             onClick = state.onClickChangePin,
@@ -131,6 +135,7 @@ private fun PinLoadingContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
+            modifier = Modifier.testTag(TangemPayTestTags.VIEW_PIN_TITLE),
             text = stringResourceSafe(R.string.tangempay_card_details_view_pin_code_title),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
@@ -149,7 +154,9 @@ private fun PinLoadingContent(modifier: Modifier = Modifier) {
         SpacerH(TangemTheme.dimens2.x8)
 
         TangemLoader(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens2.x5),
+            modifier = Modifier
+                .padding(vertical = TangemTheme.dimens2.x5)
+                .testTag(TangemPayTestTags.VIEW_PIN_LOADER),
         )
 
         SpacerH(TangemTheme.dimens2.x12)
@@ -157,7 +164,8 @@ private fun PinLoadingContent(modifier: Modifier = Modifier) {
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens2.x4),
+                .padding(vertical = TangemTheme.dimens2.x4)
+                .testTag(TangemPayTestTags.VIEW_PIN_CHANGE_BUTTON),
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_change_pin_code),
             onClick = {},
@@ -172,7 +180,7 @@ private fun PinCode(value: String, modifier: Modifier = Modifier, numbersCount: 
         enabled = false,
         value = value,
         onValueChange = {},
-        modifier = modifier,
+        modifier = modifier.testTag(TangemPayTestTags.VIEW_PIN_VALUE),
         textStyle = TangemTheme.typography3.heading.medium.copy(color = Transparent),
         cursorBrush = SolidColor(Transparent),
         decorationBox = { innerTextField ->
