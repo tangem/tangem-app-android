@@ -89,6 +89,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val userWalletId = UserWalletId("011")
     private val params = PaymentAccountStatusFetcher.Params(userWalletId)
 
+    private companion object {
+        const val STALE_ORDER_ID = "order-gone"
+    }
+
     private val bankCredentialsFixture = BankCredentials(
         type = "ACH",
         beneficiaryName = "Test Beneficiary",
@@ -469,6 +473,85 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
                 assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
             }
+
+        @Test
+        fun `GIVEN no instance and va order is gone on backend WHEN invoke THEN id cleared and falls back to eligibility`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+                stubHappyPath(customerInfo)
+                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
+                coEvery {
+                    customerOrderRepository.getOrderData(userWalletId, "va-1")
+                } returns VisaApiError.OrderNotFound.left()
+                coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
+                coEvery {
+                    onboardingRepository.fetchCustomerEligibility(userWalletId)
+                } returns Either.Right(listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT))
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                coVerify(exactly = 1) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+                assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Eligible)
+            }
+    }
+
+    /**
+     * A locally persisted `orderId` can go stale (the order is removed on the backend) while the wallet is still a
+     * valid Paera customer. Before the fix, the resulting 404 was read as "not a Paera customer" and collapsed the
+     * whole Tangem Pay block to [PaymentAccountStatusValue.Empty] on every refresh, with the stale id never
+     * cleared — so the card stayed invisible until app reinstall.
+     */
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StaleOrderIdRecovery {
+
+        @Test
+        fun `GIVEN persisted order is gone on backend WHEN invoke THEN id cleared and status rebuilt from customer info`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = emptyList())
+                stubHappyPath(customerInfo)
+                coEvery { onboardingRepository.getOrderId(userWalletId) } returns STALE_ORDER_ID
+                coEvery {
+                    customerOrderRepository.getOrderData(userWalletId, STALE_ORDER_ID)
+                } returns VisaApiError.OrderNotFound.left()
+                coEvery { onboardingRepository.clearOrderId(userWalletId) } just Runs
+                coEvery { onboardingRepository.createOrder(userWalletId) } returns "order-2".right()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                coVerify(exactly = 1) { onboardingRepository.clearOrderId(userWalletId) }
+                assertThat(storedStatuses.map { it.value }.last())
+                    .isEqualTo(PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL))
+            }
+
+        @Test
+        fun `GIVEN order lookup fails transiently WHEN invoke THEN id kept and status is Unavailable`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = emptyList())
+            stubHappyPath(customerInfo)
+            coEvery { onboardingRepository.getOrderId(userWalletId) } returns STALE_ORDER_ID
+            coEvery {
+                customerOrderRepository.getOrderData(userWalletId, STALE_ORDER_ID)
+            } returns VisaApiError.ServerUnavailable.left()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            coVerify(exactly = 0) { onboardingRepository.clearOrderId(userWalletId) }
+            assertThat(storedStatuses.map { it.value }.last())
+                .isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
+        }
     }
 
     /**
