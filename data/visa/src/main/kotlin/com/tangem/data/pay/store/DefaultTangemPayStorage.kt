@@ -8,6 +8,7 @@ import com.tangem.data.pay.entity.WithdrawStoreData
 import com.tangem.data.pay.util.WithdrawStateConverter
 import com.tangem.data.pay.util.WithdrawStoreDataConverter
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
@@ -34,6 +35,7 @@ private const val WITHDRAW_ORDER_ID_KEY = "tangem_pay_withdraw_order_id_key"
 internal class DefaultTangemPayStorage @Inject constructor(
     @ApplicationContext applicationContext: Context,
     @NetworkMoshi moshi: Moshi,
+    @SdkMoshi private val sdkMoshi: Moshi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
 ) : TangemPayStorage {
@@ -57,7 +59,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
         Types.newParameterizedType(Map::class.java, String::class.java, listType)
     }
     private val adapter: JsonAdapter<Map<String, List<WithdrawStoreData>>> by lazy {
-        appPreferencesStore.moshi.adapter(mapType)
+        sdkMoshi.adapter(mapType)
     }
 
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
