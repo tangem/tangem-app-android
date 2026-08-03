@@ -20,6 +20,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.impl.R
@@ -29,6 +30,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.backup
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.onlyOneBackupDeviceDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetBackupCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
@@ -43,7 +45,7 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 @Suppress("LongParameterList")
-class MultiWalletBackupModel @Inject constructor(
+internal class MultiWalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val backupServiceHolder: BackupServiceHolder,
@@ -54,6 +56,7 @@ class MultiWalletBackupModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val cardRepository: CardRepository,
+    private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")
@@ -195,9 +198,7 @@ class MultiWalletBackupModel @Inject constructor(
             when (result) {
                 is CompletionResult.Success -> {
                     state.update {
-                        it.copy(
-                            numberOfBackupCards = it.numberOfBackupCards + 1,
-                        )
+                        it.copy(addedCards = it.addedCards + CardDTO(result.data))
                     }
 
                     val backupCardInfo = MultiWalletChildParams.Backup.BackupCardInfo(
@@ -212,6 +213,11 @@ class MultiWalletBackupModel @Inject constructor(
                             card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else it.card3,
                         )
                     }
+
+                    walletCardsBackupReporter.reportBackupCardAdded(
+                        scanResponse = scanResponse,
+                        backupCards = state.value.addedCards,
+                    )
 
                     setNumberOfBackupCards(state.value.numberOfBackupCards)
                 }
