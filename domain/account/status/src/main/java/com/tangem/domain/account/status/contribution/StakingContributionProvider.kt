@@ -44,8 +44,8 @@ internal class StakingContributionProvider @Inject constructor(
         if (!userWallet.isMultiCurrency) return flowOf(ContributionResolver.Empty)
 
         return stakingBalanceSupplier(MultiStakingBalanceProducer.Params(userWallet.walletId))
-            .map { balances -> balances.groupBy(StakingBalance::stakingId) }
             .distinctUntilChanged()
+            .map { balances -> balances.groupBy(StakingBalance::stakingId) }
             .map { balancesByStakingId ->
                 ContributionResolver { currency, networkStatus ->
                     resolve(
