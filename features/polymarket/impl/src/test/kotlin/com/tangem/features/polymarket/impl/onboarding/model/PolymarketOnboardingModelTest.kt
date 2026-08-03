@@ -62,7 +62,8 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN entry is Trade WHEN model created THEN the feed is opened in trading mode`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns PolymarketEntry.Trade.right()
+        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
+            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING).right()
 
         // Act
         val model = createModel(testScope = this)
@@ -81,7 +82,8 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN entry is ReadOnly WHEN model created THEN the feed is opened in read-only mode`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns PolymarketEntry.ReadOnly.right()
+        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
+            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY).right()
 
         // Act
         val model = createModel(testScope = this)
@@ -156,7 +158,7 @@ internal class PolymarketOnboardingModelTest {
         // Arrange
         coEvery { resolvePolymarketEntryUseCase(userWalletId) } returnsMany listOf(
             PolymarketOnboardingError.Network.left(),
-            PolymarketEntry.Trade.right(),
+            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING).right(),
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -188,7 +190,7 @@ internal class PolymarketOnboardingModelTest {
                         runCatching { delay(SUPERSEDED_ATTEMPT_DELAY_MILLIS) }
                         PolymarketOnboardingError.Network.left()
                     }
-                    else -> PolymarketEntry.Trade.right()
+                    else -> PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING).right()
                 }
             }
             val model = createModel(testScope = this)
