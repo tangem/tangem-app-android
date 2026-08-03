@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import arrow.core.Either
 import arrow.core.flatMap
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -34,8 +35,9 @@ class ResolvePolymarketEntryUseCase(
 
     private fun PolymarketWalletState.toEntry(isBlocked: Boolean): PolymarketEntry = when {
         isBlocked && !hasDepositWallet() -> PolymarketEntry.RegionBlocked
-        isBlocked -> PolymarketEntry.ReadOnly
-        status == PolymarketWalletStatus.READY_TO_TRADE -> PolymarketEntry.Trade
+        isBlocked -> PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY)
+        status == PolymarketWalletStatus.READY_TO_TRADE ->
+            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING)
         else -> PolymarketEntry.Onboard(status = status)
     }
 
