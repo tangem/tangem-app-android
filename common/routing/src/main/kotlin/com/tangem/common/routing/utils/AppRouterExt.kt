@@ -26,8 +26,13 @@ inline fun <reified R : AppRoute> AppRouter.popTo(noinline onComplete: (isSucces
  * ***Must be removed after Decompose migration.***
  *
  * @param route The route to push.
+ * @param onComplete The callback invoked when the push completes. Not invoked when the push is
+ * skipped because an equal [route] is already in the stack.
  */
-fun AppRouter.pushIfNotInStack(route: AppRoute) {
+fun AppRouter.pushIfAbsent(
+    route: AppRoute,
+    onComplete: (isSuccess: Boolean) -> Unit = { defaultCompletionHandler(it, "Unable to push $route") },
+) {
     if (stack.contains(route)) return
-    push(route)
+    push(route, onComplete)
 }
