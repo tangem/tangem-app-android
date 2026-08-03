@@ -20,7 +20,7 @@ internal data class PolymarketMainUM(
 ) {
 
     @Immutable
-    internal sealed interface ContentUM {
+    sealed interface ContentUM {
 
         data object Loading : ContentUM
 
