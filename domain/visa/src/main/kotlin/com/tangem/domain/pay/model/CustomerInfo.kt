@@ -34,6 +34,9 @@ data class CustomerInfo(
     val availableForWithdrawal: BigDecimal,
     val tariffPlan: TangemPayCustomerTariffPlan?,
     val networks: List<NetworkInfo> = emptyList(),
+    val country: String? = null,
+    val phoneMask: String? = null,
+    val email: String? = null,
 ) {
 
     /** Transitional single-card accessor — returns the first product instance, or null if none. */

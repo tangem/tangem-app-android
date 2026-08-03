@@ -8,4 +8,10 @@ internal sealed class TangemPayOrderCardInnerRoute : Route {
 
     @Serializable
     data object Type : TangemPayOrderCardInnerRoute()
+
+    @Serializable
+    data object Data : TangemPayOrderCardInnerRoute()
+
+    @Serializable
+    data object Success : TangemPayOrderCardInnerRoute()
 }
