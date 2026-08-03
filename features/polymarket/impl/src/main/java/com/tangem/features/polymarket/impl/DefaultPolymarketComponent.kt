@@ -21,6 +21,7 @@ import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsCompone
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -77,6 +78,9 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         configuration: PolymarketRoute,
         factoryContext: AppComponentContext,
     ): ComposableContentComponent = when (configuration) {
+        is PolymarketRoute.Onboarding -> PolymarketOnboardingComponent(
+            appComponentContext = factoryContext,
+        )
         is PolymarketRoute.Main -> PolymarketMainComponent(
             appComponentContext = factoryContext,
             accessMode = configuration.accessMode,
