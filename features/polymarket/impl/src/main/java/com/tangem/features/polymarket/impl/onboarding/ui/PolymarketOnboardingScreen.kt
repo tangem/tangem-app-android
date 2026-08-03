@@ -47,9 +47,9 @@ internal fun PolymarketOnboardingScreen(
         contentAlignment = Alignment.Center,
     ) {
         when (state) {
-            PolymarketOnboardingUM.Loading,
-            PolymarketOnboardingUM.RegionBlocked,
-            -> TangemLoader(color = TangemTheme.colors3.icon.primary, size = TangemLoaderSize.X32)
+            PolymarketOnboardingUM.Loading ->
+                TangemLoader(color = TangemTheme.colors3.icon.primary, size = TangemLoaderSize.X32)
+            PolymarketOnboardingUM.RegionBlocked -> Unit
             PolymarketOnboardingUM.Welcome -> WelcomePlaceholder()
             is PolymarketOnboardingUM.Failed -> FailedState(onRetryClick = state.onRetryClick)
         }
