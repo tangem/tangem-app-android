@@ -10,19 +10,21 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
 /**
  * Application preferences store.
- * AppPreferencesStore is wrapper around DataStore<Preferences> that supports json serialization and deserialization.
+ * A wrapper around [DataStore] of [Preferences] that supports json serialization and deserialization.
  *
- * @property moshi                Moshi instance. Property has 'public' modifier because it is used
- *                                  by Public-API inline function. Don't use it directly.
- * @property preferencesDataStore DataStore<Preferences> instance
+
+ * [AppPreferencesStore] factory function below.
+ *
+ * @property moshi       Moshi instance. Not part of the public API — it is [PublishedApi] internal only so the
+ *                        inline serialization helpers can reach it. Don't use it directly.
+ * @property dispatchers coroutine dispatchers, used by the inline sync helpers. Same visibility caveat as [moshi].
  *
 [REDACTED_AUTHOR]
  */
-class AppPreferencesStore(
-    val moshi: Moshi,
-    val dispatchers: CoroutineDispatcherProvider,
-    private val preferencesDataStore: DataStore<Preferences>,
-) : DataStore<Preferences> by preferencesDataStore {
+abstract class AppPreferencesStore(
+    @PublishedApi internal val moshi: Moshi,
+    @PublishedApi internal val dispatchers: CoroutineDispatcherProvider,
+) : DataStore<Preferences> {
 
     /**
      * Edit data according with transaction [transform].
@@ -110,5 +112,23 @@ class AppPreferencesStore(
     inline fun <reified T> MutablePreferences.setObjectSet(key: Preferences.Key<String>, value: Set<T>) {
         val adapter = moshi.adapter<Set<T>>(Types.newParameterizedType(Set::class.java, T::class.java))
         this[key] = adapter.toJson(value)
+    }
+
+    companion object {
+
+        /**
+         * Create an [AppPreferencesStore] backed by [preferencesDataStore].
+         *
+         * Keeps the `AppPreferencesStore(...)` construction call sites working while the concrete type stays internal.
+         */
+        operator fun invoke(
+            moshi: Moshi,
+            dispatchers: CoroutineDispatcherProvider,
+            preferencesDataStore: DataStore<Preferences>,
+        ): AppPreferencesStore = DefaultAppPreferencesStore(
+            moshi = moshi,
+            dispatchers = dispatchers,
+            preferencesDataStore = preferencesDataStore,
+        )
     }
 }
