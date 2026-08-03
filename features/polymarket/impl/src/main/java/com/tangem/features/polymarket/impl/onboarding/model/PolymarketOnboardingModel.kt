@@ -12,6 +12,7 @@ import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboard
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,6 +24,9 @@ import javax.inject.Inject
  * Resolving the entry may open a card session, so it runs once per gate and is repeated only when the user
  * retries. A failed resolution never falls through to the feed: the region is unknown, and treating that as
  * permission would let a restricted user trade.
+ *
+ * A superseded resolution never reports its outcome: the use case turns cancellation into a failure instead of
+ * propagating it, so a retried attempt would otherwise overwrite the fresh state with the stale error.
  */
 @ModelScoped
 internal class PolymarketOnboardingModel @Inject constructor(
@@ -51,7 +55,11 @@ internal class PolymarketOnboardingModel @Inject constructor(
         modelScope.launch {
             uiState.value = PolymarketOnboardingUM.Loading
 
-            resolvePolymarketEntryUseCase(params.userWalletId).fold(
+            val result = resolvePolymarketEntryUseCase(params.userWalletId)
+
+            ensureActive()
+
+            result.fold(
                 ifLeft = { uiState.value = PolymarketOnboardingUM.Failed(onRetryClick = ::resolveEntry) },
                 ifRight = { entry ->
                     when (val step = entry.toGateStep()) {
