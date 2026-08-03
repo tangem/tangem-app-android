@@ -28,14 +28,11 @@ internal sealed interface PolymarketRoute : Route {
      * @property eventId event to show
      * @property marketId market preselected by the caller, e.g. by tapping an outcome on the feed card
      * @property assetId outcome preselected by the caller
-     * @property accessMode whether trading is permitted; [PolymarketAccessMode.READ_ONLY] hides the
-     *  place-prediction affordance
      */
     data class EventDetails(
         val eventId: String,
         val marketId: String? = null,
         val assetId: String? = null,
-        val accessMode: PolymarketAccessMode,
     ) : PolymarketRoute
 
     /** Events/markets search screen. */
