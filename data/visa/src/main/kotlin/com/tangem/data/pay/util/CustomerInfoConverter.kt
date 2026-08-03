@@ -48,6 +48,9 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
             tariffPlan = value.customerTariffPlan?.toDomain(),
             networks = value.balance?.networks.orEmpty().map { it.toDomain() },
+            country = value.kyc?.country,
+            phoneMask = value.kyc?.phoneMask,
+            email = value.kyc?.email,
         )
     }
 
