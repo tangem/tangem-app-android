@@ -6,7 +6,7 @@ import com.tangem.features.feed.ui.earn.state.EarnFilterTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnUM
 
 internal class EarnFilterSelectedStateTransformer(
-    private val earnNetworks: EarnNetworks,
+    private val earnNetworks: EarnNetworks?,
     private val filterType: EarnFilterTypeUM,
     private val filterNetwork: EarnFilterNetworkUM,
 ) : EarnUMTransformer {
@@ -16,7 +16,7 @@ internal class EarnFilterSelectedStateTransformer(
             earnFilterUM = prevState.earnFilterUM.copy(
                 selectedTypeFilter = filterType,
                 selectedNetworkFilter = filterNetwork,
-                isNetworkFilterEnabled = earnNetworks.isRight { networks -> networks.isNotEmpty() },
+                isNetworkFilterEnabled = earnNetworks?.isRight { networks -> networks.isNotEmpty() } == true,
                 isTypeFilterEnabled = true,
             ),
         )

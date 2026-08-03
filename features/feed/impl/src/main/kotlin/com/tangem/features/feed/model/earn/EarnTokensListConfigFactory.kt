@@ -9,7 +9,7 @@ import com.tangem.features.feed.ui.earn.state.EarnFilterTypeUM
 internal fun createEarnTokensListConfig(
     selectedTypeFilter: EarnFilterTypeUM,
     selectedNetworkFilter: EarnFilterNetworkUM,
-    earnNetworks: EarnNetworks,
+    earnNetworks: EarnNetworks?,
     isForEarn: Boolean = false,
 ): EarnTokensListConfig {
     val type = when (selectedTypeFilter) {
@@ -19,8 +19,9 @@ internal fun createEarnTokensListConfig(
     }
     val networks = when (selectedNetworkFilter) {
         is EarnFilterNetworkUM.AllNetworks -> null
-        is EarnFilterNetworkUM.MyNetworks -> {
-            earnNetworks.fold(
+        is EarnFilterNetworkUM.MyNetworks -> when (earnNetworks) {
+            null -> listOf(NO_ONE_NETWORK)
+            else -> earnNetworks.fold(
                 ifLeft = { null },
                 ifRight = { networks ->
                     networks.filter(EarnNetwork::isAdded)
