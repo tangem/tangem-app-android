@@ -4,7 +4,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -26,6 +25,6 @@ internal class PolymarketModel @Inject constructor(
     /** Wallet context the feature was opened for; consumed by child screens (events feed, place prediction). */
     val userWalletId: UserWalletId = params.userWalletId
 
-    /** Initial route of the feature stack. */
-    val initialRoute: PolymarketRoute = PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING)
+    /** Initial route of the feature stack — the gate decides where the user actually lands. */
+    val initialRoute: PolymarketRoute = PolymarketRoute.Onboarding
 }
