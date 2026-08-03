@@ -28,6 +28,6 @@ internal class PolymarketMainComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        PolymarketMainScreen(state = state, accessMode = accessMode, modifier = modifier)
+        PolymarketMainScreen(state = state, modifier = modifier)
     }
 }
