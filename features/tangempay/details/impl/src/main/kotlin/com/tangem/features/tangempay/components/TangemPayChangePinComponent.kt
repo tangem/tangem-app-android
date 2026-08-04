@@ -12,7 +12,7 @@ import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayChangePinModel
-import com.tangem.features.tangempay.ui.TangemPayChangePinScreenV2
+import com.tangem.features.tangempay.ui.TangemPayChangePinScreen
 
 internal class TangemPayChangePinComponent(
     private val appComponentContext: AppComponentContext,
@@ -26,7 +26,7 @@ internal class TangemPayChangePinComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
         DisableScreenshotsDisposableEffect()
-        TangemPayChangePinScreenV2(
+        TangemPayChangePinScreen(
             state = state,
             onBackClick = router::pop,
         )

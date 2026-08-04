@@ -107,13 +107,13 @@ private fun TangemPayCardPageScreen(
                     }
                 }
                 if (
-                    state.settingsV2.isNotEmpty() &&
+                    state.settings.isNotEmpty() &&
                     state.cardState == TangemPayCardState.Active
                 ) {
                     cardPageItem("Settings buttons") {
                         TangemPayCardPageSettingsButtonsBlock(
                             modifier = Modifier.fillMaxWidth(),
-                            settings = state.settingsV2,
+                            settings = state.settings,
                         )
                     }
                 }
@@ -318,7 +318,7 @@ private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDet
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemPayCardPageScreenPreviewV2() {
+private fun TangemPayCardPageScreenPreview() {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
             state = TangemPayCardPageUM.stub(),

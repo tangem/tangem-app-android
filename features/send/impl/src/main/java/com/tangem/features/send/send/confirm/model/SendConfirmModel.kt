@@ -41,6 +41,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.api.SendFeatureToggles
@@ -114,6 +115,7 @@ internal class SendConfirmModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
+    private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val sendFeatureToggles: SendFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
@@ -410,14 +412,19 @@ internal class SendConfirmModel @Inject constructor(
 
         val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
 
-        val result = if (isFeeInTokenCurrency) {
-            createAndSendGaslessTransactionUseCase(
+        val result = when {
+            feeExtended?.tronGaslessQuote != null -> createAndSendTronGaslessTransactionUseCase(
+                userWallet = userWallet,
+                network = cryptoCurrency.network,
+                transactionData = txData,
+                fee = feeExtended,
+            )
+            isFeeInTokenCurrency -> createAndSendGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = txData,
                 fee = feeExtended,
             )
-        } else {
-            sendTransactionUseCase(
+            else -> sendTransactionUseCase(
                 txData = txData,
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
@@ -443,6 +450,11 @@ internal class SendConfirmModel @Inject constructor(
                 )
             },
             ifRight = { txHash ->
+                if (feeExtended?.tronGaslessQuote != null) {
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.GaslessTransactionUsed(categoryName = analyticsCategoryName),
+                    )
+                }
                 updateTransactionStatus(txData, txHash)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
@@ -462,7 +474,8 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency ||
+            feeExtended?.tronGaslessQuote != null
         return if (isFeeInTokenCurrency) {
             feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: cryptoCurrencyStatus
         } else {

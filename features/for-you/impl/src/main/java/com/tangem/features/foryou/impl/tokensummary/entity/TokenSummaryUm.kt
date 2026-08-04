@@ -8,8 +8,8 @@ internal data class TokenSummaryUm(
     val periodPicker: PeriodPickerUM,
     val aiInsight: AiInsightUM,
     val tokenSentiment: TokenSentimentUM,
-    val onSwapClick: () -> Unit,
+    val bottomButton: BottomButtonUM,
     val onPeriodClick: (TangemSegmentUM) -> Unit,
-    val onInfoClick: (IndicatorType) -> Unit,
+    val onInfoClick: (TokenIndicatorUM.Loaded) -> Unit,
     val onCloseClick: () -> Unit,
 )

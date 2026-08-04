@@ -35,6 +35,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.ImportSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.SeedPhraseCheckUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,6 +67,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
+    private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -259,6 +261,11 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                         }
 
                         cardRepository.startCardActivation(cardId = result.data.card.cardId)
+
+                        walletCardsBackupReporter.reportWalletCreated(
+                            scanResponse = updatedScanResponse,
+                            usedSeed = true,
+                        )
 
                         onDone.emit(Unit)
                     } else {

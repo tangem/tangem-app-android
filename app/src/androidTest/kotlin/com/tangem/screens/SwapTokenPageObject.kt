@@ -28,6 +28,16 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
     }
 
+    val moreButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.MORE_BUTTON)
+    }
+
+    // Simple/Detailed items live in a dropdown popup; match the clickable row by its title.
+    fun swapModeMenuItem(title: String): KNode = child {
+        hasText(title)
+        useUnmergedTree = true
+    }
+
     val textInput: KNode = child {
         hasParent(withTestTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD))
         useUnmergedTree = true
@@ -75,6 +85,17 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val providersBlock: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val simpleProvidersBlock: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK_SIMPLE)
+        useUnmergedTree = true
+    }
+
+    fun providerWithName(name: String): KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK))
+        hasText(name, substring = true)
         useUnmergedTree = true
     }
 
@@ -181,6 +202,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    // PercentPill testTag is the PredefinedPercentAmount enum name: PERCENT_25 / PERCENT_50 / PERCENT_75 / MAX.
+    fun percentButton(id: String): KNode = child {
+        hasTestTag(id)
+        useUnmergedTree = true
+    }
+
     val youSwapBlock: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER)
         hasAnyDescendant(withText(getResourceString(R.string.swapping_from_title_v2)))
@@ -199,6 +226,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE)
         hasText(getResourceString(R.string.swapping_insufficient_funds))
         useUnmergedTree = true
+    }
+
+    // On the Swap screen an insufficient balance turns the main button into a disabled "Insufficient funds" button.
+    val insufficientFundsButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.swapping_insufficient_funds))
     }
 
     val receiveFiatAmount: KNode = child {
@@ -224,6 +257,18 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     val receiveSelectTokenIcon: KNode = child {
         hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
         hasTestTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON)
+        useUnmergedTree = true
+    }
+
+    val swapCardTokenSymbol: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.SWAP_CARD))
+        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
+        useUnmergedTree = true
+    }
+
+    val receiveCardTokenSymbol: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
         useUnmergedTree = true
     }
 

@@ -3,8 +3,8 @@ package com.tangem.data.pay.repository
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.SetPendingTariffPlanTransitionRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
