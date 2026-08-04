@@ -449,6 +449,20 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun provideReportMissingWalletCardsBackupUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
+        isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    ): ReportMissingWalletCardsBackupUseCase {
+        return ReportMissingWalletCardsBackupUseCase(
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
+            isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideApplyUserWalletListSortingUseCase(
         userWalletsListRepository: UserWalletsListRepository,
     ): ApplyUserWalletListSortingUseCase {
