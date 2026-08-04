@@ -1,6 +1,6 @@
 package com.tangem.common.rules
 
-import com.tangem.datasource.api.common.config.TangemPay
+import com.tangem.spend.datasource.config.TangemPay
 
 import com.tangem.datasource.api.common.config.News
 

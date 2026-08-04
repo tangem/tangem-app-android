@@ -241,6 +241,10 @@ include(":libs:visa")
 include(":libs:tangem-sdk-api")
 // endregion Libs modules
 
+// region Spend modules
+include(":spend:datasource")
+// endregion Spend modules
+
 // region Feature modules
 include(":features:address-book:api")
 include(":features:address-book:impl")
