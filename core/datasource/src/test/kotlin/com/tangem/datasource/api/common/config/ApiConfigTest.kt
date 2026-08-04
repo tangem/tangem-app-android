@@ -63,14 +63,6 @@ class ApiConfigTest {
                 appInfoProvider = mockk(),
             ),
             StakeKit(stakeKitAuthProvider = mockk()),
-            TangemPay.Bff(
-                environmentConfig = environmentConfig,
-                appInfoProvider = mockk(),
-            ),
-            TangemPay.Auth(
-                environmentConfig = environmentConfig,
-                appInfoProvider = mockk(),
-            ),
             BlockAid(environmentConfig = environmentConfig),
             MoonPay(),
             P2PEthPool(p2pAuthProvider = mockk()),
