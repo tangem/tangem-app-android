@@ -6,6 +6,11 @@ import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackModel
 import com.tangem.features.tangempay.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupModel
 import com.tangem.features.tangempay.model.*
+import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetworkModel
+import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksModel
+import com.tangem.features.tangempay.multichain.receive.PaymentReceiveModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardTypeModel
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanModel
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanModel
 import dagger.Binds
@@ -16,6 +21,7 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(ModelComponent::class)
+@Suppress("TooManyFunctions")
 internal interface TangemPayModelModule {
 
     @Binds
@@ -107,4 +113,29 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayCashbackModel::class)
     fun bindTangemPayCashbackModel(model: TangemPayCashbackModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PaymentChooseNetworkModel::class)
+    fun bindPaymentChooseNetworkModel(model: PaymentChooseNetworkModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PaymentOtherNetworksModel::class)
+    fun bindPaymentOtherNetworksModel(model: PaymentOtherNetworksModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PaymentReceiveModel::class)
+    fun bindPaymentReceiveModel(model: PaymentReceiveModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayOrderCardTypeModel::class)
+    fun bindTangemPayOrderCardTypeModel(model: TangemPayOrderCardTypeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayOrderCardModel::class)
+    fun bindTangemPayOrderCardModel(model: TangemPayOrderCardModel): Model
 }
