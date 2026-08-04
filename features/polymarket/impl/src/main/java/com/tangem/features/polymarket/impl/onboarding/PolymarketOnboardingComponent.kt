@@ -33,7 +33,7 @@ internal class PolymarketOnboardingComponent(
 
         PolymarketOnboardingScreen(
             state = state,
-            onRegionRestrictionsDismiss = model::onRegionRestrictionsDismiss,
+            onCloseClick = model::onCloseClick,
             modifier = modifier,
         )
     }
