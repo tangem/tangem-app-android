@@ -1,7 +1,7 @@
 package com.tangem.domain.pay.usecase
 
 import arrow.core.Either
-import arrow.core.right
+import arrow.core.left
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
@@ -32,7 +32,7 @@ class SubmitTariffTransitionUseCase(
             }
             TangemPayTariffPlanTransition.Type.SYSTEM_DOWNGRADE,
             TangemPayTariffPlanTransition.Type.UNKNOWN,
-            -> Unit.right()
+            -> VisaApiError.Unspecified.left()
         }
     }
 }

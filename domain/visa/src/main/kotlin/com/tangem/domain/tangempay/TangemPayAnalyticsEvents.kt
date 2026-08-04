@@ -319,6 +319,11 @@ sealed class TangemPayAnalyticsEvents(
         event = "Success Screen Activation",
     )
 
+    class VaPreparationPopupShowed : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Preparation Popup Showed",
+    )
+
     class VaConditionsPopupShowed : TangemPayAnalyticsEvents(
         categoryName = "Visa VA Topup",
         event = "Conditions Popup Showed",
@@ -332,6 +337,11 @@ sealed class TangemPayAnalyticsEvents(
     class VaBankingDetailsShowed : TangemPayAnalyticsEvents(
         categoryName = "Visa VA Topup",
         event = "Banking Details Showed",
+    )
+
+    class VaDetailsErrorShowed : TangemPayAnalyticsEvents(
+        categoryName = "Visa VA Topup",
+        event = "Details Error Showed",
     )
 
     class VaShareDetailsButtonClicked : TangemPayAnalyticsEvents(
