@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,8 +22,8 @@ import javax.inject.Singleton
  * Bridges a suspending caller (the Google authorizer) to an [ActivityResultLauncher] owned by the UI.
  *
  * Mirrors the requester-proxy overlays (`ScanFailsRequesterProxy`, `HotWalletPasswordRequesterProxy`):
- * the concrete launcher is registered by a host mounted at the app root, while callers only see
- * [launch]. One resolution runs at a time (auth is user-driven), guarded by [mutex].
+ * the concrete launcher is registered by the root Activity, while callers only see [launch]. One
+ * resolution runs at a time (auth is user-driven), guarded by [mutex].
  */
 @Singleton
 class GoogleAuthActivityResultBridge @Inject constructor() {
@@ -47,9 +48,9 @@ class GoogleAuthActivityResultBridge @Inject constructor() {
     }
 
     suspend fun launch(intentSender: IntentSender): ActivityResult = mutex.withLock {
-        val target = withTimeoutOrNull(LAUNCHER_WAIT_TIMEOUT_MS) {
+        val target = withTimeout(LAUNCHER_WAIT_TIMEOUT_MS) {
             launcher.filterNotNull().first()
-        } ?: error("Google auth launcher is not mounted")
+        }
 
         val deferred = CompletableDeferred<ActivityResult>()
         pending = deferred
@@ -58,8 +59,8 @@ class GoogleAuthActivityResultBridge @Inject constructor() {
             deferred.await()
         } finally {
             // If the caller is cancelled while the consent UI is still up, hold the slot until the
-            // stale result is delivered (or the host unmounts) so it can't complete the next request.
-            // Bounded so a result that never arrives can't wedge the bridge.
+            // stale result is delivered (or the launcher is unregistered) so it can't complete the
+            // next request. Bounded so a result that never arrives can't wedge the bridge.
             withContext(NonCancellable) {
                 withTimeoutOrNull(RESULT_DRAIN_TIMEOUT_MS) { deferred.join() }
             }
