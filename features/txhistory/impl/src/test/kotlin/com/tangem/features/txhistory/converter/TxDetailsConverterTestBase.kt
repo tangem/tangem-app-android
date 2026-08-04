@@ -54,6 +54,7 @@ internal open class TxDetailsConverterTestBase {
     protected val ownAccount: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1, name = "Family")
     protected val secondAccount: Account.CryptoPortfolio =
         MockAccounts.createAccount(derivationIndex = 2, name = "Savings")
+    protected val ownPaymentAccount: Account.Payment = Account.Payment(MockAccounts.userWalletId)
     protected val copiedAddresses = mutableListOf<String>()
     protected val openedUrls = mutableListOf<String>()
 
@@ -75,14 +76,14 @@ internal open class TxDetailsConverterTestBase {
     protected fun onChainConverter(
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         validators: List<Yield.Validator> = emptyList(),
-        ownAddresses: Set<String> = emptySet(),
+        lookup: TxHistoryLookupContext = lookupOf(),
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
         menu = menu,
         validatorsByAddress = validators.associateBy(Yield.Validator::address),
         onOpenValidator = openedUrls::add,
-        ownAddresses = ownAddresses,
+        lookup = lookup,
     )
 
     protected fun expressConverter(
@@ -102,13 +103,14 @@ internal open class TxDetailsConverterTestBase {
         interactionAddressType: TxInfo.InteractionAddressType? = null,
         destinationType: TxInfo.DestinationType =
             TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(USER_ADDRESS)),
+        sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
         fee: SdkAmount? = null,
     ): TxInfo = TxInfo(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = isOutgoing,
         destinationType = destinationType,
-        sourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
+        sourceType = sourceType,
         interactionAddressType = interactionAddressType,
         status = status,
         type = type,
@@ -192,6 +194,7 @@ internal open class TxDetailsConverterTestBase {
                 cryptoCurrency = bitcoin,
             ),
             externalTxUrl = externalTxUrl,
+            externalTxId = null,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
             refundAssetId = null,
@@ -251,7 +254,7 @@ internal open class TxDetailsConverterTestBase {
 
     /** Builds a details lookup with the given per-network own-address maps. */
     protected fun lookupOf(
-        vararg networks: Pair<Network.RawID, Map<String, Account.CryptoPortfolio>>,
+        vararg networks: Pair<Network.RawID, Map<String, Account>>,
         isAccountsModeEnabled: Boolean = true,
         walletInfoById: Map<UserWalletId, WalletInfo> = mapOf(
             MockAccounts.userWalletId to WalletInfo(
@@ -264,6 +267,15 @@ internal open class TxDetailsConverterTestBase {
         isAccountsModeEnabled = isAccountsModeEnabled,
         walletInfoById = walletInfoById,
     )
+
+    /** A `walletInfoById` with the own [MockAccounts.userWalletId] plus a second wallet, so an own-wallet leg has
+     * something to disambiguate against. */
+    protected fun twoWalletInfo(): Map<UserWalletId, WalletInfo> = mapOf(
+        MockAccounts.userWalletId to WalletInfo(name = "My Wallet", deviceIconUM = deviceIcon()),
+        UserWalletId("022") to WalletInfo(name = "Second Wallet", deviceIconUM = deviceIcon()),
+    )
+
+    private fun deviceIcon(): DeviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null)
 
     protected fun TextReference.resolveString(): String = (this as TextReference.Str).value
 
