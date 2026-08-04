@@ -57,6 +57,7 @@ internal class StateBuilderUpdateSwapAmountTest {
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
             appRouter = appRouter,
+            isChooseTokenPulseEnabled = false,
         )
     }
 

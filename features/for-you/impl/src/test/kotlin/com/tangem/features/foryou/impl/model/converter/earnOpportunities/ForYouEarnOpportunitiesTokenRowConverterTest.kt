@@ -3,11 +3,7 @@ package com.tangem.features.foryou.impl.model.converter.earnOpportunities
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
@@ -31,10 +27,12 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
     private fun createConverter(
         userWalletId: UserWalletId? = UserWalletId("01"),
         onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
+        isBalanceHidden: Boolean = false,
     ) = ForYouEarnOpportunitiesTokenRowConverter(
         appCurrency = appCurrency,
         userWalletId = userWalletId,
         onTokenClick = onTokenClick,
+        isBalanceHidden = isBalanceHidden,
     )
 
     @Test
@@ -68,7 +66,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
         val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
         assertThat(topEnd.text).isEqualTo(
             combinedReference(
-                stringReference(StringsSigns.PLUS),
+                stringReference(StringsSigns.PLUS + StringsSigns.WHITE_SPACE),
                 resourceReference(R.string.for_you_earn_per_year, wrappedList(expectedEarn)),
             ),
         )
@@ -86,7 +84,7 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
         // Assert
         val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
         val styled = bottomEnd.text as TextReference.StyledStr
-        assertThat(styled.value).isEqualTo(BigDecimal("0.05").format { percent() })
+        assertThat(styled.value).isEqualTo("APY " + BigDecimal("0.05").format { percent() })
     }
 
     @Test
@@ -126,6 +124,29 @@ internal class ForYouEarnOpportunitiesTokenRowConverterTest {
 
         // Assert
         assertThat(clicked).isEqualTo(Triple(walletId, currency, earnType))
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN convert THEN yearly earn masked but percent rate visible`() {
+        // Arrange — 200 fiat at 5%
+        val status = createStatus(createEarnCurrency(), createRowLoadedValue(fiatAmount = BigDecimal("200")))
+        val converter = createConverter(isBalanceHidden = true)
+
+        // Act
+        val result = converter.convert(status to createEarnApyInfo(apy = BigDecimal("0.05")))
+            as TangemTokenRowUM.Content
+
+        // Assert — the projected fiat earn is masked, the styled APY percent stays visible
+        val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
+        val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
+        assertThat(topEnd.text).isEqualTo(
+            combinedReference(
+                TextReference.EMPTY,
+                resourceReference(R.string.for_you_earn_per_year, wrappedList(StringsSigns.THREE_STARS)),
+            ),
+        )
+        val styled = bottomEnd.text as TextReference.StyledStr
+        assertThat(styled.value).isEqualTo("APY " + BigDecimal("0.05").format { percent() })
     }
 
     @Test

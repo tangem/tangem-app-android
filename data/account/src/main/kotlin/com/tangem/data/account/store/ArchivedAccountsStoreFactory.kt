@@ -1,7 +1,7 @@
 package com.tangem.data.account.store
 
 import androidx.annotation.VisibleForTesting
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.models.wallet.UserWalletId
 import java.util.concurrent.ConcurrentHashMap
 

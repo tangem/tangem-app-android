@@ -1,11 +1,9 @@
 package com.tangem.features.tangempay.entity
 
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsTopBarConfig(
     val onBackClick: () -> Unit,
     val onOpenMenu: () -> Unit,
-    val items: ImmutableList<TangemDropdownMenuItem>,
-    val itemsV2: ImmutableList<TangemPayDropDownItemUM>,
+    val items: ImmutableList<TangemPayDropDownItemUM>,
 )

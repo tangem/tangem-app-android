@@ -1,6 +1,6 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.stories.DefaultStoriesStore
 import com.tangem.datasource.local.stories.StoriesStore
 import dagger.Module
@@ -16,6 +16,6 @@ object StoriesStoreModule {
     @Provides
     @Singleton
     fun provideStoriesStore(): StoriesStore {
-        return DefaultStoriesStore(dataStore = RuntimeDataStore())
+        return DefaultStoriesStore(store = RuntimeSharedMapStore())
     }
 }
