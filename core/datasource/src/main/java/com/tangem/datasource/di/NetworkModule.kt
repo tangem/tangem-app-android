@@ -6,7 +6,6 @@ import com.tangem.datasource.api.common.config.P2PEthPool
 import com.tangem.datasource.api.common.config.TangemTech
 import com.tangem.datasource.api.common.config.News
 import com.tangem.datasource.api.common.config.YieldSupply
-import com.tangem.datasource.api.common.config.TangemPay
 import com.tangem.datasource.api.common.config.BlockAid
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
@@ -36,8 +35,6 @@ import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.datasource.api.gasless.TronGaslessApi
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
@@ -48,7 +45,6 @@ import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.build
 import com.tangem.core.remote.Timeouts
-import com.tangem.datasource.api.visa.VisaApi
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -199,52 +195,6 @@ internal object NetworkModule {
                     readTimeoutSeconds = TIMEOUT_60_SECONDS,
                 ),
                 shouldSaveLogs = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideTangemPayApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemPay.Bff.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideVisaApi(retrofitApiBuilder: RetrofitApiBuilder): VisaApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemPay.Bff.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideTangemPayAuthApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayAuthApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemPay.Auth.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
             ),
         )
     }
