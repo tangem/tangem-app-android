@@ -16,12 +16,11 @@ sealed interface PolymarketOnboardingProgress {
     data object Ready : PolymarketOnboardingProgress
 
     /**
-     * Terminal: the backend is still executing [status] and this run stopped waiting. Not a failure —
-     * the operation continues server-side and a later run resumes from wherever it got to.
+     * Terminal: [isRetryable] tells whether starting another run can plausibly succeed.
+     *
+     * The UI does not currently read [isRetryable] — both values return the Start button to idle.
+     * The flag is reserved for the error design that is still to be agreed.
      */
-    data class StillWorking(val status: PolymarketWalletStatus) : PolymarketOnboardingProgress
-
-    /** Terminal: [isRetryable] tells whether starting another run can plausibly succeed. */
     data class Failed(
         val error: PolymarketOnboardingError,
         val isRetryable: Boolean,
