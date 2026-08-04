@@ -230,6 +230,65 @@ internal class StartTangemPayOrderPollingUseCaseTest {
             firstPoller.cancel()
         }
 
+    @Test
+    fun `GIVEN processing order WHEN backend reports order not found THEN resolves as CANCELED and stops`() = runTest {
+        // GIVEN
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+        val changes = mutableListOf<TangemPayOrderInfo>()
+        coEvery {
+            cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
+        } returns VisaApiError.OrderNotFound.left()
+        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
+
+        // WHEN
+        val result = useCase(order, USER_WALLET_ID, onOrderStateChange = { changes.add(it) })
+
+        // THEN
+        assertThat(result).isFalse()
+        assertThat(changes).containsExactly(TangemPayOrderInfo(ORDER_ID, OrderStatus.CANCELED))
+        coVerify(exactly = 1) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
+        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN long outage WHEN backend recovers THEN order is still polled to terminal`() = runTest {
+        // GIVEN
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+        val outage = List(size = 100) { VisaApiError.ServerUnavailable.left() }
+        coEvery {
+            cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
+        } returnsMany outage + TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED).right()
+        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
+
+        // WHEN
+        val result = useCase(order, USER_WALLET_ID)
+
+        // THEN
+        assertThat(result).isTrue()
+        coVerify(exactly = 101) { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) }
+    }
+
+    @Test
+    fun `GIVEN non-terminal order WHEN polling THEN polls at a flat 5s cadence`() = runTest {
+        // GIVEN
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+        coEvery {
+            cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID)
+        } returnsMany listOf(
+            TangemPayOrderInfo(ORDER_ID, OrderStatus.NEW).right(),
+            VisaApiError.ServerUnavailable.left(),
+            TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED).right(),
+        )
+        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
+
+        // WHEN
+        val result = useCase(order, USER_WALLET_ID)
+
+        // THEN
+        assertThat(result).isTrue()
+        assertThat(testScheduler.currentTime).isEqualTo(10_000L)
+    }
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
         const val ORDER_ID = "order-test-1"
