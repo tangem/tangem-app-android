@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.onboarding.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,17 +24,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -69,13 +73,20 @@ internal fun PolymarketWelcomeContent(
     val layoutDirection = LocalLayoutDirection.current
     val startPadding = contentPadding.calculateStartPadding(layoutDirection)
     val endPadding = contentPadding.calculateEndPadding(layoutDirection)
+    val scrollState = rememberScrollState()
     var footerHeight by remember { mutableIntStateOf(0) }
+
+    val isScrolledToEnd by remember { derivedStateOf { !scrollState.canScrollForward } }
+    val legalAlpha by animateFloatAsState(
+        targetValue = if (isScrolledToEnd) 1f else 0f,
+        label = "legalLineAlpha",
+    )
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(top = contentPadding.calculateTopPadding(), start = startPadding, end = endPadding),
         ) {
             WelcomeHero()
@@ -87,6 +98,7 @@ internal fun PolymarketWelcomeContent(
 
         WelcomeFooter(
             state = state,
+            legalAlpha = legalAlpha,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onSizeChanged { footerHeight = it.height },
@@ -268,6 +280,7 @@ private fun FaqItem(hasTopBorder: Boolean, question: String, answer: String, mod
 @Composable
 private fun WelcomeFooter(
     state: PolymarketOnboardingUM,
+    legalAlpha: Float,
     bottomPadding: Dp,
     startPadding: Dp,
     endPadding: Dp,
@@ -286,7 +299,11 @@ private fun WelcomeFooter(
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            val isLegalVisible = legalAlpha > 0f
+
             LegalLine(
+                modifier = Modifier.alpha(legalAlpha),
+                isVisible = isLegalVisible,
                 onPolymarketTermsClick = state.onPolymarketTermsClick,
                 onTangemTermsClick = state.onTangemTermsClick,
             )
@@ -310,6 +327,7 @@ private fun WelcomeFooter(
 
 @Composable
 private fun LegalLine(
+    isVisible: Boolean,
     onPolymarketTermsClick: () -> Unit,
     onTangemTermsClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -323,8 +341,8 @@ private fun LegalLine(
     // Handles translations that reorder the %1$s/%2$s placeholders and skips a title that a translation
     // does not contain verbatim — falling back to plain text instead of crashing on an invalid substring range.
     val links = listOf(
-        Triple(fullText.indexOf(polymarketTitle), polymarketTitle, onPolymarketTermsClick),
-        Triple(fullText.indexOf(tangemTitle), tangemTitle, onTangemTermsClick),
+        Triple(fullText.indexOf(polymarketTitle), polymarketTitle) { if (isVisible) onPolymarketTermsClick() },
+        Triple(fullText.indexOf(tangemTitle), tangemTitle) { if (isVisible) onTangemTermsClick() },
     )
         .filter { it.first >= 0 }
         .sortedBy { it.first }
@@ -342,7 +360,9 @@ private fun LegalLine(
         append(fullText.substring(cursor))
     }
     Text(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (isVisible) Modifier else Modifier.clearAndSetSemantics { }),
         text = text,
         style = TangemTheme.typography3.caption.medium,
         color = TangemTheme.colors3.text.secondary,
