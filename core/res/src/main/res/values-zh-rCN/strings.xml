@@ -1282,7 +1282,7 @@
   <string name="promo_campaign_terms_agreement">我同意 %1$s</string>
   <string name="promo_campaign_terms_agreement_android">我同意</string>
   <string name="promo_campaign_terms_link">%1$s 条款</string>
-  <string name="promo_campaign_whale_swap_summary_description">7月底前，每次1万美元及以上的兑换均可获得返现。\n\n返现率随交易金额递增：1万美元起为0.10% ，2万美元起为0.20% ，10万美元起为0.50% 。n\n最高奖励：每笔最少兑换500美元，且在活动期间内，每个钱包单向兑换方向的奖励上限为10,000美元。稳定币与稳定币之间的兑换不计入奖励范围。\n\n奖励每周发放至您指定的USDT或USDC地址。</string>
+  <string name="promo_campaign_whale_swap_summary_description">8月底前，每次1万美元及以上的兑换均可获得返现。\n\n返现率随交易金额递增：1万美元起为0.10% ，2万美元起为0.20% ，10万美元起为0.50% 。n\n最高奖励：每笔最少兑换500美元，且在活动期间内，每个钱包单向兑换方向的奖励上限为10,000美元。稳定币与稳定币之间的兑换不计入奖励范围。\n\n奖励每周发放至您指定的USDT或USDC地址。</string>
   <string name="provider_name_support">%s 支持</string>
   <string name="push_notification_settings_banner_description">推送通知已启用，但需要您在设备设置中允许通知才能正常工作。</string>
   <string name="push_notification_settings_banner_title">允许通知</string>
@@ -1808,7 +1808,7 @@
   <string name="tangempay_bank_transfer_fee_header">入金手续费</string>
   <string name="tangempay_bank_transfer_intro_subtitle">收到的美元将按 1:1 的汇率转换为 USDC</string>
   <string name="tangempay_bank_transfer_intro_title">银行转账可能需要 1-2 个工作日</string>
-  <string name="tangempay_bank_transfer_legal">使用本服务即表示您同意服务提供商的 %1$s 和 %2$s</string>
+  <string name="tangempay_bank_transfer_legal">使用本服务即表示您同意服务提供商的 %1$s</string>
   <string name="tangempay_bank_transfer_show_details">显示详情</string>
   <string name="tangempay_bank_transfer_success_subtitle">这可能需要一些时间</string>
   <string name="tangempay_bank_transfer_success_title">正在准备您的银行信息</string>
