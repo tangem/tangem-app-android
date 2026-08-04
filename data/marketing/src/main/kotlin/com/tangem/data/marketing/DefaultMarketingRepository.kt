@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.data.marketing.converter.MarketingCampaignConverter
 import com.tangem.data.marketing.store.MarketingCampaignsCacheStore
 import com.tangem.data.marketing.store.MarketingDismissStore
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsCacheEntry
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse

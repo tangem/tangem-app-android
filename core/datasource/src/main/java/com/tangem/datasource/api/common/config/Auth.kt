@@ -1,12 +1,18 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 
 /**
  * Tangem Auth Service [ApiConfig] — endpoints for device registration, authentication,
  * nonce issuance, refresh token rotation, and JWKS publication.
  */
-internal class Auth : ApiConfig() {
+class Auth : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -40,7 +46,10 @@ internal class Auth : ApiConfig() {
         headers = emptyMap(),
     )
 
-    private companion object {
+    companion object {
+
+        const val KEY = "Auth"
+        val ID = ApiConfig.ID(KEY)
 
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
         private const val PROD_BASE_URL = "https://api.tangem.org/"
