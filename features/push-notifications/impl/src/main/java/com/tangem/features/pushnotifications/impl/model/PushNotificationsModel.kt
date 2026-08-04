@@ -5,18 +5,15 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import arrow.core.Either
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
-import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
-import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
@@ -42,10 +39,8 @@ internal class PushNotificationsModel @Inject constructor(
     private val analyticHandler: AnalyticsEventHandler,
     private val notificationsRepository: NotificationsRepository,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
-    private val setAllWalletPushNotificationPreferences: SetAllWalletPushNotificationPreferencesUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
-    private val isPushNotificationFirstActivationDone: IsPushNotificationFirstActivationDoneUseCase,
+    private val applyPushNotificationFirstActivation: ApplyPushNotificationFirstActivationUseCase,
     private val markPushNotificationFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase,
     private val getPushNotificationsDoubleAskVariantUseCase: GetPushNotificationsDoubleAskVariantUseCase,
 ) : Model(), PushNotificationsClickIntents {
@@ -162,20 +157,7 @@ internal class PushNotificationsModel @Inject constructor(
     /** On the first grant, enable all three categories for every not-yet-activated wallet (guarded once per wallet). */
     private suspend fun applyFirstActivationRule() {
         userWalletsListRepository.userWalletsSync().forEach { wallet ->
-            if (isPushNotificationFirstActivationDone(wallet.walletId)) return@forEach
-
-            // Tokens (address re-subscription) first, then preferences; mark only on success, undo tokens on failure.
-            val tokensResult = setNotificationsEnabledUseCase(wallet.walletId, isEnabled = true)
-            if (tokensResult is Either.Left) return@forEach
-
-            setAllWalletPushNotificationPreferences(
-                userWalletId = wallet.walletId,
-                transactionAlerts = true,
-                offersUpdates = true,
-                priceAlerts = true,
-            )
-                .onRight { markPushNotificationFirstActivationDone(wallet.walletId) }
-                .onLeft { setNotificationsEnabledUseCase(wallet.walletId, isEnabled = false) }
+            applyPushNotificationFirstActivation(wallet.walletId)
         }
     }
 

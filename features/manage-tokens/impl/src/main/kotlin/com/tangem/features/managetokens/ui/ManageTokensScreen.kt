@@ -53,7 +53,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.ManageTokensScreenTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
@@ -78,13 +78,13 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
 
     Scaffold(
         modifier = modifier.nestedScroll(nestedScrollConnection),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors3.bg.primary,
         contentWindowInsets = WindowInsetsZero,
         topBar = {
             ManageTokensTopBar(
                 modifier = Modifier
                     .statusBarsPadding()
-                    .background(TangemTheme.colors.background.primary),
+                    .background(TangemTheme.colors3.bg.primary),
                 topBar = state.topBar,
                 search = state.search,
             )
@@ -93,6 +93,7 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
             Content(
                 modifier = Modifier
                     .padding(innerPadding)
+                    .padding(horizontal = 8.dp)
                     .fillMaxSize(),
                 state = state,
             )
@@ -245,7 +246,7 @@ fun SearchNothingFoundText(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.markets_search_token_no_result_title),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.tertiary,
         )
     }
 }
@@ -253,10 +254,10 @@ fun SearchNothingFoundText(modifier: Modifier = Modifier) {
 @Composable
 fun ProgressIndicator(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.background(color = TangemTheme.colors.background.primary),
+        modifier = modifier.background(color = TangemTheme.colors3.bg.primary),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(color = TangemTheme.colors.icon.informative)
+        CircularProgressIndicator(color = TangemTheme.colors3.icon.tertiary)
     }
 }
 
@@ -339,7 +340,7 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
                         .rotate(rotation)
                         .size(TangemTheme.dimens.size24),
                     painter = painterResource(id = R.drawable.ic_chevron_24),
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.tertiary,
                     contentDescription = null,
                 )
             },
@@ -434,7 +435,7 @@ private fun NetworksList(
 private fun Preview_ManageTokens(
     @PreviewParameter(PreviewManageTokensComponentProvider::class) component: ManageTokensComponent,
 ) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         component.Content(Modifier.fillMaxWidth())
     }
 }

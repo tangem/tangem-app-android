@@ -338,7 +338,7 @@
   <string name="tangem_pay_freeze_card_unfreeze">解凍</string>
   <string name="tangem_pay_get_help">獲取幫助</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">原因：%s</string>
-  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s・%s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">其他</string>
   <string name="tangem_pay_pin_code_title">PIN 碼</string>
@@ -378,7 +378,7 @@
   <string name="tangempay_bank_transfer_fee_header">入金手續費</string>
   <string name="tangempay_bank_transfer_intro_subtitle">收到的美元將按 1:1 的匯率轉換為 USDC</string>
   <string name="tangempay_bank_transfer_intro_title">銀行轉帳可能需要 1-2 個工作日</string>
-  <string name="tangempay_bank_transfer_legal">使用本服務即表示您同意服務提供商的 %1$s 和 %2$s</string>
+  <string name="tangempay_bank_transfer_legal">使用本服務即表示您同意服務提供商的 %1$s</string>
   <string name="tangempay_bank_transfer_show_details">顯示詳情</string>
   <string name="tangempay_bank_transfer_success_subtitle">這可能需要一些時間</string>
   <string name="tangempay_bank_transfer_success_title">正在準備您的銀行資訊</string>

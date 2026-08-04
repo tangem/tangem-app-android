@@ -87,8 +87,10 @@
   <string name="add_and_manage_sheet_manage_title">Add tokens</string>
   <string name="add_and_manage_sheet_organize_subtitle">Sorting and grouping</string>
   <string name="add_and_manage_sheet_organize_title">Organize tokens</string>
+  <string name="add_crypto_account_subtitle">Organize funds across accounts</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
+  <string name="add_joint_account_subtitle">Manage shared funds together</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="addfunds_buy_row_description">Credit card or bank account</string>
   <string name="addfunds_fund_token">Fund token</string>
@@ -329,6 +331,7 @@
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
   <string name="common_create">Create</string>
+  <string name="common_crypto_account">Crypto account</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Custom</string>
   <string name="common_day">day</string>
@@ -397,6 +400,7 @@
   <string name="common_in">in</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
+  <string name="common_joint_account">Joint account</string>
   <string name="common_later">Later</string>
   <string name="common_learn_more">Learn more</string>
   <string name="common_left">%1$s left</string>
@@ -816,8 +820,8 @@
   <string name="hw_backup_alert_title">Are you sure you want to quit activation?</string>
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
-  <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
   <string name="hw_backup_google_drive_delete_confirm">Delete Google Drive backup?</string>
+  <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
   <string name="hw_backup_google_drive_dialog_message">We\'re working on Google Drive backup to make wallet recovery even easier.</string>
   <string name="hw_backup_google_drive_dialog_title">Google Drive backup is coming soon</string>
   <string name="hw_backup_google_drive_title">Google Drive backup</string>
@@ -844,11 +848,11 @@
   <string name="hw_cloud_backup_cancel_setup_description">Your wallet won\'t be backed up to Google Drive. You can set this up later in wallet settings.</string>
   <string name="hw_cloud_backup_cancel_setup_title">Cancel backup setup?</string>
   <string name="hw_cloud_backup_change_account">Change account</string>
+  <string name="hw_cloud_backup_completed_description">Your wallet is set up and ready to use!</string>
+  <string name="hw_cloud_backup_completed_title">Backup completed</string>
   <string name="hw_cloud_backup_confirm_password_description">A password is required to encrypt your secret phrase on Google Drive.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirm password</string>
   <string name="hw_cloud_backup_consent">I understand that if I lose or forget this password I will lose access to my crypto.</string>
-  <string name="hw_cloud_backup_completed_description">Your wallet is set up and ready to use!</string>
-  <string name="hw_cloud_backup_completed_title">Backup completed</string>
   <string name="hw_cloud_backup_created">Backup created</string>
   <string name="hw_cloud_backup_delete_confirm_message">You won\'t be able to restore this wallet from Google Drive. You can create a new backup anytime.</string>
   <string name="hw_cloud_backup_error_auth">Authorization not completed. Try again and check the required permissions.</string>
@@ -873,12 +877,12 @@
   <string name="hw_cloud_backup_removed">Backup removed</string>
   <string name="hw_cloud_backup_restore_choose_backup_title">Choose a backup</string>
   <string name="hw_cloud_backup_restore_error">Couldn\'t restore your backup. Please try again.</string>
+  <string name="hw_cloud_backup_restore_error_title">Something went wrong</string>
+  <string name="hw_cloud_backup_restore_error_with_recovery">Please try again later or import your recovery phrase.</string>
   <string name="hw_cloud_backup_restore_importing">Restoring wallet…</string>
   <string name="hw_cloud_backup_restore_navtitle">Cloud backup</string>
   <string name="hw_cloud_backup_restore_no_backup_description">We couldn\'t find a Google Drive backup for this account. You can import your wallet with a recovery phrase instead.</string>
   <string name="hw_cloud_backup_restore_no_backup_title">No backup found</string>
-  <string name="hw_cloud_backup_restore_error_title">Something went wrong</string>
-  <string name="hw_cloud_backup_restore_error_with_recovery">Please try again later or import your recovery phrase.</string>
   <string name="hw_cloud_backup_restore_password_button">Restore</string>
   <string name="hw_cloud_backup_restore_password_description">You\'re restoring “%1$s” from a Google Drive backup created on %2$s. Enter the encryption password to continue.</string>
   <string name="hw_cloud_backup_restore_password_navtitle">Enter password</string>
@@ -925,7 +929,7 @@
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_remove_wallet_action_forget_title">Forget wallet</string>
   <string name="hw_remove_wallet_attention_description">This wallet will be permanently removed from your device</string>
-  <string name="hw_remove_wallet_cloud_backup_description">Wallet will be removed from this device. Your Google Drive backup stays safe — you can restore this wallet anytime with your password.</string>
+  <string name="hw_remove_wallet_cloud_backup_description">Wallet will be removed from this device. Your %s backup stays safe — you can restore this wallet anytime with your password.</string>
   <string name="hw_remove_wallet_cloud_backup_title">Forget this wallet?</string>
   <string name="hw_remove_wallet_confirmation_title">Are you sure you want to do this?</string>
   <string name="hw_remove_wallet_confirmation_with_cloud_backup">Forgetting this wallet will also remove its Google Drive backup. Make sure you can access your recovery phrase — this action can\'t be undone.</string>
@@ -977,6 +981,7 @@
   <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
   <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
+  <string name="joint_account_onboarding_subtitle">A shared account that several people own together. Money moves only when enough members sign.</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Not enough balance</string>
@@ -1082,6 +1087,8 @@
   <string name="markets_sort_by_yield_mode_title">Yield Mode</string>
   <string name="markets_staking_banner_description_placeholder">Staking is the easiest way to receive rewards on your crypto. %s</string>
   <string name="markets_staking_banner_title">Earn up to %s APY</string>
+  <string name="markets_token_add_all_added_description">Already in all wallets &amp; accounts</string>
+  <string name="markets_token_add_all_added_title">No more to add</string>
   <string name="markets_token_add_subtitle">in another network or account</string>
   <string name="markets_token_added">Token Added</string>
   <string name="markets_token_details_about_token_title">About %s</string>
@@ -1431,6 +1438,15 @@
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
   <string name="prediction_account_title">Prediction account</string>
+  <plurals name="prediction_event_more_outcomes">
+    <item quantity="one">+%d Outcome</item>
+    <item quantity="other">+%d Outcomes</item>
+  </plurals>
+  <string name="prediction_event_probability">Probability</string>
+  <string name="prediction_event_total_volume">Total volume:</string>
+  <string name="prediction_main_empty_events">No events yet</string>
+  <string name="prediction_main_subtitle">USDC on Polygon network</string>
+  <string name="prediction_main_title">Predictions</string>
   <string name="prediction_region_restrictions_subtitle">Predictions – not supported in your region, you still can view events</string>
   <string name="prediction_region_restrictions_title">Region restrictions</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
@@ -1447,7 +1463,7 @@
   <string name="promo_campaign_terms_agreement">I agree with %1$s</string>
   <string name="promo_campaign_terms_agreement_android">I agree with</string>
   <string name="promo_campaign_terms_link">%1$s Terms</string>
-  <string name="promo_campaign_whale_swap_summary_description">Earn cashback on every swap from $10K until the end of July.\n\nRates step up with size: 0.10% from $10K, 0.20% from $20K, 0.50% from $100K.\n\nMax payout: $500 per swap, and $10,000 per wallet per swap direction until campaign lasts. Stable coin into stablecoin swaps are excluded.\n\nPayout arrives weekly in USDT or USDC address of your choice.</string>
+  <string name="promo_campaign_whale_swap_summary_description">Earn cashback on every swap from $10K until the end of August.\n\nRates step up with size: 0.10% from $10K, 0.20% from $20K, 0.50% from $100K.\n\nMax payout: $500 per swap, and $10,000 per wallet per swap direction until campaign lasts. Stable coin into stablecoin swaps are excluded.\n\nPayout arrives weekly in USDT or USDC address of your choice.</string>
   <string name="provider_name_support">%s support</string>
   <string name="push_notification_settings_banner_description">Push Notifications are enabled but won\'t work until you allow them</string>
   <string name="push_notification_settings_banner_title">Allow notifications</string>
@@ -1886,6 +1902,8 @@
   <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
   <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Assets</string>
+  <string name="swap_token_selector_empty_filtered_message">You don\'t have any funded tokens on this wallet. Explore other wallets or change the filter</string>
+  <string name="swap_token_selector_filter_hide_zero_balance">Hide 0 balance</string>
   <string name="swap_via_provider">Swap via provider</string>
   <string name="swap_your_assets_title">Your assets</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
@@ -1982,7 +2000,7 @@
   <string name="tangempay_bank_transfer_fee_header">Fee for onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Received USD will be converted to USDC by 1:1 rate</string>
   <string name="tangempay_bank_transfer_intro_title">Bank transfer might take 1-2 business days</string>
-  <string name="tangempay_bank_transfer_legal">By using service, you agree with %1$s and %2$s</string>
+  <string name="tangempay_bank_transfer_legal">By using service, you agree with provider %1$s</string>
   <string name="tangempay_bank_transfer_show_details">Show details</string>
   <string name="tangempay_bank_transfer_success_subtitle">This may take a little time</string>
   <string name="tangempay_bank_transfer_success_title">Preparing your banking details</string>
@@ -2032,7 +2050,7 @@
   <string name="tangempay_card_details_rename_card_placeholder">Card name</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Details</string>
-  <string name="tangempay_card_details_system_downgrade_subtitle">If it will remain below zero your %1$s cards will be closed on %2$s</string>
+  <string name="tangempay_card_details_system_downgrade_subtitle">If it remain below zero your %1$s cards will be closed on %2$s</string>
   <string name="tangempay_card_details_system_downgrade_title">Top up your account shortly</string>
   <string name="tangempay_card_details_title">Details</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
@@ -2101,6 +2119,7 @@
   <string name="tangempay_common_card">Card</string>
   <string name="tangempay_common_error_loading">Error loading</string>
   <string name="tangempay_current_plan_active_till_notification">Your %1$s plan is active till %2$s, then we will move you to %3$s. %4$s won\'t be charged.</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">We are in process of moving you to %s plan and awaiting payment for plan fee</string>
   <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_current_plan_fee_charged_notification">%1$s monthly fee will be charged on %2$s</string>
   <string name="tangempay_current_plan_section_card">Card related</string>

@@ -9,10 +9,15 @@ sealed interface AddressBookOpenMode {
     @Serializable
     data object Default : AddressBookOpenMode
 
+    /**
+     * Opened to create a contact for an already-known [address] on [networkId]. [memo] carries the destination tag /
+     * memo that went with it, when the network supports transaction extras and one was entered.
+     */
     @Serializable
     data class WithContactCreation(
         val address: String,
         val networkId: String,
+        val memo: String? = null,
     ) : AddressBookOpenMode
 
     /**
