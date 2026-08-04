@@ -108,7 +108,7 @@ fun PortfolioSelectRowV2(
                     modifier = Modifier.padding(end = TangemTheme.dimens2.x3),
                     name = state.name,
                     icon = state.icon,
-                    size = AccountIconSize.RedesignedDefault,
+                    size = AccountIconSize.Default,
                 )
             }
         } else if (state.imageState != null) {

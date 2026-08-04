@@ -23,7 +23,7 @@ import javax.inject.Singleton
  * INACTIVE, balances ([getCustomerInfo]) — is driven by the WireMock test scenario (authenticated with the
  * synthetic tokens from [com.tangem.data.pay.store.MockAwareTangemPayStorage]) rather than hardcoded:
  *  - [hasTangemPayInWallet] delegates to the real repo, so the "existing customer" gate follows the
- *    checkCustomerWalletId mock (the `tangem_pay_eligibility` scenario: `Started` → 404/NotPaeraCustomer →
+ *    checkCustomerWalletId mock (the `tangem_pay_eligibility` scenario: `Started` → 404/NotFound →
  *    no Payment account, `PaeraCustomer` → 200 → Payment account);
  *  - [getCustomerInfo] delegates to the real repo (WireMock), so KYC / customer-state scenarios take effect.
  */
@@ -124,7 +124,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     // The "existing Tangem Pay customer" gate (decides whether an active Payment account — and accounts mode —
     // appears). Delegates to WireMock's checkCustomerWalletId via the real repo (static token, no signing), so it
-    // is driven by the `tangem_pay_eligibility` scenario: `Started` (default) → 404/NotPaeraCustomer → no account;
+    // is driven by the `tangem_pay_eligibility` scenario: `Started` (default) → 404/NotFound → no account;
     // `PaeraCustomer` → 200 → account. Generic UI tests never set the scenario, so they stay Payment-free.
     override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> =
         real.hasTangemPayInWallet(userWalletId)

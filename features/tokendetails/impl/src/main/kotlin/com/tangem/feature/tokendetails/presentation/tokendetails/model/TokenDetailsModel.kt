@@ -13,8 +13,6 @@ import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
-import com.tangem.features.marketing.api.MarketingBannerRequest
-import com.tangem.features.rating.RatingComponent
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
@@ -54,8 +52,8 @@ import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -102,6 +100,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.*
+import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -822,7 +822,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.ANY, checkYieldSupply = true)
+        handleSwap(unavailabilityReason, checkYieldSupply = true)
     }
 
     /**
@@ -848,10 +848,6 @@ internal class TokenDetailsModel @Inject constructor(
         MarketingDeeplink.EXTERNAL -> false
     }
 
-    override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.FROM, checkYieldSupply = true)
-    }
-
     override fun onSwapAndSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
@@ -866,15 +862,7 @@ internal class TokenDetailsModel @Inject constructor(
         )
     }
 
-    override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.TO, checkYieldSupply = false)
-    }
-
-    private fun handleSwap(
-        unavailabilityReason: ScenarioUnavailabilityReason,
-        currencyPosition: AppRoute.Swap.CurrencyPosition,
-        checkYieldSupply: Boolean,
-    ) {
+    private fun handleSwap(unavailabilityReason: ScenarioUnavailabilityReason, checkYieldSupply: Boolean) {
         analyticsEventsHandler.send(
             TokenScreenAnalyticsEvent.ButtonWithParams.ButtonExchange(
                 token = cryptoCurrency.symbol,
@@ -902,7 +890,6 @@ internal class TokenDetailsModel @Inject constructor(
                         fromCryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
-                        fromCurrencyPosition = currencyPosition,
                     ),
                 )
             }
