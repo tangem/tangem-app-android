@@ -10,6 +10,12 @@ import com.tangem.domain.models.wallet.UserWallet
  */
 interface WalletRegistrationTrigger {
 
-    /** Registers a freshly created/imported MOBILE (hot) wallet while its unlock context is fresh. */
-    suspend fun onMobileWalletCreated(userWallet: UserWallet.Hot)
+    /**
+
+     *
+     * Non-blocking: the implementation dispatches the registration on an application-level scope and
+     * returns immediately, so callers on a short-lived scope (a screen model destroyed on navigation)
+     * don't cancel the in-flight registration.
+     */
+    fun onMobileWalletCreated(userWallet: UserWallet.Hot)
 }

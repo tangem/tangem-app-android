@@ -8,9 +8,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -20,15 +18,17 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.tokens.SlideInItemVisibility
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
@@ -36,12 +36,13 @@ import com.tangem.core.ui.components.account.toBoxSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.badge.TangemBadge
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -50,74 +51,119 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_collapse_20
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.sharedBoundsSafely
+import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletGroupUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun ForYouPortfolioTokenList(tokenList: ImmutableList<ForYouTokenListItemUM>, modifier: Modifier = Modifier) {
+internal fun ForYouPortfolioTokenList(items: ImmutableList<ForYouTokenListItemUM>, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        val outerLastIndex = tokenList.lastIndex
-        tokenList.fastForEachIndexed { index, listItem ->
+        items.fastForEachIndexed { index, listItem ->
             key(listItem.tokenRowUM.id) {
-                PortfolioTokenItem(listItem = listItem, index = index, outerLastIndex = outerLastIndex)
+                PortfolioTokenItem(listItem = listItem, index = index)
             }
         }
     }
 }
 
 @Composable
-private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int, outerLastIndex: Int) {
-    PortfolioAssetItem(listItem = listItem, index = index, outerLastIndex = outerLastIndex)
-
-    val lastIndex = listItem.tokenList.lastIndex.inc()
-    listItem.tokenList.fastForEachIndexed { tokenIndex, item ->
-        SlideInItemVisibility(
-            currentIndex = tokenIndex + 1,
-            lastIndex = lastIndex,
-            modifier = Modifier
-                .roundedShapeItemDecoration(
-                    radius = 24.dp,
-                    currentIndex = tokenIndex + 1,
-                    addDefaultPadding = false,
-                    lastIndex = lastIndex,
-                    backgroundColor = TangemTheme.colors3.bg.secondary,
-                ),
-            visible = listItem.isExpanded,
-        ) {
-            val itemModifier = Modifier
-                .semantics { lazyListItemPosition = tokenIndex + 1 }
-
-            var position by remember { mutableStateOf(Offset.Zero) }
-            TangemTokenRow(
-                tokenRowUM = item,
-                isBalanceHidden = false, // TODO For You
-                modifier = itemModifier
-                    .onGloballyPositioned {
-                        position = it.positionInWindow()
-                    }
-                    .conditionalCompose(item.onItemClick != null) {
-                        clickable(onClick = requireNotNull(item.onItemClick))
-                    },
-            )
+internal fun ForYouEarnOpportunitiesTokenList(
+    groups: ImmutableList<ForYouWalletGroupUM>,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        groups.fastForEach { group ->
+            group.header?.let { header ->
+                key(header.id) {
+                    WalletNameRow(header = header)
+                }
+            }
+            group.items.fastForEachIndexed { index, listItem ->
+                key(listItem.tokenRowUM.id) {
+                    PortfolioTokenItem(listItem = listItem, index = index)
+                }
+            }
         }
     }
 }
 
+@Composable
+private fun WalletNameRow(header: ForYouWalletHeaderUM, modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp, bottom = 8.dp),
+        includeInnerPaddings = false,
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        subtitleSlot = {
+            TangemRowText(
+                modifier = Modifier.align(Alignment.CenterVertically),
+                text = header.name.resolveReference(),
+                role = TangemRowTextRole.Subtitle,
+            )
+            TangemDeviceIcon(
+                state = header.deviceIcon,
+                modifier = Modifier.size(20.dp),
+            )
+        },
+    )
+}
+
+@Composable
+private fun PortfolioTokenItem(listItem: ForYouTokenListItemUM, index: Int) {
+    PortfolioAssetItem(listItem = listItem, index = index)
+
+    val lastIndex = listItem.tokenList.lastIndex.inc()
+    listItem.tokenList.fastForEachIndexed { tokenIndex, item ->
+        key(item.id) {
+            SlideInItemVisibility(
+                currentIndex = tokenIndex + 1,
+                lastIndex = lastIndex,
+                modifier = Modifier
+                    .roundedShapeItemDecoration(
+                        radius = 24.dp,
+                        currentIndex = tokenIndex + 1,
+                        addDefaultPadding = false,
+                        lastIndex = lastIndex,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
+                    ),
+                visible = listItem.isExpanded,
+            ) {
+                TangemTokenRow(
+                    tokenRowUM = item,
+                    isBalanceHidden = false, // Handled in converters
+                    modifier = Modifier
+                        .semantics { lazyListItemPosition = tokenIndex + 1 }
+                        .conditionalCompose(item.onItemClick != null) {
+                            clickable(onClick = requireNotNull(item.onItemClick))
+                        },
+                )
+            }
+        }
+    }
+
+    SpacerH8()
+}
+
 @Suppress("MagicNumber")
 @Composable
-private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, outerLastIndex: Int) {
+private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, modifier: Modifier = Modifier) {
     val itemBackgroundColor = TangemTheme.colors3.bg.secondary
 
+    val currentItem by rememberUpdatedState(listItem)
+
     ProvideSharedTransitionScope(
-        modifier = Modifier
-            .padding(top = 8.dp)
+        modifier = modifier
             .semantics { lazyListItemPosition = index }
             .roundedShapeItemDecoration(
                 currentIndex = 0,
                 radius = 24.dp,
                 addDefaultPadding = false,
-                lastIndex = portfolioAssetExpandAnimation(listItem = listItem, outerLastIndex = outerLastIndex).value,
+                lastIndex = portfolioAssetExpandAnimation(listItem = listItem).value,
                 backgroundColor = itemBackgroundColor,
             ),
     ) {
@@ -128,28 +174,30 @@ private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, oute
         AnimatedContent(
             targetState = listItem.isExpanded,
             transitionSpec = { portfolioAssetExpandFadeAnimation() },
-        ) { isExpandedWrapped ->
-            val composables = remember(isExpandedWrapped) {
+        ) { isExpanded ->
+            val animatedContentScope = this
+
+            val composables = remember(currentItem) {
                 SharedTokenRowComposables(
-                    icon = { modifier ->
+                    icon = { slotModifier ->
                         PortfolioSharedAssetIcon(
-                            listItem = listItem,
-                            isExpandedWrapped = isExpandedWrapped,
+                            listItem = currentItem,
+                            isExpandedWrapped = isExpanded,
                             itemBackgroundColor = itemBackgroundColor,
-                            modifier = modifier.sharedBoundsSafely(
+                            modifier = slotModifier.sharedBoundsSafely(
                                 sharedContentState = iconSharedContentState,
-                                animatedVisibilityScope = this,
+                                animatedVisibilityScope = animatedContentScope,
                                 boundsTransform = boundsTransform,
                             ),
                         )
                     },
-                    title = { modifier ->
+                    title = { slotModifier ->
                         PortfolioSharedAssetTitle(
-                            listItem = listItem,
-                            isExpandedWrapped = isExpandedWrapped,
-                            modifier = modifier.sharedBoundsSafely(
+                            listItem = currentItem,
+                            isExpandedWrapped = isExpanded,
+                            modifier = slotModifier.sharedBoundsSafely(
                                 sharedContentState = titleSharedContentState,
-                                animatedVisibilityScope = this,
+                                animatedVisibilityScope = animatedContentScope,
                                 boundsTransform = boundsTransform,
                                 resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
                             ),
@@ -158,18 +206,18 @@ private fun PortfolioAssetItem(listItem: ForYouTokenListItemUM, index: Int, oute
                 )
             }
 
-            if (isExpandedWrapped) {
+            if (isExpanded) {
                 ForYouPortfolioListHeader(
-                    tokenRowUM = listItem.tokenRowUM,
+                    tokenRowUM = currentItem.tokenRowUM,
                     headComponent = composables.icon,
                     titleComponent = composables.title,
                 )
             } else {
                 TangemTokenRow(
-                    tokenRowUM = listItem.tokenRowUM,
+                    tokenRowUM = currentItem.tokenRowUM,
                     headComponent = composables.icon,
                     titleComponent = composables.title,
-                    isBalanceHidden = false, // todo For You
+                    isBalanceHidden = false, // Handled in converters
                 )
             }
         }
@@ -196,29 +244,40 @@ private fun PortfolioSharedAssetIcon(
             is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(size = size)
             else -> currencyIconState
         }
-        TangemCurrencyIcon(
-            state = currencyIconState,
-            shouldDisplayNetwork = false,
-            modifier = modifier
-                .size(size.toBoxSize())
-                // TODO For You replace with DC components
-                .drawWithContent {
-                    drawContent()
-                    if (!isExpandedWrapped) {
-                        val offset = 34.dp.toPx()
-                        drawBadge(
-                            color = Color.Red,
-                            containerColor = itemBackgroundColor,
-                            offset = Offset(
-                                x = offset,
-                                y = offset,
-                            ),
-                            size = 3.dp,
-                            padding = 1.dp,
-                        )
-                    }
-                },
-        )
+        val indicatorColor = listItem.segmentColor?.getColor()
+        val iconModifier = modifier
+            .size(size.toBoxSize())
+            .drawWithContent {
+                drawContent()
+                if (!isExpandedWrapped && indicatorColor != null) {
+                    val offset = 34.dp.toPx()
+                    drawBadge(
+                        color = indicatorColor,
+                        containerColor = itemBackgroundColor,
+                        offset = Offset(
+                            x = offset,
+                            y = offset,
+                        ),
+                        size = 3.dp,
+                        padding = 1.dp,
+                    )
+                }
+            }
+
+        if (currencyIconState is CurrencyIconState.Empty) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_empty_64),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.tertiary,
+                modifier = iconModifier,
+            )
+        } else {
+            TangemCurrencyIcon(
+                state = currencyIconState,
+                shouldDisplayNetwork = !isExpandedWrapped && currencyIconState.topBadgeIconResId != null,
+                modifier = iconModifier,
+            )
+        }
     }
 }
 
@@ -238,28 +297,33 @@ private fun PortfolioSharedAssetTitle(
     val startStyle = TangemTheme.typography3.subheading.medium
     val stopStyle = TangemTheme.typography3.body.medium
 
-    val textStyle by remember(animationFraction.value) {
-        derivedStateOf { lerp(startStyle, stopStyle, animationFraction.value) }
-    }
+    val textStyle = lerp(startStyle, stopStyle, animationFraction.value)
 
-    val resizedTitle = when (val titleUM = listItem.tokenRowUM.titleUM) {
-        is TangemTokenRowUM.TitleUM.Content -> titleUM.copy(
-            text = styledStringReference(
-                titleUM.text.resolveReference(),
-                { textStyle.toSpanStyle() },
-            ),
-        )
-        else -> titleUM
-    }
+    val titleContent = listItem.tokenRowUM.titleUM as? TangemTokenRowUM.TitleUM.Content
 
-    TokenRowTitle(
-        titleUM = if (isExpandedWrapped) {
-            (resizedTitle as? TangemTokenRowUM.TitleUM.Content)?.copy(badge = null) ?: resizedTitle
-        } else {
-            resizedTitle
-        },
+    val resizedTitle = titleContent?.copy(
+        text = styledStringReference(
+            titleContent.text.resolveReference(),
+            { textStyle.toSpanStyle() },
+        ),
+        badge = null,
+    ) ?: listItem.tokenRowUM.titleUM
+
+    val badge = titleContent?.badge?.takeUnless { isExpandedWrapped }
+
+    Row(
         modifier = modifier,
-    )
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TokenRowTitle(
+            titleUM = resizedTitle,
+            modifier = Modifier.weight(weight = 1f, fill = false),
+        )
+        if (badge != null) {
+            TangemBadge(badgeUM = badge)
+        }
+    }
 }
 
 @Composable
@@ -336,11 +400,9 @@ private fun DrawScope.drawBadge(
 
 @Suppress("MagicNumber")
 @Composable
-private fun portfolioAssetExpandAnimation(listItem: ForYouTokenListItemUM, outerLastIndex: Int): State<Int> {
-    // Snap immediately on expand; on collapse, hold the current value until all
-    // child items finish their shrink animation, then snap to fully-rounded shape.
+private fun portfolioAssetExpandAnimation(listItem: ForYouTokenListItemUM): State<Int> {
     return animateIntAsState(
-        targetValue = if (listItem.isExpanded) outerLastIndex else 0,
+        targetValue = if (listItem.isExpanded) listItem.tokenList.size else 0,
         animationSpec = if (listItem.isExpanded) {
             snap()
         } else {

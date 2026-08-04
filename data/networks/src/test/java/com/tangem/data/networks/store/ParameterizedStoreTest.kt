@@ -7,7 +7,7 @@ import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.toDataModel
 import com.tangem.data.networks.toSimple
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels

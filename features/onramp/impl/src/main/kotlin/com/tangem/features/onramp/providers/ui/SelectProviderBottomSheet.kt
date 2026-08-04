@@ -97,7 +97,7 @@ private fun PaymentMethodBlock(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        PaymentMethodIcon(imageUrl = state.imageUrl)
+        PaymentMethodIcon(method = state)
         Column(modifier = Modifier.weight(1F)) {
             Text(
                 text = stringResourceSafe(id = R.string.onramp_pay_with),

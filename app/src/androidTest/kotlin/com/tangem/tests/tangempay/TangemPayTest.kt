@@ -51,16 +51,7 @@ class TangemPayTest : BaseTestCase() {
                 resetWireMockScenarioState(pinSetupScenario)
             },
         ).run {
-            openTangemPay()
-            step("Click on card button") {
-                onTangemPayMainScreen { cardButton.clickWithAssertion() }
-            }
-            step("Click on 'Change PIN' row") {
-                onTangemPayCardPageScreen { changePinRow.clickWithAssertion() }
-            }
-            step("Assert PIN screen is displayed") {
-                onTangemPayChangePinScreen { title.assertIsDisplayed() }
-            }
+            step("Open PIN entry screen") { openTangemPayChangePin() }
             step("Enter PIN '$newPin'") {
                 onTangemPayChangePinScreen { inputField.performTextInput(newPin) }
             }

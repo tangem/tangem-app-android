@@ -1,12 +1,18 @@
 package com.tangem.features.txhistory.converter
 
+import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.getResId
+import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -86,8 +92,10 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     @Test
     fun `GIVEN incoming Transfer from own address WHEN convert THEN transferred title`() {
-        // Arrange — the counterparty is one of the user's own deposit addresses.
-        val ownConverter = onChainConverter(ownAddresses = setOf(USER_ADDRESS))
+        // Arrange — the counterparty resolves to one of the user's own accounts on the viewed network.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
         val tx = txInfo(
             type = TransactionType.Transfer,
             isOutgoing = false,
@@ -104,7 +112,9 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     @Test
     fun `GIVEN outgoing Transfer to own address WHEN convert THEN transferred title`() {
         // Arrange
-        val ownConverter = onChainConverter(ownAddresses = setOf(USER_ADDRESS))
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
         val tx = txInfo(
             type = TransactionType.Transfer,
             isOutgoing = true,
@@ -116,6 +126,49 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(header.title).isEqualTo(resourceReference(R.string.common_transferred))
+    }
+
+    @Test
+    fun `GIVEN own address reported in a different case WHEN convert THEN transferred title`() {
+        // Arrange — a confirmed tx from an indexer may carry the own address in a different case (e.g. EIP-55
+        // checksummed vs lowercase) than the locally-derived one the lookup was built from.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS.uppercase() to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val header = ownConverter.convert(tx).header
+
+        // Assert
+        assertThat(header.title).isEqualTo(resourceReference(R.string.common_transferred))
+    }
+
+    @Test
+    fun `GIVEN own address with accounts mode off and no wallet info WHEN convert THEN sent title`() {
+        // Arrange — mirrors the list: with accounts mode off and no wallet display info the owner stays external.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(
+                currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount),
+                isAccountsModeEnabled = false,
+                walletInfoById = emptyMap(),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val header = ownConverter.convert(tx).header
+
+        // Assert
+        assertThat(header.title).isEqualTo(resourceReference(R.string.common_sent))
     }
 
     @Test
@@ -312,12 +365,33 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     // region Counterparty
 
     @Test
-    fun `GIVEN no interaction address WHEN convert THEN counterparty is null`() {
-        // Arrange
-        val tx = txInfo(type = TransactionType.Transfer, interactionAddressType = null)
+    fun `GIVEN outgoing tx with no interaction address WHEN convert THEN counterparty is null`() {
+        // Arrange — outgoing, so the counterparty is the (absent) interaction/destination address, not the source.
+        val tx = txInfo(type = TransactionType.Transfer, isOutgoing = true, interactionAddressType = null)
 
         // Act
         val counterparty = converter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty).isNull()
+    }
+
+    @Test
+    fun `GIVEN incoming Swap whose source is own WHEN convert THEN no counterparty card`() {
+        // Only an incoming unrecognized call reads the sender from source; every other type (Swap here) keeps its
+        // interaction-address counterparty, which a swap does not carry, so no card is shown.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Swap,
+            isOutgoing = false,
+            interactionAddressType = null,
+            sourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
 
         // Assert
         assertThat(counterparty).isNull()
@@ -347,7 +421,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     )
 
     @Test
-    fun `GIVEN incoming Transfer with User address WHEN convert THEN address-avatar counterparty with From label`() {
+    fun `GIVEN incoming Transfer with User address WHEN convert THEN address-avatar counterparty with From address label`() {
         // Arrange
         val tx = txInfo(
             type = TransactionType.Transfer,
@@ -360,7 +434,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
-        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from))
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
     }
 
     @Test
@@ -380,6 +454,49 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card without copy`() {
+        // Arrange — the recipient address belongs to the user's own Tangem Pay (Payment) account.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert — resolved as own Payment account (not an external address): Visa avatar, name, no copy button.
+        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount)
+        assertThat(counterparty?.onCopyClick).isNull()
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+    }
+
+    @Test
+    fun `GIVEN incoming operation from external sender WHEN convert THEN counterparty is the sender not own destination`() {
+        // Arrange — the trap: an incoming operation's interaction address is always the viewed (own) destination, so
+        // resolving it would wrongly show "From <own account>". The counterparty must come from the real sender (source).
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            sourceType = TxInfo.SourceType.Single(address = EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(EXTERNAL_ADDRESS))
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
+    }
+
+    @Test
     fun `GIVEN address counterparty WHEN onCopyClick invoked THEN raw address is copied`() {
         // Arrange
         val tx = txInfo(
@@ -395,15 +512,147 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
+    @Test
+    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card without copy`() {
+        // Arrange — the counterparty resolves to the user's own account, so the card shows its name and avatar.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyUM(
+                label = resourceReference(R.string.send_recipient),
+                title = stringReference("Family"),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                    iconResId = ownAccount.icon.value.getResId(),
+                    backgroundColor = ownAccount.icon.color.getUiColor(),
+                ),
+                onCopyClick = null,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN Transfer to own address with accounts mode off WHEN convert THEN wallet counterparty card`() {
+        // Arrange — with accounts mode off the owner renders as the owning wallet instead of the account.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(
+                currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount),
+                isAccountsModeEnabled = false,
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyUM(
+                label = resourceReference(R.string.send_recipient),
+                title = stringReference("My Wallet"),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
+                    deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
+                ),
+                onCopyClick = null,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN Transfer to address owned only on another network WHEN convert THEN external address card`() {
+        // Arrange — the address is owned on bitcoin, not the viewed ethereum currency, so it stays external here.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(bitcoin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert
+        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
+        assertThat(counterparty?.onCopyClick).isNotNull()
+    }
+
+    // endregion
+
+    // region Operation / UnknownOperation reclassified as own transfer
+
+    @Test
+    fun `GIVEN incoming Operation from own address WHEN convert THEN transferred header and own account counterparty`() {
+        // Arrange — an unrecognized call whose sender resolves to the user's own account reads as a transfer.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(type = TransactionType.Operation(name = "Mint NFT"), isOutgoing = false)
+
+        // Act
+        val result = ownConverter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.counterparty).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyUM(
+                label = resourceReference(R.string.common_from_account),
+                title = stringReference("Family"),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                    iconResId = ownAccount.icon.value.getResId(),
+                    backgroundColor = ownAccount.icon.color.getUiColor(),
+                ),
+                onCopyClick = null,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN outgoing Operation whose recipient is external WHEN convert THEN stays Operation`() {
+        // The trap: for an outgoing tx the counterparty is the recipient; an own sender must not trigger reclassification.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = true,
+            destinationType = TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(EXTERNAL_ADDRESS)),
+        )
+
+        // Act
+        val header = ownConverter.convert(tx).header
+
+        // Assert
+        assertThat(header.title).isEqualTo(stringReference("Mint NFT"))
+        assertThat(header.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
+    }
+
     // endregion
 
     // region Network-fee row
 
     @Test
-    fun `GIVEN tx with fee WHEN convert THEN single network-fee row`() {
+    fun `GIVEN outgoing Transfer with fee WHEN convert THEN single network-fee row`() {
         // Arrange
         val tx = txInfo(
             type = TransactionType.Transfer,
+            isOutgoing = true,
             fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
         )
 
@@ -414,6 +663,40 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rows).hasSize(1)
         assertThat(rows.first().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
         assertThat(rows.first().value.resolveString()).contains("ETH")
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer with fee WHEN convert THEN no network-fee row`() {
+        // A received transfer's fee belongs to the sender, not the user — it must not be shown.
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN incoming ClaimRewards with fee WHEN convert THEN network-fee row shown`() {
+        // Staking claims are isOutgoing = false yet the user paid the gas — the fee stays (only plain Transfers hide it).
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Staking.ClaimRewards,
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows.map { it.label }).contains(resourceReference(R.string.common_network_fee_title))
     }
 
     @Test

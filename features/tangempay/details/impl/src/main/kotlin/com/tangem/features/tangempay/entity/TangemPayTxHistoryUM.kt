@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.entity
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -49,9 +48,7 @@ internal sealed interface TangemPayTxHistoryUM {
             val title: String,
             val itemKey: String,
             val isLoading: Boolean = false,
-        ) : TangemPayTxHistoryItemUM {
-            val legacyGroupTitle = TxHistoryState.TxHistoryItemState.GroupTitle(title = title, itemKey = itemKey)
-        }
+        ) : TangemPayTxHistoryItemUM
         data class Transaction(val transaction: TangemPayTransactionState) : TangemPayTxHistoryItemUM
     }
 

@@ -9,6 +9,7 @@ import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ReceiveAddressModel.DisplayType
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayAddFundsComponent
 import com.tangem.features.tangempay.entity.TangemPayAddFundsUM
 import com.tangem.features.tangempay.model.transformers.TangemPayAddFundsUMConverter
@@ -22,12 +23,15 @@ internal class TangemPayAddFundsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     virtualAccountToggles: VirtualAccountFeatureToggles,
+    tangemPayFeatureToggles: TangemPayFeatureToggles,
     analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayAddFundsComponent.Params>()
 
     private val isBankTransferShown = virtualAccountToggles.isVaMvp0Enabled && params.virtualAccountOnramp != null
+
+    private val isMultichainEnabled = tangemPayFeatureToggles.isAccountMultichainEnabled
 
     val uiState: TangemPayAddFundsUM = getInitialState()
 
@@ -54,6 +58,7 @@ internal class TangemPayAddFundsModel @Inject constructor(
         return TangemPayAddFundsUMConverter(
             listener = params.listener,
             shouldShowBankTransfer = isBankTransferShown,
+            isMultichainEnabled = isMultichainEnabled,
         ).convert(data)
     }
 
