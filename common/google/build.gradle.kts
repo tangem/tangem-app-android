@@ -8,6 +8,7 @@ plugins {
 
 android {
     namespace = "com.tangem.common.google"
+    testOptions.unitTests.isReturnDefaultValues = true
 }
 
 dependencies {
@@ -22,4 +23,6 @@ dependencies {
 
     implementation(deps.googlePlay.services.wallet)
     implementation(deps.googlePlay.services.auth)
+
+    testImplementation(projects.test.core)
 }

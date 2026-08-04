@@ -13,6 +13,7 @@ import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -63,7 +64,6 @@ import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
-import com.tangem.tap.google.GoogleAuthLauncherHost
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
@@ -257,9 +257,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         setContent {
             CompositionLocalProvider(LocalUserInteractionTracker provides userInteractionTracker) {
-                if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
-                    GoogleAuthLauncherHost(googleAuthActivityResultBridge)
-                }
                 routingComponent.Content(
                     Modifier
                         .fillMaxSize()
@@ -285,6 +282,14 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             passwordRequester = passwordRequester,
             appRouter = appRouter,
         )
+
+        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            val googleAuthLauncher = activityResultRegistry.register(
+                "google_auth",
+                ActivityResultContracts.StartIntentSenderForResult(),
+            ) { googleAuthActivityResultBridge.onResult(it) }
+            googleAuthActivityResultBridge.registerLauncher(googleAuthLauncher)
+        }
     }
 
     private fun installAppTheme() {
