@@ -19,6 +19,7 @@ import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
@@ -41,6 +42,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
+    private val orderCardComponentFactory: TangemPayOrderCardComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -131,6 +133,12 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         TangemPayAccountDetailsInnerRoute.Cashback -> cashbackComponentFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayCashbackComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
+            ),
+        )
+        TangemPayAccountDetailsInnerRoute.OrderCard -> orderCardComponentFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayOrderCardComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
             ),
         )

@@ -1,14 +1,15 @@
 package com.tangem.data.visa
 
+import com.tangem.datasource.api.common.config.TangemPay
+
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.squareup.moshi.Moshi
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.converter.VisaActivationStatusConverterWithState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.models.request.SetPinCodeRequest
 import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
@@ -165,7 +166,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     }
 
     override suspend fun getPinCodeRsaEncryptionPublicKey(): String {
-        val env = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemPay).environment
+        val env = apiConfigsManager.getEnvironmentConfig(TangemPay.Bff.ID).environment
         val rsaPublicKey = visaLibLoader.getOrCreateConfig().rsaPublicKey
         return when (env) {
             ApiEnvironment.DEV,
