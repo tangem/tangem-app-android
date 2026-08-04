@@ -26,7 +26,9 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.usecase.IsWalletAlreadySavedUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
@@ -262,8 +264,14 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
 
                         cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
-                        walletCardsBackupReporter.reportWalletCreated(
+                        walletCardsBackupReporter.report(
                             scanResponse = updatedScanResponse,
+                            cards = listOf(
+                                CardBackupConverter.convert(
+                                    card = updatedScanResponse.card,
+                                    role = WalletCardBackup.Role.PRIMARY,
+                                ),
+                            ),
                             usedSeed = true,
                         )
 
