@@ -1294,7 +1294,7 @@
   <string name="promo_campaign_summary_title">%1$sに参加</string>
   <string name="promo_campaign_terms_agreement">%1$sに同意します</string>
   <string name="promo_campaign_terms_link">%1$s 利用規約</string>
-  <string name="promo_campaign_whale_swap_summary_description">7月末まで、累計1万ドル以上のスワップでキャッシュバックを獲得できます。\n\n累計スワップ額に応じて還元率がアップします。1万ドル以上で0.10%、2万ドル以上で0.20%、10万ドル以上で0.50%。\n\nキャッシュバックは、1回のスワップあたり最大500ドル、ウォレットごと・スワップ方向ごとにキャンペーン期間中、合計最大1万ドルです。ステーブルコイン同士のスワップは対象外です。\n\nキャッシュバックは毎週、ご指定のUSDTまたはUSDCアドレスにお支払いします。</string>
+  <string name="promo_campaign_whale_swap_summary_description">8月末まで、累計1万ドル以上のスワップでキャッシュバックを獲得できます。\n\n累計スワップ額に応じて還元率がアップします。1万ドル以上で0.10%、2万ドル以上で0.20%、10万ドル以上で0.50%。\n\nキャッシュバックは、1回のスワップあたり最大500ドル、ウォレットごと・スワップ方向ごとにキャンペーン期間中、合計最大1万ドルです。ステーブルコイン同士のスワップは対象外です。\n\nキャッシュバックは毎週、ご指定のUSDTまたはUSDCアドレスにお支払いします。</string>
   <string name="provider_name_support">%sサポート</string>
   <string name="push_notification_settings_banner_description">プッシュ通知は有効ですが、許可するまで動作しません</string>
   <string name="push_notification_settings_banner_title">通知を許可する</string>

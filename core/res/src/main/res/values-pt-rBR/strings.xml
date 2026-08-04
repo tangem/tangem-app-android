@@ -1357,7 +1357,7 @@
   <string name="promo_campaign_terms_agreement">Concordo com %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Concordo com</string>
   <string name="promo_campaign_terms_link">%1$s Termos</string>
-  <string name="promo_campaign_whale_swap_summary_description">Ganhe cashback em todas as suas transações a partir de US$ 10.000 até o final de julho.\n\nAs taxas aumentam conforme o tamanho da transação: 0,10% a partir de US$ 10 mil, 0,20% a partir de US$ 20 mil, 0,50% A partir de US$ 100 mil.\n\nPagamento máximo: US$ 500 por troca e US$ 10.000 por carteira por direção de troca, enquanto durar a campanha. Trocas de stablecoin por stablecoin estão excluídas.\n\nO pagamento é feito semanalmente em USDT ou USDC, no endereço de sua escolha.</string>
+  <string name="promo_campaign_whale_swap_summary_description">Ganhe cashback em todas as suas transações a partir de US$ 10.000 até o final de agosto.\n\nAs taxas aumentam conforme o tamanho da transação: 0,10% a partir de US$ 10 mil, 0,20% a partir de US$ 20 mil, 0,50% A partir de US$ 100 mil.\n\nPagamento máximo: US$ 500 por troca e US$ 10.000 por carteira por direção de troca, enquanto durar a campanha. Trocas de stablecoin por stablecoin estão excluídas.\n\nO pagamento é feito semanalmente em USDT ou USDC, no endereço de sua escolha.</string>
   <string name="provider_name_support">%s suporte</string>
   <string name="push_notification_settings_banner_description">As notificações push estão ativadas, mas só funcionarão depois que você as permitir nas configurações do seu dispositivo.</string>
   <string name="push_notification_settings_banner_title">Permitir notificações</string>
