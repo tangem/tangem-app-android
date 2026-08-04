@@ -9,7 +9,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
-import com.tangem.core.ui.ds.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
@@ -26,7 +26,7 @@ internal const val ORGANIZE_TOKENS_BUTTON_ITEM_KEY = "OrganizeTokensButton"
 internal fun LazyListScope.nftCollections2(state: WalletUM, itemModifier: Modifier) {
     (state as? WalletUM.Content)?.let { content ->
         item(key = "NFTCollections", contentType = "NFTCollections") {
-            WalletNFTItem(
+            WalletNFTItem2(
                 modifier = itemModifier,
                 state = content.nftState,
             )
@@ -62,15 +62,18 @@ internal fun LazyListScope.organizeTokens2(
             }
 
             TangemButton(
-                buttonUM = organizeButton.copy(
-                    onClick = {
-                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                        organizeButton.onClick()
-                    },
-                ),
                 modifier = itemModifier
                     .onGloballyPositioned { currentOnButtonBoundsChange(it.boundsInRoot()) }
                     .testTag(testTag),
+                size = TangemButton.Size.X9,
+                onClick = {
+                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                    organizeButton.onClick()
+                },
+                variant = TangemButton.Variant.Secondary,
+                iconStart = organizeButton.tangemIconUM,
+                text = organizeButton.text,
+                isEnabled = organizeButton.isEnabled,
             )
         }
     }

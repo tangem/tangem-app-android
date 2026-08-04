@@ -34,11 +34,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         val cards = if (value.paymentAccount == null || value.balance == null) {
             emptyList()
         } else {
-            value.cards.mapIndexed { index, cardWire ->
-                // Legacy single-card has no card_id on the card object → join to the single product instance.
-                val cardId = cardWire.cardId ?: value.productInstances.getOrNull(index)?.cardId.orEmpty()
-                buildCardInfo(cardId = cardId, card = cardWire)
-            }
+            value.cards.mapNotNull { it.toDomain() }
         }
 
         return CustomerInfo(
@@ -89,13 +85,13 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         )
     }
 
-    private fun buildCardInfo(cardId: String, card: CustomerMeResponse.Card): CardInfo {
+    private fun CustomerMeResponse.Card.toDomain(): CardInfo? {
         return CardInfo(
-            cardId = cardId,
-            cardStatus = TangemPayCard.Status.fromString(card.cardStatus),
-            lastFourDigits = card.cardNumberEnd,
-            isPinSet = card.isPinSet == true,
-            images = card.images.orEmpty().mapNotNull(::convertCardImage),
+            cardId = id ?: return null,
+            cardStatus = TangemPayCard.Status.fromString(cardStatus),
+            lastFourDigits = cardNumberEnd,
+            isPinSet = isPinSet == true,
+            images = images.orEmpty().mapNotNull(::convertCardImage),
         )
     }
 

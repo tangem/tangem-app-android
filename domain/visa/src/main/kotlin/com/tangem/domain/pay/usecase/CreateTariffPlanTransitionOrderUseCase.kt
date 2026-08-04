@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOrderRepository
@@ -54,9 +55,16 @@ class CreateTariffPlanTransitionOrderUseCase(
 
         appCoroutineScope.launch {
             startTangemPayOrderPollingUseCase(
-                order = TangemPayOrderInfo(orderId = order.id, orderStatus = order.status),
+                order = TangemPayOrderInfo.fromOrder(order),
                 userWalletId = userWalletId,
-                onTerminalReached = { issueCardRepository.removeIssueOrderId(userWalletId, order.id) },
+                onOrderStateChange = { newOrder ->
+                    if (newOrder.orderStatus.isTerminal) {
+                        issueCardRepository.removeIssueOrderId(userWalletId, order.id)
+                    }
+                    if (newOrder.orderStep == OrderStep.AWAITING_DEPOSIT) {
+                        paymentAccountStatusFetcher.invoke(userWalletId)
+                    }
+                },
             )
         }
 

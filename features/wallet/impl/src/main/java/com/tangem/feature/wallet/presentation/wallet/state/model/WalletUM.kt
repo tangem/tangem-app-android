@@ -40,6 +40,7 @@ internal sealed interface WalletUM {
         override val type: WalletType,
         override val tangemPayMainUM: TangemPayMainUM,
         override val virtualAccountMainUM: VirtualAccountMainUM,
+        val areActionsAvailable: Boolean = false,
     ) : WalletUM
 
     data class Locked(
