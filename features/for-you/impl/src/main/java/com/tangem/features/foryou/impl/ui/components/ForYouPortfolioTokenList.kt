@@ -235,9 +235,9 @@ private fun PortfolioSharedAssetIcon(
 
     if (headIcon is TangemIconUM.Currency) {
         val size = if (isExpandedWrapped) {
-            AccountIconSize.RedesignExtraSmall
+            AccountIconSize.ExtraSmall
         } else {
-            AccountIconSize.RedesignedDefault
+            AccountIconSize.Default
         }
         val currencyIconState = when (val currencyIconState = headIcon.currencyIconState) {
             is CurrencyIconState.CryptoPortfolio.Icon -> currencyIconState.copy(size = size)

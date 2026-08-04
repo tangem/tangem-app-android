@@ -97,9 +97,11 @@ fun TangemPagerIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            modifier = Modifier.offset {
-                IntOffset(animState.slideOffset.value.roundToInt(), 0)
-            },
+            modifier = Modifier
+                .wrapContentWidth(unbounded = true)
+                .offset {
+                    IntOffset(animState.slideOffset.value.roundToInt(), 0)
+                },
             horizontalArrangement = Arrangement.spacedBy(SPACING),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -413,6 +415,7 @@ private class TangemPagerIndicatorPreviewProvider : PreviewParameterProvider<Int
             1,
             2,
             3,
+            4,
             5,
             6,
             7,

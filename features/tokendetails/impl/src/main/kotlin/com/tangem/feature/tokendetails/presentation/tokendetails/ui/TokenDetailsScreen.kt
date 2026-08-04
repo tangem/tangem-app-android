@@ -53,6 +53,7 @@ import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -81,6 +82,7 @@ internal fun TokenDetailsScreen(
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
     val topBarTotalHeight = TopBarHeight + statusBarHeight
     val hazeState = rememberHazeState()
+    val buttonsHazeState = rememberHazeState()
 
     val rootBackground = TangemTheme.colors2.surface.level2
     var marketBlockHeight by remember { mutableStateOf(0.dp) }
@@ -92,6 +94,13 @@ internal fun TokenDetailsScreen(
                 .fillMaxSize()
                 .background(rootBackground),
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(rootBackground)
+                    .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
+            )
+
             TangemPullToRefreshSlidingContainer(
                 config = tokenDetailsUM.pullToRefreshConfig,
                 indicatorOffset = topBarTotalHeight,
@@ -104,6 +113,7 @@ internal fun TokenDetailsScreen(
                     expressTransactionsToDisplay = expressState.transactionsToDisplay,
                     marketingBannerComponent = marketingBannerComponent,
                     rootBackground = rootBackground,
+                    buttonsHazeState = buttonsHazeState,
                     topContentPadding = topBarTotalHeight,
                     bottomContentPadding = effectiveBottomPadding,
                     modifier = Modifier.fillMaxSize(),
@@ -166,6 +176,7 @@ private fun TokenDetailsBody(
     expressTransactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
     marketingBannerComponent: MarketingBannerComponent,
     rootBackground: Color,
+    buttonsHazeState: HazeState,
     topContentPadding: Dp,
     bottomContentPadding: Dp,
     modifier: Modifier = Modifier,
@@ -194,11 +205,13 @@ private fun TokenDetailsBody(
         contentPadding = PaddingValues(top = topContentPadding, bottom = bottomContentPadding),
     ) {
         item(key = "balance_block") {
-            TokenDetailsBalanceBlock(
-                balanceBlockUM = tokenDetailsUM.balanceBlockUM,
-                isBalanceHidden = tokenDetailsUM.isBalanceHidden,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
+                TokenDetailsBalanceBlock(
+                    balanceBlockUM = tokenDetailsUM.balanceBlockUM,
+                    isBalanceHidden = tokenDetailsUM.isBalanceHidden,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
         val balance = tokenDetailsUM.balanceBlockUM
         notifications(
