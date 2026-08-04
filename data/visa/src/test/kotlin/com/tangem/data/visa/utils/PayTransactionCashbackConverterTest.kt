@@ -1,7 +1,7 @@
 package com.tangem.data.visa.utils
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.TransactionCashbackResponse
+import com.tangem.spend.datasource.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
