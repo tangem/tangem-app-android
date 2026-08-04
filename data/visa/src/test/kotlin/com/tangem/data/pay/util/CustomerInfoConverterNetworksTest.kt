@@ -1,8 +1,8 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.BalanceResponse
-import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.spend.datasource.pay.models.response.BalanceResponse
+import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.domain.pay.model.CustomerInfo
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal

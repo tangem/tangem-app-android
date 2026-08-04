@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
-import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
 import com.tangem.domain.models.wallet.UserWalletId
