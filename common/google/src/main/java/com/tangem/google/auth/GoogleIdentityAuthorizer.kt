@@ -44,12 +44,12 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
 
     @Suppress("TooGenericExceptionCaught")
     override suspend fun authorize(
-        scopes: List<String>,
+        scopes: List<GoogleAuthScope>,
         interactive: Boolean,
     ): Either<GoogleAuthError, GoogleAuthResult> {
         return try {
             val request = AuthorizationRequest.builder()
-                .setRequestedScopes(scopes.map { Scope(it) })
+                .setRequestedScopes(scopes.map { Scope(it.value) })
                 .build()
 
             val result = Identity.getAuthorizationClient(context)
@@ -80,6 +80,8 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
         withContext(dispatchers.io) {
             try {
                 GoogleAuthUtil.clearToken(context, token)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logger.e("Google token cache clear failed")
             }
@@ -125,23 +127,8 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
         return GoogleAuthResult(accessToken = token).right()
     }
 
-    private fun mapApiException(e: ApiException): GoogleAuthError {
-        return when (e.statusCode) {
-            CommonStatusCodes.NETWORK_ERROR,
-            CommonStatusCodes.TIMEOUT,
-            -> GoogleAuthError.NetworkError
-            CommonStatusCodes.SIGN_IN_REQUIRED,
-            CommonStatusCodes.RESOLUTION_REQUIRED,
-            -> GoogleAuthError.AuthRequired
-            CommonStatusCodes.INVALID_ACCOUNT -> GoogleAuthError.PermissionsMissing
-            CommonStatusCodes.API_NOT_CONNECTED,
-            CommonStatusCodes.SERVICE_DISABLED,
-            CommonStatusCodes.SERVICE_VERSION_UPDATE_REQUIRED,
-            -> GoogleAuthError.Unavailable
-            CommonStatusCodes.CANCELED -> GoogleAuthError.AuthCanceled
-            else -> GoogleAuthError.Unknown(e)
-        }
-    }
+    private fun mapApiException(e: ApiException): GoogleAuthError =
+        googleAuthErrorForStatusCode(e.statusCode) ?: GoogleAuthError.Unknown(e)
 
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
         addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
@@ -152,4 +139,24 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
     private companion object {
         const val TAG = "GoogleIdentityAuthorizer"
     }
+}
+
+/**
+ * Maps a Google Identity [CommonStatusCodes] status code to a [GoogleAuthError], or `null` when the
+ * code is unrecognized (the caller wraps it as [GoogleAuthError.Unknown] with the original cause).
+ */
+internal fun googleAuthErrorForStatusCode(statusCode: Int): GoogleAuthError? = when (statusCode) {
+    CommonStatusCodes.NETWORK_ERROR,
+    CommonStatusCodes.TIMEOUT,
+    -> GoogleAuthError.NetworkError
+    CommonStatusCodes.SIGN_IN_REQUIRED,
+    CommonStatusCodes.RESOLUTION_REQUIRED,
+    -> GoogleAuthError.AuthRequired
+    CommonStatusCodes.INVALID_ACCOUNT -> GoogleAuthError.PermissionsMissing
+    CommonStatusCodes.API_NOT_CONNECTED,
+    CommonStatusCodes.SERVICE_DISABLED,
+    CommonStatusCodes.SERVICE_VERSION_UPDATE_REQUIRED,
+    -> GoogleAuthError.Unavailable
+    CommonStatusCodes.CANCELED -> GoogleAuthError.AuthCanceled
+    else -> null
 }
