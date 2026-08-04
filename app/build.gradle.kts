@@ -190,6 +190,7 @@ dependencies {
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
+    implementation(projects.spend.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
     implementation(projects.core.error.ext)
