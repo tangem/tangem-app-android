@@ -12,6 +12,7 @@ import com.tangem.datasource.api.gasless.models.tron.TronTokensResponse
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -123,6 +124,33 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
     }
 
     @Test
+    fun `GIVEN tokens already loaded WHEN getSupportedTokens twice THEN api is called once`() = runTest {
+        // Arrange
+        coEvery { api.getSupportedTokens() } returns tokensResponse(isSuccess = true)
+
+        // Act
+        val first = repository.getSupportedTokens()
+        val second = repository.getSupportedTokens()
+
+        // Assert
+        assertThat(second).isEqualTo(first)
+        coVerify(exactly = 1) { api.getSupportedTokens() }
+    }
+
+    @Test
+    fun `GIVEN unsuccessful tokens response WHEN getSupportedTokens twice THEN api is called again`() = runTest {
+        // Arrange
+        coEvery { api.getSupportedTokens() } returns tokensResponse(isSuccess = false)
+
+        // Act
+        runCatching { repository.getSupportedTokens() }
+        runCatching { repository.getSupportedTokens() }
+
+        // Assert
+        coVerify(exactly = 2) { api.getSupportedTokens() }
+    }
+
+    @Test
     fun `GIVEN submit response WHEN submit THEN maps to domain result`() = runTest {
         // Arrange
         coEvery { api.submit(any()) } returns ApiResponse.Success(
@@ -145,4 +173,21 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         assertThat(result.originalTxHash).isEqualTo("hOrig")
         assertThat(result.status).isEqualTo("BROADCAST")
     }
+
+    private fun tokensResponse(isSuccess: Boolean) = ApiResponse.Success(
+        GaslessServiceResponse(
+            result = TronTokensResponse(
+                tokens = listOf(
+                    TronTokenDto(
+                        address = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+                        symbol = "USDT",
+                        decimals = 6,
+                        chain = "Tron",
+                    ),
+                ),
+            ),
+            isSuccess = isSuccess,
+            timestamp = "t",
+        ),
+    )
 }
