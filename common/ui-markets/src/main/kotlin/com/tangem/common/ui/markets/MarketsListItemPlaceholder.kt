@@ -6,24 +6,33 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.*
-import com.tangem.core.ui.res.*
+import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.res.LocalWindowSize
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.windowsize.WindowSizeType
 
-@Suppress("LongMethod")
 @Composable
-fun MarketsListItemPlaceholder() {
+fun MarketsListItemPlaceholder(modifier: Modifier = Modifier) {
     val windowSize = LocalWindowSize.current
     Row(
-        modifier = Modifier.padding(
+        modifier = modifier.padding(
             horizontal = 12.dp,
             vertical = 14.dp,
         ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CircleShimmer(modifier = Modifier.size(40.dp))
+        TangemShimmer(
+            radius = 999.dp,
+            modifier = Modifier.size(40.dp),
+        )
 
         SpacerW(4.dp)
 
@@ -32,18 +41,13 @@ fun MarketsListItemPlaceholder() {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.Start,
         ) {
-            RectangleShimmer(
-                modifier = Modifier
-                    .width(96.dp)
-                    .height(20.dp),
-                radius = TangemTheme.dimens2.x25,
+            MarketsListShimmerLine(
+                style = TangemTheme.typography3.body.medium,
+                width = 96.dp,
             )
-
-            RectangleShimmer(
-                modifier = Modifier
-                    .width(46.dp)
-                    .height(16.dp),
-                radius = TangemTheme.dimens2.x25,
+            MarketsListShimmerLine(
+                style = TangemTheme.typography3.caption.medium,
+                width = 46.dp,
             )
         }
 
@@ -54,22 +58,29 @@ fun MarketsListItemPlaceholder() {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 horizontalAlignment = Alignment.End,
             ) {
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(56.dp)
-                        .height(20.dp),
-                    radius = TangemTheme.dimens2.x25,
+                MarketsListShimmerLine(
+                    style = TangemTheme.typography3.body.medium,
+                    width = 56.dp,
                 )
-
-                RectangleShimmer(
-                    modifier = Modifier
-                        .width(46.dp)
-                        .height(16.dp),
-                    radius = TangemTheme.dimens2.x25,
+                MarketsListShimmerLine(
+                    style = TangemTheme.typography3.caption.medium,
+                    width = 46.dp,
                 )
             }
         }
     }
+}
+
+@Composable
+private fun MarketsListShimmerLine(style: TextStyle, width: Dp, modifier: Modifier = Modifier) {
+    val lineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .width(width)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
+    )
 }
 
 @Preview(showBackground = true, widthDp = 360, name = "normal")

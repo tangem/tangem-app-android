@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.news.trending
 
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.news.TrendingNews
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

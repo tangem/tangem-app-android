@@ -3,7 +3,6 @@ package com.tangem.domain.feedback
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.utils.breakLine
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainAddresses
 
 internal class FeedbackDataBuilder {
@@ -13,36 +12,6 @@ internal class FeedbackDataBuilder {
     fun addTangemPayTxInfo(item: TangemPayTxHistoryItem) {
         builder.append(item.jsonRepresentation)
         builder.breakLine()
-    }
-
-    fun addVisaTxInfo(txDetails: VisaTxDetails) {
-        builder.appendKeyValue("Type", txDetails.type)
-        builder.appendKeyValue("Status", txDetails.status)
-        builder.appendKeyValue("Blockchain amount", txDetails.blockchainAmount.toString())
-        builder.appendKeyValue("Transaction amount", txDetails.transactionAmount.toString())
-        builder.appendKeyValue("Currency code", txDetails.transactionCurrencyCode.toString())
-        builder.appendKeyValue("Merchant name", txDetails.merchantName)
-        builder.appendKeyValue("Merchant city", txDetails.merchantCity)
-        builder.appendKeyValue("Merchant country code", txDetails.merchantCountryCode)
-        builder.appendKeyValue("Merchant category code", txDetails.merchantCategoryCode)
-
-        builder.appendDelimiter()
-        builder.breakLine()
-        builder.append("Requests:")
-
-        txDetails.requests.forEach { request ->
-            builder.appendKeyValue("Type", request.requestType)
-            builder.appendKeyValue("Status", request.requestStatus)
-            builder.appendKeyValue("Blockchain amount", request.blockchainAmount.toString())
-            builder.appendKeyValue("Transaction amount", request.transactionAmount.toString())
-            builder.appendKeyValue("Currency code", request.txCurrencyCode.toString())
-            builder.appendKeyValue("Error code", request.errorCode.toString())
-            builder.appendKeyValue("Date", request.requestDate.toString())
-            builder.appendKeyValue("Transaction hash", request.txHash)
-            builder.appendKeyValue("Transaction status", request.txStatus)
-            builder.appendDelimiter()
-            builder.breakLine()
-        }
     }
 
     fun addUserWalletsInfo(userWalletsInfo: UserWalletsInfo) {
@@ -117,12 +86,11 @@ internal class FeedbackDataBuilder {
         val issueType = when (type) {
             is FeedbackEmailType.Visa.Activation,
             is FeedbackEmailType.Visa.DirectUserRequest,
-            is FeedbackEmailType.Visa.Dispute,
             is FeedbackEmailType.Visa.FeatureIsBeta,
             is FeedbackEmailType.Visa.Withdrawal,
             is FeedbackEmailType.Visa.KycRejected,
             -> return
-            is FeedbackEmailType.Visa.DisputeV2 -> when (type.item) {
+            is FeedbackEmailType.Visa.Dispute -> when (type.item) {
                 is TangemPayTxHistoryItem.Collateral -> "Receive/Withdraw"
                 is TangemPayTxHistoryItem.Fee,
                 is TangemPayTxHistoryItem.Spend,
