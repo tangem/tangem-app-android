@@ -2,10 +2,6 @@ package com.tangem.data.pay.util
 
 import arrow.core.getOrElse
 import com.tangem.data.pay.converter.TangemPayTariffPlanConverter
-import com.tangem.datasource.api.pay.models.response.BalanceResponse
-import com.tangem.datasource.api.pay.models.response.CryptoBalance
-import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
-import com.tangem.datasource.api.pay.models.response.FiatBalance
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
@@ -20,6 +16,10 @@ import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
+import com.tangem.spend.datasource.pay.models.response.BalanceResponse
+import com.tangem.spend.datasource.pay.models.response.CryptoBalance
+import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
+import com.tangem.spend.datasource.pay.models.response.FiatBalance
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import org.joda.time.DateTime

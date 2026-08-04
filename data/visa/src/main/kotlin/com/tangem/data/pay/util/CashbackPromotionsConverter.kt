@@ -1,6 +1,6 @@
 package com.tangem.data.pay.util
 
-import com.tangem.datasource.api.pay.models.response.CashbackPromotionsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTime

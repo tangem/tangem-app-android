@@ -1,7 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.CashbackPromotionsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
 import com.tangem.domain.pay.model.CashbackPromotions
 import org.joda.time.DateTime
 import org.junit.jupiter.api.Test
