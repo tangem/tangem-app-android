@@ -2,8 +2,8 @@ package com.tangem.data.visa.utils
 
 import com.tangem.data.visa.converter.AccessCodeDataConverter
 import com.tangem.data.visa.model.AccessCodeData
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardWalletRequest
 import com.tangem.datasource.api.visa.VisaApi
