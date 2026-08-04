@@ -180,11 +180,11 @@ interface TangemTechApi {
     suspend fun createWallet(@Body body: WalletIdBody): ApiResponse<Unit>
 
     /** Sends the cards of the wallet [walletId] and the state of its backup */
-    @POST("v1/user-wallets/wallets/{wallet_id}/cards")
+    @POST("api/v1/wallets/{wallet_id}/card-backups")
     suspend fun saveWalletCards(@Path("wallet_id") walletId: String, @Body body: WalletCardsBody): ApiResponse<Unit>
 
     /** Returns the cards of the wallet [walletId] and the state of its backup */
-    @GET("v1/user-wallets/wallets/{wallet_id}/cards")
+    @GET("api/v1/wallets/{wallet_id}/card-backups")
     suspend fun getWalletCards(@Path("wallet_id") walletId: String): ApiResponse<WalletCardsResponse>
     // endregion
 
