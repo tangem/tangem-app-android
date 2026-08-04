@@ -494,9 +494,21 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Send outgoing WHEN convert THEN withdraw title`() {
+    fun `GIVEN YieldSupply Send not withdraw and outgoing WHEN convert THEN transfer title`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = true,
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transfer))
+    }
+
+    @Test
+    fun `GIVEN YieldSupply Send withdraw and outgoing WHEN convert THEN withdraw title`() {
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
             isOutgoing = true,
         )
 
