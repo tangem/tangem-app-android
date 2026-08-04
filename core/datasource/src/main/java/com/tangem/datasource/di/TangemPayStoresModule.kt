@@ -1,6 +1,6 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.visa.DefaultTangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.DefaultTangemPayCloseCardStore
@@ -24,7 +24,7 @@ internal object TangemPayStoresModule {
     @Singleton
     fun provideTangemPayCardFrozenStateStore(): TangemPayCardFrozenStateStore {
         return DefaultTangemPayCardFrozenStateStore(
-            dataStore = RuntimeDataStore(),
+            store = RuntimeSharedMapStore(),
         )
     }
 
@@ -32,7 +32,7 @@ internal object TangemPayStoresModule {
     @Singleton
     fun provideTangemPayReissueCardStore(prefs: AppPreferencesStore): TangemPayReissueCardStore {
         return DefaultTangemPayReissueCardStore(
-            feeStore = RuntimeDataStore(),
+            feeStore = RuntimeSharedMapStore(),
             prefs = prefs,
         )
     }

@@ -1,7 +1,7 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.swap.DefaultSwapBestRateAnimationStore
 import com.tangem.datasource.local.swap.DefaultSwapTransactionStatusStore
 import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
@@ -20,7 +20,7 @@ object SwapStoreModule {
     @Singleton
     fun provideSwapTransactionStatusStore(): SwapTransactionStatusStore {
         return DefaultSwapTransactionStatusStore(
-            dataStore = RuntimeDataStore(),
+            store = RuntimeSharedMapStore(),
         )
     }
 

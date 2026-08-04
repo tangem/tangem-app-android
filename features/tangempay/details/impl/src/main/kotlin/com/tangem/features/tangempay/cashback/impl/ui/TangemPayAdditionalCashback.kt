@@ -20,6 +20,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -36,8 +37,7 @@ internal fun TangemPayAdditionalCashback(state: TangemPayAdditionalCashbackUM, m
                 .padding(16.dp),
         ) {
             Text(
-                // TODO([REDACTED_TASK_KEY]): move to string resources
-                text = stringReference("Additional cashback").resolveReference(),
+                text = resourceReference(R.string.tangempay_cashback_additional_title).resolveReference(),
                 style = TangemTheme.typography3.heading.small,
                 color = TangemTheme.colors3.text.primary,
             )
@@ -86,8 +86,7 @@ private fun AdditionalCashbackCard(item: TangemPayAdditionalCashbackUM.Item, mod
 private fun CashbackBadge(badge: TangemPayAdditionalCashbackUM.Badge, modifier: Modifier = Modifier) {
     when (badge) {
         TangemPayAdditionalCashbackUM.Badge.Permanent -> TangemBadge(
-            // TODO([REDACTED_TASK_KEY]): move to string resources
-            text = stringReference("Permanent"),
+            text = resourceReference(R.string.tangempay_cashback_additional_permanent),
             modifier = modifier,
             status = TangemBadge.Status.Neutral,
             size = TangemBadge.Size.X6,
