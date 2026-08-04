@@ -14,8 +14,8 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.utils.*
-import com.tangem.datasource.api.visa.VisaApi
-import com.tangem.datasource.api.visa.models.response.VisaTxHistoryResponse
+import com.tangem.spend.datasource.visa.VisaApi
+import com.tangem.spend.datasource.visa.models.response.VisaTxHistoryResponse
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict

@@ -85,20 +85,6 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(TangemPay.Bff.KEY)
-    fun provideTangemPayBffConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
-        return TangemPay.Bff(environmentConfig, appInfoProvider)
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(TangemPay.Auth.KEY)
-    fun provideTangemPayAuthConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
-        return TangemPay.Auth(environmentConfig, appInfoProvider)
-    }
-
-    @Provides
-    @IntoMap
     @StringKey(BlockAid.KEY)
     fun provideBlockAidConfig(environmentConfig: EnvironmentConfig): ApiConfig {
         return BlockAid(environmentConfig)

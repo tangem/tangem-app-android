@@ -1,7 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.CustomerOffersResponse
+import com.tangem.spend.datasource.pay.models.response.CustomerOffersResponse
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.plasticOffer

@@ -1,8 +1,8 @@
 package com.tangem.data.visa.utils
 
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.pay.models.response.TangemPayTxHistoryResponse
-import com.tangem.datasource.api.pay.models.response.TransactionCashbackResponse
+import com.tangem.spend.datasource.pay.models.response.TangemPayTxHistoryResponse
+import com.tangem.spend.datasource.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.pay.utils.TangemPayTxHistoryItemStatusConverter
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.converter.Converter
