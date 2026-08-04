@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.flow
  * Drives a Polymarket onboarding run to completion, resuming from the status the backend currently reports.
  * The card is used for at most one signing session per run: this use case never asks for a second signature,
  * it reports a retryable failure and lets the caller start a new run.
+ *
+ * The run has no deadline of its own. While the backend reports a non-terminal status the poll continues; the
+ * only way it stops waiting is a terminal status, a non-network error, or repeated network failures.
  */
 @Suppress("LongParameterList")
 class RunPolymarketOnboardingUseCase(
@@ -98,11 +101,10 @@ class RunPolymarketOnboardingUseCase(
         if (from == target) return from
 
         var reported = from
-        var waited = 0L
         var consecutiveFailures = 0
         emit(PolymarketOnboardingProgress.Working(from))
 
-        while (waited < POLL_CEILING_MILLIS) {
+        while (true) {
             val state = getWalletStatus(addresses).fold(
                 ifLeft = { error ->
                     if (error != PolymarketOnboardingError.Network) {
@@ -136,11 +138,7 @@ class RunPolymarketOnboardingUseCase(
             }
 
             delay(POLL_INTERVAL_MILLIS)
-            waited += POLL_INTERVAL_MILLIS
         }
-
-        emit(PolymarketOnboardingProgress.StillWorking(reported))
-        return null
     }
 
     /** Best-effort refresh of the CLOB's cached balance and allowance; onboarding is complete either way. */
@@ -185,7 +183,6 @@ class RunPolymarketOnboardingUseCase(
 
     private companion object {
         const val POLL_INTERVAL_MILLIS = 2_500L
-        const val POLL_CEILING_MILLIS = 120_000L
         const val MAX_CONSECUTIVE_POLL_FAILURES = 3
     }
 }
