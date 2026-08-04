@@ -1,10 +1,6 @@
 package com.tangem.features.yield.supply.impl.main.model
 
-import arrow.core.Option
-import arrow.core.left
-import arrow.core.none
-import arrow.core.right
-import arrow.core.some
+import arrow.core.*
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -34,27 +30,13 @@ import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusFlowUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetDustMinAmountUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
+import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.slot
-import io.mockk.unmockkObject
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -258,7 +240,9 @@ internal class YieldSupplyModelTest {
         assertThat(approveEvent.blockchain).isEqualTo("Ethereum")
 
         val block = model.uiState.value as EarnBlockUM.Content
-        assertThat(block.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Warning)
+        assertThat(block.trailingUM).isEqualTo(
+            EarnBlockUM.TrailingUM.StatusIcon(tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning),
+        )
     }
 
     @Test
@@ -290,7 +274,9 @@ internal class YieldSupplyModelTest {
         assertThat(legacy.shouldShowInfoIcon).isTrue()
         assertThat(legacy.shouldShowWarningIcon).isFalse()
         val block = model.uiState.value as EarnBlockUM.Content
-        assertThat(block.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Info)
+        assertThat(block.trailingUM).isEqualTo(
+            EarnBlockUM.TrailingUM.StatusIcon(tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Info),
+        )
     }
 
     @Test

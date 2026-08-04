@@ -30,7 +30,11 @@ class ReissueTangemPayCardUseCase(
             startTangemPayOrderPollingUseCase(
                 order = order,
                 userWalletId = userWalletId,
-                onTerminalReached = { reissueCardRepository.removeReissueOrderId(cardId) },
+                onOrderStateChange = { newOrder ->
+                    if (newOrder.orderStatus.isTerminal) {
+                        reissueCardRepository.removeReissueOrderId(cardId)
+                    }
+                },
             )
         }
     }
