@@ -8,11 +8,11 @@ import com.tangem.data.pay.util.CashbackPromotionsConverter
 import com.tangem.data.visa.utils.PayTransactionCashbackConverter
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.response.CashbackAccrualDocsResponse
-import com.tangem.datasource.api.pay.models.response.CashbackPromotionsResponse
-import com.tangem.datasource.api.pay.models.response.CashbackTransactionDetailsResponse
-import com.tangem.datasource.api.pay.models.response.TransactionCashbackResponse
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.response.CashbackAccrualDocsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackTransactionDetailsResponse
+import com.tangem.spend.datasource.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks

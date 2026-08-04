@@ -7,7 +7,7 @@ import com.tangem.data.pay.util.CashbackHistoryConverter
 import com.tangem.data.pay.util.CashbackPromotionsConverter
 import com.tangem.data.pay.util.CashbackSummaryConverter
 import com.tangem.data.visa.utils.PayTransactionCashbackConverter
-import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.domain.pay.model.CashbackHistory
