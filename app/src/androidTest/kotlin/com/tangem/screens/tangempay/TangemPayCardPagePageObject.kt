@@ -1,6 +1,7 @@
 package com.tangem.screens.tangempay
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasText as withText
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -15,6 +16,10 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
     val moreButton: KNode = child {
         hasTestTag(TangemPayTestTags.CARD_PAGE_MORE_BUTTON)
         useUnmergedTree = true
+    }
+
+    val cardNameEditButton: KNode = child {
+        hasTestTag(TangemPayTestTags.CARD_NAME_EDIT_BUTTON)
     }
 
     val replaceCardMenuItem: KNode = child {
@@ -42,6 +47,19 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
 
     val freezeCardRow: KNode = child {
         hasTestTag(TangemPayTestTags.FREEZE_CARD_ROW)
+        useUnmergedTree = true
+    }
+
+    // Single FREEZE_CARD_ROW toggles its title Freeze<->Unfreeze by state; text pins the card as active vs frozen.
+    val freezeCardRowActive: KNode = child {
+        hasTestTag(TangemPayTestTags.FREEZE_CARD_ROW)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangem_pay_freeze_card_freeze)))
+        useUnmergedTree = true
+    }
+
+    val unfreezeCardRow: KNode = child {
+        hasTestTag(TangemPayTestTags.FREEZE_CARD_ROW)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangem_pay_freeze_card_unfreeze)))
         useUnmergedTree = true
     }
 
@@ -87,6 +105,11 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
 
     val copyCvcButton: KNode = child {
         hasTestTag(TangemPayTestTags.CARD_DETAILS_COPY_CVC)
+        useUnmergedTree = true
+    }
+
+    val addToWalletBanner: KNode = child {
+        hasTestTag(TangemPayTestTags.ADD_TO_WALLET_BANNER)
         useUnmergedTree = true
     }
 

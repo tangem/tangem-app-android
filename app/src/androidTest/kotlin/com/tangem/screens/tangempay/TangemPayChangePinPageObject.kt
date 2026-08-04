@@ -2,16 +2,19 @@ package com.tangem.screens.tangempay
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 
 class TangemPayChangePinPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TangemPayChangePinPageObject>(semanticsProvider = semanticsProvider) {
 
+    // TangemTopBar takes no per-title testTag, so the screen title is matched by text.
     val title: KNode = child {
-        hasTestTag(TangemPayTestTags.PIN_SCREEN_TITLE)
+        hasText(getResourceString(CoreResR.string.visa_onboarding_pin_code_title))
         useUnmergedTree = true
     }
 
@@ -25,8 +28,8 @@ class TangemPayChangePinPageObject(semanticsProvider: SemanticsNodeInteractionsP
         useUnmergedTree = true
     }
 
-    val submitButton: KNode = child {
-        hasTestTag(TangemPayTestTags.PIN_SUBMIT_BUTTON)
+    val closeButton: KNode = child {
+        hasTestTag(TangemPayTestTags.PIN_CLOSE_BUTTON)
         useUnmergedTree = true
     }
 

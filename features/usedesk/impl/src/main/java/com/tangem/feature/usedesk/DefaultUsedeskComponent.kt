@@ -22,6 +22,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import com.tangem.usedesk.chat_gui.chat.UsedeskChatScreen
+import com.tangem.usedesk.chat_sdk.entity.UsedeskChatConfiguration
 
 internal class DefaultUsedeskComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -30,7 +31,6 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
 
     private val model: UsedeskModel = getOrCreateModel(params)
 
-    @Suppress("NestedScopeFunctions")
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
@@ -42,62 +42,70 @@ internal class DefaultUsedeskComponent @AssistedInject constructor(
                 .systemBarsPadding()
                 .imePadding(),
         ) {
-            // Show the chat only once the configuration is ready (clientId is loaded asynchronously).
             if (configuration != null) {
-                val activity = LocalContext.current as? FragmentActivity ?: return@Box
-                val containerId = rememberSaveable { View.generateViewId() }
+                val activity = LocalContext.current as? FragmentActivity
+                if (activity != null) {
+                    ChatFragmentHost(activity = activity, configuration = configuration)
+                }
+            }
+        }
+    }
 
-                AndroidView(
-                    factory = { context ->
-                        FragmentContainerView(context).apply {
-                            id = containerId
+    @Suppress("NestedScopeFunctions")
+    @Composable
+    private fun ChatFragmentHost(activity: FragmentActivity, configuration: UsedeskChatConfiguration) {
+        val containerId = rememberSaveable { View.generateViewId() }
 
-                            val fragment = UsedeskChatScreen.newInstance(
-                                usedeskChatConfiguration = configuration,
-                                allowedFileExtensions = ALLOWED_FILE_EXTENSIONS,
-                                cameraEnabled = false,
-                            ).apply {
-                                onChatLoaded = { model.onChatLoaded() }
-                                onChatLoadError = { model.onChatLoadError() }
-                                onAttachLogs = { onReady ->
-                                    model.provideLogsFile { file ->
-                                        val uri = file?.let { logsFile ->
-                                            FileProvider.getUriForFile(
-                                                context,
-                                                "${context.packageName}.provider",
-                                                logsFile,
-                                            )
-                                        }
-                                        onReady(uri)
-                                    }
+        AndroidView(
+            factory = { context ->
+                FragmentContainerView(context).apply {
+                    id = containerId
+
+                    val fragment = UsedeskChatScreen.newInstance(
+                        usedeskChatConfiguration = configuration,
+                        allowedFileExtensions = ALLOWED_FILE_EXTENSIONS,
+                        cameraEnabled = false,
+                    ).apply {
+                        onChatLoaded = { model.onChatLoaded() }
+                        onChatLoadError = { model.onChatLoadError() }
+                        onSupportClick = { model.onSupportClick() }
+                        onAttachLogs = { onReady ->
+                            model.provideLogsFile { file ->
+                                val uri = file?.let { logsFile ->
+                                    FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.provider",
+                                        logsFile,
+                                    )
                                 }
-                            }
-                            activity.supportFragmentManager.beginTransaction()
-                                .replace(containerId, fragment)
-                                .commit()
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                )
-
-                DisposableEffect(Unit) {
-                    onDispose {
-                        // When leaving the chat, hide the keyboard via the (still alive) activity
-                        // window and remove the hosted fragment. Otherwise the input connection to
-                        // the destroyed EditText leaks: the keyboard stays open and crashes the app
-                        // when it is dismissed later.
-                        activity.getSystemService(InputMethodManager::class.java)
-                            ?.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
-
-                        val fragmentManager = activity.supportFragmentManager
-                        if (!fragmentManager.isStateSaved) {
-                            fragmentManager.executePendingTransactions()
-                            fragmentManager.findFragmentById(containerId)?.let { fragment ->
-                                fragmentManager.beginTransaction()
-                                    .remove(fragment)
-                                    .commit()
+                                onReady(uri)
                             }
                         }
+                    }
+                    activity.supportFragmentManager.beginTransaction()
+                        .replace(containerId, fragment)
+                        .commit()
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        DisposableEffect(Unit) {
+            onDispose {
+                // When leaving the chat, hide the keyboard via the (still alive) activity
+                // window and remove the hosted fragment. Otherwise the input connection to
+                // the destroyed EditText leaks: the keyboard stays open and crashes the app
+                // when it is dismissed later.
+                activity.getSystemService(InputMethodManager::class.java)
+                    ?.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
+
+                val fragmentManager = activity.supportFragmentManager
+                if (!fragmentManager.isStateSaved) {
+                    fragmentManager.executePendingTransactions()
+                    fragmentManager.findFragmentById(containerId)?.let { fragment ->
+                        fragmentManager.beginTransaction()
+                            .remove(fragment)
+                            .commit()
                     }
                 }
             }

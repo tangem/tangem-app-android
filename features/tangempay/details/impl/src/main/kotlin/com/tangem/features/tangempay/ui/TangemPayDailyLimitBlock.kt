@@ -34,11 +34,11 @@ import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 
 @Composable
 internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
-    CurrentLimitBlockV2(state, modifier.padding(top = TangemTheme.dimens2.x2))
+    CurrentLimitBlock(state, modifier.padding(top = TangemTheme.dimens2.x2))
 }
 
 @Composable
-private fun CurrentLimitBlockV2(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
+private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
     TangemRowContainer(
         modifier = modifier
             .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
@@ -190,7 +190,7 @@ private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifi
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewV2() {
+private fun TangemPayDailyLimitBlockPreview() {
     TangemThemePreviewRedesign {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),

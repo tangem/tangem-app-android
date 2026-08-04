@@ -9,8 +9,8 @@ import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.addressbook.models.SyncAddressBooksRequest
 import com.tangem.datasource.api.addressbook.models.SyncAddressBooksResponse
 import com.tangem.datasource.api.addressbook.models.UpdateAddressBookResponse
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.addressbook.crypto.AddressBookCipher
 import com.tangem.domain.addressbook.error.AddressBookCryptoError
 import com.tangem.domain.addressbook.error.AddressBookSyncError
