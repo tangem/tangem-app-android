@@ -20,7 +20,7 @@ import java.util.Date
 /**
  * Tests for the firmware-based blockchain filter in [supportedBlockchains].
  *
- * Regression: Igra was unavailable on cards without HD wallets.
+ * Regression: Robinhood and Igra were unavailable on cards without HD wallets.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SupportedBlockchainsTest {
@@ -46,7 +46,7 @@ internal class SupportedBlockchainsTest {
     }
 
     @Test
-    fun `GIVEN card without HD wallets WHEN supportedTokens THEN Igra is available`() {
+    fun `GIVEN card without HD wallets WHEN supportedTokens THEN Robinhood and Igra are available`() {
         // Arrange
         val card = createCard(firmwareVersion = MULTI_WHITE_FIRMWARE)
 
@@ -57,21 +57,21 @@ internal class SupportedBlockchainsTest {
         )
 
         // Assert
-        assertThat(actual).contains(Blockchain.Igra)
+        assertThat(actual).containsAtLeast(Blockchain.Robinhood, Blockchain.Igra)
     }
 
     private fun provideTestModels() = listOf(
         TestModel(
             firmwareVersion = WALLET_V3_FIRMWARE,
             isTangemWallet = false,
-            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Igra),
+            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Robinhood, Blockchain.Igra),
             expectedNotContains = listOf(Blockchain.Quai, Blockchain.Adi, Blockchain.SeiEvm),
         ),
         // 4.12 Multi White: cardId FF79000000000000, batch CB79, firmware 4.12d
         TestModel(
             firmwareVersion = MULTI_WHITE_FIRMWARE,
             isTangemWallet = true,
-            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Igra),
+            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Robinhood, Blockchain.Igra),
             expectedNotContains = listOf(Blockchain.Quai, Blockchain.Adi, Blockchain.SeiEvm),
         ),
         // Wallet 2.0: HD wallets are available, nothing is filtered out by firmware
@@ -80,12 +80,13 @@ internal class SupportedBlockchainsTest {
             isTangemWallet = true,
             expectedContains = listOf(
                 Blockchain.Ethereum,
+                Blockchain.Robinhood,
                 Blockchain.Igra,
                 Blockchain.Quai,
                 Blockchain.Adi,
                 Blockchain.SeiEvm,
             ),
-            expectedNotContains = listOf(Blockchain.IgraTestnet),
+            expectedNotContains = listOf(Blockchain.RobinhoodTestnet, Blockchain.IgraTestnet),
         ),
     )
 
