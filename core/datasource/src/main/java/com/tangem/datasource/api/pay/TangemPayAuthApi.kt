@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.pay
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.pay.models.request.GenerateNonceByCustomerWalletRequest
 import com.tangem.datasource.api.pay.models.request.GetTokenByCustomerWalletRequest
 import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessTokenRequest

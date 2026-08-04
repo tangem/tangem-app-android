@@ -328,7 +328,6 @@ internal class TangemPaySelectPlanModelTest {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
 
         const val ACTIVATION_INDEX = 2
-
         val UPGRADE_TRANSITION = transition(TangemPayTariffPlanTransition.Type.UPGRADE, "PLUS", isBasic = false)
         val DOWNGRADE_TRANSITION = transition(TangemPayTariffPlanTransition.Type.DOWNGRADE, "BASIC", isBasic = true)
         val ACTIVATION_TRANSITION = transition(TangemPayTariffPlanTransition.Type.ACTIVATION, "PLUS", isBasic = false)

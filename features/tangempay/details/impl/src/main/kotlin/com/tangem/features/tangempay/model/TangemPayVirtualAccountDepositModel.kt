@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
+import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayVirtualAccountDepositComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -25,11 +26,13 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val urlOpener: UrlOpener,
     private val uiMessageSender: UiMessageSender,
+    private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val createVirtualAccountOrderUseCase: CreateVirtualAccountOrderUseCase,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
@@ -72,18 +75,32 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     }
 
     private fun onShowDetailsClick() {
-        when (params.virtualAccountOnramp) {
+        when (val onramp = params.virtualAccountOnramp) {
             is VirtualAccountOnramp.Available -> {
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsClicked())
-                params.onShowDetails(params.virtualAccountOnramp)
+                fetchBankCredentials(onramp)
             }
             VirtualAccountOnramp.Eligible -> {
                 analytics.send(TangemPayAnalyticsEvents.VaShowDetailsFirstTimeClicked())
                 createVirtualAccountOrder()
             }
-            VirtualAccountOnramp.BankCredentialsError -> params.onShowBankingDetailsError()
             // Processing never reaches this sheet (the Preparing message is shown instead); defensive.
             VirtualAccountOnramp.Processing -> onDismiss()
+        }
+    }
+
+    private fun fetchBankCredentials(onramp: VirtualAccountOnramp.Available) {
+        if (uiState.value.isLoading) return
+        uiState.update { it.copy(isLoading = true) }
+        modelScope.launch {
+            getBankCredentialsUseCase(
+                userWalletId = params.userWalletId,
+                productInstanceId = onramp.productInstanceId,
+            ).onRight { credentials ->
+                params.onShowDetails(credentials)
+            }.onLeft {
+                params.onShowBankingDetailsError(onramp.productInstanceId)
+            }
         }
     }
 
