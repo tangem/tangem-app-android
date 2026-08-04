@@ -1353,7 +1353,7 @@
   <string name="promo_campaign_summary_title">Участвовать в %1$s</string>
   <string name="promo_campaign_terms_agreement">Я принимаю %1$s</string>
   <string name="promo_campaign_terms_link">%1$s Условия</string>
-  <string name="promo_campaign_whale_swap_summary_description">Получайте кешбэк за каждый обмен от $10K до конца июля.\n\nСтавка растет вместе с суммой: 0.10% от $10K, 0.20% от $20K, 0.50% от $100K.\n\nМаксимальная выплата: $500 за обмен и $10,000 на кошелек для каждого направления обмена, пока длится кампания. Обмены стейблкоина на стейблкоин исключены.\n\nВыплата поступает еженедельно на выбранный вами адрес USDT или USDC.</string>
+  <string name="promo_campaign_whale_swap_summary_description">Получайте кешбэк за каждый обмен от $10K до конца августа.\n\nСтавка растет вместе с суммой: 0.10% от $10K, 0.20% от $20K, 0.50% от $100K.\n\nМаксимальная выплата: $500 за обмен и $10,000 на кошелек для каждого направления обмена, пока длится кампания. Обмены стейблкоина на стейблкоин исключены.\n\nВыплата поступает еженедельно на выбранный вами адрес USDT или USDC.</string>
   <string name="provider_name_support">Поддержка %s</string>
   <string name="push_notification_settings_banner_description">Push-уведомления включены, но не будут работать без вашего разрешения</string>
   <string name="push_notification_settings_banner_title">Разрешить уведомления</string>
@@ -2171,7 +2171,7 @@
   <string name="tangempay_topup_swap_title">Из вашего кошелька Tangem</string>
   <string name="tangempay_usdc_on_polygon_network">USDC в сети Polygon</string>
   <string name="tangempay_va_account_details">Реквизиты счёта</string>
-  <string name="tangempay_va_available_to_deposit_day">Доступно для пополнения в день:</string>
+  <string name="tangempay_va_available_to_deposit_day">Лимит в день:</string>
   <string name="tangempay_va_banking_details_error_description">Пожалуйста, попробуйте снова или обратитесь в поддержку, если проблема повторится</string>
   <string name="tangempay_va_banking_details_error_title">Не удалось загрузить банковские реквизиты</string>
   <string name="tangempay_va_limit_resetting_everyday">Лимит обновляется каждый день</string>
