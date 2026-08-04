@@ -1,6 +1,6 @@
 package com.tangem.data.pay.util
 
-import com.tangem.datasource.api.pay.models.response.CardDeliveryQuoteResponse
+import com.tangem.spend.datasource.pay.models.response.CardDeliveryQuoteResponse
 import com.tangem.domain.pay.model.CardDeliveryQuote
 import com.tangem.utils.converter.Converter
 import java.util.Currency

@@ -22,7 +22,6 @@ import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
 import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
-import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -109,14 +108,6 @@ internal class ProdApiConfigsManagerTest {
                 appInfoProvider = appInfoProvider,
             ),
             StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
-            TangemPay.Bff(
-                environmentConfig = environmentConfig,
-                appInfoProvider = appInfoProvider,
-            ),
-            TangemPay.Auth(
-                environmentConfig = environmentConfig,
-                appInfoProvider = appInfoProvider,
-            ),
             BlockAid(environmentConfig = environmentConfig),
             MoonPay(),
             P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
@@ -144,8 +135,6 @@ internal class ProdApiConfigsManagerTest {
         createYieldSupplyModel(),
         createTangemTechModel(),
         createStakeKitModel(),
-        createTangemPayModel(),
-        createTangemPayAuthModel(),
         createBlockAidSdkModel(),
         createMoonPayModel(),
         createP2PModel(),
@@ -318,40 +307,6 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
                     "accept" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createTangemPayModel(): TestModel {
-        return TestModel(
-            id = TangemPay.Bff.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.DEV,
-                baseUrl = "https://api.dev.us.paera.com/bff-v2/",
-                headers = mapOf(
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "Android" },
-                    "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
-                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
-                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
-                ),
-            ),
-        )
-    }
-
-    private fun createTangemPayAuthModel(): TestModel {
-        return TestModel(
-            id = TangemPay.Auth.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.DEV,
-                baseUrl = "https://api.dev.us.paera.com/",
-                headers = mapOf(
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "Android" },
-                    "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
-                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
-                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
