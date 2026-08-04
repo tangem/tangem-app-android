@@ -69,7 +69,6 @@ private fun CardDTO.isBlockchainUnsupported(blockchain: Blockchain): Boolean {
         Blockchain.Adi, Blockchain.AdiTestnet,
         Blockchain.SeiEvm, Blockchain.SeiEvmTestnet,
         Blockchain.Robinhood, Blockchain.RobinhoodTestnet,
-        Blockchain.Igra, Blockchain.IgraTestnet,
         -> {
             firmwareVersion <= FirmwareVersion.HDWalletAvailable
         }
