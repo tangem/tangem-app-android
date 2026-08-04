@@ -38,12 +38,14 @@ sealed class MainScreenAnalyticsEvent(
         event = "Button - Receive",
     )
 
-    class ButtonAddFunds : MainScreenAnalyticsEvent(
+    data class ButtonAddFunds(val status: AnalyticsParam.Status) : MainScreenAnalyticsEvent(
         event = "Button - Add Funds",
+        params = mapOf(AnalyticsParam.STATUS to status.value),
     )
 
-    class ButtonTransfer : MainScreenAnalyticsEvent(
+    data class ButtonTransfer(val status: AnalyticsParam.Status) : MainScreenAnalyticsEvent(
         event = "Button - Transfer",
+        params = mapOf(AnalyticsParam.STATUS to status.value),
     )
 
     class LimitsClicked : MainScreenAnalyticsEvent(
