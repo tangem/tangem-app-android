@@ -74,7 +74,6 @@ internal class GetCurrentTariffUseCaseTest {
     private fun awaitingPlanSelection(source: StatusSource, tariff: TangemPayCustomerTariffPlan) =
         PaymentAccountStatusValue.AwaitingPlanSelection(
             source = source,
-            cryptoCurrency = mockk(),
             tariffPlan = tariff,
         )
 

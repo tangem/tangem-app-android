@@ -139,6 +139,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
             AddressBookRoute.EditContact(
                 predefinedAddress = mode.address,
                 predefinedNetworkId = mode.networkId,
+                predefinedMemo = mode.memo,
             ),
         )
     }

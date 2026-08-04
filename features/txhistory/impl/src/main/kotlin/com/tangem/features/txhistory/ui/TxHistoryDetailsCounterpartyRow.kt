@@ -102,7 +102,7 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
             modifier = avatarModifier,
         )
         is CounterpartyAvatar.PaymentAccount -> PaymentAccountIcon(
-            size = AccountIconSize.RedesignedDefault,
+            size = AccountIconSize.Default,
             modifier = avatarModifier,
         )
     }

@@ -3,19 +3,23 @@ package com.tangem.core.ui.ds2.topnavigation
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
@@ -42,8 +46,10 @@ private enum class SlotId { Start, Content, Group, End }
  *   [TangemTopNavigation.DefaultContentPadding] (top 8, bottom 16, horizontal 16). Override a single
  *   edge via [com.tangem.core.ui.extensions.copy], e.g. `DefaultContentPadding.copy(top = 16.dp)`.
  * @param blurBackground Whether the fade behind the row should blur the content below.
+ * @param fadeEnabled Whether the fade behind the row is shown. Alpha is animated on change. Defaults to true.
  * @param startButton Leading slot. Typically a back button (see [TangemButton.Back]).
  * @param endButtonsGroup Optional pill-grouped secondary actions placed just before [endButton].
+ * @param isEndButtonsGroupBackgroundShown Whether the pill-grouped secondary actions should have a background. Defaults to true.
  * @param endButton Trailing slot. Typically, a close button (see [TangemButton.Close]).
  * @param contentColumn Center slot. Place title/subtitle children here.
  */
@@ -55,14 +61,24 @@ fun TangemTopNavigation(
     windowInsets: WindowInsets = WindowInsets.statusBars,
     contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
+    fadeEnabled: Boolean = true,
+    isEndButtonsGroupBackgroundShown: Boolean = true,
     startButton: (@Composable () -> Unit)? = null,
     endButtonsGroup: (@Composable RowScope.() -> Unit)? = null,
     endButton: (@Composable () -> Unit)? = null,
     contentColumn: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
+    val fadeAlpha by animateFloatAsState(
+        targetValue = if (fadeEnabled) 1f else 0f,
+        animationSpec = TangemAnimationSpec.Alpha,
+        label = "TangemTopNavigation.fadeAlpha",
+    )
+
     Box(modifier) {
         TangemFade(
-            modifier = Modifier.matchParentSize(),
+            modifier = Modifier
+                .graphicsLayer { alpha = fadeAlpha }
+                .matchParentSize(),
             position = TangemFade.Position.Top,
             variant = TangemFade.Variant.Soft,
             blur = blurBackground,
@@ -105,11 +121,24 @@ fun TangemTopNavigation(
                         exit = TangemTransition.SlotExitHorizontally,
                     ) {
                         displayedGroup?.let { group ->
-                            TangemSurface(isMaterial = true, shape = CircleShape) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    content = group,
-                                )
+                            AnimatedContent(
+                                targetState = isEndButtonsGroupBackgroundShown,
+                                transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
+                                label = "TangemTopNavigation.endButtonsGroupBackground",
+                            ) { shown ->
+                                if (shown) {
+                                    TangemSurface(isMaterial = true, shape = CircleShape) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            content = group,
+                                        )
+                                    }
+                                } else {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        content = group,
+                                    )
+                                }
                             }
                         }
                     }
@@ -189,6 +218,8 @@ fun TangemTopNavigation(
     windowInsets: WindowInsets = WindowInsets.statusBars,
     contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
+    fadeEnabled: Boolean = true,
+    isEndButtonsGroupBackgroundShown: Boolean = true,
     onBack: (() -> Unit)? = null,
     endButtonsGroup: (@Composable RowScope.() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
@@ -199,6 +230,8 @@ fun TangemTopNavigation(
         windowInsets = windowInsets,
         contentPadding = contentPadding,
         blurBackground = blurBackground,
+        fadeEnabled = fadeEnabled,
+        isEndButtonsGroupBackgroundShown = isEndButtonsGroupBackgroundShown,
         startButton = onBack?.let { { TangemButton.Back(onClick = it) } },
         endButtonsGroup = endButtonsGroup,
         endButton = onClose?.let { { TangemButton.Close(onClick = it) } },
@@ -216,6 +249,8 @@ fun TangemTopNavigation(
     windowInsets: WindowInsets = WindowInsets.statusBars,
     contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
+    fadeEnabled: Boolean = true,
+    isEndButtonsGroupBackgroundShown: Boolean = true,
     endButtonsGroup: (@Composable RowScope.() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
     startButton: @Composable () -> Unit,
@@ -226,6 +261,8 @@ fun TangemTopNavigation(
         windowInsets = windowInsets,
         contentPadding = contentPadding,
         blurBackground = blurBackground,
+        fadeEnabled = fadeEnabled,
+        isEndButtonsGroupBackgroundShown = isEndButtonsGroupBackgroundShown,
         startButton = startButton,
         endButtonsGroup = endButtonsGroup,
         endButton = onClose?.let { { TangemButton.Close(onClick = it) } },
@@ -243,6 +280,7 @@ fun TangemTopNavigation(
     windowInsets: WindowInsets = WindowInsets.statusBars,
     contentPadding: PaddingValues = TangemTopNavigation.DefaultContentPadding,
     blurBackground: Boolean = true,
+    fadeEnabled: Boolean = true,
     onBack: (() -> Unit)? = null,
     endButton: @Composable () -> Unit,
 ) {
@@ -252,6 +290,7 @@ fun TangemTopNavigation(
         windowInsets = windowInsets,
         contentPadding = contentPadding,
         blurBackground = blurBackground,
+        fadeEnabled = fadeEnabled,
         startButton = onBack?.let { { TangemButton.Back(onClick = it) } },
         endButton = endButton,
         contentColumn = { TitleSubtitle(title = title, subtitle = subtitle) },

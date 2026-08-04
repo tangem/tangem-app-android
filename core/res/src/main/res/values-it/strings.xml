@@ -134,7 +134,7 @@
   <string name="tangempay_bank_transfer_fee_header">Commissione onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">USD ricevuti convertiti in USDC al tasso 1:1</string>
   <string name="tangempay_bank_transfer_intro_title">Bonifico bancario: 1-2 giorni lavorativi</string>
-  <string name="tangempay_bank_transfer_legal">Utilizzando il servizio, accetti %1$s e %2$s</string>
+  <string name="tangempay_bank_transfer_legal">Utilizzando il servizio, accetti %1$s</string>
   <string name="tangempay_bank_transfer_show_details">Mostra dettagli</string>
   <string name="tangempay_bank_transfer_success_subtitle">Potrebbe richiedere un po\' di tempo</string>
   <string name="tangempay_bank_transfer_success_title">Preparazione dati bancari</string>
