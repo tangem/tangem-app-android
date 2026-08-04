@@ -769,5 +769,29 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 assertThat(loaded.cards).hasSize(1)
                 assertThat(loaded.cards.single().state).isEqualTo(TangemPayCardState.Issuing)
             }
+
+        @Test
+        fun `GIVEN local issue order missing on backend WHEN invoke THEN placeholder dropped and order forgotten`() =
+            runTest {
+                // GIVEN
+                val customerInfo = buildCustomerInfo()
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
+                coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_gone")
+                coEvery {
+                    cardDetailsRepository.getOrderInfo(userWalletId, "order_gone")
+                } returns VisaApiError.OrderNotFound.left()
+                coEvery { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") } just Runs
+                val storedStatuses = captureStoredStatuses()
+
+                // WHEN
+                fetcher.invoke(params)
+
+                // THEN
+                val loaded = storedStatuses.lastLoaded()
+                assertThat(loaded.cards.map { it.state }).doesNotContain(TangemPayCardState.Issuing)
+                coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") }
+            }
     }
 }
