@@ -128,32 +128,48 @@ internal class PushNotificationSettingsModel @Inject constructor(
 
     fun onResume() {
         osNotificationsEnabled.value = systemNotificationsStateProvider.areNotificationsEnabled()
-        if (cachedPrefs != null) autoApplyFirstActivationIfNeeded()
+        if (cachedPrefs == null) return
+
+        // An explicitly tapped toggle wins over the silent first-activation rule.
+        if (pendingPermissionToggle != null) {
+            modelScope.launch { applyPendingToggle() }
+        } else {
+            autoApplyFirstActivationIfNeeded()
+        }
     }
 
     fun onPermissionResult(isGranted: Boolean) {
-        val tapped = pendingPermissionToggle
-        pendingPermissionToggle = null
         modelScope.launch {
-            // Enable all three only on a real grant that actually turned notifications on: an
-            // already-granted-but-OS-disabled wallet returns isGranted=true instantly, so also require
-            // areNotificationsEnabled() before triggering the rule; a deny routes the user to settings.
+            // isGranted alone is unreliable: an already-granted-but-OS-disabled wallet returns true
+            // instantly, and pre-Android 13 there is no runtime permission at all.
             val isNotificationsEnabled = systemNotificationsStateProvider.areNotificationsEnabled()
             osNotificationsEnabled.value = isNotificationsEnabled
             analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = isGranted))
 
-            if (!isGranted || !isNotificationsEnabled) {
-                markFirstActivationDone(userWalletId)
+            if (isNotificationsEnabled) {
+                applyPendingToggle()
+            } else {
+                // The tapped toggle stays pending until the user comes back from the system settings.
                 showEnableNotificationsDialog()
-                return@launch
             }
+        }
+    }
 
-            if (isFirstActivationDone(userWalletId)) {
-                tapped?.let { applyOptimisticToggle(it, newValue = true) }
-            } else if (enableAllCategories(initiatingToggle = tapped)) {
-                // Fix the flag only after a successful enable, so a transient failure can retry.
-                markFirstActivationDone(userWalletId)
-            }
+    /**
+     * Applies the toggle the user tapped before the permission ask, once notifications are actually enabled.
+     * A refusal never fixes the first-activation flag, so the rule survives until a real grant.
+     */
+    private suspend fun applyPendingToggle() {
+        val tapped = pendingPermissionToggle ?: return
+        if (!osNotificationsEnabled.value || cachedPrefs == null) return
+        // Consumed before the first suspension point, so a concurrent resume cannot apply it twice.
+        pendingPermissionToggle = null
+
+        if (isFirstActivationDone(userWalletId)) {
+            applyOptimisticToggle(tapped, newValue = true)
+        } else if (enableAllCategories(initiatingToggle = tapped)) {
+            // Fix the flag only after a successful enable, so a transient failure can retry.
+            markFirstActivationDone(userWalletId)
         }
     }
 
@@ -373,7 +389,8 @@ internal class PushNotificationSettingsModel @Inject constructor(
                 ),
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.push_notifications_permission_alert_negative_button),
-                    onClick = {},
+                    // Declining is a final answer: the tapped toggle is dropped.
+                    onClick = { pendingPermissionToggle = null },
                 ),
             ),
         )
