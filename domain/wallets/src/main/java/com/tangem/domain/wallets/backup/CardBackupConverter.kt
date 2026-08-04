@@ -26,6 +26,27 @@ object CardBackupConverter {
     }
 
     /**
+     * Builds a card the app knows only by identity — a backup card that has been added to the backup but not
+     * finalized yet, so it holds no wallets and its curves are empty.
+     */
+    fun convert(
+        cardId: String,
+        cardPublicKey: ByteArray,
+        role: WalletCardBackup.Role,
+        backupStatus: CardBackupStatus,
+        error: CardBackupError? = null,
+    ): WalletCardBackup {
+        return WalletCardBackup(
+            cardId = cardId,
+            cardPublicKey = cardPublicKey.toHexString(),
+            role = role,
+            backupStatus = backupStatus,
+            curves = emptyList(),
+            error = error,
+        )
+    }
+
+    /**
      * A `null` status means the card's firmware has no notion of backup. Such wallets never reach the backend —
      * [com.tangem.domain.wallets.usecase.GetWalletBackupIntegrityUseCase] filters them out — so the value is
      * only a safe default here.
