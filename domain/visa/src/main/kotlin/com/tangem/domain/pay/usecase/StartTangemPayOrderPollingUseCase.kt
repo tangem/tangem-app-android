@@ -5,6 +5,8 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import java.util.concurrent.ConcurrentHashMap
 
@@ -12,6 +14,8 @@ class StartTangemPayOrderPollingUseCase(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
 ) {
+
+    private val logger = TangemLogger.withTag("StartTangemPayOrderPollingUseCase")
 
     /**
      * Order keys (`walletId:orderId`) currently being polled. Keeps polling idempotent so callers that
@@ -36,7 +40,7 @@ class StartTangemPayOrderPollingUseCase(
                 val newOrder = if (order.orderStatus.isTerminal) {
                     order
                 } else {
-                    cardDetailsRepository.getOrderInfo(userWalletId, order.orderId).getOrNull()
+                    getOrderInfo(userWalletId = userWalletId, orderId = order.orderId)
                 }
 
                 if (newOrder != null && newOrder != currentOrder) {
@@ -56,7 +60,22 @@ class StartTangemPayOrderPollingUseCase(
         }
     }
 
+    private suspend fun getOrderInfo(userWalletId: UserWalletId, orderId: String): TangemPayOrderInfo? {
+        return cardDetailsRepository.getOrderInfo(userWalletId, orderId).fold(
+            ifLeft = { error ->
+                if (error == VisaApiError.OrderNotFound) {
+                    logger.i("$orderId: does not exist on the backend, resolving as CANCELED")
+                    TangemPayOrderInfo(orderId = orderId, orderStatus = OrderStatus.CANCELED)
+                } else {
+                    logger.e("$orderId: poll failed, will retry — $error")
+                    null
+                }
+            },
+            ifRight = { it },
+        )
+    }
+
     companion object {
-        private const val POLLING_DELAY = 3000L
+        private const val POLLING_DELAY = 5_000L
     }
 }
