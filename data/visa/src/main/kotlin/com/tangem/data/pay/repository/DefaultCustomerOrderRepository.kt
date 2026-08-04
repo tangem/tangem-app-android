@@ -3,8 +3,8 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import com.tangem.data.pay.util.OrderConverter
 import com.tangem.data.pay.util.OrderStatusConverter
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.request.OrderRequest
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Order
