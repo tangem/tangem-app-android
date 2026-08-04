@@ -25,7 +25,9 @@ internal class EarnListBatchFlowManager(
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
-    private val actionsFlow = MutableSharedFlow<BatchAction<Int, EarnTokensListConfig, Nothing>>()
+    // `replay = 1` because the batch source subscribes asynchronously, so an action emitted before
+    // that would be dropped silently.
+    private val actionsFlow = MutableSharedFlow<BatchAction<Int, EarnTokensListConfig, Nothing>>(replay = 1)
     private val converter = EarnTokenWithCurrencyToListItemUMConverter(
         onItemClick = { onItemClick(it, EarnSource.BEST_OPPORTUNITIES_SOURCE) },
     )
@@ -38,8 +40,10 @@ internal class EarnListBatchFlowManager(
         batchSize = DEFAULT_BATCH_SIZE,
     )
 
+    private val batchState = batchFlow.state.filterNot { it.status is PaginationStatus.None }
+
     val uiItems: StateFlow<ImmutableList<EarnListItemUM>> =
-        batchFlow.state
+        batchState
             .scan(persistentListOf<EarnListItemUM>() to -1) { (accItems, lastProcessedBatchIndex), newState ->
                 if (newState.data.size <= lastProcessedBatchIndex) {
                     val newItems = newState.data
@@ -63,7 +67,7 @@ internal class EarnListBatchFlowManager(
                 initialValue = persistentListOf(),
             )
 
-    val initialLoadingError: StateFlow<Throwable?> = batchFlow.state
+    val initialLoadingError: StateFlow<Throwable?> = batchState
         .map { state ->
             val status = state.status
             if (status is PaginationStatus.InitialLoadingError) {
@@ -79,7 +83,7 @@ internal class EarnListBatchFlowManager(
             initialValue = null,
         )
 
-    val paginationStatus: StateFlow<PaginationStatus<List<EarnTokenWithCurrency>>> = batchFlow.state
+    val paginationStatus: StateFlow<PaginationStatus<List<EarnTokenWithCurrency>>> = batchState
         .map { it.status }
         .distinctUntilChanged()
         .stateIn(

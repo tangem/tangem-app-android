@@ -28,6 +28,7 @@ sealed class SendDestinationComponentParams {
         val route: DestinationRoute,
         val callback: SendDestinationComponent.ModelCallback,
         override val isAllowSelfSend: Boolean = false,
+        val isInitialRoute: Boolean = false,
     ) : SendDestinationComponentParams()
 
     data class DestinationBlockParams(
