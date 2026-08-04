@@ -19,89 +19,111 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.news.details.state.RelatedArticleUM
 
 @Composable
 internal fun RelatedNewsItem(relatedArticle: RelatedArticleUM, modifier: Modifier = Modifier) {
-    RelatedNewsItemV2(relatedArticle, modifier)
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun RelatedNewsItemV2(relatedArticle: RelatedArticleUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .sizeIn(maxWidth = 280.dp, minHeight = 164.dp)
             .background(
-                color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x6),
+                color = TangemTheme.colors3.bg.secondary,
+                shape = RoundedCornerShape(24.dp),
             )
             .clickable(onClick = relatedArticle.onClick)
-            .padding(TangemTheme.dimens2.x4),
+            .padding(16.dp),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x4)) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_explore_16),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.markers.iconGray,
-                        modifier = Modifier.size(TangemTheme.dimens2.x4),
-                    )
-                    SpacerW(TangemTheme.dimens2.x0_5)
-                    Text(
-                        text = relatedArticle.media.name,
-                        style = TangemTheme.typography2.captionMedium12,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = TangemTheme.colors2.text.neutral.secondary,
-                    )
-                }
-                if (relatedArticle.title.isNotEmpty()) {
-                    SpacerH(TangemTheme.dimens2.x2)
-                    Text(
-                        text = relatedArticle.title,
-                        style = TangemTheme.typography2.bodyMedium16,
-                        color = TangemTheme.colors2.text.neutral.primary,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            if (relatedArticle.imageUrl != null) {
-                SubcomposeAsyncImage(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop,
-                    model = ImageRequest.Builder(context = LocalContext.current)
-                        .data(relatedArticle.imageUrl)
-                        .crossfade(enable = false)
-                        .allowHardware(true)
-                        .memoryCachePolicy(CachePolicy.DISABLED)
-                        .build(),
-                    loading = {
-                        RectangleShimmer(
-                            modifier = Modifier.size(44.dp),
-                            radius = 12.dp,
-                        )
-                    },
-                    error = {},
-                    contentDescription = relatedArticle.media.name,
-                )
+        RelatedNewsItemBody(relatedArticle = relatedArticle)
+        SpacerHMax()
+        RelatedNewsItemPublishedAt(publishedAt = relatedArticle.publishedAt.resolveReference())
+    }
+}
+
+@Composable
+private fun RelatedNewsItemBody(relatedArticle: RelatedArticleUM) {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(modifier = Modifier.weight(1f)) {
+            RelatedNewsItemSource(name = relatedArticle.media.name)
+            if (relatedArticle.title.isNotEmpty()) {
+                SpacerH(8.dp)
+                RelatedNewsItemTitle(title = relatedArticle.title)
             }
         }
-        SpacerHMax()
+        relatedArticle.imageUrl?.let { imageUrl ->
+            RelatedNewsItemImage(
+                imageUrl = imageUrl,
+                contentDescription = relatedArticle.media.name,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RelatedNewsItemSource(name: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_explore_16),
+            contentDescription = null,
+            tint = TangemTheme.colors3.icon.secondary,
+            modifier = Modifier.size(16.dp),
+        )
+        SpacerW(2.dp)
         Text(
-            text = relatedArticle.publishedAt.resolveReference(),
-            style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            text = name,
+            style = TangemTheme.typography3.caption.medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
+}
+
+@Composable
+private fun RelatedNewsItemTitle(title: String) {
+    Text(
+        text = title,
+        style = TangemTheme.typography3.body.medium,
+        color = TangemTheme.colors3.text.primary,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun RelatedNewsItemImage(imageUrl: String, contentDescription: String) {
+    SubcomposeAsyncImage(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(RoundedCornerShape(12.dp)),
+        contentScale = ContentScale.Crop,
+        model = ImageRequest.Builder(context = LocalContext.current)
+            .data(imageUrl)
+            .crossfade(enable = false)
+            .allowHardware(true)
+            .memoryCachePolicy(CachePolicy.DISABLED)
+            .build(),
+        loading = {
+            TangemShimmer(
+                modifier = Modifier.fillMaxSize(),
+                radius = 12.dp,
+            )
+        },
+        error = {},
+        contentDescription = contentDescription,
+    )
+}
+
+@Composable
+private fun RelatedNewsItemPublishedAt(publishedAt: String) {
+    Text(
+        text = publishedAt,
+        style = TangemTheme.typography3.caption.medium,
+        color = TangemTheme.colors3.text.secondary,
+    )
 }

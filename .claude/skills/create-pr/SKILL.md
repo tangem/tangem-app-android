@@ -29,7 +29,8 @@ This skill only adds what is **not** in git-rules.md:
 | Protected branches | `develop`, `releases/*` — never commit directly; always branch off (Phase 2) |
 | Commit trailer | `Co-Authored-By: Claude Opus 4.8 (1M context) <[REDACTED_EMAIL]>` |
 | PR body footer | `🤖 Generated with [Claude Code](https://claude.com/claude-code)` |
-| Code comments | **No `AND-xxx`** in code/KDoc (fine in branch/commit/PR) |
+| PR body — no Jira keys | The PR **description/body must contain no Jira ticket key at all** (`AND-xxxxx`) — this holds for **both** kinds of PR. **Task-tied PR:** the PR's own `AND-xxxxx` belongs **only in the title**, never in the body; and no *other* ticket may be referenced anywhere. **Technical PR:** there is no Jira id at all — none in the title or the body. Either way: no "related to / part of / see / blocked by / follow-up of AND-…" and no `AND-xxxxx` in `## What` or any other body section. Strip or rephrase any such reference before creating the PR (describe the dependency in prose, without the key). |
+| Code comments | **No `AND-xxx`** in code/KDoc (fine in branch, commit, and the PR **title** — but never in the PR body, see the row above) |
 
 **Dry-run:** if `$ARGUMENTS` contains `--dry-run`, do everything except the writes — no branch
 creation, no commit, no push, no `gh pr create`. Print the exact branch name, commit message, file
@@ -164,6 +165,11 @@ About to open a PR:
 Show the chosen labels, the file count vs. the level's limit, and — if over the limit — that a
 justification is included. For a `bugfix` branch the line reads e.g. `Labels : deep, bug`.
 
+The previewed `PR body` must **already** be free of any Jira ticket key (matched by the ERE
+`AND-[0-9]+`, e.g. `grep -E "AND-[0-9]+"`) — see the "PR body — no Jira keys" rule. If a draft body
+contains a ticket key, scrub it *before* showing this preview, so the user reviews the final
+ticket-free text.
+
 ## Phase 3b — Optional pre-PR checks (build / unit tests / detekt)
 
 Before committing/pushing, ask via `AskUserQuestion` (**multiSelect**): **"Run any checks before
@@ -241,6 +247,14 @@ approval does not carry over to a later run.
    Pass the complexity label (`deep`|`complex`|`easy`) via `--label`, plus a second `--label "bug"`
    for bugfix branches. `gh pr create` prints the PR URL on success. (If labels were missed at
    creation, add them after with `gh pr edit <url> --add-label "<label>"`.)
+
+   **Before building `--body`, scrub it of every Jira ticket key** (see the "PR body — no Jira keys"
+   rule above): the body must contain **no `AND-xxxxx` keys at all** — not other tickets, not even
+   this PR's own id (that lives only in the title, and only for a task-tied PR). If the change relates
+   to another ticket, describe it in prose without the key. Scan the assembled body with a
+   PCRE-independent pattern — `grep -E "AND-[0-9]+"` (ERE). Do not use `\d`: it is **not part of
+   POSIX BRE/ERE**, so `grep` without `-P` (PCRE) won't match it — use the `[0-9]` digit class
+   instead. Remove/rephrase any hit before the `gh pr create` call.
 
 If a step fails, stop and surface the exact error and the command that failed; do not retry blindly.
 

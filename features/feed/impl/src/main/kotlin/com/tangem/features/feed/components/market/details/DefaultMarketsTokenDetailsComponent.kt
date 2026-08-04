@@ -26,6 +26,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
@@ -35,6 +36,8 @@ import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnal
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTitle
+import com.tangem.features.foryou.TokenSummaryBlockComponent
+import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -49,6 +52,7 @@ internal class DefaultMarketsTokenDetailsComponent(
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
+    tokenSummaryBlockComponentFactory: TokenSummaryBlockComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     // applying l2 compatibility
@@ -83,6 +87,23 @@ internal class DefaultMarketsTokenDetailsComponent(
                         model.openAddFunds(rawCurrencyId)
                     }
                 },
+            )
+        } else {
+            null
+        }
+
+    private val tokenSummaryBlockComponent: TokenSummaryBlockComponent? =
+        if (updatedParams.isTokenSummaryEnabled) {
+            tokenSummaryBlockComponentFactory.create(
+                context = child("token_summary_block"),
+                params = TokenSummaryBlockComponent.Params(
+                    symbol = updatedParams.token.symbol,
+                    selectedPeriod = model.selectedTokenSummaryPeriod,
+                    isHostLoading = model.isBodyLoading,
+                    callbacks = object : TokenSummaryBlockComponent.Callbacks {
+                        override fun onClick() = model.onTokenSummaryBlockClick()
+                    },
+                ),
             )
         } else {
             null
@@ -162,7 +183,7 @@ internal class DefaultMarketsTokenDetailsComponent(
         MarketsTokenDetailsTitle(
             state = state,
             isBackButtonEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-            onBackClick = { params.onBackClicked() },
+            onBackClick = { params.callbacks.onBackClicked() },
         )
     }
 
@@ -199,6 +220,9 @@ internal class DefaultMarketsTokenDetailsComponent(
             marketingBanner = { blockModifier ->
                 marketingBannerComponent.Content(blockModifier)
             },
+            tokenSummaryBlock = tokenSummaryBlockComponent?.let { component ->
+                { blockModifier -> component.Content(blockModifier) }
+            },
         )
         bottomSheet.child?.instance?.BottomSheet()
         addFundsBs.child?.instance?.BottomSheet()
@@ -209,13 +233,25 @@ internal class DefaultMarketsTokenDetailsComponent(
         val token: TokenMarketParams,
         val appCurrency: AppCurrency,
         val shouldShowPortfolio: Boolean,
+        val isTokenSummaryEnabled: Boolean,
         val analyticsParams: AnalyticsParams?,
-        val onBackClicked: () -> Unit,
-        val onArticleClick: (articleId: Int, preselectedArticlesId: List<Int>) -> Unit,
+        val callbacks: Callbacks,
         val preselectedSection: PreselectedTokenDetailsSection? = null,
         val shouldOpenExchanges: Boolean = false,
         val exchangesCount: Int? = null,
     )
+
+    interface Callbacks {
+        fun onBackClicked()
+
+        fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>)
+
+        fun onTokenSummaryClick(
+            userWalletId: UserWalletId,
+            token: TokenSummaryComponent.Token,
+            selectedTokenPeriodId: String?,
+        )
+    }
 
     @Serializable
     data class AnalyticsParams(

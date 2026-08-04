@@ -16,6 +16,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
+import com.tangem.core.ui.test.TokenActionMenuTestTags
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -30,7 +32,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import kotlinx.collections.immutable.ImmutableList
@@ -136,6 +137,7 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                         } else {
                             TangemTheme.colors3.text.primary
                         },
+                        modifier = Modifier.testTag(TokenActionMenuTestTags.action(item.id)),
                     )
                 }
                 if (item.hasDivider) {

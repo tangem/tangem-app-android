@@ -4,6 +4,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.swipeVertical
 import com.tangem.screens.onAddAndManageBottomSheet
 import com.tangem.screens.onMainScreen
@@ -33,6 +34,14 @@ fun BaseTestCase.getMainScreenTokensOrder(): List<String> {
         }
     }
     return tokens
+}
+
+fun BaseTestCase.waitUntilMainScreenTokenBalanceLoaded(tokenTitle: String) {
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        var balance = ""
+        onMainScreen { balance = tokenFiatAmountText(tokenTitle).extractText() }
+        require(balance.any(Char::isDigit)) { "Balance for '$tokenTitle' is not loaded yet: '$balance'" }
+    }
 }
 
 fun BaseTestCase.assertOrganizeTokensMatch(expectedTokens: List<String>) {

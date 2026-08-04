@@ -7,7 +7,7 @@ import arrow.core.raise.catch
 import arrow.core.right
 import com.squareup.wire.Instant
 import com.tangem.data.pay.util.TangemPayErrorConverter
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessTokenRequest
 import com.tangem.datasource.api.pay.models.response.TangemPayGetTokensResponse

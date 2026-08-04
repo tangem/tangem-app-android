@@ -110,7 +110,7 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
                             .align(Alignment.BottomCenter)
                             .windowInsetsPadding(WindowInsets.navigationBars),
                         colors = TangemPagerIndicatorColors.copy(
-                            overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(PAGER_BG_ALPHA),
+                            overlay = TangemTheme.colors3.bg.opaque.secondary.copy(PAGER_BG_ALPHA),
                         ),
                         hazeState = localHaze,
                     )
@@ -123,7 +123,7 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewNewsDetailsContentV2() {
+private fun PreviewNewsDetailsContent() {
     TangemThemePreviewRedesign {
         val background = TangemTheme.colors.background.tertiary
         CompositionLocalProvider(

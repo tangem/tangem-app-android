@@ -9,7 +9,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.features.tangempay.model.TangemPayAddFundsModel
-import com.tangem.features.tangempay.ui.TangemPayAddFundsContentV2
+import com.tangem.features.tangempay.ui.TangemPayAddFundsContent
 import java.math.BigDecimal
 
 internal class TangemPayAddFundsComponent(
@@ -25,7 +25,7 @@ internal class TangemPayAddFundsComponent(
 
     @Composable
     override fun BottomSheet() {
-        TangemPayAddFundsContentV2(state = model.uiState)
+        TangemPayAddFundsContent(state = model.uiState)
     }
 
     data class Params(

@@ -1,7 +1,6 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
-import com.tangem.domain.visa.GetVisaTxDetailsUseCase
 import com.tangem.domain.visa.GetVisaTxHistoryUseCase
 import com.tangem.domain.visa.SetVisaPinCodeUseCase
 import com.tangem.domain.visa.repository.VisaActivationRepository
@@ -23,11 +22,6 @@ internal object VisaDomainModule {
     @Provides
     fun provideGetVisaTxHistoryUseCase(visaRepository: VisaRepository): GetVisaTxHistoryUseCase {
         return GetVisaTxHistoryUseCase(visaRepository)
-    }
-
-    @Provides
-    fun provideGetVisaTxDetailsUseCase(visaRepository: VisaRepository): GetVisaTxDetailsUseCase {
-        return GetVisaTxDetailsUseCase(visaRepository)
     }
 
     @Provides
