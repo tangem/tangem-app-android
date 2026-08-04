@@ -47,6 +47,7 @@ internal class ForceUpdateModel @Inject constructor(
             title = resourceReference(R.string.force_update_warning_title),
             description = resourceReference(R.string.force_update_warning_message),
             onUpdateClick = ::onUpdateClick,
+            onLaterClick = null,
             onSupportClick = ::onSupportClick,
         )
         ForceUpdateComponent.Mode.Brick -> ForceUpdateUM(
@@ -55,20 +56,26 @@ internal class ForceUpdateModel @Inject constructor(
             title = resourceReference(R.string.force_update_brick_title),
             description = resourceReference(R.string.force_update_brick_description),
             onUpdateClick = null,
+            onLaterClick = null,
             onSupportClick = ::onSupportClick,
         )
         ForceUpdateComponent.Mode.OsTooOld -> ForceUpdateUM(
             mode = mode,
-            accent = Accent.Red,
+            accent = Accent.Yellow,
             title = resourceReference(R.string.force_update_os_title),
             description = resourceReference(R.string.force_update_os_description),
             onUpdateClick = null,
+            onLaterClick = ::onLaterClick,
             onSupportClick = null,
         )
     }
 
     private fun onUpdateClick() {
         appStoreOpener.openStorePage()
+    }
+
+    private fun onLaterClick() {
+        forceUpdateContinuation.dismiss()
     }
 
     private fun onSupportClick() {

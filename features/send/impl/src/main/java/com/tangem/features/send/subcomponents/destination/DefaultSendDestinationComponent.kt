@@ -85,7 +85,7 @@ internal class DefaultSendDestinationComponent @AssistedInject constructor(
         AppBarWithBackButtonAndIcon(
             text = params.title.resolveReference(),
             onBackClick = model::onBackClick,
-            backIconRes = if (params.route.isEditMode) {
+            backIconRes = if (params.route.isEditMode || !params.isInitialRoute) {
                 R.drawable.ic_back_24
             } else {
                 R.drawable.ic_close_24
