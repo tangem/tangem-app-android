@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.utils
 
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
@@ -31,6 +32,13 @@ internal val PaymentAccountStatusValue.typeName: String
         PaymentAccountStatusValue.Error.Unavailable -> "Error.Unavailable"
         PaymentAccountStatusValue.Error.NotSynced -> "Error.NotSynced"
         is PaymentAccountStatusValue.Error.CardIssueFailed -> "Error.CardIssueFailed"
+    }
+
+internal val AccountStatus.Payment.tariffPlanState: TangemPayTariffPlanState?
+    get() = when (val v = value) {
+        is PaymentAccountStatusValue.Inactive -> v.tariffPlan
+        is PaymentAccountStatusValue.Loaded -> v.tariffPlan
+        else -> null
     }
 
 internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
