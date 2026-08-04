@@ -84,7 +84,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
-    private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
@@ -165,18 +164,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                 }
             }
             .launchIn(modelScope)
-    }
-
-    override fun onCancelTariffTransition(orderId: String) {
-        analytics.send(TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked())
-        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
-        modelScope.launch {
-            cancelTariffTransitionUseCase(userWalletId = userWalletId, orderId = orderId)
-                .onLeft {
-                    uiMessageSender.send(TangemPayMessagesFactory.createGenericError())
-                }
-            uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
-        }
     }
 
     fun onStart() {
@@ -511,7 +498,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         urlOpener.openUrl(TangemPayConstants.visaBenefitsLink())
     }
 
-    override fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan) {
+    override fun onClickCurrentPlan(tariffPlan: TangemPayTariffPlanState) {
         analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
     }
@@ -532,7 +519,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             if (offer == null) {
                 val message = if (tariffState != null && tariffState.tariff.plan.isBasicTier) {
                     TangemPayMessagesFactory.createMaximumCardsForPlanIssuedMessage(
-                        onUpgradeClick = { onClickCurrentPlan(tariffState.tariff) }
+                        onUpgradeClick = { onClickCurrentPlan(tariffState) }
                             .takeIf { !tariffState.isPlanTransitioningState },
                     )
                 } else {
