@@ -34,7 +34,6 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds.button.TangemButton
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
@@ -44,6 +43,7 @@ import com.tangem.core.ui.ds.row.internal.TangemRowTail
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowEndContent
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -63,7 +63,6 @@ import org.burnoutcrew.reorderable.ItemPosition
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import com.tangem.core.ui.ds2.button.TangemButton as TangemButtonDs3
 
 @Composable
 internal fun OrganizeTokensContent(
@@ -81,7 +80,7 @@ internal fun OrganizeTokensContent(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors2.surface.level2,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemTopNavigation(
                 title = resourceReference(R.string.organize_tokens_title),
@@ -90,10 +89,10 @@ internal fun OrganizeTokensContent(
                 blurBackground = false,
                 endButton = {
                     Box {
-                        TangemButtonDs3(
+                        TangemButton(
                             modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
-                            variant = TangemButtonDs3.Variant.Material,
-                            size = TangemButtonDs3.Size.X11,
+                            variant = TangemButton.Variant.Material,
+                            size = TangemButton.Size.X11,
                             iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_exchange_mini_24),
                             onClick = { isShowDropdownMenu = true },
                         )
@@ -137,7 +136,7 @@ private fun TokenList(
     var draggingItem by remember { mutableStateOf<OrganizeRowItemUM?>(null) }
 
     Box(
-        modifier = modifier.background(TangemTheme.colors2.surface.level2),
+        modifier = modifier.background(TangemTheme.colors3.bg.primary),
     ) {
         val footerInset = LocalTangemBottomSheetContentBottomInset.current
 
@@ -238,7 +237,7 @@ private fun LazyItemScope.DraggableItem(
         enabled = isValidDropTarget,
     ) { _ ->
         val modifierWithBackground = itemModifier
-            .background(color = TangemTheme.colors.background.primary)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .semantics { lazyListItemPosition = index }
 
         when (item) {
@@ -281,16 +280,23 @@ private fun BoxScope.BottomButtons(organizeTokensUM: OrganizeTokensUM) {
             .padding(bottom = bottomBarHeight + TangemTheme.dimens2.x4),
     ) {
         TangemButton(
-            buttonUM = organizeTokensUM.cancelButton,
             modifier = Modifier
                 .weight(1f)
                 .testTag(OrganizeTokensScreenTestTags.CANCEL_BUTTON),
+            onClick = organizeTokensUM.cancelButton.onClick,
+            text = organizeTokensUM.cancelButton.text,
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X12,
+            isEnabled = organizeTokensUM.cancelButton.isEnabled,
         )
         TangemButton(
-            buttonUM = organizeTokensUM.applyButton,
             modifier = Modifier
                 .weight(1f)
                 .testTag(OrganizeTokensScreenTestTags.APPLY_BUTTON),
+            onClick = organizeTokensUM.applyButton.onClick,
+            text = organizeTokensUM.applyButton.text,
+            size = TangemButton.Size.X12,
+            isEnabled = organizeTokensUM.applyButton.isEnabled,
         )
     }
 }
@@ -355,8 +361,8 @@ private fun OrganizeTokenRow(
             TokenRowEndContent(
                 endContentUM = tokenRowUM.topEndContentUM,
                 isBalanceHidden = isBalanceHidden,
-                textStyle = TangemTheme.typography2.captionSemibold12,
-                textColor = TangemTheme.colors2.text.neutral.secondary,
+                textStyle = TangemTheme.typography3.caption.medium,
+                textColor = TangemTheme.colors3.text.secondary,
                 placeholderWidth = TangemTheme.dimens2.x11,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)

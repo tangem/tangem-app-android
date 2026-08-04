@@ -40,6 +40,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -90,6 +91,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
+    tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
@@ -116,8 +118,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         MutableStateFlow(persistentListOf())
     val cardControllersState: StateFlow<ImmutableList<TangemPayCardDetailsController>> = _cardControllersState
 
-    private val cryptoCurrency
-        get() = currentStatus.value.cryptoCurrency
+    private val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
@@ -484,6 +485,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     fun showVaBankingDetailsError(productInstanceId: String) {
+        analytics.send(TangemPayAnalyticsEvents.VaDetailsErrorShowed())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VaBankingDetailsError(
@@ -494,6 +496,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun showVaPreparing() {
+        analytics.send(TangemPayAnalyticsEvents.VaPreparationPopupShowed())
         bottomSheetNavigation.dismiss()
         uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
     }

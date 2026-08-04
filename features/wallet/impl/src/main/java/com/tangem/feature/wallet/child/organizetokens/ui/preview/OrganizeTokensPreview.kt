@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.organizetokens.ui.preview
 
+import androidx.compose.ui.text.SpanStyle
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
@@ -8,9 +9,12 @@ import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeRowItemUM
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensUM
 import com.tangem.feature.wallet.child.organizetokens.entity.RoundingModeUM
@@ -75,7 +79,16 @@ internal object OrganizeTokensPreview {
                         tokenRowUM = draggableToken.copy(
                             id = "${group.id}_token_$tokenNumber",
                             titleUM = TangemTokenRowUM.TitleUM.Content(
-                                text = stringReference(value = "Token $tokenNumber from $networkNumber network"),
+                                text = combinedReference(
+                                    stringReference(value = "Token $tokenNumber"),
+                                    stringReference(value = " "),
+                                    styledStringReference(
+                                        value = "TKN$tokenNumber",
+                                        spanStyleReference = {
+                                            SpanStyle(color = TangemTheme.colors2.text.neutral.secondary)
+                                        },
+                                    ),
+                                ),
                             ),
                         ),
                         groupId = group.id,

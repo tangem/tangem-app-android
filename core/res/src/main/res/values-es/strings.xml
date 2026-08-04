@@ -1301,7 +1301,7 @@
   <string name="promo_campaign_terms_agreement">Estoy de acuerdo con %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Estoy de acuerdo con</string>
   <string name="promo_campaign_terms_link">%1$s Términos</string>
-  <string name="promo_campaign_whale_swap_summary_description">Consiga reembolsos en cada intercambio a partir de 10,000 $ hasta finales de Julio.\n\nLas tasas aumentan según el volumen: 0.10% a partir de 10,000 $, 0,20% a partir de 20,000 $ y 0.50% a partir de 100,000 $.\n\nPago máximo: 500 $ por intercambio y 10,000 $ por billetera por dirección de intercambio mientras dure la campaña. Quedan excluidos los intercambios de monedas estables por otras monedas estables.\n\nEl pago se realiza semanalmente en la dirección de USDT o USDC que elija.</string>
+  <string name="promo_campaign_whale_swap_summary_description">Consiga un reembolso en cada intercambio a partir de 10 000 $ hasta finales de agosto.\n\nLas tasas aumentan según el importe: 0,10% a partir de 10 000 $, 0,20% a partir de 20 000 $ y 0,50% a partir de 100 000 $.\n\nPago máximo: 500 $ por intercambio y 10 000 $ por billetera y por dirección de intercambio mientras dure la campaña. Quedan excluidos los intercambios de monedas estables por otras monedas estables.\n\nEl pago se realiza semanalmente en la dirección de USDT o USDC que elija.</string>
   <string name="provider_name_support">Soporte de %s</string>
   <string name="push_notification_settings_banner_description">Las notificaciones push están activadas, pero no funcionarán hasta que las autorice</string>
   <string name="push_notification_settings_banner_title">Permitir notificaciones</string>
@@ -1834,7 +1834,7 @@
   <string name="tangempay_bank_transfer_fee_header">Comisión de onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Los USD recibidos se convierten a USDC a 1:1</string>
   <string name="tangempay_bank_transfer_intro_title">Transferencia bancaria: 1-2 días hábiles</string>
-  <string name="tangempay_bank_transfer_legal">Al usar el servicio, acepta %1$s y %2$s</string>
+  <string name="tangempay_bank_transfer_legal">Al usar el servicio, acepta %1$s</string>
   <string name="tangempay_bank_transfer_show_details">Mostrar detalles</string>
   <string name="tangempay_bank_transfer_success_subtitle">Esto puede tardar un poco</string>
   <string name="tangempay_bank_transfer_success_title">Preparando sus datos bancarios</string>
@@ -1928,7 +1928,7 @@
   <string name="tangempay_cashback_deactivated_title">Cashback desactivado</string>
   <string name="tangempay_cashback_deposit_banner">Cashback %1$s por %2$s se depositará antes del %3$s</string>
   <string name="tangempay_cashback_deposited_on">Se deposita el %1$s</string>
-  <string name="tangempay_cashback_details_cap">%1$s máx./mes</string>
+  <string name="tangempay_cashback_details_cap">%1$s máx/mes</string>
   <string name="tangempay_cashback_details_eu_excluded">Sin cashback por compras presenciales en la UE</string>
   <string name="tangempay_cashback_details_paid_in">Pagado en %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% en compras con tarjetas %2$s, compra mín. %3$s</string>
