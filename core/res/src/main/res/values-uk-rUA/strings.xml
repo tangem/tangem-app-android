@@ -746,10 +746,16 @@
   <string name="feedback_subject_support_tangem">Звернення в підтримку Tangem</string>
   <string name="feedback_subject_tx_failed">Не вдається відправити транзакцію</string>
   <string name="feedback_token_description_error">Помилка в описі монети</string>
-  <string name="force_update_banner_message">Для забезпечення коректної роботи оновіть застосунок до останньої версії.</string>
-  <string name="force_update_banner_title">Необхідне оновлення</string>
+  <string name="force_update_action">Оновити зараз</string>
+  <string name="force_update_banner_message">Оновіть застосунок Tangem, щоб відкрити нові функції та отримати останні покращення.</string>
+  <string name="force_update_banner_title">Доступна нова версія</string>
+  <string name="force_update_brick_description">Tangem не може працювати з цією версією ОС. Ваші кошти в безпеці, а користуватися гаманцем можна на іншому підтримуваному пристрої.</string>
+  <string name="force_update_brick_title">Оновлення недоступне</string>
   <string name="force_update_button">Оновити</string>
-  <string name="force_update_warning_message">Будь ласка, оновіть застосунок до останньої версії, щоб забезпечити його коректну роботу.</string>
+  <string name="force_update_os_description">Ваша версія ОС застаріла. Tangem поки що працюватиме, але для майбутніх оновлень застосунку систему потрібно буде оновити.</string>
+  <string name="force_update_os_title">Оновіть систему</string>
+  <string name="force_update_required_action">Оновити застосунок</string>
+  <string name="force_update_warning_message">Будь ласка, оновіть Tangem до останньої версії, щоб продовжити користуватися застосунком.</string>
   <string name="force_update_warning_title">Потрібне оновлення</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Недостатньо коштів</string>
   <string name="gasless_transaction_fee">Комісія за транзакцію</string>
@@ -1346,7 +1352,7 @@
   <string name="promo_campaign_summary_title">Долучитися до %1$s</string>
   <string name="promo_campaign_terms_agreement">Я приймаю %1$s</string>
   <string name="promo_campaign_terms_link">%1$s Умови</string>
-  <string name="promo_campaign_whale_swap_summary_description">Отримуйте кешбек за кожний обмін від $10K до кінця липня.\n\nСтавка зростає разом із сумою: 0.10% від $10K, 0.20% від $20K, 0.50% від $100K.\n\nМаксимальна виплата: $500 за обмін та $10,000 на гаманець для кожного напрямку обмінів, поки триває кампанія. Обміни стейблкоїна на стейблкоїн виключено.\n\nВиплата надходить щотижня на обрану вами адресу USDT або USDC.</string>
+  <string name="promo_campaign_whale_swap_summary_description">Отримуйте кешбек за кожний обмін від $10K до кінця серпня.\n\nСтавка зростає разом із сумою: 0.10% від $10K, 0.20% від $20K, 0.50% від $100K.\n\nМаксимальна виплата: $500 за обмін та $10,000 на гаманець для кожного напрямку обмінів, поки триває кампанія. Обміни стейблкоїна на стейблкоїн виключено.\n\nВиплата надходить щотижня на обрану вами адресу USDT або USDC.</string>
   <string name="provider_name_support">Підтримка %s</string>
   <string name="push_notification_settings_banner_description">Push-сповіщення ввімкнені, але не працюватимуть без вашого дозволу</string>
   <string name="push_notification_settings_banner_title">Дозволити сповіщення</string>
@@ -1883,7 +1889,7 @@
   <string name="tangempay_bank_transfer_fee_header">Комісія за онрамп</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Отримані USD будуть конвертовані в USDC за курсом 1:1</string>
   <string name="tangempay_bank_transfer_intro_title">Банківський переказ може тривати 1-2 робочі дні</string>
-  <string name="tangempay_bank_transfer_legal">Використовуючи сервіс, ви погоджуєтеся з %1$s та %2$s</string>
+  <string name="tangempay_bank_transfer_legal">Використовуючи сервіс, ви погоджуєтеся з %1$s</string>
   <string name="tangempay_bank_transfer_show_details">Показати деталі</string>
   <string name="tangempay_bank_transfer_success_subtitle">Це може зайняти певний час</string>
   <string name="tangempay_bank_transfer_success_title">Підготовка ваших банківських реквізитів</string>
@@ -1977,7 +1983,7 @@
   <string name="tangempay_cashback_additional_until">До %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Це сталося через підозрілу активність. Зверніться до служби підтримки, щоб дізнатися більше</string>
   <string name="tangempay_cashback_deactivated_title">Кешбек деактивовано</string>
-  <string name="tangempay_cashback_deposit_banner">Кешбек %1$s за %2$s буде зараховано до %3$s</string>
+  <string name="tangempay_cashback_deposit_banner">Кэшбэк %1$s за %2$s буде зараховано до %3$s</string>
   <string name="tangempay_cashback_deposited_on">Буде зараховано %1$s</string>
   <string name="tangempay_cashback_details_cap">Максимум %1$s на місяць</string>
   <string name="tangempay_cashback_details_eu_excluded">Кешбек не нараховується за офлайн-покупки в магазинах ЄС</string>
@@ -1993,7 +1999,7 @@
   <string name="tangempay_cashback_refund_banner">Ми отримали повернення за покупку, за яку раніше було нараховано кешбек</string>
   <string name="tangempay_cashback_title">Кешбек</string>
   <string name="tangempay_cashback_total_earned">%1$s зароблено загалом</string>
-  <string name="tangempay_cashback_widget_title">%1$s кешбеку в %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s кешбек в %2$s</string>
   <string name="tangempay_change_pin_code">Змінити PIN-код</string>
   <string name="tangempay_changing_plan">Зміна тарифу</string>
   <string name="tangempay_choose_network_fast_way">Швидкий спосіб</string>
@@ -2132,7 +2138,7 @@
   <string name="tangempay_select_plan_confirm_point_cancel_till">Ви можете скасувати цей перехід до %1$s</string>
   <string name="tangempay_select_plan_confirm_point_cards_closed">Ваші картки %1$s буде закрито</string>
   <string name="tangempay_select_plan_confirm_point_monthly_fee">Щомісячна плата %1$s буде списана з вашого рахунку</string>
-  <string name="tangempay_select_plan_confirm_point_move_on_date">%1$s ми переведемо вас на тариф %2$s</string>
+  <string name="tangempay_select_plan_confirm_point_move_on_date">%1$s переведемо вас на тариф %2$s</string>
   <string name="tangempay_select_plan_confirm_point_no_fee">Без комісії</string>
   <string name="tangempay_select_plan_confirm_point_virtual_card">Ви отримаєте віртуальну картку %1$s за кілька хвилин</string>
   <string name="tangempay_select_plan_confirm_switch_title">Ви переходите на %1$s</string>
@@ -2164,7 +2170,7 @@
   <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
   <string name="tangempay_va_account_details">Реквізити рахунку</string>
-  <string name="tangempay_va_available_to_deposit_day">Доступно для поповнення на день:</string>
+  <string name="tangempay_va_available_to_deposit_day">Лимит на день:</string>
   <string name="tangempay_va_banking_details_error_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема повториться</string>
   <string name="tangempay_va_banking_details_error_title">Не вдалося завантажити банківські реквізити</string>
   <string name="tangempay_va_limit_resetting_everyday">Ліміт оновлюється щодня</string>

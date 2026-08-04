@@ -9,7 +9,7 @@
     },
     {
         "name": "TWI_1322_FORCE_UPDATE_ENABLED",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "NEW_CARD_SCANNING_ENABLED",
@@ -61,7 +61,7 @@
     },
     {
         "name": "AND_15741_VISA_PAY_REMOVE_ACCOUNT",
-        "version": "undefined"
+        "version": "6.1"
     },
     {
         "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
@@ -85,7 +85,7 @@
     },
     {
         "name": "TWI_1522_MARKETING_BANNERS_ENABLED",
-        "version": "undefined"
+        "version": "6.0.1"
     },
     {
         "name": "TWI_1469_FOR_YOU_ENABLED",
@@ -97,11 +97,11 @@
     },
     {
         "name": "TWI_1638_VA_MVP0_ENABLED",
-        "version": "6.1"
+        "version": "6.0.1"
     },
     {
         "name": "TWI_1637_CASHBACK_AND_REACTIVATION_CAMPAIGNS_ENABLED",
-        "version": "undefined"
+        "version": "6.0.1"
     },
     {
         "name": "AND_16080_TRON_DEX_SWAP_ENABLED",

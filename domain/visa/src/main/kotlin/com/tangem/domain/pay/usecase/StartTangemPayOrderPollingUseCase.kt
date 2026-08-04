@@ -5,6 +5,8 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.ConcurrentHashMap
@@ -15,6 +17,8 @@ class StartTangemPayOrderPollingUseCase(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
 ) {
 
+    private val logger = TangemLogger.withTag("StartTangemPayOrderPollingUseCase")
+
     /**
      * Order keys (`walletId:orderId`) currently being polled. Keeps polling idempotent so callers that
      * may fire repeatedly for the same order (e.g. order restore on every wallet (re)load) never spawn a
@@ -23,9 +27,10 @@ class StartTangemPayOrderPollingUseCase(
     private val activeOrders = ConcurrentHashMap.newKeySet<String>()
 
     /**
-     * @param onTerminalReached invoked once the order is terminal, **before** the status refresh. Callers
-     * use it to forget the locally stored order-id hint (issue / reissue / close) so the refresh does not
-     * re-issue a `GET /order/{id}` for the order that was just resolved.
+     * @param onOrderStateChange invoked on every observed order change, including the terminal one, and
+     * **before** the status refresh. Callers use it to forget the locally stored order-id hint
+     * (issue / reissue / close) so the refresh does not re-issue an order request for the order that was
+     * just resolved, and to react to intermediate steps such as `AWAITING_DEPOSIT`.
      * @param timeout when set, bounds the poll loop — a still-non-terminal order after [timeout] elapses
      * makes this return `false` (as if canceled) without further polling. `null` (default) polls
      * indefinitely, preserving existing callers' behavior exactly.
@@ -33,7 +38,7 @@ class StartTangemPayOrderPollingUseCase(
     suspend operator fun invoke(
         order: TangemPayOrderInfo,
         userWalletId: UserWalletId,
-        onTerminalReached: (suspend () -> Unit)? = null,
+        onOrderStateChange: (suspend (TangemPayOrderInfo) -> Unit)? = null,
         timeout: Duration? = null,
     ): Boolean {
         // A poller for this exact order is already running — `false` only reaches fire-and-forget issue
@@ -42,8 +47,9 @@ class StartTangemPayOrderPollingUseCase(
         if (!activeOrders.add(key)) return false
 
         try {
-            val onTerminal = onTerminalReached ?: {}
-            val pollBlock: suspend () -> Boolean = { pollUntilTerminal(order, userWalletId, onTerminal) }
+            val pollBlock: suspend () -> Boolean = {
+                pollUntilTerminal(order, userWalletId, onOrderStateChange)
+            }
             return if (timeout != null) {
                 withTimeoutOrNull(timeout) { pollBlock() } == true
             } else {
@@ -57,17 +63,22 @@ class StartTangemPayOrderPollingUseCase(
     private suspend fun pollUntilTerminal(
         order: TangemPayOrderInfo,
         userWalletId: UserWalletId,
-        onTerminalReached: suspend () -> Unit,
+        onOrderStateChange: (suspend (TangemPayOrderInfo) -> Unit)?,
     ): Boolean {
+        var currentOrder: TangemPayOrderInfo? = null
         while (true) {
             val newOrder = if (order.orderStatus.isTerminal) {
                 order
             } else {
-                cardDetailsRepository.getOrderInfo(userWalletId, order.orderId).getOrNull()
+                getOrderInfo(userWalletId = userWalletId, orderId = order.orderId)
+            }
+
+            if (newOrder != null && newOrder != currentOrder) {
+                currentOrder = newOrder
+                onOrderStateChange?.invoke(newOrder)
             }
 
             if (newOrder != null && newOrder.orderStatus.isTerminal) {
-                onTerminalReached()
                 paymentAccountStatusFetcher.invoke(userWalletId)
                 return newOrder.orderStatus == OrderStatus.COMPLETED
             }
@@ -76,7 +87,22 @@ class StartTangemPayOrderPollingUseCase(
         }
     }
 
+    private suspend fun getOrderInfo(userWalletId: UserWalletId, orderId: String): TangemPayOrderInfo? {
+        return cardDetailsRepository.getOrderInfo(userWalletId, orderId).fold(
+            ifLeft = { error ->
+                if (error == VisaApiError.OrderNotFound) {
+                    logger.i("$orderId: does not exist on the backend, resolving as CANCELED")
+                    TangemPayOrderInfo(orderId = orderId, orderStatus = OrderStatus.CANCELED)
+                } else {
+                    logger.e("$orderId: poll failed, will retry — $error")
+                    null
+                }
+            },
+            ifRight = { it },
+        )
+    }
+
     companion object {
-        private const val POLLING_DELAY = 3000L
+        private const val POLLING_DELAY = 5_000L
     }
 }

@@ -1,13 +1,17 @@
 package com.tangem.feature.wallet.child.organizetokens.model.converter.items
 
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.format.bigdecimal.cryptoStyled
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.formatStyled
@@ -36,7 +40,21 @@ internal class OrganizeTokenItemConverter(
                 id = getTokenItemId(currency.id),
                 headIconUM = TangemIconUM.Currency(iconStateConverter.convert(currencyStatus)),
                 titleUM = TangemTokenRowUM.TitleUM.Content(
-                    text = stringReference(currency.name),
+                    text = combinedReference(
+                        stringReference(currency.name),
+                        stringReference(" "),
+                        styledStringReference(
+                            value = currency.symbol,
+                            spanStyleReference = {
+                                SpanStyle(
+                                    color = TangemTheme.colors3.text.secondary,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp,
+                                    letterSpacing = 0.18.sp,
+                                )
+                            },
+                        ),
+                    ),
                 ),
                 subtitleUM = TangemTokenRowUM.SubtitleUM.Empty,
                 topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
