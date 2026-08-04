@@ -43,7 +43,12 @@ internal fun segmentTooltipPositionProvider(
     val innerRadius = diameter / 2f - strokePx / 2
     // End angle of the selected slice (before its round cap) — same *visual* layout as DonutChart's
     // drawing pass, so the anchor lands on the (floored) slice end rather than its true-weight end.
-    val sweeps = visualSweepAngles(segments.map { it.weight.toFloat() })
+    // capDeg must match the draw pass (centerline diameter = min(size) − strokePx); without it the grey-gap
+    // padding differs and the anchor drifts off the drawn slice end.
+    val sweeps = visualSweepAngles(
+        weights = segments.map { it.weight.toFloat() },
+        capDeg = lastSegmentOverlapDeg(strokePx, diameter - strokePx),
+    )
     val endAngleDeg = startAngle + sweeps.take(selectedIndex + 1).sum()
     val endAngleRad = Math.toRadians(endAngleDeg.toDouble())
     val anchorLocal = Offset(

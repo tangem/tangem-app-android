@@ -5,6 +5,7 @@ import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
@@ -15,6 +16,8 @@ import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
+import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
+import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -98,11 +101,13 @@ internal object WalletsDomainModule {
         userWalletsListRepository: UserWalletsListRepository,
         walletsRepository: WalletsRepository,
         analyticsEventHandler: AnalyticsEventHandler,
+        walletRegistrationTrigger: WalletRegistrationTrigger,
     ): SaveWalletUseCase {
         return SaveWalletUseCase(
             userWalletsListRepository = userWalletsListRepository,
             walletsRepository = walletsRepository,
             analyticsEventHandler = analyticsEventHandler,
+            walletRegistrationTrigger = walletRegistrationTrigger,
         )
     }
 
@@ -420,6 +425,26 @@ internal object WalletsDomainModule {
     @Singleton
     fun provideSyncWalletWithRemoteUseCase(walletsRepository: WalletsRepository): SyncWalletWithRemoteUseCase {
         return SyncWalletWithRemoteUseCase(walletsRepository = walletsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportWalletCardsBackupUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+    ): ReportWalletCardsBackupUseCase {
+        return ReportWalletCardsBackupUseCase(walletCardsBackupRepository = walletCardsBackupRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetWalletBackupIntegrityUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    ): GetWalletBackupIntegrityUseCase {
+        return GetWalletBackupIntegrityUseCase(
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        )
     }
 
     @Provides
