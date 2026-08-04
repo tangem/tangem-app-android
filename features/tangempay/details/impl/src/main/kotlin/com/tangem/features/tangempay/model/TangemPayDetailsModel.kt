@@ -46,6 +46,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.utils.*
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
@@ -151,6 +152,12 @@ internal class TangemPayDetailsModel @Inject constructor(
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
                         stateFactory.getInactiveState(state)
                     }
+                    is PaymentAccountStatusValue.AwaitingPlanSelection -> router.replaceAll(
+                        TangemPayAccountDetailsInnerRoute.SelectPlan(
+                            tariffPlan = state.tariffPlan,
+                            source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
+                        ),
+                    )
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
             }

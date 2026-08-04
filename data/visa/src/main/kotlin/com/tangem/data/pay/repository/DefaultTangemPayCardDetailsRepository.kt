@@ -308,6 +308,8 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     ): Either<UniversalError, TangemPayOrderInfo> = either {
         val order = requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getOrder(authHeader, orderId)
+        }.mapLeft { error ->
+            if (error is VisaApiError.NotFound) VisaApiError.OrderNotFound else error
         }.bind()
 
         val result = order.result ?: raise(VisaApiError.Unspecified)
