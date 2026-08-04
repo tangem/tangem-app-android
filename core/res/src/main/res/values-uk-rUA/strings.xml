@@ -1352,7 +1352,7 @@
   <string name="promo_campaign_summary_title">Долучитися до %1$s</string>
   <string name="promo_campaign_terms_agreement">Я приймаю %1$s</string>
   <string name="promo_campaign_terms_link">%1$s Умови</string>
-  <string name="promo_campaign_whale_swap_summary_description">Отримуйте кешбек за кожний обмін від $10K до кінця липня.\n\nСтавка зростає разом із сумою: 0.10% від $10K, 0.20% від $20K, 0.50% від $100K.\n\nМаксимальна виплата: $500 за обмін та $10,000 на гаманець для кожного напрямку обмінів, поки триває кампанія. Обміни стейблкоїна на стейблкоїн виключено.\n\nВиплата надходить щотижня на обрану вами адресу USDT або USDC.</string>
+  <string name="promo_campaign_whale_swap_summary_description">Отримуйте кешбек за кожний обмін від $10K до кінця серпня.\n\nСтавка зростає разом із сумою: 0.10% від $10K, 0.20% від $20K, 0.50% від $100K.\n\nМаксимальна виплата: $500 за обмін та $10,000 на гаманець для кожного напрямку обмінів, поки триває кампанія. Обміни стейблкоїна на стейблкоїн виключено.\n\nВиплата надходить щотижня на обрану вами адресу USDT або USDC.</string>
   <string name="provider_name_support">Підтримка %s</string>
   <string name="push_notification_settings_banner_description">Push-сповіщення ввімкнені, але не працюватимуть без вашого дозволу</string>
   <string name="push_notification_settings_banner_title">Дозволити сповіщення</string>
@@ -2170,7 +2170,7 @@
   <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
   <string name="tangempay_va_account_details">Реквізити рахунку</string>
-  <string name="tangempay_va_available_to_deposit_day">Доступно для поповнення на день:</string>
+  <string name="tangempay_va_available_to_deposit_day">Лимит на день:</string>
   <string name="tangempay_va_banking_details_error_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема повториться</string>
   <string name="tangempay_va_banking_details_error_title">Не вдалося завантажити банківські реквізити</string>
   <string name="tangempay_va_limit_resetting_everyday">Ліміт оновлюється щодня</string>
