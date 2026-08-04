@@ -3,7 +3,7 @@ package com.tangem.features.promobanners.impl.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.promobanners.api.toggles.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.DefaultPromoBannersBlockComponent

@@ -3,7 +3,6 @@ package com.tangem.features.feed.model.market.list.statemanager
 import androidx.compose.runtime.Stable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
@@ -40,10 +39,6 @@ internal class MarketsListUMStateManager(
 
     val state = MutableStateFlow(state())
 
-    private var isSortByBottomSheetShown
-        get() = state.value.sortByBottomSheet.isShown
-        set(value) = state.update { it.copy(sortByBottomSheet = it.sortByBottomSheet.copy(isShown = value)) }
-
     var searchQuery
         get() = state.value.marketsSearchBar.searchBarUM.query
         private set(value) = state.update { marketsListUM ->
@@ -62,11 +57,6 @@ internal class MarketsListUMStateManager(
         set(value) = state.update { marketsListUM ->
             marketsListUM.copy(
                 selectedSortBy = value,
-                sortByBottomSheet = marketsListUM.sortByBottomSheet.copy(
-                    content = (marketsListUM.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
-                        selectedOption = value,
-                    ),
-                ),
                 sortByMenuUM = marketsListUM.sortByMenuUM.copy(
                     selectedOption = value,
                 ),
@@ -232,15 +222,6 @@ internal class MarketsListUMStateManager(
         selectedSortBy = preselectedSortType(),
         selectedInterval = preselectedInterval(),
         onIntervalClick = { selectedInterval = it },
-        onSortByButtonClick = { isSortByBottomSheetShown = true },
-        sortByBottomSheet = TangemBottomSheetConfig(
-            isShown = false,
-            onDismissRequest = { isSortByBottomSheetShown = false },
-            content = SortByBottomSheetContentUM(
-                selectedOption = preselectedSortType(),
-                onOptionClicked = ::onBottomSheetOrMenuOptionClicked,
-            ),
-        ),
         onSearchClicked = {
             analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
             changeSearchBarIsActive(true)
@@ -251,20 +232,14 @@ internal class MarketsListUMStateManager(
         ),
         sortByMenuUM = SortByMenuUM(
             selectedOption = preselectedSortType(),
-            onOptionClicked = ::onBottomSheetOrMenuOptionClicked,
+            onOptionClicked = ::onMenuOptionClicked,
         ),
     )
 
-    private fun onBottomSheetOrMenuOptionClicked(sortByTypeUM: SortByTypeUM) {
+    private fun onMenuOptionClicked(sortByTypeUM: SortByTypeUM) {
         state.update { marketsListUM ->
             marketsListUM.copy(
                 selectedSortBy = sortByTypeUM,
-                sortByBottomSheet = marketsListUM.sortByBottomSheet.copy(
-                    isShown = false,
-                    content = (marketsListUM.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
-                        selectedOption = sortByTypeUM,
-                    ),
-                ),
                 sortByMenuUM = marketsListUM.sortByMenuUM.copy(selectedOption = sortByTypeUM),
             )
         }

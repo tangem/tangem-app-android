@@ -180,12 +180,9 @@ private fun SimpleTransactionCardEmpty(
                         .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
                 )
             }
-            SecondarySmallButton(
-                config = SmallButtonConfig(
-                    text = resourceReference(R.string.common_choose_token),
-                    icon = TangemButtonIconPosition.End(R.drawable.ic_chevron_24),
-                    onClick = onChangeTokenClick,
-                ),
+            ChooseTokenPulseButton(
+                isPulseEnabled = cardState.isPulseAnimationEnabled,
+                onClick = onChangeTokenClick,
             )
         }
     }
