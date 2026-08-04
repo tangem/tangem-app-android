@@ -604,13 +604,25 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun buildIssuingCards(userWalletId: UserWalletId): List<TangemPayCard> {
         val orderIds = issueCardRepository.getIssueOrderIds(userWalletId)
         return orderIds.mapNotNull { orderId ->
-            val order = cardDetailsRepository.getOrderInfo(userWalletId, orderId).getOrNull()
-            if (order != null && order.orderStatus.isTerminal) {
-                issueCardRepository.removeIssueOrderId(userWalletId, orderId)
-                null
-            } else {
-                issuingPlaceholderCard(orderId)
-            }
+            cardDetailsRepository.getOrderInfo(userWalletId, orderId).fold(
+                ifLeft = { error ->
+                    if (error == VisaApiError.OrderNotFound) {
+                        logger.i("buildIssuingCards $userWalletId: dropping missing order $orderId")
+                        issueCardRepository.removeIssueOrderId(userWalletId, orderId)
+                        null
+                    } else {
+                        issuingPlaceholderCard(orderId)
+                    }
+                },
+                ifRight = { order ->
+                    if (order.orderStatus.isTerminal) {
+                        issueCardRepository.removeIssueOrderId(userWalletId, orderId)
+                        null
+                    } else {
+                        issuingPlaceholderCard(orderId)
+                    }
+                },
+            )
         }
     }
 
