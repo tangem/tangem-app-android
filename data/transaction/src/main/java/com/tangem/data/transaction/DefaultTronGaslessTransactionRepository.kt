@@ -10,6 +10,8 @@ import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
 import com.tangem.domain.transaction.models.tron.TronGaslessToken
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -20,10 +22,21 @@ internal class DefaultTronGaslessTransactionRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TronGaslessTransactionRepository {
 
+    private val supportedTokensMutex = Mutex()
+
+    @Volatile
+    private var supportedTokens: List<TronGaslessToken>? = null
+
     override suspend fun getSupportedTokens(): List<TronGaslessToken> = withContext(dispatchers.io) {
+        supportedTokens ?: supportedTokensMutex.withLock {
+            supportedTokens ?: fetchSupportedTokens().also { supportedTokens = it }
+        }
+    }
+
+    private suspend fun fetchSupportedTokens(): List<TronGaslessToken> {
         val response = api.getSupportedTokens().getOrThrow()
         check(response.isSuccess) { GASLESS_UNSUCCESSFUL }
-        response.result.tokens.map {
+        return response.result.tokens.map {
             TronGaslessToken(contractAddress = it.address, symbol = it.symbol, decimals = it.decimals)
         }
     }
