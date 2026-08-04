@@ -25,12 +25,19 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 
@@ -116,60 +123,35 @@ internal class DefaultAssetsDiscoveryRepository(
         val assetsDiscoveryStore = assetsDiscoveryStoreFactory.provide(userWalletId)
         assetsDiscoveryStore.clear()
 
-        val batches = networks.chunked(MAX_CONCURRENT_REQUESTS)
-        var completedNetworks = 0
-        getProgressFlow(userWalletId).value = AssetsDiscoveryProgress.InProgress(
-            completedNetworks = 0,
-            totalNetworks = networks.size,
-        )
+        val totalNetworks = networks.size
+        val progressFlow = getProgressFlow(userWalletId)
+        progressFlow.value = AssetsDiscoveryProgress.InProgress(completedNetworks = 0, totalNetworks = totalNetworks)
 
-        for (batch in batches) {
-            val batchResults = processBatch(userWalletId, batch)
-            completedNetworks = handleBatchResults(
-                userWalletId = userWalletId,
-                results = batchResults,
-                assetsDiscoveryStore = assetsDiscoveryStore,
-                completedNetworks = completedNetworks,
-                totalNetworks = networks.size,
-            )
+        val semaphore = Semaphore(permits = MAX_CONCURRENT_REQUESTS)
+        val progressMutex = Mutex()
+        var completedNetworks = 0
+
+        coroutineScope {
+            networks.forEach { network ->
+                launch(dispatchers.io) {
+                    val result = semaphore.withPermit { processNetwork(userWalletId, network) }
+                    handleNetworkResult(result, assetsDiscoveryStore)
+                    progressMutex.withLock {
+                        completedNetworks++
+                        val inProgress = AssetsDiscoveryProgress.InProgress(
+                            completedNetworks = completedNetworks,
+                            totalNetworks = totalNetworks,
+                        )
+                        progressFlow.value = inProgress
+                    }
+                }
+            }
         }
     }
 
     override suspend fun completeDiscovery(userWalletId: UserWalletId) {
         setPendingFlag(userWalletId, value = false)
         getProgressFlow(userWalletId).value = AssetsDiscoveryProgress.Completed
-    }
-
-    private suspend fun processBatch(userWalletId: UserWalletId, batch: List<Network>): List<NetworkResult> {
-        return coroutineScope {
-            batch.map { network ->
-                async(dispatchers.io) {
-                    processNetwork(userWalletId, network)
-                }
-            }.awaitAll()
-        }
-    }
-
-    private suspend fun handleBatchResults(
-        userWalletId: UserWalletId,
-        results: List<NetworkResult>,
-        assetsDiscoveryStore: AssetsDiscoveryStore,
-        completedNetworks: Int,
-        totalNetworks: Int,
-    ): Int {
-        var completed = completedNetworks
-        val progressFlow = getProgressFlow(userWalletId)
-
-        for (result in results) {
-            completed++
-            handleNetworkResult(result, assetsDiscoveryStore)
-            progressFlow.value = AssetsDiscoveryProgress.InProgress(
-                completedNetworks = completed,
-                totalNetworks = totalNetworks,
-            )
-        }
-
-        return completed
     }
 
     private suspend fun handleNetworkResult(result: NetworkResult, assetsDiscoveryStore: AssetsDiscoveryStore) {
@@ -191,25 +173,25 @@ internal class DefaultAssetsDiscoveryRepository(
 
     private suspend fun processNetwork(userWalletId: UserWalletId, network: Network): NetworkResult {
         return try {
-            val discoveredAssets = discoverAndFilterAssets(userWalletId, network)
+            withTimeout(NETWORK_DISCOVERY_TIMEOUT_MILLIS) {
+                val discoveredAssets = discoverAndFilterAssets(userWalletId, network)
 
-            if (discoveredAssets.isEmpty()) {
-                return NetworkResult.Success(
-                    networkId = network.rawId,
-                    responseTokens = emptyList(),
-                )
+                val responseTokens = if (discoveredAssets.isEmpty()) {
+                    emptyList()
+                } else {
+                    enrichTokensWithCatalog(discoveredAssets, network)
+                        .filter { it.contractAddress != null }
+                        .map { it.toResponseToken() }
+                }
+
+                ensureActive()
+
+                NetworkResult.Success(networkId = network.rawId, responseTokens = responseTokens)
             }
-
-            val enrichedTokens = enrichTokensWithCatalog(discoveredAssets, network)
-
-            val responseTokens = enrichedTokens
-                .filter { it.contractAddress != null }
-                .map { it.toResponseToken() }
-
-            NetworkResult.Success(
-                networkId = network.rawId,
-                responseTokens = responseTokens,
-            )
+        } catch (e: TimeoutCancellationException) {
+            NetworkResult.Error(networkId = network.rawId, cause = e)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             NetworkResult.Error(networkId = network.rawId, cause = e)
         }
@@ -352,6 +334,7 @@ internal class DefaultAssetsDiscoveryRepository(
     }
 
     companion object {
-        private const val MAX_CONCURRENT_REQUESTS = 3
+        private const val MAX_CONCURRENT_REQUESTS = 20
+        private const val NETWORK_DISCOVERY_TIMEOUT_MILLIS = 30_000L
     }
 }

@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.ObserveWalletPushNotificationPreferencesUseCase
@@ -23,6 +24,7 @@ import com.tangem.domain.pushnotificationpreferences.UpdateWalletPushNotificatio
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotificationsettings.component.PushNotificationSettingsComponent
@@ -50,6 +52,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -67,6 +70,8 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private val setNotificationsEnabled: SetNotificationsEnabledUseCase,
     private val isFirstActivationDone: IsPushNotificationFirstActivationDoneUseCase,
     private val markFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase,
+    private val applyFirstActivation: ApplyPushNotificationFirstActivationUseCase,
+    private val notificationsRepository: NotificationsRepository,
 ) : Model() {
 
     private val params: PushNotificationSettingsComponent.Params = paramsContainer.require()
@@ -76,6 +81,7 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private val osNotificationsEnabled = MutableStateFlow(systemNotificationsStateProvider.areNotificationsEnabled())
 
     private var pendingPermissionToggle: ToggleSpec? = null
+    private val wasAutoActivationAttempted = AtomicBoolean(false)
     private val preferencesJobHolder = JobHolder()
 
     private val cachedPrefs: WalletPushNotificationPreferences?
@@ -122,31 +128,48 @@ internal class PushNotificationSettingsModel @Inject constructor(
 
     fun onResume() {
         osNotificationsEnabled.value = systemNotificationsStateProvider.areNotificationsEnabled()
+        if (cachedPrefs == null) return
+
+        // An explicitly tapped toggle wins over the silent first-activation rule.
+        if (pendingPermissionToggle != null) {
+            modelScope.launch { applyPendingToggle() }
+        } else {
+            autoApplyFirstActivationIfNeeded()
+        }
     }
 
     fun onPermissionResult(isGranted: Boolean) {
-        val tapped = pendingPermissionToggle
-        pendingPermissionToggle = null
         modelScope.launch {
-            // Enable all three only on a real grant that actually turned notifications on: an
-            // already-granted-but-OS-disabled wallet returns isGranted=true instantly, so also require
-            // areNotificationsEnabled() before triggering the rule; a deny routes the user to settings.
+            // isGranted alone is unreliable: an already-granted-but-OS-disabled wallet returns true
+            // instantly, and pre-Android 13 there is no runtime permission at all.
             val isNotificationsEnabled = systemNotificationsStateProvider.areNotificationsEnabled()
             osNotificationsEnabled.value = isNotificationsEnabled
             analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = isGranted))
 
-            if (!isGranted || !isNotificationsEnabled) {
-                markFirstActivationDone(userWalletId)
+            if (isNotificationsEnabled) {
+                applyPendingToggle()
+            } else {
+                // The tapped toggle stays pending until the user comes back from the system settings.
                 showEnableNotificationsDialog()
-                return@launch
             }
+        }
+    }
 
-            if (isFirstActivationDone(userWalletId)) {
-                tapped?.let { applyOptimisticToggle(it, newValue = true) }
-            } else if (enableAllCategories(initiatingToggle = tapped)) {
-                // Fix the flag only after a successful enable, so a transient failure can retry.
-                markFirstActivationDone(userWalletId)
-            }
+    /**
+     * Applies the toggle the user tapped before the permission ask, once notifications are actually enabled.
+     * A refusal never fixes the first-activation flag, so the rule survives until a real grant.
+     */
+    private suspend fun applyPendingToggle() {
+        val tapped = pendingPermissionToggle ?: return
+        if (!osNotificationsEnabled.value || cachedPrefs == null) return
+        // Consumed before the first suspension point, so a concurrent resume cannot apply it twice.
+        pendingPermissionToggle = null
+
+        if (isFirstActivationDone(userWalletId)) {
+            applyOptimisticToggle(tapped, newValue = true)
+        } else if (enableAllCategories(initiatingToggle = tapped)) {
+            // Fix the flag only after a successful enable, so a transient failure can retry.
+            markFirstActivationDone(userWalletId)
         }
     }
 
@@ -156,9 +179,32 @@ internal class PushNotificationSettingsModel @Inject constructor(
                 // Fall to Failed only when nothing is cached yet; otherwise keep showing the last value.
                 if (loadState.value !is LoadState.Content) loadState.value = LoadState.Failed
             }
-            .onEach { value -> loadState.value = LoadState.Content(value) }
+            .onEach { value ->
+                loadState.value = LoadState.Content(value)
+                autoApplyFirstActivationIfNeeded()
+            }
             .launchIn(modelScope)
             .saveIn(preferencesJobHolder)
+    }
+
+    /**
+     * Silently re-applies the first-activation rule once preferences are loaded: the grant-time attempt
+
+     */
+    private fun autoApplyFirstActivationIfNeeded() {
+        if (!wasAutoActivationAttempted.compareAndSet(false, true)) return
+        modelScope.launch(dispatchers.io) {
+            val areGatesPassed = osNotificationsEnabled.value &&
+                notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
+            if (areGatesPassed) {
+                // Deliberately not retried on failure within this screen instance: a retry fired by the
+                // cache echo of a manual toggle write would force-enable all three against the user's choice.
+                applyFirstActivation(userWalletId)
+            } else {
+                // A gate miss is not an attempt — onResume may retry after the OS state changes.
+                wasAutoActivationAttempted.set(false)
+            }
+        }
     }
 
     private fun buildContent(
@@ -343,7 +389,8 @@ internal class PushNotificationSettingsModel @Inject constructor(
                 ),
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.push_notifications_permission_alert_negative_button),
-                    onClick = {},
+                    // Declining is a final answer: the tapped toggle is dropped.
+                    onClick = { pendingPermissionToggle = null },
                 ),
             ),
         )

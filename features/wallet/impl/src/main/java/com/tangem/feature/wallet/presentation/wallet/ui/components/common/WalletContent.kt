@@ -69,7 +69,7 @@ internal fun WalletListContent(
             item(key = "PromoBannersBlock") {
                 component.ContentWithPadding(
                     horizontalItemPadding = 12.dp,
-                    modifier = Modifier.padding(top = TangemTheme.dimens2.x3),
+                    modifier = Modifier.padding(top = 12.dp),
                     walletId = walletId,
                 )
             }
