@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -105,15 +106,21 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onAddFundsClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds())
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds(status = AnalyticsParam.Status.Success))
         router.openAddFunds(userWalletId)
     }
 
     fun onTransferClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonTransfer())
-
         val selectedWallet = stateController.getSelectedWalletUM() as? WalletUM.Content
-        if (selectedWallet?.areActionsAvailable == false) {
+        val areActionsAvailable = selectedWallet?.areActionsAvailable != false
+
+        analyticsEventHandler.send(
+            MainScreenAnalyticsEvent.ButtonTransfer(
+                status = if (areActionsAvailable) AnalyticsParam.Status.Success else AnalyticsParam.Status.Error,
+            ),
+        )
+
+        if (!areActionsAvailable) {
             uiMessageSender.send(WalletAlertUM.unavailableOperation())
             return
         }
