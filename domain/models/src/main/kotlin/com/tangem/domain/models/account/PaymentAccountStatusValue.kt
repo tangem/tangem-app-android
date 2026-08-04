@@ -109,13 +109,11 @@ sealed class PaymentAccountStatusValue {
      * Represents a state where KYC is approved but no tariff plan has been selected yet
      *
      * @property source The source of the status information.
-     * @property cryptoCurrency The crypto currency held by the account.
      * @property tariffPlan Current tariff plan
      */
     @Serializable
     data class AwaitingPlanSelection(
         override val source: StatusSource,
-        val cryptoCurrency: CryptoCurrency.Token,
         val tariffPlan: TangemPayCustomerTariffPlan,
     ) : PaymentAccountStatusValue()
 
@@ -124,14 +122,12 @@ sealed class PaymentAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property fiatBalance The fiat balance of state.
-     * @property cryptoCurrency The crypto currency held by the account.
      * @property tariffPlan Current tariff plan
      */
     @Serializable
     data class Inactive(
         override val source: StatusSource,
         val fiatBalance: FiatBalance,
-        val cryptoCurrency: CryptoCurrency.Token,
         val tariffPlan: TangemPayTariffPlanState,
     ) : PaymentAccountStatusValue()
 

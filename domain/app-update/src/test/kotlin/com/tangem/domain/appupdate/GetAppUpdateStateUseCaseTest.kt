@@ -112,6 +112,37 @@ internal class GetAppUpdateStateUseCaseTest {
     }
 
     @Test
+    fun `GIVEN latest below installed and min supported not met WHEN getCached THEN ForceUpdate`() = runTest {
+        // [REDACTED_TASK_KEY]: a latestVersion below the installed one must not suppress the min-supported force update.
+        givenCached(
+            appVersion = "6.1",
+            osVersion = "16",
+            info = info(minSupportedVersion = "6.2", minSupportedOSVersion = "15.0", latestVersion = "5.0"),
+        )
+
+        assertThat(useCase.getCached()).isEqualTo(AppUpdateState.ForceUpdate)
+    }
+
+    @Test
+    fun `GIVEN latest below installed and critical met WHEN getCached THEN ForceUpdate`() = runTest {
+        // [REDACTED_TASK_KEY]: a latestVersion below the installed one must not suppress the critical force update either.
+        givenCached(
+            appVersion = "6.1",
+            osVersion = "16",
+            info = info(criticalVersion = "6.1", criticalOSVersion = "15.0", latestVersion = "5.0"),
+        )
+
+        assertThat(useCase.getCached()).isEqualTo(AppUpdateState.ForceUpdate)
+    }
+
+    @Test
+    fun `GIVEN latest below installed and no thresholds WHEN getCached THEN NoUpdate`() = runTest {
+        givenCached(appVersion = "6.1", info = info(latestVersion = "5.0"))
+
+        assertThat(useCase.getCached()).isEqualTo(AppUpdateState.NoUpdate)
+    }
+
+    @Test
     fun `GIVEN critical above latest WHEN getCached THEN not blocking and degraded to optional`() = runTest {
         givenCached(appVersion = "5.20", info = info(criticalVersion = "9.99", latestVersion = "5.41"))
 

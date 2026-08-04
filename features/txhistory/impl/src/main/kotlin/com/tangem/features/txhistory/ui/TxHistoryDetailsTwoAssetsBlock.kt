@@ -197,7 +197,7 @@ private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
             modifier = iconModifier.clip(CircleShape),
         )
         is AssetOwnerUM.PaymentAccount -> PaymentAccountIcon(
-            size = AccountIconSize.RedesignExtraSmall,
+            size = AccountIconSize.ExtraSmall,
             modifier = iconModifier,
         )
     }

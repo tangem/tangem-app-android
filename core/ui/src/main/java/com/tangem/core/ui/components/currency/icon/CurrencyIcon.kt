@@ -50,7 +50,7 @@ fun TangemCurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, 
                     modifier = iconModifier,
                     shouldShowTopBadge = shouldDisplayNetwork,
                     networkBadgeSize = 14.dp,
-                    networkBadgeBackground = TangemTheme.colors2.surface.level1,
+                    networkBadgeBackground = TangemTheme.colors3.bg.secondary,
                 )
             }
         }
@@ -72,7 +72,7 @@ fun CurrencyIcon(
     modifier: Modifier = Modifier,
     shouldDisplayNetwork: Boolean = true,
     networkBadgeSize: Dp = 14.dp,
-    networkBadgeBackground: Color = TangemTheme.colors.background.primary,
+    networkBadgeBackground: Color = TangemTheme.colors3.bg.secondary,
     withFixedSize: Boolean = true,
     iconSize: Dp = 36.dp,
 ) {

@@ -12,6 +12,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -107,6 +108,8 @@ internal class WalletModel @Inject constructor(
     private val notificationsRepository: NotificationsRepository,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
+    private val applyPushNotificationFirstActivationUseCase: ApplyPushNotificationFirstActivationUseCase,
+    private val systemNotificationsStateProvider: SystemNotificationsStateProvider,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
@@ -887,8 +890,10 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun enableNotificationsIfNeeded() {
-        // New first-activation owns auto-enable when the feature is on; skip the legacy path.
-        if (pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
+        if (pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) {
+            applyPushFirstActivationIfNeeded()
+            return
+        }
         modelScope.launch {
             val isUserAllowToEnableNotifications = notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
             if (isUserAllowToEnableNotifications) {
@@ -903,6 +908,20 @@ internal class WalletModel @Inject constructor(
                         TangemLogger.e("Error", it)
                     }
                 }
+            }
+        }
+    }
+
+    /**
+
+     * on the backend (onboarding). See [ApplyPushNotificationFirstActivationUseCase].
+     */
+    private fun applyPushFirstActivationIfNeeded() {
+        modelScope.launch {
+            if (!systemNotificationsStateProvider.areNotificationsEnabled()) return@launch
+            if (!notificationsRepository.isUserAllowToSubscribeOnPushNotifications()) return@launch
+            userWalletsListRepository.userWalletsSync().forEach { wallet ->
+                applyPushNotificationFirstActivationUseCase(wallet.walletId)
             }
         }
     }

@@ -31,7 +31,7 @@ internal class UpdateActionButtonsTransformer(
                     }
                 },
             ) ?: prev.swapButton.tangemIconUM,
-            onClick = { clickIntents.onSwapFromClick(swapAction.unavailabilityReason) },
+            onClick = { clickIntents.onSwapClick(swapAction.unavailabilityReason) },
         )
 
         return prevState.copy(balanceBlockUM = prev.copyButtons(swapButton = updated))

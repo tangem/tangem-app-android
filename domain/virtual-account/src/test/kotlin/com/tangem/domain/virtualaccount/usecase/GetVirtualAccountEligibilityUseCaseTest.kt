@@ -138,7 +138,7 @@ internal class GetVirtualAccountEligibilityUseCaseTest {
         coEvery { onboardingRepository.getCustomerEligibility() } returns listOf(TangemPayEligibilityType.BANNER)
         coEvery {
             onboardingRepository.hasTangemPayInWallet(wallet.walletId)
-        } returns VisaApiError.NotPaeraCustomer.left()
+        } returns VisaApiError.NotFound.left()
 
         // WHEN
         val result = useCase(VirtualAccountEntryPoint.BANNER)

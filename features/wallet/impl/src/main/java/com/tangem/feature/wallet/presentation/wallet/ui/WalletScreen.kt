@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -46,13 +47,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.containers.pullToRefresh.getPullToRefreshIndicatorOffset
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
@@ -79,8 +78,7 @@ import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
-import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.collectLatest
@@ -89,6 +87,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 private const val MARKET_HINT_THRESHOLD = 0.5f
+
+// collapsedFraction below this is treated as "fully expanded" (user is at the very top of the list)
+private const val FULLY_EXPANDED_THRESHOLD = 0.01f
 
 @OptIn(ExperimentalDecomposeApi::class)
 @Suppress("LongParameterList")
@@ -181,9 +182,6 @@ private fun WalletContent(
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
-    val density = LocalDensity.current
-    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
-
     var walletBalance by remember { mutableStateOf<TextReference?>(TextReference.EMPTY) }
     var pullToRefreshConfig by remember {
         mutableStateOf(
@@ -207,10 +205,15 @@ private fun WalletContent(
             )
         },
     ) { paddingValues, bottomSheetState ->
-        val marketHintApproxHeight = 140.dp
+        val density = LocalDensity.current
+        var marketsHintHeight by remember { mutableStateOf(0.dp) }
+        val collapsedBodyOverhang = with(density) { behavior.state.partialHeightLimit.toDp() }
 
         val contentPadding = PaddingValues(
-            bottom = paddingValues.calculateBottomPadding() + marketHintApproxHeight,
+            bottom = paddingValues.calculateBottomPadding() +
+                marketsHintHeight +
+                collapsedBodyOverhang +
+                TangemTheme.dimens2.x2,
         )
 
         val selectedWalletIndex by rememberUpdatedState(state.selectedWalletIndex)
@@ -229,166 +232,168 @@ private fun WalletContent(
         val canPagerScroll by remember { derivedStateOf { behavior.state.heightOffset == 0f } }
 
         val pullToRefreshState = rememberPullToRefreshState()
+        val wallpaperHazeState = rememberHazeState()
 
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
         ) {
-            val backgroundColor = if (LocalIsInDarkTheme.current) {
-                TangemTheme.colors2.surface.level1
-            } else {
-                TangemTheme.colors2.surface.level2
-            }
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(TangemTheme.colors3.bg.primary),
-            )
             val isSheetExpanded by remember {
                 derivedStateOf { bottomSheetState.targetValue == TangemSheetValue.Expanded }
             }
-            if (!isSheetExpanded) {
-                NorthernLightsBackground(
-                    containerColor = backgroundColor,
-                    modifier = Modifier
-                        .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
-                        .matchParentSize(),
-                )
-            }
-
-            WalletPagerIndicator(
-                pagerState = walletsPagerState,
-                pullToRefreshState = pullToRefreshState,
-                pullToRefreshConfig = pullToRefreshConfig,
-                behavior = behavior,
-                topOffset = subtitleBottom + TangemTheme.dimens2.x2,
-            )
-
-            val overlay = TangemTheme.colors2.overlay.overlayPrimary
-
-            // Root-coordinates bounds of the "Add & Manage" button per pager page, reported by the
-            // button itself, so the markets hint and tooltip can avoid covering it
             val organizeButtonBounds = remember { mutableStateMapOf<Int, Rect>() }
-
-            HorizontalPager(
-                state = walletsPagerState,
-                userScrollEnabled = canPagerScroll,
-                beyondViewportPageCount = 1,
-                modifier = Modifier.hazeEffectTangem {
-                    fallbackTint = HazeTint(color = overlay)
-                    progressive = HazeProgressive.verticalGradient(
-                        startIntensity = 1f,
-                        endIntensity = 1f,
-                        preferPerformance = true,
-                    )
-                },
-            ) { currentWalletIndex ->
-                val listState = listStates[currentWalletIndex] ?: rememberLazyListState()
-
-                val currentWallet = state.wallets2.getOrElse(currentWalletIndex) {
-                    state.wallets2[state.selectedWalletIndex]
-                }
-                val currentWalletId = currentWallet.walletsBalanceUM.id.stringValue
-
-                LaunchedEffect(walletsPagerState.currentPage, currentWallet.walletsBalanceUM) {
-                    if (walletsPagerState.currentPage == currentWalletIndex) {
-                        walletBalance =
-                            (currentWallet.walletsBalanceUM as? WalletBalanceUM.Content)?.balanceInAppBar
-                    }
-                }
-                LaunchedEffect(walletsPagerState.currentPage, currentWallet.pullToRefreshConfig) {
-                    if (walletsPagerState.currentPage == currentWalletIndex) {
-                        pullToRefreshConfig = currentWallet.pullToRefreshConfig
-                    }
-                }
-
-                val isShowMarketsHint by remember {
-                    derivedStateOf {
-                        behavior.state.collapsedFraction > MARKET_HINT_THRESHOLD &&
-                            listState.layoutInfo.totalItemsCount > 0 &&
-                            !listState.canScrollBackward && !listState.canScrollForward ||
-                            listState.canScrollBackward && !listState.canScrollForward
-                    }
-                }
-
-                val pageSlideAlpha by rememberPageAlpha(walletsPagerState, currentWalletIndex)
-
-                val pullToRefreshContentOffset = getPullToRefreshIndicatorOffset(
-                    pullToRefreshConfig = currentWallet.pullToRefreshConfig,
-                    pullToRefreshState = pullToRefreshState,
-                )
-
-                TangemSharedTransitionLayout(
+            CompositionLocalProvider(LocalHazeState provides wallpaperHazeState) {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(pageSlideAlpha),
+                        .hazeSourceTangem(zIndex = -1f),
                 ) {
-                    TangemPullToRefreshSlidingContainer(
-                        state = pullToRefreshState,
-                        config = currentWallet.pullToRefreshConfig,
-                        indicatorOffset = with(LocalDensity.current) {
-                            behavior.state.partialHeightLimit.toDp()
-                        },
-                    ) {
-                        TangemCollapsingTopBar(
-                            state = behavior.state,
-                            collapsingPart = {
-                                val balanceBlockHeight = with(LocalDensity.current) {
-                                    -behavior.state.heightOffsetLimit.toDp()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(TangemTheme.colors3.bg.primary),
+                    )
+                    if (!isSheetExpanded) {
+                        NorthernLightsBackground(
+                            containerColor = TangemTheme.colors3.bg.primary,
+                            modifier = Modifier
+                                .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
+                                .fillMaxSize(),
+                        )
+                    }
+                }
+
+                WalletPagerIndicator(
+                    pagerState = walletsPagerState,
+                    pullToRefreshState = pullToRefreshState,
+                    pullToRefreshConfig = pullToRefreshConfig,
+                    behavior = behavior,
+                    topOffset = subtitleBottom + 8.dp,
+                )
+
+                HorizontalPager(
+                    state = walletsPagerState,
+                    userScrollEnabled = canPagerScroll,
+                    beyondViewportPageCount = 1,
+                ) { currentWalletIndex ->
+                    val listState = listStates[currentWalletIndex] ?: rememberLazyListState()
+
+                    val currentWallet = state.wallets2.getOrElse(currentWalletIndex) {
+                        state.wallets2[state.selectedWalletIndex]
+                    }
+                    val currentWalletId = currentWallet.walletsBalanceUM.id.stringValue
+
+                    LaunchedEffect(walletsPagerState.currentPage, currentWallet.walletsBalanceUM) {
+                        if (walletsPagerState.currentPage == currentWalletIndex) {
+                            walletBalance =
+                                (currentWallet.walletsBalanceUM as? WalletBalanceUM.Content)?.balanceInAppBar
+                        }
+                    }
+                    LaunchedEffect(walletsPagerState.currentPage, currentWallet.pullToRefreshConfig) {
+                        if (walletsPagerState.currentPage == currentWalletIndex) {
+                            pullToRefreshConfig = currentWallet.pullToRefreshConfig
+                        }
+                    }
+
+                    LaunchedEffect(listState) {
+                        snapshotFlow { listState.layoutInfo.totalItemsCount }
+                            .collectLatest {
+                                if (behavior.state.collapsedFraction < FULLY_EXPANDED_THRESHOLD &&
+                                    listState.firstVisibleItemIndex != 0
+                                ) {
+                                    listState.scrollToItem(index = 0)
                                 }
-                                WalletBalance(
-                                    behavior = behavior,
-                                    walletBalanceUM = currentWallet.walletsBalanceUM,
-                                    buttons = currentWallet.buttons,
-                                    isBalanceHidden = state.isHidingMode,
-                                    modifier = Modifier.height(balanceBlockHeight),
-                                    onSubtitleBottomChange = { newValue ->
-                                        if (pullToRefreshContentOffset == 0.dp && newValue > subtitleBottom) {
-                                            subtitleBottom = newValue
-                                        }
-                                    },
-                                )
+                            }
+                    }
+
+                    val isShowMarketsHint by remember {
+                        derivedStateOf {
+                            behavior.state.collapsedFraction > MARKET_HINT_THRESHOLD &&
+                                listState.layoutInfo.totalItemsCount > 0 &&
+                                !listState.canScrollBackward && !listState.canScrollForward ||
+                                listState.canScrollBackward && !listState.canScrollForward
+                        }
+                    }
+
+                    val pageSlideAlpha by rememberPageAlpha(walletsPagerState, currentWalletIndex)
+
+                    val pullToRefreshContentOffset = getPullToRefreshIndicatorOffset(
+                        pullToRefreshConfig = currentWallet.pullToRefreshConfig,
+                        pullToRefreshState = pullToRefreshState,
+                    )
+
+                    TangemSharedTransitionLayout(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .alpha(pageSlideAlpha),
+                    ) {
+                        TangemPullToRefreshSlidingContainer(
+                            state = pullToRefreshState,
+                            config = currentWallet.pullToRefreshConfig,
+                            indicatorOffset = with(LocalDensity.current) {
+                                behavior.state.partialHeightLimit.toDp()
                             },
-                            body = {
-                                WalletListContent(
-                                    currentWallet = currentWallet,
-                                    listState = listState,
-                                    isBalanceHidden = state.isHidingMode,
-                                    contentPadding = contentPadding,
-                                    tangemPayComponent = tangemPayComponent,
-                                    promoBannersBlockComponent = promoBannersBlockComponent,
-                                    walletId = currentWalletId,
-                                    virtualAccountComponent = virtualAccountComponent,
-                                    onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
-                                        { bounds ->
-                                            if (bounds != null) {
-                                                organizeButtonBounds[currentWalletIndex] = bounds
-                                            } else {
-                                                organizeButtonBounds.remove(currentWalletIndex)
+                        ) {
+                            TangemCollapsingTopBar(
+                                state = behavior.state,
+                                collapsingPart = {
+                                    val balanceBlockHeight = with(LocalDensity.current) {
+                                        -behavior.state.heightOffsetLimit.toDp()
+                                    }
+                                    WalletBalance(
+                                        behavior = behavior,
+                                        walletBalanceUM = currentWallet.walletsBalanceUM,
+                                        buttons = currentWallet.buttons,
+                                        isBalanceHidden = state.isHidingMode,
+                                        modifier = Modifier.height(balanceBlockHeight),
+                                        onSubtitleBottomChange = { newValue ->
+                                            if (pullToRefreshContentOffset == 0.dp && newValue > subtitleBottom) {
+                                                subtitleBottom = newValue
                                             }
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .nestedScroll(behavior.nestedScrollConnection),
-                                )
+                                        },
+                                    )
+                                },
+                                body = {
+                                    WalletListContent(
+                                        currentWallet = currentWallet,
+                                        listState = listState,
+                                        isBalanceHidden = state.isHidingMode,
+                                        contentPadding = contentPadding,
+                                        tangemPayComponent = tangemPayComponent,
+                                        promoBannersBlockComponent = promoBannersBlockComponent,
+                                        walletId = currentWalletId,
+                                        virtualAccountComponent = virtualAccountComponent,
+                                        onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
+                                            { bounds ->
+                                                if (bounds != null) {
+                                                    organizeButtonBounds[currentWalletIndex] = bounds
+                                                } else {
+                                                    organizeButtonBounds.remove(currentWalletIndex)
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .nestedScroll(behavior.nestedScrollConnection),
+                                    )
+                                },
+                            )
+                        }
+                        MarketsHint(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth(fraction = .6f)
+                                .padding(bottom = paddingValues.calculateBottomPadding())
+                                .onSizeChanged { size ->
+                                    marketsHintHeight = with(density) { size.height.toDp() }
+                                },
+                            isVisible = isShowMarketsHint,
+                            obstacleBounds = remember(currentWalletIndex) {
+                                { organizeButtonBounds[currentWalletIndex] }
                             },
                         )
                     }
-
-                    val peekHeight =
-                        bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
-                    MarketsHint(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth(fraction = .6f)
-                            .padding(bottom = peekHeight),
-                        isVisible = isShowMarketsHint,
-                        obstacleBounds = remember(currentWalletIndex) {
-                            { organizeButtonBounds[currentWalletIndex] }
-                        },
-                    )
                 }
             }
 
@@ -400,7 +405,7 @@ private fun WalletContent(
                     .fillMaxWidth(),
                 isVisible = state.showMarketsOnboarding,
                 availableHeight = maxHeight,
-                sheetTopInset = TangemTheme.dimens2.x3,
+                sheetTopInset = 12.dp,
                 bottomSheetState = bottomSheetState,
                 onCloseClick = state.onDismissMarketsTooltip,
                 obstacleBounds = remember(walletsPagerState, organizeButtonBounds) {
@@ -425,7 +430,7 @@ private inline fun BaseScaffoldWithMarkets(
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
-    val peekHeight = bottomSheetHeaderHeightProvider() + TangemTheme.dimens2.x3 + bottomBarHeight
+    val peekHeight = bottomSheetHeaderHeightProvider() + 12.dp + bottomBarHeight
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -527,8 +532,8 @@ private fun BottomSheet(
 
     val maxHeight = LocalWindowSize.current.height
     val shape = RoundedCornerShape(
-        topStart = TangemTheme.dimens2.x8,
-        topEnd = TangemTheme.dimens2.x8,
+        topStart = 32.dp,
+        topEnd = 32.dp,
     )
     CustomBottomSheet(
         state = bottomSheetState,

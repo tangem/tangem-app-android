@@ -310,7 +310,7 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             afterIconColor = primary,
             modifier = modifier,
         ) {
-            PaymentAccountIcon(size = AccountIconSize.RedesignExtraSmall)
+            PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
         }
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
         is ContentSubtitle.Asset -> InlineImageSubtitle(

@@ -1,8 +1,10 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -18,6 +20,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +49,7 @@ internal class WalletClickIntents @Inject constructor(
     private val tangemPayIntents: TangemPayClickIntentsImplementor,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -103,12 +107,25 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onAddFundsClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds())
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds(status = AnalyticsParam.Status.Success))
         router.openAddFunds(userWalletId)
     }
 
     fun onTransferClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonTransfer())
+        val selectedWallet = stateController.getSelectedWalletUM() as? WalletUM.Content
+        val areActionsAvailable = selectedWallet?.areActionsAvailable != false
+
+        analyticsEventHandler.send(
+            MainScreenAnalyticsEvent.ButtonTransfer(
+                status = if (areActionsAvailable) AnalyticsParam.Status.Success else AnalyticsParam.Status.Error,
+            ),
+        )
+
+        if (!areActionsAvailable) {
+            uiMessageSender.send(WalletAlertUM.unavailableOperation())
+            return
+        }
+
         router.openTransfer(userWalletId)
     }
 

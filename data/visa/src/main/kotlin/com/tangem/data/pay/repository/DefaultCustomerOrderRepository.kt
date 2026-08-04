@@ -23,6 +23,8 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
     override suspend fun getOrderData(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, OrderData> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getOrder(authHeader = authHeader, orderId = orderId)
+        }.mapLeft { error ->
+            if (error is VisaApiError.NotFound) VisaApiError.OrderNotFound else error
         }.map { response ->
             val status = response.result?.status?.let(OrderStatusConverter::convert) ?: OrderStatus.PROCESSING
             OrderData(
