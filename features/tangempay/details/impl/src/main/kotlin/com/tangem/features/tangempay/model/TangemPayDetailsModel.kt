@@ -26,6 +26,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -47,6 +48,7 @@ import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
 import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.utils.*
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
@@ -86,6 +88,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
+    tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(),
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
@@ -100,8 +103,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val userWalletId
         get() = currentStatus.value.userWalletId
 
-    val cryptoCurrency
-        get() = currentStatus.value.cryptoCurrency
+    val cryptoCurrency: CryptoCurrency.Token = tangemPayCurrencyFactory.create(userWalletId)
 
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
@@ -153,6 +155,12 @@ internal class TangemPayDetailsModel @Inject constructor(
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
                         stateFactory.getInactiveState(state)
                     }
+                    is PaymentAccountStatusValue.AwaitingPlanSelection -> router.replaceAll(
+                        TangemPayAccountDetailsInnerRoute.SelectPlan(
+                            tariffPlan = state.tariffPlan,
+                            source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
+                        ),
+                    )
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
             }
@@ -379,6 +387,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     fun showVaBankingDetailsError(productInstanceId: String) {
+        analytics.send(TangemPayAnalyticsEvents.VaDetailsErrorShowed())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.VaBankingDetailsError(
@@ -389,6 +398,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun showVaPreparing() {
+        analytics.send(TangemPayAnalyticsEvents.VaPreparationPopupShowed())
         bottomSheetNavigation.dismiss()
         uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
     }
