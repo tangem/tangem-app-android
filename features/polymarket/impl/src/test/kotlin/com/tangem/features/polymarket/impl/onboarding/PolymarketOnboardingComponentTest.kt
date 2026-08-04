@@ -9,9 +9,11 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ModelsEntryPoint
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
+import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -35,7 +37,9 @@ import javax.inject.Provider
 internal class PolymarketOnboardingComponentTest {
 
     private val router: Router = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val resolvePolymarketEntryUseCase: ResolvePolymarketEntryUseCase = mockk()
+    private val runPolymarketOnboardingUseCase: RunPolymarketOnboardingUseCase = mockk()
 
     private val userWalletId = UserWalletId("011")
     private val params = PolymarketComponent.Params(userWalletId = userWalletId)
@@ -84,7 +88,9 @@ internal class PolymarketOnboardingComponentTest {
     private fun createModel(paramsContainer: ParamsContainer) = PolymarketOnboardingModel(
         paramsContainer = paramsContainer,
         router = router,
+        urlOpener = urlOpener,
         resolvePolymarketEntryUseCase = resolvePolymarketEntryUseCase,
+        runPolymarketOnboardingUseCase = runPolymarketOnboardingUseCase,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 }
