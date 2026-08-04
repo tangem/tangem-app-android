@@ -1,6 +1,6 @@
 package com.tangem.data.pay.repository
 
-import com.tangem.datasource.api.common.config.TangemPay
+import com.tangem.spend.datasource.config.TangemPay
 
 import arrow.core.Either
 import arrow.core.right

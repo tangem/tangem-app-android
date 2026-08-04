@@ -1,7 +1,5 @@
 package com.tangem.data.pay.repository
 
-import com.tangem.datasource.api.common.config.TangemPay
-
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
@@ -11,6 +9,7 @@ import com.tangem.domain.pay.model.CardDeliveryContext
 import com.tangem.domain.pay.model.CardDeliveryQuote
 import com.tangem.domain.pay.repository.CardDeliveryQuoteRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.spend.datasource.config.TangemPay
 import java.math.BigDecimal
 import java.util.Currency
 import javax.inject.Inject

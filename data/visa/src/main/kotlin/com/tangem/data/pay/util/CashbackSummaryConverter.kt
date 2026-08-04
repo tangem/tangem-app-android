@@ -1,6 +1,6 @@
 package com.tangem.data.pay.util
 
-import com.tangem.datasource.api.pay.models.response.CashbackSummaryResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackSummaryResponse
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackProgramStatus
 import com.tangem.domain.pay.model.CashbackSummary

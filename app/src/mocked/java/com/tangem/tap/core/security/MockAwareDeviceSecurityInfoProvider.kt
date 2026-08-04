@@ -1,6 +1,6 @@
 package com.tangem.tap.core.security
 
-import com.tangem.datasource.api.common.config.TangemPay
+import com.tangem.spend.datasource.config.TangemPay
 
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager

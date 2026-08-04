@@ -8,9 +8,9 @@ import arrow.core.right
 import com.squareup.wire.Instant
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.pay.TangemPayAuthApi
-import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessTokenRequest
-import com.tangem.datasource.api.pay.models.response.TangemPayGetTokensResponse
+import com.tangem.spend.datasource.pay.TangemPayAuthApi
+import com.tangem.spend.datasource.pay.models.request.RefreshCustomerWalletAccessTokenRequest
+import com.tangem.spend.datasource.pay.models.response.TangemPayGetTokensResponse
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
@@ -40,7 +40,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val tokensMutex = Mutex()
 
     /**
-     * Static token added in headers [com.tangem.datasource.api.common.config.TangemPay]
+     * Static token added in headers [com.tangem.spend.datasource.config.TangemPay]
      */
     suspend fun <T : Any> performWithStaticToken(requestBlock: suspend () -> ApiResponse<T>): Either<VisaApiError, T> =
         withContext(dispatchers.io) {
