@@ -22,6 +22,7 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -178,7 +179,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the status never settles WHEN collected THEN ends with StillWorking`() = runTest {
+    fun `GIVEN the status never settles WHEN collected THEN it keeps waiting`() = runTest {
         // Arrange
         coEvery { getWalletStatus(ADDRESSES) } returns
             walletState(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS).right()
@@ -190,10 +191,12 @@ internal class RunPolymarketOnboardingUseCaseTest {
             assertThat(awaitItem()).isEqualTo(
                 PolymarketOnboardingProgress.Working(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS),
             )
-            assertThat(awaitItem()).isEqualTo(
-                PolymarketOnboardingProgress.StillWorking(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS),
-            )
-            awaitComplete()
+
+            advanceTimeBy(WELL_PAST_THE_OLD_CEILING_MILLIS)
+            runCurrent()
+            expectNoEvents()
+
+            cancelAndIgnoreRemainingEvents()
         }
         coVerify(exactly = 0) { submitApprovals(any(), any()) }
     }
@@ -632,6 +635,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
         const val L1_SIGNATURE = "0xaa"
         const val TIMESTAMP = "1735689600"
         const val TWELVE_POLL_INTERVALS_MILLIS = 30_000L
+        const val WELL_PAST_THE_OLD_CEILING_MILLIS = 300_000L
 
         val USER_WALLET_ID = UserWalletId("011")
         val NONCE: BigInteger = BigInteger.valueOf(7)
