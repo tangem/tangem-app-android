@@ -22,6 +22,8 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.wallets.backup.CardBackupConverter
+import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -31,6 +33,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.onlyOn
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetBackupCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.usedSeedPhrase
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
@@ -214,10 +217,7 @@ internal class MultiWalletBackupModel @Inject constructor(
                         )
                     }
 
-                    walletCardsBackupReporter.reportBackupCardAdded(
-                        scanResponse = scanResponse,
-                        backupCards = state.value.addedCards,
-                    )
+                    reportAddedCards()
 
                     setNumberOfBackupCards(state.value.numberOfBackupCards)
                 }
@@ -253,6 +253,26 @@ internal class MultiWalletBackupModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Reports the primary card together with the backup cards added so far. Only cards the backup service accepted
+     * get here, which is what makes them eligible for backup.
+     */
+    private fun reportAddedCards() {
+        val primaryCard = CardBackupConverter.convert(
+            card = scanResponse.card,
+            role = WalletCardBackup.Role.PRIMARY,
+        )
+        val backupCards = state.value.addedCards.zip(WalletCardsBackupReporter.BACKUP_ROLES) { card, role ->
+            CardBackupConverter.convert(card = card, role = role)
+        }
+
+        walletCardsBackupReporter.report(
+            scanResponse = scanResponse,
+            cards = listOf(primaryCard) + backupCards,
+            usedSeed = scanResponse.usedSeedPhrase(),
+        )
     }
 
     private fun showCardVerificationFailedDialog(error: TangemSdkError.CardVerificationFailed) {
