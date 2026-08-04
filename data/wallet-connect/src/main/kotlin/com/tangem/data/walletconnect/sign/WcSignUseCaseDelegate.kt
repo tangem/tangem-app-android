@@ -2,6 +2,7 @@ package com.tangem.data.walletconnect.sign
 
 import arrow.core.left
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.SignStateConverter.toPreSign
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
     private val analytics: AnalyticsEventHandler,
     private val context: WcMethodUseCaseContext,
+    private val respondService: WcRespondService,
     private val finalActionCollector: FinalActionCollector<SignModel>,
     private val middleActionCollector: MiddleActionCollector<MiddleAction, SignModel>,
 ) : FinalActionCollector<SignModel> by finalActionCollector,
@@ -55,7 +57,18 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
 
         var listenMiddleJob: Job = listenMiddle()
 
-        fun signFlow() = flow { onSign(state.updateAndGet { it.toSigning() }) }
+        fun signFlow() = flow {
+            // Final validity gate: the confirmation UI keeps this callback actionable even after the
+            // request expired or its session was removed. Re-check against the SDK before the sensitive
+            // action so nothing reaches the network client for a dead request. Check first, then switch
+            // to Signing only in the valid branch, so a dead request never flashes a spinner.
+            if (!respondService.isRequestActual(context.rawSdkRequest)) {
+                respondService.rejectRequestNonBlock(context.rawSdkRequest)
+                emit(state.value.toResult(WcRequestError.RequestExpired.left()))
+                return@flow
+            }
+            onSign(state.updateAndGet { it.toSigning() })
+        }
             .onEach { newState -> state.update { newState } }
             .catch { exception ->
                 val errorResult = state.value
