@@ -1,8 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.common
 
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.usecase.ReportWalletCardsBackupUseCase
@@ -22,34 +20,15 @@ internal class WalletCardsBackupReporter @Inject constructor(
 ) {
 
     /**
+     * Reports every card known to the app for this wallet, called on each step that changes what is known —
 
-     * backup has started yet.
      *
+     * @param scanResponse scan response holding the primary card, the source of the wallet id
+     * @param cards        all known cards, primary first
 
+     *                     wallet creation take it from [usedSeedPhrase]
      */
-    fun reportWalletCreated(scanResponse: ScanResponse, usedSeed: Boolean) {
-        report(scanResponse = scanResponse, backupCards = emptyList(), usedSeed = usedSeed)
-    }
-
-    /**
-     * Reports the primary card together with every backup card added so far, called each time a backup card is
-     * added on the Creating a backup screen.
-     *
-     * Only cards the backup service accepted reach this point, which is what makes them eligible for backup.
-     *
-     * @param backupCards added backup cards, in the order they were added
-     */
-    fun reportBackupCardAdded(scanResponse: ScanResponse, backupCards: List<CardDTO>) {
-        report(
-            scanResponse = scanResponse,
-            backupCards = backupCards,
-            // unlike wallet creation, this step cannot know it firsthand — the wallet may have been created in an
-            // earlier session — so it is read off the card: an imported wallet is one created from a seed phrase
-            usedSeed = scanResponse.card.wallets.any { it.isImported },
-        )
-    }
-
-    private fun report(scanResponse: ScanResponse, backupCards: List<CardDTO>, usedSeed: Boolean) {
+    fun report(scanResponse: ScanResponse, cards: List<WalletCardBackup>, usedSeed: Boolean) {
         if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
 
         val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
@@ -57,18 +36,6 @@ internal class WalletCardsBackupReporter @Inject constructor(
         if (userWalletId == null) {
             TangemLogger.e("Unable to build user wallet id, cards backup state is not reported")
             return
-        }
-
-        if (backupCards.size > BACKUP_ROLES.size) {
-            TangemLogger.e("Got ${backupCards.size} backup cards, only the first ${BACKUP_ROLES.size} are reported")
-        }
-
-        val primaryCard = CardBackupConverter.convert(
-            card = scanResponse.card,
-            role = WalletCardBackup.Role.PRIMARY,
-        )
-        val cards = listOf(primaryCard) + backupCards.zip(BACKUP_ROLES) { card, role ->
-            CardBackupConverter.convert(card = card, role = role)
         }
 
         // deliberately not modelScope: an onboarding step navigates away right after it reports, which destroys the
@@ -85,7 +52,17 @@ internal class WalletCardsBackupReporter @Inject constructor(
         }
     }
 
-    private companion object {
+    internal companion object {
+
+        /** Roles of the backup cards, in the order the cards are added to the backup */
         val BACKUP_ROLES = listOf(WalletCardBackup.Role.BACKUP_1, WalletCardBackup.Role.BACKUP_2)
     }
 }
+
+/**
+
+ *
+ * Only wallet creation knows this firsthand; every later step — a backup card is added, a card is finalized — may
+
+ */
+internal fun ScanResponse.usedSeedPhrase(): Boolean = card.wallets.any { it.isImported }
