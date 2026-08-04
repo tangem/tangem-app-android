@@ -77,6 +77,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
 
     /* Test */
+    testImplementation(projects.test.core)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
