@@ -12,11 +12,13 @@ import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManag
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddData
 import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioUM
 
+@Suppress("LongParameterList")
 internal class UserPortfolioSectionsTransformer(
     private val availableData: AvailableToAddData,
     private val rawCurrencyId: CryptoCurrency.RawID,
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
+    private val isAccountsModeEnabled: Boolean,
     private val resolveWalletDeviceIcon: (UserWallet) -> DeviceIconUM,
     private val onTokenSelected: (AddToPortfolioManager.Result) -> Unit,
 ) {
@@ -25,6 +27,7 @@ internal class UserPortfolioSectionsTransformer(
         val content = TokenSelectorContentConverter(
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
+            isAccountsModeEnabled = isAccountsModeEnabled,
             resolveWalletDeviceIcon = resolveWalletDeviceIcon,
             onEntryClick = { entry ->
                 onTokenSelected(
