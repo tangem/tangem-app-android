@@ -20,4 +20,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isAccountMultichainEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1684_ACCOUNT_MULTICHAIN_ENABLED)
+
+    override val isPinBiometryGateEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED)
 }
