@@ -19,6 +19,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -32,6 +33,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.format.bigdecimal.price
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -107,6 +109,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val getNewsUseCase: GetNewsUseCase,
     private val shareManager: ShareManager,
     private val appRouter: AppRouter,
+    private val messageSender: UiMessageSender,
 ) : Model() {
 
     private val quotesJob = JobHolder()
@@ -297,6 +300,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             ),
             onShareClick = ::onShareClick,
             isAddToPortfolioButtonVisible = false,
+            isAddToPortfolioButtonEnabled = true,
             onAddToPortfolioClick = ::openAddToPortfolio,
         ),
     )
@@ -368,12 +372,17 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         if (isAddToPortfolioAvailable) {
             addToPortfolioManager.setTokenParams(params.token)
             addToPortfolioManager.state
-                .map { managerState ->
-                    managerState is AddToPortfolioManager.State.Ready && managerState.isAvailableToAdd
-                }
+                .map { managerState -> managerState as? AddToPortfolioManager.State.Ready }
                 .distinctUntilChanged()
-                .onEach { isVisible ->
-                    state.update { it.copy(isAddToPortfolioButtonVisible = isVisible) }
+                .onEach { readyState ->
+                    state.update {
+                        it.copy(
+                            // The token is already in every account: keep the button, but explain it on click
+                            isAddToPortfolioButtonVisible = readyState?.isAvailableToAdd == true ||
+                                readyState?.isAddedEverywhere == true,
+                            isAddToPortfolioButtonEnabled = readyState?.isAvailableToAdd == true,
+                        )
+                    }
                 }
                 .launchIn(modelScope)
         }
@@ -401,6 +410,16 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     fun openAddToPortfolio() {
         if (!isAddToPortfolioAvailable) return
+        val managerState = addToPortfolioManager.state.value
+        if (managerState is AddToPortfolioManager.State.Ready && managerState.isAddedEverywhere) {
+            messageSender.send(
+                DialogMessage(
+                    title = resourceReference(R.string.markets_token_add_all_added_title),
+                    message = resourceReference(R.string.markets_token_add_all_added_description),
+                ),
+            )
+            return
+        }
         prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.DirectAdd)
         addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
     }
