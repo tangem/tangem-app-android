@@ -41,8 +41,10 @@ internal class StakingBalanceContributionTest {
         // Act
         val actual = balance.kind
 
-        // Assert
-        Truth.assertThat(actual).isEqualTo(StakingBalance.CONTRIBUTION_KIND)
+        // Assert — the literal, not the constant: comparing the constant to itself can never fail, and `kind` is
+        // the cross-module discriminator, so its value is part of the contract
+        Truth.assertThat(actual).isEqualTo("staking")
+        Truth.assertThat(StakingBalance.CONTRIBUTION_KIND).isEqualTo("staking")
     }
 
     @Test
@@ -61,15 +63,15 @@ internal class StakingBalanceContributionTest {
     }
 
     @Test
-    fun `GIVEN empty and error balances WHEN checked THEN they are not contributions`() {
+    fun `GIVEN empty and error balances WHEN totalDeltaCryptoAmount THEN they move no total`() {
         // Arrange
         val stakingId = StakingID(integrationId = "integration", address = "0x1")
         val empty = StakingBalance.Empty(stakingId = stakingId, source = StatusSource.ACTUAL)
         val error = StakingBalance.Error(stakingId = stakingId)
 
-        // Assert — only non-empty balances can move a total
-        Truth.assertThat(empty).isNotInstanceOf(BalanceContribution::class.java)
-        Truth.assertThat(error).isNotInstanceOf(BalanceContribution::class.java)
+        // Assert — both ARE contributions (the whole sealed hierarchy is one); only their delta is zero
+        Truth.assertThat(empty.totalDeltaCryptoAmount()).isEqualTo(BigDecimal.ZERO)
+        Truth.assertThat(error.totalDeltaCryptoAmount()).isEqualTo(BigDecimal.ZERO)
     }
 
     private fun provideTestModels() = listOf(

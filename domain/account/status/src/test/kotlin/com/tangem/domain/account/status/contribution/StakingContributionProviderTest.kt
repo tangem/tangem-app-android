@@ -167,6 +167,22 @@ internal class StakingContributionProviderTest {
     }
 
     @Test
+    fun `GIVEN a staking id with no balance of its own WHEN resolve THEN nothing is contributed`() = runTest {
+        // Arrange — a *valid* staking id that is simply not a key in the grouped map: the wallet stakes, just not
+        // on this integration. Its address matches the status, so nothing downstream could stop it either.
+        val currency = cryptoCurrencyFactory.ethereum
+        every { stakingBalanceSupplier(any()) } returns flowOf(setOf(stakeKitBalance(currency)))
+        every { stakingIdFactory.create(currencyId = currency.id, defaultAddress = any()) } returns
+            StakingID(integrationId = "another-integration", address = ADDRESS).right()
+
+        // Act
+        val actual = provider.contributions(multiCurrencyWallet).first().resolve(currency, verifiedStatus(currency))
+
+        // Assert — the id resolves, so this is the map lookup returning nothing, not the address or narrowing check
+        assertThat(actual).isNull()
+    }
+
+    @Test
     fun `GIVEN P2PEthPool balance WHEN resolve THEN it is stamped for the network and every bucket counts`() =
         runTest {
             // Arrange — Ethereum keeps the staked principal outside the network balance
