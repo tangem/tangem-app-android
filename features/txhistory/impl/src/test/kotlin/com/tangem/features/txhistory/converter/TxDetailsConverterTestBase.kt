@@ -236,7 +236,7 @@ internal open class TxDetailsConverterTestBase {
                 decimals = 8,
                 cryptoCurrency = bitcoin,
             ),
-            country = country,
+            fiatCurrency = country,
             toAmount = BigDecimal("0.006"),
             toActualAmount = null,
         ),

@@ -722,7 +722,7 @@ internal class TxHistoryInfoMergerTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
-            country = null,
+            fiatCurrency = null,
             toAmount = toAmount,
             toActualAmount = toActualAmount,
         ),
