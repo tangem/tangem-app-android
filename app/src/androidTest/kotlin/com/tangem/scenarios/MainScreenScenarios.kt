@@ -51,7 +51,9 @@ fun BaseTestCase.assertOrganizeTokensMatch(expectedTokens: List<String>) {
     }
     step("Assert 'Organize tokens' list matches the main screen order") {
         onOrganizeTokensScreen {
-            assertEquals(expectedTokens, getDisplayedTokenTitles())
+            // 'Organize tokens' appends the currency symbol to the name ("Bitcoin BTC"), the main screen doesn't.
+            val organizeTokens = getDisplayedTokenTitles().map { it.substringBeforeLast(delimiter = ' ') }
+            assertEquals(expectedTokens, organizeTokens)
         }
     }
     step("Return to 'Main' screen") {
