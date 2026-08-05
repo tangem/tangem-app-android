@@ -229,17 +229,43 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
     transactionData: TransactionData,
     isYieldActive: Boolean,
 ): TransactionFeeExtended {
-    val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
-        ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
     val feeTokenContract = (tokenStatus.currency as? CryptoCurrency.Token)?.contractAddress
         ?: raiseIllegalStateError("gasless fee currency must be a token")
+
+    return attachGaslessFeePlan(
+        resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+        userWallet = userWallet,
+        tokenStatus = tokenStatus,
+        tokenFeeExtended = tokenFeeExtended,
+        sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract),
+        isYieldActive = isYieldActive,
+    )
+}
+
+/**
+ * Same as the [TransactionData]-based overload, but for the *estimate* paths
+ * ([EstimateFeeForGaslessTxUseCase] / [EstimateFeeForTokenUseCase]) where no transaction has been built
+ * yet — a CEX swap only knows the amount it is about to send. The caller computes
+ * [sendAmountInFeeToken] with [computeSendAmountInFeeToken].
+ */
+@Suppress("LongParameterList")
+internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
+    resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    userWallet: UserWallet,
+    tokenStatus: CryptoCurrencyStatus,
+    tokenFeeExtended: TransactionFeeExtended,
+    sendAmountInFeeToken: BigDecimal,
+    isYieldActive: Boolean,
+): TransactionFeeExtended {
+    val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
+        ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
 
     val plan = resolveGaslessFeePlanUseCase(
         userWallet = userWallet,
         tokenStatus = tokenStatus,
         tokenFee = feeInTokenCurrency,
         isYieldActive = isYieldActive,
-        sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract),
+        sendAmountInFeeToken = sendAmountInFeeToken,
     ).bind()
 
     return tokenFeeExtended.copy(gaslessFeePlan = plan)
@@ -273,6 +299,19 @@ internal fun Raise<GetFeeError>.computeSendAmountInFeeToken(
     return if (sentTokenContract != null && sentTokenContract.equals(feeTokenContract, ignoreCase = true)) {
         uncompiled.amount.value
             ?: raiseIllegalStateError("sent amount is null while paying the gasless fee in the sent token")
+    } else {
+        BigDecimal.ZERO
+    }
+}
+
+internal fun computeSendAmountInFeeToken(
+    sendingCurrency: CryptoCurrency,
+    feeTokenContract: String,
+    amount: BigDecimal,
+): BigDecimal {
+    val sentTokenContract = (sendingCurrency as? CryptoCurrency.Token)?.contractAddress
+    return if (sentTokenContract != null && sentTokenContract.equals(feeTokenContract, ignoreCase = true)) {
+        amount
     } else {
         BigDecimal.ZERO
     }
