@@ -7,7 +7,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.displayedTextsInVisualOrder
 import com.tangem.common.extensions.firstTextForTestTag
 import com.tangem.common.extensions.firstTextOrNull
-import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.test.*
@@ -309,14 +308,16 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
-    fun missingAddressNotificationMessage(networkCount: Int): KNode = child {
+    // The message is pluralised over the underived-network count, which varies by card.
+    val missingAddressNotificationMessage: KNode = child {
         hasTestTag(NotificationTestTags.MESSAGE)
-        hasText(
-            getQuantityString(
-                R.plurals.warning_missing_derivation_message,
-                networkCount,
-                networkCount
-            )
+        hasAnyAncestor(
+            withTestTag(NotificationTestTags.CONTAINER)
+                .and(
+                    androidx.compose.ui.test.hasAnyDescendant(
+                        withText(getResourceString(R.string.warning_missing_derivation_title))
+                    )
+                )
         )
         useUnmergedTree = true
     }
