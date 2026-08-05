@@ -277,7 +277,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
-            country = null,
+            fiatCurrency = null,
             toAmount = toAmount,
             toActualAmount = null,
         ),
