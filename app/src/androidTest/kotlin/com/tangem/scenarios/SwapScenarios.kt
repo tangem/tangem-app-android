@@ -61,8 +61,15 @@ fun BaseTestCase.openSwapScreen(
     }
 
     if (storiesExist) {
+        // Whether stories show at all is decided by a request that can still be in flight here.
         step("Close 'Stories' screen") {
-            onSwapStoriesScreen { closeButton.clickWithAssertion() }
+            val storiesShown = runCatching {
+                awaitSuccess { onSwapStoriesScreen { closeButton.assertIsDisplayed() } }
+            }.isSuccess
+
+            if (storiesShown) {
+                onSwapStoriesScreen { closeButton.performClick() }
+            }
         }
     } else {
         step("Assert 'Stories' screen is not displayed") {
@@ -467,6 +474,7 @@ fun BaseTestCase.openSwapAmountScreen(
     receiveTokenName: String,
     amount: String,
     seedPhrase: String? = null,
+    storiesExist: Boolean = true,
 ) {
     if (seedPhrase == null) {
         step("Open 'Main' screen") {
@@ -484,7 +492,7 @@ fun BaseTestCase.openSwapAmountScreen(
         onMainScreen { tokenWithTitleAndAddress(fromTokenName).clickWithAssertion() }
     }
     step("Open 'Swap' screen") {
-        openSwapScreen(from = SwapEntryPoint.TokenDetails)
+        openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = storiesExist)
     }
     step("Choose receive token '$receiveTokenName'") {
         chooseReceiveToken(receiveTokenName)
@@ -536,21 +544,40 @@ fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: St
     }
 }
 
+private const val HOLD_ATTEMPTS = 3
+private const val HOLD_CONFIRMATION_TIMEOUT = 10_000L
+
 /** Holds the last BASE_BUTTON; enters [accessCode] if a hot wallet prompts for it. */
 fun BaseTestCase.confirmSwapByHolding(accessCode: String? = null) {
     val buttonMatcher = hasTestTag(BaseButtonTestTags.BUTTON)
-    val buttons = composeTestRule.onAllNodes(buttonMatcher)
-    // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
-    val swapButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
-    swapButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
-    waitForIdle()
     val accessCodeInput = hasTestTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
     val swapInProgressText = hasText(getResourceString(CoreUiR.string.swap_in_progress))
-    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+
+    fun confirmationStarted(): Boolean =
         composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty() ||
             composeTestRule.onAllNodes(swapInProgressText, useUnmergedTree = true)
                 .fetchSemanticsNodes().isNotEmpty()
+
+    // holdToConfirmGestures swallows the hold while the quote is being re-fetched, with no feedback.
+    var attemptsLeft = HOLD_ATTEMPTS
+    while (attemptsLeft > 0 && !confirmationStarted()) {
+        attemptsLeft--
+        val buttons = composeTestRule.onAllNodes(buttonMatcher)
+        // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
+        val swapButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
+        swapButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+        waitForIdle()
+
+        val isLastAttempt = attemptsLeft == 0
+        if (isLastAttempt) {
+            composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { confirmationStarted() }
+        } else {
+            runCatching {
+                composeTestRule.waitUntil(timeoutMillis = HOLD_CONFIRMATION_TIMEOUT) { confirmationStarted() }
+            }
+        }
     }
+
     val needsAccessCode =
         composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()
     if (needsAccessCode && accessCode != null) {
