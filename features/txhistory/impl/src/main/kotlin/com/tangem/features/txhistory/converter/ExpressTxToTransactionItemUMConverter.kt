@@ -96,7 +96,7 @@ internal class ExpressTxToTransactionItemUMConverter(
                 direction = SubtitleDirection.FROM,
                 symbol = onramp.tx.fromFiat.currencySymbol,
                 icon = CurrencyIconState.FiatIcon(
-                    url = onramp.tx.country?.image,
+                    url = onramp.tx.fiatCurrency?.image,
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
             ),
