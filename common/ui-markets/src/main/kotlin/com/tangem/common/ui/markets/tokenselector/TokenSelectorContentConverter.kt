@@ -34,12 +34,13 @@ data class TokenSelectorEntry(
  * Converts a list of portfolio holdings into [TokenSelectorContentUM].
  *
  * Entries are grouped by wallet (wallet headers appear only when more than one wallet is present) and then by
- * account (account headers appear only when more than one account holds the token). Callers own how the entries
- * are collected and filtered; this converter only turns them into display state.
+ * account (account headers appear while the accounts mode is enabled or more than one account holds the token).
+ * Callers own how the entries are collected and filtered; this converter only turns them into display state.
  */
 class TokenSelectorContentConverter(
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
+    private val isAccountsModeEnabled: Boolean,
     private val resolveWalletDeviceIcon: (UserWallet) -> DeviceIconUM,
     private val onEntryClick: (TokenSelectorEntry) -> Unit,
 ) : Converter<List<TokenSelectorEntry>, TokenSelectorContentUM> {
@@ -67,7 +68,7 @@ class TokenSelectorContentConverter(
             }
 
             val byAccount = walletEntries.groupBy { it.account.account.accountId }
-            val shouldShowAccountHeaders = byAccount.size > 1
+            val shouldShowAccountHeaders = isAccountsModeEnabled || byAccount.size > 1
 
             for ((_, accountEntries) in byAccount) {
                 val singles = accountEntries.map(::entryToSingle).toImmutableList()
