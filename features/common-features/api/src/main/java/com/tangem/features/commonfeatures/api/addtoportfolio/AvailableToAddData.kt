@@ -13,6 +13,8 @@ data class AvailableToAddData(
     val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet>,
 ) {
     val isAvailableToAdd: Boolean = availableToAddWallets.values.any { item -> item.isAvailableToAdd }
+    val isAddedEverywhere: Boolean = availableToAddWallets.isNotEmpty() && !isAvailableToAdd
+
     val isSinglePortfolio: Boolean
         get() = availableToAddWallets.size == 1 && availableToAddWallets.values.first().accounts.size == 1
 }
