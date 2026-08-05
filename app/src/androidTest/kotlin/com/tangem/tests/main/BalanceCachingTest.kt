@@ -29,8 +29,15 @@ class BalanceCachingTest : BaseTestCase() {
     fun balanceCachingOutdatedBalancesBannerDisplayingTest() {
         val bitcoinBalanceScenario = "bitcoin_utxo"
         val bitcoinBalanceState = "BalanceError"
+        val providersScenario = "networks_providers"
+        val bitcoinMockOnlyState = "BitcoinMockOnly"
 
+        // Bitcoin has five providers: a failing mock alone just makes the SDK fall through to the real ones.
+        // The provider list is read at app launch, so it has to be selected before the app starts.
         setupHooks(
+            additionalBeforeAppLaunchSection = {
+                setWireMockScenarioState(providersScenario, bitcoinMockOnlyState)
+            },
             additionalAfterSection = {
                 resetWireMockScenarios()
             }
@@ -64,10 +71,17 @@ class BalanceCachingTest : BaseTestCase() {
     fun balanceCachingActionsWithTokensWithOutdatedBalancesTest() {
         val bitcoinBalanceScenario = "bitcoin_utxo"
         val bitcoinBalanceState = "BalanceError"
+        val providersScenario = "networks_providers"
+        val bitcoinMockOnlyState = "BitcoinMockOnly"
         val bitcoinBalanceDefaultState = "Started"
         val tokenWithOutdatedBalance = "Bitcoin"
 
+        // Bitcoin has five providers: a failing mock alone just makes the SDK fall through to the real ones.
+        // The provider list is read at app launch, so it has to be selected before the app starts.
         setupHooks(
+            additionalBeforeAppLaunchSection = {
+                setWireMockScenarioState(providersScenario, bitcoinMockOnlyState)
+            },
             additionalAfterSection = {
                 resetWireMockScenarios()
             }
