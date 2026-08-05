@@ -163,6 +163,12 @@ interface TangemPayApi {
         @Path("type") type: String,
     ): ApiResponse<FeeResponse>
 
+    @GET("v1/fees")
+    suspend fun getFees(
+        @Header("Authorization") authHeader: String,
+        @Query("groups") groups: String,
+    ): ApiResponse<FeesResponse>
+
     @POST("v1/customer/card/reissue")
     suspend fun reissueCard(
         @Header("Authorization") authHeader: String,
