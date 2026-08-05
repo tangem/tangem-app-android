@@ -27,6 +27,7 @@ object TangemPayTestTags {
     const val ADD_TO_WALLET_BANNER = "TANGEM_PAY_ADD_TO_WALLET_BANNER"
     const val ADD_TO_WALLET_SCREEN = "TANGEM_PAY_ADD_TO_WALLET_SCREEN"
     const val ADD_TO_WALLET_CLOSE_BUTTON = "TANGEM_PAY_ADD_TO_WALLET_CLOSE_BUTTON"
+    const val ADD_TO_WALLET_STEP = "TANGEM_PAY_ADD_TO_WALLET_STEP"
 
     // Card management (card page settings)
     const val SHOW_DETAILS_ROW = "TANGEM_PAY_SHOW_DETAILS_ROW"
