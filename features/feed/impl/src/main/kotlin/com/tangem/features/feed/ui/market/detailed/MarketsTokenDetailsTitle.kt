@@ -34,6 +34,7 @@ internal fun MarketsTokenDetailsTitle(
 ) {
     MarketsTokenDetailsRedesignTopBar(
         isAddToPortfolioButtonVisible = state.isAddToPortfolioButtonVisible,
+        isAddToPortfolioButtonEnabled = state.isAddToPortfolioButtonEnabled,
         onAddToPortfolioClick = state.onAddToPortfolioClick,
         onShareClick = state.onShareClick,
         isBackButtonEnabled = isBackButtonEnabled,
@@ -41,9 +42,11 @@ internal fun MarketsTokenDetailsTitle(
     )
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun MarketsTokenDetailsRedesignTopBar(
     isAddToPortfolioButtonVisible: Boolean,
+    isAddToPortfolioButtonEnabled: Boolean,
     onAddToPortfolioClick: () -> Unit,
     onShareClick: () -> Unit,
     isBackButtonEnabled: Boolean,
@@ -73,6 +76,7 @@ private fun MarketsTokenDetailsRedesignTopBar(
                         onClick = onAddToPortfolioClick,
                         enabled = isBackButtonEnabled,
                         contentPadding = 10.dp,
+                        isDimmed = !isAddToPortfolioButtonEnabled,
                     )
                 }
                 TopBarHazeIconButton(
@@ -92,11 +96,17 @@ private fun MarketsTokenDetailsRedesignTopBar(
 }
 
 @Composable
-private fun TopBarHazeIconButton(imageVector: ImageVector, onClick: () -> Unit, enabled: Boolean, contentPadding: Dp) {
+private fun TopBarHazeIconButton(
+    imageVector: ImageVector,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    contentPadding: Dp,
+    isDimmed: Boolean = false,
+) {
     Icon(
         imageVector = imageVector,
         contentDescription = null,
-        tint = TangemTheme.colors3.icon.primary,
+        tint = if (isDimmed) TangemTheme.colors3.icon.tertiary else TangemTheme.colors3.icon.primary,
         modifier = Modifier
             .size(44.dp)
             .clip(CircleShape)

@@ -43,6 +43,7 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
         data object Loading : State
         data class Ready(val availableToAddData: AvailableToAddData) : State {
             val isAvailableToAdd: Boolean get() = availableToAddData.isAvailableToAdd
+            val isAddedEverywhere: Boolean get() = availableToAddData.isAddedEverywhere
             val isSinglePortfolio: Boolean get() = availableToAddData.isSinglePortfolio
         }
     }

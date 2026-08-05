@@ -52,6 +52,7 @@ internal object MarketsTokenDetailsPreview {
         ),
         onShareClick = {},
         isAddToPortfolioButtonVisible = false,
+        isAddToPortfolioButtonEnabled = true,
         onAddToPortfolioClick = {},
         priceAnnotated = stringReference("$0.00000000324"),
     )
@@ -145,6 +146,7 @@ internal object MarketsTokenDetailsPreview {
         ),
         onShareClick = {},
         isAddToPortfolioButtonVisible = false,
+        isAddToPortfolioButtonEnabled = true,
         onAddToPortfolioClick = {},
         priceAnnotated = stringReference("$0.00000000324"),
     )
