@@ -2,15 +2,12 @@ package com.tangem.features.polymarket.impl.main.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -27,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.res.R
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
@@ -40,7 +38,6 @@ import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import kotlinx.collections.immutable.persistentListOf
 
 private val CardShape = RoundedCornerShape(16.dp)
-private val OutcomeShape = RoundedCornerShape(percent = 50)
 private val ChipShape = RoundedCornerShape(50.dp)
 
 @Composable
@@ -180,40 +177,18 @@ private fun EventRow(state: PolymarketEventRowUM) {
             // The first outcome carries the positive (info) accent, the second the negative (error) one —
             // driven by position, not by label, since upstream labels aren't always "Yes"/"No".
             state.outcomes.forEachIndexed { index, outcome ->
-                OutcomeButton(outcome = outcome, isPositive = index == 0)
+                TangemButton(
+                    variant = if (index == 0) {
+                        TangemButton.Variant.InfoSubtle
+                    } else {
+                        TangemButton.Variant.ErrorSubtle
+                    },
+                    size = TangemButton.Size.X9,
+                    text = outcome.title,
+                    onClick = outcome.onClick,
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun OutcomeButton(outcome: PolymarketOutcomeUM, isPositive: Boolean) {
-    val background = if (isPositive) {
-        TangemTheme.colors3.bg.status.infoSubtle
-    } else {
-        TangemTheme.colors3.bg.status.errorSubtle
-    }
-    val textColor = if (isPositive) {
-        TangemTheme.colors3.text.accent.blue
-    } else {
-        TangemTheme.colors3.text.accent.red
-    }
-    Box(
-        modifier = Modifier
-            .heightIn(min = 36.dp)
-            .defaultMinSize(minWidth = 64.dp)
-            .clip(OutcomeShape)
-            .background(background)
-            .clickable(onClick = outcome.onClick)
-            .padding(horizontal = 20.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = outcome.title.resolveReference(),
-            color = textColor,
-            style = TangemTheme.typography3.body.medium,
-            maxLines = 1,
-        )
     }
 }
 
