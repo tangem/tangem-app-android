@@ -7,7 +7,6 @@ import com.tangem.common.constants.TestConstants.XRP_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_NON_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openSendScreen
 import com.tangem.screens.onSendAddressScreen
@@ -41,7 +40,6 @@ class XRPWarningsTest : BaseTestCase() {
         val rippleCustomDerivationScenario = "ripple_custom_derivation"
         val rippleAccountInfoScenario = "ripple_account_info"
         val rippleAccountLinesScenario = "ripple_account_lines"
-        val initialState = "Started"
 
         setupHooks(
             additionalAfterSection = {
@@ -52,14 +50,14 @@ class XRPWarningsTest : BaseTestCase() {
                 resetWireMockScenarioState(rippleAccountLinesScenario)
             }
         ).run {
-            step("Set WireMock scenario: '$rippleCustomDerivationScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleCustomDerivationScenario, initialState)
+            step("Reset WireMock scenario: '$rippleCustomDerivationScenario' to its initial state") {
+                resetWireMockScenarioState(rippleCustomDerivationScenario)
             }
-            step("Set WireMock scenario: '$rippleAccountInfoScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleAccountInfoScenario, initialState)
+            step("Reset WireMock scenario: '$rippleAccountInfoScenario' to its initial state") {
+                resetWireMockScenarioState(rippleAccountInfoScenario)
             }
-            step("Set WireMock scenario: '$rippleAccountLinesScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleAccountLinesScenario, initialState)
+            step("Reset WireMock scenario: '$rippleAccountLinesScenario' to its initial state") {
+                resetWireMockScenarioState(rippleAccountLinesScenario)
             }
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName, mockStateName)
@@ -112,7 +110,6 @@ class XRPWarningsTest : BaseTestCase() {
         val rippleCustomDerivationScenario = "ripple_custom_derivation"
         val rippleAccountInfoScenario = "ripple_account_info"
         val rippleAccountLinesScenario = "ripple_account_lines"
-        val initialState = "Started"
 
         setupHooks(
             additionalAfterSection = {
@@ -123,14 +120,14 @@ class XRPWarningsTest : BaseTestCase() {
                 resetWireMockScenarioState(rippleAccountLinesScenario)
             }
         ).run {
-            step("Set WireMock scenario: '$rippleCustomDerivationScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleCustomDerivationScenario, initialState)
+            step("Reset WireMock scenario: '$rippleCustomDerivationScenario' to its initial state") {
+                resetWireMockScenarioState(rippleCustomDerivationScenario)
             }
-            step("Set WireMock scenario: '$rippleAccountInfoScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleAccountInfoScenario, initialState)
+            step("Reset WireMock scenario: '$rippleAccountInfoScenario' to its initial state") {
+                resetWireMockScenarioState(rippleAccountInfoScenario)
             }
-            step("Set WireMock scenario: '$rippleAccountLinesScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleAccountLinesScenario, initialState)
+            step("Reset WireMock scenario: '$rippleAccountLinesScenario' to its initial state") {
+                resetWireMockScenarioState(rippleAccountLinesScenario)
             }
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName, mockStateName)
@@ -184,7 +181,6 @@ class XRPWarningsTest : BaseTestCase() {
         val rippleCustomDerivationScenario = "ripple_custom_derivation"
         val rippleAccountInfoScenario = "ripple_account_info"
         val rippleAccountLinesScenario = "ripple_account_lines"
-        val initialState = "Started"
 
         setupHooks(
             additionalAfterSection = {
@@ -195,14 +191,14 @@ class XRPWarningsTest : BaseTestCase() {
                 resetWireMockScenarioState(rippleAccountLinesScenario)
             }
         ).run {
-            step("Set WireMock scenario: '$rippleCustomDerivationScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleCustomDerivationScenario, initialState)
+            step("Reset WireMock scenario: '$rippleCustomDerivationScenario' to its initial state") {
+                resetWireMockScenarioState(rippleCustomDerivationScenario)
             }
-            step("Set WireMock scenario: '$rippleAccountInfoScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleAccountInfoScenario, initialState)
+            step("Reset WireMock scenario: '$rippleAccountInfoScenario' to its initial state") {
+                resetWireMockScenarioState(rippleAccountInfoScenario)
             }
-            step("Set WireMock scenario: '$rippleAccountLinesScenario' to state: '$initialState'") {
-                setWireMockScenarioState(rippleAccountLinesScenario, initialState)
+            step("Reset WireMock scenario: '$rippleAccountLinesScenario' to its initial state") {
+                resetWireMockScenarioState(rippleAccountLinesScenario)
             }
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName, mockStateName)
