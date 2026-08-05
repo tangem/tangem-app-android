@@ -142,5 +142,9 @@
     {
         "name": "TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
+        "version": "undefined"
     }
 ]

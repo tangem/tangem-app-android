@@ -24,6 +24,7 @@ androidxActivity = "1.10.1"
 androidxActivityCompose = "1.8.0"
 androidxAnnotation = "1.9.1"
 androidxAppCompat = "1.5.1"
+androidxBiometric = "1.1.0"
 androidxBrowser = "1.4.0"
 androidxConstraintLayout = "2.2.1"
 androidxCore = "1.13.1"
@@ -165,6 +166,7 @@ androidx-activity = { module = "androidx.activity:activity", version.ref = "andr
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivityCompose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidxBiometric" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidxBrowser" }
 androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidxConstraintLayout" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidxCore" }
