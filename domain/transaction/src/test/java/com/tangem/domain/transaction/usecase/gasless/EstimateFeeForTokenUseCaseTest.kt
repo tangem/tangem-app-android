@@ -150,6 +150,31 @@ internal class EstimateFeeForTokenUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the yield module balance is unreadable WHEN estimate THEN falls back to the native fee`() = runTest {
+        // Arrange — no token-fee plan can be trusted while the module holding the balance cannot be read.
+        val yieldStatus = activeYieldStatus(effectiveProtocolBalance = TOKEN_BALANCE)
+        val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = yieldStatus)
+        coEvery {
+            resolveGaslessFeePlanUseCase(any(), any(), any(), any(), any())
+        } returns Either.Left(GetFeeError.GaslessError.YieldBalanceUnavailable)
+
+        // Act
+        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+            userWallet = userWallet,
+            feeTokenCurrencyStatus = feeTokenStatus,
+            sendingTokenCurrencyStatus = feeTokenStatus,
+            amount = SWAP_AMOUNT,
+        )
+
+        // Assert — the fee block must keep rendering instead of failing the whole load
+        val feeExtended = result.getOrNull()
+        assertThat(feeExtended).isNotNull()
+        assertThat(feeExtended!!.feeTokenId).isEqualTo(nativeCoin.id)
+        assertThat(feeExtended.transactionFee).isEqualTo(INITIAL_TX_FEE)
+        assertThat(feeExtended.gaslessFeePlan).isNull()
+    }
+
+    @Test
     fun `GIVEN plan resolution fails for another reason WHEN estimate THEN the error propagates`() = runTest {
         // Arrange
         val yieldStatus = activeYieldStatus(effectiveProtocolBalance = TOKEN_BALANCE)
