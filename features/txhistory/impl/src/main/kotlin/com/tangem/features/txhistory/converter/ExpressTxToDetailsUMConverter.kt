@@ -154,8 +154,8 @@ internal class ExpressTxToDetailsUMConverter(
             from = onramp.tx.fromFiat.toFiatAssetUM(
                 // The fiat side was paid from a card, not a portfolio address — no owner to resolve.
                 label = resourceReference(R.string.tx_history_you_paid),
-                currencyIcon = onramp.tx.country?.image?.let { flagUrl ->
-                    CurrencyIconState.FiatIcon(url = flagUrl, fallbackResId = R.drawable.ic_currency_24)
+                currencyIcon = onramp.tx.fiatCurrency?.image?.let { imageUrl ->
+                    CurrencyIconState.FiatIcon(url = imageUrl, fallbackResId = R.drawable.ic_currency_24)
                 },
             ),
             to = onramp.tx.toAsset.toAssetUM(
@@ -292,9 +292,9 @@ internal class ExpressTxToDetailsUMConverter(
 
     /**
      * Builds the fiat ("You paid") leg of an onramp. The paid fiat amount is exact and carries no sign — neither `+`/`−`
-     * nor the `~` estimate — so only the value is shown. [currencyIcon] is the paid-from country flag, or `null` when the
-     * onramp carries no country. It never fades: the paid fiat stands as spent even on a failed onramp, where only the
-     * never-received crypto leg is struck.
+     * nor the `~` estimate — so only the value is shown. [currencyIcon] is the paid fiat currency's icon, or `null` when
+     * the onramp carries no resolved fiat currency. It never fades: the paid fiat stands as spent even on a failed
+     * onramp, where only the never-received crypto leg is struck.
      */
     private fun Amount.toFiatAssetUM(
         label: TextReference,
