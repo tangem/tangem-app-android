@@ -36,6 +36,7 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
+import com.tangem.domain.tokens.operations.BalanceContributionsInput
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -495,6 +496,9 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             ).some(),
             maybeQuoteStatus = quoteStatus.toOption(),
             maybeStakingBalance = none(),
+            // MissedDerivation carries no balance, so the factory ignores contributions entirely on this path —
+            // reading TWI_1717_BALANCE_CONTRIBUTIONS here would change nothing
+            contributionsInput = BalanceContributionsInput.Disabled,
         )
     }
 

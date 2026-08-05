@@ -1,6 +1,7 @@
 package com.tangem.domain.models.currency
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
@@ -62,19 +63,42 @@ data class CryptoCurrencyStatus(
         /** Yield supply status */
         val yieldSupplyStatus: YieldSupplyStatus? get() = null
 
+        /**
+         * Extra balances folded into this currency's total, on top of [amount].
+         *
+         * Read it generically — `contributions.sumOf { it.totalDeltaCryptoAmount() }` — instead of branching on
+         * concrete balance types. Downcast only for a type-specific breakdown ("Axis 2").
+         *
+         * Filled by `CryptoCurrencyStatusFactory` **only while `TWI_1717_BALANCE_CONTRIBUTIONS` is on**; with the
+         * toggle off it stays empty and readers fall back to the legacy typed fields
+         * (`com.tangem.common.getExtraBalanceOrNull`). That makes an empty list the switch between the two
+         * architectures — the reason it is stored rather than derived from [stakingBalance].
+         *
+         * Not serialized: statuses are derived in memory, never persisted.
+         */
+        val contributions: List<BalanceContribution> get() = emptyList()
+
         /** Sources */
         val sources: Sources get() = Sources()
     }
 
+    /**
+     * Freshness of every dimension the status is assembled from.
+     *
+     * @property contributionSources sources of the extra balances exposed as [Value.contributions]. Generic
+     * replacement for [stakingBalanceSource], which is kept until every producer reports through this list.
+     */
     @Serializable
     data class Sources(
         val networkSource: StatusSource = StatusSource.ACTUAL,
         val quoteSource: StatusSource = StatusSource.ACTUAL,
         val stakingBalanceSource: StatusSource = StatusSource.ACTUAL,
+        val contributionSources: List<StatusSource> = emptyList(),
     ) {
 
         val total: StatusSource by lazy {
-            listOf(networkSource, quoteSource, stakingBalanceSource).getResultStatusSource()
+            (listOf(networkSource, quoteSource, stakingBalanceSource) + contributionSources)
+                .getResultStatusSource()
         }
     }
 
@@ -166,6 +190,7 @@ data class CryptoCurrencyStatus(
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
+        override val contributions: List<BalanceContribution> = emptyList(),
     ) : Value {
 
         override val isError: Boolean = false
@@ -194,6 +219,7 @@ data class CryptoCurrencyStatus(
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
+        override val contributions: List<BalanceContribution> = emptyList(),
     ) : Value {
 
         override val isError: Boolean = false
@@ -216,6 +242,7 @@ data class CryptoCurrencyStatus(
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
+        override val contributions: List<BalanceContribution> = emptyList(),
     ) : Value {
 
         override val isError: Boolean = false
