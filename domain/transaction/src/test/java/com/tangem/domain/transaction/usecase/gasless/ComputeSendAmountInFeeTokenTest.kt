@@ -5,10 +5,15 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
 /**
@@ -133,6 +138,67 @@ class ComputeSendAmountInFeeTokenTest {
             result.leftOrNull() is GetFeeError.DataError,
             "Expected GetFeeError.DataError wrapping IllegalStateException",
         )
+    }
+
+    /**
+     * The estimate-path overload used by [EstimateFeeForGaslessTxUseCase] / [EstimateFeeForTokenUseCase]:
+     * no transaction exists yet, so the sent amount is supplied by the caller ([REDACTED_TASK_KEY]).
+     */
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FromSendingCurrency {
+
+        @Test
+        fun `GIVEN fee token equals sent token WHEN compute THEN returns the sent amount`() {
+            // Arrange
+            val sendingCurrency = token(feeContract)
+
+            // Act
+            val actual = computeSendAmountInFeeToken(sendingCurrency, feeContract, sentAmount)
+
+            // Assert
+            assertEquals(sentAmount, actual)
+        }
+
+        @Test
+        fun `GIVEN contracts differ only in case WHEN compute THEN returns the sent amount`() {
+            // Arrange
+            val sendingCurrency = token(feeContract.uppercase())
+
+            // Act
+            val actual = computeSendAmountInFeeToken(sendingCurrency, feeContract.lowercase(), sentAmount)
+
+            // Assert
+            assertEquals(sentAmount, actual)
+        }
+
+        @Test
+        fun `GIVEN a different fee token WHEN compute THEN returns ZERO`() {
+            // Arrange
+            val sendingCurrency = token(otherContract)
+
+            // Act
+            val actual = computeSendAmountInFeeToken(sendingCurrency, feeContract, sentAmount)
+
+            // Assert
+            assertEquals(BigDecimal.ZERO, actual)
+        }
+
+        @Test
+        fun `GIVEN a coin is being sent WHEN compute THEN returns ZERO`() {
+            // Arrange
+            val sendingCurrency = mockk<CryptoCurrency.Coin>()
+
+            // Act
+            val actual = computeSendAmountInFeeToken(sendingCurrency, feeContract, sentAmount)
+
+            // Assert
+            assertEquals(BigDecimal.ZERO, actual)
+        }
+
+        private fun token(contract: String): CryptoCurrency.Token = mockk {
+            every { contractAddress } returns contract
+        }
     }
 
     // (e) Compiled tx → raises (gasless token-fee requires uncompiled data)
