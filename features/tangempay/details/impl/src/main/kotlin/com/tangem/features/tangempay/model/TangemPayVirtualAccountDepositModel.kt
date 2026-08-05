@@ -8,16 +8,22 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
+import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayVirtualAccountDepositComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayVirtualAccountDepositUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -34,6 +40,7 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val createVirtualAccountOrderUseCase: CreateVirtualAccountOrderUseCase,
+    private val getOnrampFeesUseCase: GetOnrampFeesUseCase,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -42,16 +49,7 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
     val uiState: StateFlow<TangemPayVirtualAccountDepositUM>
         field = MutableStateFlow(
             TangemPayVirtualAccountDepositUM(
-                fees = persistentListOf(
-                    TangemPayVirtualAccountDepositUM.FeeRow(
-                        title = resourceReference(R.string.tangempay_bank_transfer_fee_ach),
-                        value = "$1",
-                    ),
-                    TangemPayVirtualAccountDepositUM.FeeRow(
-                        title = resourceReference(R.string.tangempay_bank_transfer_fee_fedwire),
-                        value = "$11",
-                    ),
-                ),
+                fees = TangemPayVirtualAccountDepositUM.FeesUM.Loading,
                 shouldShowTermsAndConditions = params.virtualAccountOnramp is VirtualAccountOnramp.Eligible,
                 isLoading = false,
                 onShowDetailsClick = ::onShowDetailsClick,
@@ -68,7 +66,48 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
             TangemPayAnalyticsEvents.VaConditionsPopupShowed()
         }
         analytics.send(event)
+
+        fetchOnrampFees()
     }
+
+    private fun fetchOnrampFees() {
+        modelScope.launch {
+            getOnrampFeesUseCase(userWalletId = params.userWalletId).fold(
+                ifLeft = {
+                    uiState.update { state -> state.copy(fees = feesError(isRetryLoading = false)) }
+                },
+                ifRight = { fees ->
+                    val rows = fees.map { fee ->
+                        val currency = getJavaCurrencyByCode(fee.currency)
+                        TangemPayVirtualAccountDepositUM.FeeRow(
+                            title = stringReference(fee.name),
+                            value = fee.amount.format {
+                                fiat(currency.currencyCode, currency.symbol).optionalDecimals()
+                            },
+                        )
+                    }
+                    uiState.update { state ->
+                        state.copy(
+                            fees = TangemPayVirtualAccountDepositUM.FeesUM.Content(rows.toImmutableList()),
+                        )
+                    }
+                },
+            )
+        }
+    }
+
+    private fun onRetryFeesClick() {
+        val fees = uiState.value.fees
+        if (fees !is TangemPayVirtualAccountDepositUM.FeesUM.Error || fees.isRetryLoading) return
+        uiState.update { it.copy(fees = feesError(isRetryLoading = true)) }
+        fetchOnrampFees()
+    }
+
+    private fun feesError(isRetryLoading: Boolean) = TangemPayVirtualAccountDepositUM.FeesUM.Error(
+        isRetryLoading = isRetryLoading,
+        onRetryClick = ::onRetryFeesClick,
+        onContactSupportClick = params.onContactSupport,
+    )
 
     fun onDismiss() {
         params.onDismiss()
