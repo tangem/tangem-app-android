@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceLoading
@@ -37,7 +38,7 @@ internal class TokenSelectorContentConverterTest {
     )
 
     @Test
-    fun `GIVEN single account with two tokens WHEN convert THEN one group without headers`() {
+    fun `GIVEN accounts mode disabled and single account WHEN convert THEN one group without headers`() {
         // Arrange
         val entries = listOf(entry(mainAccount, eth), entry(mainAccount, btc))
 
@@ -52,7 +53,20 @@ internal class TokenSelectorContentConverterTest {
     }
 
     @Test
-    fun `GIVEN two accounts WHEN convert THEN a group per account each with an account header`() {
+    fun `GIVEN accounts mode enabled and token only in main WHEN convert THEN group has an account header`() {
+        // Arrange
+        val entries = listOf(entry(mainAccount, eth))
+
+        // Act
+        val result = converter(isAccountsModeEnabled = true).convert(entries)
+
+        // Assert
+        val group = result.sections.single() as TokenSelectorSectionUM.TokenGroup
+        assertThat(group.accountHeader?.accountName).isEqualTo(AccountNameUM.DefaultMain.value)
+    }
+
+    @Test
+    fun `GIVEN accounts mode disabled and two accounts WHEN convert THEN a group per account with a header`() {
         // Arrange
         val entries = listOf(entry(mainAccount, eth), entry(secondAccount, btc))
 
@@ -92,9 +106,13 @@ internal class TokenSelectorContentConverterTest {
         assertThat(result.sections).isEmpty()
     }
 
-    private fun converter(onEntryClick: (TokenSelectorEntry) -> Unit = {}) = TokenSelectorContentConverter(
+    private fun converter(
+        isAccountsModeEnabled: Boolean = false,
+        onEntryClick: (TokenSelectorEntry) -> Unit = {},
+    ) = TokenSelectorContentConverter(
         appCurrency = AppCurrency.Default,
         isBalanceHidden = false,
+        isAccountsModeEnabled = isAccountsModeEnabled,
         resolveWalletDeviceIcon = { mockk<DeviceIconUM>() },
         onEntryClick = onEntryClick,
     )
