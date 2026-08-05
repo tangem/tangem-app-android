@@ -686,18 +686,20 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
+                flakySafely { onMainScreen { screenContainer.assertIsDisplayed() } }
             }
             step("Click on token with name: '$bitcoin'. Swap unavailable") {
-                onMainScreen { tokenWithTitleAndAddress(bitcoin).clickWithAssertion() }
+                onMainScreen { clickDisplayedToken(bitcoin) }
             }
             step("Assert 'Swap' button is dimmed") {
                 onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
+                flakySafely { onMainScreen { screenContainer.assertIsDisplayed() } }
             }
             step("Click on unknown custom token with name: '$salam'. Swap unavailable") {
-                onMainScreen { tokenWithTitleAndAddress(salam).clickWithAssertion() }
+                onMainScreen { clickDisplayedToken(salam) }
             }
             step("Assert 'Swap' button is dimmed") {
                 onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
