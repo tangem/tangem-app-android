@@ -43,6 +43,7 @@ internal class UserPortfolioSectionsTransformer(
         return UserPortfolioUM(
             content = content,
             isAddEnabled = availableData.isAvailableToAdd,
+            isAddedEverywhere = availableData.isAddedEverywhere,
         )
     }
 
