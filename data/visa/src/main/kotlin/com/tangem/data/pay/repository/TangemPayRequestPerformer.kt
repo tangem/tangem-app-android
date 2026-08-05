@@ -85,6 +85,14 @@ internal class TangemPayRequestPerformer @Inject constructor(
         return storedAddress
     }
 
+    /**
+     * Drops the cached wallet → address mapping. Must be called when a wallet is removed, otherwise the
+     * stale address outlives the stored one and keys requests for a wallet that no longer exists.
+     */
+    fun removeCachedCustomerWalletAddresses(userWalletIds: List<UserWalletId>) {
+        userWalletIds.forEach(customerWalletAddresses::remove)
+    }
+
     private suspend fun getAccessTokens(userWalletId: UserWalletId): Either<VisaApiError, TangemPayAuthTokens> {
         return tokensMutex.withLock {
             val walletAddress = getCustomerWalletAddress(userWalletId)
