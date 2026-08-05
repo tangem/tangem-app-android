@@ -8,12 +8,15 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.biometric.BiometricAuthError
+import com.tangem.core.biometric.BiometricAuthManager
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R as CoreUiR
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -80,6 +83,7 @@ import kotlinx.coroutines.launch
 @ModelScoped
 internal class TangemPayCardPageModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -91,7 +95,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
-    tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    private val biometricAuthManager: BiometricAuthManager,
+    private val settingsManager: SettingsManager,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
@@ -101,6 +106,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val addFundsJobHolder = JobHolder()
     private val frozenStateJobHolder = JobHolder()
     private val reloadLimitsJobHolder = JobHolder()
+    private val viewPinAuthJobHolder = JobHolder()
 
     private val currentStatus = MutableStateFlow(params.initialStatus)
     private val userWalletId = currentStatus.value.userWalletId
@@ -356,15 +362,73 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickChangePIN(isPinSet: Boolean) {
         val card = selectedCard() ?: return
-        if (!isPinSet) {
-            router.push(TangemPayCardDetailsInnerRoute.ChangePIN(card))
-        } else {
-            bottomSheetNavigation.activate(
-                TangemPayCardNavigation.ViewPinCode(
-                    userWalletId = userWalletId,
-                    cardId = card.id,
-                ),
-            )
+        when {
+            !isPinSet -> router.push(TangemPayCardDetailsInnerRoute.ChangePIN(card))
+            tangemPayFeatureToggles.isPinBiometryGateEnabled -> {
+                if (viewPinAuthJobHolder.isActive) return
+                modelScope.launch {
+                    val result = biometricAuthManager.authenticate(
+                        BiometricAuthManager.Config(
+                            title = resourceReference(R.string.tangempay_card_details_view_pin_code_title),
+                            subtitle = null,
+                        ),
+                    )
+                    when (result) {
+                        is BiometricAuthManager.Result.Success -> showPinCode(cardId = card.id)
+                        is BiometricAuthManager.Result.Cancelled -> Unit
+                        is BiometricAuthManager.Result.Failure -> onViewPinAuthFailure(result)
+                    }
+                }.saveIn(viewPinAuthJobHolder)
+            }
+            else -> showPinCode(cardId = card.id)
+        }
+    }
+
+    private fun showPinCode(cardId: String) {
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.ViewPinCode(
+                userWalletId = userWalletId,
+                cardId = cardId,
+            ),
+        )
+    }
+
+    private fun onViewPinAuthFailure(failure: BiometricAuthManager.Result.Failure) {
+        when (failure.error) {
+            BiometricAuthError.NoDeviceCredential -> {
+                uiMessageSender.send(
+                    message = TangemPayMessagesFactory.createProtectionNotSetMessage(
+                        onOpenSettingsClick = settingsManager::openScreenLockSettings,
+                    ),
+                )
+            }
+            BiometricAuthError.NoBiometricEnrolled,
+            BiometricAuthError.HardwareUnavailable,
+            BiometricAuthError.NoForegroundActivity,
+            BiometricAuthError.Unknown,
+            -> {
+                uiMessageSender.send(
+                    message = SnackbarMessage(resourceReference(CoreUiR.string.common_unknown_error)),
+                )
+            }
+            BiometricAuthError.LockedOutPermanently -> {
+                uiMessageSender.send(
+                    message = SnackbarMessage(
+                        resourceReference(CoreUiR.string.biometric_lockout_permanent_warning_title),
+                    ),
+                )
+            }
+            BiometricAuthError.SecurityUpdateRequired -> {
+                uiMessageSender.send(
+                    message = SnackbarMessage(
+                        resourceReference(CoreUiR.string.alert_authentication_error_message),
+                    ),
+                )
+            }
+            BiometricAuthError.LockedOut,
+            BiometricAuthError.SystemCancelled,
+            BiometricAuthError.Timeout,
+            -> Unit
         }
     }
 
