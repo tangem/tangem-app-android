@@ -156,10 +156,6 @@ object TangemButton {
      * - [Success] — success-colored background for positive confirmations.
      * - [Outline] — transparent background with a secondary border.
      * - [Ghost] — transparent background, no border. Lowest visual weight.
-     * - [InfoSubtle] — subtle info-tinted background with blue accent content; the affirmative
-     *   side of a paired choice (e.g. a prediction-market "Yes" outcome).
-     * - [ErrorSubtle] — subtle error-tinted background with red accent content; the negative
-     *   side of a paired choice (e.g. a prediction-market "No" outcome).
      */
     enum class Variant {
         Brand,
@@ -169,8 +165,6 @@ object TangemButton {
         Success,
         Outline,
         Ghost,
-        InfoSubtle,
-        ErrorSubtle,
     }
 
     /**
