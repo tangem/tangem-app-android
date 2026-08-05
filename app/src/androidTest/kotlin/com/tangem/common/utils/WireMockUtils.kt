@@ -32,7 +32,7 @@ fun setWireMockScenarioState(
     TangemLogger.i("=== WireMock Scenario Set ===")
     TangemLogger.i("Setting scenario '$scenarioName' to state: $state")
     val client = OkHttpClient()
-    val json = """{"state": "$state"}"""
+    val json = JSONObject().put("state", state).toString()
     val mediaType = "application/json".toMediaType()
 
     val request = Request.Builder()
@@ -205,18 +205,37 @@ fun resetWireMockScenarios(baseUrl: String = getWireMockBaseUrl()): Boolean {
 }
 
 /**
- * Method to reset a specific WireMock scenario to its initial state
+ * Method to reset a specific WireMock scenario to its initial state.
+ *
+ * Resets via an empty-body `PUT` rather than setting the state to "Started": `possibleStates` holds only
+ * the states a scenario's mappings name, so for the ones that never name "Started" (`tangem_pay_balance_update`,
+ * `kaspa_utxo`, …) an explicit state change is rejected with HTTP 422 and the scenario stays dirty for the
+ * next test on this WireMock instance.
+ *
  * @param scenarioName Name of the scenario to reset
- * @param initialState The target state to reset the scenario to (must be one of the scenario's possibleStates)
  * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  * @return true if reset was successful, false otherwise
  */
-fun resetWireMockScenarioState(
-    scenarioName: String,
-    initialState: String = "Started",
-    baseUrl: String = getWireMockBaseUrl()
-): Boolean {
+fun resetWireMockScenarioState(scenarioName: String, baseUrl: String = getWireMockBaseUrl()): Boolean {
     TangemLogger.i("=== WireMock Scenario Reset ===")
-    TangemLogger.i("Resetting scenario '$scenarioName' to initial state: $initialState")
-    return setWireMockScenarioState(scenarioName, initialState, baseUrl)
+    TangemLogger.i("Resetting scenario '$scenarioName' to its initial state")
+
+    val client = OkHttpClient()
+    val request = Request.Builder()
+        .url("$baseUrl/__admin/scenarios/$scenarioName/state")
+        .put("".toRequestBody())
+        .build()
+
+    return try {
+        client.newCall(request).execute().use { response ->
+            TangemLogger.d("WireMock scenario reset response: ${response.code} - ${response.message}")
+            if (!response.isSuccessful) {
+                TangemLogger.e("Failed to reset scenario '$scenarioName': ${response.code}")
+            }
+            response.isSuccessful
+        }
+    } catch (e: IOException) {
+        TangemLogger.e("WireMock scenario reset error", e)
+        false
+    }
 }
