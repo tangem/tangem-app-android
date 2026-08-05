@@ -69,6 +69,30 @@ fun BaseTestCase.openTangemPayCardPage() {
     }
 }
 
+/** From the already-open Payment account screen, taps the card to reach the card management page. */
+fun BaseTestCase.openTangemPayCardPageFromPaymentAccount() {
+    step("Assert payment account balance is displayed") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+    step("Click on 'Card' button") {
+        onTangemPayMainScreen { cardButton.clickWithAssertion() }
+    }
+    step("Assert card page 'More' button is displayed") {
+        awaitSuccess { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
+    }
+}
+
+/** From the card page, taps the 'Add to wallet' banner and waits for the Google Pay guide. */
+fun BaseTestCase.openTangemPayAddToWalletGuide() {
+    step("Click on 'Add to wallet' banner") {
+        awaitSuccess { onTangemPayCardPageScreen { addToWalletBanner.assertIsDisplayed() } }
+        onTangemPayCardPageScreen { addToWalletBanner.performClick() }
+    }
+    step("Assert Add to wallet guide is displayed") {
+        awaitSuccess { onTangemPayAddToWalletGuideScreen { container.assertIsDisplayed() } }
+    }
+}
+
 /** From the card page, taps the 'Show details' row and waits for the revealed card number. */
 fun BaseTestCase.revealCardDetailsFromCardPage() {
     step("Click on 'Show details' row") {
