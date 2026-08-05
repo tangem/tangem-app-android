@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.util.BankCredentialsConverter
 import com.tangem.data.pay.util.CustomerInfoConverter
+import com.tangem.data.pay.util.OnrampFeeConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.DeeplinkValidityRequest
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
@@ -23,6 +24,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWallet
@@ -123,6 +125,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }.flatMap { response ->
             val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
             BankCredentialsConverter.convert(result).right()
+        }
+    }
+
+    override suspend fun getOnrampFees(userWalletId: UserWalletId): Either<VisaApiError, List<TangemPayOnrampFee>> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getFees(authHeader = authHeader, groups = "ONRAMP")
+        }.flatMap { response ->
+            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
+            OnrampFeeConverter.convertList(result).right()
         }
     }
 
