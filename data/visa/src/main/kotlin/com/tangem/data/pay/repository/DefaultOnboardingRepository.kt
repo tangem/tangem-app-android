@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
+import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.util.BankCredentialsConverter
 import com.tangem.data.pay.util.CustomerInfoConverter
 import com.tangem.data.pay.util.OnrampFeeConverter
@@ -38,7 +39,6 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
@@ -55,10 +55,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val paymentAccountStatusStore: PaymentAccountStatusesStore,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
+    private val customerInfoStore: TangemPayCustomerInfoStore,
 ) : OnboardingRepository {
-
-    // Save data for a session
-    private val lastFetchedCustomerInfoMap = ConcurrentHashMap<UserWalletId, CustomerInfo>()
 
     override suspend fun validateDeeplink(link: String): Either<VisaApiError, Boolean> {
         return requestHelper.performWithStaticToken {
@@ -156,7 +154,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     }
 
     override fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo? {
-        return lastFetchedCustomerInfoMap[userWalletId]
+        return customerInfoStore.get().value[userWalletId]
     }
 
     override suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String> =
@@ -246,7 +244,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             cardFrozenStateStore.store(key = instance.cardId, value = instance.frozenState)
         }
 
-        return customerInfo.also { lastFetchedCustomerInfoMap[userWalletId] = it }
+        return customerInfo.also { customerInfoStore.update { cache -> cache + (userWalletId to it) } }
     }
 
     private fun sendKycAnalytics(kycStatus: KycStatus) {
