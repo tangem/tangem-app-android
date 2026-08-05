@@ -297,24 +297,6 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             disabledAlpha = 0.4f,
             defaultBorderColor = TangemTheme.colors3.border.secondary,
         )
-        TangemButton.Variant.InfoSubtle -> ColorTokens(
-            backgroundColor = TangemTheme.colors3.bg.status.infoSubtle,
-            textColor = TangemTheme.colors3.text.accent.blue,
-            iconTint = TangemTheme.colors3.icon.accent.blue,
-            disabledBackgroundColor = TangemTheme.colors3.bg.disabled,
-            disabledTextColor = TangemTheme.colors3.text.tertiary,
-            disabledIconTint = TangemTheme.colors3.icon.tertiary,
-            focusRingColor = TangemTheme.colors3.interaction.focusRing.default,
-        )
-        TangemButton.Variant.ErrorSubtle -> ColorTokens(
-            backgroundColor = TangemTheme.colors3.bg.status.errorSubtle,
-            textColor = TangemTheme.colors3.text.accent.red,
-            iconTint = TangemTheme.colors3.icon.accent.red,
-            disabledBackgroundColor = TangemTheme.colors3.bg.disabled,
-            disabledTextColor = TangemTheme.colors3.text.tertiary,
-            disabledIconTint = TangemTheme.colors3.icon.tertiary,
-            focusRingColor = TangemTheme.colors3.interaction.focusRing.default,
-        )
         TangemButton.Variant.Ghost -> ColorTokens(
             backgroundColor = Color.Transparent,
             textColor = TangemTheme.colors3.text.primary,
