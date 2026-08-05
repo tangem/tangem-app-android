@@ -1,9 +1,11 @@
 package com.tangem.screens.tangempay
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -110,6 +112,25 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
 
     val addToWalletBanner: KNode = child {
         hasTestTag(TangemPayTestTags.ADD_TO_WALLET_BANNER)
+        useUnmergedTree = true
+    }
+
+    // The banner is a shared TangemMessage, so its inner NOTIFICATION_* tags need the banner as ancestor.
+    val addToWalletBannerTitle: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.ADD_TO_WALLET_BANNER))
+        hasTestTag(NotificationTestTags.TITLE)
+        useUnmergedTree = true
+    }
+
+    val addToWalletBannerSubtitle: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.ADD_TO_WALLET_BANNER))
+        hasTestTag(NotificationTestTags.MESSAGE)
+        useUnmergedTree = true
+    }
+
+    val addToWalletBannerCloseButton: KNode = child {
+        hasAnyAncestor(withTestTag(TangemPayTestTags.ADD_TO_WALLET_BANNER))
+        hasTestTag(NotificationTestTags.CLOSE_BUTTON)
         useUnmergedTree = true
     }
 
