@@ -37,6 +37,9 @@ class SwapRatingTest : BaseTestCase() {
     private val changellyStatusState = "Changelly"
     private val nativeBalanceScenario = "polygon_coin_balance"
     private val zeroBalanceState = "ZeroBalance"
+    // Stories auto-advance forever, which keeps Compose non-idle and flakes everything after them.
+    private val storiesScenario = "stories_first_time_swap_v2"
+    private val storiesErrorState = "Error"
     private val rating = 5
     private val feedbackComment = "Great swap experience"
 
@@ -47,7 +50,9 @@ class SwapRatingTest : BaseTestCase() {
         val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
 
         setupHooks(
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
             additionalAfterSection = {
+                resetWireMockScenarioState(storiesScenario)
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
                 resetWireMockScenarioState(assetsScenarioName)
@@ -77,6 +82,7 @@ class SwapRatingTest : BaseTestCase() {
                     receiveTokenName = receiveTokenName,
                     amount = inputAmount,
                     seedPhrase = SVS_SEED_PHRASE_12,
+                    storiesExist = false,
                 )
             }
             step("Assert the recommended provider block is displayed") {
