@@ -12,6 +12,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEn
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCountryEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCurrencyEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.TokenInfoEntity
 
 @Database(
@@ -22,6 +23,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.TokenInfoEntity
         ExpressOnrampEntity::class,
         ExpressSyncStateEntity::class,
         OnrampCountryEntity::class,
+        OnrampCurrencyEntity::class,
         TokenInfoEntity::class,
         HistoryIndexEntity::class,
     ],

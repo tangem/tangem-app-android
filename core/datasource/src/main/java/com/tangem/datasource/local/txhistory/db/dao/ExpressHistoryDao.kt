@@ -9,6 +9,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEn
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCountryEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCurrencyEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -26,6 +27,9 @@ interface ExpressHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertCountries(items: List<OnrampCountryEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertCurrencies(items: List<OnrampCurrencyEntity>)
+
     /**
      * All persisted providers keyed by [ExpressProviderEntity.id]
      */
@@ -35,6 +39,10 @@ interface ExpressHistoryDao {
     /** All persisted onramp countries keyed by [OnrampCountryEntity.code]. */
     @Query("SELECT * FROM onramp_country")
     fun getCountriesByCode(): Flow<Map<@MapColumn(columnName = "code") String, OnrampCountryEntity>>
+
+    /** All persisted onramp fiat currencies keyed by [OnrampCurrencyEntity.code]. */
+    @Query("SELECT * FROM onramp_currency")
+    fun getCurrenciesByCode(): Flow<Map<@MapColumn(columnName = "code") String, OnrampCurrencyEntity>>
 
     /**
      * Outgoing swaps: the viewed currency is the swap's `from` side, so the row is looked up by its `from_address`.
