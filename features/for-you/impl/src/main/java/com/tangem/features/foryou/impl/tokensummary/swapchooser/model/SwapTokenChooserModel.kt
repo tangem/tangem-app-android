@@ -6,6 +6,7 @@ import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -17,11 +18,13 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class SwapTokenChooserModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
 ) : Model() {
@@ -32,6 +35,7 @@ internal class SwapTokenChooserModel @Inject constructor(
         flow = params.holdings,
         flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
+        flow4 = isAccountsModeEnabledUseCase(),
         transform = ::buildContent,
     )
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
@@ -49,12 +53,14 @@ internal class SwapTokenChooserModel @Inject constructor(
         holdings: List<SwapHolding>,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
+        isAccountsModeEnabled: Boolean,
     ): TokenSelectorContentUM? {
         if (holdings.isEmpty()) return null
 
         return TokenSelectorContentConverter(
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
+            isAccountsModeEnabled = isAccountsModeEnabled,
             resolveWalletDeviceIcon = { walletIconUMConverter.convert(getWalletIconUseCase(it)) },
             onEntryClick = { entry ->
                 holdings.firstOrNull { it.entry == entry }?.let(params.callbacks::onHoldingSelected)
