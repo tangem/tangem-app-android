@@ -10,10 +10,11 @@ import java.math.BigDecimal
  * Staking balance facade covering StakeKit and P2PEthPool balances
  */
 @Serializable
-sealed interface StakingBalance {
+sealed interface StakingBalance : BalanceContribution {
 
+    override val kind: String get() = CONTRIBUTION_KIND
     val stakingId: StakingID
-    val source: StatusSource
+    override val source: StatusSource
 
     val totalStaked: BigDecimal
     val totalRewards: BigDecimal?
@@ -25,7 +26,7 @@ sealed interface StakingBalance {
      * [BalanceContribution] — see [totalDeltaCryptoAmount].
      */
     @Serializable
-    sealed interface Data : StakingBalance, BalanceContribution {
+    sealed interface Data : StakingBalance {
 
         /** Provider-agnostic list of balance entries for UI display */
         val entries: List<StakingBalanceEntry>
@@ -40,8 +41,6 @@ sealed interface StakingBalance {
          * and the decision must match the network of the currency the balance is folded into.
          */
         val isStakedIncludedInNetworkBalance: Boolean
-
-        override val kind: String get() = CONTRIBUTION_KIND
 
         @Serializable
         data class StakeKit(
@@ -116,6 +115,7 @@ sealed interface StakingBalance {
         override val totalRewards: BigDecimal? get() = null
         override val unstakingAmount: BigDecimal? get() = null
         override val withdrawableAmount: BigDecimal? get() = null
+        override fun totalDeltaCryptoAmount(): BigDecimal = BigDecimal.ZERO
     }
 
     @Serializable
@@ -125,6 +125,7 @@ sealed interface StakingBalance {
         override val totalRewards: BigDecimal? get() = null
         override val unstakingAmount: BigDecimal? get() = null
         override val withdrawableAmount: BigDecimal? get() = null
+        override fun totalDeltaCryptoAmount(): BigDecimal = BigDecimal.ZERO
     }
 
     fun copySealed(source: StatusSource): StakingBalance {
