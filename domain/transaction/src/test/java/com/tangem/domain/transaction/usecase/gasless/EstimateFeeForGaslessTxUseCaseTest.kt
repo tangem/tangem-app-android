@@ -137,6 +137,37 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         }
 
     @Test
+    fun `GIVEN the yield module balance is unreadable WHEN estimate THEN falls back to the native fee`() = runTest {
+        // Arrange — the resolver refuses to plan a token fee it cannot verify; the block must not disappear.
+        val yieldStatus = activeYieldStatus(effectiveProtocolBalance = SWAP_AMOUNT + BigDecimal("5"))
+        givenAccountStatusList(
+            nativeBalance = BigDecimal.ZERO,
+            tokenBalance = SWAP_AMOUNT + BigDecimal("5"),
+            yieldSupplyStatus = yieldStatus,
+        )
+        coEvery { walletManager.getGasLimit(any(), FEE_RECEIVER, any()) } returns insufficientFundsFailure()
+        coEvery {
+            resolveGaslessFeePlanUseCase(any(), any(), any(), any(), any())
+        } returns Either.Left(GetFeeError.GaslessError.YieldBalanceUnavailable)
+
+        // Act
+        val result = createUseCase(isYieldWithdrawEnabled = true).invoke(
+            userWallet = userWallet,
+            amount = SWAP_AMOUNT,
+            sendingTokenCurrencyStatus = tokenStatus(
+                balance = SWAP_AMOUNT + BigDecimal("5"),
+                yieldSupplyStatus = yieldStatus,
+            ),
+        )
+
+        // Assert
+        val feeExtended = result.getOrNull()
+        assertThat(feeExtended).isNotNull()
+        assertThat(feeExtended!!.feeTokenId).isEqualTo(nativeCoin.id)
+        assertThat(feeExtended.gaslessFeePlan).isNull()
+    }
+
+    @Test
     fun `GIVEN yield withdraw toggle is off WHEN estimate THEN falls back to the native fee`() = runTest {
         // Arrange
         val yieldStatus = activeYieldStatus(effectiveProtocolBalance = SWAP_AMOUNT + BigDecimal("5"))
