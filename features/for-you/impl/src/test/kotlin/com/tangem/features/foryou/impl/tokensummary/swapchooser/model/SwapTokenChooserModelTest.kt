@@ -8,6 +8,7 @@ import com.tangem.common.ui.markets.tokenselector.TokenSelectorEntry
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorSectionUM
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -55,6 +56,7 @@ internal class SwapTokenChooserModelTest {
 
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk()
 
     // Hot maps to a plain DeviceIconUM.Mobile, so wallet headers render without touching Android colour parsing.
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk {
@@ -68,6 +70,7 @@ internal class SwapTokenChooserModelTest {
 
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(AppCurrency.Default)
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+        every { isAccountsModeEnabledUseCase.invoke() } returns flowOf(false)
 
         holdings.value = listOf(holding(WALLET_ID), holding(OTHER_WALLET_ID))
     }
@@ -183,6 +186,7 @@ internal class SwapTokenChooserModelTest {
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
+            isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = WalletIconUMConverter(),
         )
