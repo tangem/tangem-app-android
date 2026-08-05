@@ -73,15 +73,15 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
             }
         }
 
-        if (state.bottomActionText != null) {
-            SpacerH16()
+        SpacerH16()
 
-            SecondaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = state.bottomActionText.resolveReference(),
-                onClick = state.onBottomActionClick,
-            )
-        }
+        SecondaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = state.bottomActionText.resolveReference(),
+            onClick = state.onBottomActionClick,
+        )
+
+        SpacerH16()
     }
 }
 
