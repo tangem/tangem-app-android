@@ -97,8 +97,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * wallet decoration. [isFaded] renders the failed amount (struck through, recolored to tertiary); an in-flight leg is
      * not faded — it carries a `~` estimate sign instead.
      *
-     * [currencyIcon] is `null` when the leg has no icon to show — e.g. the onramp fiat side when its paid-from country
-     * is unknown; the trailing icon slot is then left empty. When the country is known, the fiat leg shows its flag.
+     * [currencyIcon] is `null` when the leg has no icon to show — e.g. the onramp fiat side when its paid fiat currency
+     * is unresolved; the trailing icon slot is then left empty. When resolved, the fiat leg shows its currency icon.
      */
     data class AssetUM(
         val label: TextReference,
