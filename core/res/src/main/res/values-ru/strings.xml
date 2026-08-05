@@ -751,7 +751,7 @@
   <string name="force_update_banner_message">Обновите приложение Tangem, чтобы открыть новые функции и получить последние улучшения.</string>
   <string name="force_update_banner_title">Доступна новая версия</string>
   <string name="force_update_brick_description">Tangem не может работать с этой версией ОС. Ваши средства в безопасности, а пользоваться кошельком можно на другом поддерживаемом устройстве.</string>
-  <string name="force_update_brick_title">Обновление недоступно</string>
+  <string name="force_update_brick_title">Устройство более не поддерживается</string>
   <string name="force_update_button">Обновить</string>
   <string name="force_update_os_description">Ваша версия ОС устарела. Tangem пока продолжит работать, но для будущих обновлений приложения систему потребуется обновить.</string>
   <string name="force_update_os_title">Обновите систему</string>
