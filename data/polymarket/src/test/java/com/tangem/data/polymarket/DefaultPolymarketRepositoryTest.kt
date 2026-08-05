@@ -19,6 +19,10 @@ import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketCategoryDto
+import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
+import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
@@ -28,6 +32,8 @@ import com.tangem.datasource.api.polymarket.relayer.models.PolymarketNonceRespon
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -38,6 +44,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
@@ -77,6 +84,71 @@ internal class DefaultPolymarketRepositoryTest {
         l2HeaderBuilder = l2HeaderBuilder,
         dispatchers = dispatchers,
     )
+
+    @Test
+    fun `GIVEN categories response WHEN getCategories THEN maps to domain categories`() = runTest {
+        // Arrange
+        coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
+            PolymarketCategoriesResponse(
+                categories = listOf(
+                    PolymarketCategoryDto(id = 1, label = "Trending", icon = "https://img/trending.png"),
+                    PolymarketCategoryDto(id = 2, label = "Sport", icon = null),
+                ),
+            ),
+        )
+
+        // Act
+        val result = repository.getCategories()
+
+        // Assert
+        assertThat(result).isEqualTo(
+            listOf(
+                PolymarketCategory(id = 1, label = "Trending", iconUrl = "https://img/trending.png"),
+                PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
+            ).right(),
+        )
+    }
+
+    @Test
+    fun `GIVEN network exception WHEN getCategories THEN returns left no internet`() = runTest {
+        // Arrange
+        coEvery { api.getCategories(locale = null) } returns networkError()
+
+        // Act
+        val result = repository.getCategories()
+
+        // Assert
+        assertThat(result).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+    }
+
+    @Test
+    fun `GIVEN events response WHEN getEvents THEN converts events of the requested category`() = runTest {
+        // Arrange
+        val dto: PolymarketEventDto = mockk()
+        val event: PolymarketEvent = mockk()
+        coEvery { api.getEvents(category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
+            PolymarketEventsResponse(events = listOf(dto), cursor = null, hasNext = false),
+        )
+        every { eventConverter.convert(dto) } returns event
+
+        // Act
+        val result = repository.getEvents(category = 5)
+
+        // Assert
+        assertThat(result).isEqualTo(listOf(event).right())
+    }
+
+    @Test
+    fun `GIVEN network exception WHEN getEvents THEN returns left no internet`() = runTest {
+        // Arrange
+        coEvery { api.getEvents(category = null, limit = 20, cursor = null) } returns networkError()
+
+        // Act
+        val result = repository.getEvents(category = null)
+
+        // Assert
+        assertThat(result).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+    }
 
     @Test
     fun `GIVEN stored wallet WHEN getWalletStatus THEN maps to domain state`() = runTest {
