@@ -132,10 +132,6 @@ internal class DefaultOnrampRepository(
         )
             .getOrThrow()
 
-        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-            expressHistoryDao.upsertCountries(response.map { it.toEntity() })
-        }
-
         val result = response.map(countryConverter::convert)
         countriesStore.store(COUNTRIES_KEY, result)
 
