@@ -383,6 +383,11 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetOnrampFeesUseCase(onboardingRepository: OnboardingRepository): GetOnrampFeesUseCase {
+            return GetOnrampFeesUseCase(onboardingRepository = onboardingRepository)
+        }
+
+        @Provides
         fun provideCancelTangemPayOrderUseCase(
             customerOrderRepository: CustomerOrderRepository,
             issueCardRepository: TangemPayIssueCardRepository,
