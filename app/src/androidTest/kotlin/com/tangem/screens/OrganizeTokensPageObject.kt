@@ -73,10 +73,11 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
         useUnmergedTree = true
     }
 
+    // The row appends the currency symbol to the name ("Bitcoin BTC"), so an exact match never hits.
     fun tokenWithTitle(tokenTitle: String): KNode {
         return lazyList.child {
             hasTestTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM)
-            hasAnyDescendant(withText(tokenTitle))
+            hasAnyDescendant(withText(text = tokenTitle, substring = true))
             useUnmergedTree = true
         }
     }
@@ -84,7 +85,7 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
         return lazyList.child {
             hasTestTag(OrganizeTokensScreenTestTags.GROUP_TITLE_ITEM)
-            hasAnyDescendant(withText(tokenNetwork))
+            hasAnyDescendant(withText(text = tokenNetwork, substring = true))
             useUnmergedTree = true
         }
     }
@@ -93,7 +94,7 @@ class OrganizeTokensPageObject(private val semanticsProvider: SemanticsNodeInter
         return lazyList.child {
             hasLazyListItemPosition(index)
             hasTestTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM)
-            hasAnyDescendant(withText(tokenTitle))
+            hasAnyDescendant(withText(text = tokenTitle, substring = true))
             useUnmergedTree = true
         }
     }
