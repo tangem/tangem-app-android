@@ -95,6 +95,8 @@ class WireMockRedirectInterceptor : Interceptor {
             "solana-gateway.moralis.io",
             "api.etherscan.io",
             "eth-blockbook.nownodes.io",
+            // Swap ratings: real survey responses are keyed by the mocked tx id and outlive the run.
+            "eu-api.surveysparrow.com",
         )
 
         /**
