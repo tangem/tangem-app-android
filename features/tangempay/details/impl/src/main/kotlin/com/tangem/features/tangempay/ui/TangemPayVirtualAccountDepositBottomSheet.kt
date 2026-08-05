@@ -1,14 +1,10 @@
 package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,14 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withLink
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -33,11 +26,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.*
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -45,7 +34,8 @@ import com.tangem.core.ui.res.generated.icons.ic_info_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_usd_32
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayVirtualAccountDepositUM
-import kotlinx.collections.immutable.ImmutableList
+import com.tangem.features.tangempay.ui.components.TangemPayErrorAction
+import com.tangem.features.tangempay.ui.components.TangemPayErrorContent
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.R as CoreUiR
 
@@ -66,7 +56,38 @@ internal fun TangemPayVirtualAccountDepositBottomSheet(state: TangemPayVirtualAc
                 endContent = { TangemButton.Close(onClick = state.onDismiss) },
             )
         },
-        content = { _ -> DepositContent(state) },
+        content = { _ ->
+            when (val fees = state.fees) {
+                is TangemPayVirtualAccountDepositUM.FeesUM.Error -> FeesErrorContent(fees)
+                TangemPayVirtualAccountDepositUM.FeesUM.Loading,
+                is TangemPayVirtualAccountDepositUM.FeesUM.Content,
+                -> DepositContent(state)
+            }
+        },
+    )
+}
+
+@Composable
+private fun FeesErrorContent(fees: TangemPayVirtualAccountDepositUM.FeesUM.Error, modifier: Modifier = Modifier) {
+    TangemPayErrorContent(
+        title = resourceReference(R.string.common_something_went_wrong),
+        subtitle = resourceReference(R.string.tangempay_va_banking_details_error_description),
+        actions = persistentListOf(
+            TangemPayErrorAction(
+                text = resourceReference(R.string.common_contact_support),
+                variant = TangemButton.Variant.Secondary,
+                onClick = fees.onContactSupportClick,
+                isEnabled = !fees.isRetryLoading,
+            ),
+            TangemPayErrorAction(
+                text = resourceReference(R.string.common_retry),
+                variant = TangemButton.Variant.Primary,
+                onClick = fees.onRetryClick,
+                isLoading = fees.isRetryLoading,
+                isEnabled = !fees.isRetryLoading,
+            ),
+        ),
+        modifier = modifier,
     )
 }
 
@@ -119,7 +140,9 @@ private fun DepositContent(state: TangemPayVirtualAccountDepositUM, modifier: Mo
 }
 
 @Composable
-private fun FeesBlock(fees: ImmutableList<TangemPayVirtualAccountDepositUM.FeeRow>, modifier: Modifier = Modifier) {
+private fun FeesBlock(fees: TangemPayVirtualAccountDepositUM.FeesUM, modifier: Modifier = Modifier) {
+    if (fees is TangemPayVirtualAccountDepositUM.FeesUM.Content && fees.rows.isEmpty()) return
+
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             modifier = Modifier.padding(
@@ -130,16 +153,58 @@ private fun FeesBlock(fees: ImmutableList<TangemPayVirtualAccountDepositUM.FeeRo
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
         )
-        fees.forEachIndexed { index, fee ->
-            TangemRow(
-                contentLead = TangemRowContentLead.Equal,
-                verticalAlignment = TangemRowVerticalAlignment.Center,
-                divider = index != fees.lastIndex,
-                titleSlot = { TangemRowText(text = fee.title, role = TangemRowTextRole.Title) },
-                valueSlot = { TangemRowText(text = stringReference(fee.value), role = TangemRowTextRole.Value) },
-            )
+        when (fees) {
+            TangemPayVirtualAccountDepositUM.FeesUM.Loading -> {
+                val placeholderRows = 2
+                repeat(placeholderRows) { index ->
+                    FeeRowPlaceholder(divider = index != placeholderRows - 1)
+                }
+            }
+            is TangemPayVirtualAccountDepositUM.FeesUM.Content -> {
+                fees.rows.forEachIndexed { index, fee ->
+                    TangemRow(
+                        contentLead = TangemRowContentLead.Equal,
+                        verticalAlignment = TangemRowVerticalAlignment.Center,
+                        divider = index != fees.rows.lastIndex,
+                        titleSlot = {
+                            TangemRowText(
+                                text = fee.title,
+                                role = TangemRowTextRole.Title,
+                            )
+                        },
+                        valueSlot = {
+                            TangemRowText(
+                                text = stringReference(fee.value),
+                                role = TangemRowTextRole.Value,
+                            )
+                        },
+                    )
+                }
+            }
+            is TangemPayVirtualAccountDepositUM.FeesUM.Error -> Unit
         }
     }
+}
+
+@Composable
+private fun FeeRowPlaceholder(divider: Boolean, modifier: Modifier = Modifier) {
+    @Composable
+    fun Shimmer(text: String) {
+        TextShimmer(
+            style = TangemTheme.typography3.body.medium,
+            text = text,
+            textSizeHeight = true,
+            radius = 999.dp,
+        )
+    }
+    TangemRow(
+        modifier = modifier,
+        contentLead = TangemRowContentLead.Equal,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        divider = divider,
+        titleSlot = { Shimmer("Commission Name") },
+        valueSlot = { Shimmer("Value") },
+    )
 }
 
 @Composable
@@ -289,17 +354,22 @@ private fun SubtitleText(text: TextReference, modifier: Modifier = Modifier) {
     )
 }
 
-private fun previewState(shouldShowTermsAndConditions: Boolean) = TangemPayVirtualAccountDepositUM(
-    fees = persistentListOf(
-        TangemPayVirtualAccountDepositUM.FeeRow(
-            title = resourceReference(R.string.tangempay_bank_transfer_fee_ach),
-            value = "$1",
-        ),
-        TangemPayVirtualAccountDepositUM.FeeRow(
-            title = resourceReference(R.string.tangempay_bank_transfer_fee_fedwire),
-            value = "$11",
+private fun previewState(
+    shouldShowTermsAndConditions: Boolean,
+    fees: TangemPayVirtualAccountDepositUM.FeesUM = TangemPayVirtualAccountDepositUM.FeesUM.Content(
+        rows = persistentListOf(
+            TangemPayVirtualAccountDepositUM.FeeRow(
+                title = resourceReference(R.string.tangempay_bank_transfer_fee_ach),
+                value = "$1",
+            ),
+            TangemPayVirtualAccountDepositUM.FeeRow(
+                title = resourceReference(R.string.tangempay_bank_transfer_fee_fedwire),
+                value = "$11",
+            ),
         ),
     ),
+) = TangemPayVirtualAccountDepositUM(
+    fees = fees,
     shouldShowTermsAndConditions = shouldShowTermsAndConditions,
     isLoading = false,
     onShowDetailsClick = {},
@@ -327,6 +397,21 @@ private fun DepositAvailablePreview() {
     TangemThemePreviewRedesign {
         DepositContent(
             state = previewState(shouldShowTermsAndConditions = false),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun DepositFeesLoadingPreview() {
+    TangemThemePreviewRedesign {
+        DepositContent(
+            state = previewState(
+                shouldShowTermsAndConditions = false,
+                fees = TangemPayVirtualAccountDepositUM.FeesUM.Loading,
+            ),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
