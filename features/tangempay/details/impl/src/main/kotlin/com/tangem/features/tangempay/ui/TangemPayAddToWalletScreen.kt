@@ -128,7 +128,9 @@ private fun AddToWalletSteps(steps: ImmutableList<TangemPayAddToWalletStepItemUM
 @Composable
 private fun StepItem(stepNumber: Int, title: TextReference, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(vertical = 2.dp),
+        modifier = modifier
+            .padding(vertical = 2.dp)
+            .testTag(TangemPayTestTags.ADD_TO_WALLET_STEP),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
