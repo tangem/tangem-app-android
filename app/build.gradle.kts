@@ -195,6 +195,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.error.ext)
     implementation(projects.core.security)
+    implementation(projects.core.biometricAuth.impl)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
