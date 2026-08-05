@@ -97,10 +97,10 @@ internal class TokenActionsUiBuilder @Inject constructor(
         )
     }
 
-    private fun bottomActionText(action: BottomAction): TextReference? {
+    private fun bottomActionText(action: BottomAction): TextReference {
         return when (action) {
             BottomAction.GoToToken -> resourceReference(R.string.common_go_to_token)
-            BottomAction.None -> null
+            BottomAction.None -> resourceReference(R.string.common_close)
         }
     }
 
