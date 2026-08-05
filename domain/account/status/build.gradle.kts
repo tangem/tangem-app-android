@@ -44,6 +44,7 @@ dependencies {
     kapt(deps.hilt.kapt)
     // end
 
+    testImplementation(projects.common) // reads the same total helpers the UI does, for seam parity tests
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
