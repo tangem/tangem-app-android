@@ -40,6 +40,7 @@ internal class TangemPayVirtualAccountDepositComponent(
         val onDismiss: () -> Unit,
         val onShowDetails: (BankCredentials) -> Unit,
         val onShowBankingDetailsError: (String) -> Unit,
+        val onContactSupport: () -> Unit,
         val onOrderCreated: () -> Unit,
     )
 }
