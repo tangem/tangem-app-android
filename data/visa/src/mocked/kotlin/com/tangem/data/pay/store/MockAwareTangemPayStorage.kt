@@ -38,11 +38,6 @@ internal class MockAwareTangemPayStorage @Inject constructor(
         return real.getCustomerWalletAddress(userWalletId)
     }
 
-    override suspend fun clearCustomerWalletAddress(userWalletId: UserWalletId) {
-        if (isMockMode) return
-        real.clearCustomerWalletAddress(userWalletId)
-    }
-
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) {
         if (isMockMode) return
         real.storeAuthTokens(customerWalletAddress, tokens)
@@ -59,11 +54,6 @@ internal class MockAwareTangemPayStorage @Inject constructor(
             )
         }
         return real.getAuthTokens(customerWalletAddress)
-    }
-
-    override suspend fun clearAuthTokens(customerWalletAddress: String) {
-        if (isMockMode) return
-        real.clearAuthTokens(customerWalletAddress)
     }
 
     override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) =
@@ -137,6 +127,9 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean =
         real.isTangemPayDeactivated(userWalletId)
 
-    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) =
+    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String?) =
         real.clearAll(userWalletId, customerWalletAddress)
+
+    override suspend fun clearIsTangemPayDeactivated(userWalletId: UserWalletId) =
+        real.clearIsTangemPayDeactivated(userWalletId)
 }
