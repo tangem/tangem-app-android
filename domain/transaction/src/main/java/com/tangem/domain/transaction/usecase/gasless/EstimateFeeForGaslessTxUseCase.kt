@@ -157,7 +157,9 @@ class EstimateFeeForGaslessTxUseCase(
                 amount = amount,
             ).map { it.copy(nativeFee = initialFee) }.getOrElse { error ->
                 when (error) {
-                    GaslessError.NotEnoughFunds -> nativeCoinSelectedResult
+                    GaslessError.NotEnoughFunds,
+                    GaslessError.YieldBalanceUnavailable,
+                    -> nativeCoinSelectedResult
                     else -> raise(error)
                 }
             }
