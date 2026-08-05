@@ -470,6 +470,7 @@ internal object TransactionDomainModule {
         gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
         featureTogglesManager: FeatureTogglesManager,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
@@ -479,6 +480,7 @@ internal object TransactionDomainModule {
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
@@ -494,6 +496,8 @@ internal object TransactionDomainModule {
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        featureTogglesManager: FeatureTogglesManager,
     ): EstimateFeeForGaslessTxUseCase {
         return EstimateFeeForGaslessTxUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -503,6 +507,10 @@ internal object TransactionDomainModule {
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             estimateFeeUseCase = estimateFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
+                toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
+            ),
         )
     }
 
