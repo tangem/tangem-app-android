@@ -62,6 +62,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
@@ -208,7 +209,7 @@ internal class StakingModel @Inject constructor(
     private var stakingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var minimumTransactionAmount: EnterAmountBoundary? = null
-    private val isBalanceHiddenFlow: StateFlow<Boolean>
+    val isBalanceHiddenFlow: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
     private var tonAccountInitializeTransaction: TransactionData.Uncompiled? = null
@@ -228,7 +229,7 @@ internal class StakingModel @Inject constructor(
 
     private val balancesToShow: List<StakingBalanceEntry>
         get() {
-            val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
+            val stakingBalance = cryptoCurrencyStatus.value.stakingBalanceData
             return when (integration) {
                 is StakeKitIntegration -> {
                     val balanceItems = (stakingBalance as? StakingBalance.Data.StakeKit)
@@ -369,7 +370,7 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
             val isBalanceAbsent = balanceState == null
-            val hasNoYieldBalanceData = cryptoCurrencyStatus.value.stakingBalance !is StakingBalance.Data.StakeKit
+            val hasNoYieldBalanceData = cryptoCurrencyStatus.value.stakingBalanceData !is StakingBalance.Data.StakeKit
 
             when {
                 isInitialInfoStep && isBalanceAbsent && integration.areAllTargetsFull && hasNoYieldBalanceData -> {
@@ -1271,7 +1272,7 @@ internal class StakingModel @Inject constructor(
     private suspend fun onDataLoaded(status: CryptoCurrencyStatus) {
         if (!isInitialInfoAnalyticSent) {
             isInitialInfoAnalyticSent = true
-            val balances = status.value.stakingBalance as? StakingBalance.Data.StakeKit
+            val balances = status.value.stakingBalanceData as? StakingBalance.Data.StakeKit
             paramsInterceptorHolder.addParamsInterceptor(
                 interceptor = StakingParamsInterceptor(status.currency.symbol),
             )
