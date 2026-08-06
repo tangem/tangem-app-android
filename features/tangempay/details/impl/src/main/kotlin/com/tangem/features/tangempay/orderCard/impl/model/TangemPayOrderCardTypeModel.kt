@@ -16,10 +16,10 @@ import com.tangem.domain.pay.model.plasticOffer
 import com.tangem.domain.pay.repository.CardDeliveryQuoteRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.common.cardMainImageUrl
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
-import com.tangem.features.tangempay.utils.cardMainImageUrl
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
