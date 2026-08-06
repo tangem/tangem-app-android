@@ -252,7 +252,9 @@ class DexSwapFeeCalculator(
      * is applied to match the non-yield DEX flow.
      *
      * Fallback to [GetEthSpecificFeeUseCase] (with the gas limit carried by the Express transaction
-     * model) is applied in two cases:
+     * model) is applied in three cases:
+     *  - the native balance is empty — the node cannot estimate a transaction it knows is unpayable,
+     *    yet the quote must still carry a fee so the UI can report the missing native coin ([REDACTED_TASK_KEY]);
      *  - [yieldModuleAddress] is `null` — yield module address could not be resolved upstream;
      *  - the fee estimation call throws `IllegalStateException` (e.g. payload too large).
      *
@@ -274,9 +276,12 @@ class DexSwapFeeCalculator(
             networkId = network.rawId,
             derivationPath = network.derivationPath.value,
         )
-        if (nativeBalance.signum() == 0) raise(GetFeeError.UnknownError)
 
-        if (yieldModuleAddress == null) {
+        // An empty native balance makes the on-chain estimation revert — there is nothing to pay the
+        // probe with — but the swap must still be priced, otherwise the fee block shows a loading error
+        // instead of the "not enough <coin> for the fee" notification the non-yield flow gives ([REDACTED_TASK_KEY]).
+        // The Express quote carries a gas limit, so fall back to gasPrice × gasLimit, which needs no balance.
+        if (nativeBalance.signum() == 0 || yieldModuleAddress == null) {
             val gasLimit = transaction.gas ?: raise(GetFeeError.UnknownError)
             return@either ethSpecificFeeFallback(fromSwapCurrencyStatus, gasLimit).bind()
         }
