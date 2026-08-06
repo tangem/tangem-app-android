@@ -45,9 +45,8 @@ class GetFeeForTokenUseCase(
     )
 
     /**
-     * @param sentAmount amount the main transaction sends, in the sent token. Required when [transactionData]
-     * is a yield-supply send — its [TransactionData.Uncompiled.amount] is zeroed and the fee plan needs the
-     * real figure to decide whether the fee must be funded by a yield withdraw.
+     * @param sentAmount amount sent by the main transaction, in the sent token. Required for a yield-supply
+     * send, whose [TransactionData.Uncompiled.amount] is zeroed.
      */
     suspend operator fun invoke(
         userWallet: UserWallet,

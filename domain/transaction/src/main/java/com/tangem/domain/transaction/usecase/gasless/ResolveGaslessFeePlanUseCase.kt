@@ -49,10 +49,9 @@ class ResolveGaslessFeePlanUseCase(
             }
         }
 
-        // An unreadable balance is not an empty module. Degrading it to zero makes the whole effective
-        // balance look liquid and yields a TokenPay plan that cannot be settled, so give up on the token fee
-        // and let the caller fall back to the native one. The repository declares the balance nullable but
-        // in practice signals failure by throwing, so both shapes map to the same error.
+        // An unreadable balance is not an empty module: degrading it to zero would make the whole effective
+        // balance look liquid and yield a TokenPay plan that cannot be settled. Give up on the token fee
+        // instead and let the caller fall back to the native one.
         val moduleBalance = runSuspendCatching {
             gaslessYieldRepository.getEffectiveProtocolBalance(userWallet.walletId, token)
         }
