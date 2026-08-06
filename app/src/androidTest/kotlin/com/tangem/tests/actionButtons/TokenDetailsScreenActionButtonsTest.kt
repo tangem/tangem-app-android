@@ -19,6 +19,7 @@ import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendFromTokenDetails
 import com.tangem.scenarios.openSendScreenWithHotWallet
 import com.tangem.scenarios.openSendSuccessScreenViaLongClickOnSendButton
+import com.tangem.scenarios.openSwapFromZeroBalanceToken
 import com.tangem.scenarios.readNetworkFeeAmount
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.scenarios.waitUntilNetworkFeeIsStable
@@ -187,6 +188,48 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             }
             step("Assert token symbol: '$tokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(tokenSymbol).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("9455")
+    @DisplayName("Action buttons (token details screen): 'Swap' for a zero-balance token pre-fills the most funded token as source")
+    @Ignore("[REDACTED_JIRA]")
+    @Test
+    fun checkSwapForZeroBalanceTokenTest() {
+        val emptyTokenTitle = "Polygon"
+        val emptyTokenSymbol = "POL"
+        val mostFundedTokenSymbol = "ETH"
+        val mainAccountName = getResourceString(R.string.account_main_account_title)
+        val polygonBalanceScenarioName = "polygon_coin_balance"
+        val zeroBalanceState = "ZeroBalance"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(polygonBalanceScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$polygonBalanceScenarioName' to state: '$zeroBalanceState'") {
+                setWireMockScenarioState(polygonBalanceScenarioName, zeroBalanceState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Swap' from the zero-balance '$emptyTokenTitle' token") {
+                openSwapFromZeroBalanceToken(tokenName = emptyTokenTitle, accountName = mainAccountName)
+            }
+            step("Assert '$mostFundedTokenSymbol' is pre-filled as the source token") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { swapTokenSymbol(mostFundedTokenSymbol).assertIsDisplayed() }
+                }
+            }
+            step("Assert '$emptyTokenSymbol' is set as the receive token") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) { receiveTokenSymbol(emptyTokenSymbol).assertIsDisplayed() }
+                }
             }
         }
     }

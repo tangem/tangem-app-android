@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.test.core.ProvideTestModels
 import org.joda.time.DateTime
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -40,6 +41,27 @@ internal class TangemPayTxHistoryItemDMConverterTest {
         assertRoundTrip(collateral().copy(type = type))
     }
 
+    @ParameterizedTest
+    @EnumSource(TangemPayTxHistoryItem.Cashback.Status::class)
+    fun `GIVEN every Cashback status WHEN converted to DM and back THEN status preserved`(
+        status: TangemPayTxHistoryItem.Cashback.Status,
+    ) {
+        assertRoundTrip(spend().copy(cashback = cashback().copy(status = status)))
+    }
+
+    @ParameterizedTest
+    @EnumSource(TangemPayTxHistoryItem.Cashback.ExclusionReason::class)
+    fun `GIVEN every Cashback exclusion reason WHEN converted to DM and back THEN reason preserved`(
+        reason: TangemPayTxHistoryItem.Cashback.ExclusionReason,
+    ) {
+        assertRoundTrip(spend().copy(cashback = cashback().copy(exclusionReason = reason)))
+    }
+
+    @Test
+    fun `GIVEN spend without cashback WHEN converted to DM and back THEN cashback stays null`() {
+        assertRoundTrip(spend().copy(cashback = null))
+    }
+
     private fun assertRoundTrip(item: TangemPayTxHistoryItem) {
         // Act
         val restored = toDomainConverter.convert(toDMConverter.convert(item))
@@ -67,6 +89,16 @@ internal class TangemPayTxHistoryItemDMConverterTest {
         status = TangemPayTxHistoryItem.Status.COMPLETED,
         enrichedMerchantIconUrl = "https://example.com/icon.png",
         declinedReason = null,
+        cashback = cashback(),
+    )
+
+    private fun cashback() = TangemPayTxHistoryItem.Cashback(
+        status = TangemPayTxHistoryItem.Cashback.Status.CONFIRMED,
+        amount = BigDecimal("0.50"),
+        currency = Currency.getInstance("USD"),
+        isCapTrimmed = true,
+        exclusionReason = TangemPayTxHistoryItem.Cashback.ExclusionReason.MCC_EXCLUDED,
+        promotionIds = listOf("promo-1"),
     )
 
     private fun payment() = TangemPayTxHistoryItem.Payment(

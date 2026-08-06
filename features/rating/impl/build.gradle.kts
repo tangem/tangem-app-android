@@ -12,6 +12,8 @@ android {
 dependencies {
     api(projects.features.rating.api)
 
+    implementation(projects.features.swap.domain)
+
     api(projects.core.decompose)
     api(projects.core.ui)
     api(projects.core.utils)
@@ -19,6 +21,7 @@ dependencies {
     api(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
 
     implementation(deps.androidx.appCompat)
     implementation(deps.decompose)

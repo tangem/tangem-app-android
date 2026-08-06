@@ -2,22 +2,21 @@ package com.tangem.features.tangempay.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
 
 internal data class ButtonState(
     val text: TextReference,
     val onClick: () -> Unit,
-    val startIcon: ImageReference.Res? = null,
 )
 
-internal data class TangemPayTxHistoryDetailsUMV2(
+internal data class TangemPayTxHistoryDetailsUM(
     val isBalanceHidden: Boolean,
     val title: TextReference,
     val subtitle: TextReference,
     val iconState: TangemIconUM,
     val transactionTitle: TextReference,
     val detail: TransactionDetailUM?,
+    val cashbackDetail: CashbackDetailUM?,
     val transactionCategory: TextReference,
     val mcc: TextReference?,
     val transactionAmount: String,
@@ -49,6 +48,17 @@ internal sealed interface TransactionDetailUM {
         val cardName: TextReference?,
     ) : TransactionDetailUM
     data class Error(val onRefreshClick: () -> Unit) : TransactionDetailUM
+}
+
+@Immutable
+internal sealed interface CashbackDetailUM {
+    data object Loading : CashbackDetailUM
+    data object AwaitingCalculation : CashbackDetailUM
+    data class Content(
+        val value: TextReference,
+        val subvalue: TextReference?,
+    ) : CashbackDetailUM
+    data class Error(val onRefreshClick: () -> Unit) : CashbackDetailUM
 }
 
 internal enum class TransactionLoadState { Loading, Loaded, Error }

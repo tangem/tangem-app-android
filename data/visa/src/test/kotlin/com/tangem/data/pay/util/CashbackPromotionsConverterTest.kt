@@ -1,7 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.CashbackPromotionsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
 import com.tangem.domain.pay.model.CashbackPromotions
 import org.joda.time.DateTime
 import org.junit.jupiter.api.Test
@@ -29,9 +29,49 @@ internal class CashbackPromotionsConverterTest {
                         monthlyCapAmount = BigDecimal("100"),
                     ),
                 ),
+                monthlyCap = null,
                 additionalCashback = emptyList(),
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN program monthly cap WHEN convert THEN mapped with amount and currency`() {
+        // Arrange
+        val response = CashbackPromotionsResponse(
+            cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
+                tiers = null,
+                monthlyCapAmount = BigDecimal("150"),
+                monthlyCapCurrency = "USD",
+            ),
+            additionalCashback = null,
+        )
+
+        // Act
+        val result = CashbackPromotionsConverter.convert(response)
+
+        // Assert
+        assertThat(result.monthlyCap)
+            .isEqualTo(CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"))
+    }
+
+    @Test
+    fun `GIVEN no monthly cap amount WHEN convert THEN monthly cap is null`() {
+        // Arrange
+        val response = CashbackPromotionsResponse(
+            cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
+                tiers = null,
+                monthlyCapAmount = null,
+                monthlyCapCurrency = "USD",
+            ),
+            additionalCashback = null,
+        )
+
+        // Act
+        val result = CashbackPromotionsConverter.convert(response)
+
+        // Assert
+        assertThat(result.monthlyCap).isNull()
     }
 
     @Test

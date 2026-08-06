@@ -1,7 +1,7 @@
 package com.tangem.data.pay.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal

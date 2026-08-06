@@ -92,6 +92,12 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
+         * Counterparty matches one of the user's own Tangem Pay (Payment) accounts — renders as
+         * "to/from: <Visa icon> <accountName>".
+         */
+        data class OwnPaymentAccount(val direction: Direction, val accountName: TextReference) : ContentSubtitle
+
+        /**
          * Counterparty matches one of the user's own wallets (cross-wallet transfer with accounts mode disabled) —
          * renders as "to/from: <walletIcon> <walletName>".
          */
