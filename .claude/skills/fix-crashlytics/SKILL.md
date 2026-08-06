@@ -1,6 +1,6 @@
 ---
 name: fix-crashlytics
-description: Auto-fix Crashlytics crashes from Jira — find [Crashlytics] tasks, analyze crash, fix code, create branches, comment on Jira. Runs on CI without prompts.
+description: Auto-fix Crashlytics crashes from Jira — find [Crashlytics] tasks, analyze crash, fix code, open a pull request, comment on Jira. Runs on CI without prompts.
 allowed-tools: Read, Grep, Glob, Bash, Edit, Write, Agent, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__searchJiraIssuesUsingJql, mcp__atlassian__getJiraIssue, mcp__atlassian__addCommentToJiraIssue, mcp__firebase__crashlytics_get_issue, mcp__firebase__crashlytics_list_events, mcp__firebase__firebase_get_environment
 argument-hint: [--dry-run] [--since <JQL date expression>]
 ---
@@ -9,12 +9,16 @@ Auto-fix Crashlytics crashes reported in Jira.
 
 **CRITICAL: This skill runs on CI. NEVER ask questions. If anything is ambiguous, make the safer choice or skip the task.**
 
+**OUTPUT DISCIPLINE (terse):** Do not narrate steps, restate the situation, or explain reasoning. No preamble, no "I attempted…", no multi-paragraph recaps. On a preflight failure, print ONLY the single `FATAL:` line and stop — nothing else. During processing stay silent; the ONLY human-facing output is the Phase 4 summary table.
+
 ## Constants
 
 - **Jira cloudId**: `tangem.atlassian.net`
 - **Firebase project**: `tangemapp`
 - **Crashlytics appId (Release)**: `1:721920782444:android:2202a761840271413f2849`
-- **Dry-run mode**: check if `$ARGUMENTS` contains `--dry-run`. In dry-run mode, do NOT push branches and do NOT comment on Jira.
+- **Dry-run mode**: check if `$ARGUMENTS` contains `--dry-run`. In dry-run mode, do NOT push branches, do NOT open pull requests, and do NOT comment on Jira.
+- **PR base branch**: `develop` (all Crashlytics fixes target `develop`).
+- **PR labels**: always `bug` (bugfix branch) plus the complexity label `complex` (auto-fixes are single-file, minimal, defensive changes — well within the `complex` file limit).
 - **Since**: check if `$ARGUMENTS` contains `--since <value>`. The value is any valid JQL date expression (e.g., `-3d`, `-1w`, `"2026-03-25"`). Default: `-1d`.
 - **Tangem SDK packages** (crashes here cannot be fixed in app code):
   - `com.tangem.blockchain` — Blockchain SDK
@@ -41,7 +45,18 @@ Call `mcp__firebase__firebase_get_environment` (no parameters).
 - If the project is different or missing — STOP with: `FATAL: Firebase project mismatch. Expected 'tangemapp'. Check .firebaserc configuration.`
 - If the call fails or the tool is not found — STOP with: `FATAL: Firebase MCP server is not connected. Run 'claude mcp list' to check server status.`
 
-### 0c. Verify Git State
+### 0c. Verify GitHub CLI
+
+Run:
+```bash
+gh auth status 2>&1
+```
+- If `gh` is authenticated — OK.
+- If the call fails or `gh` is not authenticated — STOP with: `FATAL: gh is not authenticated. Run 'gh auth login'.`
+
+(Skip this check in `--dry-run` mode, since no PR will be opened — but a warning that PRs would be skipped is acceptable.)
+
+### 0d. Verify Git State
 
 Run:
 ```bash
@@ -50,12 +65,17 @@ git status --porcelain 2>&1
 - If output is empty (clean working tree) — OK.
 - If there are uncommitted changes — STOP with: `FATAL: Working tree is not clean. Commit or stash changes before running this skill.`
 
-### 0d. Sync with Remote
+### 0e. Sync with Remote
+
+Force the local `develop` to **exactly** match the remote. A plain `git checkout develop` + `git pull`
+trusts whatever the local `develop` ref already points at — and on the reused self-hosted CI workspace
+that ref can be left pointing at another branch (e.g. `master`). If that happens, every fix branch cut
+below inherits the wrong base and its PR shows dozens of unrelated commits. `checkout -B … origin/develop`
+makes the remote authoritative:
 
 ```bash
 git fetch origin
-git checkout develop
-git pull origin develop
+git checkout -B develop origin/develop
 ```
 
 Initialize an internal results list to track each ticket's outcome.
@@ -66,12 +86,13 @@ Search Jira for Crashlytics tasks created in the past day:
 
 - Tool: `mcp__atlassian__searchJiraIssuesUsingJql`
 - `cloudId`: `tangem.atlassian.net`
-- `jql`: `project = "AND" AND summary ~ "\\[Crashlytics\\]" AND created >= <since value> ORDER BY created DESC`
+- `jql`: `project = "CRASHAND" AND summary ~ "\\[Crashlytics\\]" AND created >= <since value> ORDER BY created DESC`
+  - Crashlytics auto-tickets live in the dedicated **CRASHAND** project (Firebase Alerts -> Jira). The `summary ~ "[Crashlytics]"` filter excludes test alerts (e.g. `[Firebase] [Test Alert]`).
   - Use the `--since` argument value, or `-1d` if not provided.
 - `maxResults`: `50`
 - `fields`: `["summary", "status"]`
 
-Collect all returned issue keys (e.g., `[REDACTED_TASK_KEY]`).
+Collect all returned issue keys (e.g., `CRASHAND-19`).
 
 If no tasks found, output "No Crashlytics tasks found since <since value>" and stop.
 
@@ -99,7 +120,7 @@ If no tickets remain after filtering, output the summary table and stop.
 
 ## Phase 3: Process Each Ticket
 
-Process each remaining ticket sequentially. **Error handling rule**: if ANY step fails for a ticket, record the failure reason, run `git checkout develop && git checkout -- .` to clean up, and continue to the next ticket.
+Process each remaining ticket sequentially. **Error handling rule**: if ANY step fails for a ticket, record the failure reason, run `git checkout -f -B develop origin/develop` to reset back to a clean, authoritative base (discarding the failed ticket's working-tree changes), and continue to the next ticket.
 
 ### Step 3a: Extract Crashlytics Issue ID
 
@@ -239,23 +260,66 @@ Apply a **minimal, defensive fix** based on the crash type. Do NOT refactor, add
    - Read the error, attempt to fix it (one retry only).
    - If still fails: `git checkout -- .` and skip with `Failed (build failed)`.
 
-### Step 3f: Create Branch, Commit, Push
+### Step 3f: Create Branch, Commit, Push, Open PR
+
+Create the branch **off the authoritative `origin/develop`** — never a local `develop`, which a reused
+CI workspace may have left pointing at another branch (that is exactly what makes a PR show dozens of
+unrelated commits). `checkout -B … origin/develop` carries the working-tree fix onto the fresh branch:
 
 ```bash
-git checkout develop
-git checkout -b bugfix/<TICKET_KEY>
+git fetch origin develop
+git checkout -B bugfix/<TICKET_KEY> origin/develop
 git add <changed_files_only>
 git commit -m "<TICKET_KEY> Fix <ExceptionType> in <ClassName>"
 ```
 
-If NOT in `--dry-run` mode:
+**Sanity check before pushing:** the branch must be exactly **one** commit ahead of `origin/develop`.
+If not, the base is wrong — do NOT push; record `Failed (bad base)`, clean up, and skip the ticket:
+
+```bash
+git rev-list --count origin/develop..HEAD   # must print exactly 1
+```
+
+If in `--dry-run` mode: do NOT push and do NOT open a PR. Instead, print the exact `git push` and
+`gh pr create` commands that would run, then return to develop and continue to the next ticket.
+
+If NOT in `--dry-run` mode, push and open the PR:
+
 ```bash
 git push -u origin bugfix/<TICKET_KEY>
 ```
 
-Return to develop for the next ticket:
+Then open the pull request with `gh`. **Base is `develop`**; the **title is the commit subject**
+(`<TICKET_KEY> Fix <ExceptionType> in <ClassName>`); the **body must contain NO Jira ticket key** —
+not this ticket's key, not any other (the key lives only in the title). Apply both the `bug` and
+`complex` labels.
+
 ```bash
-git checkout develop
+gh pr create --base develop --head bugfix/<TICKET_KEY> \
+  --label "bug" --label "complex" \
+  --title "<TICKET_KEY> Fix <ExceptionType> in <ClassName>" \
+  --body "$(cat <<'EOF'
+## What
+Defensive fix for a Crashlytics-reported crash: <one-line description of the crash and the guard added>.
+
+**Root cause:** <short description of what caused the crash>
+**Fix:** <short description of the code change>
+
+EOF
+)"
+```
+
+- **Scrub the body of every Jira key before creating the PR.** Verify with `grep -E "CRASHAND-[0-9]+"`
+  (ERE — do not use `\d`); if the body matches, rephrase to remove the key, then create the PR.
+- `gh pr create` prints the PR URL on success — **capture it** for Step 3g and the summary.
+- If `git push` or `gh pr create` fails: the branch is already committed locally, so record the
+  failure reason (`Failed (push failed)` / `Failed (PR failed)`), return to develop, and continue to
+  the next ticket. Do NOT retry blindly.
+
+Return to a clean, authoritative develop for the next ticket (pin to the remote again, discarding any
+leftover working-tree state so the next ticket's fix is read and applied against the correct base):
+```bash
+git checkout -f -B develop origin/develop
 ```
 
 ### Step 3g: Comment on Jira
@@ -270,10 +334,11 @@ If NOT in `--dry-run` mode, call `mcp__atlassian__addCommentToJiraIssue`:
   **Root cause:** <description of what caused the crash>
   **Fix:** <description of the code change>
   **Branch:** bugfix/<TICKET_KEY>
+  **PR:** <PR URL from Step 3f>
   **Affected file:** <relative path to the changed file>
   ```
 
-Record status as `Fixed`.
+Record status as `Fixed` and store the PR URL for the summary table.
 
 ## Phase 4: Output Summary
 
@@ -282,14 +347,17 @@ Output the results as a Markdown table:
 ```markdown
 ## Crashlytics Auto-Fix Summary
 
-| Ticket | Crash | File | Status | Branch |
-|--------|-------|------|--------|--------|
-| AND-XXXXX | NPE in ClassName.method | ClassName.kt | Fixed | bugfix/AND-XXXXX |
-| AND-YYYYY | IOOB in OtherClass.method | OtherClass.kt | Skipped (branch exists) | — |
-| AND-ZZZZZ | ISE in ThirdClass.method | ThirdClass.kt | Failed (build failed) | — |
+| Ticket | Crash | File | Status | PR |
+|--------|-------|------|--------|----|
+| CRASHAND-123 | NPE in ClassName.method | ClassName.kt | Fixed | <PR URL> |
+| CRASHAND-124 | IOOB in OtherClass.method | OtherClass.kt | Skipped (branch exists) | — |
+| CRASHAND-125 | ISE in ThirdClass.method | ThirdClass.kt | Failed (build failed) | — |
 ```
+
+For the `PR` column: the PR URL for `Fixed` tickets, or `—` for skipped/commented/failed tickets (and
+the would-be branch name in `--dry-run`).
 
 After the table, output totals:
 ```
-**Total:** X tasks found, Y fixed, Z commented (SDK), W skipped, V failed
+**Total:** X tasks found, Y fixed (PRs opened), Z commented (SDK), W skipped, V failed
 ```

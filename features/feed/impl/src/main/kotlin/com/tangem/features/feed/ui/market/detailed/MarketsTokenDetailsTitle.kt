@@ -55,7 +55,7 @@ private fun MarketsTokenDetailsRedesignTopBar(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
                 onClick = onBackClick,
                 enabled = isBackButtonEnabled,
-                contentPadding = TangemTheme.dimens2.x2,
+                contentPadding = 8.dp,
             )
         },
         endContent = {
@@ -72,14 +72,14 @@ private fun MarketsTokenDetailsRedesignTopBar(
                         imageVector = Icons.ic_sign_plus_24,
                         onClick = onAddToPortfolioClick,
                         enabled = isBackButtonEnabled,
-                        contentPadding = TangemTheme.dimens2.x2_5,
+                        contentPadding = 10.dp,
                     )
                 }
                 TopBarHazeIconButton(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_share_new_24),
                     onClick = onShareClick,
                     enabled = isBackButtonEnabled,
-                    contentPadding = TangemTheme.dimens2.x2_5,
+                    contentPadding = 10.dp,
                 )
             }
         },
@@ -96,9 +96,9 @@ private fun TopBarHazeIconButton(imageVector: ImageVector, onClick: () -> Unit, 
     Icon(
         imageVector = imageVector,
         contentDescription = null,
-        tint = TangemTheme.colors2.graphic.neutral.primary,
+        tint = TangemTheme.colors3.icon.primary,
         modifier = Modifier
-            .size(TangemTheme.dimens2.x11)
+            .size(44.dp)
             .clip(CircleShape)
             .hazeEffectTangem { blurRadius = 8.dp }
             .clickableSingle(onClick = onClick, enabled = enabled)
