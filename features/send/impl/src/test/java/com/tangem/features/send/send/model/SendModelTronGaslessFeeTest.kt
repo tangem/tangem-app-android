@@ -78,12 +78,14 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
 
     private fun provideTestModels() = listOf(
         // The account's free bandwidth and (often delegated) energy cover the transfer, so the SDK
-        // charges nothing — a wallet holding no TRX must still be quoted in the sent token.
+        // charges nothing. Nothing is covered by the wallet itself, so the sent token is quoted
+        // whatever the TRX balance is — empty, dust, or enough for a real fee.
         TestModel(nativeFee = BigDecimal.ZERO, nativeBalance = BigDecimal.ZERO, expectsGasless = true),
-        // Dust left on the account does not make it able to pay a real fee either.
-        TestModel(nativeFee = BigDecimal.ZERO, nativeBalance = BigDecimal("0.000003"), expectsGasless = false),
+        TestModel(nativeFee = BigDecimal.ZERO, nativeBalance = BigDecimal("0.00004"), expectsGasless = true),
+        TestModel(nativeFee = BigDecimal.ZERO, nativeBalance = BigDecimal("10"), expectsGasless = true),
         // No energy delegated: the fee is burned in TRX the wallet does not have.
         TestModel(nativeFee = BigDecimal("6.4285"), nativeBalance = BigDecimal.ZERO, expectsGasless = true),
+        TestModel(nativeFee = BigDecimal("6.4285"), nativeBalance = BigDecimal("0.00004"), expectsGasless = true),
         TestModel(nativeFee = BigDecimal("6.4285"), nativeBalance = BigDecimal("1.5"), expectsGasless = true),
         // The wallet can pay in TRX — keep the native fee.
         TestModel(nativeFee = BigDecimal("6.4285"), nativeBalance = BigDecimal("10"), expectsGasless = false),
