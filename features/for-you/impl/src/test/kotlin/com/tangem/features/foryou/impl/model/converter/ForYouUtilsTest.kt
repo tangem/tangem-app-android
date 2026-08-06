@@ -1,13 +1,24 @@
 package com.tangem.features.foryou.impl.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.badge.TangemBadgeColor
+import com.tangem.core.ui.ds.badge.TangemBadgeSize
+import com.tangem.core.ui.ds.badge.TangemBadgeType
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.model.ForYouPeriod
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 internal class ForYouUtilsTest {
@@ -174,4 +185,183 @@ internal class ForYouUtilsTest {
             assertThat(result).isEqualTo(BigDecimal("0.3333"))
         }
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ForYouSentimentBadge {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN readings WHEN forYouSentimentBadge THEN badge matches the net signal score`(model: BadgeModel) {
+            // Act
+            val result = forYouSentimentBadge(coinIndicators = model.coinIndicators, timeframe = model.timeframe)
+
+            // Assert
+            if (model.expected == null) {
+                assertThat(result).isNull()
+            } else {
+                assertThat(result).isNotNull()
+                assertThat(result!!.text).isEqualTo(model.expected.first)
+                assertThat(result.color).isEqualTo(model.expected.second)
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            // No entry for the symbol at all → no badge
+            BadgeModel(coinIndicators = null, expected = null),
+            // Entry present but without readings → score 0 → Neutral (summary shows "Neutral outlook" too)
+            BadgeModel(coinIndicators = createIndicators(), expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue),
+            // Only non-actionable signals → score 0 → Neutral, matching the summary's "Neutral outlook"
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.INSUFFICIENT_DATA, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_AVAILABLE),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NOT_AVAILABLE),
+                ),
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+            // Net-positive score → Positive
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NEGATIVE),
+                ),
+                expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
+            ),
+            // Net-negative score → Negative
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NEGATIVE),
+                ),
+                expected = resourceReference(R.string.common_negative) to TangemBadgeColor.Red,
+            ),
+            // Balanced score → Neutral
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
+                ),
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+            // All-neutral actionable signals → Neutral (unlike non-actionable, they do produce a badge)
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.GALAXY_SCORE, Signal.NEUTRAL),
+                ),
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+            // The only reading belongs to another timeframe → nothing scores for DAY → Neutral
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.WEEK),
+                ),
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+            // WEEK selection picks the WEEK reading of RSI, not the DAY one
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NEGATIVE, Timeframe.WEEK),
+                ),
+                timeframe = Timeframe.WEEK,
+                expected = resourceReference(R.string.common_negative) to TangemBadgeColor.Red,
+            ),
+            // Social indicators are keyed by timeframe too: the MONTH reading scores for a MONTH selection
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE, Timeframe.MONTH),
+                ),
+                timeframe = Timeframe.MONTH,
+                expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
+            ),
+            // …and no longer count outside it: a DAY-only SENTIMENT reading scores nothing for MONTH
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE, Timeframe.DAY),
+                ),
+                timeframe = Timeframe.MONTH,
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+        )
+
+        @Test
+        fun `GIVEN actionable readings WHEN forYouSentimentBadge THEN badge keeps the row title style`() {
+            // Arrange
+            val indicators = createIndicators(createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE))
+
+            // Act
+            val result = forYouSentimentBadge(coinIndicators = indicators, timeframe = Timeframe.DAY)
+
+            // Assert
+            assertThat(result).isNotNull()
+            assertThat(result!!.size).isEqualTo(TangemBadgeSize.X4)
+            assertThat(result.type).isEqualTo(TangemBadgeType.Tinted)
+        }
+    }
+
+    @Nested
+    inner class ForYouPeriodFromId {
+
+        @Test
+        fun `GIVEN known segment id WHEN fromId THEN returns the matching period`() {
+            // Act & Assert
+            assertThat(ForYouPeriod.fromId("1")).isEqualTo(ForYouPeriod.Week)
+            assertThat(ForYouPeriod.fromId("2")).isEqualTo(ForYouPeriod.Month)
+        }
+
+        @Test
+        fun `GIVEN unknown or null id WHEN fromId THEN falls back to Day`() {
+            // Act & Assert
+            assertThat(ForYouPeriod.fromId("42")).isEqualTo(ForYouPeriod.Day)
+            assertThat(ForYouPeriod.fromId(null)).isEqualTo(ForYouPeriod.Day)
+        }
+    }
+
+    @Nested
+    inner class ForYouPeriodEntries {
+
+        @Test
+        fun `GIVEN ForYouPeriod entries THEN each maps to its segment id title and timeframe`() {
+            // Pins the enum's segment ids (portable to TokenSummaryModel), titles and timeframes.
+            // Act
+            val mapping = ForYouPeriod.entries.map { Triple(it.id, it.title, it.timeframe) }
+
+            // Assert
+            assertThat(mapping).containsExactly(
+                Triple("0", resourceReference(R.string.common_day), CoinIndicators.Reading.Timeframe.DAY),
+                Triple("1", resourceReference(R.string.common_week), CoinIndicators.Reading.Timeframe.WEEK),
+                Triple("2", resourceReference(R.string.common_month), CoinIndicators.Reading.Timeframe.MONTH),
+            ).inOrder()
+        }
+    }
+
+    internal data class BadgeModel(
+        val coinIndicators: CoinIndicators?,
+        val timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
+        val expected: Pair<TextReference, TangemBadgeColor>?,
+    )
+
+    private fun createIndicators(vararg readings: CoinIndicators.Reading): CoinIndicators = CoinIndicators(
+        symbol = "BTC",
+        readings = readings.toList(),
+    )
+
+    private fun createReading(
+        type: CoinIndicators.Reading.Type,
+        signal: CoinIndicators.Reading.Signal,
+        timeframe: CoinIndicators.Reading.Timeframe = CoinIndicators.Reading.Timeframe.DAY,
+    ): CoinIndicators.Reading = CoinIndicators.Reading(
+        type = type,
+        name = type.name,
+        timeframe = timeframe,
+        value = null,
+        signal = signal,
+        updatedAt = null,
+    )
 }
+
+private typealias Signal = CoinIndicators.Reading.Signal
+private typealias Timeframe = CoinIndicators.Reading.Timeframe

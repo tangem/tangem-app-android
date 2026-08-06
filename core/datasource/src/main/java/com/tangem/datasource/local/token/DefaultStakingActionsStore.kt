@@ -1,21 +1,17 @@
 package com.tangem.datasource.local.token
 
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 internal class DefaultStakingActionsStore(
-    private val dataStore: StringKeyDataStore<List<StakingAction>>,
+    private val store: RuntimeSharedMapStore<Pair<UserWalletId, CryptoCurrency.ID>, List<StakingAction>>,
 ) : StakingActionsStore {
 
-    private val mutex = Mutex()
-
     override fun get(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): Flow<List<StakingAction>> {
-        return dataStore.get(composeKey(userWalletId, cryptoCurrencyId))
+        return store.get(key = userWalletId to cryptoCurrencyId)
     }
 
     override suspend fun store(
@@ -23,12 +19,6 @@ internal class DefaultStakingActionsStore(
         cryptoCurrencyId: CryptoCurrency.ID,
         items: List<StakingAction>,
     ) {
-        mutex.withLock {
-            dataStore.store(composeKey(userWalletId, cryptoCurrencyId), items)
-        }
-    }
-
-    private fun composeKey(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): String {
-        return userWalletId.stringValue + cryptoCurrencyId.value
+        store.store(key = userWalletId to cryptoCurrencyId, value = items)
     }
 }
