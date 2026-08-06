@@ -31,6 +31,7 @@ dependencies {
 
     // region Project - Core
     api(projects.core.utils)
+    implementation(projects.core.local)
     implementation(projects.core.datasource)
     // endregion
 

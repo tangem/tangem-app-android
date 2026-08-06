@@ -17,6 +17,8 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
+import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
@@ -54,6 +56,7 @@ internal open class TxDetailsConverterTestBase {
     protected val ownAccount: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1, name = "Family")
     protected val secondAccount: Account.CryptoPortfolio =
         MockAccounts.createAccount(derivationIndex = 2, name = "Savings")
+    protected val ownPaymentAccount: Account.Payment = Account.Payment(MockAccounts.userWalletId)
     protected val copiedAddresses = mutableListOf<String>()
     protected val openedUrls = mutableListOf<String>()
 
@@ -75,14 +78,14 @@ internal open class TxDetailsConverterTestBase {
     protected fun onChainConverter(
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         validators: List<Yield.Validator> = emptyList(),
-        ownAddresses: Set<String> = emptySet(),
+        lookup: TxHistoryLookupContext = lookupOf(),
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
         menu = menu,
         validatorsByAddress = validators.associateBy(Yield.Validator::address),
         onOpenValidator = openedUrls::add,
-        ownAddresses = ownAddresses,
+        lookup = lookup,
     )
 
     protected fun expressConverter(
@@ -102,13 +105,14 @@ internal open class TxDetailsConverterTestBase {
         interactionAddressType: TxInfo.InteractionAddressType? = null,
         destinationType: TxInfo.DestinationType =
             TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(USER_ADDRESS)),
+        sourceType: TxInfo.SourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
         fee: SdkAmount? = null,
     ): TxInfo = TxInfo(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = isOutgoing,
         destinationType = destinationType,
-        sourceType = TxInfo.SourceType.Single(address = USER_ADDRESS),
+        sourceType = sourceType,
         interactionAddressType = interactionAddressType,
         status = status,
         type = type,
@@ -192,6 +196,7 @@ internal open class TxDetailsConverterTestBase {
                 cryptoCurrency = bitcoin,
             ),
             externalTxUrl = externalTxUrl,
+            externalTxId = null,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
             refundAssetId = null,
@@ -209,6 +214,7 @@ internal open class TxDetailsConverterTestBase {
         txInfo: OnChainTx? = null,
         externalTxUrl: String? = null,
         payoutAddress: String = PAYOUT_ADDRESS,
+        country: OnrampCountry? = null,
     ): ExpressTx.Onramp = ExpressTx.Onramp(
         tx = OnrampTransaction(
             txId = "onramp-1",
@@ -230,11 +236,23 @@ internal open class TxDetailsConverterTestBase {
                 decimals = 8,
                 cryptoCurrency = bitcoin,
             ),
-            country = null,
+            country = country,
             toAmount = BigDecimal("0.006"),
             toActualAmount = null,
         ),
         txInfo = txInfo,
+    )
+
+    /** A resolved onramp country carrying [flagUrl] as its flag image (the "paid from" flag shown on the fiat leg). */
+    protected fun onrampCountry(flagUrl: String): OnrampCountry = OnrampCountry(
+        id = "SE",
+        name = "Sweden",
+        code = "SE",
+        image = flagUrl,
+        alpha3 = "SWE",
+        continent = "Europe",
+        defaultCurrency = OnrampCurrency(name = "Swedish Krona", code = "SEK", image = null, precision = 2, unit = "SEK"),
+        onrampAvailable = true,
     )
 
     protected fun expressAsset(
@@ -251,7 +269,7 @@ internal open class TxDetailsConverterTestBase {
 
     /** Builds a details lookup with the given per-network own-address maps. */
     protected fun lookupOf(
-        vararg networks: Pair<Network.RawID, Map<String, Account.CryptoPortfolio>>,
+        vararg networks: Pair<Network.RawID, Map<String, Account>>,
         isAccountsModeEnabled: Boolean = true,
         walletInfoById: Map<UserWalletId, WalletInfo> = mapOf(
             MockAccounts.userWalletId to WalletInfo(
@@ -264,6 +282,15 @@ internal open class TxDetailsConverterTestBase {
         isAccountsModeEnabled = isAccountsModeEnabled,
         walletInfoById = walletInfoById,
     )
+
+    /** A `walletInfoById` with the own [MockAccounts.userWalletId] plus a second wallet, so an own-wallet leg has
+     * something to disambiguate against. */
+    protected fun twoWalletInfo(): Map<UserWalletId, WalletInfo> = mapOf(
+        MockAccounts.userWalletId to WalletInfo(name = "My Wallet", deviceIconUM = deviceIcon()),
+        UserWalletId("022") to WalletInfo(name = "Second Wallet", deviceIconUM = deviceIcon()),
+    )
+
+    private fun deviceIcon(): DeviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null)
 
     protected fun TextReference.resolveString(): String = (this as TextReference.Str).value
 
