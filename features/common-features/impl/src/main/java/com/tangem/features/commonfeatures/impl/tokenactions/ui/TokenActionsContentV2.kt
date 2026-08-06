@@ -68,6 +68,7 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
 private fun CompactLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
         QuickActionsList(state)
+        SpacerH24()
         BottomActionButton(state.bottomActionText, state.onBottomActionClick)
     }
 }
@@ -92,6 +93,7 @@ private fun FullLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
             )
         }
         QuickActionsList(state)
+        SpacerH24()
         BottomActionButton(state.bottomActionText, state.onBottomActionClick)
     }
 }
@@ -217,18 +219,19 @@ private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, mo
 }
 
 @Composable
-private fun BottomActionButton(bottomActionText: TextReference, onBottomActionClick: () -> Unit) {
-    SpacerH24()
-    CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
-        SecondaryTangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onBottomActionClick,
-            text = bottomActionText,
-            size = TangemButtonSize.X12,
-            shape = TangemButtonShape.Rounded,
-        )
+private fun BottomActionButton(bottomActionText: TextReference?, onBottomActionClick: () -> Unit) {
+    if (bottomActionText != null) {
+        CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
+            SecondaryTangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onBottomActionClick,
+                text = bottomActionText,
+                size = TangemButtonSize.X12,
+                shape = TangemButtonShape.Rounded,
+            )
+        }
+        SpacerH16()
     }
-    SpacerH16()
 }
 
 @Preview(widthDp = 360, showBackground = true)
