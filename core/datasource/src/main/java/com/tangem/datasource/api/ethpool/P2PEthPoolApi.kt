@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.ethpool
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolAccountsListRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolTransactionRequest

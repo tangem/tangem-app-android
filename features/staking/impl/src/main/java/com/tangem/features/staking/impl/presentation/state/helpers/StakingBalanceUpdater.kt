@@ -5,6 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
+import com.tangem.domain.staking.GetActionsUseCase
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
@@ -15,12 +16,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.firstOrNull
 
 @Suppress("LongParameterList")
 internal class StakingBalanceUpdater @AssistedInject constructor(
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val fetchActionsUseCase: FetchActionsUseCase,
+    private val getActionsUseCase: GetActionsUseCase,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val fetchStakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
@@ -53,7 +56,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
                     updateTxHistory()
                 },
                 async {
-                    updateStakingActions()
+                    refreshStakingActionsUntilSettled()
                 },
             ).awaitAll()
         }
@@ -110,6 +113,33 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         )
     }
 
+    /**
+     * The "pending" overlay on the staking screen is driven by StakeKit actions with status
+     * [StakingActionStatus.PROCESSING]. A single post-submit fetch always captures the just-submitted
+     * action as PROCESSING, so without a follow-up the badge would never disappear. Re-fetch the
+     * actions until the backend stops reporting any as PROCESSING, bounded by [ACTIONS_POLL_MAX_ATTEMPTS]
+     * so we never poll indefinitely if it never settles.
+     */
+    private suspend fun refreshStakingActionsUntilSettled() {
+        updateStakingActions()
+        repeat(ACTIONS_POLL_MAX_ATTEMPTS) {
+            if (!hasProcessingActions()) return
+            delay(ACTIONS_POLL_INTERVAL)
+            updateStakingActions()
+        }
+    }
+
+    private suspend fun hasProcessingActions(): Boolean {
+        return getActionsUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencyId = cryptoCurrencyStatus.currency.id,
+        )
+            .firstOrNull()
+            ?.getOrNull()
+            .orEmpty()
+            .any { it.status == StakingActionStatus.PROCESSING }
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(
@@ -121,5 +151,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
 
     private companion object {
         const val BALANCE_UPDATE_DELAY = 11_000L
+        const val ACTIONS_POLL_INTERVAL = 10_000L
+        const val ACTIONS_POLL_MAX_ATTEMPTS = 6
     }
 }

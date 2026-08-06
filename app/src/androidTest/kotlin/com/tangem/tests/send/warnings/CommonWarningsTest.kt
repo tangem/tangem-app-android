@@ -2,8 +2,11 @@ package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendConfirmScreen
@@ -31,7 +34,13 @@ class CommonWarningsTest : BaseTestCase() {
         val warningTitle = getResourceString(R.string.send_notification_transaction_delay_title)
         val warningMessage = getResourceString(R.string.send_notification_transaction_delay_text)
 
-        setupHooks().run {
+        setupHooks(
+            // openSendConfirmScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
 
             step("Open 'Main' screen") {
                 openMainScreen()
@@ -82,7 +91,13 @@ class CommonWarningsTest : BaseTestCase() {
         val warningTitle = getResourceString(R.string.send_network_fee_warning_title)
         val warningMessage = getResourceString(R.string.common_network_fee_warning_content, network, amount)
 
-        setupHooks().run {
+        setupHooks(
+            // openSendConfirmScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
 
             step("Open 'Main' screen") {
                 openMainScreen()
@@ -118,7 +133,13 @@ class CommonWarningsTest : BaseTestCase() {
         val warningTitle = getResourceString(R.string.send_notification_fee_too_high_title)
         val warningMessage = getResourceString(R.string.send_notification_fee_too_high_text, timesHigher)
 
-        setupHooks().run {
+        setupHooks(
+            // openSendConfirmScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
 
             step("Open 'Main' screen") {
                 openMainScreen()
