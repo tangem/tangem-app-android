@@ -139,6 +139,10 @@ class EstimateFeeForTokenUseCase(
             )
         }.getOrElse { error ->
             when (error) {
+                // Liquid + module balance cannot cover send + fee (e.g. the user swapped MAX), or the yield
+                // balance could not be read. Mirrors the auto path in [EstimateFeeForGaslessTxUseCase]:
+                // return the native fee so the block still renders and the caller can show "not enough funds",
+                // instead of failing the whole fee load and leaving an empty block.
                 GaslessError.NotEnoughFunds,
                 GaslessError.YieldBalanceUnavailable,
                 -> nativeFeeResult
