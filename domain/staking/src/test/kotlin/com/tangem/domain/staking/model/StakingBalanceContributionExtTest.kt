@@ -14,6 +14,8 @@ import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -41,6 +43,66 @@ internal class StakingBalanceContributionExtTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    /**
+     * [stakingSource] is the freshness half of the same accessor, and it exists because
+     * `CryptoCurrencyStatus.Sources.stakingBalanceSource` lies under the toggle: the factory nulls the typed
+     * field and stamps that source a fixed `ACTUAL`, moving the real staleness onto the contribution.
+     */
+    @Nested
+    inner class StakingSourceTest {
+
+        @Test
+        fun `GIVEN no staking balance WHEN stakingSource THEN actual`() {
+            // Act & Assert — nothing to be stale, matching what the factory stamps for this case
+            assertThat(value().stakingSource).isEqualTo(StatusSource.ACTUAL)
+        }
+
+        @Test
+        fun `GIVEN a cached contribution WHEN stakingSource THEN cache`() {
+            // Arrange — the toggle-on shape
+            val cached = StakingBalance.Data.P2PEthPool(
+                stakingId = STAKING_ID,
+                source = StatusSource.CACHE,
+                accounts = emptyList(),
+            )
+
+            // Act & Assert — reading Sources.stakingBalanceSource here would report a false "fresh"
+            assertThat(value(contributions = listOf(cached)).stakingSource).isEqualTo(StatusSource.CACHE)
+        }
+
+        @Test
+        fun `GIVEN a cached legacy field WHEN stakingSource THEN cache`() {
+            // Arrange — the toggle-off shape must keep behaving exactly as before
+            val cached = StakingBalance.Data.P2PEthPool(
+                stakingId = STAKING_ID,
+                source = StatusSource.CACHE,
+                accounts = emptyList(),
+            )
+
+            // Act & Assert
+            assertThat(value(stakingBalance = cached).stakingSource).isEqualTo(StatusSource.CACHE)
+        }
+
+        @Test
+        fun `GIVEN only a yield contribution WHEN stakingSource THEN actual`() {
+            // Arrange — yield rides the network status, so it must not register as staking staleness
+            val staleYield = YieldSupplyContribution(
+                status = mockk<YieldSupplyStatus>(relaxed = true),
+                source = StatusSource.ONLY_CACHE,
+            )
+
+            // Act & Assert
+            assertThat(value(contributions = listOf(staleYield)).stakingSource).isEqualTo(StatusSource.ACTUAL)
+        }
+
+        @Test
+        fun `GIVEN a non-Data legacy variant WHEN stakingSource THEN actual`() {
+            // Arrange — Empty carries a source of its own, but the accessor narrows it away, as the factory does
+            // Act & Assert
+            assertThat(value(stakingBalance = EMPTY).stakingSource).isEqualTo(StatusSource.ACTUAL)
+        }
     }
 
     @ParameterizedTest
