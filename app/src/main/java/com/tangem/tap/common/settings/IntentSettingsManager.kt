@@ -53,6 +53,10 @@ internal class IntentSettingsManager(val context: Context) : SettingsManager {
         open(intent = intent)
     }
 
+    override fun openScreenLockSettings() {
+        open(intent = Intent(Settings.ACTION_SECURITY_SETTINGS))
+    }
+
     private fun open(intent: Intent) {
         context.startActivity(
             intent.apply {

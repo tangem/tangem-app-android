@@ -14,7 +14,7 @@ internal class TangemPayCardLimitSetupSuccessComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         BackHandler(onBack = ::backToDetails)
-        TangemPayCardLimitSetupSuccessScreenV2(
+        TangemPayCardLimitSetupSuccessScreen(
             modifier = modifier,
             onDoneClick = ::backToDetails,
         )

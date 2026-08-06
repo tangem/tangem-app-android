@@ -2,11 +2,15 @@ package com.tangem.features.foryou.impl.ui.preview
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletGroupUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
+import com.tangem.features.foryou.impl.entity.asSingleForYouGroup
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
@@ -35,6 +39,47 @@ internal object ForYouEarnOpportunitiesPreviewData {
                 topEnd = "+ \$7.98/year",
                 bottomEnd = "6,2%",
             ),
+        ).asSingleForYouGroup(),
+        onAllEarnTokensClick = {},
+    )
+
+    /** Earn-eligible holdings spread across two wallets: one grouped section per wallet with a header. */
+    val groupedByWallet = EarnOpportunitiesUM.Content(
+        subtitleRes = R.string.for_you_earn_opportunities_tokens_rewards,
+        potentialReward = stringReference(TOTAL_POTENTIAL_REWARD),
+        potentialRewardType = null,
+        tokenList = persistentListOf(
+            ForYouWalletGroupUM(
+                header = walletHeader(id = "wallet_0", name = "Tangem wallet"),
+                items = persistentListOf(
+                    earnTokenRow(
+                        id = "wallet_0_main",
+                        name = "Main Account",
+                        network = "7 tokens",
+                        topEnd = "+ \$394/year",
+                        bottomEnd = "",
+                    ),
+                ),
+            ),
+            ForYouWalletGroupUM(
+                header = walletHeader(id = "wallet_1", name = "Tangem wallet 2.0"),
+                items = persistentListOf(
+                    earnTokenRow(
+                        id = "wallet_1_solana",
+                        name = "Solana",
+                        network = "Solana network",
+                        topEnd = "+ \$41.83/year",
+                        bottomEnd = "APY 19.44%",
+                    ),
+                    earnTokenRow(
+                        id = "wallet_1_tether",
+                        name = "Tether",
+                        network = "Solana network",
+                        topEnd = "+ \$20/year",
+                        bottomEnd = "APY 3.44%",
+                    ),
+                ),
+            ),
         ),
         onAllEarnTokensClick = {},
     )
@@ -52,7 +97,7 @@ internal object ForYouEarnOpportunitiesPreviewData {
                 topEnd = "APY 4,5",
                 bottomEnd = "Staking",
             ),
-        ),
+        ).asSingleForYouGroup(),
         onAllEarnTokensClick = {},
     )
 
@@ -72,8 +117,15 @@ internal object ForYouEarnOpportunitiesPreviewData {
                 tokenList = persistentListOf(),
                 isExpanded = false,
                 isExpandable = false,
+                segmentColor = null,
             )
-        }.toPersistentList(),
+        }.toPersistentList().asSingleForYouGroup(),
+    )
+
+    private fun walletHeader(id: String, name: String): ForYouWalletHeaderUM = ForYouWalletHeaderUM(
+        id = id,
+        name = stringReference(name),
+        deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
     )
 
     private fun earnTokenRow(
@@ -97,6 +149,7 @@ internal object ForYouEarnOpportunitiesPreviewData {
             tokenList = persistentListOf(),
             isExpanded = false,
             isExpandable = false,
+            segmentColor = null,
         )
     }
 }
