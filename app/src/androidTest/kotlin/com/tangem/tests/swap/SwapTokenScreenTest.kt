@@ -72,13 +72,8 @@ class SwapTokenScreenTest : BaseTestCase() {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
                 }
             }
-            step("Open the providers tab") {
-                onSwapTokenScreen { providersBlock.performClick() }
-            }
-            step("Assert the 'ALL' filter is displayed") {
-                onChooseProviderBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { filterButton(allFilter).assertIsDisplayed() }
-                }
+            step("Open the providers bottom sheet with the type filter displayed") {
+                openProviderSheetWithTypeFilter(allFilter)
             }
             step("Assert the 'CEX' filter is displayed") {
                 onChooseProviderBottomSheet { filterButton(cexFilter).assertIsDisplayed() }
