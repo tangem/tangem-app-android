@@ -648,3 +648,38 @@ fun BaseTestCase.switchSwapMode(mode: String) {
 }
 
 
+
+
+private const val PROVIDER_SHEET_OPEN_ATTEMPTS = 3
+
+/**
+ * Opens the providers bottom sheet, reopening it until the ALL/CEX/DEX segments render.
+ *
+ * The segments exist only when the provider list already holds both a CEX and a DEX quote, and that set is
+ * captured once, when the sheet config is built (`StateBuilder.showSelectProviderBottomSheet`). A DEX quote
+ * arriving later never adds them to an open sheet, so a slow quote is waited out by reopening, not by a
+ * longer assert — hence the mutating retry instead of a plain awaitSuccess.
+ */
+fun BaseTestCase.openProviderSheetWithTypeFilter(allFilter: String) {
+    repeat(PROVIDER_SHEET_OPEN_ATTEMPTS - 1) {
+        step("Click on 'Providers' block") {
+            onSwapTokenScreen { providersBlock.performClick() }
+        }
+        val filtersRendered = runCatching {
+            awaitSuccess { onChooseProviderBottomSheet { filterButton(allFilter).assertIsDisplayed() } }
+        }.isSuccess
+        if (filtersRendered) return
+
+        step("Close the providers bottom sheet and wait for the next quote") {
+            device.uiDevice.pressBack()
+            awaitSuccess { onSwapTokenScreen { providersBlock.assertIsDisplayed() } }
+        }
+    }
+
+    step("Click on 'Providers' block") {
+        onSwapTokenScreen { providersBlock.performClick() }
+    }
+    step("Assert the '$allFilter' filter is displayed") {
+        awaitSuccess { onChooseProviderBottomSheet { filterButton(allFilter).assertIsDisplayed() } }
+    }
+}
