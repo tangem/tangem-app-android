@@ -221,6 +221,59 @@ internal class SwapNotificationsFactoryTest {
         assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>()).hasSize(1)
     }
 
+    @Test
+    fun `GIVEN permission required and insufficient approve fee WHEN notifications built THEN approve prompt hidden`() {
+        // Arrange — the fee coin cannot cover the approve fee
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(
+            providerType = ExchangeProviderType.DEX,
+            permissionState = PermissionDataState.PermissionRequired(
+                isResetApproval = false,
+                spenderAddress = "0xSpender",
+            ),
+        )
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert — the cover-fee error replaces the approve prompt
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Info.PermissionNeeded>()).isEmpty()
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN permission required and pending balance status WHEN notifications built THEN approve prompt shown`() {
+        // Arrange — fee not resolved yet, the approve prompt keeps its usual behavior
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(
+            providerType = ExchangeProviderType.DEX,
+            permissionState = PermissionDataState.PermissionRequired(
+                isResetApproval = false,
+                spenderAddress = "0xSpender",
+            ),
+            balanceStatus = SwapBalanceStatus.Pending,
+        )
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Info.PermissionNeeded>()).hasSize(1)
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>()).isEmpty()
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -276,6 +329,11 @@ internal class SwapNotificationsFactoryTest {
     private fun buildQuotesLoadedState(
         providerType: ExchangeProviderType,
         txType: ExpressTxType? = null,
+        permissionState: PermissionDataState = PermissionDataState.Empty,
+        balanceStatus: SwapBalanceStatus = SwapBalanceStatus.InsufficientFee(
+            feeCurrencyName = "Ethereum",
+            feeCurrencySymbol = "ETH",
+        ),
     ): SwapState.QuotesLoadedState {
         val toStatusValue = mockk<CryptoCurrencyStatus.Loaded>(relaxed = true) {
             every { amount } returns BigDecimal("1")
@@ -303,13 +361,10 @@ internal class SwapNotificationsFactoryTest {
             ),
             priceImpact = PriceImpact.Empty,
             preparedSwapConfigState = PreparedSwapConfigState(
-                balanceStatus = SwapBalanceStatus.InsufficientFee(
-                    feeCurrencyName = "Ethereum",
-                    feeCurrencySymbol = "ETH",
-                ),
+                balanceStatus = balanceStatus,
                 hasOutgoingTransaction = false,
             ),
-            permissionState = PermissionDataState.Empty,
+            permissionState = permissionState,
             swapDataModel = null,
             currencyCheck = null,
             validationResult = null,
