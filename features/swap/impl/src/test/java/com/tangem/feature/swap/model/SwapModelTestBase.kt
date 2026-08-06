@@ -128,19 +128,29 @@ internal abstract class SwapModelTestBase {
         every { getBalanceHidingSettingsUseCase.invoke() } returns emptyFlow()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { shouldShowStoriesInteractor.invokeSync(any()) } returns false
-        coEvery { initialCurrenciesResolver.invoke(any(), any(), any(), any()) } returns (null to null)
+        coEvery { initialCurrenciesResolver.invoke(any(), any(), any(), any(), any()) } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
     }
 
-    protected fun createParams(): SwapComponent.Params = SwapComponent.Params(
+    protected fun createParams(
+        fromCryptoCurrency: CryptoCurrency? = null,
+        toCryptoCurrency: CryptoCurrency? = null,
+        fromCurrencyPosition: SwapComponent.Params.CurrencyPosition = SwapComponent.Params.CurrencyPosition.ANY,
+        fromAmount: java.math.BigDecimal? = null,
+        providerId: String? = null,
+    ): SwapComponent.Params = SwapComponent.Params(
         userWalletId = userWalletId,
-        fromCryptoCurrency = null,
+        fromCryptoCurrency = fromCryptoCurrency,
         screenSource = "Test",
+        fromCurrencyPosition = fromCurrencyPosition,
+        toCryptoCurrency = toCryptoCurrency,
+        fromAmount = fromAmount,
+        providerId = providerId,
     )
 
     @Suppress("LongMethod")
-    protected fun createModel(): SwapModel = SwapModel(
-        paramsContainer = MutableParamsContainer(createParams()),
+    protected fun createModel(params: SwapComponent.Params = createParams()): SwapModel = SwapModel(
+        paramsContainer = MutableParamsContainer(params),
         getUserCountryUseCase = getUserCountryUseCase,
         getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         chooseTokenBridgeFactory = chooseTokenBridgeFactory,
