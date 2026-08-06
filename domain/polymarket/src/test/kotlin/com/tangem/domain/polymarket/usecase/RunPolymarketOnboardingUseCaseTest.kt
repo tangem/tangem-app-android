@@ -72,8 +72,8 @@ internal class RunPolymarketOnboardingUseCaseTest {
             PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS.right()
         coEvery { submitApprovals(ADDRESSES, SIGNED) } returns
             PolymarketWalletStatus.APPROVALS_IN_PROGRESS.right()
-        coEvery { deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP) } returns CREDENTIALS.right()
-        coEvery { getApiCredentials(OWNER) } returns null
+        coEvery { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) } returns CREDENTIALS.right()
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns null
         coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
     }
 
@@ -102,10 +102,10 @@ internal class RunPolymarketOnboardingUseCaseTest {
         coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
         coVerify(exactly = 1) { deployDepositWallet(ADDRESSES) }
         coVerify(exactly = 1) { submitApprovals(ADDRESSES, SIGNED) }
-        coVerify(exactly = 1) { deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP) }
+        coVerify(exactly = 1) { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) }
         coVerifyOrder {
             deployDepositWallet(ADDRESSES)
-            deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP)
+            deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP)
         }
     }
 
@@ -131,7 +131,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     fun `GIVEN a wallet already onboarded WHEN collected THEN primes the cache with the stored credentials`() =
         runTest {
             // Arrange
-            coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+            coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
             coEvery { getWalletStatus(ADDRESSES) } returns
                 walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
 
@@ -148,7 +148,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     @Test
     fun `GIVEN the cache prime fails WHEN collected THEN still reports Ready`() = runTest {
         // Arrange
-        coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { getWalletStatus(ADDRESSES) } returns
             walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } returns
@@ -165,7 +165,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     @Test
     fun `GIVEN the cache prime throws WHEN collected THEN still reports Ready`() = runTest {
         // Arrange
-        coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { getWalletStatus(ADDRESSES) } returns
             walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } throws IllegalArgumentException("bad secret")
@@ -205,7 +205,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     fun `GIVEN the wallet is onboarded and credentials are stored WHEN collected THEN Ready without a tap`() =
         runTest {
             // Arrange
-            coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+            coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
             coEvery { getWalletStatus(ADDRESSES) } returns
                 walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
 
@@ -236,7 +236,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
                 awaitComplete()
             }
             coVerify(exactly = 1) { signOnboardingDigests(ADDRESSES, NONCE) }
-            coVerify(exactly = 1) { deriveApiCredentials(OWNER, L1_SIGNATURE, TIMESTAMP) }
+            coVerify(exactly = 1) { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) }
             coVerify(exactly = 0) { deployDepositWallet(any()) }
             coVerify(exactly = 0) { submitApprovals(any(), any()) }
         }
@@ -293,7 +293,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     fun `GIVEN the wallet is deployed and credentials are stored WHEN collected THEN does not re-derive credentials`() =
         runTest {
             // Arrange
-            coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+            coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
             coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
                 walletState(PolymarketWalletStatus.DEPLOYED).right(),
                 walletState(PolymarketWalletStatus.READY_TO_TRADE).right(),
@@ -309,14 +309,14 @@ internal class RunPolymarketOnboardingUseCaseTest {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
                 awaitComplete()
             }
-            coVerify(exactly = 0) { deriveApiCredentials(any(), any(), any()) }
+            coVerify(exactly = 0) { deriveApiCredentials(any(), any(), any(), any()) }
             coVerify(exactly = 1) { submitApprovals(ADDRESSES, SIGNED) }
         }
 
     @Test
     fun `GIVEN approvals are in flight and credentials are stored WHEN collected THEN only waits`() = runTest {
         // Arrange
-        coEvery { getApiCredentials(OWNER) } returns CREDENTIALS
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
             walletState(PolymarketWalletStatus.APPROVALS_IN_PROGRESS).right(),
             walletState(PolymarketWalletStatus.READY_TO_TRADE).right(),
@@ -609,7 +609,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
             // Arrange
             coEvery { getWalletStatus(ADDRESSES) } returns
                 walletState(PolymarketWalletStatus.NOT_CREATED).right()
-            coEvery { getApiCredentials(OWNER) } throws IllegalStateException("keystore")
+            coEvery { getApiCredentials(USER_WALLET_ID) } throws IllegalStateException("keystore")
 
             // Act & Assert
             useCase(USER_WALLET_ID).test {
