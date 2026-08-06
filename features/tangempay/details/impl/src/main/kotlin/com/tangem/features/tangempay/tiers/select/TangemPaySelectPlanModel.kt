@@ -16,11 +16,11 @@ import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
 import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
-import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
