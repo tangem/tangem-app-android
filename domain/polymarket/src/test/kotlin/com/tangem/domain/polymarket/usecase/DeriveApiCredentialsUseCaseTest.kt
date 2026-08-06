@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -39,10 +40,10 @@ internal class DeriveApiCredentialsUseCaseTest {
     fun `GIVEN credentials are already stored WHEN invoke THEN returns them without calling the service`() =
         runTest {
             // Arrange
-            coEvery { credentialsStore.get(OWNER) } returns CREDENTIALS
+            coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
 
             // Act
-            val actual = useCase(ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
+            val actual = useCase(userWalletId = USER_WALLET_ID, ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
 
             // Assert
             assertThat(actual).isEqualTo(CREDENTIALS.right())
@@ -54,18 +55,18 @@ internal class DeriveApiCredentialsUseCaseTest {
     fun `GIVEN nothing is stored WHEN invoke THEN derives with the L1 headers and persists the result`() = runTest {
         // Arrange
         val headers = slot<PolymarketL1Headers>()
-        coEvery { credentialsStore.get(OWNER) } returns null
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
         coEvery { polymarketRepository.deriveApiCredentials(capture(headers)) } returns CREDENTIALS.right()
 
         // Act
-        val actual = useCase(ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
+        val actual = useCase(userWalletId = USER_WALLET_ID, ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
 
         // Assert
         assertThat(actual).isEqualTo(CREDENTIALS.right())
         assertThat(headers.captured).isEqualTo(
             PolymarketL1Headers(address = OWNER, signature = SIGNATURE, timestamp = TIMESTAMP, nonce = "0"),
         )
-        coVerify(exactly = 1) { credentialsStore.store(OWNER, CREDENTIALS) }
+        coVerify(exactly = 1) { credentialsStore.store(USER_WALLET_ID, CREDENTIALS) }
     }
 
     @Test
@@ -73,13 +74,13 @@ internal class DeriveApiCredentialsUseCaseTest {
         // Arrange
         val deriveHeaders = slot<PolymarketL1Headers>()
         val createHeaders = slot<PolymarketL1Headers>()
-        coEvery { credentialsStore.get(OWNER) } returns null
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
         coEvery { polymarketRepository.deriveApiCredentials(capture(deriveHeaders)) } returns
             PolymarketAuthError.KeyNotFound.left()
         coEvery { polymarketRepository.createApiCredentials(capture(createHeaders)) } returns CREDENTIALS.right()
 
         // Act
-        val actual = useCase(ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
+        val actual = useCase(userWalletId = USER_WALLET_ID, ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
 
         // Assert
         assertThat(actual).isEqualTo(CREDENTIALS.right())
@@ -87,19 +88,19 @@ internal class DeriveApiCredentialsUseCaseTest {
         coVerifyOrder {
             polymarketRepository.deriveApiCredentials(any())
             polymarketRepository.createApiCredentials(any())
-            credentialsStore.store(OWNER, CREDENTIALS)
+            credentialsStore.store(USER_WALLET_ID, CREDENTIALS)
         }
     }
 
     @Test
     fun `GIVEN the signature is rejected WHEN invoke THEN does not try to create a key`() = runTest {
         // Arrange
-        coEvery { credentialsStore.get(OWNER) } returns null
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
         coEvery { polymarketRepository.deriveApiCredentials(any()) } returns
             PolymarketAuthError.InvalidSignature.left()
 
         // Act
-        val actual = useCase(ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
+        val actual = useCase(userWalletId = USER_WALLET_ID, ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -112,11 +113,11 @@ internal class DeriveApiCredentialsUseCaseTest {
     @Test
     fun `GIVEN the service is unreachable WHEN invoke THEN returns Network`() = runTest {
         // Arrange
-        coEvery { credentialsStore.get(OWNER) } returns null
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
         coEvery { polymarketRepository.deriveApiCredentials(any()) } returns PolymarketAuthError.Network.left()
 
         // Act
-        val actual = useCase(ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
+        val actual = useCase(userWalletId = USER_WALLET_ID, ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketOnboardingError.Network.left())
@@ -126,12 +127,12 @@ internal class DeriveApiCredentialsUseCaseTest {
     @Test
     fun `GIVEN creation also fails WHEN invoke THEN wraps that error and stores nothing`() = runTest {
         // Arrange
-        coEvery { credentialsStore.get(OWNER) } returns null
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
         coEvery { polymarketRepository.deriveApiCredentials(any()) } returns PolymarketAuthError.KeyNotFound.left()
         coEvery { polymarketRepository.createApiCredentials(any()) } returns PolymarketAuthError.RateLimited.left()
 
         // Act
-        val actual = useCase(ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
+        val actual = useCase(userWalletId = USER_WALLET_ID, ownerAddress = OWNER, l1Signature = SIGNATURE, timestamp = TIMESTAMP)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketOnboardingError.Auth(PolymarketAuthError.RateLimited).left())
@@ -139,6 +140,7 @@ internal class DeriveApiCredentialsUseCaseTest {
     }
 
     private companion object {
+        val USER_WALLET_ID = UserWalletId("011")
         const val OWNER = "0x1111111111111111111111111111111111111111"
         const val SIGNATURE = "0xaa"
         const val TIMESTAMP = "1735689600"
