@@ -107,7 +107,7 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
 
     @Test
     fun `applySwapFee names the fee-paying coin in InsufficientFee, not the swapped token`() = runTest {
-        // Arrange — swapping a token while the network coin cannot cover the gas.
+        // Arrange
         coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
         coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("0.0001")
 
