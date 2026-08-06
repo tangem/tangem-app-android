@@ -2,8 +2,8 @@ package com.tangem.data.common.api
 
 import arrow.core.raise.Raise
 import arrow.core.raise.recover
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration

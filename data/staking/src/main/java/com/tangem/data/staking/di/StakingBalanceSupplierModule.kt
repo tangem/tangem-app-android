@@ -7,7 +7,7 @@ import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer

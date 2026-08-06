@@ -2,8 +2,8 @@ package com.tangem.feature.tester.presentation.environments.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
 import com.tangem.feature.tester.impl.BuildConfig
@@ -64,9 +64,7 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
     }
 
     private fun Map<ApiConfig, ApiEnvironment>.toUiModel(): ImmutableSet<EnvironmentTogglesScreenUM.ApiInfoUM> {
-        return mapNotNull {
-            val (config, currentEnvironment) = it
-
+        return mapNotNull { (config, currentEnvironment) ->
             if (config.environmentConfigs.size <= 1) return@mapNotNull null
 
             EnvironmentTogglesScreenUM.ApiInfoUM(

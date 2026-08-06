@@ -7,8 +7,8 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolAccountsListRequest
 import com.tangem.datasource.api.ethpool.models.response.*
@@ -101,6 +101,33 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         }
 
         coVerify(inverse = true) { stakeKitBalancesStore.storeError(any(), any()) }
+
+        assertEitherRight(actual)
+    }
+
+    @Test
+    fun `GIVEN more than 15 stakeKit integrations WHEN fetch THEN requests are chunked by 15`() = runTest {
+        // Arrange
+        // Regression for [REDACTED_TASK_KEY]: StakeKit rejects a single POST /yields/balances carrying
+        // more than 15 integrations ("You can only submit maximum of 15 integrations"), so the
+        // request must be split into chunks of at most 15.
+        val integrationId = solanaId.integrationId
+        val stakingIds = (1..18).mapTo(mutableSetOf()) { index ->
+            StakingID(integrationId = integrationId, address = "0x$index")
+        }
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds)
+
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        coEvery { stakingYieldsStore.getSyncWithTimeout() } returns listOf(MockYieldDTOFactory.create(solanaId))
+        coEvery { stakeKitApi.getMultipleYieldBalances(any()) } returns ApiResponse.Success(emptySet())
+
+        // Act
+        val actual = fetcher.invoke(params)
+
+        // Assert
+        coVerify(exactly = 1) { stakeKitApi.getMultipleYieldBalances(match { it.size == 15 }) }
+        coVerify(exactly = 1) { stakeKitApi.getMultipleYieldBalances(match { it.size == 3 }) }
+        coVerify(inverse = true) { stakeKitApi.getMultipleYieldBalances(match { it.size > 15 }) }
 
         assertEitherRight(actual)
     }

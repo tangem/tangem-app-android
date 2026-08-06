@@ -33,6 +33,7 @@ import com.tangem.core.ui.components.bottomsheets.internal.collapse
 import com.tangem.core.ui.components.bottomsheets.modal.MODAL_SHEET_MAX_HEIGHT
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
 import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
@@ -258,6 +259,12 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
                     .testTag(BaseBottomSheetTestTags.CONTAINER),
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .hazeSourceTangem()
+                            .background(containerColor),
+                    )
                     title(model)
                 }
                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -311,6 +318,7 @@ fun BoxScope.FooterOverlay(
         0.dp
     }
     val fadeMax = TangemTheme.colors2.surface.level2
+
     CompositionLocalProvider(
         LocalTangemBottomSheetContentBottomInset provides contentBottomOverlayHeight,
         LocalBottomSheetContentScrollable provides isContentScrollable,
@@ -331,6 +339,7 @@ fun BoxScope.FooterOverlay(
                     height = gradientHeight,
                 )
             }
+
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()

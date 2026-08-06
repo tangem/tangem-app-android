@@ -3,10 +3,15 @@ package com.tangem.core.ui.test
 object TangemPayTestTags {
     // Main wallet screen tile (entry point into Tangem Pay)
     const val MAIN_SCREEN_TILE = "TANGEM_PAY_MAIN_SCREEN_TILE"
+    const val MAIN_SCREEN_TILE_BALANCE = "TANGEM_PAY_MAIN_SCREEN_TILE_BALANCE"
 
     // Payment account details screen
+    const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
     const val PAYMENT_ACCOUNT_BALANCE = "TANGEM_PAY_PAYMENT_ACCOUNT_BALANCE"
     const val PAYMENT_ACCOUNT_CARD_BUTTON = "TANGEM_PAY_PAYMENT_ACCOUNT_CARD_BUTTON"
+
+    // Reload button shown in the transaction-history "failed to load" state
+    const val TRANSACTION_HISTORY_RELOAD_BUTTON = "TANGEM_PAY_TRANSACTION_HISTORY_RELOAD_BUTTON"
 
     // Card details (reveal + copy)
     const val CARD_DETAILS_SHOW_BUTTON = "TANGEM_PAY_CARD_DETAILS_SHOW_BUTTON"
@@ -18,6 +23,12 @@ object TangemPayTestTags {
     const val CARD_DETAILS_COPY_EXPIRATION = "TANGEM_PAY_CARD_DETAILS_COPY_EXPIRATION"
     const val CARD_DETAILS_COPY_CVC = "TANGEM_PAY_CARD_DETAILS_COPY_CVC"
 
+    // Add to Apple/Google Pay guide (entry banner + guide screen)
+    const val ADD_TO_WALLET_BANNER = "TANGEM_PAY_ADD_TO_WALLET_BANNER"
+    const val ADD_TO_WALLET_SCREEN = "TANGEM_PAY_ADD_TO_WALLET_SCREEN"
+    const val ADD_TO_WALLET_CLOSE_BUTTON = "TANGEM_PAY_ADD_TO_WALLET_CLOSE_BUTTON"
+    const val ADD_TO_WALLET_STEP = "TANGEM_PAY_ADD_TO_WALLET_STEP"
+
     // Card management (card page settings)
     const val SHOW_DETAILS_ROW = "TANGEM_PAY_SHOW_DETAILS_ROW"
     const val CHANGE_PIN_ROW = "TANGEM_PAY_CHANGE_PIN_ROW"
@@ -26,6 +37,12 @@ object TangemPayTestTags {
 
     // Card page top bar more-actions menu (redesign)
     const val CARD_PAGE_MORE_BUTTON = "TANGEM_PAY_CARD_PAGE_MORE_BUTTON"
+
+    // Card rename
+    const val CARD_NAME_EDIT_BUTTON = "TANGEM_PAY_CARD_NAME_EDIT_BUTTON"
+    const val CARD_NAME_TEXT_FIELD = "TANGEM_PAY_CARD_NAME_TEXT_FIELD"
+    const val CARD_RENAME_DONE_BUTTON = "TANGEM_PAY_CARD_RENAME_DONE_BUTTON"
+    const val CARD_RENAME_CLOSE_BUTTON = "TANGEM_PAY_CARD_RENAME_CLOSE_BUTTON"
 
     // Masked card number shown on the card face (e.g. "*4242")
     const val CARD_NUMBER_SHORT = "TANGEM_PAY_CARD_NUMBER_SHORT"
@@ -41,11 +58,16 @@ object TangemPayTestTags {
     const val FREEZE_CONFIRMATION_SUBMIT_BUTTON = "TANGEM_PAY_FREEZE_CONFIRMATION_SUBMIT_BUTTON"
 
     // PIN entry screen
-    const val PIN_SCREEN_TITLE = "TANGEM_PAY_PIN_SCREEN_TITLE"
     const val PIN_SCREEN_DESCRIPTION = "TANGEM_PAY_PIN_SCREEN_DESCRIPTION"
     const val PIN_INPUT_FIELD = "TANGEM_PAY_PIN_INPUT_FIELD"
-    const val PIN_SUBMIT_BUTTON = "TANGEM_PAY_PIN_SUBMIT_BUTTON"
     const val PIN_ERROR_MESSAGE = "TANGEM_PAY_PIN_ERROR_MESSAGE"
+    const val PIN_CLOSE_BUTTON = "TANGEM_PAY_PIN_CLOSE_BUTTON"
+
+    // Current-PIN bottom sheet (card already has a PIN)
+    const val VIEW_PIN_TITLE = "TANGEM_PAY_VIEW_PIN_TITLE"
+    const val VIEW_PIN_VALUE = "TANGEM_PAY_VIEW_PIN_VALUE"
+    const val VIEW_PIN_LOADER = "TANGEM_PAY_VIEW_PIN_LOADER"
+    const val VIEW_PIN_CHANGE_BUTTON = "TANGEM_PAY_VIEW_PIN_CHANGE_BUTTON"
 
     // PIN success screen
     const val PIN_SUCCESS_TITLE = "TANGEM_PAY_PIN_SUCCESS_TITLE"

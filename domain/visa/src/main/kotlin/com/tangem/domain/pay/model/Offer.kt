@@ -15,11 +15,14 @@ data class Offer(
     val data: Data,
 ) {
 
+    val isPlastic: Boolean get() = type == Type.TANGEM_PAY_PLASTIC_VISA
+
     data class Data(val specificationName: String, val orderType: OrderType)
 
     /** Offer type — unknown wire values resolve to [UNKNOWN]. */
     enum class Type(val wireValue: String) {
         CARD_ISSUE_VIRTUAL_RAIN("CARD_ISSUE_VIRTUAL_RAIN"),
+        TANGEM_PAY_PLASTIC_VISA("TANGEM_PAY_PLASTIC_VISA"),
         UNKNOWN(""),
         ;
 
@@ -36,3 +39,5 @@ data class Offer(
         val currency: Currency,
     )
 }
+
+fun List<Offer>.plasticOffer(): Offer? = firstOrNull(Offer::isPlastic)

@@ -5,11 +5,14 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.pay.util.CashbackAccrualDocsConverter
 import com.tangem.data.pay.util.CashbackPromotionsConverter
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.response.CashbackAccrualDocsResponse
-import com.tangem.datasource.api.pay.models.response.CashbackPromotionsResponse
+import com.tangem.data.visa.utils.PayTransactionCashbackConverter
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.response.CashbackAccrualDocsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackTransactionDetailsResponse
+import com.tangem.spend.datasource.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
@@ -18,6 +21,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 internal class DefaultCashbackRepositoryTest {
 
@@ -89,6 +93,38 @@ internal class DefaultCashbackRepositoryTest {
 
         // Act
         val actual = createRepository().getCashbackAccrualDocs(userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+    }
+
+    @Test
+    fun `GIVEN details response WHEN getCashbackDetails THEN converter result is returned`() = runTest {
+        // Arrange
+        val response = CashbackTransactionDetailsResponse(
+            cashback = TransactionCashbackResponse(
+                status = "confirmed",
+                amount = BigDecimal("0.63"),
+                currency = "USD",
+            ),
+        )
+        coEvery { tangemPayApi.getCashbackDetails(any(), any()) } returns ApiResponse.Success(response)
+
+        // Act
+        val actual = createRepository().getCashbackDetails(userWalletId, transactionId = "tx_1")
+
+        // Assert
+        assertThat(actual).isEqualTo(PayTransactionCashbackConverter.convert(response.cashback).right())
+    }
+
+    @Test
+    fun `GIVEN backend error WHEN getCashbackDetails THEN error is propagated`() = runTest {
+        // Arrange
+        coEvery { tangemPayApi.getCashbackDetails(any(), any()) } returns
+            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CashbackTransactionDetailsResponse>
+
+        // Act
+        val actual = createRepository().getCashbackDetails(userWalletId, transactionId = "tx_1")
 
         // Assert
         assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())

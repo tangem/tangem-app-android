@@ -104,12 +104,7 @@ internal object MarketsTokenDetailsPreview {
                     onInfoClick = {},
                 ),
                 metrics = MetricsUM(
-                    metrics = persistentListOf(
-                        infoPoint,
-                        infoPoint,
-                        infoPoint,
-                    ),
-                    metricsV2 = null,
+                    rows = persistentListOf(),
                 ),
                 pricePerformance = PricePerformanceUM(
                     h24 = PricePerformanceUM.Value(

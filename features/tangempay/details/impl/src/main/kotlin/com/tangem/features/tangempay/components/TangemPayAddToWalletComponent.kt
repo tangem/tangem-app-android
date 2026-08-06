@@ -11,7 +11,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
-import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreenV2
+import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreen
 
 internal class TangemPayAddToWalletComponent(
     private val appComponentContext: AppComponentContext,
@@ -25,7 +25,7 @@ internal class TangemPayAddToWalletComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         val cardDetailsState by model.cardDetailsState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
-        TangemPayAddToWalletScreenV2(
+        TangemPayAddToWalletScreen(
             state = state,
             cardDetailsState = cardDetailsState,
         )

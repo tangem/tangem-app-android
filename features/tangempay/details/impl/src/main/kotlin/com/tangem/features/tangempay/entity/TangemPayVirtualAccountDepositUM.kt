@@ -4,14 +4,9 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
-/**
- * UI state of the bank-transfer deposit bottom sheet (VA MVP0, TWI-1638).
- *
- * @property shouldShowTermsAndConditions `true` for the `Eligible` state — shows the provider T&C consent footer.
- */
 @Immutable
 internal data class TangemPayVirtualAccountDepositUM(
-    val fees: ImmutableList<FeeRow>,
+    val fees: FeesUM,
     val shouldShowTermsAndConditions: Boolean,
     val isLoading: Boolean,
     val onShowDetailsClick: () -> Unit,
@@ -19,6 +14,20 @@ internal data class TangemPayVirtualAccountDepositUM(
     val onTermsClick: () -> Unit,
     val onPrivacyClick: () -> Unit,
 ) {
+
+    @Immutable
+    sealed interface FeesUM {
+
+        data object Loading : FeesUM
+
+        data class Content(val rows: ImmutableList<FeeRow>) : FeesUM
+
+        data class Error(
+            val isRetryLoading: Boolean,
+            val onRetryClick: () -> Unit,
+            val onContactSupportClick: () -> Unit,
+        ) : FeesUM
+    }
 
     @Immutable
     data class FeeRow(

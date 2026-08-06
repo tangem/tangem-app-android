@@ -3,6 +3,7 @@ package com.tangem.tap.di
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.tap.common.deeplink.DefaultDeeplinkLauncher
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.navigation.settings.SettingsManager
@@ -10,6 +11,7 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.navigation.url.DefaultAppStoreOpener
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.tap.ForegroundActivityObserver
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.tap.common.finisher.AndroidAppFinisher
 import com.tangem.tap.common.settings.IntentSettingsManager
@@ -59,6 +61,10 @@ internal interface UtilsModule {
         @Singleton
         fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager =
             IntentSettingsManager(context)
+
+        @Provides
+        @Singleton
+        fun provideForegroundActivityProvider(): ForegroundActivityProvider = ForegroundActivityObserver
 
         @Provides
         @Singleton

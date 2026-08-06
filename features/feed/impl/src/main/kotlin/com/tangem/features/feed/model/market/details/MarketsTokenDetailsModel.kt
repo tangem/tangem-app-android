@@ -32,10 +32,11 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.format.bigdecimal.price
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.*
@@ -49,6 +50,9 @@ import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
+import com.tangem.features.foryou.TokenSummaryComponent
+import com.tangem.features.foryou.model.ForYouPeriod
+import com.tangem.features.foryou.model.PriceChangeIntervalToForYouPeriodConverter
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.feed.components.market.details.AddFundsSlotRoute
 import com.tangem.features.feed.components.market.details.AddToPortfolioSlotRoute
@@ -97,6 +101,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getUserWalletsUseCase: GetWalletsUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val excludedBlockchains: ExcludedBlockchains,
     private val urlOpener: UrlOpener,
     private val getNewsUseCase: GetNewsUseCase,
@@ -314,6 +319,18 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private val loadChartJobHolder = JobHolder()
 
+    private val tokenSummaryPeriodConverter = PriceChangeIntervalToForYouPeriodConverter()
+
+    /** Token-summary period derived from the chart interval, capped at month. Also fed to the embedded block. */
+    val selectedTokenSummaryPeriod: Flow<ForYouPeriod> = state
+        .map { tokenSummaryPeriodConverter.convert(it.selectedInterval) }
+        .distinctUntilChanged()
+
+    /** Whether the body is still loading. Fed to the embedded token-summary block so both shimmers end together. */
+    val isBodyLoading: Flow<Boolean> = state
+        .map { it.body is MarketsTokenDetailsUM.Body.Loading }
+        .distinctUntilChanged()
+
     init {
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
             ?: UserCountry.Other(Locale.getDefault().country)
@@ -399,6 +416,22 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         addFundsSheetNavigation.activate(AddFundsSlotRoute(rawCurrencyId = rawCurrencyId))
     }
 
+    fun onTokenSummaryBlockClick() {
+        val userWalletId = userWalletsListRepository.selectedUserWallet.value?.walletId ?: return
+        val token = params.token
+        params.callbacks.onTokenSummaryClick(
+            userWalletId,
+            TokenSummaryComponent.Token.Market(
+                cryptoCurrencyRawId = token.id,
+                symbol = token.symbol,
+                title = token.name,
+                tangemIconUrl = token.imageUrl.orEmpty(),
+                networks = (networksState.value as? TokenNetworksState.NetworksAvailable)?.networks.orEmpty(),
+            ),
+            tokenSummaryPeriodConverter.convert(state.value.selectedInterval).id,
+        )
+    }
+
     private fun openTokenDetails(result: AddToPortfolioManager.Result) {
         appRouter.push(
             AppRoute.CurrencyDetails(
@@ -456,7 +489,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                             relatedNews = marketsTokenDetailsUM.relatedNews.copy(
                                 articles = relatedNews,
                                 onArticledClicked = { articledId ->
-                                    params.onArticleClick(
+                                    params.callbacks.onArticleClick(
                                         /* articledId */ articledId,
                                         /* preselectedIds */ relatedNews.map { it.id },
                                     )
@@ -842,8 +875,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     ExchangesBottomSheetContent.Error(onRetryClick = { onListedOnClick(exchangesCount) })
                 },
                 ifRight = { list ->
-                    ExchangesBottomSheetContent.ContentV2(
-                        exchangeItemsV2 = ExchangeItemStateConverterV2.convertList(list).toImmutableList(),
+                    ExchangesBottomSheetContent.Content(
+                        exchangeItems = ExchangeItemStateConverterV2.convertList(list).toImmutableList(),
                     )
                 },
             )

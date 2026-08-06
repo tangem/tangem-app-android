@@ -43,6 +43,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
+    api(projects.core.configToggles)
     api(projects.core.datasource)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
@@ -70,5 +71,9 @@ dependencies {
 
     // region Libs
     api(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Testing
+    testImplementation(projects.test.core)
     // endregion
 }

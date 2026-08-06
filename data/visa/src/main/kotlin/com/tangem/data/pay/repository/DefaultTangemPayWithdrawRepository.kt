@@ -5,10 +5,10 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.data.common.quote.QuotesFetcher
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.request.WithdrawDataRequest
-import com.tangem.datasource.api.pay.models.request.WithdrawRequest
-import com.tangem.datasource.api.pay.models.response.WithdrawResponse
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.WithdrawDataRequest
+import com.tangem.spend.datasource.pay.models.request.WithdrawRequest
+import com.tangem.spend.datasource.pay.models.response.WithdrawResponse
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet

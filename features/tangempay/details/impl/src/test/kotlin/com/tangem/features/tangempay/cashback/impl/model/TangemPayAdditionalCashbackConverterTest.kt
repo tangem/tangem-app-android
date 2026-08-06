@@ -1,7 +1,10 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayAdditionalCashbackUM
 import io.mockk.clearMocks
@@ -73,7 +76,9 @@ internal class TangemPayAdditionalCashbackConverterTest {
         BadgeCase(
             isPermanent = false,
             endDate = DATE,
-            expected = TangemPayAdditionalCashbackUM.Badge.Until(stringReference("Until $FORMATTED_DATE")),
+            expected = TangemPayAdditionalCashbackUM.Badge.Until(
+                resourceReference(R.string.tangempay_cashback_additional_until, wrappedList(FORMATTED_DATE)),
+            ),
         ),
     )
 

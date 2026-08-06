@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -13,12 +14,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
 
 @Composable
-internal fun TangemPayEditDisplayNameScreenV2(
+internal fun TangemPayEditDisplayNameScreen(
     state: TangemPayEditDisplayNameUM,
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
@@ -32,6 +34,7 @@ internal fun TangemPayEditDisplayNameScreenV2(
         TangemTopBar(
             endContent = {
                 TangemButton(
+                    modifier = Modifier.testTag(TangemPayTestTags.CARD_RENAME_CLOSE_BUTTON),
                     iconStart = TangemIconUM.Icon(imageVector = Icons.ic_cross_20),
                     onClick = state.onDismiss,
                     size = TangemButton.Size.X11,
@@ -57,7 +60,8 @@ internal fun TangemPayEditDisplayNameScreenV2(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = TangemTheme.dimens2.x3, horizontal = TangemTheme.dimens2.x4)
-                .imePadding(),
+                .imePadding()
+                .testTag(TangemPayTestTags.CARD_RENAME_DONE_BUTTON),
             text = resourceReference(R.string.common_done),
             onClick = state.onDoneClick,
             isLoading = state.isLoading,

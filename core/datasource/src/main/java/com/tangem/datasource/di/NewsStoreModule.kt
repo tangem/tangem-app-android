@@ -1,6 +1,6 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.news.details.DefaultNewsDetailsStore
 import com.tangem.datasource.local.news.details.NewsDetailsStore
 import com.tangem.datasource.local.news.liked.DefaultNewsLikedStore
