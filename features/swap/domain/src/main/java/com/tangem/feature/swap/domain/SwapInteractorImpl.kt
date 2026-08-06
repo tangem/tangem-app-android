@@ -1777,9 +1777,22 @@ internal class SwapInteractorImpl @Inject constructor(
                             quoteModel = quoteModel,
                         )
                         if (state !is SwapState.QuotesLoadedState) return state
+                        val permissionState = state.permissionState
+                        val balanceStatus = if (
+                            permissionState is PermissionDataState.PermissionRequired &&
+                            quoteBalanceStatus is SwapBalanceStatus.Pending
+                        ) {
+                            checkSeparateApprovalFeeCoverage(
+                                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                                spenderAddress = permissionState.spenderAddress,
+                                amount = amount,
+                            ) ?: quoteBalanceStatus
+                        } else {
+                            quoteBalanceStatus
+                        }
                         state.copy(
                             preparedSwapConfigState = state.preparedSwapConfigState.copy(
-                                balanceStatus = quoteBalanceStatus,
+                                balanceStatus = balanceStatus,
                             ),
                         )
                     }
@@ -2173,6 +2186,52 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
             },
         )
+    }
+
+    /**
+     * Guard for the separate-approval flow: [PermissionDataState.PermissionRequired]
+     * sends a standalone approve transaction paid in the network's fee coin, so the coin balance
+     * must cover the approve fee before approval is offered. Returns [SwapBalanceStatus.InsufficientFee]
+     * when it cannot, `null` when the balance covers the fee or coverage cannot be determined.
+     *
+     * A failed fee estimation on a zero coin balance (e.g. a TRON address that never held TRX) is
+     * also insufficient — an approve always costs more than nothing. With a positive balance an
+     * estimation failure stays inconclusive and does not block the approval.
+     */
+    private suspend fun checkSeparateApprovalFeeCoverage(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        spenderAddress: String,
+        amount: SwapAmount,
+    ): SwapBalanceStatus.InsufficientFee? {
+        val tokenCurrency = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return null
+        val feeCurrencyStatus = resolveNativeFeeTokenStatus(fromSwapCurrencyStatus) ?: return null
+        val feeCurrency = feeCurrencyStatus.currency as? CryptoCurrency.Coin ?: return null
+        val feeBalance = feeCurrencyStatus.value.amount.orZero()
+
+        val insufficientFee = SwapBalanceStatus.InsufficientFee(
+            feeCurrencyName = feeCurrency.name,
+            feeCurrencySymbol = feeCurrency.symbol,
+        )
+
+        val approveFee = createApprovalTransactionUseCase(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+            amount = amount.value,
+            contractAddress = tokenCurrency.contractAddress,
+            spenderAddress = spenderAddress,
+        ).getOrNull()?.let { approveTx ->
+            getFeeUseCase(
+                transactionData = approveTx,
+                userWallet = fromSwapCurrencyStatus.userWallet,
+                network = fromSwapCurrencyStatus.currency.network,
+            ).getOrNull()
+        }
+
+        return when {
+            approveFee == null -> insufficientFee.takeIf { feeBalance.signum() == 0 }
+            approveFee.normal.amount.value.orZero() > feeBalance -> insufficientFee
+            else -> null
+        }
     }
 
     private fun createNativeAmountForDex(txValueAmount: String, network: Network): Amount {
