@@ -26,7 +26,7 @@ class HotUserWalletBuilder @AssistedInject constructor(
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
 ) {
 
-    suspend fun build(): UserWallet.Hot = withContext(dispatcherProvider.default) {
+    suspend fun build(name: String? = null): UserWallet.Hot = withContext(dispatcherProvider.default) {
         checkHotWalletCreationSupported()
 
         val allNetworks = Blockchain.entries.filter { it.isTestnet().not() }
@@ -69,7 +69,7 @@ class HotUserWalletBuilder @AssistedInject constructor(
         }
 
         UserWallet.Hot(
-            name = generateWalletNameUseCase.invokeForHot(),
+            name = generateWalletNameUseCase.invokeForHot(preferredName = name),
             walletId = UserWalletIdBuilder.walletPublicKey(wallets.first().publicKey),
             hotWalletId = hotWalletId,
             wallets = wallets,
