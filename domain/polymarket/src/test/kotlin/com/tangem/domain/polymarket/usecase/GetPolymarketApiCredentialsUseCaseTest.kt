@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.usecase
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import io.mockk.clearMocks
@@ -24,10 +25,10 @@ internal class GetPolymarketApiCredentialsUseCaseTest {
     @Test
     fun `GIVEN credentials are stored WHEN invoke THEN returns them`() = runTest {
         // Arrange
-        coEvery { credentialsStore.get(OWNER) } returns CREDENTIALS
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
 
         // Act
-        val actual = useCase(ownerAddress = OWNER)
+        val actual = useCase(userWalletId = USER_WALLET_ID)
 
         // Assert
         assertThat(actual).isEqualTo(CREDENTIALS)
@@ -36,17 +37,17 @@ internal class GetPolymarketApiCredentialsUseCaseTest {
     @Test
     fun `GIVEN nothing is stored WHEN invoke THEN returns null`() = runTest {
         // Arrange
-        coEvery { credentialsStore.get(OWNER) } returns null
+        coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
 
         // Act
-        val actual = useCase(ownerAddress = OWNER)
+        val actual = useCase(userWalletId = USER_WALLET_ID)
 
         // Assert
         assertThat(actual).isNull()
     }
 
     private companion object {
-        const val OWNER = "0x1111111111111111111111111111111111111111"
+        val USER_WALLET_ID = UserWalletId("011")
         val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
     }
 }
