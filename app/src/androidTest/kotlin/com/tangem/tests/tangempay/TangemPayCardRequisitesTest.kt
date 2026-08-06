@@ -5,8 +5,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.extensions.assertSnackbarWithText
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openTangemPayCardPage
@@ -35,12 +33,8 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             openTangemPayCardPage()
             step("Reveal card details from the card page") { revealCardDetailsFromCardPage() }
@@ -85,12 +79,8 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
     fun guideRequisitesHiddenIndependentlyFromCardDetailsTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             openTangemPayCardPage()
             step("Reveal card details from the card page") { revealCardDetailsFromCardPage() }
@@ -133,14 +123,12 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 System.setProperty(revealErrorKey, "1")
             },
             additionalAfterSection = {
                 System.clearProperty(revealErrorKey)
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             openTangemPayCardPage()
             step("Click on 'Show details' row") {
