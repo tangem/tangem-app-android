@@ -1,7 +1,8 @@
 package com.tangem.data.pay.store
 
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.spend.datasource.config.TangemPay
+
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
@@ -24,7 +25,7 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
-            .getEnvironmentConfig(ApiConfig.ID.TangemPay)
+            .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {

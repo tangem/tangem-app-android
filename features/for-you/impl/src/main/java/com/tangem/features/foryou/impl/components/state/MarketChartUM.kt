@@ -34,9 +34,14 @@ internal sealed class MarketChartUM(
 internal sealed class DonutChartUM(
     open val donutSegmentList: ImmutableList<DonutSegmentUM>,
 ) {
+    /**
+     * @property onSegmentTap invoked on every tap inside the chart — a selection, a deselection by tapping
+     * the same segment again, and a tap that misses the ring alike. Repeated taps are not deduplicated.
+     */
     data class Loaded(
         val totalAmount: String,
         override val donutSegmentList: ImmutableList<DonutSegmentUM>,
+        val onSegmentTap: () -> Unit,
     ) : DonutChartUM(donutSegmentList = donutSegmentList)
 
     data class NoData(

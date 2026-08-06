@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.RequestHeader
@@ -14,11 +18,13 @@ import com.tangem.utils.info.AppInfoProvider
  * @property expressAuthProvider       express auth provider
  * @property appInfoProvider           app info provider
  */
-internal class Express(
+class Express(
     private val environmentConfig: EnvironmentConfig,
     private val expressAuthProvider: ExpressAuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -38,7 +44,7 @@ internal class Express(
             DEBUG_BUILD_TYPE,
             -> ApiEnvironment.DEV
             INTERNAL_BUILD_TYPE,
-            -> ApiEnvironment.STAGE
+            -> ApiEnvironment.PROD
             MOCKED_BUILD_TYPE,
             -> ApiEnvironment.MOCK
             EXTERNAL_BUILD_TYPE,
@@ -110,5 +116,10 @@ internal class Express(
         }
             ?.apiKey
             ?: error("No express config provided")
+    }
+
+    companion object {
+        const val KEY = "Express"
+        val ID = ApiConfig.ID(KEY)
     }
 }
