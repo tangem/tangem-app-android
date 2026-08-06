@@ -24,7 +24,7 @@ internal object AppPreferencesStoreModule {
         appScope: AppCoroutineScope,
         @SdkMoshi moshi: Moshi,
     ): AppPreferencesStore {
-        return AppPreferencesStore(
+        return DefaultAppPreferencesStore(
             preferencesDataStore = PreferencesDataStore.getInstance(context = appContext, appScope = appScope),
             moshi = moshi,
             dispatchers = dispatchers,
