@@ -1,10 +1,12 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.raise.either
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import io.mockk.every
@@ -137,6 +139,73 @@ class ComputeSendAmountInFeeTokenTest {
         assertTrue(
             result.leftOrNull() is GetFeeError.DataError,
             "Expected GetFeeError.DataError wrapping IllegalStateException",
+        )
+    }
+
+    /**
+     * A yield-supply send keeps the real amount in the module call data — DefaultTransactionRepository zeroes
+     * TransactionData.amount for it. Reading that zero back would make the fee plan believe the send is free,
+     * so the caller-supplied amount must win.
+     */
+    @Test
+    fun `returns caller amount for a yield-supply send whose transaction amount is zeroed`() {
+        val tx = yieldSupplySendTx(value = BigDecimal.ZERO)
+
+        val result = either<GetFeeError, BigDecimal> {
+            computeSendAmountInFeeToken(tx, feeContract, sentAmount)
+        }
+
+        assertTrue(result.isRight())
+        assertEquals(sentAmount, result.getOrNull())
+    }
+
+    // Without the caller-supplied amount the plan would silently under-account the send — raise instead.
+    @Test
+    fun `raises for a yield-supply send when the sent amount is not supplied`() {
+        val tx = yieldSupplySendTx(value = BigDecimal.ZERO)
+
+        val result = either<GetFeeError, BigDecimal> {
+            computeSendAmountInFeeToken(tx, feeContract)
+        }
+
+        assertTrue(result.isLeft(), "Expected Left (error) when a yield-supply send has no explicit amount")
+        assertTrue(
+            result.leftOrNull() is GetFeeError.DataError,
+            "Expected GetFeeError.DataError wrapping IllegalStateException",
+        )
+    }
+
+    // A different fee token short-circuits to ZERO before the yield-supply branch is reached.
+    @Test
+    fun `returns ZERO for a yield-supply send paid in another token`() {
+        val tx = yieldSupplySendTx(value = BigDecimal.ZERO, contract = otherContract)
+
+        val result = either<GetFeeError, BigDecimal> {
+            computeSendAmountInFeeToken(tx, feeContract)
+        }
+
+        assertTrue(result.isRight())
+        assertEquals(BigDecimal.ZERO, result.getOrNull())
+    }
+
+    private fun yieldSupplySendTx(value: BigDecimal?, contract: String = feeContract): TransactionData.Uncompiled {
+        val token = makeToken(contract)
+        return uncompiledWith(
+            type = AmountType.TokenYieldSupply(
+                token = token,
+                isActive = true,
+                isInitialized = true,
+                isAllowedToSpend = true,
+            ),
+            value = value,
+        ).copy(
+            extras = EthereumTransactionExtras(
+                callData = EthereumYieldSupplySendCallData(
+                    tokenContractAddress = contract,
+                    destinationAddress = "0xDst",
+                    amount = Amount(value = sentAmount, token = token),
+                ),
+            ),
         )
     }
 
