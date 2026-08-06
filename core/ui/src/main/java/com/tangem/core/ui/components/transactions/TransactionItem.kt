@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -299,17 +301,18 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                 )
             }
         }
-        is ContentSubtitle.OwnWallet -> InlineImageSubtitle(
-            template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.walletName),
+        is ContentSubtitle.OwnPaymentAccount -> InlineImageSubtitle(
+            template = stringResourceSafe(
+                subtitle.direction.templateResId(),
+                subtitle.accountName.resolveReference(),
+            ),
             color = tertiary,
             afterIconColor = primary,
             modifier = modifier,
         ) {
-            TangemDeviceIcon(
-                state = subtitle.deviceIconUM,
-                modifier = Modifier.fillMaxSize(),
-            )
+            PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
         }
+        is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
         is ContentSubtitle.Asset -> InlineImageSubtitle(
             template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.symbol),
             color = tertiary,
@@ -355,9 +358,53 @@ private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Sta
     )
 }
 
+/**
+ * Own-wallet counterparty subtitle: "to:/from: {wallet name}" followed by the wallet's device icon. Unlike the
+ * address/account/asset rows (icon before the value via [InlineImageSubtitle]), the wallet renders name-first with a
+ * trailing icon, so a plain [Row] is used — the name ellipsizes within the available width while the icon stays visible
+ * (an inline trailing icon would be truncated by the ellipsis instead).
+ */
+@Composable
+private fun OwnWalletSubtitle(subtitle: ContentSubtitle.OwnWallet, modifier: Modifier = Modifier) {
+    val primary = TangemTheme.colors2.text.neutral.primary
+    val full = stringResourceSafe(subtitle.direction.plainTemplateResId(), subtitle.walletName)
+    val text = remember(full, subtitle.walletName, primary) {
+        buildAnnotatedString {
+            append(full)
+            val start = full.lastIndexOf(subtitle.walletName)
+            if (start >= 0) {
+                addStyle(SpanStyle(color = primary), start, start + subtitle.walletName.length)
+            }
+        }
+    }
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+    ) {
+        Text(
+            text = text,
+            color = TangemTheme.colors2.text.neutral.tertiary,
+            style = TangemTheme.typography2.captionMedium12,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(weight = 1f, fill = false),
+        )
+        TangemDeviceIcon(
+            state = subtitle.deviceIconUM,
+            modifier = Modifier.size(TangemTheme.dimens2.x4),
+        )
+    }
+}
+
 private fun ContentSubtitle.Direction.templateResId(): Int = when (this) {
     ContentSubtitle.Direction.TO -> R.string.transaction_history_to_inline_address
     ContentSubtitle.Direction.FROM -> R.string.transaction_history_from_inline_address
+}
+
+private fun ContentSubtitle.Direction.plainTemplateResId(): Int = when (this) {
+    ContentSubtitle.Direction.TO -> R.string.transaction_history_transaction_to_address
+    ContentSubtitle.Direction.FROM -> R.string.transaction_history_transaction_from_address
 }
 
 // endregion

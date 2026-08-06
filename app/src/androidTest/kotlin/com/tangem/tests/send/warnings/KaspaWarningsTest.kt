@@ -46,6 +46,7 @@ class KaspaWarningsTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(kaspaUTXOScenarioName)
             }
         ).run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$moreThanLimitState'") {
@@ -87,6 +88,7 @@ class KaspaWarningsTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(kaspaUTXOScenarioName)
             }
         ).run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$moreThanLimitState'") {
@@ -127,6 +129,7 @@ class KaspaWarningsTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(kaspaUTXOScenarioName)
             }
         ).run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$moreThanLimitState'") {

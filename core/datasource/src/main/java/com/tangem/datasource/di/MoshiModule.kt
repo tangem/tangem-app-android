@@ -85,6 +85,7 @@ class MoshiModule {
             )
             .addLast(KotlinJsonAdapterFactory())
             .addStakeKitEnumFallbackAdapters()
+            .addCoinIndicatorsEnumFallbackAdapters()
             .build()
     }
 

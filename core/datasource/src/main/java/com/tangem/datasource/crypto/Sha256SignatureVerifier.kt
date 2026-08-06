@@ -1,9 +1,10 @@
 package com.tangem.datasource.crypto
 
+import com.tangem.datasource.api.common.config.Express
+
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.crypto.CryptoUtils
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 
@@ -22,7 +23,7 @@ internal class Sha256SignatureVerifier(
     }
 
     private fun getPubKey(): String? {
-        val expressConfig = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.Express)
+        val expressConfig = apiConfigsManager.getEnvironmentConfig(Express.ID)
         return when (expressConfig.environment) {
             ApiEnvironment.PROD -> environmentConfig.express?.signVerifierPublicKey
             else -> environmentConfig.devExpress?.signVerifierPublicKey

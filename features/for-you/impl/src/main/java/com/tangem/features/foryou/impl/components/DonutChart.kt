@@ -65,15 +65,19 @@ import kotlin.math.min
  * track (unfilled remainder) — so only the selected slice stays at full strength. Only one slice can be
  * selected at a time — selection is hoisted (the index is the slice's identity, as there are no segment ids
  * yet). Taps are hit-tested against the ring band only and reported via [onSegmentClick]; the chart is
- * interactive only when [onSegmentClick] is set **and** [segments] is non-empty.
+ * interactive when [onSegmentClick] or [onTap] is set **and** [segments] is non-empty.
  *
  * @param segments Slices, in priority order (index 0 is painted on top). See [DonutSegmentUM.weight].
  * @param modifier Modifier; should carry the overall size (e.g. `Modifier.size(240.dp)`).
  * @param selectedIndex Index of the currently selected slice, or `null` for no selection (nothing dimmed).
- * @param onSegmentClick Invoked on every tap inside the chart: with the tapped slice index, or with `null`
- *   when the tap missed all slices (the center hole or the unfilled track). Passing `null` for the whole
- *   callback makes the chart non-interactive. Toggling/switching/clearing the selection is the caller's
- *   responsibility — e.g. map a repeat tap or a miss to deselection, and a tap on another slice to a switch.
+ * @param onSegmentClick Invoked when a tap lands on a slice **other than** the selected one, or misses all
+ *   slices (the center hole or the unfilled track) while something is selected — i.e. only when the tap can
+ *   change the selection. A repeat tap on the selected slice is not reported here; use [onTap] to observe
+ *   every tap. Toggling/switching/clearing the selection is the caller's responsibility — e.g. map a miss to
+ *   deselection, and a tap on another slice to a switch.
+ * @param onTap Invoked on every tap inside the chart, without the de-duplication [onSegmentClick] applies —
+ *   repeat taps on the selected slice and taps that miss the ring included. Fires on press, in step with
+ *   [onSegmentClick].
  * @param strokeWidth Thickness of the ring.
  * @param trackColor Fill of the unfilled remainder of the circle (and the empty-state ring).
  * @param startAngle Angle (degrees) where the first slice starts. `-90f` = 12 o'clock.
@@ -86,6 +90,7 @@ internal fun DonutChart(
     modifier: Modifier = Modifier,
     selectedIndex: Int? = null,
     onSegmentClick: ((index: Int?) -> Unit)? = null,
+    onTap: (() -> Unit)? = null,
     strokeWidth: Dp = 28.dp,
     trackColor: Color = TangemTheme.colors3.border.tertiary,
     startAngle: Float = -90f,
@@ -111,11 +116,13 @@ internal fun DonutChart(
 
     val latestSelectedIndex by rememberUpdatedState(selectedIndex)
     val latestOnSegmentClick by rememberUpdatedState(onSegmentClick)
+    val latestOnTap by rememberUpdatedState(onTap)
 
-    val clickModifier = if (onSegmentClick != null && segments.isNotEmpty()) {
+    val clickModifier = if ((onSegmentClick != null || onTap != null) && segments.isNotEmpty()) {
         Modifier.pointerInput(segments, startAngle, strokePx) {
             detectTapGestures(
                 onPress = { tap ->
+                    latestOnTap?.invoke()
                     val clickedIndex = segmentIndexAt(tap, size.toSize(), strokePx, segments, startAngle)
                     if (latestSelectedIndex != clickedIndex) latestOnSegmentClick?.invoke(clickedIndex)
                 },
@@ -168,8 +175,10 @@ internal fun DonutChart(
 
                 // Precompute each slice's [start, sweep] once. Sweeps are the *visual* angles: every
                 // non-zero slice is floored to a minimum share (see [visualSweepAngles]) so tiny holdings
-                // stay visible; larger slices shrink proportionally to make room. On a full ring the last
-                // slice's floor is bumped by the exact width its two lapped-over caps eat (see below).
+                // stay visible; larger slices shrink proportionally to make room. The grey gap (unfilled
+                // remainder) follows the same floor-or-nothing rule — it's either absent or at least the
+                // minimum share. On a full ring (no grey gap) the last slice's floor is bumped by the exact
+                // width its two lapped-over caps eat (see below).
                 val sweeps = visualSweepAngles(
                     weights = segments.map { it.weight.toFloat() },
                     capDeg = lastSegmentOverlapDeg(strokePx, arc.size.width),
@@ -272,19 +281,6 @@ private fun segmentIndexAt(
     return null
 }
 
-/**
- * Exact extra sweep (degrees) the last slice needs on a full ring to read the same visible width as a
- * middle slice (see [visualSweepAngles]).
- *
- * A round cap bulges past its arc's angular end by one cap radius (`strokePx / 2`), i.e.
- * `capAngle = toDegrees((strokePx / 2) / R)` with `R = arcDiameter / 2` → `toDegrees(strokePx / arcDiameter)`.
- * A middle slice loses one such bulge at its start (covered by the previous slice's end cap) but keeps its
- * own end cap, so its visible width equals its sweep. The last slice additionally has its end covered by
- * slice 0's start cap at the wrap — a second cap's worth — so it needs `2 × capAngle` back.
- */
-private fun lastSegmentOverlapDeg(strokePx: Float, arcDiameter: Float): Float =
-    2f * Math.toDegrees((strokePx / arcDiameter).toDouble()).toFloat()
-
 /** Square arc bounds, centered in this [DrawScope], inset by half the stroke so the ring fits inside. */
 private fun DrawScope.arcRect(strokePx: Float): ArcRect {
     val diameter = min(size.width, size.height)
@@ -381,7 +377,7 @@ private fun PreviewDonutChart() {
                 segments = persistentListOf(
                     DonutSegmentUM(
                         weight = BigDecimal(0.55),
-                        color = DonutSegmentColor.Brand,
+                        color = DonutSegmentColor.Blue,
                         title = stringReference("Ethereum"),
                         fiatValue = stringReference("$5,720.22"),
                     ),
