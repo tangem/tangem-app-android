@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.res.R
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
@@ -34,7 +35,6 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
-import com.tangem.features.polymarket.impl.ui.PolymarketOutcomeButton
 import kotlinx.collections.immutable.persistentListOf
 
 private val CardShape = RoundedCornerShape(16.dp)
@@ -174,10 +174,17 @@ private fun EventRow(state: PolymarketEventRowUM) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // The first outcome carries the info appearance, the second the error one — driven by
+            // position, not by label, since upstream labels aren't always "Yes"/"No".
             state.outcomes.forEachIndexed { index, outcome ->
-                PolymarketOutcomeButton(
-                    title = outcome.title,
-                    isPositive = index == 0,
+                TangemButton(
+                    variant = if (index == 0) {
+                        TangemButton.Variant.SecondaryInfo
+                    } else {
+                        TangemButton.Variant.SecondaryError
+                    },
+                    size = TangemButton.Size.X9,
+                    text = outcome.title,
                     onClick = outcome.onClick,
                 )
             }
