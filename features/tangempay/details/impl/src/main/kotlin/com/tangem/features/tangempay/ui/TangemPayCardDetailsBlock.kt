@@ -399,10 +399,12 @@ private fun CardDisplayName(state: DisplayNameState, modifier: Modifier = Modifi
 @Composable
 private fun DisplayOnlyCardDisplayName(state: DisplayNameState.Display, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.conditional(
-            condition = state.isEditingEnabled,
-            modifier = { clickable(onClick = state.onClick) },
-        ),
+        modifier = modifier
+            .testTag(TangemPayTestTags.CARD_NAME_EDIT_BUTTON)
+            .conditional(
+                condition = state.isEditingEnabled,
+                modifier = { clickable(onClick = state.onClick) },
+            ),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -439,6 +441,7 @@ private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Mo
         value = state.editingValue,
         onValueChange = state.onValueChanged,
         modifier = modifier
+            .testTag(TangemPayTestTags.CARD_NAME_TEXT_FIELD)
             .width(textWidthDp.coerceAtLeast(1.dp))
             .focusRequester(focusRequester),
         textStyle = textStyle,
@@ -615,7 +618,7 @@ private fun TangemPayCardDetailsCustomButton(
 
 @Preview(widthDp = 400, heightDp = 700, showBackground = true)
 @Composable
-private fun TangemPayCardDetailsBlockV2Preview(
+private fun TangemPayCardDetailsBlockPreview(
     @PreviewParameter(TangemPayCardDetailsUMProvider::class) state: TangemPayCardDetailsUM,
 ) {
     TangemThemePreview(isDark = true) {

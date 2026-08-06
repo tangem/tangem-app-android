@@ -99,13 +99,13 @@ fun TangemBadge(
             iconColor = iconColor,
             shouldRespectIconTint = shouldRespectIconTint,
         )
+        val title = rememberLastNonNull(text)
         AnimatedVisibility(
             visible = text != null,
             label = "Text Visibility",
         ) {
-            val wrappedText = remember(this) { requireNotNull(text) }
             Text(
-                text = wrappedText.resolveReference(),
+                text = title?.resolveReference().orEmpty(),
                 style = size.toTextStyle(),
                 maxLines = 1,
                 color = getTextColor(type = type, color = color),

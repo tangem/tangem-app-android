@@ -1,7 +1,7 @@
 package com.tangem.feature.tester.presentation.environments.utils
 
-import com.tangem.datasource.api.common.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 
 /**
  * Comparator for [ApiEnvironmentConfig] based on the priority of [ApiEnvironment].

@@ -1,7 +1,7 @@
 package com.tangem.data.staking
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolNetworkDTO
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
