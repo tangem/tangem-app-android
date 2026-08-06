@@ -53,7 +53,6 @@ internal class TransferBottomSheetComponent(
             content = { contentState ->
                 TransferBottomSheetContent(
                     state = contentState,
-                    onCloseClick = ::dismiss,
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                 )
             },
