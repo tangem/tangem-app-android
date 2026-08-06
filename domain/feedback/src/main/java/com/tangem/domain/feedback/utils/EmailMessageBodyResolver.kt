@@ -4,7 +4,6 @@ import com.tangem.domain.feedback.FeedbackDataBuilder
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.repository.FeedbackRepository
-import com.tangem.domain.visa.model.VisaTxDetails
 
 /**
  * Email message body resolver
@@ -36,13 +35,8 @@ class EmailMessageBodyResolver(
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
-            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(
-                walletMetaInfo = type.walletMetaInfo,
-                customerId = type.customerId,
-                visaTxDetails = type.visaTxDetails,
-            )
             is FeedbackEmailType.Visa.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
-            is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayDisputeRequestBody(type)
+            is FeedbackEmailType.Visa.Dispute -> addTangemPayDisputeRequestBody(type)
             is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
             is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type)
             is FeedbackEmailType.Visa.KycRejected -> addTangemPayKycRejectedRequestBody(type)
@@ -60,7 +54,7 @@ class EmailMessageBodyResolver(
         }
     }
 
-    private fun FeedbackDataBuilder.addTangemPayDisputeRequestBody(type: FeedbackEmailType.Visa.DisputeV2) {
+    private fun FeedbackDataBuilder.addTangemPayDisputeRequestBody(type: FeedbackEmailType.Visa.Dispute) {
         addTangemPayPhoneInfoBody(type = type)
         addDelimiter()
         addTangemPayTxInfo(type.item)
@@ -111,17 +105,6 @@ class EmailMessageBodyResolver(
         addDelimiter()
 
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
-    }
-
-    private suspend fun FeedbackDataBuilder.addVisaRequestBody(
-        walletMetaInfo: WalletMetaInfo,
-        visaTxDetails: VisaTxDetails,
-        customerId: String,
-    ) {
-        addUserRequestBody(walletMetaInfo)
-        addDelimiter()
-        addCustomerId(customerId = customerId)
-        addVisaTxInfo(visaTxDetails)
     }
 
     private suspend fun FeedbackDataBuilder.addUserRequestBody(walletMetaInfo: WalletMetaInfo) {
