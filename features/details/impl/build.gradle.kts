@@ -46,7 +46,6 @@ dependencies {
     runtimeOnly(projects.domain.appCurrency)
     runtimeOnly(projects.domain.balanceHiding)
     runtimeOnly(projects.domain.tokens)
-    implementation(projects.domain.virtualAccount)
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring
@@ -78,6 +77,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
 
     /* Test */
+    testImplementation(projects.test.core)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)

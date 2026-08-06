@@ -17,6 +17,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -40,6 +41,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_circle_20_filled
+import com.tangem.core.ui.test.NotificationTestTags
 
 /**
  * Design-system v2 (DS3) **Message Banner** — low-level slot API: a [content] block above an
@@ -264,6 +266,7 @@ private fun MessageBannerTextWrapper(
             textAlign = textAlign,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag(NotificationTestTags.TITLE),
         )
         if (description != null) {
             Text(
@@ -271,6 +274,7 @@ private fun MessageBannerTextWrapper(
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = textAlign,
+                modifier = Modifier.testTag(NotificationTestTags.MESSAGE),
             )
         }
         extraBottomSlot?.let { slot ->

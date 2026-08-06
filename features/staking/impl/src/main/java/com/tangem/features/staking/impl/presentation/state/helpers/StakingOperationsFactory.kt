@@ -5,6 +5,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.StakeKitIntegration
 import com.tangem.domain.staking.model.StakingIntegration
+import com.tangem.utils.Provider
 import javax.inject.Inject
 
 internal class StakingOperationsFactory @Inject constructor(
@@ -15,38 +16,38 @@ internal class StakingOperationsFactory @Inject constructor(
 ) {
 
     fun createFeeLoader(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
         userWallet: UserWallet,
         integration: StakingIntegration,
     ): StakingFeeLoader {
         return when (integration) {
             is StakeKitIntegration -> stakeKitFeeLoaderFactory.create(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
                 userWallet = userWallet,
                 integration = integration,
             )
             is P2PEthPoolIntegration -> p2pEthPoolFeeLoaderFactory.create(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
                 integration = integration,
             )
         }
     }
 
     fun createTransactionSender(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
         userWallet: UserWallet,
         integration: StakingIntegration,
         isAmountSubtractAvailable: Boolean,
     ): StakingTransactionSender {
         return when (integration) {
             is StakeKitIntegration -> stakeKitTransactionSenderFactory.create(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
                 userWallet = userWallet,
                 integration = integration,
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
             )
             is P2PEthPoolIntegration -> p2pEthPoolTransactionSenderFactory.create(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
                 userWallet = userWallet,
                 integration = integration,
             )

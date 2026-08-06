@@ -4,4 +4,5 @@ class DummySettingsManager : SettingsManager {
     override fun openAppSettings() = Unit
     override fun openAppNotificationSettings() = Unit
     override fun openBiometricSettings() = Unit
+    override fun openScreenLockSettings() = Unit
 }

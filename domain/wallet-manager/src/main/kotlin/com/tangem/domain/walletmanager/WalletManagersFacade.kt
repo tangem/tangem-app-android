@@ -246,6 +246,19 @@ interface WalletManagersFacade {
      */
     suspend fun getPsbtFee(userWalletId: UserWalletId, network: Network, psbtBase64: String): BigDecimal?
 
+    /**
+     * Builds + signs (one signing session, no broadcast) the two Tron gasless transactions and returns
+     * each as a TronWeb-compatible signed-JSON string in input order. Returns `null` if the wallet
+     * manager is unavailable, the network is not Tron (the manager does not implement the gasless
+     * signing contract), or signing fails.
+     */
+    suspend fun signTronGaslessTransactions(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionDataList: List<TransactionData>,
+        signer: TransactionSigner,
+    ): List<String>?
+
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
 
     /**

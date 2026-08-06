@@ -1,9 +1,9 @@
 package com.tangem.features.tangempay
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
-import com.tangem.features.tangempay.entity.TangemPayAction
-import com.tangem.features.tangempay.entity.TangemPayActionButtonUM
-import com.tangem.features.tangempay.entity.TangemPayDetailsUM
+import com.tangem.features.tangempay.account.TangemPayAction
+import com.tangem.features.tangempay.account.TangemPayActionButtonUM
+import com.tangem.features.tangempay.account.TangemPayDetailsUM
 
 internal val List<TangemPayActionButtonUM>.withdrawButton: ActionButtonConfig
     get() = first { it.action == TangemPayAction.Withdraw }.config
