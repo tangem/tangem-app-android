@@ -438,11 +438,12 @@ class StakingTest : BaseTestCase() {
             step("Check 'Unstake' screen") {
                 checkUnstakeScreen()
             }
-            step("Hold 'Unstake' button to sign and send the transaction") {
-                confirmStakingActionByHolding()
-            }
+            // Switched before the hold — the transaction's own refetch would race it and cache the stale state.
             step("Set WireMock scenario: '$stakingScenario' to state: '$stakingUnstakingState'") {
                 setWireMockScenarioState(scenarioName = stakingScenario, state = stakingUnstakingState)
+            }
+            step("Hold 'Unstake' button to sign and send the transaction") {
+                confirmStakingActionByHolding()
             }
             step("Check 'Unstake success' screen") {
                 checkUnstakeSuccessScreen()
@@ -534,11 +535,12 @@ class StakingTest : BaseTestCase() {
             step("Check 'Staking confirm' blocks clickability and hint") {
                 checkStakingConfirmClickabilityAndHint()
             }
-            step("Hold 'Stake' button to sign and send the transaction") {
-                confirmStakingByHolding()
-            }
+            // Switched before the hold for the same reason as in unstakeStakingTest.
             step("Set WireMock scenario: '$stakingScenario' to state: '$stakingStakedState'") {
                 setWireMockScenarioState(scenarioName = stakingScenario, state = stakingStakedState)
+            }
+            step("Hold 'Stake' button to sign and send the transaction") {
+                confirmStakingByHolding()
             }
             step("Check 'Staking success' screen") {
                 checkStakingSuccessScreen()
