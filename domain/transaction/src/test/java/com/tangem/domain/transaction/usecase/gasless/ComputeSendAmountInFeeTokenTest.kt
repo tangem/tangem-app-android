@@ -143,8 +143,7 @@ class ComputeSendAmountInFeeTokenTest {
     }
 
     /**
-     * A yield-supply send keeps the real amount in the module call data — DefaultTransactionRepository zeroes
-     * TransactionData.amount for it. Reading that zero back would make the fee plan believe the send is free,
+     * A yield-supply send keeps the real amount in the module call data and zeroes TransactionData.amount,
      * so the caller-supplied amount must win.
      */
     @Test
