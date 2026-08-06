@@ -128,6 +128,23 @@ When the user asks to **port** an iOS test to Android:
   starts with explicit `step("Set WireMock scenario '$name' to '$state'") { setWireMockScenarioState(name, state) }`
   calls, then calls a thin helper (e.g. `openTangemPay()`) that only opens the screen. Mirror the
   `SendViaSwapTest` pattern.
+- **Don't roll scenarios back.** `BaseTestCase.setupHooks` resets *all* WireMock scenario states before
+  every test, in the same window as `additionalBeforeAppLaunchSection` (i.e. before
+  `ActivityScenario.launch`), so scenarios read at app start — `/v1/networks/providers`, stories — are
+  covered. So no `resetWireMockScenarioState(...)` / `resetWireMockScenarios()` in
+  `additionalAfterSection` / `additionalBeforeSection`, and no defensive reset as a first step;
+  `additionalAfterSection` is for **non-WireMock** cleanup only (system properties, clipboard, network
+  toggles). A reset *inside* a test body is legitimate only when it is part of the scenario under test
+  (e.g. "error state → reset → pull-to-refresh → content loads"); `MainScreenActionButtonsTest` and
+  `SwapStoriesTest` are the only such cases today.
+- **The reset covers scenario state, not the request journal.** `/__admin/scenarios/reset` leaves
+  `/__admin/requests` untouched, so `getWireMockRequestCount(...)` still sees calls made by earlier tests
+  in the run. Always assert on a **delta** (`countBefore` → act → `countAfter`), never on an absolute
+  count — mirror `TangemPayTransactionsTest` / `TangemPayBalanceSyncTest`.
+- **The reset is global for the WireMock instance it hits.** Harmless on CI, where each emulator gets its
+  own container, and locally when you run your own instance. But without a `wiremockBaseUrl` arg tests hit
+  the **shared remote** WireMock, and the run then resets scenarios out from under everyone else using it
+  — so pass `wiremockBaseUrl` when running locally (see `reference/running-and-debugging.md`).
 - **Open-the-feature helpers stay thin** — no scenarios-as-parameters, no scenario juggling inside.
 - **Every scenario name + state is a `val`** at the top of the test method. Reviewers reject magic
   strings inside `step(...)`.

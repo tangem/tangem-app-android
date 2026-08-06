@@ -5,7 +5,6 @@ import com.tangem.common.constants.TestConstants.DOGECOIN_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendAddressScreen
@@ -29,13 +28,7 @@ class MyWalletsBlockTest : BaseTestCase() {
         val sendAmount = "1"
         val txHistoryScenarioState = "OutgoingTransaction"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }
@@ -104,13 +97,7 @@ class MyWalletsBlockTest : BaseTestCase() {
         val sendAmount = "1"
         val txHistoryScenarioState = "OutgoingTransaction"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }

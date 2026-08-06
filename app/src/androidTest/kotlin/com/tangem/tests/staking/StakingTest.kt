@@ -8,7 +8,6 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.extensions.swipeVertical
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -29,11 +28,7 @@ class StakingTest : BaseTestCase() {
         val scenarioName = "staking_eth_pol_balances"
         val scenarioState = "Staked"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -81,11 +76,7 @@ class StakingTest : BaseTestCase() {
         val scenarioState = "Staked"
         val stakingAmount = "1"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -140,11 +131,7 @@ class StakingTest : BaseTestCase() {
         val stakingAmount = "1"
         val stakingApy = "2.84%"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -211,13 +198,7 @@ class StakingTest : BaseTestCase() {
         val stakingWithdrawableState = "Withdrawable"
         val stakingStartedState = "Started"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -299,13 +280,7 @@ class StakingTest : BaseTestCase() {
         val stakingRewardsState = "Rewards"
         val stakingStakedState = "Staked"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -385,13 +360,7 @@ class StakingTest : BaseTestCase() {
         val stakingStakedState = "Staked"
         val stakingUnstakingState = "Unstaking"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -479,13 +448,7 @@ class StakingTest : BaseTestCase() {
         val stakingStartedState = "Started"
         val stakingStakedState = "Staked"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)

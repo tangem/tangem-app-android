@@ -2,10 +2,7 @@ package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.CARDANO_ADDRESS
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openSendScreen
 import com.tangem.screens.onSendAddressScreen
@@ -32,12 +29,7 @@ class CardanoWarningsTest : BaseTestCase() {
     fun afterTransactionRemainsLessThanMinimumAmountTest() {
         val sendAmount = "19"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
@@ -73,12 +65,7 @@ class CardanoWarningsTest : BaseTestCase() {
     fun transactionAmountMoreThanOneTest() {
         val sendAmount = "2.5"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
@@ -114,12 +101,7 @@ class CardanoWarningsTest : BaseTestCase() {
     fun afterTransactionRemainsMoreThanMinimumAmountTest() {
         val sendAmount = "18"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
