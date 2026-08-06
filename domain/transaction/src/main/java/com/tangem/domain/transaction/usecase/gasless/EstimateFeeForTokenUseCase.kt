@@ -118,9 +118,9 @@ class EstimateFeeForTokenUseCase(
                                 )
                                 else -> raise(error)
                             }
-                        }
+                        }.copy(nativeFee = initialTxFee)
                     } else {
-                        tokenFeeExtended
+                        tokenFeeExtended.copy(nativeFee = initialTxFee)
                     }
                 },
                 catch = {
