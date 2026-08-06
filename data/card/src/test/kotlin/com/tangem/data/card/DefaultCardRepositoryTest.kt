@@ -10,6 +10,7 @@ import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.storeObjectList
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -31,7 +32,7 @@ internal class DefaultCardRepositoryTest {
 
     // Only the in-memory store's content is mutable, so it is the single thing reset per test.
     private val dataStore = MockStateDataStore(default = emptyPreferences())
-    private val appPreferencesStore = AppPreferencesStore(
+    private val appPreferencesStore = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
