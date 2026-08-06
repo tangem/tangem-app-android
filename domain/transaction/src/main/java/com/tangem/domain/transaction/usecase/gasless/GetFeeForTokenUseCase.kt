@@ -100,9 +100,9 @@ class GetFeeForTokenUseCase(
                             tokenFeeExtended = tokenFeeExtended,
                             transactionData = transactionData,
                             isYieldActive = true,
-                        )
+                        ).copy(nativeFee = initialTxFee)
                     } else {
-                        tokenFeeExtended
+                        tokenFeeExtended.copy(nativeFee = initialTxFee)
                     }
                 },
                 catch = {
