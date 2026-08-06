@@ -397,8 +397,8 @@ internal class SwapInteractorImpl @Inject constructor(
             ).getOrNull()
         } ?: AllowanceInfo.Enough(allowance = BigDecimal.ZERO)
 
-        if (allowanceInfo is AllowanceInfo.Enough &&
-            allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)
+        if (allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress) &&
+            isApproveSettled(allowanceInfo, fromTokenAddress)
         ) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
             cryptoCurrencyBalanceFetcher(
@@ -450,6 +450,24 @@ internal class SwapInteractorImpl @Inject constructor(
                 isAllowedToSpend = isAllowedToSpend,
                 quoteBalanceStatus = quoteBalanceStatus,
             )
+        }
+    }
+
+    /**
+     * Whether the approve transaction marked in-progress for [tokenAddress] has landed on-chain.
+     * `Enough` settles it trivially. For `NotEnough` the on-chain allowance reaching the amount the
+     * approval was given for settles it too — the entered amount may have grown past the approved
+     * one since, and treating that as still-in-progress would block re-approving forever.
+     * `ResetNeeded` keeps the conservative in-progress state.
+     */
+    private fun isApproveSettled(allowanceInfo: AllowanceInfo, tokenAddress: String): Boolean {
+        return when (allowanceInfo) {
+            is AllowanceInfo.Enough -> true
+            is AllowanceInfo.NotEnough -> {
+                val approvedAmount = allowPermissionsHandler.getApprovedAmount(tokenAddress)
+                approvedAmount != null && allowanceInfo.allowance >= approvedAmount
+            }
+            is AllowanceInfo.ResetNeeded -> false
         }
     }
 
