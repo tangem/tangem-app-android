@@ -4,6 +4,7 @@ import android.content.res.Resources
 import com.tangem.core.res.getStringSafe
 import com.tangem.domain.feedback.R
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 
 /**
  * Email subject resolver
@@ -43,12 +44,16 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             FeedbackEmailType.AppUpdateProblem -> resources.getStringSafe(R.string.feedback_subject_support_tangem)
             is FeedbackEmailType.Visa.Activation -> "[Visa] [Activation] {auto-filled subject}"
             is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
-            is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] {auto-filled subject}"
-            is FeedbackEmailType.Visa.Dispute,
-            is FeedbackEmailType.Visa.DisputeV2,
-            -> "[Visa] [DISPUTE] {auto-filled subject}"
+            is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] Failed to issue card"
+            is FeedbackEmailType.Visa.Dispute -> when (type.item) {
+                is TangemPayTxHistoryItem.Collateral -> "[Visa] Deposit/withdrawal"
+                is TangemPayTxHistoryItem.Fee,
+                is TangemPayTxHistoryItem.Spend,
+                is TangemPayTxHistoryItem.Payment,
+                -> "[Visa] [PAYMENT] Help"
+            }
             is FeedbackEmailType.Visa.Withdrawal -> "[Visa] [WITHDRAWAL] {auto-filled subject}"
-            is FeedbackEmailType.Visa.FeatureIsBeta -> "[VISA] [FEEDBACK]"
+            is FeedbackEmailType.Visa.FeatureIsBeta -> "[Visa] General help"
             is FeedbackEmailType.Visa.KycRejected -> "Tangem Pay - [VISA] [KYC REJECTED]"
         }
     }

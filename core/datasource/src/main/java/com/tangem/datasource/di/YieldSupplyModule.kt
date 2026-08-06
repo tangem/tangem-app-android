@@ -5,7 +5,7 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.yieldsupply.DefaultYieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostPromoStore

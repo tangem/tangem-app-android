@@ -1,6 +1,6 @@
 package com.tangem.data.earn
 
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.earn.EarnErrorResolver
 import com.tangem.domain.models.earn.EarnError
 
