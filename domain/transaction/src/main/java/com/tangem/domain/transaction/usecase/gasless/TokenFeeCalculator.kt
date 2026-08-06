@@ -201,14 +201,12 @@ internal class TokenFeeCalculator(
     /**
      * Resolves the fee-transfer gas limit from the on-chain estimation result.
      *
-     * A revert of the probe transfer means the liquid token balance does not cover it. Matching only
-     * [BlockchainSdkError.Ethereum.InsufficientFundsForOperation] is not enough: the SDK produces that type solely
-     * for JSON-RPC code 3, while tokens that revert without a reason string never reach it — USDT (Solidity 0.4.x)
-     * reverts with an `INVALID` opcode, reported as -32000, and arrives as a plain [BlockchainSdkError.Ethereum.Api].
-     * So any execution error answered by the node is read as "not enough liquid balance": on the yield path
-     * ([isYieldActive] = true) the fee is topped up from the module, hence [FALLBACK_FEE_TRANSFER_GAS_LIMIT];
-     * otherwise it is [GaslessError.NotEnoughFunds]. Transport failures — no JSON-RPC answer at all — still
-     * propagate as [GaslessError.DataError] on both paths.
+     * A revert of the probe transfer means the liquid balance does not cover it. Matching
+     * [BlockchainSdkError.Ethereum.InsufficientFundsForOperation] alone misses tokens that revert without a
+     * reason string — USDT reverts with an `INVALID` opcode and arrives as a plain
+     * [BlockchainSdkError.Ethereum.Api] — so any execution error answered by the node is read as "not enough
+     * liquid balance": topped up from the module on the yield path, [GaslessError.NotEnoughFunds] otherwise.
+     * Transport failures still propagate as [GaslessError.DataError].
      */
     private fun Raise<GetFeeError>.resolveFeeTransferGasLimit(
         feeTransferGasLimitResult: Result<BigInteger>,
