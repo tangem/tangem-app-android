@@ -72,7 +72,6 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -387,6 +386,10 @@ internal class SendModel @Inject constructor(
      * balance, quote the gasless fee in the sent token instead. Without this the fee row stays in the
      * unreachable-error state and the fee-token selector can never be opened. Keeps the original
      * result when Tron gasless is off, unsupported, or the estimate fails.
+     *
+     * A zero native fee (the address still has enough free bandwidth / delegated energy for this
+     * transfer) does not count as covered: any non-zero TRX balance would otherwise satisfy
+     * `balance >= fee` and silently switch the fee row back to TRX right after a successful send.
      */
     private suspend fun Either<GetFeeError, TransactionFeeExtended>.recoverWithTronGasless(
         transferTransaction: TransactionData,
@@ -398,8 +401,8 @@ internal class SendModel @Inject constructor(
             ifRight = { extended ->
                 val feeValue = extended.transactionFee.normal.amount.value
                 val nativeBalance = feeCryptoCurrencyStatusFlow.value.value.amount
-                feeValue != null && nativeBalance != null &&
-                    nativeBalance > BigDecimal.ZERO && nativeBalance >= feeValue
+                feeValue != null && feeValue.signum() > 0 &&
+                    nativeBalance != null && nativeBalance >= feeValue
             },
         )
         if (isFeeCoveredByNative) return this
