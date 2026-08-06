@@ -3,7 +3,7 @@ package com.tangem.data.quotes.store
 import androidx.datastore.core.DataStore
 import com.tangem.data.quotes.converter.QuoteStatusConverter
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus

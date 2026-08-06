@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.express
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.express.models.request.AssetsRequestBody
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody

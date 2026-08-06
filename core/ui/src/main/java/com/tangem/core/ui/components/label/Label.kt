@@ -52,6 +52,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
             LabelStyle.ACCENT -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
             LabelStyle.REGULAR -> TangemTheme.colors.control.default
             LabelStyle.WARNING -> TangemTheme.colors.text.warning.copy(alpha = 0.1f)
+            LabelStyle.ATTENTION -> TangemTheme.colors.text.attention.copy(alpha = 0.1f)
         },
     )
 
@@ -60,6 +61,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
             LabelStyle.ACCENT -> TangemTheme.colors.text.accent
             LabelStyle.REGULAR -> TangemTheme.colors.text.secondary
             LabelStyle.WARNING -> TangemTheme.colors.text.warning
+            LabelStyle.ATTENTION -> TangemTheme.colors.text.attention
         },
     )
 
@@ -68,6 +70,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
             LabelStyle.ACCENT -> TangemTheme.colors.icon.accent
             LabelStyle.REGULAR -> TangemTheme.colors.icon.informative
             LabelStyle.WARNING -> TangemTheme.colors.icon.warning
+            LabelStyle.ATTENTION -> TangemTheme.colors.icon.attention
         },
     )
 
@@ -203,6 +206,12 @@ private fun LabelPreview() {
                         style = LabelStyle.WARNING,
                     ),
                 )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Attention Label"),
+                        style = LabelStyle.ATTENTION,
+                    ),
+                )
             }
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -231,6 +240,13 @@ private fun LabelPreview() {
                         icon = R.drawable.ic_information_24,
                     ),
                 )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Attention Label"),
+                        style = LabelStyle.ATTENTION,
+                        icon = R.drawable.ic_information_24,
+                    ),
+                )
             }
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -255,6 +271,13 @@ private fun LabelPreview() {
                     state = LabelUM(
                         text = TextReference.Str("Warning Label"),
                         style = LabelStyle.WARNING,
+                        size = LabelSize.BIG,
+                    ),
+                )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Attention Label"),
+                        style = LabelStyle.ATTENTION,
                         size = LabelSize.BIG,
                     ),
                 )

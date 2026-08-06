@@ -8,7 +8,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
-import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.token.DefaultP2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.DefaultStakingActionsStore
 import com.tangem.datasource.local.token.DefaultStakingYieldsStore
@@ -73,7 +73,7 @@ internal object StakingStoreModule {
     @Provides
     @Singleton
     fun provideStakingActionsStore(): StakingActionsStore {
-        return DefaultStakingActionsStore(dataStore = RuntimeDataStore())
+        return DefaultStakingActionsStore(store = RuntimeSharedMapStore())
     }
 
     @Provides

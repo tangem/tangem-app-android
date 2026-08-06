@@ -94,7 +94,7 @@ private fun FeeSelectorDescription(state: FeeSelectorUM, onReadMoreClick: () -> 
         when (state) {
             is FeeSelectorUM.Content -> FeeContent(state)
             is FeeSelectorUM.Loading -> FeeLoading()
-            is FeeSelectorUM.Error -> FeeError()
+            is FeeSelectorUM.Error -> FeeError(state)
         }
     }
 }
@@ -157,12 +157,20 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
 }
 
 @Composable
-private fun FeeError() {
-    Text(
-        text = EMPTY_BALANCE_SIGN,
-        color = TangemTheme.colors.text.primary1,
-        style = TangemTheme.typography.body2,
-    )
+private fun FeeError(state: FeeSelectorUM.Error) {
+    if (state.error is GetFeeError.GaslessError.NotEnoughFunds) {
+        Text(
+            text = stringResourceSafe(R.string.gasless_not_enough_funds_to_cover_token_fee),
+            color = TangemTheme.colors.text.warning,
+            style = TangemTheme.typography.body2,
+        )
+    } else {
+        Text(
+            text = EMPTY_BALANCE_SIGN,
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.body2,
+        )
+    }
 }
 
 @Composable

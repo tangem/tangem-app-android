@@ -36,6 +36,7 @@ internal class ExpressOnrampStatusToUiStatusConverterTest {
         Model(status = ExpressOnrampStatus.Finished, expected = Status.Confirmed),
         Model(status = ExpressOnrampStatus.Failed, expected = Status.Failed),
         Model(status = ExpressOnrampStatus.Expired, expected = Status.Failed),
+        Model(status = ExpressOnrampStatus.Refunded, expected = Status.Failed),
         Model(status = ExpressOnrampStatus.Unknown, expected = Status.Failed),
         Model(status = ExpressOnrampStatus.Created, expected = Status.Unconfirmed),
         Model(status = ExpressOnrampStatus.WaitingForPayment, expected = Status.Unconfirmed),
@@ -44,6 +45,7 @@ internal class ExpressOnrampStatusToUiStatusConverterTest {
         Model(status = ExpressOnrampStatus.Paid, expected = Status.Unconfirmed),
         Model(status = ExpressOnrampStatus.Sending, expected = Status.Unconfirmed),
         Model(status = ExpressOnrampStatus.Paused, expected = Status.Unconfirmed),
+        Model(status = ExpressOnrampStatus.RefundInProgress, expected = Status.Unconfirmed),
     )
 
     internal data class Model(val status: ExpressOnrampStatus, val expected: Status)
