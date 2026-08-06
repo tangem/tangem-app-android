@@ -288,12 +288,11 @@ internal class SendModel @Inject constructor(
     private suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
         val predefinedValues = predefinedValues
         val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
+        val amount = currentSentAmount() ?: error("Invalid amount")
         return when (predefinedValues) {
             is PredefinedValues.Content.Deeplink -> {
-                val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
                 createTransferTransactionUseCase(
-                    amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus)
-                        ?: error("Invalid amount"),
+                    amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
                     memo = predefinedValues.memo,
                     destination = predefinedValues.address,
                     userWalletId = userWallet.walletId,
@@ -301,10 +300,6 @@ internal class SendModel @Inject constructor(
                 )
             }
             is PredefinedValues.Content.QrCode -> {
-                val predefinedAmount = predefinedValues.amount?.parseBigDecimalOrNull()
-                val amount = predefinedAmount
-                    ?: (uiState.value.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-                    ?: error("Invalid amount")
                 createTransferTransactionUseCase(
                     amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
                     memo = predefinedValues.memo,
@@ -316,13 +311,11 @@ internal class SendModel @Inject constructor(
             PredefinedValues.Empty -> {
                 val destinationUM = uiState.value.destinationUM as? DestinationUM.Content
                     ?: error("Invalid destination")
-                val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
                 val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
                 val enteredMemo = destinationUM.memoTextField?.value
-                val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
 
                 createTransferTransactionUseCase(
-                    amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
+                    amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
                     memo = enteredMemo,
                     destination = enteredDestinationAddress,
                     userWalletId = userWallet.walletId,
@@ -330,6 +323,22 @@ internal class SendModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * The amount the transfer transaction is built with. Kept as a single source shared by
+     * [prepareTransferTransaction] and the gasless fee estimation, which needs the figure separately: a
+     * yield-supply send zeroes the amount inside [TransactionData] and carries the real one in call data.
+     */
+    private fun currentSentAmount(): BigDecimal? = when (val predefinedValues = predefinedValues) {
+        is PredefinedValues.Content.Deeplink -> predefinedValues.amount.parseBigDecimalOrNull()
+        is PredefinedValues.Content.QrCode -> predefinedValues.amount?.parseBigDecimalOrNull()
+            ?: enteredCryptoAmount()
+        PredefinedValues.Empty -> enteredCryptoAmount()
+    }
+
+    private fun enteredCryptoAmount(): BigDecimal? {
+        return (uiState.value.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
@@ -346,6 +355,9 @@ internal class SendModel @Inject constructor(
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
         val transferTransaction = prepareTransferTransaction()
             .getOrElse { return GetFeeError.DataError(it).left() }
+        // A yield-supply send zeroes the amount inside TransactionData (the real one lives in the module call
+        // data), so the gasless fee plan cannot read it back — pass it explicitly.
+        val sentAmount = currentSentAmount()
 
         val feeToken = maybeToken?.currency
         return when {
@@ -360,11 +372,13 @@ internal class SendModel @Inject constructor(
                 transactionData = transferTransaction,
                 userWallet = userWallet,
                 network = params.currency.network,
+                sentAmount = sentAmount,
             ).recoverWithTronGasless(transferTransaction)
             else -> getFeeForTokenUseCase(
                 transactionData = transferTransaction,
                 userWallet = userWallet,
                 token = maybeToken.currency,
+                sentAmount = sentAmount,
             )
         }
     }
