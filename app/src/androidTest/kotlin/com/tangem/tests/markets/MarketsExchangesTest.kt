@@ -7,7 +7,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.extensions.*
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.assertMarketsExchangesScreen
@@ -148,10 +147,7 @@ class MarketsExchangesTest : BaseTestCase() {
         setupHooks(
             additionalBeforeAppLaunchSection = {
                 setWireMockScenarioState(scenarioName = scenarioName, state = "EmptyExchanges")
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            },
+            }
         ).run {
             step("Open 'Markets Exhanges Screen with token: $tokenName'") {
                 openMarketsExchangesScreen(tokenName)
@@ -171,10 +167,7 @@ class MarketsExchangesTest : BaseTestCase() {
         setupHooks(
             additionalBeforeAppLaunchSection = {
                 setWireMockScenarioState(scenarioName = scenarioName, state = "Unreachable")
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            },
+            }
         ).run {
             step("Open 'Markets Exhanges Screen with token: $tokenName'") {
                 openMarketsExchangesScreen(tokenName)
@@ -186,7 +179,6 @@ class MarketsExchangesTest : BaseTestCase() {
                 step("Assert 'Try again button' is displayed") {
                     onMarketsExchangesScreen { tryAgainButton.assertIsDisplayed() }
                 }
-
             }
             step("Set WireMock scenario '$scenarioName' to state 'Started'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = "Started")
