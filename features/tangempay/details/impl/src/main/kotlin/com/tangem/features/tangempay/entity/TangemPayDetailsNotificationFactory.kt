@@ -46,8 +46,7 @@ internal class TangemPayDetailsNotificationFactory(
     }
 
     private fun createTopUpForTierUpgradeConfig(tariffPlan: TangemPayTariffPlanState): NotificationConfig? {
-        val order = tariffPlan.order ?: return null
-        val orderStep = order.step
+        val orderStep = tariffPlan.order?.step
         if (orderStep !is TangemPayTariffPlanState.OrderStep.AwaitingDeposit) return null
         val feeText = orderStep.toPlan.formatRecurringFeeOrNull() ?: return null
 
@@ -56,11 +55,8 @@ internal class TangemPayDetailsNotificationFactory(
             subtitle = resourceReference(R.string.tangempay_card_details_awaiting_deposit_subtitle),
             iconResId = R.drawable.ic_alert_circle_24,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(
-                    R.string.tangempay_card_details_awaiting_deposit_cancel_button,
-                    wrappedList(orderStep.toPlan.name, orderStep.fromPlan.name),
-                ),
-                onClick = { intents.onCancelTariffTransition(order.orderId) },
+                text = resourceReference(R.string.tangempay_card_details_add_funds),
+                onClick = intents::onClickAddFunds,
             ),
         )
     }

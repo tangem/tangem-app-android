@@ -221,6 +221,7 @@ private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, 
                 text = "123456",
                 style = TangemTheme.typography3.display.medium,
                 radius = 100.dp,
+                modifier = Modifier.testTag(MainScreenTestTags.WALLET_BALANCE_SHIMMER),
             )
             is WalletBalanceUM.Empty -> TextPlaceholder(
                 textStyle = TangemTheme.typography3.display.medium,

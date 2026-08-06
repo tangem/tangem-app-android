@@ -112,6 +112,26 @@ internal object TangemPayMessagesFactory {
         }
     }
 
+    fun createProtectionNotSetMessage(onOpenSettingsClick: () -> Unit): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_lock_24) {
+                    type = MessageBottomSheetUM.Icon.Type.Attention
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
+                }
+                title = resourceReference(R.string.tangempay_card_details_protection_not_set_title)
+                body = resourceReference(R.string.tangempay_card_details_protection_not_set_description)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.tangempay_card_details_protection_not_set_button)
+                onClick {
+                    onOpenSettingsClick()
+                    closeBs()
+                }
+            }
+        }
+    }
+
     fun createWithdrawWarning(onGotItClick: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {

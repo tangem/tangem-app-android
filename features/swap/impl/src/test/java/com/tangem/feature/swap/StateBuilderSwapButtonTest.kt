@@ -80,6 +80,7 @@ internal class StateBuilderSwapButtonTest {
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
             appRouter = appRouter,
+            isChooseTokenPulseEnabled = false,
         )
     }
 

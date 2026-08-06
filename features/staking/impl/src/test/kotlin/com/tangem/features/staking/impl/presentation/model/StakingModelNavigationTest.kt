@@ -128,7 +128,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
             every { stateController.uiState } returns uiStateFlow
             every {
                 stakingOperationsFactory.createFeeLoader(
-                    cryptoCurrencyStatus = any(),
+                    cryptoCurrencyStatusProvider = any(),
                     userWallet = any(),
                     integration = any()
                 )

@@ -45,6 +45,8 @@ import com.tangem.features.tangempay.components.TangemPayIssueAdditionalCardComp
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.model.transformers.*
+import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
+import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.utils.*
@@ -55,10 +57,10 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @Stable
@@ -82,7 +84,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
-    private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
@@ -91,7 +92,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     TangemPayTxHistoryUiActions,
     TangemPayDetailIntents,
     AddFundsListener,
-    TangemPayIssueAdditionalCardComponent.Listener {
+    TangemPayIssueAdditionalCardComponent.Listener,
+    ChooseNetworkListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
@@ -162,18 +164,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                 }
             }
             .launchIn(modelScope)
-    }
-
-    override fun onCancelTariffTransition(orderId: String) {
-        analytics.send(TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked())
-        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
-        modelScope.launch {
-            cancelTariffTransitionUseCase(userWalletId = userWalletId, orderId = orderId)
-                .onLeft {
-                    uiMessageSender.send(TangemPayMessagesFactory.createGenericError())
-                }
-            uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
-        }
     }
 
     fun onStart() {
@@ -365,11 +355,8 @@ internal class TangemPayDetailsModel @Inject constructor(
         when (val onramp = loaded.virtualAccount) {
             null -> return
             VirtualAccountOnramp.Processing -> showVaPreparing()
-            // BankCredentialsError opens the deposit intro first; the retryable error sheet is shown from
-            // its "Show details" action (see onShowDetailsClick).
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
-            is VirtualAccountOnramp.BankCredentialsError,
             -> openVirtualAccountDeposit(onramp, loaded)
         }
     }
@@ -386,11 +373,14 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
-    fun showVaBankingDetailsError() {
+    fun showVaBankingDetailsError(productInstanceId: String) {
         analytics.send(TangemPayAnalyticsEvents.VaDetailsErrorShowed())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
-            TangemPayDetailsNavigation.VaBankingDetailsError(userWalletId = userWalletId),
+            TangemPayDetailsNavigation.VaBankingDetailsError(
+                userWalletId = userWalletId,
+                productInstanceId = productInstanceId,
+            ),
         )
     }
 
@@ -400,16 +390,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
     }
 
-    fun onVaBankingDetailsResolved(onramp: VirtualAccountOnramp) {
-        when (onramp) {
-            // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
-            // instead of the intro deposit sheet that would need another "Show details" tap.
-            is VirtualAccountOnramp.Available -> onShowVirtualAccountRequisites(onramp)
-            else -> {
-                val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-                openVirtualAccountDeposit(onramp, loaded)
-            }
-        }
+    fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
+        // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
+        // instead of the intro deposit sheet that would need another "Show details" tap.
+        onShowVirtualAccountRequisites(bankCredentials)
     }
 
     fun onVirtualAccountOrderCreated() {
@@ -418,12 +402,12 @@ internal class TangemPayDetailsModel @Inject constructor(
         router.push(TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess)
     }
 
-    fun onShowVirtualAccountRequisites(onramp: VirtualAccountOnramp.Available) {
+    fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.VirtualAccountRequisites(
                 userWalletId = userWalletId,
-                bankCredentials = onramp.bankCredentials,
+                bankCredentials = bankCredentials,
             ),
         )
     }
@@ -443,17 +427,40 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickReceive(data: TangemPayTopUpData) {
         analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
-        val config = TokenReceiveConfig(
-            shouldShowWarning = true,
-            cryptoCurrency = data.currency,
-            userWalletId = data.walletId,
-            showMemoDisclaimer = false,
-            receiveAddress = data.receiveAddress,
-        )
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
+        val loaded = currentStatus.value.ifLoadedOrNull { it }
+        val shouldChooseNetwork = loaded != null &&
+            shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, loaded.networks)
+        if (shouldChooseNetwork) {
+            bottomSheetNavigation.activate(TangemPayDetailsNavigation.ChooseNetwork(walletId = data.walletId))
+        } else {
+            val config = TokenReceiveConfig(
+                shouldShowWarning = true,
+                cryptoCurrency = data.currency,
+                userWalletId = data.walletId,
+                showMemoDisclaimer = false,
+                receiveAddress = data.receiveAddress,
+            )
+            bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
+        }
     }
 
     override fun onDismissAddFunds() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    override fun onSelectAvailable(networkRawId: String) {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.PaymentReceive(walletId = userWalletId, networkRawId = networkRawId),
+        )
+    }
+
+    override fun onSelectDisabled() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(TangemPayDetailsNavigation.OtherNetworks)
+    }
+
+    override fun onDismiss() {
         bottomSheetNavigation.dismiss()
     }
 
@@ -491,7 +498,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         urlOpener.openUrl(TangemPayConstants.visaBenefitsLink())
     }
 
-    override fun onClickCurrentPlan(tariffPlan: TangemPayCustomerTariffPlan) {
+    override fun onClickCurrentPlan(tariffPlan: TangemPayTariffPlanState) {
         analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
     }
@@ -512,13 +519,17 @@ internal class TangemPayDetailsModel @Inject constructor(
             if (offer == null) {
                 val message = if (tariffState != null && tariffState.tariff.plan.isBasicTier) {
                     TangemPayMessagesFactory.createMaximumCardsForPlanIssuedMessage(
-                        onUpgradeClick = { onClickCurrentPlan(tariffState.tariff) }
+                        onUpgradeClick = { onClickCurrentPlan(tariffState) }
                             .takeIf { !tariffState.isPlanTransitioningState },
                     )
                 } else {
                     TangemPayMessagesFactory.createMaximumCardsIssuedMessage()
                 }
                 uiMessageSender.send(message)
+                return@launch
+            }
+            if (tangemPayFeatureToggles.isPlasticCardOrderEnabled) {
+                router.push(TangemPayAccountDetailsInnerRoute.OrderCard)
                 return@launch
             }
             analytics.send(TangemPayAnalyticsEvents.IssueAdditionalCardPopupShown())

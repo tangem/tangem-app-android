@@ -10,7 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnFilterNetwork
 import com.tangem.domain.earn.model.EarnFilterType
