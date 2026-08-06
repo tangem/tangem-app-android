@@ -8,6 +8,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -28,7 +29,7 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultTangemPayReissueCardStoreTest {
 
     private val dataStore = MockStateDataStore(default = emptyPreferences())
-    private val prefs = AppPreferencesStore(
+    private val prefs = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
