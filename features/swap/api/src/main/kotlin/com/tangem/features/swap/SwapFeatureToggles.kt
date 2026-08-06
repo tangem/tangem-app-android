@@ -4,4 +4,5 @@ interface SwapFeatureToggles {
     val isYieldDexTransferEnabled: Boolean
     val isTronDexSwapEnabled: Boolean
     val isChooseTokenPulseEnabled: Boolean
+    val isSwapDeeplinkEnabled: Boolean
 }
