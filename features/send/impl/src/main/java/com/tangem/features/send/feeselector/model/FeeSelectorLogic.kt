@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
@@ -38,6 +39,7 @@ import com.tangem.features.send.feeselector.model.transformers.FeeSelectorLoadin
 import com.tangem.features.send.feeselector.model.transformers.FeeSelectorNonceChangeTransformer
 import com.tangem.features.send.feeselector.model.transformers.FeeSelectorRemoveSuggestedTransformer
 import com.tangem.features.send.feeselector.model.transformers.FeeSelectorTokenSelectedTransformer
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
@@ -51,6 +53,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 internal class FeeSelectorLogic @AssistedInject constructor(
@@ -67,6 +70,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
     isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    sendFeatureToggles: SendFeatureToggles,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -74,8 +78,12 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     val uiState = MutableStateFlow(params.state)
 
     val isGaslessEnabled = params.onLoadFeeExtended != null &&
-        isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) &&
-        params.cryptoCurrencyStatus.currency is CryptoCurrency.Token
+        params.cryptoCurrencyStatus.currency is CryptoCurrency.Token &&
+        (
+            isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ||
+                sendFeatureToggles.isTronGaslessEnabled &&
+                BlockchainUtils.isTron(params.cryptoCurrencyStatus.currency.network.rawId)
+            )
 
     val shouldShowOnlySpeedOption: StateFlow<Boolean>
         field = MutableStateFlow(params.shouldShowOnlySpeedOption)
@@ -255,6 +263,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 val feeExtended = TransactionFeeExtended(
                     transactionFee = loadedFee,
                     feeTokenId = selectedTokenOrNull.currency.id,
+                    nativeFee = loadedFee,
                 )
                 populateExtendedFee(feeExtended)
             }
@@ -283,7 +292,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         fee: TransactionFeeExtended,
     ): Either<GetFeeError, LoadedFeeResult.Extended> = either {
         val selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind()
-        val availableTokens = getAvailableFeeTokens().fold(
+        val availableTokens = getAvailableFeeTokens(fee.nativeFee?.normal?.amount?.value).fold(
             ifLeft = { error ->
                 TangemLogger.e("Failed to get available fee tokens: $error")
                 if (selectedToken.currency !is CryptoCurrency.Coin) {
@@ -313,7 +322,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             }
         }
 
-    private suspend fun getAvailableFeeTokens(): Either<GetFeeError, List<CryptoCurrencyStatus>> = either {
+    private suspend fun getAvailableFeeTokens(
+        nativeFeeAmount: BigDecimal?,
+    ): Either<GetFeeError, List<CryptoCurrencyStatus>> = either {
         val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
             GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
         }.bind()
@@ -321,6 +332,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         getAvailableFeeTokensUseCase.invoke(
             userWallet = userWallet,
             network = params.cryptoCurrencyStatus.currency.network,
+            nativeFeeAmount = nativeFeeAmount,
         ).bind()
     }
 

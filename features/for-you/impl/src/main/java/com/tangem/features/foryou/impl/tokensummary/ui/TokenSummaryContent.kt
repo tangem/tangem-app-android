@@ -2,27 +2,12 @@ package com.tangem.features.foryou.impl.tokensummary.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
@@ -32,36 +17,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.ds.badge.TangemBadge
-import com.tangem.core.ui.ds.badge.TangemBadgeColor
-import com.tangem.core.ui.ds.badge.TangemBadgeShape
-import com.tangem.core.ui.ds.badge.TangemBadgeSize
-import com.tangem.core.ui.ds.badge.TangemBadgeType
-import com.tangem.core.ui.ds.badge.TangemBadgeUM
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
-import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
-import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenIndicatorUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSentimentUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
+import com.tangem.features.foryou.impl.tokensummary.entity.*
+import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewBottomButton
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewContentSentiment
+import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewNoOutlookSentiment
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewTokenSummary
 import com.tangem.features.foryou.impl.ui.components.AiInsightContent
 import com.tangem.features.foryou.impl.ui.components.GradientScaleBar
@@ -110,6 +81,7 @@ internal fun TokenSummaryContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
                 is TokenSentimentUM.Empty -> EmptySentimentContent(
+                    tokenSentiment = tokenSentiment,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
                 is TokenSentimentUM.Loading -> LoadingSentimentContent(
@@ -128,27 +100,42 @@ internal fun TokenSummaryContent(
             Spacer(modifier = Modifier.height(buttonHeight))
         }
 
-        PrimaryButton(
-            text = stringResourceSafe(R.string.token_summary_go_to_swap_button),
+        BottomButton(
+            bottomButton = tokenSummary.bottomButton,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .onSizeChanged { buttonHeight = with(density) { it.height.toDp() } }
                 .navigationBarsPadding()
                 .padding(16.dp),
-            onClick = tokenSummary.onSwapClick,
         )
     }
 }
 
 @Composable
-private fun EmptySentimentContent(modifier: Modifier = Modifier) {
+private fun BottomButton(bottomButton: BottomButtonUM, modifier: Modifier = Modifier) {
+    when (bottomButton) {
+        BottomButtonUM.Loading -> RectangleShimmer(
+            modifier = modifier.height(48.dp),
+            radius = 12.dp,
+        )
+        is BottomButtonUM.Content -> PrimaryButton(
+            text = bottomButton.text.resolveReference(),
+            modifier = modifier,
+            enabled = bottomButton.isEnabled,
+            onClick = bottomButton.onClick,
+        )
+    }
+}
+
+@Composable
+private fun EmptySentimentContent(tokenSentiment: TokenSentimentUM.Empty, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResourceSafe(R.string.token_summary_can_not_load_token),
+            text = tokenSentiment.message.resolveReference(),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.heading.small,
         )
@@ -228,7 +215,10 @@ private fun SentimentsContent(
         )
 
         GradientScaleBar(
-            state = GradientScaleBarState.Content(value = tokenSentiment.totalScore),
+            state = GradientScaleBarState.Content(
+                value = tokenSentiment.totalScore,
+                range = -tokenSentiment.scaleMax..tokenSentiment.scaleMax,
+            ),
             modifier = Modifier.padding(vertical = 40.dp),
         )
 
@@ -244,14 +234,19 @@ private fun SentimentsContent(
 @Composable
 private fun IndicatorsList(
     indicators: ImmutableList<TokenIndicatorUM>,
-    onInfoClick: (IndicatorType) -> Unit,
+    onInfoClick: (TokenIndicatorUM.Loaded) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         indicators.forEach { indicator ->
             IndicatorRow(
                 indicator = indicator,
-                onInfoClick = { onInfoClick(indicator.indicatorType) },
+                // A skeleton row has no name and no description to open — nothing to click
+                onInfoClick = if (indicator is TokenIndicatorUM.Loaded) {
+                    { onInfoClick(indicator) }
+                } else {
+                    {}
+                },
             )
         }
     }
@@ -265,32 +260,22 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
         includeInnerPaddings = true,
         contentLead = TangemRowContentLead.Equal,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        titleSlot = {
-            Row(
-                modifier = Modifier
-                    .clickableSingle(onClick = onInfoClick)
-                    .padding(vertical = 3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = indicator.indicatorType.title,
-                    color = TangemTheme.colors3.text.primary,
-                    style = TangemTheme.typography3.caption.medium,
-                )
-                Icon(
-                    modifier = Modifier.size(16.dp),
-                    painter = painterResource(id = R.drawable.ic_information_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.tertiary,
-                )
-            }
-        },
+        titleSlot = { IndicatorRowTitle(indicator = indicator, onInfoClick = onInfoClick) },
         valueSlot = {
             when (indicator) {
                 is TokenIndicatorUM.Content -> {
-                    TangemBadge(badgeUM = indicator.scoreBadge)
-                    TangemBadge(badgeUM = indicator.sentimentBadge)
+                    TangemBadge(
+                        text = indicator.scoreBadgeText,
+                        status = TangemBadge.Status.Neutral,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
+                    )
+                    TangemBadge(
+                        text = indicator.sentimentBadgeText,
+                        status = indicator.sentimentBadgeStatus,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
+                    )
                 }
                 is TokenIndicatorUM.Loading -> {
                     RectangleShimmer(
@@ -300,18 +285,47 @@ private fun IndicatorRow(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, m
                 }
                 is TokenIndicatorUM.NoData -> {
                     TangemBadge(
-                        badgeUM = TangemBadgeUM(
-                            text = stringReference("None"), // TODO For You localization
-                            size = TangemBadgeSize.X6,
-                            color = TangemBadgeColor.Gray,
-                            type = TangemBadgeType.Tinted,
-                            shape = TangemBadgeShape.Rounded,
-                        ),
+                        text = resourceReference(R.string.common_none),
+                        status = TangemBadge.Status.Neutral,
+                        variant = TangemBadge.Variant.Tinted,
+                        size = TangemBadge.Size.X6,
                     )
                 }
             }
         },
     )
+}
+
+/** Only a row built from a reading has a name — the skeleton row shimmers instead, with nothing to explain. */
+@Composable
+private fun IndicatorRowTitle(indicator: TokenIndicatorUM, onInfoClick: () -> Unit, modifier: Modifier = Modifier) {
+    when (indicator) {
+        is TokenIndicatorUM.Loaded -> Row(
+            modifier = modifier
+                .clickableSingle(onClick = onInfoClick)
+                .padding(vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = indicator.title,
+                color = TangemTheme.colors3.text.primary,
+                style = TangemTheme.typography3.caption.medium,
+            )
+            Icon(
+                modifier = Modifier.size(16.dp),
+                painter = painterResource(id = R.drawable.ic_information_24),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.tertiary,
+            )
+        }
+        is TokenIndicatorUM.Loading -> RectangleShimmer(
+            modifier = modifier
+                .padding(vertical = 3.dp)
+                .size(width = 72.dp, height = 16.dp),
+            radius = 8.dp,
+        )
+    }
 }
 
 // region Preview
@@ -354,6 +368,7 @@ private fun TokenSummaryContentLoadingPreview() {
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Loading,
                 tokenSentiment = TokenSentimentUM.Loading,
+                bottomButton = BottomButtonUM.Loading,
             ),
             contentPadding = PaddingValues.Zero,
             modifier = Modifier
@@ -363,15 +378,54 @@ private fun TokenSummaryContentLoadingPreview() {
     }
 }
 
-@Preview(name = "Empty · Light", showBackground = true, widthDp = 360)
-@Preview(name = "Empty · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
+@Preview(name = "No response · Light", showBackground = true, widthDp = 360)
+@Preview(name = "No response · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
 @Composable
-private fun TokenSummaryContentEmptyPreview() {
+private fun TokenSummaryContentNoResponsePreview() {
     TangemThemePreviewRedesign {
         TokenSummaryContent(
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Empty,
-                tokenSentiment = TokenSentimentUM.Empty,
+                tokenSentiment = TokenSentimentUM.Empty.NoResponse,
+                bottomButton = previewBottomButton(text = resourceReference(R.string.common_add_funds)),
+            ),
+            contentPadding = PaddingValues.Zero,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors3.bg.primary),
+        )
+    }
+}
+
+@Preview(name = "No outlook · Light", showBackground = true, widthDp = 360)
+@Preview(name = "No outlook · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
+@Composable
+private fun TokenSummaryContentNoOutlookPreview() {
+    TangemThemePreviewRedesign {
+        TokenSummaryContent(
+            tokenSummary = previewTokenSummary(
+                periodPickerUm = PeriodPickerUM.Empty,
+                tokenSentiment = previewNoOutlookSentiment,
+                bottomButton = previewBottomButton(text = resourceReference(R.string.common_add_funds)),
+            ),
+            contentPadding = PaddingValues.Zero,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors3.bg.primary),
+        )
+    }
+}
+
+@Preview(name = "Swap unavailable · Light", showBackground = true, widthDp = 360)
+@Preview(name = "Swap unavailable · Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, widthDp = 360)
+@Composable
+private fun TokenSummaryContentSwapUnavailablePreview() {
+    TangemThemePreviewRedesign {
+        TokenSummaryContent(
+            tokenSummary = previewTokenSummary(
+                periodPickerUm = PeriodPickerUM.Empty,
+                tokenSentiment = previewContentSentiment,
+                bottomButton = previewBottomButton(isEnabled = false),
             ),
             contentPadding = PaddingValues.Zero,
             modifier = Modifier

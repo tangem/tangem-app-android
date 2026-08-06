@@ -6,10 +6,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.components.block.information.GridItems
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
@@ -28,11 +31,6 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
-    InsightsBlockV2(state, modifier)
-}
-
-@Composable
-private fun InsightsBlockV2(state: InsightsUM, modifier: Modifier = Modifier) {
     val segmentItems = remember {
         persistentListOf(
             TangemSegmentUM(
@@ -62,8 +60,8 @@ private fun InsightsBlockV2(state: InsightsUM, modifier: Modifier = Modifier) {
             ) {
                 Text(
                     text = stringResourceSafe(R.string.markets_token_details_insights),
-                    style = TangemTheme.typography2.headingSemibold20,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography3.heading.small,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 TangemSegmentedPicker(
                     items = segmentItems,
@@ -102,31 +100,24 @@ private fun InsightsBlockV2(state: InsightsUM, modifier: Modifier = Modifier) {
 
 @Composable
 internal fun InsightsBlockPlaceholder(modifier: Modifier = Modifier) {
-    InsightsBlockPlaceholderV2(modifier)
-}
-
-@Composable
-internal fun InsightsBlockPlaceholderV2(modifier: Modifier = Modifier) {
     TokenMarketInformationBlock(
         modifier = modifier,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                RectangleShimmer(
-                    modifier = Modifier
-                        .height(24.dp)
-                        .width(120.dp),
-                    radius = TangemTheme.dimens2.x25,
+                InsightsShimmerLine(
+                    style = TangemTheme.typography3.heading.small,
+                    width = 120.dp,
                 )
 
                 SpacerW(62.dp)
 
-                RectangleShimmer(
+                TangemShimmer(
+                    radius = 999.dp,
                     modifier = Modifier
                         .height(36.dp)
                         .weight(1f),
-                    radius = TangemTheme.dimens2.x25,
                 )
             }
         },
@@ -142,10 +133,22 @@ internal fun InsightsBlockPlaceholderV2(modifier: Modifier = Modifier) {
     )
 }
 
+@Composable
+private fun InsightsShimmerLine(style: TextStyle, width: Dp, modifier: Modifier = Modifier) {
+    val lineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .width(width)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
+    )
+}
+
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ContentPreviewV2() {
+private fun ContentPreview() {
     TangemThemePreviewRedesign {
         InsightsBlock(
             state = InsightsUM(
@@ -213,10 +216,10 @@ private fun ContentPreviewV2() {
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewPlaceholderV2() {
+private fun PreviewPlaceholder() {
     TangemThemePreviewRedesign {
         PreviewShimmerContainer(
-            actualContent = { ContentPreviewV2() },
+            actualContent = { ContentPreview() },
             shimmerContent = { InsightsBlockPlaceholder() },
         )
     }
