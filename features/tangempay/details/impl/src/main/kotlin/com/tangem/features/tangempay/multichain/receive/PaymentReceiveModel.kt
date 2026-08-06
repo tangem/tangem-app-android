@@ -14,11 +14,11 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
 @Stable
 @ModelScoped
