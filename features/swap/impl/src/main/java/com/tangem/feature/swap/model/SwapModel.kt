@@ -293,7 +293,11 @@ internal class SwapModel @Inject constructor(
         override fun onApproveDone() {
             val fromContractAddress = dataState.fromSwapCurrencyStatus?.currency?.getContractAddress()
             if (fromContractAddress != null) {
-                allowPermissionsHandler.addAddressToInProgress(fromContractAddress)
+                allowPermissionsHandler.addAddressToInProgress(
+                    tokenAddress = fromContractAddress,
+                    // the approval sheet approves the amount entered at the moment it was opened
+                    approvedAmount = dataState.amount?.parseBigDecimalOrNull(),
+                )
             }
             approvalSlotNavigation.dismiss()
             updateWalletBalance()
