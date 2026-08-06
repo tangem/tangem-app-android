@@ -42,6 +42,24 @@ object BlockchainUtils {
         return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
     }
 
+    /**
+     * If current [networkId] is a UTXO chain whose DEX swaps are executed via a provider-supplied PSBT
+     * (signed and broadcast by the SDK's `PsbtProvider`): Bitcoin, Litecoin, Dogecoin, Dash, Bitcoin Cash.
+     *
+     * This is an explicit allowlist, not a "Bitcoin-based" category: other UTXO chains such as Ravencoin
+     * are excluded because `PsbtProviderFactory` resolves them to a no-op provider.
+     */
+    fun isPsbtSwapSupported(networkId: String): Boolean {
+        val blockchain = networkId.toBlockchain()
+        return blockchain == Blockchain.Bitcoin ||
+            blockchain == Blockchain.BitcoinTestnet ||
+            blockchain == Blockchain.Litecoin ||
+            blockchain == Blockchain.Dogecoin ||
+            blockchain == Blockchain.Dash ||
+            blockchain == Blockchain.BitcoinCash ||
+            blockchain == Blockchain.BitcoinCashTestnet
+    }
+
     /** Checks if the current [networkId] uses a custom fee converter */
     fun isUseBitcoinFeeConverter(networkId: String): Boolean {
         val blockchain = networkId.toBlockchain()

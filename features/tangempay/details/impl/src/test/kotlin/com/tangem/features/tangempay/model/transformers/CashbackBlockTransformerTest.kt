@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
@@ -13,7 +14,9 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarConfig
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import io.mockk.every
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlinx.collections.immutable.persistentListOf
 import org.joda.time.DateTime
@@ -41,11 +44,14 @@ internal class CashbackBlockTransformerTest {
         Locale.setDefault(Locale.US)
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "July 1 – 5"
     }
 
     @AfterEach
     fun tearDown() {
         unmockkStatic(DateFormat::class)
+        unmockkObject(DateTimeFormatters)
         Locale.setDefault(defaultLocale)
     }
 
@@ -146,7 +152,6 @@ internal class CashbackBlockTransformerTest {
             onBackClick = {},
             onOpenMenu = {},
             items = persistentListOf(),
-            itemsV2 = persistentListOf(),
         ),
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         balanceBlockState = TangemPayDetailsBalanceBlockState.Content(

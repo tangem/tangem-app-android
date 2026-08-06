@@ -9,7 +9,7 @@ import com.tangem.datasource.api.auth.models.request.AuthApiRequest
 import com.tangem.datasource.api.auth.models.request.AuthenticationPayload
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError

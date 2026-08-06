@@ -4,11 +4,9 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
@@ -20,8 +18,6 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
-import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.withdrawButton
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -48,7 +44,6 @@ internal class TangemPayDetailsModelTest {
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
-    private val router: Router = mockk(relaxed = true)
 
     @ParameterizedTest
     @MethodSource("provideMutedCases")
@@ -112,39 +107,12 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // WHEN
-        model.showVaBankingDetailsError()
+        model.showVaBankingDetailsError(productInstanceId = "pi_account")
 
         // THEN
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaDetailsErrorShowed>()) }
         model.onDestroy()
     }
-
-    @Test
-    fun `GIVEN awaiting plan selection WHEN model created THEN inner stack is replaced with plan selection`() =
-        runTest {
-            // GIVEN
-            val tariffPlan: TangemPayCustomerTariffPlan = mockk(relaxed = true)
-            val awaitingPlanSelection = PaymentAccountStatusValue.AwaitingPlanSelection(
-                source = StatusSource.ACTUAL,
-                tariffPlan = tariffPlan,
-            )
-
-            // WHEN
-            val model = createModel(testScope = this, statusValue = awaitingPlanSelection)
-            advanceUntilIdle()
-
-            // THEN
-            verify(exactly = 1) {
-                router.replaceAll(
-                    TangemPayAccountDetailsInnerRoute.SelectPlan(
-                        tariffPlan = tariffPlan,
-                        source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-                    ),
-                )
-            }
-            verify(exactly = 0) { router.push(any(), any()) }
-            model.onDestroy()
-        }
 
     private fun createModel(
         testScope: TestScope,
@@ -196,7 +164,7 @@ internal class TangemPayDetailsModelTest {
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
-            router = router,
+            router = mockk(relaxed = true),
             urlOpener = mockk(relaxed = true),
             cardDetailsRepository = cardDetailsRepository,
             getBalanceHidingSettingsUseCase = mockk(relaxed = true),
@@ -210,7 +178,6 @@ internal class TangemPayDetailsModelTest {
             produceTangemPayInitialDataUseCase = mockk(relaxed = true),
             onboardingRepository = mockk(relaxed = true),
             getCustomerOffers = mockk(relaxed = true),
-            cancelTariffTransitionUseCase = mockk(relaxed = true),
             getCashbackSummaryUseCase = mockk(relaxed = true),
             getCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             setCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
