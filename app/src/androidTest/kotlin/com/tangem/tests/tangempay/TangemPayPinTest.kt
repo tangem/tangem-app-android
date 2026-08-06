@@ -8,8 +8,6 @@ import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.bringAppToForeground
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.collapseAppByHomeButton
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openTangemPayCardPage
@@ -45,13 +43,7 @@ class TangemPayPinTest : BaseTestCase() {
     fun pinEntryScreenOpensFromCardDetailsWhenPinIsNotSetTest() {
         val descriptionText = getResourceString(CoreResR.string.visa_onboarding_pin_code_description)
 
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -74,13 +66,7 @@ class TangemPayPinTest : BaseTestCase() {
     fun pinValidationRejectsRepeatedAndSequentialDigitsTest() {
         val validationError = getResourceString(CoreResR.string.visa_onboarding_pin_validation_error_message)
 
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -120,13 +106,7 @@ class TangemPayPinTest : BaseTestCase() {
     @DisplayName("Tangem Pay: PIN entry screen closes without saving and returns to card details")
     @Test
     fun pinEntryScreenClosesWithoutSavingAndReturnsToCardDetailsTest() {
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -161,13 +141,7 @@ class TangemPayPinTest : BaseTestCase() {
         val successDescriptionText =
             getResourceString(CoreResR.string.tangempay_card_details_change_pin_success_description)
 
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -197,13 +171,7 @@ class TangemPayPinTest : BaseTestCase() {
     @DisplayName("Tangem Pay: current PIN sheet opens when a PIN is already set on the card")
     @Test
     fun currentPinSheetOpensWhenPinIsAlreadySetTest() {
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -230,14 +198,11 @@ class TangemPayPinTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 System.setProperty(pinDelayKey, pinDelayMs)
             },
             additionalAfterSection = {
                 System.clearProperty(pinDelayKey)
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
+            }
         ).run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
@@ -269,13 +234,7 @@ class TangemPayPinTest : BaseTestCase() {
     fun currentPinSheetIsDismissedAfterCollapseAndExpandTest() {
         val packageName = getTargetContext().packageName
 
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -310,14 +269,11 @@ class TangemPayPinTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 System.setProperty(pinErrorKey, "1")
             },
             additionalAfterSection = {
                 System.clearProperty(pinErrorKey)
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
+            }
         ).run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
@@ -354,13 +310,7 @@ class TangemPayPinTest : BaseTestCase() {
     fun pinChangeSucceedsForCardWithPinAlreadySetTest() {
         val successTitleText = getResourceString(CoreResR.string.tangempay_card_details_change_pin_success_title)
 
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }

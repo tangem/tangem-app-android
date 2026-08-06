@@ -148,6 +148,10 @@ Distinguish:
 Without a `wiremockBaseUrl` arg the app hits the **remote** WireMock (`wiremock.tests-d.com`); pass the
 arg to redirect to a local instance (see "Running against local WireMock"). Default local port: `8081`.
 
+`BaseTestCase.setupHooks` already resets every scenario state before each test, so the curls below are
+for manual poking and for inspecting what a run left behind — a test never needs them. Note the reset
+hits whichever instance `wiremockBaseUrl` points at, the shared remote one included.
+
 ```bash
 # Set a scenario state — PUT, not POST
 curl -X PUT http://localhost:8081/__admin/scenarios/<name>/state \

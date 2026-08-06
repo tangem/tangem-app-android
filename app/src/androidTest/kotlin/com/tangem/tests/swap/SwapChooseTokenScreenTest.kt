@@ -7,7 +7,6 @@ import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.SwapEntryPoint
@@ -38,11 +37,7 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
         val jesusCoin = "Jesus Coin"
         val salam = "Salam"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
