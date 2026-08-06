@@ -11,7 +11,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
  *
  * When a request hits the tangem-api-mocks catch-all (an unmocked endpoint → HTTP 404 with the
  * [MOCKED_ENDPOINT_NOT_CONFIGURED_MARKER] body), it folds the failing endpoint (method + URL) into the
- * response body. That body becomes [com.tangem.datasource.api.common.response.ApiResponseError.HttpException.errorBody]
+ * response body. That body becomes [com.tangem.core.remote.response.ApiResponseError.HttpException.errorBody]
  * (see ResponseExt), whose data-class `toString()` is what appears in a failing test's stack trace — so the
  * exact missing mapping is named instead of an opaque `HttpException(404, errorBody={"error":"not_found",…})`.
  */
@@ -95,6 +95,8 @@ class WireMockRedirectInterceptor : Interceptor {
             "solana-gateway.moralis.io",
             "api.etherscan.io",
             "eth-blockbook.nownodes.io",
+            // Swap ratings: real survey responses are keyed by the mocked tx id and outlive the run.
+            "eu-api.surveysparrow.com",
         )
 
         /**

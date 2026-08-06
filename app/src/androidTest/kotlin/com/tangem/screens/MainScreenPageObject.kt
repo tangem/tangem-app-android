@@ -5,8 +5,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.displayedTextsInVisualOrder
+import com.tangem.common.extensions.firstTextForTestTag
 import com.tangem.common.extensions.firstTextOrNull
-import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.test.*
@@ -113,6 +113,13 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             .performScrollToNode(
                 withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) and hasAnyDescendant(withText(accountName)),
             )
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToTokenList() {
+        collapseHeader()
+        semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
+            .performScrollToNode(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM))
     }
 
     // Wallet pager keeps the adjacent page composed (beyondViewportPageCount=1), so the token is mounted on two pages — click the displayed copy.
@@ -301,20 +308,27 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
-    fun missingAddressNotificationMessage(networkCount: Int): KNode = child {
+    // The message is pluralised over the underived-network count, which varies by card.
+    val missingAddressNotificationMessage: KNode = child {
         hasTestTag(NotificationTestTags.MESSAGE)
-        hasText(
-            getQuantityString(
-                R.plurals.warning_missing_derivation_message,
-                networkCount,
-                networkCount
-            )
+        hasAnyAncestor(
+            withTestTag(NotificationTestTags.CONTAINER)
+                .and(
+                    androidx.compose.ui.test.hasAnyDescendant(
+                        withText(getResourceString(R.string.warning_missing_derivation_title))
+                    )
+                )
         )
         useUnmergedTree = true
     }
 
     val totalBalanceContainer: KNode = child {
         hasTestTag(MainScreenTestTags.WALLET_LIST_ITEM)
+    }
+
+    val totalBalanceShimmer: KNode = child {
+        hasTestTag(MainScreenTestTags.WALLET_BALANCE_SHIMMER)
+        useUnmergedTree = true
     }
 
     val totalBalanceMenuRenameWallet: KNode = child {
@@ -393,6 +407,43 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
+            useUnmergedTree = true
+        }
+    }
+
+    /**
+     * 'Earn' APY/APR badge shown on a token row (staking or yield-supply indicator). Present only
+     * when the token has an earn rate to display.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenEarnApyBadge(tokenTitle: String): KNode {
+        collapseHeader()
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenTitle)
+            useUnmergedTree = true
+        }.child<KNode> {
+            hasTestTag(TokenElementsTestTags.TOKEN_EARN_APY_BADGE)
+        }
+    }
+
+    /**
+     * Fiat-amount text of a token row (the balance shown on the top-right of the row). The tagged
+     * container is a plain Row that merges into the clickable row, so we read its inner balance
+     * Text node from the unmerged tree.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenFiatAmountText(tokenTitle: String): KNode {
+        collapseHeader()
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenTitle)
+            useUnmergedTree = true
+        }.child<KNode> {
+            hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
+            useUnmergedTree = true
+        }.child<KNode> {
+            addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
             useUnmergedTree = true
         }
     }
@@ -577,10 +628,83 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             useUnmergedTree = true,
         ).displayedTextsInVisualOrder()
 
+    /**
+     * (title to fiat amount) for every token row currently composed on the wallet page. A coin held on
+     * several derivations renders one row per occurrence, so a title may repeat; a custom token with no
+     * quote yields the dash sign as its fiat amount. Network-group header rows carry the same
+     * [MainScreenTestTags.TOKEN_LIST_ITEM] tag but have no fiat amount, so they're skipped.
+     *
+     * onAllNodes escape hatch (same pattern as [getDisplayedTokenTitles]): the row is a merged-semantics
+     * node — its title/fiat texts collapse into it, so a `childWith { hasAnyDescendant(text) }` can't reach
+     * them and duplicate titles make `childWith` ambiguous. Reading the unmerged subtree per row pairs
+     * title and fiat reliably.
+     */
+    fun getDisplayedTokenBalances(): List<Pair<String, String>> {
+        collapseHeader()
+        val rows = semanticsProvider.onAllNodes(withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM), useUnmergedTree = true)
+        val rowNodes = rows.fetchSemanticsNodes()
+        return buildList {
+            rowNodes.forEach { row ->
+                val title = row.firstTextForTestTag(TokenElementsTestTags.TOKEN_TITLE) ?: return@forEach
+                val fiatAmount = row.firstTextForTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT) ?: return@forEach
+                add(title to fiatAmount)
+            }
+        }
+    }
+
+    /**
+     * Asserts the token context menu (opened by a long-tap on a token row) shows every action in
+     * [expectedActionIds]. When [exact] is `true` it additionally asserts the menu shows *no other* actions
+     * (count matches exactly); when `false` it only checks the expected ones are present and tolerates extra
+     * actions.
+     *
+     * The context menu renders inside a separate Popup root, i.e. NOT under [MainScreenTestTags.SCREEN_CONTAINER]
+     * — that's why its rows are absent from `onMainScreen`'s subtree / a plain semantic-tree dump. So nodes are
+     * matched globally via [semanticsProvider] (which spans every root, including popups) with
+     * `useUnmergedTree` (each row merges its label/icon).
+     *
+     * Usage:
+     * - [DERIVED_TOKEN_ACTIONS] with `exact = false` — a fully-derived token always exposes at least this
+     *   stable subset, but the full set (e.g. 'Buy'/'Sell') varies per token/environment, so we assert
+     *   presence only.
+     * - [UNDERIVED_TOKEN_ACTIONS] with `exact = true` — a token without addresses exposes *only* 'Hide token',
+     *   so the exact count matters.
+     */
+    fun assertTokenContextMenuActions(expectedActionIds: List<String>, exact: Boolean = true) {
+        expectedActionIds.forEach { actionId ->
+            semanticsProvider
+                .onNode(withTestTag(TokenActionMenuTestTags.action(actionId)), useUnmergedTree = true)
+                .assertIsDisplayed()
+        }
+        if (exact) {
+            // Exactly the expected actions are shown — no more, no fewer.
+            semanticsProvider
+                .onAllNodes(withTestTag(BaseBottomSheetTestTags.ACTION_BUTTON), useUnmergedTree = true)
+                .assertCountEquals(expectedActionIds.size)
+        }
+    }
+
     private companion object {
         const val WALLET_SWITCH_ATTEMPTS = 4
     }
 }
+
+/**
+ * Context-menu actions a fully-derived token (with a resolved address) always exposes on the mocked
+ * environment. This is a stable subset asserted for presence only (see [assertTokenContextMenuActions] with
+ * `exact = false`) — the full set may additionally include environment-dependent actions like 'Buy'/'Sell'.
+ */
+internal val DERIVED_TOKEN_ACTIONS = listOf(
+    TokenActionMenuTestTags.ANALYTICS,
+    TokenActionMenuTestTags.COPY_ADDRESS,
+    TokenActionMenuTestTags.RECEIVE,
+    TokenActionMenuTestTags.HIDE_TOKEN,
+    TokenActionMenuTestTags.SEND,
+    TokenActionMenuTestTags.SWAP,
+)
+
+/** Context-menu actions expected for an underived token (no address) — only hiding is available. */
+internal val UNDERIVED_TOKEN_ACTIONS = listOf(TokenActionMenuTestTags.HIDE_TOKEN)
 
 internal fun BaseTestCase.onMainScreen(function: MainScreenPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)

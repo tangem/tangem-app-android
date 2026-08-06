@@ -1,5 +1,7 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -44,52 +46,36 @@ class ApiConfigTest {
         Truth.assertThat(actual).isTrue()
     }
 
-    private fun createApiConfigs(): ApiConfigs {
-        return ApiConfig.ID.entries.mapTo(destination = hashSetOf()) {
-            when (it) {
-                ApiConfig.ID.Express -> {
-                    Express(
-                        environmentConfig = environmentConfig,
-                        expressAuthProvider = mockk(),
-                        appInfoProvider = mockk(),
-                    )
-                }
-                ApiConfig.ID.YieldSupply -> {
-                    YieldSupply(
-                        environmentConfig = environmentConfig,
-                        authProvider = appAuthProvider,
-                        appInfoProvider = mockk(),
-                    )
-                }
-                ApiConfig.ID.TangemTech -> {
-                    TangemTech(
-                        authProvider = appAuthProvider,
-                        appInfoProvider = mockk(),
-                    )
-                }
-                ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = mockk())
-                ApiConfig.ID.TangemPay -> TangemPay.Bff(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = mockk(),
-                )
-                ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = mockk(),
-                )
-                ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
-                ApiConfig.ID.MoonPay -> MoonPay()
-                ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = mockk())
-                ApiConfig.ID.News -> News(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = mockk(),
-                )
-                ApiConfig.ID.GaslessTxService -> GaslessTxService(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = mockk(),
-                )
-                ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
-                ApiConfig.ID.Auth -> Auth()
-            }
-        }
+    private fun createApiConfigs(): List<ApiConfig> {
+        return listOf(
+            Express(
+                environmentConfig = environmentConfig,
+                expressAuthProvider = mockk(),
+                appInfoProvider = mockk(),
+            ),
+            YieldSupply(
+                environmentConfig = environmentConfig,
+                authProvider = appAuthProvider,
+                appInfoProvider = mockk(),
+            ),
+            TangemTech(
+                authProvider = appAuthProvider,
+                appInfoProvider = mockk(),
+            ),
+            StakeKit(stakeKitAuthProvider = mockk()),
+            BlockAid(environmentConfig = environmentConfig),
+            MoonPay(),
+            P2PEthPool(p2pAuthProvider = mockk()),
+            News(
+                authProvider = appAuthProvider,
+                appInfoProvider = mockk(),
+            ),
+            GaslessTxService(
+                authProvider = appAuthProvider,
+                appInfoProvider = mockk(),
+            ),
+            SurveySparrow(environmentConfig = environmentConfig),
+            Auth(),
+        )
     }
 }

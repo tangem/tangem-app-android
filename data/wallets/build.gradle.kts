@@ -65,4 +65,5 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }

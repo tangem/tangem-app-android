@@ -10,6 +10,7 @@ import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.features.foryou.impl.entity.asSingleForYouGroup
 import com.tangem.features.foryou.impl.model.converter.EarnOpportunities
 import com.tangem.features.foryou.impl.model.converter.FOR_YOU_TOP_EARN_TOKENS_COUNT
 import com.tangem.utils.converter.Converter
@@ -40,7 +41,8 @@ internal class ForYouEarnOpportunitiesNoTokensConverter(
             tokenList = topEarnTokenList
                 ?.map(rowConverter::convert)
                 .orEmpty()
-                .toPersistentList(),
+                .toPersistentList()
+                .asSingleForYouGroup(),
             subtitleRes = R.string.for_you_earn_opportunities_no_available_tokens,
             potentialReward = stringReference(topEarnApy.format { percent() }),
             potentialRewardType = topEarnToken?.rewardType?.name?.let(::stringReference),

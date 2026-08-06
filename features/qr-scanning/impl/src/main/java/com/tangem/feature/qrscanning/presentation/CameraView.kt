@@ -23,11 +23,13 @@ internal fun CameraView(executor: () -> ExecutorService, analyzer: () -> MLKitBa
     val previewView = remember { PreviewView(context) }
     val cameraController = remember { LifecycleCameraController(context) }
 
-    cameraController.apply {
-        bindToLifecycle(lifecycleOwner)
-        cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-        setImageAnalysisAnalyzer(executor(), analyzer())
-        imageAnalysisBackpressureStrategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+    runCatching {
+        cameraController.apply {
+            bindToLifecycle(lifecycleOwner)
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            setImageAnalysisAnalyzer(executor(), analyzer())
+            imageAnalysisBackpressureStrategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+        }
     }
 
     LaunchedEffect(key1 = isFlash) {

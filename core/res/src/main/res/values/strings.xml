@@ -2031,6 +2031,7 @@
   <string name="tangempay_bank_transfer_success_subtitle">This may take a little time</string>
   <string name="tangempay_bank_transfer_success_title">Preparing your banking details</string>
   <string name="tangempay_bank_transfer_swift_warning">Deposit via ACH or FedWire only. SWIFT transfers will be returned.</string>
+  <string name="tangempay_bank_transfer_terms_of_use">Terms of Service</string>
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
   <string name="tangempay_card_default_name">Tangem Pay Card 1</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>

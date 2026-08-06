@@ -2,6 +2,9 @@ package com.tangem.tests.send.amountScreen
 
 import android.view.KeyEvent
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setClipboardText
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -26,7 +29,13 @@ class SendAmountScreenTest : BaseTestCase() {
         val errorText = getResourceString(R.string.common_insufficient_balance)
         val context = device.context
 
-        setupHooks().run {
+        setupHooks(
+            // openSendScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName)
             }
@@ -106,7 +115,13 @@ class SendAmountScreenTest : BaseTestCase() {
         val tokenAmount = "1"
         val fiatAmount = "$2,535.63"
 
-        setupHooks().run {
+        setupHooks(
+            // openSendScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName)
             }
