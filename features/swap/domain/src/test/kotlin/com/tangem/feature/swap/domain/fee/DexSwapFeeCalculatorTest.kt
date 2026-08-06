@@ -1075,6 +1075,60 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
+    /**
+     * A wallet holding too little — rather than nothing — reaches the node, which then refuses to
+     * estimate. That refusal arrives as a Left, not an exception, so it used to bypass the fallback
+     * and produce the same fee-loading error the empty-balance case did.
+     */
+    @Test
+    fun `GIVEN the node refuses to estimate WHEN calculateYield THEN falls back to getEthSpecificFeeUseCase`() =
+        runTest {
+            // Arrange
+            val fromStatus =
+                buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
+            val gas = BigInteger.valueOf(871_439L)
+            // The yield path wraps the DEX call data, so it has to be real hex rather than the base64 default.
+            val transaction = buildDex(txData = "0xa9059cbb", gas = gas, allowanceContract = "0xSpender")
+            coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("0.0001")
+            every {
+                createTransactionExtrasUseCase.invoke(
+                    callData = any(),
+                    network = any(),
+                    gasLimit = any(),
+                    nonce = any(),
+                )
+            } returns mockk<TransactionExtras>(relaxed = true).right()
+            coEvery {
+                getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+            } returns GetFeeError.UnknownError.left()
+            coEvery {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = any(),
+                    gasPrice = any(),
+                )
+            } returns TransactionFee.Choosable(
+                minimum = ethLegacyFee(),
+                normal = ethLegacyFee(),
+                priority = ethLegacyFee(),
+            ).right()
+
+            // Act
+            val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 1) {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = gas,
+                    gasPrice = any(),
+                )
+            }
+        }
+
     @Test
     fun `GIVEN zero native balance and no gas in quote WHEN calculateYield THEN raises`() = runTest {
         // Arrange
