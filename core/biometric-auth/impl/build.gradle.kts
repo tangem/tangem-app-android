@@ -8,6 +8,14 @@ plugins {
 
 android {
     namespace = "com.tangem.core.biometric.impl"
+
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/kotlin")
+            }
+        }
+    }
 }
 
 dependencies {
