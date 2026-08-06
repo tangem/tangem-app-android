@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
 import arrow.core.right
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -10,7 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 
 /**
- * Obtains the CLOB credentials for [ownerAddress] and persists them. Deriving is deterministic and returns
+ * Obtains the CLOB credentials of the wallet's owner address and persists them against [UserWalletId]. Deriving is deterministic and returns
  * the existing key, so it is tried first; creating is attempted only when no key exists yet, which keeps a
  * repeated onboarding from producing a second, competing key set.
  */
@@ -20,11 +21,12 @@ class DeriveApiCredentialsUseCase(
 ) {
 
     suspend operator fun invoke(
+        userWalletId: UserWalletId,
         ownerAddress: String,
         l1Signature: String,
         timestamp: String,
     ): Either<PolymarketOnboardingError, PolymarketApiCredentials> {
-        credentialsStore.get(ownerAddress = ownerAddress)?.let { return it.right() }
+        credentialsStore.get(userWalletId = userWalletId)?.let { return it.right() }
 
         val headers = PolymarketL1Headers(
             address = ownerAddress,
@@ -41,7 +43,7 @@ class DeriveApiCredentialsUseCase(
         }
 
         return credentials
-            .onRight { credentialsStore.store(ownerAddress = ownerAddress, credentials = it) }
+            .onRight { credentialsStore.store(userWalletId = userWalletId, credentials = it) }
             .mapLeft { it.toOnboardingError() }
     }
 
