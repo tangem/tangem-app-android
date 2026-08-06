@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.nft
 
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.network.Network
 import javax.inject.Inject
 import javax.inject.Singleton
