@@ -253,11 +253,9 @@ class DexSwapFeeCalculator(
      *
      * Fallback to [GetEthSpecificFeeUseCase] (with the gas limit carried by the Express transaction
      * model) is applied whenever the estimation cannot be obtained:
-     *  - the native balance is empty — no point asking a node to estimate a transaction it knows is
-     *    unpayable, yet the quote must still carry a fee so the UI can report the missing coin ([REDACTED_TASK_KEY]);
+     *  - the native balance is empty;
      *  - [yieldModuleAddress] is `null` — yield module address could not be resolved upstream;
-     *  - the estimation call fails or throws `IllegalStateException` (e.g. payload too large, or a node
-     *    refusing to estimate because the native balance falls short of the gas it would quote).
+     *  - the estimation call fails or throws `IllegalStateException` (e.g. payload too large).
      *
      * Yield-module errors ([YieldModuleUpgradeUnavailableException],
      * [YieldModuleVersionIndeterminateException]) are mapped to [ExpressDataError.UnknownError]
@@ -278,10 +276,6 @@ class DexSwapFeeCalculator(
             derivationPath = network.derivationPath.value,
         )
 
-        // An empty native balance makes the on-chain estimation revert — there is nothing to pay the
-        // probe with — but the swap must still be priced, otherwise the fee block shows a loading error
-        // instead of the "not enough <coin> for the fee" notification the non-yield flow gives ([REDACTED_TASK_KEY]).
-        // The Express quote carries a gas limit, so fall back to gasPrice × gasLimit, which needs no balance.
         if (nativeBalance.signum() == 0 || yieldModuleAddress == null) {
             val gasLimit = transaction.gas ?: raise(GetFeeError.UnknownError)
             return@either ethSpecificFeeFallback(fromSwapCurrencyStatus, gasLimit).bind()
@@ -309,9 +303,6 @@ class DexSwapFeeCalculator(
                 sourceAddress = transaction.txFrom,
                 extras = extras,
             )
-            // A node that refuses to estimate — most often because the native balance cannot cover the
-            // gas it is about to quote — must not sink the whole quote ([REDACTED_TASK_KEY]): the swap is still
-            // priced from the Express gas limit, and the balance check downstream names what is missing.
             getFeeUseCase(
                 transactionData = transactionData,
                 network = network,
