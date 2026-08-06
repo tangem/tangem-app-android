@@ -63,6 +63,9 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
         } catch (e: IOException) {
             logger.e("Google authorization network error")
             GoogleAuthError.NetworkError.left()
+        } catch (e: GoogleAuthLauncherUnavailableException) {
+            logger.e("Google authorization consent UI is unavailable")
+            GoogleAuthError.Unknown(e).left()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -72,7 +75,8 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
     }
 
     override fun clearAuthorization() {
-        // AuthorizationClient exposes no token revocation; the session token is dropped by the caller's store
+        // Nothing is cached here: AuthorizationClient is created per call and exposes no revocation,
+        // so forgetting the account means the caller dropping its token (see clearToken)
     }
 
     @Suppress("TooGenericExceptionCaught", "SwallowedException")

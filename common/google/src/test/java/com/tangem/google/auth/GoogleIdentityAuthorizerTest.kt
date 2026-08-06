@@ -2,7 +2,6 @@ package com.tangem.google.auth
 
 import android.app.Activity
 import android.content.Context
-import androidx.activity.result.ActivityResult
 import arrow.core.left
 import arrow.core.right
 import com.google.android.gms.auth.GoogleAuthUtil
@@ -107,6 +106,22 @@ internal class GoogleIdentityAuthorizerTest {
 
         // Assert
         assertThat(actual).isEqualTo(GoogleAuthError.AuthCanceled.left())
+    }
+
+    @Test
+    fun `GIVEN no consent launcher WHEN authorize THEN Unknown instead of cancellation`() = runTest {
+        // Arrange
+        val result = authResult(hasResolution = true, token = null)
+        every { result.pendingIntent } returns mockk(relaxed = true)
+        stubAuthorize(successTask(result))
+        coEvery { bridge.launch(any()) } throws GoogleAuthLauncherUnavailableException()
+
+        // Act
+        val actual = authorizer.authorize(scopes, interactive = true)
+
+        // Assert
+        assertThat(actual.isLeft()).isTrue()
+        assertThat(actual.leftOrNull()).isInstanceOf(GoogleAuthError.Unknown::class.java)
     }
 
     @Test
