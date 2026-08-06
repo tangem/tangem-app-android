@@ -42,10 +42,10 @@ import java.math.BigDecimal
  * |-------------------------------|-----------------|---------|-------------------------------|
  * | CEX                           | no              | null    | warning shown (the bug fix)   |
  * | CEX                           | yes             | null    | suppressed (fee → token)     |
- * | CEX                           | yes             | set     | warning shown ([REDACTED_TASK_KEY])     |
+ * | CEX                           | yes             | set     | warning shown                |
  * | DEX (txType=null)             | yes             | null    | warning shown (DEX unchanged) |
  * | DEX + txType=SEND (CEX-like)  | yes             | null    | suppressed like a real CEX    |
- * | DEX + txType=SEND (CEX-like)  | yes             | set     | warning shown ([REDACTED_TASK_KEY])     |
+ * | DEX + txType=SEND (CEX-like)  | yes             | set     | warning shown                 |
  * | DEX + txType=SEND (CEX-like)  | no              | null    | warning shown                 |
  *
  * A non-null `swapFee` means the gasless selector has already resolved which token pays, so an
