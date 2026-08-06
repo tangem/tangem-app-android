@@ -276,6 +276,9 @@ internal class SwapNotificationsFactory(
     }
 
     private fun MutableList<NotificationUM>.maybeAddPermissionNeededWarning(quoteModel: SwapState.QuotesLoadedState) {
+        // The fee coin cannot cover the approve fee — maybeAddUnableCoverFeeWarning shows the
+        // insufficient-fee error instead, and the approve prompt must not be offered.
+        if (quoteModel.preparedSwapConfigState.balanceStatus is SwapBalanceStatus.InsufficientFee) return
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
