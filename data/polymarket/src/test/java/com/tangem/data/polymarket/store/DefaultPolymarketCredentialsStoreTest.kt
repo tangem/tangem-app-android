@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.data.polymarket.converter.PolymarketApiCredentialsConverter
 import com.tangem.data.polymarket.entity.PolymarketApiCredentialsDTO
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.Severity
@@ -44,13 +45,13 @@ internal class DefaultPolymarketCredentialsStoreTest {
     }
 
     @Test
-    fun `GIVEN credentials WHEN store THEN saved as json under the address key`() = runTest {
+    fun `GIVEN credentials WHEN store THEN saved as json under the wallet key`() = runTest {
         // Arrange
         val payload = slot<String>()
         every { secureStorage.store(eq(EXPECTED_KEY), capture(payload)) } returns Unit
 
         // Act
-        store.store(ownerAddress = OWNER_ADDRESS, credentials = CREDENTIALS)
+        store.store(userWalletId = USER_WALLET_ID, credentials = CREDENTIALS)
 
         // Assert
         verify(exactly = 1) { secureStorage.store(EXPECTED_KEY, any()) }
@@ -64,7 +65,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
         every { secureStorage.store(eq(EXPECTED_KEY), capture(payload)) } returns Unit
 
         // Act
-        store.store(ownerAddress = OWNER_ADDRESS, credentials = CREDENTIALS)
+        store.store(userWalletId = USER_WALLET_ID, credentials = CREDENTIALS)
 
         // Assert
         assertThat(json.parseToJsonElement(payload.captured).jsonObject.keys)
@@ -77,7 +78,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
         every { secureStorage.getAsString(EXPECTED_KEY) } returns encode(CREDENTIALS)
 
         // Act
-        val actual = store.get(ownerAddress = OWNER_ADDRESS)
+        val actual = store.get(userWalletId = USER_WALLET_ID)
 
         // Assert
         assertThat(actual).isEqualTo(CREDENTIALS)
@@ -89,7 +90,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
         every { secureStorage.getAsString(EXPECTED_KEY) } returns null
 
         // Act
-        val actual = store.get(ownerAddress = OWNER_ADDRESS)
+        val actual = store.get(userWalletId = USER_WALLET_ID)
 
         // Assert
         assertThat(actual).isNull()
@@ -101,7 +102,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
         every { secureStorage.getAsString(EXPECTED_KEY) } returns "{not a json"
 
         // Act
-        val actual = store.get(ownerAddress = OWNER_ADDRESS)
+        val actual = store.get(userWalletId = USER_WALLET_ID)
 
         // Assert
         assertThat(actual).isNull()
@@ -116,12 +117,21 @@ internal class DefaultPolymarketCredentialsStoreTest {
         every { secureStorage.getAsString(EXPECTED_KEY) } returns """{"secret":"${CREDENTIALS.secret}",,,"""
 
         // Act
-        store.get(ownerAddress = OWNER_ADDRESS)
+        store.get(userWalletId = USER_WALLET_ID)
 
         // Assert
         assertThat(logs.entries).isNotEmpty()
         assertThat(logs.entries.map { it.second }).containsExactly(null)
         assertThat(logs.entries.none { it.first.contains(CREDENTIALS.secret) }).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a stored entry WHEN clear THEN the key is deleted`() = runTest {
+        // Act
+        store.clear(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        verify(exactly = 1) { secureStorage.delete(EXPECTED_KEY) }
     }
 
     private fun encode(credentials: PolymarketApiCredentials): String =
@@ -151,21 +161,7 @@ internal class DefaultPolymarketCredentialsStoreTest {
     }
 
     @Test
-    fun `GIVEN checksummed address WHEN store and get THEN both use the same lowercased slot`() = runTest {
-        // Arrange
-        every { secureStorage.getAsString(EXPECTED_KEY) } returns encode(CREDENTIALS)
-
-        // Act
-        store.store(ownerAddress = CHECKSUMMED_OWNER_ADDRESS, credentials = CREDENTIALS)
-        val actual = store.get(ownerAddress = OWNER_ADDRESS)
-
-        // Assert
-        verify(exactly = 1) { secureStorage.store(EXPECTED_KEY, any()) }
-        assertThat(actual).isEqualTo(CREDENTIALS)
-    }
-
-    @Test
-    fun `GIVEN in-memory storage WHEN store THEN the entry is keyed by address and holds the credentials`() = runTest {
+    fun `GIVEN in-memory storage WHEN store THEN the entry is keyed by the wallet and holds the credentials`() = runTest {
         // Arrange
         val storage = InMemorySecureStorage()
         val storeOverRealStorage = DefaultPolymarketCredentialsStore(
@@ -175,11 +171,11 @@ internal class DefaultPolymarketCredentialsStoreTest {
         )
 
         // Act
-        storeOverRealStorage.store(ownerAddress = OWNER_ADDRESS, credentials = CREDENTIALS)
+        storeOverRealStorage.store(userWalletId = USER_WALLET_ID, credentials = CREDENTIALS)
 
         // Assert
         assertThat(storage.entries.keys).containsExactly(EXPECTED_KEY)
-        assertThat(storeOverRealStorage.get(ownerAddress = CHECKSUMMED_OWNER_ADDRESS)).isEqualTo(CREDENTIALS)
+        assertThat(storeOverRealStorage.get(userWalletId = USER_WALLET_ID)).isEqualTo(CREDENTIALS)
     }
 
     private class InMemorySecureStorage : SecureStorage {
@@ -205,19 +201,10 @@ internal class DefaultPolymarketCredentialsStoreTest {
         }
     }
 
-    @Test
-    fun `GIVEN address WHEN clear THEN deletes the entry`() = runTest {
-        // Act
-        store.clear(ownerAddress = CHECKSUMMED_OWNER_ADDRESS)
-
-        // Assert
-        verify(exactly = 1) { secureStorage.delete(EXPECTED_KEY) }
-    }
-
     private companion object {
-        const val OWNER_ADDRESS = "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed"
-        const val CHECKSUMMED_OWNER_ADDRESS = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
-        const val EXPECTED_KEY = "polymarket_api_credentials_0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed"
+        val USER_WALLET_ID = UserWalletId("FE7F9D116CF285B694715DAE477AF6DC1CFCA02DBD9DCDA2EE2AF523A93E920F")
+        const val EXPECTED_KEY =
+            "polymarket_api_credentials_FE7F9D116CF285B694715DAE477AF6DC1CFCA02DBD9DCDA2EE2AF523A93E920F"
 
         val CREDENTIALS = PolymarketApiCredentials(
             apiKey = "df2b7b32-a2e6-4a3f-9b1c-0f0e5f5f0000",
