@@ -30,7 +30,7 @@ import java.math.RoundingMode
  * Unit tests for [ResolveGaslessFeePlanUseCase].
  * Covers every branch of the gasless fee decision tree.
  *
- * [REDACTED_TASK_KEY] — the fee must be charged against the liquid balance on the address, never against the part
+ * The fee must be charged against the liquid balance on the address, never against the part
  * of the effective balance that sits inside the yield module.
  */
 internal class ResolveGaslessFeePlanUseCaseTest {
