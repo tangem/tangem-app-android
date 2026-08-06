@@ -342,6 +342,8 @@ internal class ChildFactory @Inject constructor(
                                 depositAddress = tangemPayInput.depositAddress,
                             )
                         },
+                        fromAmount = route.fromAmount,
+                        providerId = route.providerId,
                     ),
                     componentFactory = swapComponentFactory,
                 )
