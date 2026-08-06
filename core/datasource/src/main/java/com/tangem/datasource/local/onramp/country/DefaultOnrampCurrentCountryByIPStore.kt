@@ -1,22 +1,13 @@
 package com.tangem.datasource.local.onramp.country
 
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
-import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.onramp.model.OnrampCountry
 
 internal class DefaultOnrampCurrentCountryByIPStore(
-    val dataStore: StringKeyDataStore<OnrampCountry>,
-) : OnrampCurrentCountryByIPStore, StringKeyDataStoreDecorator<Unit, OnrampCountry>(
-    wrappedDataStore = dataStore,
-) {
+    private val store: RuntimeSharedStore<OnrampCountry>,
+) : OnrampCurrentCountryByIPStore {
 
-    override suspend fun getSyncOrNull(): OnrampCountry? {
-        return getSyncOrNull(Unit)
-    }
+    override suspend fun getSyncOrNull(): OnrampCountry? = store.getSyncOrNull()
 
-    override suspend fun store(value: OnrampCountry) {
-        return store(Unit, value)
-    }
-
-    override fun provideStringKey(key: Unit) = "KEY"
+    override suspend fun store(value: OnrampCountry) = store.store(value)
 }

@@ -8,15 +8,20 @@ import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 internal class P2PEthPoolFeeLoader @AssistedInject constructor(
     private val transactionCreator: P2PEthPoolTransactionCreator,
-    @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     @Assisted private val integration: P2PEthPoolIntegration,
 ) : StakingFeeLoader {
+
+    // Re-read on every use so the loader never operates on a stale frozen snapshot (CRASHAND-53)
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus
+        get() = cryptoCurrencyStatusProvider()
 
     override suspend fun getFee(
         onStakingFee: (Fee, Boolean) -> Unit,
@@ -50,6 +55,9 @@ internal class P2PEthPoolFeeLoader @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
 
-        fun create(cryptoCurrencyStatus: CryptoCurrencyStatus, integration: P2PEthPoolIntegration): P2PEthPoolFeeLoader
+        fun create(
+            cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+            integration: P2PEthPoolIntegration,
+        ): P2PEthPoolFeeLoader
     }
 }

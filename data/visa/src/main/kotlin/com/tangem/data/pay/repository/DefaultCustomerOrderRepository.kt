@@ -3,8 +3,8 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import com.tangem.data.pay.util.OrderConverter
 import com.tangem.data.pay.util.OrderStatusConverter
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.request.OrderRequest
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Order
@@ -60,6 +60,7 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
         idempotencyKey: String,
         targetTariffPlanId: String?,
         transitionType: TangemPayTariffPlanTransition.Type?,
+        chainId: Int?,
     ): Either<VisaApiError, Order> {
         val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
         return requestHelper.performRequest(userWalletId) { authHeader ->
@@ -72,6 +73,7 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                         type = type.wireValue,
                         targetTariffPlanId = targetTariffPlanId,
                         tariffPlanTransitionType = transitionType?.name,
+                        chainId = chainId,
                     ),
                     idempotencyKey = idempotencyKey,
                 ),

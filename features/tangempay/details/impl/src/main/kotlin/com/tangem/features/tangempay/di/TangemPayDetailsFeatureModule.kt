@@ -1,13 +1,15 @@
 package com.tangem.features.tangempay.di
 
+import com.tangem.features.tangempay.account.DefaultTangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.card.details.CardDetailsEventListener
+import com.tangem.features.tangempay.card.details.DefaultCardDetailsEventListener
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.DefaultTangemPayCashbackComponent
-import com.tangem.features.tangempay.components.DefaultTangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
-import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
-import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
-import com.tangem.features.tangempay.model.listener.DefaultCardDetailsEventListener
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
+import com.tangem.features.tangempay.orderCard.impl.DefaultTangemPayOrderCardComponent
+import com.tangem.features.tangempay.txhistory.details.TangemPayTxHistoryDetailsComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -39,4 +41,10 @@ internal interface TangemPayDetailsFeatureModule {
     fun bindTangemPayCashbackComponentFactory(
         factory: DefaultTangemPayCashbackComponent.Factory,
     ): TangemPayCashbackComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayOrderCardComponentFactory(
+        factory: DefaultTangemPayOrderCardComponent.Factory,
+    ): TangemPayOrderCardComponent.Factory
 }

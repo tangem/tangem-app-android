@@ -7,24 +7,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.rememberQrPainter
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.*
@@ -174,19 +170,6 @@ private fun Buttons(onShareClick: () -> Unit, onCopyClick: () -> Unit, modifier:
             iconStart = TangemIconUM.Icon(Icons.ic_share_android_24),
             size = TangemButton.Size.X12,
             variant = TangemButton.Variant.Secondary,
-        )
-    }
-}
-
-@Composable
-private fun rememberQrPainter(content: String, size: Dp = 248.dp, padding: Dp = 0.dp): BitmapPainter {
-    val density = LocalDensity.current
-    return remember(content) {
-        BitmapPainter(
-            content.toQrCode(
-                sizePx = with(density) { size.roundToPx() },
-                paddingPx = with(density) { padding.roundToPx() },
-            ).asImageBitmap(),
         )
     }
 }

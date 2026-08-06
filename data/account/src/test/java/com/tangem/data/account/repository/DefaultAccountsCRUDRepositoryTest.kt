@@ -11,12 +11,12 @@ import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account.CryptoPortfolio

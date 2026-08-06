@@ -1,5 +1,6 @@
 package com.tangem.common.extensions
 
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.tangem.common.BaseTestCase
@@ -87,6 +88,21 @@ fun BaseTestCase.stopApp(packageName: String) {
 fun BaseTestCase.launchApp(packageName: String) {
     device.apps.launch(packageName)
     device.apps.waitForAppLaunchAndReady(packageName = packageName)
+}
+
+/**
+ * Resumes a backgrounded app preserving its navigation state. Unlike [openTheAppFromRecents] it taps
+ * nothing (a blind tap can hit a bottom sheet's scrim), and unlike [launchApp] it sends no launcher
+ * intent, so the task is not reset to its root activity.
+ */
+fun BaseTestCase.bringAppToForeground(packageName: String) {
+    val component = InstrumentationRegistry.getInstrumentation().targetContext.packageManager
+        .getLaunchIntentForPackage(packageName)
+        ?.component
+        ?: error("No launch activity found for $packageName")
+    device.uiDevice.executeShellCommand("am start -n ${component.packageName}/${component.className}")
+    device.apps.waitForAppLaunchAndReady(packageName = packageName)
+    waitForIdle()
 }
 
 fun BaseTestCase.restartApp(packageName: String) {
