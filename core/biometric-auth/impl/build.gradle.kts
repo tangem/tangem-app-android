@@ -9,6 +9,8 @@ plugins {
 android {
     namespace = "com.tangem.core.biometric.impl"
 
+    // `src/prodDi/` holds production DI bindings for interfaces with a `mocked` counterpart.
+    // Wired into every build type EXCEPT `mocked`, which supplies its own bindings from `src/mocked/`.
     buildTypes.configureEach {
         if (name != "mocked") {
             sourceSets.named(name) {
