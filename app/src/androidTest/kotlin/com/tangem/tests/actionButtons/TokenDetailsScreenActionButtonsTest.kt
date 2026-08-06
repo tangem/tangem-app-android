@@ -9,7 +9,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.pullToRefresh
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.checkQrCodeBottomSheetScenario
@@ -204,11 +203,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
         val polygonBalanceScenarioName = "polygon_coin_balance"
         val zeroBalanceState = "ZeroBalance"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(polygonBalanceScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$polygonBalanceScenarioName' to state: '$zeroBalanceState'") {
                 setWireMockScenarioState(polygonBalanceScenarioName, zeroBalanceState)
             }
@@ -277,11 +272,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
         val polygonBalanceScenarioName = "polygon_coin_balance"
         val polygonBalanceScenarioState = "ZeroBalance"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(polygonBalanceScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$polygonBalanceScenarioName' to state: '$polygonBalanceScenarioState'") {
                 setWireMockScenarioState(polygonBalanceScenarioName, polygonBalanceScenarioState)
             }
@@ -335,13 +326,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
         val pendingSendMessagePrefix =
             getResourceString(R.string.token_button_unavailability_reason_pending_transaction_send).substringBefore("%")
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }
@@ -421,14 +406,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
         val txHistoryScenarioName = "dogecoin_tx_history"
         val sendingTitle = getResourceString(R.string.common_sending)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(balanceScenarioName)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }
