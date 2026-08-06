@@ -1024,6 +1024,79 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Yield path with an empty native balance ([REDACTED_TASK_KEY])
+    //
+    // A wallet holding no native coin used to get UnknownError before any fee was computed, which the
+    // fee block renders as a loading error. The quote must instead be priced from the Express gas limit
+    // so the swap screen can tell the user the native coin is missing, as the non-yield flow does.
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN zero native balance WHEN calculateYield THEN falls back to getEthSpecificFeeUseCase`() = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
+        val gas = BigInteger.valueOf(871_439L)
+        val transaction = buildDex(gas = gas, allowanceContract = "0xSpender")
+        coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
+        coEvery {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        } returns TransactionFee.Choosable(
+            minimum = ethLegacyFee(),
+            normal = ethLegacyFee(),
+            priority = ethLegacyFee(),
+        ).right()
+
+        // Act
+        val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = gas,
+                gasPrice = any(),
+            )
+        }
+        // The node is never asked to estimate a transaction it knows is unpayable.
+        coVerify(exactly = 0) {
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any<TransactionData>(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN zero native balance and no gas in quote WHEN calculateYield THEN raises`() = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
+        val transaction = buildDex(gas = null, allowanceContract = "0xSpender")
+        coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
+
+        // Act
+        val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
+
+        // Assert — nothing left to price the swap with.
+        assertThat(result.isLeft()).isTrue()
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        }
+    }
+
     private fun buildDex(
         txData: String = "dGVzdA==",
         txValue: String? = "0",
