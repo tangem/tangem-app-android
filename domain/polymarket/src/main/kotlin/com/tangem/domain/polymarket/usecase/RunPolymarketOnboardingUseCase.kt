@@ -46,7 +46,7 @@ class RunPolymarketOnboardingUseCase(
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.runOnboarding(addresses: PolymarketAddresses) {
         val entry = (step { getWalletStatus(addresses) } ?: return).status
-        val credentials = getApiCredentials(addresses.ownerAddress)
+        val credentials = getApiCredentials(addresses.userWalletId)
 
         if (!entry.owesApprovals() && credentials != null) {
             awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
@@ -75,6 +75,7 @@ class RunPolymarketOnboardingUseCase(
 
         val activeCredentials = credentials ?: step {
             deriveApiCredentials(
+                userWalletId = addresses.userWalletId,
                 ownerAddress = addresses.ownerAddress,
                 l1Signature = signed.l1Signature,
                 timestamp = signed.clobAuthTimestamp,
