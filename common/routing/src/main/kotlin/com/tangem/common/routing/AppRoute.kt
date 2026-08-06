@@ -233,6 +233,8 @@ sealed class AppRoute(val path: String) : Route {
         val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
         val toCryptoCurrency: CryptoCurrency? = null,
+        val fromAmount: SerializedBigDecimal? = null,
+        val providerId: String? = null,
     ) : AppRoute(
         path = "/swap" +
             "/${fromCryptoCurrency?.id?.value}" +
