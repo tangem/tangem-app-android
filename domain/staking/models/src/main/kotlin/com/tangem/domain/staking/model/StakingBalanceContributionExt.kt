@@ -1,5 +1,6 @@
 package com.tangem.domain.staking.model
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.contributionOrNull
 import com.tangem.domain.models.staking.StakingBalance
@@ -27,3 +28,15 @@ import com.tangem.domain.models.staking.StakingBalance
  */
 val CryptoCurrencyStatus.Value.stakingBalanceData: StakingBalance.Data?
     get() = contributionOrNull<StakingBalance.Data>() ?: stakingBalance as? StakingBalance.Data
+
+/**
+ * How fresh this currency's staking data is — `ACTUAL` when it has no staking balance at all, which is what
+ * `CryptoCurrencyStatusFactory` stamps for that case anyway.
+ *
+ * The source half of [stakingBalanceData].
+ *
+ * Callers that also depend on the on-chain amount must still `&&` this with
+ * [CryptoCurrencyStatus.Sources.networkSource] — this answers only for the staking half.
+ */
+val CryptoCurrencyStatus.Value.stakingSource: StatusSource
+    get() = stakingBalanceData?.source ?: sources.stakingBalanceSource
