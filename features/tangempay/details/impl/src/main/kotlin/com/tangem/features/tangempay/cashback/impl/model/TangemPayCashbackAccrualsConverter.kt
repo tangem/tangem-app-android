@@ -1,5 +1,7 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackAccrualsUM
@@ -11,10 +13,9 @@ internal class TangemPayCashbackAccrualsConverter(
     private val onDocClick: (url: String) -> Unit,
 ) : Converter<List<CashbackDocument>, TangemPayCashbackAccrualsUM> {
 
-    // TODO([REDACTED_TASK_KEY]): move hardcoded strings to string resources
     override fun convert(value: List<CashbackDocument>): TangemPayCashbackAccrualsUM {
         return TangemPayCashbackAccrualsUM(
-            title = stringReference("Accruals"),
+            title = resourceReference(R.string.tangempay_cashback_accruals_title),
             infoRows = INFO_ROWS,
             docRows = value.map { doc ->
                 TangemPayCashbackAccrualsUM.DocRow(
@@ -28,22 +29,16 @@ internal class TangemPayCashbackAccrualsConverter(
     private companion object {
         val INFO_ROWS = persistentListOf(
             TangemPayCashbackAccrualsUM.InfoRow(
-                title = stringReference("How we calculate cashback?"),
-                description = stringReference(
-                    "We process purchases within 5 days after the operation and count only completed transactions",
-                ),
+                title = resourceReference(R.string.tangempay_cashback_accruals_calc_title),
+                description = resourceReference(R.string.tangempay_cashback_accruals_calc_description),
             ),
             TangemPayCashbackAccrualsUM.InfoRow(
-                title = stringReference("How we pay cashback?"),
-                description = stringReference("From the 2nd and the 5th of the next month"),
+                title = resourceReference(R.string.tangempay_cashback_accruals_pay_title),
+                description = resourceReference(R.string.tangempay_cashback_accruals_pay_description),
             ),
             TangemPayCashbackAccrualsUM.InfoRow(
-                title = stringReference("Exceptions"),
-                description = stringReference(
-                    "No cashback will be awarded for in-person/in-store purchases at EU merchants; also for " +
-                        "withdrawals, transfers, quasi-cash, mobile phone bills, government services and certain " +
-                        "other categories",
-                ),
+                title = resourceReference(R.string.tangempay_cashback_accruals_exceptions_title),
+                description = resourceReference(R.string.tangempay_cashback_accruals_exceptions_description),
             ),
         )
     }

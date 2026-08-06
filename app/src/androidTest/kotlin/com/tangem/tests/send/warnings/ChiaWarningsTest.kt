@@ -46,6 +46,7 @@ class ChiaWarningsTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(chiaUTXOScenarioName)
             }
         ).run {
             step("Set WireMock scenario: '$chiaUTXOScenarioName' to state: '$moreThanLimitState'") {
@@ -87,6 +88,7 @@ class ChiaWarningsTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(chiaUTXOScenarioName)
             }
         ).run {
             step("Set WireMock scenario: '$chiaUTXOScenarioName' to state: '$moreThanLimitState'") {
@@ -128,6 +130,7 @@ class ChiaWarningsTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(chiaUTXOScenarioName)
             }
         ).run {
             step("Set WireMock scenario: '$chiaUTXOScenarioName' to state: '$moreThanLimitState'") {

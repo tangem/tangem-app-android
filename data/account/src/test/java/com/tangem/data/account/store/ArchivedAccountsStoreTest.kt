@@ -1,7 +1,7 @@
 package com.tangem.data.account.store
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName

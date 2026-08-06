@@ -9,6 +9,11 @@ internal class DefaultSendFeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : SendFeatureToggles {
 
+    override val isTronGaslessEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_16063_TRON_GASLESS_ENABLED,
+        )
+
     override val isHighFeeWarningEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1367_HIGH_FEE_WARNING_ENABLED,
