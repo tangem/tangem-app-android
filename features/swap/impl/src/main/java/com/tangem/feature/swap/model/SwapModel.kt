@@ -2770,6 +2770,7 @@ internal class SwapModel @Inject constructor(
                         is TransactionFeeResult.Loaded -> TransactionFeeExtended(
                             transactionFee = res.fee,
                             feeTokenId = swapFee.selectedFeeToken.currency.id,
+                            nativeFee = res.fee,
                         )
                     }
                 }
