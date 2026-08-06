@@ -2285,9 +2285,12 @@ internal class SwapInteractorImpl @Inject constructor(
                 if (balanceToCheck > fee.multiply(percentsToFeeIncrease)) {
                     FeeBalanceState.Enough
                 } else {
+                    // The missing currency here is the network's coin paying the gas, not the token
+                    // being swapped — naming the latter told the user to top up the wrong asset.
                     FeeBalanceState.NotEnough(
-                        currencyName = fromSwapCurrencyStatus.currency.name,
-                        currencySymbol = fromSwapCurrencyStatus.currency.symbol,
+                        currencyName = selectedFeeToken?.currency?.name ?: fromCurrency.network.name,
+                        currencySymbol = selectedFeeToken?.currency?.symbol
+                            ?: fromCurrency.network.currencySymbol,
                     )
                 }
             }
