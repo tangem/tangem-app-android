@@ -5,11 +5,15 @@ import com.google.common.truth.Truth
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiConfigs
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
+import com.tangem.core.remote.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
+import com.tangem.core.remote.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
+import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
+import com.tangem.core.remote.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
@@ -18,7 +22,6 @@ import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
 import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
-import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -89,70 +92,89 @@ internal class ProdApiConfigsManagerTest {
     }
 
     private fun createApiConfigs(): ApiConfigs {
-        return ApiConfig.ID.entries.mapTo(destination = hashSetOf()) {
-            when (it) {
-                ApiConfig.ID.Express -> {
-                    Express(
-                        environmentConfig = environmentConfig,
-                        expressAuthProvider = expressAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.YieldSupply -> {
-                    YieldSupply(
-                        environmentConfig = environmentConfig,
-                        authProvider = appAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.TangemTech -> {
-                    TangemTech(
-                        authProvider = appAuthProvider,
-                        appInfoProvider = appInfoProvider,
-                    )
-                }
-                ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = stakeKitAuthProvider)
-                ApiConfig.ID.TangemPay -> TangemPay.Bff(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
-                    environmentConfig = environmentConfig,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
-                ApiConfig.ID.MoonPay -> MoonPay()
-                ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
-                ApiConfig.ID.News -> News(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.GaslessTxService -> GaslessTxService(
-                    authProvider = appAuthProvider,
-                    appInfoProvider = appInfoProvider,
-                )
-                ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
-                ApiConfig.ID.Auth -> Auth()
-            }
-        }
+        val configs = listOf(
+            Express(
+                environmentConfig = environmentConfig,
+                expressAuthProvider = expressAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            YieldSupply(
+                environmentConfig = environmentConfig,
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            TangemTech(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
+            BlockAid(environmentConfig = environmentConfig),
+            MoonPay(),
+            P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
+            News(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            GaslessTxService(
+                authProvider = appAuthProvider,
+                appInfoProvider = appInfoProvider,
+            ),
+            SurveySparrow(environmentConfig = environmentConfig),
+            Auth(),
+            PolymarketWeb(),
+            PolymarketRelayer(),
+            PolymarketClob(),
+        )
+
+        return configs.associateBy { it.id.name }
+            .also { check(it.size == configs.size) { "Duplicate ApiConfig id in test setup" } }
     }
 
-    private fun provideTestModels() = ApiConfig.ID.entries.map {
-        when (it) {
-            ApiConfig.ID.Express -> createExpressModel()
-            ApiConfig.ID.YieldSupply -> createYieldSupplyModel()
-            ApiConfig.ID.TangemTech -> createTangemTechModel()
-            ApiConfig.ID.StakeKit -> createStakeKitModel()
-            ApiConfig.ID.TangemPay -> createTangemPayModel()
-            ApiConfig.ID.TangemPayAuth -> createTangemPayAuthModel()
-            ApiConfig.ID.BlockAid -> createBlockAidSdkModel()
-            ApiConfig.ID.MoonPay -> createMoonPayModel()
-            ApiConfig.ID.P2PEthPool -> createP2PModel()
-            ApiConfig.ID.News -> createNewsModel()
-            ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
-            ApiConfig.ID.SurveySparrow -> createSurveySparrowModel()
-            ApiConfig.ID.Auth -> createAuthModel()
-        }
+    private fun provideTestModels() = listOf(
+        createExpressModel(),
+        createYieldSupplyModel(),
+        createTangemTechModel(),
+        createStakeKitModel(),
+        createBlockAidSdkModel(),
+        createMoonPayModel(),
+        createP2PModel(),
+        createNewsModel(),
+        createGaslessTxServiceModel(),
+        createSurveySparrowModel(),
+        createAuthModel(),
+        createPolymarketWebModel(),
+        createPolymarketRelayerModel(),
+        createPolymarketClobModel(),
+    )
+
+    private fun createPolymarketWebModel(): TestModel {
+        return TestModel(
+            id = PolymarketWeb.ID,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.PROD,
+                baseUrl = "https://polymarket.com/",
+            ),
+        )
+    }
+
+    private fun createPolymarketRelayerModel(): TestModel {
+        return TestModel(
+            id = PolymarketRelayer.ID,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.PROD,
+                baseUrl = "https://relayer-v2.polymarket.com/",
+            ),
+        )
+    }
+
+    private fun createPolymarketClobModel(): TestModel {
+        return TestModel(
+            id = PolymarketClob.ID,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.PROD,
+                baseUrl = "https://clob.polymarket.com/",
+            ),
+        )
     }
 
     private fun createAuthModel(): TestModel {
@@ -168,7 +190,7 @@ internal class ProdApiConfigsManagerTest {
         }
 
         return TestModel(
-            id = ApiConfig.ID.Auth,
+            id = Auth.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = when (environment) {
@@ -194,7 +216,7 @@ internal class ProdApiConfigsManagerTest {
         }
 
         return TestModel(
-            id = ApiConfig.ID.Express,
+            id = Express.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = when (BuildConfig.BUILD_TYPE) {
@@ -232,7 +254,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createTangemTechModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.TangemTech,
+            id = TangemTech.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.tangem.org/",
@@ -255,7 +277,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createYieldSupplyModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.YieldSupply,
+            id = YieldSupply.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://yield.tangem.org/",
@@ -278,47 +300,13 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createStakeKitModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.StakeKit,
+            id = StakeKit.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.stakek.it/v1/",
                 headers = mapOf(
                     "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
                     "accept" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createTangemPayModel(): TestModel {
-        return TestModel(
-            id = ApiConfig.ID.TangemPay,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.DEV,
-                baseUrl = "https://api.dev.us.paera.com/bff-v2/",
-                headers = mapOf(
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "Android" },
-                    "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
-                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
-                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
-                ),
-            ),
-        )
-    }
-
-    private fun createTangemPayAuthModel(): TestModel {
-        return TestModel(
-            id = ApiConfig.ID.TangemPayAuth,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.DEV,
-                baseUrl = "https://api.dev.us.paera.com/",
-                headers = mapOf(
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "Android" },
-                    "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
-                    "X-Device-Scale" to ProviderSuspend { DEVICE_SCALE.toString() },
-                    "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
                 ),
             ),
         )
@@ -337,7 +325,7 @@ internal class ProdApiConfigsManagerTest {
             else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
         }
         return TestModel(
-            id = ApiConfig.ID.GaslessTxService,
+            id = GaslessTxService.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = baseUrl,
@@ -358,7 +346,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createSurveySparrowModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.SurveySparrow,
+            id = SurveySparrow.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://eu-api.surveysparrow.com/",
@@ -371,7 +359,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createBlockAidSdkModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.BlockAid,
+            id = BlockAid.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.blockaid.io/v0/",
@@ -386,7 +374,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createMoonPayModel(): TestModel {
         return TestModel(
-            id = ApiConfig.ID.MoonPay,
+            id = MoonPay.ID,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.moonpay.com/",
@@ -402,7 +390,7 @@ internal class ProdApiConfigsManagerTest {
         }
 
         return TestModel(
-            id = ApiConfig.ID.P2PEthPool,
+            id = P2PEthPool.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = baseUrl,
@@ -428,7 +416,7 @@ internal class ProdApiConfigsManagerTest {
             else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
         }
         return TestModel(
-            id = ApiConfig.ID.News,
+            id = News.ID,
             expected = ApiEnvironmentConfig(
                 environment = environment,
                 baseUrl = baseUrl,

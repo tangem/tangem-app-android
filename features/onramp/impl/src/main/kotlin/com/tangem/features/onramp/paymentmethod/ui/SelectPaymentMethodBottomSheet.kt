@@ -53,11 +53,11 @@ private fun SelectPaymentMethodBottomSheetContent(
     ) {
         items(
             items = methods,
-            key = { item -> item.id },
+            key = { item -> item.method.id },
             contentType = { item -> item::class.java },
             itemContent = { item ->
                 val isSelected = remember(item, selectedMethodId) {
-                    item.id == selectedMethodId
+                    item.method.id == selectedMethodId
                 }
                 val itemModifier = Modifier
                     .fillMaxWidth()
@@ -87,10 +87,10 @@ private fun PaymentMethodItem(paymentMethod: PaymentMethodUM, isSelected: Boolea
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         PaymentMethodIcon(
-            imageUrl = paymentMethod.imageUrl,
+            method = paymentMethod.method,
         )
         Text(
-            text = paymentMethod.name,
+            text = paymentMethod.method.name,
             style = TangemTheme.typography.subtitle2,
             color = if (isSelected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
         )

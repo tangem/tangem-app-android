@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -35,6 +36,7 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
         userWalletId: UserWalletId,
         tokenStatus: CryptoCurrencyStatus,
         feeStatus: CryptoCurrencyStatus,
+        sendAmount: BigDecimal = BigDecimal.ZERO,
     ): Either<Throwable, CryptoCurrencyWarning?> = Either.catch {
         withContext(dispatchers.io) {
             val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
@@ -44,12 +46,17 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
             val isFeePaidByToken =
                 feePaidCurrency is FeePaidCurrency.Token && tokenStatus.currency.id != feePaidCurrency.tokenId
 
-            val isFeePaidByGaslessToken =
-                currencyChecksRepository.isNetworkSupportedForGaslessTx(feeStatus.currency.network) &&
-                    feeStatus.currency is CryptoCurrency.Token
-
             val warning = when {
-                isFeePaidByGaslessToken && feeTokenBalance == BigDecimal.ZERO -> {
+                // A Tron token fee currency only ever comes from the gasless path (Tron fees are
+                // normally paid in TRX), so it owns the decision and the generic coin-fee rules below
+                // don't also fire on it.
+                isTronGaslessScenario(feeStatus) -> resolveTronGaslessWarning(
+                    fee = fee,
+                    sendAmount = sendAmount,
+                    tokenStatus = tokenStatus,
+                    feeStatus = feeStatus,
+                )
+                isEvmGaslessTokenEmpty(feeStatus, feeTokenBalance) -> {
                     CryptoCurrencyWarning.BalanceNotEnoughForFee(
                         tokenCurrency = tokenStatus.currency,
                         coinCurrency = feeStatus.currency,
@@ -73,6 +80,41 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
                 else -> null
             }
             warning
+        }
+    }
+
+    private fun isTronGaslessScenario(feeStatus: CryptoCurrencyStatus): Boolean {
+        return isTron(feeStatus.currency.network.rawId) && feeStatus.currency is CryptoCurrency.Token
+    }
+
+    // EVM gasless: the fee token pays for its own transfer; a zero balance is the only notification-level
+    // guard (the authoritative check lives in the backend / plan resolver).
+    private fun isEvmGaslessTokenEmpty(feeStatus: CryptoCurrencyStatus, feeTokenBalance: BigDecimal): Boolean {
+        return currencyChecksRepository.isNetworkSupportedForGaslessTx(feeStatus.currency.network) &&
+            feeStatus.currency is CryptoCurrency.Token &&
+            feeTokenBalance == BigDecimal.ZERO
+    }
+
+    /**
+     * Tron gasless: the compensation transfer is paid in the fee token, so its balance must cover the
+     * compensation, plus the send amount when the fee token is the sent token (cross-token pays only
+     * the compensation). Balance unknown → no warning (the fee still loads).
+     */
+    private fun resolveTronGaslessWarning(
+        fee: BigDecimal,
+        sendAmount: BigDecimal,
+        tokenStatus: CryptoCurrencyStatus,
+        feeStatus: CryptoCurrencyStatus,
+    ): CryptoCurrencyWarning? {
+        val feeTokenBalance = feeStatus.value.amount ?: return null
+        val required = if (feeStatus.currency.id == tokenStatus.currency.id) fee + sendAmount else fee
+        return if (required > feeTokenBalance) {
+            CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                tokenCurrency = tokenStatus.currency,
+                coinCurrency = feeStatus.currency,
+            )
+        } else {
+            null
         }
     }
 
