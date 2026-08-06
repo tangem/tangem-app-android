@@ -3,8 +3,6 @@ package com.tangem.tests.tangempay
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.extensions.assertSnackbarWithText
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.freezeCardFromCardPage
@@ -34,14 +32,9 @@ class TangemPayCardFreezeTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(freezeScenario, freezeErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(freezeScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay card page") { openTangemPayCardPage() }
             step("Assert card is active (Freeze row is displayed)") {
@@ -68,14 +61,9 @@ class TangemPayCardFreezeTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(freezeScenario, unfreezeErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(freezeScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay card page") { openTangemPayCardPage() }
             step("Assert card is frozen (Unfreeze row is displayed)") {
@@ -101,14 +89,9 @@ class TangemPayCardFreezeTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(freezeScenario, frozenState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(freezeScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             // ACTION_BUTTON exposes no Disabled semantics; a disabled one carries no click action.

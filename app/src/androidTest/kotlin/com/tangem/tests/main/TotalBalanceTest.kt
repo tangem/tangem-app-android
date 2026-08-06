@@ -5,7 +5,6 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.parseNumericBalance
 import com.tangem.common.extensions.tapBackButton
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -36,11 +35,7 @@ class TotalBalanceTest : BaseTestCase() {
         val coinsListDelayScenario = "coins_list_api"
         val coinsListDelayState = "SlowResponse"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$quoteDelayScenario' to state: '$quoteDelayState'") {
                 setWireMockScenarioState(quoteDelayScenario, quoteDelayState)
             }
@@ -75,11 +70,7 @@ class TotalBalanceTest : BaseTestCase() {
         val ethBalanceScenario = "eth_network_balance"
         val ethBalanceState = "Empty"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenario' to state: '$userTokensState'") {
                 setWireMockScenarioState(userTokensScenario, userTokensState)
             }
@@ -139,11 +130,7 @@ class TotalBalanceTest : BaseTestCase() {
         var stakedAmount = BigDecimal.ZERO
         var availableBalance = BigDecimal.ZERO
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$stakingEthScenario' to state: '$stakingEthState'") {
                 setWireMockScenarioState(stakingEthScenario, stakingEthState)
             }
@@ -210,11 +197,7 @@ class TotalBalanceTest : BaseTestCase() {
         val rippleAccountLinesScenario = "ripple_account_lines"
         val rippleAccountLinesState = "Started"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenario' to state: '$userTokensState'") {
                 setWireMockScenarioState(userTokensScenario, userTokensState)
             }
@@ -275,11 +258,7 @@ class TotalBalanceTest : BaseTestCase() {
         val currenciesScenario = "currencies_api"
         val currenciesState = "AppSettings"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$currenciesScenario' to state: '$currenciesState'") {
                 setWireMockScenarioState(currenciesScenario, currenciesState)
             }
