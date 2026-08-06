@@ -10,8 +10,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.res.R
@@ -203,7 +201,6 @@ class SwapTokenScreenTest : BaseTestCase() {
 
         setupHooks().run {
 
-            resetWireMockScenarios()
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -457,7 +454,6 @@ class SwapTokenScreenTest : BaseTestCase() {
 
         setupHooks().run {
 
-            resetWireMockScenarios()
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -657,11 +653,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         val salam = "Salam"
         val scenarioState = "CustomTokenAndJesusAdded"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
@@ -783,12 +775,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-                resetWireMockScenarioState(pairsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -868,13 +855,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
-
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-                resetWireMockScenarioState(pairsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)

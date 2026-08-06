@@ -3,7 +3,6 @@ package com.tangem.tests
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -26,9 +25,7 @@ class AppCurrencyTest : BaseTestCase() {
         val targetSymbol = "€"
         val token = "Bitcoin"
 
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(currenciesScenario) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$currenciesScenario' to '$appSettingsState'") {
                 setWireMockScenarioState(scenarioName = currenciesScenario, state = appSettingsState)
             }

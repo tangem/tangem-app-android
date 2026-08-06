@@ -5,7 +5,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.utils.getWcUri
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
@@ -29,11 +28,7 @@ class SolanaWalletConnectTest : BaseTestCase() {
         val deepLinkUri = getWcUri("solana")
         val scenarioState = "Solana"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
@@ -90,11 +85,7 @@ class SolanaWalletConnectTest : BaseTestCase() {
         val deepLinkUri = getWcUri("solana")
         val scenarioState = "Solana"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
@@ -152,11 +143,7 @@ class SolanaWalletConnectTest : BaseTestCase() {
         val deepLinkUri = getWcUri("solana")
         val scenarioState = "Solana"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
@@ -217,10 +204,6 @@ class SolanaWalletConnectTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 device.uiDevice.executeShellCommand("pm grant $packageName $permissionName")
-
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
 
