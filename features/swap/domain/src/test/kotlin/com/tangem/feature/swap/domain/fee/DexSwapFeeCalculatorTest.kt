@@ -1024,14 +1024,6 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Yield path with an empty native balance ([REDACTED_TASK_KEY])
-    //
-    // A wallet holding no native coin used to get UnknownError before any fee was computed, which the
-    // fee block renders as a loading error. The quote must instead be priced from the Express gas limit
-    // so the swap screen can tell the user the native coin is missing, as the non-yield flow does.
-    // -------------------------------------------------------------------------
-
     @Test
     fun `GIVEN zero native balance WHEN calculateYield THEN falls back to getEthSpecificFeeUseCase`() = runTest {
         // Arrange
@@ -1065,7 +1057,6 @@ internal class DexSwapFeeCalculatorTest {
                 gasPrice = any(),
             )
         }
-        // The node is never asked to estimate a transaction it knows is unpayable.
         coVerify(exactly = 0) {
             getFeeUseCase.invoke(
                 userWallet = any(),
@@ -1075,11 +1066,6 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
-    /**
-     * A wallet holding too little — rather than nothing — reaches the node, which then refuses to
-     * estimate. That refusal arrives as a Left, not an exception, so it used to bypass the fallback
-     * and produce the same fee-loading error the empty-balance case did.
-     */
     @Test
     fun `GIVEN the node refuses to estimate WHEN calculateYield THEN falls back to getEthSpecificFeeUseCase`() =
         runTest {
@@ -1087,7 +1073,6 @@ internal class DexSwapFeeCalculatorTest {
             val fromStatus =
                 buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
             val gas = BigInteger.valueOf(871_439L)
-            // The yield path wraps the DEX call data, so it has to be real hex rather than the base64 default.
             val transaction = buildDex(txData = "0xa9059cbb", gas = gas, allowanceContract = "0xSpender")
             coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("0.0001")
             every {
@@ -1139,7 +1124,7 @@ internal class DexSwapFeeCalculatorTest {
         // Act
         val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
 
-        // Assert — nothing left to price the swap with.
+        // Assert
         assertThat(result.isLeft()).isTrue()
         coVerify(exactly = 0) {
             getEthSpecificFeeUseCase.invoke(
