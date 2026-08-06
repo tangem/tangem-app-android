@@ -6,6 +6,7 @@ import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
+import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -25,6 +26,7 @@ import dagger.hilt.components.SingletonComponent
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 interface ApplicationEntryPoint {
 
     fun getEnvironmentConfig(): EnvironmentConfig
@@ -38,6 +40,8 @@ interface ApplicationEntryPoint {
     fun getWalletsRepository(): WalletsRepository
 
     fun getOneTimeEventFilter(): OneTimeEventFilter
+
+    fun getMoshiJsonConverter(): MoshiJsonConverter
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
 

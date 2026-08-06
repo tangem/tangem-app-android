@@ -1,8 +1,8 @@
 package com.tangem.lib.auth.session.internal
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.AuthErrorResponse
 import org.junit.jupiter.api.Test

@@ -72,7 +72,7 @@ private const val GUIDELINES_COUNT = 3
 fun MarketChart(
     modifier: Modifier = Modifier,
     state: MarketChartState = rememberMarketChartState(),
-    splitChartSegmentColor: Color = TangemTheme.colors.icon.inactive,
+    splitChartSegmentColor: Color = TangemTheme.colors3.icon.accent.neutral,
     @FloatRange(from = 0.0, to = 1.0) backgroundSplitChartSegmentColorAlpha: Float = 0.24f,
     @FloatRange(from = 0.0, to = 1.0) backgroundColorAlpha: Float = 0.24f,
 ) {
@@ -145,7 +145,7 @@ fun MarketChart(
 @Composable
 fun getMarketChartBottomAxisHeight(): Dp {
     return with(LocalDensity.current) {
-        TangemTheme.typography.caption2.fontSize.toDp() + TangemTheme.dimens.spacing26
+        TangemTheme.typography3.caption.medium.fontSize.toDp() + 26.dp
     }
 }
 
@@ -192,7 +192,7 @@ private fun rememberMarketChartEndAxis(): VerticalAxis<AxisPosition.Vertical.End
         line = null,
         tick = null,
         guideline = rememberChartAxisGuidelineComponent(
-            color = TangemTheme.colors.icon.inactive.copy(alpha = 0.12f),
+            color = TangemTheme.colors3.icon.accent.neutral.copy(alpha = 0.12f),
             isWithPadding = false,
         ),
         label = null,
@@ -207,7 +207,7 @@ private fun rememberMarketChartEndAxis(): VerticalAxis<AxisPosition.Vertical.End
 private fun rememberMarketChartStartMinMaxAxis(
     yValueFormatter: CartesianValueFormatter,
 ): VerticalAxis<AxisPosition.Vertical.Start> {
-    val textStyle = TangemTheme.typography.caption2
+    val textStyle = TangemTheme.typography3.caption.medium
     val resolver = LocalFontFamilyResolver.current
     val typeface by remember(resolver, textStyle) {
         resolver.resolveAsTypeface(
@@ -223,16 +223,16 @@ private fun rememberMarketChartStartMinMaxAxis(
         tick = null,
         guideline = null,
         labelGuideline = rememberChartAxisGuidelineComponent(
-            color = TangemTheme.colors.icon.inactive.copy(alpha = 0.12f),
+            color = TangemTheme.colors3.icon.accent.neutral.copy(alpha = 0.12f),
         ),
         label = rememberAxisLabelComponent(
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             background = null,
             padding = Dimensions.of(
-                start = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
+                start = 12.dp,
+                end = 12.dp,
             ),
-            textSize = TangemTheme.typography.caption2.fontSize,
+            textSize = TangemTheme.typography3.caption.medium.fontSize,
             typeface = typeface,
         ),
         horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
@@ -246,7 +246,7 @@ private fun rememberMarketChartStartMinMaxAxis(
 private fun rememberMarketChartStartAxis(
     yValueFormatter: CartesianValueFormatter,
 ): VerticalAxis<AxisPosition.Vertical.Start> {
-    val textStyle = TangemTheme.typography.caption2
+    val textStyle = TangemTheme.typography3.caption.medium
     val resolver = LocalFontFamilyResolver.current
     val typeface by remember(resolver, textStyle) {
         resolver.resolveAsTypeface(
@@ -262,16 +262,13 @@ private fun rememberMarketChartStartAxis(
         tick = null,
         guideline = null,
         labelGuideline = rememberChartAxisGuidelineComponent(
-            color = TangemTheme.colors.icon.inactive.copy(alpha = 0.12f),
+            color = TangemTheme.colors3.icon.accent.neutral.copy(alpha = 0.12f),
         ),
         label = rememberAxisLabelComponent(
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             background = null,
-            padding = Dimensions.of(
-                start = TangemTheme.dimens.spacing4,
-                end = TangemTheme.dimens.spacing4,
-            ),
-            textSize = TangemTheme.typography.caption2.fontSize,
+            padding = Dimensions.of(horizontal = 4.dp),
+            textSize = TangemTheme.typography3.caption.medium.fontSize,
             typeface = typeface,
         ),
         horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
@@ -285,7 +282,7 @@ private fun rememberMarketChartStartAxis(
 private fun rememberMarketChartBottomAxis(
     xValueFormatter: CartesianValueFormatter,
 ): HorizontalAxis<AxisPosition.Horizontal.Bottom> {
-    val textStyle = TangemTheme.typography.caption2
+    val textStyle = TangemTheme.typography3.caption.medium
 
     val resolver = LocalFontFamilyResolver.current
 
@@ -300,9 +297,9 @@ private fun rememberMarketChartBottomAxis(
 
     return rememberBottomAxis(
         label = rememberAxisLabelComponent(
-            color = TangemTheme.colors.text.tertiary,
-            textSize = TangemTheme.typography.caption2.fontSize,
-            padding = Dimensions.of(top = TangemTheme.dimens.spacing26),
+            color = TangemTheme.colors3.text.secondary,
+            textSize = TangemTheme.typography3.caption.medium.fontSize,
+            padding = Dimensions.of(top = 26.dp),
             typeface = typeface,
         ),
         tick = null,
@@ -316,9 +313,8 @@ private fun rememberMarketChartBottomAxis(
 
 @Composable
 private fun rememberChartAxisGuidelineComponent(color: Color, isWithPadding: Boolean = true): LineComponent {
-    val startPadding = TangemTheme.dimens2.x2_5
-
-    val endPadding = TangemTheme.dimens2.x2
+    val startPadding = 10.dp
+    val endPadding = 8.dp
 
     return rememberAxisGuidelineComponent(
         color = color,
@@ -329,7 +325,7 @@ private fun rememberChartAxisGuidelineComponent(color: Color, isWithPadding: Boo
             topDp = 0f,
             bottomDp = 0f,
         ),
-        thickness = TangemTheme.dimens.size2,
+        thickness = 2.dp,
     )
 }
 
@@ -379,9 +375,9 @@ private fun MarketChartPreview(
     val coroutineScope = rememberCoroutineScope()
 
     TangemThemePreview {
-        val growingColor = TangemTheme.colors.icon.accent
-        val fallingColor = TangemTheme.colors.icon.warning
-        val neutralColor = TangemTheme.colors.icon.informative
+        val growingColor = TangemTheme.colors3.icon.accent.blue
+        val fallingColor = TangemTheme.colors3.icon.accent.red
+        val neutralColor = TangemTheme.colors3.icon.secondary
 
         val chartState = rememberMarketChartState(
             dataProducer = dataProducer,
@@ -410,7 +406,7 @@ private fun MarketChartPreview(
                     .background(TangemTheme.colors.background.tertiary)
                     .height(173.dp),
                 state = chartState,
-                splitChartSegmentColor = TangemTheme.colors.icon.inactive,
+                splitChartSegmentColor = TangemTheme.colors3.icon.accent.neutral,
                 backgroundSplitChartSegmentColorAlpha = 0.24f,
                 backgroundColorAlpha = 0.24f,
             )
