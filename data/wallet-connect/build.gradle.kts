@@ -82,10 +82,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.turbine)
     // endregion
 }

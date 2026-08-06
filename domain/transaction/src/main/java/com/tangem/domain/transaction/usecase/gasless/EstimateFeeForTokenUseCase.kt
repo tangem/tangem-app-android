@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -31,6 +32,7 @@ class EstimateFeeForTokenUseCase(
     private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
     private val isYieldWithdrawEnabled: Boolean,
 ) {
 
@@ -78,13 +80,48 @@ class EstimateFeeForTokenUseCase(
                     val isYieldActive = isYieldWithdrawEnabled &&
                         feeTokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 
-                    tokenFeeCalculator.calculateTokenFee(
+                    val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,
                         tokenForPayFeeStatus = feeTokenCurrencyStatus,
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         initialFee = initialFeeEth,
                         isYieldActive = isYieldActive,
+                        userWallet = userWallet,
                     ).bind()
+
+                    if (isYieldActive) {
+                        val feeTokenContract = (token as? CryptoCurrency.Token)?.contractAddress
+                            ?: raiseIllegalStateError("gasless fee currency must be a token")
+
+                        either {
+                            attachGaslessFeePlan(
+                                resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+                                userWallet = userWallet,
+                                tokenStatus = feeTokenCurrencyStatus,
+                                tokenFeeExtended = tokenFeeExtended,
+                                sendAmountInFeeToken = computeSendAmountInFeeToken(
+                                    sendingCurrency = sendingTokenCurrencyStatus.currency,
+                                    feeTokenContract = feeTokenContract,
+                                    amount = amount,
+                                ),
+                                isYieldActive = true,
+                            )
+                        }.getOrElse { error ->
+                            when (error) {
+                                // Liquid + module balance cannot cover send + fee (e.g. the user swapped MAX).
+                                // Mirrors the auto path in [EstimateFeeForGaslessTxUseCase]: return the native
+                                // fee so the block still renders and the caller can show "not enough funds",
+                                // instead of failing the whole fee load and leaving an empty block.
+                                GaslessError.NotEnoughFunds -> TransactionFeeExtended(
+                                    transactionFee = initialTxFee,
+                                    feeTokenId = nativeCurrencyStatus.currency.id,
+                                )
+                                else -> raise(error)
+                            }
+                        }
+                    } else {
+                        tokenFeeExtended
+                    }
                 },
                 catch = {
                     raise(GaslessError.DataError(it))

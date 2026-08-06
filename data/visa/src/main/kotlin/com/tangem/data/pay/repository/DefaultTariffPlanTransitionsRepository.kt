@@ -3,9 +3,9 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.data.pay.converter.TangemPayTariffPlanConverter
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.request.SetPendingTariffPlanTransitionRequest
-import com.tangem.datasource.api.pay.models.response.TariffPlanTransitionResponse
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.SetPendingTariffPlanTransitionRequest
+import com.tangem.spend.datasource.pay.models.response.TariffPlanTransitionResponse
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.repository.TangemPayTariffPlanTransitionsRepository

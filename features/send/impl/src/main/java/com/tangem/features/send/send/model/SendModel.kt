@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -29,6 +30,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.qrscanning.models.SourceType
@@ -40,10 +42,13 @@ import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendComponent
+import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.entity.PredefinedValues
@@ -67,6 +72,7 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -97,6 +103,9 @@ internal class SendModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
+    private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+    private val sendFeatureToggles: SendFeatureToggles,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
@@ -338,19 +347,61 @@ internal class SendModel @Inject constructor(
         val transferTransaction = prepareTransferTransaction()
             .getOrElse { return GetFeeError.DataError(it).left() }
 
-        return if (maybeToken == null) {
-            getFeeForGaslessUseCase(
+        val feeToken = maybeToken?.currency
+        return when {
+            feeToken is CryptoCurrency.Token &&
+                sendFeatureToggles.isTronGaslessEnabled &&
+                isTronGaslessSupportedUseCase(params.currency.network, feeToken) ->
+                getTronGaslessFeeUseCase(
+                    transactionData = transferTransaction,
+                    feeToken = feeToken,
+                )
+            maybeToken == null -> getFeeForGaslessUseCase(
                 transactionData = transferTransaction,
                 userWallet = userWallet,
                 network = params.currency.network,
-            )
-        } else {
-            getFeeForTokenUseCase(
+            ).recoverWithTronGasless(transferTransaction)
+            else -> getFeeForTokenUseCase(
                 transactionData = transferTransaction,
                 userWallet = userWallet,
                 token = maybeToken.currency,
             )
         }
+    }
+
+    /**
+     * Default fee selection for Tron gasless, mirroring the EVM strategy in [GetFeeForGaslessUseCase]:
+     * when no fee token is selected yet and the native TRX fee is unavailable or exceeds the TRX
+     * balance, quote the gasless fee in the sent token instead. Without this the fee row stays in the
+     * unreachable-error state and the fee-token selector can never be opened. Keeps the original
+     * result when Tron gasless is off, unsupported, or the estimate fails.
+     */
+    private suspend fun Either<GetFeeError, TransactionFeeExtended>.recoverWithTronGasless(
+        transferTransaction: TransactionData,
+    ): Either<GetFeeError, TransactionFeeExtended> {
+        if (!sendFeatureToggles.isTronGaslessEnabled) return this
+        val sentToken = params.currency as? CryptoCurrency.Token ?: return this
+        val isFeeCoveredByNative = fold(
+            ifLeft = { false },
+            ifRight = { extended ->
+                val feeValue = extended.transactionFee.normal.amount.value
+                val nativeBalance = feeCryptoCurrencyStatusFlow.value.value.amount
+                feeValue != null && nativeBalance != null &&
+                    nativeBalance > BigDecimal.ZERO && nativeBalance >= feeValue
+            },
+        )
+        if (isFeeCoveredByNative) return this
+        if (!isTronGaslessSupportedUseCase(params.currency.network, sentToken)) return this
+        return getTronGaslessFeeUseCase(
+            transactionData = transferTransaction,
+            feeToken = sentToken,
+        )
+            .fold(
+                // On a quote failure keep the original result (unreachable-fee state); the gasless
+                // fee itself never fails on balance — insufficiency is shown as a send notification.
+                ifLeft = { this },
+                ifRight = { it.right() },
+            )
     }
 
     fun showAlertError() {

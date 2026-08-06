@@ -22,7 +22,7 @@ internal class TangemPayCardLimitSetupComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
-        TangemPayCardLimitSetupScreenV2(
+        TangemPayCardLimitSetupScreen(
             state = state,
             modifier = modifier,
         )

@@ -1,18 +1,25 @@
 package com.tangem.features.tangempay.entity
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.addFundsButton
+import com.tangem.features.tangempay.awaitingDepositOrder
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tangemPayCard
+import com.tangem.features.tangempay.tariffPlanState
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.withdrawButton
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -131,6 +138,39 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
+    fun `GIVEN plan transition in progress WHEN getLoadedState THEN current plan menu item stays clickable`() {
+        // Arrange
+        val planState = tariffPlanState(order = awaitingDepositOrder())
+        val status = loadedStatus(statusTariffPlan = planState)
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        val currentPlanItem = state.topBarConfig.items.first()
+        assertThat(currentPlanItem.title).isEqualTo(resourceReference(R.string.tangempay_current_plan_title))
+        assertThat(currentPlanItem.isEnabled).isTrue()
+        assertThat(currentPlanItem.subtitle).isEqualTo(resourceReference(R.string.tangempay_changing_plan))
+        currentPlanItem.onClick()
+        verify(exactly = 1) { intents.onClickCurrentPlan(planState) }
+    }
+
+    @Test
+    fun `GIVEN no plan transition WHEN getLoadedState THEN current plan menu item shows plan name`() {
+        // Arrange
+        val planState = tariffPlanState()
+        val status = loadedStatus(statusTariffPlan = planState)
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        val currentPlanItem = state.topBarConfig.items.first()
+        assertThat(currentPlanItem.isEnabled).isTrue()
+        assertThat(currentPlanItem.subtitle).isEqualTo(stringReference(planState.tariff.plan.name))
+    }
+
+    @Test
     fun `GIVEN withdraw disabled WHEN getActionButtonsConfig THEN withdraw disabled and add funds enabled`() {
         // Act
         val buttons = factory.getActionButtonsConfig(isAddFundsEnabled = true, isWithdrawEnabled = false)
@@ -155,11 +195,13 @@ internal class TangemPayDetailsStateFactoryTest {
         statusError: PaymentAccountStatusValue.Error? = null,
         statusCards: List<TangemPayCard> = listOf(activeUnfrozenCard),
         availableForWithdrawal: BigDecimal = BigDecimal.TEN,
+        statusTariffPlan: TangemPayTariffPlanState? = null,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards
         every { balance } returns balance(availableForWithdrawal)
+        every { tariffPlan } returns statusTariffPlan
     }
 
     private fun deactivatedStatus(availableForWithdrawal: BigDecimal): PaymentAccountStatusValue.Deactivated =

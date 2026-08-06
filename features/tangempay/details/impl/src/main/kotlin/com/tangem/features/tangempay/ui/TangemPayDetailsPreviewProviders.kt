@@ -31,7 +31,6 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 onBackClick = {},
                 onOpenMenu = {},
                 items = persistentListOf(),
-                itemsV2 = persistentListOf(),
             ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
@@ -100,7 +99,6 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 onBackClick = {},
                 onOpenMenu = {},
                 items = persistentListOf(),
-                itemsV2 = persistentListOf(),
             ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(

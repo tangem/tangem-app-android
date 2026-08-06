@@ -12,7 +12,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.model.TangemPayEditDisplayNameModel
-import com.tangem.features.tangempay.ui.TangemPayEditDisplayNameScreenV2
+import com.tangem.features.tangempay.ui.TangemPayEditDisplayNameScreen
 
 internal class TangemPayEditDisplayNameComponent(
     private val appComponentContext: AppComponentContext,
@@ -36,7 +36,7 @@ internal class TangemPayEditDisplayNameComponent(
             ),
         )
         BackHandler(onBack = state.onDismiss)
-        TangemPayEditDisplayNameScreenV2(
+        TangemPayEditDisplayNameScreen(
             state = state,
             cardDetailsState = editingCardDetailsState,
             modifier = modifier,

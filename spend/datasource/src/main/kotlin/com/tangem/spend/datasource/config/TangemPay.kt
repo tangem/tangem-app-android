@@ -1,0 +1,135 @@
+package com.tangem.spend.datasource.config
+
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
+import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.SupportedLanguages
+import com.tangem.utils.info.AppInfoProvider
+
+sealed class TangemPay(
+    private val environmentConfig: EnvironmentConfig,
+    private val appInfoProvider: AppInfoProvider,
+) : ApiConfig() {
+
+    override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
+
+    override val environmentConfigs = listOf(
+        createDevEnvironment(),
+        createMockedEnvironment(),
+        createProdEnvironment(),
+    )
+
+    protected abstract fun getBaseUrl(apiEnvironment: ApiEnvironment): String
+
+    private fun getInitialEnvironment(): ApiEnvironment {
+        return when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE -> ApiEnvironment.MOCK
+            DEBUG_BUILD_TYPE,
+            INTERNAL_BUILD_TYPE,
+            -> ApiEnvironment.DEV
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+    }
+
+    private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.DEV,
+        baseUrl = getBaseUrl(ApiEnvironment.DEV),
+        headers = createHeaders(ApiEnvironment.DEV),
+    )
+
+    private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.MOCK,
+        baseUrl = getBaseUrl(ApiEnvironment.MOCK),
+        headers = createHeaders(ApiEnvironment.MOCK),
+    )
+
+    private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.PROD,
+        baseUrl = getBaseUrl(ApiEnvironment.PROD),
+        headers = createHeaders(ApiEnvironment.PROD),
+    )
+
+    private fun createHeaders(apiEnvironment: ApiEnvironment) = mapOf(
+        "version" to ProviderSuspend { appInfoProvider.appVersion },
+        "platform" to ProviderSuspend { "Android" },
+        "X-API-KEY" to ProviderSuspend { getBffStaticToken(apiEnvironment) },
+        "X-Device-Scale" to ProviderSuspend { appInfoProvider.deviceScale.toString() },
+        "Accept-Language" to ProviderSuspend { SupportedLanguages.getCurrentSupportedLanguageCode() },
+    )
+
+    private fun getBffStaticToken(apiEnvironment: ApiEnvironment): String {
+        return when (apiEnvironment) {
+            ApiEnvironment.MOCK,
+            ApiEnvironment.DEV,
+            -> environmentConfig.bffStaticTokenDev
+            ApiEnvironment.PROD -> environmentConfig.bffStaticToken
+            ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
+            ApiEnvironment.STAGE_3,
+            ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_3,
+            -> null
+        } ?: error("BffStaticToken is not provided for $apiEnvironment")
+    }
+
+    class Bff(
+        environmentConfig: EnvironmentConfig,
+        appInfoProvider: AppInfoProvider,
+    ) : TangemPay(environmentConfig, appInfoProvider) {
+
+        override val id: ApiConfig.ID get() = ID
+
+        override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
+            return when (apiEnvironment) {
+                ApiEnvironment.DEV -> "https://api.dev.us.paera.com/bff-v2/"
+                ApiEnvironment.MOCK -> "[REDACTED_ENV_URL]"
+                ApiEnvironment.PROD -> "https://api.us.paera.com/bff-v2/"
+                ApiEnvironment.DEV_2,
+                ApiEnvironment.DEV_3,
+                ApiEnvironment.STAGE,
+                ApiEnvironment.STAGE_2,
+                ApiEnvironment.STAGE_3,
+                -> error("Unknown environment: $apiEnvironment")
+            }
+        }
+
+        companion object {
+            const val KEY = "TangemPay"
+            val ID = ApiConfig.ID(KEY)
+        }
+    }
+
+    class Auth(
+        environmentConfig: EnvironmentConfig,
+        appInfoProvider: AppInfoProvider,
+    ) : TangemPay(environmentConfig, appInfoProvider) {
+
+        override val id: ApiConfig.ID get() = ID
+
+        override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
+            return when (apiEnvironment) {
+                ApiEnvironment.DEV -> "https://api.dev.us.paera.com/"
+                ApiEnvironment.MOCK -> "[REDACTED_ENV_URL]"
+                ApiEnvironment.PROD -> "https://api.us.paera.com/"
+                ApiEnvironment.DEV_2,
+                ApiEnvironment.DEV_3,
+                ApiEnvironment.STAGE,
+                ApiEnvironment.STAGE_2,
+                ApiEnvironment.STAGE_3,
+                -> error("Unknown environment: $apiEnvironment")
+            }
+        }
+
+        companion object {
+            const val KEY = "TangemPayAuth"
+            val ID = ApiConfig.ID(KEY)
+        }
+    }
+}
