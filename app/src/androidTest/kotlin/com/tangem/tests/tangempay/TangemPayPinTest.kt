@@ -264,9 +264,9 @@ class TangemPayPinTest : BaseTestCase() {
     }
 
     @AllureId("9655")
-    @DisplayName("Tangem Pay: current PIN stays displayed after collapsing and reopening the app")
+    @DisplayName("Tangem Pay: current PIN sheet is dismissed after collapsing and reopening the app")
     @Test
-    fun currentPinRemainsDisplayedAfterCollapseAndExpandTest() {
+    fun currentPinSheetIsDismissedAfterCollapseAndExpandTest() {
         val packageName = getTargetContext().packageName
 
         setupHooks(
@@ -288,11 +288,15 @@ class TangemPayPinTest : BaseTestCase() {
             }
             step("Press 'Home' to collapse the app") { collapseAppByHomeButton() }
             step("Return to the app") { bringAppToForeground(packageName) }
-            step("Assert current PIN sheet is displayed") {
-                flakySafely { onTangemPayViewPinSheet { title.assertIsDisplayed() } }
+            // [REDACTED_TASK_KEY] dismisses the PIN sheet on pause, so the PIN needs biometrics again; iOS keeps it open.
+            step("Assert 'Card page' screen is displayed") {
+                flakySafely { onTangemPayCardPageScreen { changePinRow.assertIsDisplayed() } }
             }
-            step("Assert current PIN '$currentPin' is still displayed") {
-                onTangemPayViewPinSheet { pin.assertTextEquals(currentPin) }
+            step("Assert current PIN sheet is not displayed") {
+                onTangemPayViewPinSheet {
+                    title.assertDoesNotExist()
+                    pin.assertDoesNotExist()
+                }
             }
         }
     }
