@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -57,21 +58,24 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /**
      * Express status plaque under the two-asset block. The UI animates between successive emissions.
      *
-     * @property severity Plaque colors (background tint + text/icon color).
+     * @property style Visual identity of the status — selects the plaque colors, the trailing glyph and the title
+     * motion together. One value per distinct look, so a terminal whose glyph diverges from a plain colour (the grey
+     * [Expired][Style.Expired] clock, the red [Refunded][Style.Refunded] arrow) is its own entry rather than a colour
+     * plus a separate glyph override.
      * @property title Status line, e.g. "Awaiting funds" / "Confirmed" / "Failed".
      * @property subtitle Optional second line (e.g. the refund hint on a failed terminal). May carry a styled
      * tappable part (e.g. the "Learn more" of the refunded terminal) — rendered as an annotated reference.
-     * @property isLoading `true` → trailing rotating loader (in-progress); `false` → static [severity] glyph.
+     * @property isLoading `true` → trailing rotating loader (in-progress); `false` → the [style]'s static glyph.
      */
     data class StatusBannerUM(
-        val severity: Severity,
+        val style: Style,
         val title: TextReference,
         val subtitle: TextReference? = null,
         val isLoading: Boolean,
     ) {
 
-        /** Visual severity of the [StatusBannerUM] — selects the background tint and the text/icon color. */
-        enum class Severity { Info, Success, Error, Warning }
+        /** Visual identity of the [StatusBannerUM] — drives the plaque colors, the trailing glyph and the title motion. */
+        enum class Style { Info, Success, Warning, Error, Refunded, Expired }
     }
 
     /**
@@ -93,8 +97,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * wallet decoration. [isFaded] renders the failed amount (struck through, recolored to tertiary); an in-flight leg is
      * not faded — it carries a `~` estimate sign instead.
      *
-     * [currencyIcon] is `null` when the leg has no icon to show — the onramp fiat side carries no `CryptoCurrency` and
-     * no country flag is rendered (no data); the trailing icon slot is then left empty.
+     * [currencyIcon] is `null` when the leg has no icon to show — e.g. the onramp fiat side when its paid-from country
+     * is unknown; the trailing icon slot is then left empty. When the country is known, the fiat leg shows its flag.
      */
     data class AssetUM(
         val label: TextReference,
@@ -120,6 +124,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
             @DrawableRes val iconResId: Int,
             val backgroundColor: Color,
         ) : AssetOwnerUM
+
+        /** User's own Tangem Pay (Payment) account — the Visa icon, shown **before** the [name]. */
+        data class PaymentAccount(override val name: TextReference) : AssetOwnerUM
 
         /** User's own wallet — the wallet card [deviceIconUM], shown **after** the [name]. */
         data class Wallet(
@@ -204,14 +211,14 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * the counterparty [title], and — when [onCopyClick] is non-null — a trailing copy button.
      *
      * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
-     * and whether copy is offered. Only the [CounterpartyAvatar.Address] kind is currently produced by
-     * [com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter]; resolving the own-account /
-     * own-wallet avatars here (the `TxHistoryLookupContext` is already wired for the swap/onramp legs) is a follow-up.
+     * and whether copy is offered. The kind is resolved through the shared `TxHistoryLookupContext` — the same
+     * own-account / own-wallet resolution the history list applies to its row subtitle.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
      * @property title Counterparty value: brief address / account name / wallet name.
      * @property avatar Leading avatar.
-     * @property onCopyClick Copy action; `null` hides the copy button (e.g. own-wallet has nothing to copy).
+     * @property onCopyClick Copy action; `null` hides the copy button (an own account / wallet shows a display name,
+     * not an address, so there is nothing to copy).
      */
     data class CounterpartyUM(
         val label: TextReference,
@@ -233,6 +240,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
             val backgroundColor: Color,
         ) : CounterpartyAvatar
 
+        /** User's own Tangem Pay (Payment) account — rendered as the Visa icon. */
+        data object PaymentAccount : CounterpartyAvatar
+
         /** User's own wallet — rendered as the wallet card [deviceIconUM]. */
         data class Wallet(val deviceIconUM: DeviceIconUM) : CounterpartyAvatar
     }
@@ -249,6 +259,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val title: TextReference,
         val subtitle: TextReference,
         val menu: ImmutableList<MenuItemUM> = persistentListOf(),
+        val debugModel: TxHistoryInfo? = null,
     )
 
     /**

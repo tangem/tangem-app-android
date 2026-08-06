@@ -8,7 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal class TangemPayCurrentPlanComponent(
@@ -28,6 +28,6 @@ internal class TangemPayCurrentPlanComponent(
 
     data class Params(
         val userWalletId: UserWalletId,
-        val tariffPlan: TangemPayCustomerTariffPlan,
+        val tariffPlan: TangemPayTariffPlanState,
     )
 }
