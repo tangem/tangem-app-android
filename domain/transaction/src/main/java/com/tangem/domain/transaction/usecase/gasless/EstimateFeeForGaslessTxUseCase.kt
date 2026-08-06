@@ -75,6 +75,7 @@ class EstimateFeeForGaslessTxUseCase(
                                 return@either TransactionFeeExtended(
                                     transactionFee = fee,
                                     feeTokenId = nativeCurrencyStatus.currency.id,
+                                    nativeFee = fee,
                                 )
                             },
                         )
@@ -138,8 +139,11 @@ class EstimateFeeForGaslessTxUseCase(
             .filter { it.currency.network.id == network.id }
 
         val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val nativeCoinSelectedResult =
-            TransactionFeeExtended(transactionFee = initialFee, feeTokenId = nativeCurrencyStatus.currency.id)
+        val nativeCoinSelectedResult = TransactionFeeExtended(
+            transactionFee = initialFee,
+            feeTokenId = nativeCurrencyStatus.currency.id,
+            nativeFee = initialFee,
+        )
         return if (nativeBalance >= feeValue) {
             nativeCoinSelectedResult
         } else {
@@ -151,7 +155,7 @@ class EstimateFeeForGaslessTxUseCase(
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
                 sendingTokenCurrencyStatus = sendingTokenCurrencyStatus,
                 amount = amount,
-            ).getOrElse { error ->
+            ).map { it.copy(nativeFee = initialFee) }.getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds -> nativeCoinSelectedResult
                     else -> raise(error)
