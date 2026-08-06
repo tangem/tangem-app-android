@@ -24,7 +24,9 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
+import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -42,10 +44,15 @@ internal class StakeKitFeeLoader @AssistedInject constructor(
     private val estimateGasUseCase: EstimateGasUseCase,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
-    @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val integration: StakeKitIntegration,
 ) : StakingFeeLoader {
+
+    // Re-read on every use: a captured snapshot would freeze a transient address-less status for the
+    // whole screen lifetime (CRASHAND-53); the live read lets fee loading recover once the status updates
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus
+        get() = cryptoCurrencyStatusProvider()
 
     override suspend fun getFee(
         onStakingFee: (Fee, Boolean) -> Unit,
@@ -118,7 +125,11 @@ internal class StakeKitFeeLoader @AssistedInject constructor(
         onStakingFee: (Fee, Boolean) -> Unit,
     ) {
         val sourceAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-            ?: error("No available address")
+            ?: run {
+                TangemLogger.e("StakeKitFeeLoader: no available address for fee estimation")
+                onStakingFeeError(StakingError.DomainError("No available address"))
+                return
+            }
 
         val gasEstimate = if (isCompositePendingActions(
                 networkId = cryptoCurrencyStatus.currency.network.rawId,
@@ -266,7 +277,7 @@ internal class StakeKitFeeLoader @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            cryptoCurrencyStatus: CryptoCurrencyStatus,
+            cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
             userWallet: UserWallet,
             integration: StakeKitIntegration,
         ): StakeKitFeeLoader

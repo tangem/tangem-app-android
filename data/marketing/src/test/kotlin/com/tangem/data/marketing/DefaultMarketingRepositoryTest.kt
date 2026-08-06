@@ -4,9 +4,9 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.data.marketing.converter.MarketingCampaignConverter
 import com.tangem.data.marketing.store.MarketingCampaignsCacheStore
 import com.tangem.data.marketing.store.MarketingDismissStore
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.marketing.models.BannerDto
 import com.tangem.datasource.api.marketing.models.CampaignDto

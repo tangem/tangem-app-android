@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.pay.model.CashbackDocument
 import org.junit.jupiter.api.Test
@@ -20,7 +22,7 @@ internal class TangemPayCashbackAccrualsConverterTest {
         val result = converter.convert(docs)
 
         // Assert
-        assertThat(result.title).isEqualTo(stringReference("Accruals"))
+        assertThat(result.title).isEqualTo(resourceReference(R.string.tangempay_cashback_accruals_title))
         assertThat(result.infoRows).hasSize(3)
         assertThat(result.docRows.map { it.title }).containsExactly(
             stringReference("All categories without cashback"),
