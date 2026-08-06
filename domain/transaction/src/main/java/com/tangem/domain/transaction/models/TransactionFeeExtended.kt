@@ -35,4 +35,11 @@ data class TransactionFeeExtended(
      * NOT the EVM gasless path.
      */
     val tronGaslessQuote: TronGaslessQuote? = null,
+    /**
+     * Native-coin estimation of the same transaction. Equals [transactionFee] when the fee is paid in
+     * the native coin. Consumers use it to decide whether the native coin has enough balance to be
+     * offered as a fee payment option — see
+     * [com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase].
+     */
+    val nativeFee: TransactionFee? = null,
 )

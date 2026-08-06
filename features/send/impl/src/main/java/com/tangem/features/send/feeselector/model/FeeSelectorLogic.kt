@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 internal class FeeSelectorLogic @AssistedInject constructor(
@@ -262,6 +263,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 val feeExtended = TransactionFeeExtended(
                     transactionFee = loadedFee,
                     feeTokenId = selectedTokenOrNull.currency.id,
+                    nativeFee = loadedFee,
                 )
                 populateExtendedFee(feeExtended)
             }
@@ -290,7 +292,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         fee: TransactionFeeExtended,
     ): Either<GetFeeError, LoadedFeeResult.Extended> = either {
         val selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind()
-        val availableTokens = getAvailableFeeTokens().fold(
+        val availableTokens = getAvailableFeeTokens(fee.nativeFee?.normal?.amount?.value).fold(
             ifLeft = { error ->
                 TangemLogger.e("Failed to get available fee tokens: $error")
                 if (selectedToken.currency !is CryptoCurrency.Coin) {
@@ -320,7 +322,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             }
         }
 
-    private suspend fun getAvailableFeeTokens(): Either<GetFeeError, List<CryptoCurrencyStatus>> = either {
+    private suspend fun getAvailableFeeTokens(
+        nativeFeeAmount: BigDecimal?,
+    ): Either<GetFeeError, List<CryptoCurrencyStatus>> = either {
         val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
             GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
         }.bind()
@@ -328,6 +332,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         getAvailableFeeTokensUseCase.invoke(
             userWallet = userWallet,
             network = params.cryptoCurrencyStatus.currency.network,
+            nativeFeeAmount = nativeFeeAmount,
         ).bind()
     }
 
