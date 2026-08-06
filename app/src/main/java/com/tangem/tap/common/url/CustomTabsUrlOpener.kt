@@ -29,7 +29,11 @@ internal class CustomTabsUrlOpener : UrlOpener {
         foregroundActivityObserver.withForegroundActivity { context ->
             if (url.isEmpty()) return@withForegroundActivity
             val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
-            context.startActivity(browserIntent)
+            runCatching {
+                context.startActivity(browserIntent)
+            }.onFailure {
+                TangemLogger.e("Error", it)
+            }
         }
     }
 

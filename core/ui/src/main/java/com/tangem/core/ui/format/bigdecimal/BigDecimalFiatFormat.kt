@@ -2,6 +2,7 @@ package com.tangem.core.ui.format.bigdecimal
 
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CAN_BE_LOWER_SIGN
+import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 import com.tangem.utils.StringsSigns.TILDE_SIGN
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -13,6 +14,7 @@ open class BigDecimalFiatFormat(
     val fiatCurrencyCode: String,
     val fiatCurrencySymbol: String,
     val locale: Locale = Locale.getDefault(),
+    val shouldIgnoreSymbolPosition: Boolean = false,
 ) : BigDecimalFormat {
     override fun invoke(value: BigDecimal): String = defaultAmount()(value)
 }
@@ -30,11 +32,13 @@ open class BigDecimalFiatFormatStyled(
 fun BigDecimalFormatScope.fiat(
     fiatCurrencyCode: String,
     fiatCurrencySymbol: String,
+    ignoreSymbolPosition: Boolean = false,
     locale: Locale = Locale.getDefault(),
 ): BigDecimalFiatFormat {
     return BigDecimalFiatFormat(
         fiatCurrencyCode = fiatCurrencyCode,
         fiatCurrencySymbol = fiatCurrencySymbol,
+        shouldIgnoreSymbolPosition = ignoreSymbolPosition,
         locale = locale,
     )
 }
@@ -58,26 +62,42 @@ fun BigDecimalFormatScope.fiat(
  * Formats fiat amount with default precision.
  */
 fun BigDecimalFiatFormat.defaultAmount(): BigDecimalFormat = BigDecimalFormat { value ->
-    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
+    if (shouldIgnoreSymbolPosition) {
+        val formatter = NumberFormat.getInstance(locale).apply {
+            maximumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+            minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+            isGroupingUsed = true
+            roundingMode = RoundingMode.HALF_UP
+        }
 
-    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
-        currency = formatterCurrency
-        maximumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
-        minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
-        roundingMode = RoundingMode.HALF_UP
-    }
-
-    if (value.isLessThanThreshold()) {
-        buildString {
-            append(CAN_BE_LOWER_SIGN)
-            append(
-                formatter.format(FIAT_FORMAT_THRESHOLD)
-                    .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol),
-            )
+        if (value.isLessThanThreshold()) {
+            CAN_BE_LOWER_SIGN + formatter.format(FIAT_FORMAT_THRESHOLD) + NON_BREAKING_SPACE + fiatCurrencySymbol
+        } else {
+            formatter.format(value.zeroIfRoundsToZero(FIAT_MARKET_DEFAULT_DIGITS)) +
+                NON_BREAKING_SPACE + fiatCurrencySymbol
         }
     } else {
-        formatter.format(value.zeroIfRoundsToZero(FIAT_MARKET_DEFAULT_DIGITS))
-            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+        val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
+
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = formatterCurrency
+            maximumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+            minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+            roundingMode = RoundingMode.HALF_UP
+        }
+
+        if (value.isLessThanThreshold()) {
+            buildString {
+                append(CAN_BE_LOWER_SIGN)
+                append(
+                    formatter.format(FIAT_FORMAT_THRESHOLD)
+                        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol),
+                )
+            }
+        } else {
+            formatter.format(value.zeroIfRoundsToZero(FIAT_MARKET_DEFAULT_DIGITS))
+                .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+        }
     }
 }
 

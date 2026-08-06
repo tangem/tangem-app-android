@@ -112,4 +112,18 @@ class ByteArrayExtTest {
         val expected = byteArrayOf()
         Truth.assertThat(actual).isEqualTo(expected)
     }
+
+    @Test
+    fun `calculateHmacSha256 matches the known-answer vector`() {
+        // Arrange
+        val key = "000102030405060708090A0B0C0D0E0F".hexToBytes()
+        val message = "tangem".toByteArray()
+
+        // Act
+        val actual = message.calculateHmacSha256(key)
+
+        // Assert
+        Truth.assertThat(actual.toHexString())
+            .isEqualTo("56DCC244C797680DFA7BF59CC0F9B584A40EEFEBDB4D8F760DC34B1D2A839E8B")
+    }
 }

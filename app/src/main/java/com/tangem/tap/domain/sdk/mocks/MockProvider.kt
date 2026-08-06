@@ -41,6 +41,7 @@ object MockProvider {
         MockOption("Firmware 4.12") { Firmware412MockContent },
         MockOption("V3 Multicurrency") { V3MockContent },
         MockOption("Single Currency") { SingleCurrencyMockContent },
+        MockOption("Nodl") { NodlMockContent },
         MockOption("Start2Coin") { S2CMockContent },
         MockOption("Cobrand") { showCobrandConfigDialog(it) },
     )
