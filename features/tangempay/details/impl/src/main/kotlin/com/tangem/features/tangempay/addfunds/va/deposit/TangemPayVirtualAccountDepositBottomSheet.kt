@@ -233,7 +233,7 @@ private fun InfoNotification(text: TextReference, modifier: Modifier = Modifier)
 @Composable
 private fun TermsFooter(onTermsClick: () -> Unit, onPrivacyClick: () -> Unit, modifier: Modifier = Modifier) {
     val linkStyle = SpanStyle(color = TangemTheme.colors3.text.primary)
-    val termsTitle = stringResourceSafe(R.string.common_terms_of_use)
+    val termsTitle = stringResourceSafe(R.string.tangempay_bank_transfer_terms_of_use)
     val privacyTitle = stringResourceSafe(R.string.common_privacy_policy)
     val fullText = stringResourceSafe(R.string.tangempay_bank_transfer_legal, termsTitle, privacyTitle)
 
