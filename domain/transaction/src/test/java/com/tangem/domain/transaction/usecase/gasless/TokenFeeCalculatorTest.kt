@@ -551,10 +551,8 @@ class TokenFeeCalculatorTest {
         }
 
     /**
-     * Same as above, but for tokens that revert without a reason string: USDT (Solidity 0.4.x) aborts with an
-     * `INVALID` opcode, which the node reports as JSON-RPC -32000 and the SDK maps to a plain
-     * `BlockchainSdkError.Ethereum.Api` — never to `InsufficientFundsForOperation`. The yield path must treat it
-     * as "no liquid balance" all the same, otherwise the whole gasless fee is discarded for USDT.
+     * Same as above, but for tokens that revert without a reason string: USDT aborts with an `INVALID` opcode
+     * and arrives as a plain `BlockchainSdkError.Ethereum.Api`, which must read as "no liquid balance" too.
      */
     @Test
     fun `calculateTokenFee with active yield uses fallback gas when transfer estimation reverts with invalid opcode`() =
@@ -605,8 +603,8 @@ class TokenFeeCalculatorTest {
         }
 
     /**
-     * A transport failure is not a revert: with no answer from the node the liquid balance is unknown, so the
-     * calculator must not silently assume "no funds" and quietly hand out a fallback gas limit.
+     * A transport failure is not a revert: with no answer from the node the liquid balance is unknown, so
+     * the calculator must not assume "no funds".
      */
     @Test
     fun `calculateTokenFee with active yield raises DataError when transfer estimation fails on transport`() = runTest {
@@ -647,8 +645,8 @@ class TokenFeeCalculatorTest {
     }
 
     /**
-     * Non-yield counterpart of the invalid-opcode case: a dust balance that cannot cover the probe transfer must
-     * surface as NotEnoughFunds, not as an opaque DataError that callers fall back on.
+     * Non-yield counterpart of the invalid-opcode case: a dust balance must surface as NotEnoughFunds,
+     * not as an opaque DataError.
      */
     @Test
     fun `calculateTokenFee without yield raises NotEnoughFunds when transfer estimation reverts with invalid opcode`() =

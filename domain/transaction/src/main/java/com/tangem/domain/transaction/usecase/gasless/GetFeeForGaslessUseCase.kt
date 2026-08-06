@@ -52,9 +52,8 @@ class GetFeeForGaslessUseCase(
     )
 
     /**
-     * @param sentAmount amount the main transaction sends, in the sent token. Required when [transactionData]
-     * is a yield-supply send — its [TransactionData.Uncompiled.amount] is zeroed and the fee plan needs the
-     * real figure to decide whether the fee must be funded by a yield withdraw.
+     * @param sentAmount amount sent by the main transaction, in the sent token. Required for a yield-supply
+     * send, whose [TransactionData.Uncompiled.amount] is zeroed.
      */
     suspend operator fun invoke(
         userWallet: UserWallet,
@@ -321,11 +320,9 @@ internal fun Raise<GetFeeError>.computeSendAmountInFeeToken(
         return BigDecimal.ZERO
     }
 
-    // A yield-supply send carries the real amount inside the module call data `send(token, dest, amount)`;
-    // DefaultTransactionRepository.createTransaction zeroes TransactionData.amount for it. Reading that zero
-    // back would tell the resolver the send costs nothing, so it would keep the whole liquid balance earmarked
-    // for the fee, skip the yield withdraw, and the executor would revert on an EOA the send has just emptied.
-    // Callers that can build such a transaction must pass [sentAmount].
+    // A yield-supply send keeps the real amount in the module call data and zeroes TransactionData.amount.
+    // Reading that zero back would make the resolver skip the yield withdraw, and the executor would revert
+    // on an EOA the send has just emptied.
     if (uncompiled.isYieldSupplySend()) {
         return sentAmount
             ?: raiseIllegalStateError("sent amount is required to pay the gasless fee in a yield-supply send")

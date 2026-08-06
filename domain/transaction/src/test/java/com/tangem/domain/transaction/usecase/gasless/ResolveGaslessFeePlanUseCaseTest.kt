@@ -95,10 +95,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
     @Test
     fun `yield active with no liquid withdraws the whole fee`() = runTest {
         val decimals = 6
-        // value.amount is effectiveBalance = liquid(EOA) + effectiveProtocolBalance. Here total == module
-        // balance (20), so liquid is 0 and the entire fee must be withdrawn from the module — the plan must
-        // not short-circuit to TokenPay.
-        // withdraw == feeAmount, CEILING-rounded: 10000000.5 → 10000001 (floor would give 10000000).
+        // total == module balance → liquid is 0, so the entire fee must be withdrawn,
+        // CEILING-rounded: 10000000.5 → 10000001.
         val feeAmount = BigDecimal("10.0000005")
         val moduleBalance = BigDecimal("20")
         val expectedWithdrawAmount = feeAmount
@@ -108,7 +106,6 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         val floorAmount = feeAmount.movePointRight(decimals).toBigInteger() // 10000000
         assertThat(expectedWithdrawAmount).isGreaterThan(floorAmount)
 
-        // value.amount == module balance → liquid is 0, so the fee cannot be paid from the EOA (no TokenPay).
         val tokenStatus = tokenStatus(plainBalance = moduleBalance, decimals = decimals)
         val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
         val mockCallData = mockk<SmartContractCallData>(relaxed = true)
@@ -152,8 +149,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
     @Test
     fun `yield active withdraw covers only the fee not the send amount`() = runTest {
         val decimals = 6
-        // The main module.send tx moves the send amount from the module itself, so the fee-withdraw must
-        // cover ONLY the fee. Including the send amount would withdraw it twice and overdraw the module.
+        // module.send moves the send amount from the module itself, so the withdraw covers only the fee —
+        // including the send amount would withdraw it twice.
         val feeAmount = BigDecimal("3.0")
         val sendAmountInFeeToken = BigDecimal("1.5")
         val moduleBalance = BigDecimal("5.0") // covers required = fee(3.0) + send(1.5) = 4.5 ✓
@@ -328,11 +325,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
     @Test
     fun `GIVEN liquid covers send but protocol alone does not WHEN yield active THEN TokenPayWithYieldWithdraw`() =
         runTest {
-            // value.amount is effectiveBalance (liquid EOA + effectiveProtocolBalance). The user sends 3.00 of
-            // 3.585624 total. The yield module (effectiveProtocolBalance) holds only 0.6, the rest (2.985624)
-            // is liquid on the EOA. required = send(3.00) + fee(0.05) = 3.05 < total(3.585624), so funds ARE
-            // sufficient. The old check compared the module balance (0.6) against required and wrongly raised
-            // NotEnoughFunds.
+            // Arrange — required = send(3.00) + fee(0.05) < total(3.585624), so funds are sufficient even
+            // though the module alone (0.6) is not. The old check compared the module against required.
             val decimals = 6
             val totalBalance = BigDecimal("3.585624")
             val moduleBalance = BigDecimal("0.6")
@@ -405,11 +399,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN funds are in the module WHEN yield flag is lost THEN NotEnoughFunds`() = runTest {
-        // Arrange — reproduces the failed on-chain Send: the EOA holds nothing, 30.485747 USDC sit in the
-        // module, yet isYieldActive arrived false (status not Loaded / toggle off / statuses missing). The
-        // old check compared the effective balance (30.485747) against required (1.039923), answered
-        // "enough" and produced a TokenPay plan — a single transaction whose fee transfer reverted with
-        // "available 0, required 16058".
+        // Arrange — the EOA holds nothing and everything sits in the module, yet isYieldActive arrived false.
+        // The old check compared the effective balance against required and produced an unsettleable TokenPay.
         val moduleBalance = BigDecimal("30.485747")
         val tokenStatus = tokenStatus(
             plainBalance = moduleBalance,
@@ -434,9 +425,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN status has no yield info WHEN yield inactive THEN the module is read from chain`() = runTest {
-        // Arrange — the status carries no yieldSupplyStatus at all (non-Loaded status / toggle off), which is
-        // exactly what makes the caller pass isYieldActive = false. The status cannot rule a module out, so
-        // the balance must be established from the chain: it holds everything, leaving nothing liquid.
+        // Arrange — with no yieldSupplyStatus the status cannot rule a module out, so the balance must be
+        // read from the chain: it holds everything, leaving nothing liquid.
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("30"), decimals = 6, statusModuleBalance = null)
         val tokenFee = tokenFee(feeAmount = BigDecimal("1"), decimals = 6)
 
@@ -460,8 +450,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN module was never initialized WHEN yield inactive THEN whole balance counts as liquid`() = runTest {
-        // Arrange — a plain gasless token with no module: the status says so, so no chain call is needed and
-        // the pre-existing behaviour must be preserved.
+        // Arrange — the status rules the module out, so no chain call is needed.
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = 6, isInitialized = false)
         val tokenFee = tokenFee(feeAmount = BigDecimal("1"), decimals = 6)
 
@@ -482,8 +471,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN module unreadable WHEN yield inactive THEN falls back to the whole balance`() = runTest {
-        // Arrange — a flaky call must not make plain gasless tokens unusable, so a null answer keeps the
-        // historical "no module" assumption.
+        // Arrange — a flaky call must not make plain gasless tokens unusable, so null means "no module".
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = 6, statusModuleBalance = null)
         val tokenFee = tokenFee(feeAmount = BigDecimal("1"), decimals = 6)
 
@@ -507,9 +495,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN module read throws WHEN yield inactive THEN falls back to the whole balance`() = runTest {
-        // Arrange — the repository throws instead of returning null on an RPC failure, and every plain
-        // gasless token reaches this call. An escaping exception would be turned into a DataError with no
-        // native-fee fallback, i.e. no fee at all for a token that has nothing to do with yield.
+        // Arrange — the repository throws instead of returning null on an RPC failure. An escaping exception
+        // would become a DataError with no native-fee fallback.
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = 6, statusModuleBalance = null)
         val tokenFee = tokenFee(feeAmount = BigDecimal("1"), decimals = 6)
 
@@ -536,8 +523,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
     @Test
     fun `GIVEN module balance unavailable WHEN yield active THEN YieldBalanceUnavailable`() = runTest {
         // Arrange — a null balance means "could not read the module", not "the module is empty". Treating it
-        // as zero makes the whole effective balance look liquid and yields a TokenPay plan that cannot be
-        // settled on chain.
+        // as zero would yield an unsettleable TokenPay plan.
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("30"), decimals = 6)
         val tokenFee = tokenFee(feeAmount = BigDecimal("0.05"), decimals = 6)
 
@@ -561,8 +547,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN module balance read throws WHEN yield active THEN YieldBalanceUnavailable`() = runTest {
-        // Arrange — the repository declares the balance nullable but signals failure by throwing, so this is
-        // the shape the yield path actually meets. It must not be mistaken for an empty module.
+        // Arrange — the repository signals failure by throwing, which must not read as an empty module.
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("30"), decimals = 6)
         val tokenFee = tokenFee(feeAmount = BigDecimal("0.05"), decimals = 6)
 
@@ -588,10 +573,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN change left on the address WHEN yield active THEN withdraws the whole fee`() = runTest {
-        // Arrange — reproduces the failed on-chain batch Send. liquid = 1.00725 covers the 1.0 being sent
-        // with 0.00725 of change to spare, so the old formula netted that change off the withdraw:
-        // 0.012696 - 0.00725 = 0.005446. But the module's send sub-call spends the EOA's liquid balance
-        // first, so by the time the fee transfer ran only the withdrawn 5446 were left against 6793 needed.
+        // Arrange — liquid (1.00725) covers the 1.0 sent with change to spare, which the old formula netted
+        // off the withdraw. The module's send sub-call spends that change first, so it cannot pay the fee.
         val decimals = 6
         val totalBalance = BigDecimal("30.00000")
         val moduleBalance = BigDecimal("28.99275") // liquid = 1.00725
@@ -632,9 +615,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN a different token is sent WHEN yield active THEN the liquid balance counts toward the fee`() = runTest {
-        // Arrange — sendAmountInFeeToken is zero, so the fee token is not the one being sent: the module's
-        // send sub-call never touches it and the liquid balance survives to pay part of the fee.
-        // liquid = total(10) - module(9.7) = 0.3 of the 0.5 fee, so only 0.2 needs withdrawing.
+        // Arrange — the fee token is not the one being sent, so its liquid balance survives the send:
+        // liquid = 10 - 9.7 = 0.3 of the 0.5 fee, leaving 0.2 to withdraw.
         val decimals = 6
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = decimals)
         val tokenFee = tokenFee(feeAmount = BigDecimal("0.5"), decimals = decimals)
@@ -667,10 +649,8 @@ internal class ResolveGaslessFeePlanUseCaseTest {
 
     @Test
     fun `GIVEN module holds less than the fee WHEN yield active THEN NotEnoughFunds`() = runTest {
-        // Arrange — liquid = total(1.9) - module(0.4) = 1.5 falls short of required = send(1.4) +
-        // fee(0.5) = 1.9, so the module path is taken. The same token is being sent, so the fee must come
-        // out of the module in full, but the module holds only 0.4 of the 0.5 fee. Capping the withdraw
-        // at 0.4 would produce a plan whose fee transfer is already known to revert.
+        // Arrange — the same token is sent, so the whole 0.5 fee must come out of the module, which holds
+        // only 0.4. Capping the withdraw at 0.4 would produce a plan whose fee transfer reverts.
         val decimals = 6
         val tokenStatus = tokenStatus(plainBalance = BigDecimal("1.9"), decimals = decimals)
         val tokenFee = tokenFee(feeAmount = BigDecimal("0.5"), decimals = decimals)
@@ -700,7 +680,7 @@ internal class ResolveGaslessFeePlanUseCaseTest {
     /**
      * @param plainBalance the *effective* balance exposed by the status: liquid EOA + module.
      * @param statusModuleBalance what `yieldSupplyStatus.effectiveProtocolBalance` reports, or null when the
-     * status carries no yield info at all (non-Loaded status, toggle off, network did not return it).
+     * status carries no yield info at all.
      */
     private fun tokenStatus(
         plainBalance: BigDecimal = BigDecimal("100"),
