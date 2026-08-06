@@ -5,11 +5,13 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
@@ -49,10 +51,16 @@ class GetFeeForGaslessUseCase(
         gaslessYieldRepository = gaslessYieldRepository,
     )
 
+    /**
+     * @param sentAmount amount the main transaction sends, in the sent token. Required when [transactionData]
+     * is a yield-supply send — its [TransactionData.Uncompiled.amount] is zeroed and the fee plan needs the
+     * real figure to decide whether the fee must be funded by a yield withdraw.
+     */
     suspend operator fun invoke(
         userWallet: UserWallet,
         network: Network,
         transactionData: TransactionData,
+        sentAmount: BigDecimal? = null,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             catch(
@@ -94,6 +102,7 @@ class GetFeeForGaslessUseCase(
                         network = network,
                         initialFee = initialFee,
                         transactionData = transactionData,
+                        sentAmount = sentAmount,
                     )
                 },
                 catch = {
@@ -126,6 +135,7 @@ class GetFeeForGaslessUseCase(
         network: Network,
         initialFee: TransactionFee,
         transactionData: TransactionData,
+        sentAmount: BigDecimal?,
     ): TransactionFeeExtended {
         val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
 
@@ -149,6 +159,7 @@ class GetFeeForGaslessUseCase(
                 nativeCurrencyStatus = nativeCurrencyStatus,
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
                 transactionData = transactionData,
+                sentAmount = sentAmount,
             ).map { it.copy(nativeFee = initialFee) }.getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds,
@@ -168,6 +179,7 @@ class GetFeeForGaslessUseCase(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         networkCurrenciesStatuses: List<CryptoCurrencyStatus>,
         transactionData: TransactionData,
+        sentAmount: BigDecimal?,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val initialFee = initialTxFee.normal as? Fee.Ethereum
             ?: raiseIllegalStateError(
@@ -217,6 +229,7 @@ class GetFeeForGaslessUseCase(
             tokenFeeExtended = tokenFeeExtended,
             transactionData = transactionData,
             isYieldActive = isYieldActive,
+            sentAmount = sentAmount,
         )
     }
 }
@@ -234,6 +247,7 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
     tokenFeeExtended: TransactionFeeExtended,
     transactionData: TransactionData,
     isYieldActive: Boolean,
+    sentAmount: BigDecimal? = null,
 ): TransactionFeeExtended {
     val feeTokenContract = (tokenStatus.currency as? CryptoCurrency.Token)?.contractAddress
         ?: raiseIllegalStateError("gasless fee currency must be a token")
@@ -243,7 +257,7 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
         userWallet = userWallet,
         tokenStatus = tokenStatus,
         tokenFeeExtended = tokenFeeExtended,
-        sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract),
+        sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract, sentAmount),
         isYieldActive = isYieldActive,
     )
 }
@@ -293,6 +307,7 @@ internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
 internal fun Raise<GetFeeError>.computeSendAmountInFeeToken(
     transactionData: TransactionData,
     feeTokenContract: String,
+    sentAmount: BigDecimal? = null,
 ): BigDecimal {
     // Gasless token-fee requires uncompiled tx data (mirrors CreateAndSendGaslessTransactionUseCase).
     val uncompiled = transactionData as? TransactionData.Uncompiled
@@ -302,12 +317,27 @@ internal fun Raise<GetFeeError>.computeSendAmountInFeeToken(
         is AmountType.TokenYieldSupply -> type.token.contractAddress
         else -> null
     }
-    return if (sentTokenContract != null && sentTokenContract.equals(feeTokenContract, ignoreCase = true)) {
-        uncompiled.amount.value
-            ?: raiseIllegalStateError("sent amount is null while paying the gasless fee in the sent token")
-    } else {
-        BigDecimal.ZERO
+    if (sentTokenContract == null || !sentTokenContract.equals(feeTokenContract, ignoreCase = true)) {
+        return BigDecimal.ZERO
     }
+
+    // A yield-supply send carries the real amount inside the module call data `send(token, dest, amount)`;
+    // DefaultTransactionRepository.createTransaction zeroes TransactionData.amount for it. Reading that zero
+    // back would tell the resolver the send costs nothing, so it would keep the whole liquid balance earmarked
+    // for the fee, skip the yield withdraw, and the executor would revert on an EOA the send has just emptied.
+    // Callers that can build such a transaction must pass [sentAmount].
+    if (uncompiled.isYieldSupplySend()) {
+        return sentAmount
+            ?: raiseIllegalStateError("sent amount is required to pay the gasless fee in a yield-supply send")
+    }
+
+    return sentAmount
+        ?: uncompiled.amount.value
+        ?: raiseIllegalStateError("sent amount is null while paying the gasless fee in the sent token")
+}
+
+private fun TransactionData.Uncompiled.isYieldSupplySend(): Boolean {
+    return (extras as? EthereumTransactionExtras)?.callData is EthereumYieldSupplySendCallData
 }
 
 internal fun computeSendAmountInFeeToken(

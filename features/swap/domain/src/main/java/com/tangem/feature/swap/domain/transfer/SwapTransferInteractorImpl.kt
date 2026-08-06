@@ -370,6 +370,8 @@ class SwapTransferInteractorImpl @Inject constructor(
             userWallet = userWallet,
             network = currency.network,
             transactionData = transactionData,
+            // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
+            sentAmount = fromTokenAmount,
         ).map { transactionFeeExtended ->
             selectedToken ?: return@map transactionFeeExtended
             val selectedTokenId = selectedToken.currency.id
