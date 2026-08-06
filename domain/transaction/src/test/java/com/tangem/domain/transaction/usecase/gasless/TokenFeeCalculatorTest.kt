@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -546,6 +547,138 @@ class TokenFeeCalculatorTest {
                     fee.gasLimit,
                     "gasLimit must include WITHDRAW_GAS_LIMIT (150000)",
                 )
+            }
+        }
+
+    /**
+     * Same as above, but for tokens that revert without a reason string: USDT (Solidity 0.4.x) aborts with an
+     * `INVALID` opcode, which the node reports as JSON-RPC -32000 and the SDK maps to a plain
+     * `BlockchainSdkError.Ethereum.Api` — never to `InsufficientFundsForOperation`. The yield path must treat it
+     * as "no liquid balance" all the same, otherwise the whole gasless fee is discarded for USDT.
+     */
+    @Test
+    fun `calculateTokenFee with active yield uses fallback gas when transfer estimation reverts with invalid opcode`() =
+        runTest {
+            // Given
+            val activeYieldStatus = YieldSupplyStatus(
+                isActive = true,
+                isInitialized = true,
+                isAllowedToSpend = true,
+                effectiveProtocolBalance = BigDecimal("100"),
+            )
+            val tokenStatus = createMockTokenStatus(
+                balance = BigDecimal("0"),
+                fiatRate = BigDecimal("1"),
+            ).withYieldSupplyStatus(activeYieldStatus)
+
+            val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+            val initialFee = createMockEIP1559Fee() // gasLimit = 100_000
+
+            // Simulate USDT reverting the probe transfer: -32000 "invalid opcode: INVALID"
+            val invalidOpcodeError = BlockchainSdkError.Ethereum.Api(-32000, "invalid opcode: INVALID")
+            val wrappedError = BlockchainSdkError.WrappedThrowable(invalidOpcodeError)
+            coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Failure(wrappedError)
+            coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+            every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+
+            // When
+            val result = tokenFeeCalculator.calculateTokenFee(
+                walletManager = mockWalletManager,
+                tokenForPayFeeStatus = tokenStatus,
+                nativeCurrencyStatus = nativeStatus,
+                initialFee = initialFee,
+                isYieldActive = true,
+            )
+
+            // Then
+            assertTrue(result.isRight(), "Expected success with fallback gas on yield path")
+            result.onRight { feeExtended ->
+                val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
+                assertEquals(
+                    BigInteger("110000"),
+                    fee.feeTransferGasLimit,
+                    "feeTransferGasLimit must use fallback (100000 * 1.10 = 110000)",
+                )
+                // gasLimit = 100_000 + 110_000 + 21_000 + 150_000 = 381_000
+                assertEquals(BigInteger("381000"), fee.gasLimit)
+            }
+        }
+
+    /**
+     * A transport failure is not a revert: with no answer from the node the liquid balance is unknown, so the
+     * calculator must not silently assume "no funds" and quietly hand out a fallback gas limit.
+     */
+    @Test
+    fun `calculateTokenFee with active yield raises DataError when transfer estimation fails on transport`() = runTest {
+        // Given
+        val activeYieldStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal("100"),
+        )
+        val tokenStatus = createMockTokenStatus(
+            balance = BigDecimal("0"),
+            fiatRate = BigDecimal("1"),
+        ).withYieldSupplyStatus(activeYieldStatus)
+
+        val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+        val initialFee = createMockEIP1559Fee()
+
+        val transportError = BlockchainSdkError.WrappedThrowable(IOException("timeout"))
+        coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Failure(transportError)
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+
+        // When
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = tokenStatus,
+            nativeCurrencyStatus = nativeStatus,
+            initialFee = initialFee,
+            isYieldActive = true,
+        )
+
+        // Then
+        assertTrue(result.isLeft(), "A transport failure must not be swallowed as a missing balance")
+        result.onLeft { error ->
+            assertTrue(error is GetFeeError.GaslessError.DataError)
+        }
+    }
+
+    /**
+     * Non-yield counterpart of the invalid-opcode case: a dust balance that cannot cover the probe transfer must
+     * surface as NotEnoughFunds, not as an opaque DataError that callers fall back on.
+     */
+    @Test
+    fun `calculateTokenFee without yield raises NotEnoughFunds when transfer estimation reverts with invalid opcode`() =
+        runTest {
+            // Given
+            val tokenStatus = createMockTokenStatus(
+                balance = BigDecimal("0.001"), // dust — non-zero, so the early exit does not trigger
+                fiatRate = BigDecimal("1"),
+            )
+            val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+            val initialFee = createMockEIP1559Fee()
+
+            val invalidOpcodeError = BlockchainSdkError.Ethereum.Api(-32000, "invalid opcode: INVALID")
+            val wrappedError = BlockchainSdkError.WrappedThrowable(invalidOpcodeError)
+            coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Failure(wrappedError)
+            coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+            every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+
+            // When — default isYieldActive = false
+            val result = tokenFeeCalculator.calculateTokenFee(
+                walletManager = mockWalletManager,
+                tokenForPayFeeStatus = tokenStatus,
+                nativeCurrencyStatus = nativeStatus,
+                initialFee = initialFee,
+            )
+
+            // Then
+            assertTrue(result.isLeft())
+            result.onLeft { error ->
+                assertTrue(error is GetFeeError.GaslessError.NotEnoughFunds)
             }
         }
 
