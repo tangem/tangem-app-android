@@ -85,6 +85,11 @@ private fun ColumnScope.DonutChartBlock(donutChartUM: DonutChartUM, cardBoundsIn
     var dismissJob by remember { mutableStateOf<Job?>(null) }
     var chartSize by remember { mutableStateOf(IntSize.Zero) }
     var chartWindowOffset by remember { mutableStateOf(Offset.Zero) }
+    // Empty bounds mean the card is clipped away: no anchor to point the tooltip at, so drop the selection.
+    val hasAnchor = !cardBoundsInWindow.isEmpty
+    LaunchedEffect(hasAnchor) {
+        if (!hasAnchor) selectedIndex = null
+    }
 
     Box(
         modifier = Modifier
@@ -115,6 +120,9 @@ private fun ColumnScope.DonutChartBlock(donutChartUM: DonutChartUM, cardBoundsIn
             onSegmentClick = { index ->
                 selectedIndex = index?.takeIf { it != selectedIndex }
             },
+            // Reported separately from the selection: DonutChart drops taps that cannot change it, and every
+            // tap has to be counted — a deselect and a repeat tap on the selected slice included.
+            onTap = { (donutChartUM as? DonutChartUM.Loaded)?.onSegmentTap?.invoke() },
             segments = segments,
         ) {
             when (donutChartUM) {
@@ -181,6 +189,8 @@ private fun DonutSegmentTooltipBlock(
     cardBoundsInWindow: Rect,
     onDismissRequest: () -> Unit,
 ) {
+    if (cardBoundsInWindow.isEmpty) return
+
     val density = LocalDensity.current
     val gapPx = with(density) { 8.dp.roundToPx() }
     val strokePx = with(density) { DonutStrokeWidth.toPx() }
@@ -301,7 +311,7 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
             donutSegmentList = persistentListOf(
                 DonutSegmentUM(
                     weight = BigDecimal(0.55),
-                    color = DonutSegmentColor.Brand,
+                    color = DonutSegmentColor.Blue,
                     title = stringReference("Ethereum"),
                     fiatValue = stringReference("$5,720.22"),
                 ),
@@ -312,6 +322,7 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
                     fiatValue = stringReference("$728.30"),
                 ),
             ),
+            onSegmentTap = {},
         ),
     )
     MarketChartPreviewScenario.NO_DATA -> MarketChartUM.NoData(
@@ -327,7 +338,7 @@ private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
     donutSegmentList = persistentListOf(
         DonutSegmentUM(
             weight = BigDecimal(0.90),
-            color = DonutSegmentColor.Brand,
+            color = DonutSegmentColor.Blue,
             title = stringReference("Ethereum"),
             fiatValue = stringReference("$5,720.22"),
         ),
@@ -350,6 +361,7 @@ private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
             fiatValue = stringReference("$520.18"),
         ),
     ),
+    onSegmentTap = {},
 )
 
 // endregion

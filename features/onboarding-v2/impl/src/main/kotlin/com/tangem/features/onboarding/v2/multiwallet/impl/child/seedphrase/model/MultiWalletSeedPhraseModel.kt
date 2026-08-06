@@ -26,7 +26,9 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.usecase.IsWalletAlreadySavedUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
@@ -35,6 +37,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.ImportSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.SeedPhraseCheckUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,6 +69,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
+    private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -259,6 +263,17 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                         }
 
                         cardRepository.startCardActivation(cardId = result.data.card.cardId)
+
+                        walletCardsBackupReporter.report(
+                            scanResponse = updatedScanResponse,
+                            cards = listOf(
+                                CardBackupConverter.convert(
+                                    card = updatedScanResponse.card,
+                                    role = WalletCardBackup.Role.PRIMARY,
+                                ),
+                            ),
+                            usedSeed = true,
+                        )
 
                         onDone.emit(Unit)
                     } else {

@@ -45,7 +45,6 @@ import com.tangem.core.ui.ds.row.token.internal.TokenRowEndContent
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.copy
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -84,27 +83,28 @@ internal fun OrganizeTokensContent(
         containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemTopNavigation(
-                contentPadding = TangemTopNavigation.DefaultContentPadding.copy(top = 16.dp),
-                windowInsets = WindowInsets(0.dp),
-                blurBackground = false,
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
                 title = resourceReference(R.string.organize_tokens_title),
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
                 endButton = {
-                    TangemButton(
-                        modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
-                        variant = TangemButton.Variant.Material,
-                        size = TangemButton.Size.X11,
-                        iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_exchange_mini_24),
-                        onClick = { isShowDropdownMenu = true },
-                    )
-                    OrganizeDropDownMenu(
-                        organizeMenuUM = organizeTokensUM.organizeMenuUM,
-                        showDropdownMenu = isShowDropdownMenu,
-                        onDropdownDismiss = { isShowDropdownMenu = false },
-                        modifier = Modifier.hazeEffectTangem(hazeState) {
-                            blurRadius = 6.dp
-                        },
-                    )
+                    Box {
+                        TangemButton(
+                            modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
+                            variant = TangemButton.Variant.Material,
+                            size = TangemButton.Size.X11,
+                            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_exchange_mini_24),
+                            onClick = { isShowDropdownMenu = true },
+                        )
+                        OrganizeDropDownMenu(
+                            organizeMenuUM = organizeTokensUM.organizeMenuUM,
+                            showDropdownMenu = isShowDropdownMenu,
+                            onDropdownDismiss = { isShowDropdownMenu = false },
+                            modifier = Modifier.hazeEffectTangem(hazeState) {
+                                blurRadius = 6.dp
+                            },
+                        )
+                    }
                 },
             )
         },
