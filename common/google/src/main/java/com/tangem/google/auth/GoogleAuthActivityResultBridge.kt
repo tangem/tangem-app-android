@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,12 +33,18 @@ class GoogleAuthActivityResultBridge @Inject constructor() {
     @Volatile
     private var pending: CompletableDeferred<ActivityResult>? = null
 
-    fun registerLauncher(launcher: ActivityResultLauncher<IntentSenderRequest>?) {
+    fun registerLauncher(launcher: ActivityResultLauncher<IntentSenderRequest>) {
         this.launcher.value = launcher
-        if (launcher == null) {
-            pending?.complete(ActivityResult(Activity.RESULT_CANCELED, null))
-            pending = null
-        }
+    }
+
+    /**
+     * Detaches the launcher because the UI that owns it is going away. A request still waiting for a
+     * result is completed as canceled, so its caller does not hang until [RESULT_DRAIN_TIMEOUT_MS].
+     */
+    fun unregisterLauncher() {
+        launcher.value = null
+        pending?.complete(ActivityResult(Activity.RESULT_CANCELED, null))
+        pending = null
     }
 
     fun onResult(result: ActivityResult) {
@@ -47,10 +52,16 @@ class GoogleAuthActivityResultBridge @Inject constructor() {
         pending = null
     }
 
+    /**
+     * Runs [intentSender] through the registered launcher and awaits its result.
+     *
+     * @throws GoogleAuthLauncherUnavailableException when no launcher shows up within
+     * [LAUNCHER_WAIT_TIMEOUT_MS] — deliberately not a `CancellationException`, so the caller can report
+     * a real error instead of dying silently.
+     */
     suspend fun launch(intentSender: IntentSender): ActivityResult = mutex.withLock {
-        val target = withTimeout(LAUNCHER_WAIT_TIMEOUT_MS) {
-            launcher.filterNotNull().first()
-        }
+        val target = withTimeoutOrNull(LAUNCHER_WAIT_TIMEOUT_MS) { launcher.filterNotNull().first() }
+            ?: throw GoogleAuthLauncherUnavailableException()
 
         val deferred = CompletableDeferred<ActivityResult>()
         pending = deferred
@@ -73,3 +84,6 @@ class GoogleAuthActivityResultBridge @Inject constructor() {
         const val RESULT_DRAIN_TIMEOUT_MS = 60_000L
     }
 }
+
+/** No [ActivityResultLauncher] was registered in time, so a resolution intent cannot be shown */
+class GoogleAuthLauncherUnavailableException : IllegalStateException("Google auth launcher is not registered")

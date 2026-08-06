@@ -284,11 +284,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         )
 
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
-            val googleAuthLauncher = activityResultRegistry.register(
-                "google_auth",
-                ActivityResultContracts.StartIntentSenderForResult(),
-            ) { googleAuthActivityResultBridge.onResult(it) }
-            googleAuthActivityResultBridge.registerLauncher(googleAuthLauncher)
+            // registerForActivityResult unregisters itself on destroy; the bridge is the only holder
+            googleAuthActivityResultBridge.registerLauncher(
+                launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                    googleAuthActivityResultBridge.onResult(it)
+                },
+            )
         }
     }
 
@@ -349,6 +350,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onDestroy() {
         TangemLogger.i("onDestroy")
+        googleAuthActivityResultBridge.unregisterLauncher()
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {

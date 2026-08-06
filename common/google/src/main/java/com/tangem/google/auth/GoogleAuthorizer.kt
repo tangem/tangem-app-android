@@ -25,7 +25,11 @@ interface GoogleAuthorizer {
         interactive: Boolean = true,
     ): Either<GoogleAuthError, GoogleAuthResult>
 
-    /** Drops the authorization session cached by the platform client. */
+    /**
+     * Forgets whatever authorization state the implementation itself holds, so the next [authorize]
+     * starts from scratch. The Google Identity `AuthorizationClient` exposes no way to revoke a granted
+     * authorization, so dropping the access token is up to the caller — see [clearToken].
+     */
     fun clearAuthorization()
 
     /** Invalidates the given access [token] in the platform token cache so it cannot be reused. */
