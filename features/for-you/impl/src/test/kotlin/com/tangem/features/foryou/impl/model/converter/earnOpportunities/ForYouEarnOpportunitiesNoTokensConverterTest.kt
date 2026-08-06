@@ -27,8 +27,9 @@ internal class ForYouEarnOpportunitiesNoTokensConverterTest {
         // Act
         val result = converter.convert(emptyList()) as EarnOpportunitiesUM.Content
 
-        // Assert
-        assertThat(result.tokenList.map { it.tokenRowUM.id })
+        // Assert — suggestions live in a single header-less group
+        assertThat(result.tokenList.map { it.header }).containsExactly(null)
+        assertThat(result.items.map { it.tokenRowUM.id })
             .containsExactly("token-0-NET", "token-1-NET", "token-2-NET", "token-3-NET", "token-4-NET")
             .inOrder()
     }

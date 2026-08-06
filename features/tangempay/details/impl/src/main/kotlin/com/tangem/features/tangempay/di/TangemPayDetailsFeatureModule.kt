@@ -8,6 +8,8 @@ import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetC
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.listener.DefaultCardDetailsEventListener
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
+import com.tangem.features.tangempay.orderCard.impl.DefaultTangemPayOrderCardComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -39,4 +41,10 @@ internal interface TangemPayDetailsFeatureModule {
     fun bindTangemPayCashbackComponentFactory(
         factory: DefaultTangemPayCashbackComponent.Factory,
     ): TangemPayCashbackComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayOrderCardComponentFactory(
+        factory: DefaultTangemPayOrderCardComponent.Factory,
+    ): TangemPayOrderCardComponent.Factory
 }
