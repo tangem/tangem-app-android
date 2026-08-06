@@ -253,13 +253,15 @@ internal class CryptoCurrencyStatusExtTest {
                 fiatAmount = fiatAmount,
                 fiatRate = fiatRate,
                 priceChange = BigDecimal.ZERO,
-                stakingBalance = staking,
+                // mirrors CryptoCurrencyStatusFactory, which nulls the typed field whenever contributions are
+                // on: a status carrying BOTH cannot occur in production, and would let every parity assertion
+                // below pass off the legacy fallback even if the contributions path were dead
+                stakingBalance = staking.takeIf { !useContributions },
                 yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = networkAddress(),
                 sources = CryptoCurrencyStatus.Sources(),
-                // mirrors CryptoCurrencyStatusFactory: filled only while the toggle is on
                 contributions = if (useContributions) listOfNotNull(staking as? BalanceContribution) else emptyList(),
             ),
         )
