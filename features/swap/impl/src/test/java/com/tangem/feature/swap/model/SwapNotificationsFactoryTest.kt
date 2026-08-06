@@ -18,8 +18,10 @@ import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.RateType
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.ui.FeeBucket
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
+import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.models.UiActions
@@ -36,13 +38,18 @@ import java.math.BigDecimal
  * Tests for [SwapNotificationsFactory.getConfirmationStateNotifications], focused on the
  * `UnableToCoverFeeWarning` gating ([REDACTED_TASK_KEY]):
  *
- * | flow                          | gasless network | expected for InsufficientFee   |
- * |-------------------------------|-----------------|--------------------------------|
- * | CEX                           | no              | warning shown (the bug fix)    |
- * | CEX                           | yes             | suppressed (fee → token)      |
- * | DEX (txType=null)             | yes             | warning shown (DEX unchanged)  |
- * | DEX + txType=SEND (CEX-like)  | yes             | suppressed like a real CEX     |
- * | DEX + txType=SEND (CEX-like)  | no              | warning shown                  |
+ * | flow                          | gasless network | swapFee | expected for InsufficientFee  |
+ * |-------------------------------|-----------------|---------|-------------------------------|
+ * | CEX                           | no              | null    | warning shown (the bug fix)   |
+ * | CEX                           | yes             | null    | suppressed (fee → token)     |
+ * | CEX                           | yes             | set     | warning shown ([REDACTED_TASK_KEY])     |
+ * | DEX (txType=null)             | yes             | null    | warning shown (DEX unchanged) |
+ * | DEX + txType=SEND (CEX-like)  | yes             | null    | suppressed like a real CEX    |
+ * | DEX + txType=SEND (CEX-like)  | yes             | set     | warning shown ([REDACTED_TASK_KEY])     |
+ * | DEX + txType=SEND (CEX-like)  | no              | null    | warning shown                 |
+ *
+ * A non-null `swapFee` means the gasless selector has already resolved which token pays, so an
+ * insufficient balance is final and can no longer be fixed by switching the fee token.
  */
 internal class SwapNotificationsFactoryTest {
 
@@ -171,9 +178,60 @@ internal class SwapNotificationsFactoryTest {
         assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>()).hasSize(1)
     }
 
+    @Test
+    fun `GIVEN CEX and gasless support WHEN fee token resolved and insufficient THEN warning shown`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns true
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX)
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = buildSwapFee(),
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        val warning = notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>().single()
+        assertThat(warning.currencyName).isEqualTo("Ethereum")
+        assertThat(warning.currencySymbol).isEqualTo("ETH")
+    }
+
+    @Test
+    fun `GIVEN DEX with SEND txType and gasless support WHEN fee token resolved THEN warning shown`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns true
+        val quoteModel = buildQuotesLoadedState(
+            providerType = ExchangeProviderType.DEX,
+            txType = ExpressTxType.SEND,
+        )
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = buildSwapFee(),
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>()).hasSize(1)
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private fun buildSwapFee(): SwapFee = SwapFee(
+        fee = mockk(relaxed = true),
+        transactionFeeResult = mockk(relaxed = true),
+        selectedFeeToken = buildCoinFeeStatus(),
+        otherNativeFee = BigDecimal.ZERO,
+        feeBucket = FeeBucket.MARKET,
+    )
 
     private fun buildEthNetwork(): Network = mockk(relaxed = true) {
         every { rawId } returns "ethereum"
