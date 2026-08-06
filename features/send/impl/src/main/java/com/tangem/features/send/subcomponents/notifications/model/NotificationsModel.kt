@@ -2,6 +2,7 @@ package com.tangem.features.send.subcomponents.notifications.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -263,6 +264,7 @@ internal class NotificationsModel @Inject constructor(
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
             feeStatus = notificationData.feeCryptoCurrencyStatus,
+            sendAmount = sendingAmount,
         ).getOrNull()
 
         addExceedBalanceNotification(
@@ -434,7 +436,9 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
-        val isFeeInTokenCurrency = notificationData.fee is Fee.Ethereum.TokenCurrency
+        // Token-denominated fee amount covers both EVM gasless (Fee.Ethereum.TokenCurrency) and
+        // Tron gasless (Fee.Common carrying a token amount); regular fees are coin-denominated.
+        val isFeeInTokenCurrency = notificationData.fee?.amount?.type is AmountType.Token
         return if (isFeeInTokenCurrency) {
             notificationData.feeCryptoCurrencyStatus
         } else {

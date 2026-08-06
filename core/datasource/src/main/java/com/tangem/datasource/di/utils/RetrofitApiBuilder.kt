@@ -1,16 +1,21 @@
 package com.tangem.datasource.di.utils
 
+import com.tangem.datasource.api.common.config.MoonPay
+
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.remote.RetrofitApiSpec
+import com.tangem.core.remote.RetrofitFactory
+import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
 import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiConfigs
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiConfigs
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
@@ -63,7 +68,7 @@ internal class RetrofitApiBuilder @Inject constructor(
     @SessionAuthInterceptor private val sessionAuthInterceptor: Provider<Interceptor>,
     @SessionAuthAuthenticator private val sessionAuthenticator: Provider<Authenticator>,
     @Named("isBackendAuthenticationEnabled") private val isBackendAuthEnabled: Provider<Boolean>,
-) {
+) : RetrofitFactory {
 
     private val configsBaseUrls: Map<ApiConfig.ID, Set<String>> = getConfigsBaseUrls()
 
@@ -77,25 +82,25 @@ internal class RetrofitApiBuilder @Inject constructor(
     }
 
     /**
-     * Builds a Retrofit API instance for the specified API configuration ID
-     *
-     * @param apiConfigId             the ID of the API configuration to use
-     * @param applyTimeoutAnnotations whether to apply timeout annotations to the requests. See [ReadTimeout], etc.
-     * @param sessionAuth             when `true`, installs the DPoP `Interceptor` and 401/403
-     *                                `Authenticator` from `libs:auth`. Per-method annotations
-     *                                (`@RequiresDpopProof`, `@RequiresSessionRefresh`,
-     *                                `@RequiresSessionAuth`) gate which methods opt into each hook
-     * @param timeouts                optional timeouts for the requests
-     * @param logsSaving              whether to enable logs saving
-     *
-     * @return an instance [T] of the specified API interface
+     * Builds a Retrofit API instance of [clazz] according to [spec] (see [RetrofitApiSpec] for the
+     * available options).
      */
-    inline fun <reified T> build(
+    override fun <T : Any> create(clazz: Class<T>, spec: RetrofitApiSpec): T = createApi(
+        clazz = clazz,
+        apiConfigId = spec.apiConfigId,
+        applyTimeoutAnnotations = spec.shouldApplyTimeoutAnnotations,
+        sessionAuth = spec.shouldUseSessionAuth,
+        timeouts = spec.timeouts,
+        logsSaving = spec.shouldSaveLogs,
+    )
+
+    private fun <T : Any> createApi(
+        clazz: Class<T>,
         apiConfigId: ApiConfig.ID,
         applyTimeoutAnnotations: Boolean,
         sessionAuth: Boolean,
-        timeouts: Timeouts? = null,
-        logsSaving: Boolean = true,
+        timeouts: Timeouts?,
+        logsSaving: Boolean,
     ): T {
         val environmentConfig = apiConfigsManager.getEnvironmentConfig(apiConfigId)
 
@@ -119,11 +124,10 @@ internal class RetrofitApiBuilder @Inject constructor(
                     .build(),
             )
             .build()
-            .create(T::class.java)
+            .create(clazz)
     }
 
-    @PublishedApi
-    internal fun OkHttpClient.Builder.applySessionAuth(condition: Boolean): OkHttpClient.Builder {
+    private fun OkHttpClient.Builder.applySessionAuth(condition: Boolean): OkHttpClient.Builder {
         // Belt-and-suspenders: callers opt in via the `sessionAuth` flag, but if the backend-auth
         // feature toggle is OFF we skip installing the hooks entirely (avoids wiring up DPoP
         // header generation and 401 retry logic on builds where auth isn't live yet).
@@ -140,15 +144,8 @@ internal class RetrofitApiBuilder @Inject constructor(
         return this
     }
 
-    data class Timeouts(
-        val callTimeoutSeconds: Long? = null,
-        val connectTimeoutSeconds: Long? = null,
-        val readTimeoutSeconds: Long? = null,
-        val writeTimeoutSeconds: Long? = null,
-    )
-
     private fun getConfigsBaseUrls(): Map<ApiConfig.ID, Set<String>> {
-        return apiConfigs.associate { config ->
+        return apiConfigs.values.associate { config ->
             val allBaseUrls = config.environmentConfigs.mapTo(hashSetOf(), ApiEnvironmentConfig::baseUrl)
 
             config.id to allBaseUrls
@@ -179,19 +176,10 @@ internal class RetrofitApiBuilder @Inject constructor(
         if (timeouts == null) return this
 
         var b = this
-
-        if (timeouts.callTimeoutSeconds != null) {
-            b = b.callTimeout(timeouts.callTimeoutSeconds, TimeUnit.SECONDS)
-        }
-        if (timeouts.connectTimeoutSeconds != null) {
-            b = b.connectTimeout(timeouts.connectTimeoutSeconds, TimeUnit.SECONDS)
-        }
-        if (timeouts.readTimeoutSeconds != null) {
-            b = b.readTimeout(timeouts.readTimeoutSeconds, TimeUnit.SECONDS)
-        }
-        if (timeouts.writeTimeoutSeconds != null) {
-            b = b.writeTimeout(timeouts.writeTimeoutSeconds, TimeUnit.SECONDS)
-        }
+        timeouts.callTimeoutSeconds?.let { b = b.callTimeout(it, TimeUnit.SECONDS) }
+        timeouts.connectTimeoutSeconds?.let { b = b.connectTimeout(it, TimeUnit.SECONDS) }
+        timeouts.readTimeoutSeconds?.let { b = b.readTimeout(it, TimeUnit.SECONDS) }
+        timeouts.writeTimeoutSeconds?.let { b = b.writeTimeout(it, TimeUnit.SECONDS) }
 
         return b
     }
@@ -253,8 +241,8 @@ internal class RetrofitApiBuilder @Inject constructor(
     private companion object {
 
         val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
-            // ApiConfig.ID.StakeKit,
-            ApiConfig.ID.MoonPay,
+            // StakeKit.ID,
+            MoonPay.ID,
         )
     }
 }
