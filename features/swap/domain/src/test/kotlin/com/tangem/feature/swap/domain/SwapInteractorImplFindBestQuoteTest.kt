@@ -6,7 +6,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -58,6 +61,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
     private val ethNetwork = Blockchain.Ethereum.toNetworkId()
     private val solanaNetwork = Blockchain.Solana.toNetworkId()
     private val btcNetwork = Blockchain.Bitcoin.toNetworkId()
+    private val tronNetwork = Blockchain.Tron.toNetworkId()
 
     @BeforeEach
     fun setup() {
@@ -112,6 +116,27 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         } returns (AllowanceInfo.Enough(allowance = BigDecimal("1000")) as AllowanceInfo).right()
         every { createTransactionExtrasUseCase.invoke(data = any(), network = any()) } returns
             mockk<TransactionExtras>(relaxed = true).right()
+        // Separate-approval fee coverage: a small approve fee against the default native balance
+        // of 10 keeps the coverage check passing, so the pre-existing permission-state
+        // assertions are unaffected.
+        coEvery {
+            createApprovalTransactionUseCase.invoke(
+                cryptoCurrencyStatus = any(),
+                userWalletId = any(),
+                amount = any(),
+                contractAddress = any(),
+                spenderAddress = any(),
+            )
+        } returns mockk<TransactionData.Uncompiled>(relaxed = true).right()
+        val approveFeeAmount = mockk<com.tangem.blockchain.common.Amount>(relaxed = true) {
+            every { value } returns BigDecimal("0.001")
+        }
+        val approveFee = mockk<Fee.Common>(relaxed = true) {
+            every { this@mockk.amount } returns approveFeeAmount
+        }
+        coEvery {
+            getFeeUseCase.invoke(transactionData = any(), userWallet = any(), network = any())
+        } returns (TransactionFee.Single(normal = approveFee) as TransactionFee).right()
     }
 
     @Nested
@@ -1697,11 +1722,69 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             return dexProvider
         }
 
+        /**
+         * TRON cannot run the bundled approve+swap: `sendMultiple` accepts only compiled
+         * transaction data there, and `sumEvmFees` cannot combine a non-EVM approval fee with the
+         * swap fee. So a zero allowance must NOT be treated as satisfied — the flow has to fall
+         * back to the separate-approval path instead of letting an unapproved swap through.
+         */
+        @Test
+        fun `NotEnough allowance on TRON does NOT proceed to exchange data`() = runTest {
+            stubAllowanceForSpender(
+                AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE),
+            )
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            invokeRegularToken(dexProvider, networkRawId = tronNetwork)
+
+            coVerify(exactly = 0) {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = any(), rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            }
+        }
+
+        /**
+         * The permission state has to agree with the gate above. `PermissionSettings` would ask the
+         * UI for a combined approve+swap fee, which needs a `swapDataModel` that the gate never
+         * loaded — the fee then never resolves and the approval sheet never appears.
+         */
+        @Test
+        fun `NotEnough allowance on TRON yields separate-approval permission state`() = runTest {
+            stubAllowanceForSpender(
+                AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE),
+            )
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            val result = invokeRegularToken(dexProvider, networkRawId = tronNetwork)
+
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isInstanceOf(PermissionDataState.PermissionRequired::class.java)
+            assertThat((loaded.permissionState as PermissionDataState.PermissionRequired).spenderAddress)
+                .isEqualTo(spender)
+        }
+
+        @Test
+        fun `Enough allowance on TRON still proceeds with permission Empty`() = runTest {
+            stubAllowanceForSpender(AllowanceInfo.Enough(allowance = BigDecimal("100")))
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            val result = invokeRegularToken(dexProvider, networkRawId = tronNetwork)
+
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+        }
+
         private suspend fun invokeRegularToken(
             dexProvider: com.tangem.feature.swap.domain.models.domain.SwapProvider,
+            networkRawId: String = ethNetwork,
         ) = sut.findBestQuote(
             fromSwapCurrencyStatus = buildSwapCurrencyStatus(
-                networkRawId = ethNetwork,
+                networkRawId = networkRawId,
                 contractAddress = tokenContract,
                 isCoin = false,
                 amount = BigDecimal("10"),

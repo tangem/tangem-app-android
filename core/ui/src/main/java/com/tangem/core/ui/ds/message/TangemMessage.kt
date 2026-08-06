@@ -238,6 +238,7 @@ fun TangemMessage(
                     .align(Alignment.TopEnd)
                     .padding(TangemTheme.dimens2.x3)
                     .size(TangemTheme.dimens2.x5)
+                    .testTag(NotificationTestTags.CLOSE_BUTTON)
                     .clickableSingle(onClick = onCloseClick),
             )
         }

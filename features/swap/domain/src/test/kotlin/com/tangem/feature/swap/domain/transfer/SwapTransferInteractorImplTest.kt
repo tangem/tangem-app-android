@@ -950,6 +950,7 @@ internal class SwapTransferInteractorImplTest {
                 userWallet = userWallet,
                 network = network,
                 transactionData = transactionData,
+                sentAmount = BigDecimal("2.0"),
             )
         } returns feeExtended.right()
 
@@ -975,6 +976,7 @@ internal class SwapTransferInteractorImplTest {
                 userWallet = userWallet,
                 network = network,
                 transactionData = transactionData,
+                sentAmount = BigDecimal("2.0"),
             )
         }
     }
