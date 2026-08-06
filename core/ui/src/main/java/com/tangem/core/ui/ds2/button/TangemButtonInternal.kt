@@ -265,6 +265,26 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
             disabledAlpha = 0.4f,
         )
+        TangemButton.Variant.SecondaryError -> ColorTokens(
+            backgroundColor = TangemTheme.colors3.bg.status.errorSubtle,
+            textColor = TangemTheme.colors3.text.accent.red,
+            iconTint = TangemTheme.colors3.icon.accent.red,
+            disabledBackgroundColor = TangemTheme.colors3.bg.status.errorSubtle,
+            disabledTextColor = TangemTheme.colors3.text.accent.red,
+            disabledIconTint = TangemTheme.colors3.icon.accent.red,
+            focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
+            disabledAlpha = 0.4f,
+        )
+        TangemButton.Variant.SecondaryInfo -> ColorTokens(
+            backgroundColor = TangemTheme.colors3.bg.status.infoSubtle,
+            textColor = TangemTheme.colors3.text.accent.blue,
+            iconTint = TangemTheme.colors3.icon.accent.blue,
+            disabledBackgroundColor = TangemTheme.colors3.bg.status.infoSubtle,
+            disabledTextColor = TangemTheme.colors3.text.accent.blue,
+            disabledIconTint = TangemTheme.colors3.icon.accent.blue,
+            focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
+            disabledAlpha = 0.4f,
+        )
         TangemButton.Variant.Material -> ColorTokens(
             // Background is the haze fill (FILL/MATERIAL) rendered by TangemSurface when isMaterial = true;
             // this slot is unused in that path.
