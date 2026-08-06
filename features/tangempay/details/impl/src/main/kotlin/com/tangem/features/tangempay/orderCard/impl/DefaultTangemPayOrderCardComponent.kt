@@ -19,7 +19,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.tangempay.components.TangemPayIssueAdditionalCardComponent
+import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardNavigation
