@@ -6,7 +6,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -113,6 +116,27 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         } returns (AllowanceInfo.Enough(allowance = BigDecimal("1000")) as AllowanceInfo).right()
         every { createTransactionExtrasUseCase.invoke(data = any(), network = any()) } returns
             mockk<TransactionExtras>(relaxed = true).right()
+        // Separate-approval fee coverage: a small approve fee against the default native balance
+        // of 10 keeps the coverage check passing, so the pre-existing permission-state
+        // assertions are unaffected.
+        coEvery {
+            createApprovalTransactionUseCase.invoke(
+                cryptoCurrencyStatus = any(),
+                userWalletId = any(),
+                amount = any(),
+                contractAddress = any(),
+                spenderAddress = any(),
+            )
+        } returns mockk<TransactionData.Uncompiled>(relaxed = true).right()
+        val approveFeeAmount = mockk<com.tangem.blockchain.common.Amount>(relaxed = true) {
+            every { value } returns BigDecimal("0.001")
+        }
+        val approveFee = mockk<Fee.Common>(relaxed = true) {
+            every { this@mockk.amount } returns approveFeeAmount
+        }
+        coEvery {
+            getFeeUseCase.invoke(transactionData = any(), userWallet = any(), network = any())
+        } returns (TransactionFee.Single(normal = approveFee) as TransactionFee).right()
     }
 
     @Nested
