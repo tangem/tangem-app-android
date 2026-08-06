@@ -57,7 +57,7 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
     fun loadFeeExtended(model: TestModel) = runTest {
         // Arrange
         stubNativeBalance(model.nativeBalance)
-        coEvery { getFeeForGaslessUseCase(any(), any(), any()) } returns nativeFee(model.nativeFee).right()
+        coEvery { getFeeForGaslessUseCase(any(), any(), any(), any()) } returns nativeFee(model.nativeFee).right()
         val sendModel = createSendModel(this, MutableParamsContainer(defaultSendParams()))
         advanceUntilIdle()
         sendModel.predefinedValues = deeplink(amount = "1.0")
