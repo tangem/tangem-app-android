@@ -11,9 +11,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.features.tangempay.components.TangemPayIssueAdditionalCardComponent
+import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
+import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
-import com.tangem.features.tangempay.utils.balanceOrNull
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
