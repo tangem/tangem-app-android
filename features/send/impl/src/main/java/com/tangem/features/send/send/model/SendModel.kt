@@ -326,9 +326,8 @@ internal class SendModel @Inject constructor(
     }
 
     /**
-     * The amount the transfer transaction is built with. Kept as a single source shared by
-     * [prepareTransferTransaction] and the gasless fee estimation, which needs the figure separately: a
-     * yield-supply send zeroes the amount inside [TransactionData] and carries the real one in call data.
+     * The amount the transfer transaction is built with, shared by [prepareTransferTransaction] and the
+     * gasless fee estimation, which needs the figure separately for a yield-supply send.
      */
     private fun currentSentAmount(): BigDecimal? = when (val predefinedValues = predefinedValues) {
         is PredefinedValues.Content.Deeplink -> predefinedValues.amount.parseBigDecimalOrNull()
@@ -355,8 +354,7 @@ internal class SendModel @Inject constructor(
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
         val transferTransaction = prepareTransferTransaction()
             .getOrElse { return GetFeeError.DataError(it).left() }
-        // A yield-supply send zeroes the amount inside TransactionData (the real one lives in the module call
-        // data), so the gasless fee plan cannot read it back — pass it explicitly.
+        // A yield-supply send zeroes the amount inside TransactionData, so pass it explicitly.
         val sentAmount = currentSentAmount()
 
         val feeToken = maybeToken?.currency
