@@ -2050,6 +2050,7 @@
   <string name="tangempay_card_details_freeze_card">Freeze card</string>
   <string name="tangempay_card_details_hide_details">Hide details</string>
   <string name="tangempay_card_details_hide_text">Hide</string>
+  <string name="tangempay_card_details_name_on_card">Cardholder name</string>
   <string name="tangempay_card_details_open_wallet_button">Open Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Set up Tangem Pay in a few taps and start paying with Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Set up Tangem Pay in a few taps and start paying with Apple Pay.</string>
