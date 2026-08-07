@@ -320,7 +320,6 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
         // reports no pending transaction. Balance stays 5.8 DOGE in both states — only the pending flag changes.
         // Not "Started"/"OutgoingTransaction": their responses carry an unconfirmed transaction as well.
         val completedTxState = "Empty"
-        val sendingTitle = getResourceString(R.string.common_sending)
         val pendingSendMessagePrefix =
             getResourceString(R.string.token_button_unavailability_reason_pending_transaction_send).substringBefore("%")
 
@@ -373,13 +372,11 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Set WireMock scenario: '$txHistoryScenarioName' to state: '$completedTxState'") {
                 setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = completedTxState)
             }
+            // The proof that the refresh landed is the button turning enabled below — the pending transaction
+            // of "EmptyWithPendingTransaction" lives in the balance data only and never renders as a history
+            // item, so asserting on the history here would pass without checking anything.
             step("Pull to refresh to pick up the completed transaction") {
                 pullToRefreshTokenDetails()
-            }
-            step("Assert the active transaction is gone from the history") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onTxHistoryScreen { transactionItem(sendingTitle).assertDoesNotExist() }
-                }
             }
             step("Open the transfer bottom sheet again") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
