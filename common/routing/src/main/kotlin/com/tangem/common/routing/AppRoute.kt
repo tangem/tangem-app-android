@@ -560,8 +560,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Polymarket(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/polymarket/${userWalletId.stringValue}")
+        val userWalletId: UserWalletId? = null,
+    ) : AppRoute(path = "/polymarket")
 
     @Serializable
     data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")
