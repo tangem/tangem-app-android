@@ -75,7 +75,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
         isEditingNameEnabled = config.isEditingNameEnabled,
         onEditNameClick = onEditNameClick,
         onReveal = ::requestReveal,
-        onCopy = ::copyData,
+        onCopy = { _, _ -> },
         shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
         cardState = card.state,
         cardImageUrl = card.mainImageUrl,
@@ -163,6 +163,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
                         transformer = DetailsRevealedStateTransformer(
                             details = cardDetails,
                             onClickHide = ::requestHide,
+                            onCopy = ::copyData,
                         ),
                     )
                     launchShowDetailsTimer()
