@@ -95,6 +95,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             lastFourDigits = cardNumberEnd,
             isPinSet = isPinSet == true,
             images = images.orEmpty().mapNotNull(::convertCardImage),
+            embossName = embossName?.trim()?.ifEmpty { null },
         )
     }
 

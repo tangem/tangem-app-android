@@ -19,6 +19,7 @@ import kotlinx.serialization.Serializable
  * @property lastDigits The last four digits of the card number.
  * @property images card artwork images provided by the backend, keyed by [TangemPayTariffPlan.Image.Type].
  * @property state current lifecycle state of the card (reissuing / closing / active).
+ * @property embossName cardholder name embossed on the card
  */
 @Serializable
 data class TangemPayCard(
@@ -32,6 +33,7 @@ data class TangemPayCard(
     @SerialName("last_digits") val lastDigits: String,
     @SerialName("images") val images: List<TangemPayTariffPlan.Image>,
     @SerialName("state") val state: TangemPayCardState,
+    @SerialName("emboss_name") val embossName: String?,
 ) {
     @Serializable
     enum class Status {
