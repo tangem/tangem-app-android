@@ -20,7 +20,6 @@ internal class TangemPayDetailsNotificationFactoryTest {
 
     private val factory = TangemPayDetailsNotificationFactory(
         intents = intents,
-        isRemoveAccountEnabled = true,
         isTiersPlusPlanEnabled = true,
     )
 
@@ -64,7 +63,6 @@ internal class TangemPayDetailsNotificationFactoryTest {
         // GIVEN
         val disabledFactory = TangemPayDetailsNotificationFactory(
             intents = intents,
-            isRemoveAccountEnabled = true,
             isTiersPlusPlanEnabled = false,
         )
 

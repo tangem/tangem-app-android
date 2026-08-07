@@ -36,7 +36,6 @@ import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
@@ -64,7 +63,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val closeCardRepository: TangemPayCloseCardRepository = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
-    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles = mockk()
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
 
@@ -81,7 +79,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         closeCardRepository = closeCardRepository,
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
-        virtualAccountFeatureToggles = virtualAccountFeatureToggles,
         tangemPayFeatureToggles = tangemPayFeatureToggles,
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
     )
@@ -182,7 +179,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             closeCardRepository,
             cardDetailsRepository,
             issueCardRepository,
-            virtualAccountFeatureToggles,
             tangemPayFeatureToggles,
             getTangemPayTariffPlanStateUseCase,
         )
@@ -221,6 +217,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         coEvery { reissueCardRepository.getReissueOrderId(any(), any()) } returns Either.Right(null)
 
         coEvery { issueCardRepository.getIssueOrderIds(any()) } returns emptyList()
+
+        coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
+        coEvery { onboardingRepository.fetchCustomerEligibility(userWalletId) } returns Either.Right(emptyList())
     }
 
     /** Collects all [AccountStatus.Payment] values stored via [PaymentAccountStatusesStore.store]. */
@@ -276,30 +275,13 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     inner class ResolveVirtualAccountOnramp {
 
         @Test
-        fun `GIVEN feature toggle is off WHEN invoke THEN virtualAccount is null`() = runTest {
-            // Arrange
-            val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
-            stubHappyPath(customerInfo)
-            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            val loaded = storedStatuses.lastLoaded()
-            assertThat(loaded.virtualAccount).isNull()
-        }
-
-        @Test
-        fun `GIVEN toggle on and ACCOUNT instance WHEN invoke THEN virtualAccount is Available without fetching credentials`() =
+        fun `GIVEN ACCOUNT instance WHEN invoke THEN virtualAccount is Available without fetching credentials`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
                     productInstances = listOf(cardProductInstance, accountProductInstance),
                 )
                 stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
                 val storedStatuses = captureStoredStatuses()
 
@@ -321,7 +303,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
                 stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
                 coEvery {
                     onboardingRepository.fetchCustomerEligibility(userWalletId)
@@ -342,7 +323,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
                 stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
                 coEvery {
                     onboardingRepository.fetchCustomerEligibility(userWalletId)
@@ -362,7 +342,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Arrange
             val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
             stubHappyPath(customerInfo)
-            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
             coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
             coEvery {
                 customerOrderRepository.getOrderData(userWalletId, "va-1")
@@ -382,7 +361,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
                 stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
                 coEvery {
                     customerOrderRepository.getOrderData(userWalletId, "va-1")
@@ -401,7 +379,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Arrange
             val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
             stubHappyPath(customerInfo)
-            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
             coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
             coEvery {
                 customerOrderRepository.getOrderData(userWalletId, "va-1")
@@ -421,7 +398,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
                 stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
                 coEvery {
                     customerOrderRepository.getOrderData(userWalletId, "va-1")
@@ -446,7 +422,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
                 stubHappyPath(customerInfo)
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns true
                 coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns "va-1"
                 coEvery {
                     customerOrderRepository.getOrderData(userWalletId, "va-1")
@@ -555,7 +530,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             closeCardRepository = closeCardRepository,
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
-            virtualAccountFeatureToggles = virtualAccountFeatureToggles,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
         )
@@ -720,7 +694,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo(productInstances = emptyList())
                 stubHappyPath(customerInfo)
                 every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
                 coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
                 coEvery {
                     cardDetailsRepository.getOrderInfo(userWalletId, "order_1")
@@ -743,7 +716,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val customerInfo = buildCustomerInfo()
                 stubHappyPath(customerInfo)
                 every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
-                every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
                 coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_gone")
                 coEvery {
                     cardDetailsRepository.getOrderInfo(userWalletId, "order_gone")
@@ -780,7 +752,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             val customerInfo = buildCustomerInfo(networks = listOf(network))
             stubHappyPath(customerInfo)
             every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns false
-            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
             val storedStatuses = captureStoredStatuses()
 
             // Act
@@ -802,7 +773,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             val customerInfo = buildCustomerInfo(networks = listOf(network))
             stubHappyPath(customerInfo)
             every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns true
-            every { virtualAccountFeatureToggles.isVaMvp0Enabled } returns false
             every {
                 tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any())
             } returns listOf(networkStatus)
