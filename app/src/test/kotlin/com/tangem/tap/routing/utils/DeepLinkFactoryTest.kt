@@ -2,6 +2,7 @@ package com.tangem.tap.routing.utils
 
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
@@ -37,9 +38,11 @@ import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class DeepLinkFactoryTest {
+internal class DeepLinkFactoryTest {
 
     private val onrampDeepLinkFactory = mockk<OnrampDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any(), any()) } returns mockk()
@@ -127,6 +130,8 @@ class DeepLinkFactoryTest {
             every { create(any(), any()) } returns mockk()
         }
 
+    private val urlOpener = mockk<UrlOpener>(relaxed = true)
+
     private val mockedUri = mockk<Uri>(relaxed = true)
     private val isFromOnNewIntent: Boolean = false
 
@@ -158,6 +163,7 @@ class DeepLinkFactoryTest {
         yieldDeepLink = yieldDeepLinkFactory,
         surveyDeepLink = surveyDeepLinkFactory,
         promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
+        urlOpener = urlOpener,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -524,5 +530,225 @@ class DeepLinkFactoryTest {
         verify {
             promoDeepLinkFactory.create(eq(testScope), eq(mapOf("promo_code" to "PROMO123")))
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideWebFallbackModels")
+    fun `GIVEN push link that matches no route WHEN handleDeeplink THEN opens it only when the host is trusted`(
+        model: WebFallbackModel,
+    ) = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns model.scheme
+        every { mockedUri.host } returns model.host
+        every { mockedUri.path } returns model.path
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns model.url
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, model.source)
+        advanceUntilIdle()
+
+        // Assert
+        if (model.isOpenedInBrowser) {
+            verify { urlOpener.openUrl(model.url) }
+        } else {
+            verify(inverse = true) { urlOpener.openUrl(any()) }
+        }
+    }
+
+    @Test
+    fun `GIVEN news article link from push WHEN handleDeeplink THEN routes it and opens no browser`() = runTest {
+        // Arrange — pins the `true` of the news branch: getting it wrong opens a browser tab over the article
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/news/markets/42-some-slug"
+        every { mockedUri.toString() } returns "https://tangem.com/news/markets/42-some-slug"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { newsDeeplink.create(eq(testScope), eq(mockedUri)) }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNewsPathsWithoutArticleId")
+    fun `GIVEN news link without article id WHEN handleDeeplink THEN shows news list and opens no browser`(
+        path: String,
+    ) = runTest {
+        // Arrange — the details handler cannot route these, and the browser fallback would only bounce off
+        // the app's own verified App Link claim on `/news*`, so the news list is the one live destination
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns path
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns "https://tangem.com$path"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { newsDeepLinkFactory.create(eq(emptyMap())) }
+        verify(inverse = true) { newsDeeplink.create(any(), any()) }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
+    fun `GIVEN pay-app link from push WHEN handleDeeplink THEN routes it and opens no browser`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/pay-app"
+        every { mockedUri.toString() } returns "https://tangem.com/pay-app"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { onboardVisaDeepLink.create(eq(mockedUri)) }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
+    fun `GIVEN path that only shares a prefix with a route WHEN handleDeeplink THEN opens it in a browser`() =
+        runTest {
+            // Arrange — `/newsletter` is not the news route; claiming it as routed would swallow the fallback
+            every { mockedUri.scheme } returns "https"
+            every { mockedUri.host } returns "tangem.com"
+            every { mockedUri.path } returns "/newsletter/subscribe"
+            every { mockedUri.toString() } returns "https://tangem.com/newsletter/subscribe"
+
+            // Act
+            deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+            deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+            advanceUntilIdle()
+
+            // Assert
+            verify(inverse = true) { newsDeeplink.create(any(), any()) }
+            verify { urlOpener.openUrl("https://tangem.com/newsletter/subscribe") }
+        }
+
+    @Test
+    fun `GIVEN routable deeplink from push WHEN handleDeeplink THEN routes it and opens no browser`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.query } returns null
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns "tangem://main"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { walletDeepLinkFactory.create() }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    data class WebFallbackModel(
+        val scheme: String,
+        val host: String,
+        val path: String,
+        val url: String,
+        val source: DeeplinkSource,
+        val isOpenedInBrowser: Boolean,
+    )
+
+    private companion object {
+
+        @JvmStatic
+        fun provideNewsPathsWithoutArticleId(): List<String> = listOf(
+            "/news",
+            "/news/",
+            "/news/markets",
+            "/news/markets/not-a-number",
+        )
+
+        @JvmStatic
+        fun provideWebFallbackModels(): List<WebFallbackModel> = listOf(
+            // The [REDACTED_TASK_KEY] marketing shape: a trusted host on a path no handler claims
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://tangem.com/pricing/?utm_campaign=pizzaday",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // `+` in a query is an encoded space — CIO/AppsFlyer campaign builders produce it routinely,
+            // and the fallback must not reject an already-trusted, already-parsed URL over it
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://tangem.com/pricing/?utm_content=summer+sale",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // Hostnames are case-insensitive per RFC 3986
+            WebFallbackModel(
+                scheme = "https",
+                host = "TANGEM.COM",
+                path = "/pricing/",
+                url = "https://TANGEM.COM/pricing/",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // AppsFlyer OneLink: must leave the app so the SDK can resolve attribution on the way back in
+            WebFallbackModel(
+                scheme = "https",
+                host = "join.tangem.com",
+                path = "/abc",
+                url = "https://join.tangem.com/abc",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // The OneLink carve-out is host-based, so it must not let a non-https scheme through
+            WebFallbackModel(
+                scheme = "tangem",
+                host = "join.tangem.com",
+                path = "/abc",
+                url = "tangem://join.tangem.com/abc",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+            ),
+            WebFallbackModel(
+                scheme = "https",
+                host = "evil.com",
+                path = "/phishing",
+                url = "https://evil.com/phishing",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+            ),
+            // A custom scheme handed to ACTION_VIEW would bounce back in as an ungated intent.data.
+            // The host must be one no handler claims, otherwise the fallback is never reached.
+            WebFallbackModel(
+                scheme = "tangem",
+                host = "not_a_route",
+                path = "/",
+                url = "tangem://not_a_route",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+            ),
+            // External: the system already routed this to us, so re-opening it would bounce endlessly
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://tangem.com/pricing/",
+                source = DeeplinkSource.External,
+                isOpenedInBrowser = false,
+            ),
+        )
     }
 }
