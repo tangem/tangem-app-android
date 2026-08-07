@@ -13,10 +13,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
-import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainParams
+import com.tangem.pagination.BatchListState
+import com.tangem.pagination.BatchUpdateResult
+import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import dagger.hilt.EntryPoints
 import io.mockk.CapturingSlot
@@ -26,6 +30,8 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import javax.inject.Provider
@@ -38,7 +44,7 @@ import javax.inject.Provider
 internal class PolymarketMainComponentTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val getPolymarketEventsUseCase: GetPolymarketEventsUseCase = mockk()
+    private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
 
     private val userWalletId = UserWalletId("011")
@@ -47,7 +53,15 @@ internal class PolymarketMainComponentTest {
     init {
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
-        coEvery { getPolymarketEventsUseCase(category = null) } returns emptyList<PolymarketEvent>().right()
+        every { getPolymarketEventsBatchFlowUseCase(any(), any()) } returns object : PolymarketEventsBatchFlow {
+            override val state = MutableStateFlow(
+                BatchListState<Int, List<PolymarketEvent>>(
+                    data = emptyList(),
+                    status = PaginationStatus.InitialLoading,
+                ),
+            )
+            override val updateResults = MutableSharedFlow<Pair<Nothing, BatchUpdateResult<Int, List<PolymarketEvent>>>>()
+        }
     }
 
     @AfterEach
@@ -99,7 +113,7 @@ internal class PolymarketMainComponentTest {
         paramsContainer = paramsContainer,
         router = router,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        getPolymarketEventsUseCase = getPolymarketEventsUseCase,
+        getPolymarketEventsBatchFlowUseCase = getPolymarketEventsBatchFlowUseCase,
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
     )
 }
