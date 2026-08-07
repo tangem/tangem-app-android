@@ -1,4 +1,4 @@
-package com.tangem.domain.polymarket.usecase
+package com.tangem.domain.polymarket.interactor
 
 import arrow.core.left
 import arrow.core.right
@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -19,12 +20,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
-internal class GetPolymarketBalanceUseCaseTest {
+internal class GetPolymarketBalanceInteractorTest {
 
     private val repository: PolymarketRepository = mockk()
     private val credentialsStore: PolymarketCredentialsStore = mockk()
 
-    private val useCase = GetPolymarketBalanceUseCase(
+    private val interactor = GetPolymarketBalanceInteractor(
         polymarketRepository = repository,
         getApiCredentials = GetPolymarketApiCredentialsUseCase(credentialsStore = credentialsStore),
     )
@@ -41,7 +42,7 @@ internal class GetPolymarketBalanceUseCaseTest {
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns BALANCE.right()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES)
+        val actual = interactor(addresses = ADDRESSES)
 
         // Assert
         assertThat(actual).isEqualTo(BALANCE.right())
@@ -53,7 +54,7 @@ internal class GetPolymarketBalanceUseCaseTest {
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns null
 
         // Act
-        val actual = useCase(addresses = ADDRESSES)
+        val actual = interactor(addresses = ADDRESSES)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.KeyNotFound.left())
@@ -68,7 +69,7 @@ internal class GetPolymarketBalanceUseCaseTest {
             PolymarketAuthError.InvalidSignature.left()
 
         // Act
-        val actual = useCase(addresses = ADDRESSES)
+        val actual = interactor(addresses = ADDRESSES)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
