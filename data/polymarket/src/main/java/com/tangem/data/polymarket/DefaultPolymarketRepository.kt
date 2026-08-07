@@ -227,9 +227,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
 
-        /** Signed by the HMAC without the query string, unlike the relative path Retrofit resolves. */
+        /** Both are signed by the HMAC without the query string, unlike the relative paths Retrofit resolves. */
         const val BALANCE_ALLOWANCE_UPDATE_SIGNED_PATH = "/balance-allowance/update"
-
         const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance"
     }
 }
