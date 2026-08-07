@@ -312,10 +312,11 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
     fun sendBlockedWhileTransactionActiveTest() {
         val tokenName = "Dogecoin"
         val txHistoryScenarioName = "dogecoin_tx_history"
-        // "UnconfirmedOutgoing" answers both address requests: `?details=txs` (the history screen) and the
-        // query-less one (the balance the wallet manager reads), so the transaction is both visible in the
-        // history and blocking 'Send' — which is what the test case expects.
-        val activeTxState = "UnconfirmedOutgoing"
+        // Answers both address requests: `?details=txs` (the history screen) and the query-less one (the
+        // balance the wallet manager reads), so the transaction is both visible in the history and blocking
+        // 'Send' — which is what the test case expects. Plain "UnconfirmedOutgoing" only answers the former,
+        // and must stay that way: test 10209 pairs it with a zero balance.
+        val activeTxState = "UnconfirmedOutgoingWithBalance"
         // "Empty" answers `?details=txs` only, so the query-less request falls through to dogecoin_balance and
         // reports no pending transaction. Not "Started"/"OutgoingTransaction": their responses carry an
         // unconfirmed transaction as well, so neither can mean "the transaction is done".
