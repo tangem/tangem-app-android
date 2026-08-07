@@ -14,6 +14,7 @@ import com.tangem.core.error.UniversalError
  * `002` - First card scan error
  * `003` - Activation
  * `004` - Authorization API
+ * `005` - Plastic card order
  */
 object VisaError : UniversalError {
     override val errorCode: Int = 104000000
@@ -70,7 +71,25 @@ sealed class VisaApiError(
     data object CustomerIdUnavailable : VisaApiError(104004007)
     data object OrderNotFound : VisaApiError(104004008)
 
+    data object InsufficientFunds : VisaApiError(104005001)
+    data object InvalidShippingAddress : VisaApiError(104005002)
+    data object CountryNotSupported : VisaApiError(104005003)
+    data object OfferNotAvailable : VisaApiError(104005004)
+    data object AlreadyHasActiveOrder : VisaApiError(104005005)
+    data object PlasticNotAvailable : VisaApiError(104005006)
+
     companion object {
+
+        fun fromBackendErrorName(backendErrorName: String?): VisaApiError? = when (backendErrorName) {
+            "INSUFFICIENT_FUNDS" -> InsufficientFunds
+            "INVALID_SHIPPING_ADDRESS" -> InvalidShippingAddress
+            "COUNTRY_NOT_SUPPORTED" -> CountryNotSupported
+            "OFFER_NOT_AVAILABLE" -> OfferNotAvailable
+            "ALREADY_HAS_ACTIVE_ORDER" -> AlreadyHasActiveOrder
+            "PLASTIC_NOT_AVAILABLE" -> PlasticNotAvailable
+            else -> null
+        }
+
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
             val universalErrorCode = 104_000_000 + backendErrorCode
             return when (universalErrorCode) {
