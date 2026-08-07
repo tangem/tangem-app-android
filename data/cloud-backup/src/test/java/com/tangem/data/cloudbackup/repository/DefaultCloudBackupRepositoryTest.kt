@@ -56,7 +56,7 @@ internal class DefaultCloudBackupRepositoryTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    private val secret = CloudBackupSecretData(mnemonic = "m", passphrase = null)
+    private val secret = CloudBackupSecretData(mnemonic = "m", isPassphraseRequired = false)
 
     private val fileData = CloudBackupFileData(
         version = 1,
@@ -92,13 +92,13 @@ internal class DefaultCloudBackupRepositoryTest {
             errorResponse(HTTP_UNAUTHORIZED),
             successResponse(CloudBackupJson.encodeToString(fileData)),
         )
-        every { cipher.decrypt(any(), any()) } returns SECRET_JSON.toByteArray(Charsets.UTF_8).right()
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
 
         // Act
         val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m", passphrase = null).right())
+        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m", isPassphraseRequired = false).right())
         coVerify(exactly = 1) { tokenProvider.invalidate() }
         coVerify(exactly = 2) { api.downloadFileContent(any(), any(), any()) }
     }
@@ -125,7 +125,7 @@ internal class DefaultCloudBackupRepositoryTest {
             errorResponse(HTTP_UNAUTHORIZED),
             successResponse(CloudBackupJson.encodeToString(fileData)),
         )
-        every { cipher.decrypt(any(), any()) } returns SECRET_JSON.toByteArray(Charsets.UTF_8).right()
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
 
         // Act
         repository.readBackup(fileId = "file-1", password = "p".toCharArray())
@@ -434,7 +434,7 @@ internal class DefaultCloudBackupRepositoryTest {
         const val HTTP_UNAUTHORIZED = 401
         const val WALLET_ID = "wallet-1"
         const val FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"
-        const val SECRET_JSON = "{\"mnemonic\":\"m\"}"
+        const val SECRET_PAYLOAD = """{"mnemonic":"m","passphraseRequired":0}"""
         val JSON_MEDIA_TYPE = "application/json".toMediaType()
     }
 }
