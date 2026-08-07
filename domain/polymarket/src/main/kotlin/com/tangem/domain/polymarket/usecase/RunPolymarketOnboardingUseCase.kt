@@ -8,12 +8,14 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Drives a Polymarket onboarding run to completion, resuming from the status the backend currently reports.
@@ -40,8 +42,18 @@ class RunPolymarketOnboardingUseCase(
         emit(PolymarketOnboardingProgress.Deriving)
         val addresses = step { deriveAddresses(userWalletId) } ?: return@flow
         runOnboarding(addresses)
-    }.catch { _ ->
-        emit(PolymarketOnboardingProgress.Failed(error = PolymarketOnboardingError.Unknown, isRetryable = true))
+    }.onEach { progress -> logProgress(progress) }
+        .catch { throwable ->
+            TangemLogger.e("Onboarding run failed", throwable)
+            emit(PolymarketOnboardingProgress.Failed(error = PolymarketOnboardingError.Unknown, isRetryable = true))
+        }
+
+    private fun logProgress(progress: PolymarketOnboardingProgress) {
+        if (progress is PolymarketOnboardingProgress.Failed) {
+            TangemLogger.e("Onboarding progress: $progress")
+        } else {
+            TangemLogger.i("Onboarding progress: $progress")
+        }
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.runOnboarding(addresses: PolymarketAddresses) {
@@ -103,6 +115,7 @@ class RunPolymarketOnboardingUseCase(
 
         var reported = from
         var consecutiveFailures = 0
+        TangemLogger.v("Poll: waiting for $target, from $from")
         emit(PolymarketOnboardingProgress.Working(from))
 
         while (true) {
@@ -133,6 +146,7 @@ class RunPolymarketOnboardingUseCase(
                     return null
                 }
                 if (status != reported) {
+                    TangemLogger.v("Poll: status changed to $status")
                     emit(PolymarketOnboardingProgress.Working(status))
                     reported = status
                 }
@@ -157,6 +171,7 @@ class RunPolymarketOnboardingUseCase(
         block: suspend () -> Either<PolymarketOnboardingError, T>,
     ): T? = block().fold(
         ifLeft = { error ->
+            TangemLogger.e("Onboarding step failed: $error")
             emit(PolymarketOnboardingProgress.Failed(error = error, isRetryable = error.isRetryable()))
             null
         },
