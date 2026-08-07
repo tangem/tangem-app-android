@@ -5,16 +5,15 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import arrow.core.Either
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
+import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
@@ -22,7 +21,6 @@ import com.tangem.features.pushnotifications.impl.domain.GetPushNotificationsDou
 import com.tangem.features.pushnotifications.impl.domain.DoubleAskVariant
 import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,9 +39,9 @@ internal class PushNotificationsModel @Inject constructor(
     private val analyticHandler: AnalyticsEventHandler,
     private val notificationsRepository: NotificationsRepository,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
-    private val setAllWalletPushNotificationPreferences: SetAllWalletPushNotificationPreferencesUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val accountsCRUDRepository: AccountsCRUDRepository,
+    private val applyPushNotificationFirstActivation: ApplyPushNotificationFirstActivationUseCase,
+    private val markPushNotificationFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase,
     private val getPushNotificationsDoubleAskVariantUseCase: GetPushNotificationsDoubleAskVariantUseCase,
 ) : Model(), PushNotificationsClickIntents {
 
@@ -145,6 +143,10 @@ internal class PushNotificationsModel @Inject constructor(
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+            if (isPushNotificationSettingsEnabled) {
+                // Flag is fixed on DENY too, so a later activation is selective.
+                markFirstActivationDoneForAllWallets()
+            }
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
                 params.nextRoute?.let { appRouter.push(it) }
@@ -152,21 +154,16 @@ internal class PushNotificationsModel @Inject constructor(
         }
     }
 
-    // TODO [REDACTED_JIRA] evaluate per-wallet "first-activation done"
-    //  tracking (iOS keeps a [walletId] array in UserDefaults). Today the bulk-enable fires every
-    //  time onAllowPermission is called under the feature toggle, but Soft Ask itself is gated by
-    //  the existing `shouldShowPushPermission_*` flag so in practice it runs once per install.
+    /** On the first grant, enable all three categories for every not-yet-activated wallet (guarded once per wallet). */
     private suspend fun applyFirstActivationRule() {
         userWalletsListRepository.userWalletsSync().forEach { wallet ->
-            val result = setAllWalletPushNotificationPreferences(
-                userWalletId = wallet.walletId,
-                transactionAlerts = true,
-                offersUpdates = true,
-                priceAlerts = true,
-            )
-            if (result is Either.Right) {
-                runSuspendCatching { accountsCRUDRepository.syncTokens(wallet.walletId) }
-            }
+            applyPushNotificationFirstActivation(wallet.walletId)
+        }
+    }
+
+    private suspend fun markFirstActivationDoneForAllWallets() {
+        userWalletsListRepository.userWalletsSync().forEach { wallet ->
+            markPushNotificationFirstActivationDone(wallet.walletId)
         }
     }
 }

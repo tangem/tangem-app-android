@@ -11,6 +11,6 @@ internal class DefaultPushNotificationsFeatureToggles @Inject constructor(
 
     override val isOnboardingPushDoubleAskAbEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED,
+            FeatureToggles.TWI_1403_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED,
         )
 }

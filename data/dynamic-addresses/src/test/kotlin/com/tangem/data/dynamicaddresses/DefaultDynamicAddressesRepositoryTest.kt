@@ -6,7 +6,6 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -32,7 +31,6 @@ class DefaultDynamicAddressesRepositoryTest {
     private val walletAccountsSaver: WalletAccountsSaver = mockk(relaxed = true)
     private val accountsCRUDRepository: AccountsCRUDRepository = mockk(relaxed = true)
     private val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
-    private val featureToggles: DynamicAddressesFeatureToggles = mockk(relaxed = true)
     private val getDerivedXpubUseCase: GetDerivedXpubUseCase = mockk(relaxed = true)
 
     private val userWalletId: UserWalletId = mockk(relaxed = true)
@@ -49,7 +47,7 @@ class DefaultDynamicAddressesRepositoryTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(walletManagersFacade, featureToggles, getDerivedXpubUseCase, answers = false)
+        clearMocks(walletManagersFacade, getDerivedXpubUseCase, answers = false)
         // Empty response → findToken returns null → getStatus emits DISABLED.
         val emptyResponse = mockk<GetWalletAccountsResponse>(relaxed = true) {
             every { accounts } returns emptyList()
@@ -63,31 +61,14 @@ class DefaultDynamicAddressesRepositoryTest {
             walletAccountsSaver = walletAccountsSaver,
             accountsCRUDRepository = accountsCRUDRepository,
             walletManagersFacade = walletManagersFacade,
-            dynamicAddressesFeatureToggles = featureToggles,
             getDerivedXpubUseCase = getDerivedXpubUseCase,
             dispatchers = dispatchers,
         )
     }
 
     @Test
-    fun `GIVEN feature toggle off WHEN collect THEN probe is never called and flow emits false`() = runTest {
+    fun `GIVEN xpub is null WHEN collect THEN probe is not called AND cache is empty`() = runTest {
         // GIVEN
-        every { featureToggles.isDynamicAddressesEnabled } returns false
-
-        // WHEN
-        val values = repository.hasFundsOnAdditionalAddresses(userWalletId, network).toList()
-
-        // THEN
-        assertThat(values).doesNotContain(true)
-        coVerify(exactly = 0) {
-            walletManagersFacade.probeHasFundsOnAdditionalAddresses(any(), any(), any())
-        }
-    }
-
-    @Test
-    fun `GIVEN toggle on AND xpub is null WHEN collect THEN probe is not called AND cache is empty`() = runTest {
-        // GIVEN
-        every { featureToggles.isDynamicAddressesEnabled } returns true
         coEvery { getDerivedXpubUseCase(userWalletId, network) } returns null
 
         // WHEN
@@ -105,7 +86,6 @@ class DefaultDynamicAddressesRepositoryTest {
     @Test
     fun `GIVEN probe returns true WHEN collect THEN result is cached AND next collect skips probe`() = runTest {
         // GIVEN
-        every { featureToggles.isDynamicAddressesEnabled } returns true
         coEvery { getDerivedXpubUseCase(userWalletId, network) } returns XPUB
         coEvery {
             walletManagersFacade.probeHasFundsOnAdditionalAddresses(userWalletId, network, XPUB)
@@ -126,7 +106,6 @@ class DefaultDynamicAddressesRepositoryTest {
     @Test
     fun `GIVEN probe returns false WHEN collect twice THEN probe runs each time`() = runTest {
         // GIVEN
-        every { featureToggles.isDynamicAddressesEnabled } returns true
         coEvery { getDerivedXpubUseCase(userWalletId, network) } returns XPUB
         coEvery {
             walletManagersFacade.probeHasFundsOnAdditionalAddresses(userWalletId, network, XPUB)
@@ -145,7 +124,6 @@ class DefaultDynamicAddressesRepositoryTest {
     @Test
     fun `GIVEN cached true WHEN enable succeeds THEN cache is invalidated and next probe runs again`() = runTest {
         // GIVEN — populate cache with a positive probe
-        every { featureToggles.isDynamicAddressesEnabled } returns true
         coEvery { getDerivedXpubUseCase(userWalletId, network) } returns XPUB
         coEvery {
             walletManagersFacade.probeHasFundsOnAdditionalAddresses(userWalletId, network, XPUB)
@@ -165,7 +143,6 @@ class DefaultDynamicAddressesRepositoryTest {
     @Test
     fun `GIVEN cached true WHEN disable succeeds THEN cache is invalidated and next probe runs again`() = runTest {
         // GIVEN
-        every { featureToggles.isDynamicAddressesEnabled } returns true
         coEvery { getDerivedXpubUseCase(userWalletId, network) } returns XPUB
         coEvery {
             walletManagersFacade.probeHasFundsOnAdditionalAddresses(userWalletId, network, XPUB)
@@ -185,7 +162,6 @@ class DefaultDynamicAddressesRepositoryTest {
     @Test
     fun `GIVEN cache entry for one network WHEN invalidate other network THEN first entry is preserved`() = runTest {
         // GIVEN — cache populated for `network`
-        every { featureToggles.isDynamicAddressesEnabled } returns true
         coEvery { getDerivedXpubUseCase(userWalletId, network) } returns XPUB
         coEvery {
             walletManagersFacade.probeHasFundsOnAdditionalAddresses(userWalletId, network, XPUB)

@@ -91,7 +91,7 @@ private fun VirtualAccountMainContent(
         AccountIcon(
             name = TextReference.EMPTY,
             icon = AccountIconUM.Virtual,
-            size = AccountIconSize.RedesignedDefault,
+            size = AccountIconSize.Default,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
                 .padding(end = TangemTheme.dimens2.x2),
@@ -139,7 +139,7 @@ private fun VirtualAccountStateRow(
         AccountIcon(
             name = TextReference.EMPTY,
             icon = AccountIconUM.Virtual,
-            size = AccountIconSize.RedesignedDefault,
+            size = AccountIconSize.Default,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
                 .padding(end = TangemTheme.dimens2.x2),

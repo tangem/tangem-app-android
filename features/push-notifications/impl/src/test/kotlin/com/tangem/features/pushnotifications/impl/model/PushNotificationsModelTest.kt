@@ -1,17 +1,20 @@
 package com.tangem.features.pushnotifications.impl.model
 
+import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
+import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -21,6 +24,8 @@ import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeat
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,10 +45,10 @@ internal class PushNotificationsModelTest {
     private val analyticHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val notificationsRepository: NotificationsRepository = mockk(relaxed = true)
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles = mockk(relaxed = true)
-    private val setAllWalletPushNotificationPreferences: SetAllWalletPushNotificationPreferencesUseCase =
-        mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
-    private val accountsCRUDRepository: AccountsCRUDRepository = mockk(relaxed = true)
+    private val applyPushNotificationFirstActivation: ApplyPushNotificationFirstActivationUseCase = mockk()
+    private val markPushNotificationFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase =
+        mockk(relaxed = true)
     private val getDoubleAskVariantUseCase: GetPushNotificationsDoubleAskVariantUseCase = mockk()
     private val modelCallbacks: PushNotificationsModelCallbacks = mockk(relaxed = true)
 
@@ -162,6 +167,82 @@ internal class PushNotificationsModelTest {
         }
     }
 
+    @Test
+    fun `GIVEN settings enabled WHEN onAllowPermission THEN first activation applied for every wallet`() = runTest {
+        every { pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled } returns true
+        val w1 = UserWalletId("aa")
+        val w2 = UserWalletId("bb")
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(w1), wallet(w2))
+        coEvery { applyPushNotificationFirstActivation(any()) } returns Either.Right(Unit)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        model.onAllowPermission()
+        advanceUntilIdle()
+
+        coVerifyOrder {
+            applyPushNotificationFirstActivation(w1)
+            applyPushNotificationFirstActivation(w2)
+        }
+    }
+
+    @Test
+    fun `GIVEN activation fails for first wallet WHEN onAllowPermission THEN second wallet still attempted`() =
+        runTest {
+            every { pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled } returns true
+            val w1 = UserWalletId("aa")
+            val w2 = UserWalletId("bb")
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(w1), wallet(w2))
+            coEvery { applyPushNotificationFirstActivation(w1) } returns Either.Left(RuntimeException("404"))
+            coEvery { applyPushNotificationFirstActivation(w2) } returns Either.Right(Unit)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            model.onAllowPermission()
+            advanceUntilIdle()
+
+            coVerifyOrder {
+                applyPushNotificationFirstActivation(w1)
+                applyPushNotificationFirstActivation(w2)
+            }
+        }
+
+    @Test
+    fun `GIVEN settings enabled WHEN onDenyPermission THEN first-activation flag marked for all wallets`() = runTest {
+        every { pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled } returns true
+        val w1 = UserWalletId("aa")
+        val w2 = UserWalletId("bb")
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(w1), wallet(w2))
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        model.onDenyPermission()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { markPushNotificationFirstActivationDone(w1) }
+        coVerify(exactly = 1) { markPushNotificationFirstActivationDone(w2) }
+        // Deny only fixes the flag — it must not enable any category.
+        coVerify(exactly = 0) { applyPushNotificationFirstActivation(any()) }
+    }
+
+    @Test
+    fun `GIVEN settings disabled WHEN onAllowPermission THEN no first-activation writes`() = runTest {
+        every { pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled } returns false
+        // Non-empty wallet list + successful stubs, so the exactly=0 assertions actually protect the toggle gate.
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet(UserWalletId("aa")))
+        coEvery { applyPushNotificationFirstActivation(any()) } returns Either.Right(Unit)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        model.onAllowPermission()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { applyPushNotificationFirstActivation(any()) }
+        coVerify(exactly = 0) { markPushNotificationFirstActivationDone(any()) }
+    }
+
+    private fun wallet(id: UserWalletId): UserWallet = mockk { every { walletId } returns id }
+
     private fun createModel(
         testScope: TestScope,
         isBottomSheet: Boolean = false,
@@ -184,9 +265,9 @@ internal class PushNotificationsModelTest {
             analyticHandler = analyticHandler,
             notificationsRepository = notificationsRepository,
             pushNotificationSettingsFeatureToggles = pushNotificationSettingsFeatureToggles,
-            setAllWalletPushNotificationPreferences = setAllWalletPushNotificationPreferences,
             userWalletsListRepository = userWalletsListRepository,
-            accountsCRUDRepository = accountsCRUDRepository,
+            applyPushNotificationFirstActivation = applyPushNotificationFirstActivation,
+            markPushNotificationFirstActivationDone = markPushNotificationFirstActivationDone,
             getPushNotificationsDoubleAskVariantUseCase = getDoubleAskVariantUseCase,
         )
     }

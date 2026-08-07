@@ -17,7 +17,6 @@ import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.TransactionCardType
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.ui.StateBuilder
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import io.mockk.every
 import io.mockk.mockk
@@ -34,7 +33,6 @@ internal class StateBuilderUpdateSwapAmountTest {
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
-    private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk()
 
     private val appCurrency = AppCurrency.Default
@@ -58,7 +56,6 @@ internal class StateBuilderUpdateSwapAmountTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-            swapFeatureToggles = swapFeatureToggles,
             appRouter = appRouter,
         )
     }
