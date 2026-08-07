@@ -22,6 +22,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.hotwallet.common.ui.ChevronIcon
+import com.tangem.features.hotwallet.common.ui.LoaderIcon
 import com.tangem.features.hotwallet.common.ui.OptionBlock
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
@@ -82,6 +84,7 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 badge = {
                     state.recoveryPhraseOption?.let { Label(it) }
                 },
+                trailingContent = { ChevronIcon() },
                 onClick = state.onRecoveryPhraseClick,
                 enabled = true,
                 backgroundColor = TangemTheme.colors.background.primary,
@@ -90,16 +93,30 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 modifier = Modifier
                     .padding(top = 8.dp),
                 title = stringResourceSafe(R.string.hw_backup_google_drive_title),
-                description = stringResourceSafe(R.string.hw_backup_google_drive_description),
+                description = stringResourceSafe(
+                    R.string.hw_cloud_backup_cell_description,
+                    stringResourceSafe(R.string.hw_cloud_backup_service_name),
+                ),
                 badge = {
                     state.googleDriveOption?.let { Label(it) }
                 },
+                trailingContent = googleDriveTrailingContent(state.googleDriveStatus),
                 onClick = state.onGoogleDriveClick,
-                enabled = state.googleDriveStatus != BackupStatus.ComingSoon,
+                enabled = state.isGoogleDriveEnabled,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
             Spacer(modifier = Modifier.size(16.dp))
         }
+    }
+}
+
+private fun googleDriveTrailingContent(status: BackupStatus): (@Composable () -> Unit)? = when (status) {
+    BackupStatus.NetworkError, BackupStatus.ComingSoon -> null
+    BackupStatus.Loading -> {
+        { LoaderIcon() }
+    }
+    else -> {
+        { ChevronIcon() }
     }
 }
 
@@ -190,6 +207,54 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onGoogleDriveClick = {},
             onHardwareWalletClick = {},
             isBackedUp = false,
+        ),
+        WalletBackupUM(
+            hardwareWalletOption = null,
+            recoveryPhraseOption = LabelUM(
+                text = resourceReference(R.string.common_done),
+                style = LabelStyle.ACCENT,
+            ),
+            googleDriveOption = null,
+            googleDriveStatus = BackupStatus.Loading,
+            onBackClick = {},
+            onRecoveryPhraseClick = {},
+            onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
+            isBackedUp = true,
+        ),
+        WalletBackupUM(
+            hardwareWalletOption = null,
+            recoveryPhraseOption = LabelUM(
+                text = resourceReference(R.string.common_done),
+                style = LabelStyle.ACCENT,
+            ),
+            googleDriveOption = LabelUM(
+                text = resourceReference(R.string.hw_cloud_backup_status_action_required),
+                style = LabelStyle.ATTENTION,
+            ),
+            googleDriveStatus = BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.NoAccess),
+            onBackClick = {},
+            onRecoveryPhraseClick = {},
+            onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
+            isBackedUp = true,
+        ),
+        WalletBackupUM(
+            hardwareWalletOption = null,
+            recoveryPhraseOption = LabelUM(
+                text = resourceReference(R.string.common_done),
+                style = LabelStyle.ACCENT,
+            ),
+            googleDriveOption = LabelUM(
+                text = resourceReference(R.string.hw_cloud_backup_status_network_error),
+                style = LabelStyle.ATTENTION,
+            ),
+            googleDriveStatus = BackupStatus.NetworkError,
+            onBackClick = {},
+            onRecoveryPhraseClick = {},
+            onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
+            isBackedUp = true,
         ),
     ),
 )
