@@ -9,6 +9,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.domain.visa.model.TangemPayPushNotificationType
 import org.junit.jupiter.api.Test
 
@@ -231,5 +232,82 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isNull()
+    }
+
+    @Test
+    fun `GIVEN payload with link key holding a deeplink WHEN convert THEN should return link value`() {
+        // GIVEN
+        val payload = mapOf(WEBLINK_KEY to "tangem://markets")
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo("tangem://markets")
+    }
+
+    @Test
+    fun `GIVEN payload with link key holding a web url WHEN convert THEN should return link value`() {
+        // GIVEN
+        val payload = mapOf(WEBLINK_KEY to "https://tangem.com/pricing/")
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo("https://tangem.com/pricing/")
+    }
+
+    @Test
+    fun `GIVEN payload with both deeplink and link keys WHEN convert THEN deeplink should win`() {
+        // GIVEN
+        val payload = mapOf(
+            DEEPLINK_KEY to "tangem://main",
+            WEBLINK_KEY to "https://tangem.com/pricing/",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo("tangem://main")
+    }
+
+    @Test
+    fun `GIVEN payload with token keys and link key WHEN convert THEN token deeplink should win`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to "token",
+            NETWORK_ID_KEY to "ethereum",
+            TOKEN_ID_KEY to "0x123",
+            WALLET_ID_KEY to "wallet123",
+            WEBLINK_KEY to "https://tangem.com/pricing/",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "tangem://token?network_id=ethereum&token_id=0x123&type=token&user_wallet_id=wallet123",
+        )
+    }
+
+    @Test
+    fun `GIVEN payload with tangem pay keys and link key WHEN convert THEN pay-app-main deeplink should win`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to TangemPayPushNotificationType.CARD_READY.value,
+            CUSTOMER_WALLET_ID_KEY to "wallet123",
+            WEBLINK_KEY to "https://tangem.com/pricing/",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "tangem://pay-app-main?type=card_ready&customer_wallet_id=wallet123&link=https://tangem.com/pricing/",
+        )
     }
 }
