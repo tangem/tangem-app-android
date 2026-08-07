@@ -29,8 +29,9 @@ dependencies {
     //  once per-stream environment config is extracted (e.g. a TangemPayEnvironmentConfig slice).
     api(projects.core.datasource)
     api(projects.core.utils)
+    // Exposed in public store interface signatures (UserWalletId, TangemPayReissueCardFee, ...)
+    api(projects.domain.models)
     implementation(projects.core.local)
-    implementation(projects.domain.models)
 
     testImplementation(projects.test.core)
 }
