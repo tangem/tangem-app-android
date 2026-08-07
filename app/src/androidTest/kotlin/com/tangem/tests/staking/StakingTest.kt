@@ -5,6 +5,7 @@ import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.extensions.swipeVertical
@@ -339,9 +340,21 @@ class StakingTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onStakingSuccessScreen { closeButton.performClick() }
             }
+            // Re-enters the screen instead of only waiting: 'Staking details' has no pull-to-refresh, so if the
+            // staking balance was already cached before the scenario switched, nothing re-reads it and waiting
+            // alone never succeeds (green locally, red on CI). Leaving and opening it again reloads the data.
+            // Re-enters the screen between attempts instead of only waiting: 'Staking details' has no
+            // pull-to-refresh, so when the staking balance was cached before the scenario switched, nothing
+            // re-reads it and waiting alone never succeeds (green locally, red on CI). Re-opening reloads it.
             step("Assert 'Rewards' block shows no rewards to claim after claiming") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onStakingDetailsScreen { noRewardsToClaimText.assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 5_000) {
+                    var noRewards = false
+                    onStakingDetailsScreen { noRewards = noRewardsToClaimText.isDisplayedSafely() }
+                    if (!noRewards) {
+                        onSendScreen { closeButton.performClick() }
+                        onTokenDetailsScreen { stakingBlock.clickWithAssertion() }
+                        throw AssertionError("Rewards are still claimable — the staking balance has not reloaded")
+                    }
                 }
             }
         }
