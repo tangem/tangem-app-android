@@ -8,22 +8,19 @@ import com.tangem.utils.extensions.toHexString
 import javax.inject.Inject
 
 /**
- * CREATE2 (Solady ERC-1967 UUPS) derivation of the Polymarket deposit-wallet address on Polygon.
- * Algorithm confirmed byte-for-byte against Polymarket's reference derivation. Output is ERC-55 checksummed.
+ * CREATE2 (Solady ERC-1967 beacon) derivation of the Polymarket deposit-wallet address on Polygon.
+ * Pinned by known-answer vectors read off real factory deployments. Output is ERC-55 checksummed.
  */
 internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : PolymarketDepositWalletDeriver {
 
     override fun deriveDepositWallet(ownerAddress: String): String {
         val factory = PolymarketContracts.DW_FACTORY.hexBytes()
-        val walletId = ownerAddress.hexBytes().leftPad(WORD_SIZE)
-        val args = factory.leftPad(WORD_SIZE) + walletId
+        val args = factory.leftPad(WORD_SIZE) + walletIdBytes(ownerAddress)
         val salt = args.toKeccak()
 
-        val initCode = UUPS_INIT_PREFIX +
-            PolymarketContracts.DW_IMPLEMENTATION.hexBytes() +
-            UUPS_PROXY_SUFFIX +
-            PolymarketContracts.UUPS_INIT_CONST2.hexBytes() +
-            PolymarketContracts.UUPS_INIT_CONST1.hexBytes() +
+        val initCode = PolymarketContracts.DW_BEACON_INIT_PREFIX.hexBytes() +
+            PolymarketContracts.DW_BEACON.hexBytes() +
+            PolymarketContracts.DW_BEACON_INIT_SUFFIX.hexBytes() +
             args
         val initCodeHash = initCode.toKeccak()
 
@@ -31,15 +28,26 @@ internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : Pol
         return create2Hash.copyOfRange(WORD_SIZE - ADDRESS_SIZE, WORD_SIZE).toErc55Address()
     }
 
-    private fun String.hexBytes(): ByteArray = removePrefix("0x").hexToBytes()
+    override fun deriveWalletId(ownerAddress: String): String =
+        HEX_PREFIX + walletIdBytes(ownerAddress).toHexString().lowercase()
+
+    private fun walletIdBytes(ownerAddress: String): ByteArray = ownerAddress.hexBytes().leftPad(WORD_SIZE)
+
+    private fun String.hexBytes(): ByteArray = removePrefix(HEX_PREFIX).hexToBytes()
 
     private fun ByteArray.leftPad(size: Int): ByteArray =
         if (this.size >= size) this else ByteArray(size - this.size) + this
 
+    /**
+     * Written here rather than reused: the Blockchain SDK's checksum comes from kethereum, which it declares
+     * as `implementation`, so `withERC55Checksum` never reaches this classpath. The one public entry point,
+     * `EthereumAddressService.makeAddress`, starts from a public key, while a CREATE2 result is already the
+     * twenty address bytes. Pinned by the known-answer vectors, whose expected values are checksummed.
+     */
     private fun ByteArray.toErc55Address(): String {
         val lower = toHexString().lowercase()
         val hash = lower.toByteArray().toKeccak().toHexString().lowercase()
-        val out = StringBuilder("0x")
+        val out = StringBuilder(HEX_PREFIX)
         lower.forEachIndexed { i, c ->
             val shouldUppercase = c in 'a'..'f' && Character.digit(hash[i], HEX_RADIX) >= CHECKSUM_THRESHOLD
             out.append(if (shouldUppercase) c.uppercaseChar() else c)
@@ -52,10 +60,8 @@ internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : Pol
         const val ADDRESS_SIZE = 20
         const val CHECKSUM_THRESHOLD = 8
         const val HEX_RADIX = 16
+        const val HEX_PREFIX = "0x"
 
-        // prefix10 = 0x61003d3d8160233d3973 + (argsLen << 56); argsLen is invariant 64 → this constant.
-        val UUPS_INIT_PREFIX = "61007d3d8160233d3973".hexToBytes()
-        val UUPS_PROXY_SUFFIX = "6009".hexToBytes()
         val CREATE2_FF = byteArrayOf(0xff.toByte())
     }
 }
