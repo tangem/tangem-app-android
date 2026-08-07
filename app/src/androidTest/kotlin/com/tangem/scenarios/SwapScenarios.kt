@@ -650,7 +650,14 @@ fun BaseTestCase.switchSwapMode(mode: String) {
 
 
 
-private const val PROVIDER_SHEET_OPEN_ATTEMPTS = 3
+private const val PROVIDER_SHEET_OPEN_ATTEMPTS = 5
+
+/**
+ * Per attempt, not for the whole scenario: the sheet is reopened between attempts, so waiting the full
+ * default timeout on every one of them would burn minutes before the last try. A DEX quote that has not
+ * arrived within this window will not arrive by staring at the same open sheet either.
+ */
+private const val PROVIDER_FILTERS_WAIT_MS = 10_000L
 
 /**
  * Opens the providers bottom sheet, reopening it until the ALL/CEX/DEX segments render.
@@ -666,7 +673,9 @@ fun BaseTestCase.openProviderSheetWithTypeFilter(allFilter: String) {
             onSwapTokenScreen { providersBlock.performClick() }
         }
         val filtersRendered = runCatching {
-            awaitSuccess { onChooseProviderBottomSheet { filterButton(allFilter).assertIsDisplayed() } }
+            awaitSuccess(timeoutMillis = PROVIDER_FILTERS_WAIT_MS) {
+                onChooseProviderBottomSheet { filterButton(allFilter).assertIsDisplayed() }
+            }
         }.isSuccess
         if (filtersRendered) return
 
