@@ -16,7 +16,6 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
 import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
-import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -51,7 +50,7 @@ internal class PolymarketOnboardingModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("011")
-    private val params = PolymarketComponent.Params(userWalletId = userWalletId)
+    private val params = PolymarketOnboardingParams(userWalletId = userWalletId)
 
     @BeforeEach
     fun resetMocks() {
@@ -90,7 +89,9 @@ internal class PolymarketOnboardingModelTest {
         // Assert
         verify(exactly = 1) {
             router.replaceAll(
-                routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING)),
+                routes = arrayOf(
+                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+                ),
                 onComplete = any(),
             )
         }
@@ -110,7 +111,9 @@ internal class PolymarketOnboardingModelTest {
         // Assert
         verify(exactly = 1) {
             router.replaceAll(
-                routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.READ_ONLY)),
+                routes = arrayOf(
+                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.READ_ONLY, userWalletId = userWalletId),
+                ),
                 onComplete = any(),
             )
         }
@@ -169,7 +172,12 @@ internal class PolymarketOnboardingModelTest {
             // Assert
             verify(exactly = 1) {
                 router.replaceAll(
-                    routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.READ_ONLY)),
+                    routes = arrayOf(
+                        PolymarketRoute.Main(
+                            accessMode = PolymarketAccessMode.READ_ONLY,
+                            userWalletId = userWalletId,
+                        ),
+                    ),
                     onComplete = any(),
                 )
             }
@@ -194,7 +202,9 @@ internal class PolymarketOnboardingModelTest {
         coVerify(exactly = 2) { resolvePolymarketEntryUseCase(userWalletId) }
         verify(exactly = 1) {
             router.replaceAll(
-                routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING)),
+                routes = arrayOf(
+                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+                ),
                 onComplete = any(),
             )
         }
@@ -231,7 +241,12 @@ internal class PolymarketOnboardingModelTest {
             assertThat(model.uiState.value.overlay).isNull()
             verify(exactly = 1) {
                 router.replaceAll(
-                    routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING)),
+                    routes = arrayOf(
+                        PolymarketRoute.Main(
+                            accessMode = PolymarketAccessMode.TRADING,
+                            userWalletId = userWalletId,
+                        ),
+                    ),
                     onComplete = any(),
                 )
             }
@@ -366,7 +381,9 @@ internal class PolymarketOnboardingModelTest {
 
         // Assert
         verify(exactly = 1) {
-            router.replaceAll(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING))
+            router.replaceAll(
+                PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+            )
         }
         model.onDestroy()
     }
