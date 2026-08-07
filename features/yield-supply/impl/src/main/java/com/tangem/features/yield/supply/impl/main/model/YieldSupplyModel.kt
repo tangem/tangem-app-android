@@ -31,7 +31,6 @@ import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
@@ -68,7 +67,6 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
     private val getBoostedApyUseCase: GetBoostedApyUseCase,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyClickIntents {
 
@@ -160,9 +158,8 @@ internal class YieldSupplyModel @Inject constructor(
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
             .onRight { tokenStatus ->
-                val isPromoEnabled = yieldSupplyFeatureToggles.isYieldPromoEnabled &&
-                    isYieldBoostPromoEnabledForTokenUseCase(params.userWalletId, cryptoCurrencyToken)
-                        .getOrElse { false }
+                val isPromoEnabled = isYieldBoostPromoEnabledForTokenUseCase(params.userWalletId, cryptoCurrencyToken)
+                    .getOrElse { false }
                 val boostedApy = if (isPromoEnabled) getBoostedApyUseCase(tokenStatus.apy) else null
                 uiStateLegacy.update(
                     YieldSupplyTokenStatusSuccessTransformer(

@@ -11,13 +11,12 @@ android {
 
 dependencies {
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-
-    /** Common */
-    implementation(projects.common.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /** Domain */
-    implementation(projects.domain.models)
+    api(projects.domain.models)
 
+    /** Runtime */
+    runtimeOnly(deps.room.runtime)
 }

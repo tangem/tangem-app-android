@@ -42,6 +42,7 @@ internal fun TangemPayMainBlockItem(state: TangemPayMainUM, isBalanceHidden: Boo
     when (state) {
         is TangemPayMainUM.Empty -> Unit
         is TangemPayMainUM.Loading -> TangemPayMainLoadingItem(modifier)
+        is TangemPayMainUM.SelectPlan -> TangemPayMainSelectPlanItem(state, modifier)
         is TangemPayMainUM.UnderReview -> TangemPayMainUnderReviewItem(state, modifier)
         is TangemPayMainUM.IssuingCard -> TangemPayMainIssuingCardItem(state, modifier)
         is TangemPayMainUM.FailedToIssue -> TangemPayMainFailedIssueItem(state, modifier)
@@ -188,6 +189,25 @@ private fun TangemPayMainTempUnavailableItem(modifier: Modifier = Modifier) {
             subtitle = resourceReference(R.string.tangempay_payment_account),
             caption = TextReference.Str(DASH_SIGN),
             subtitleColor = TangemTheme.colors.text.tertiary,
+            captionColor = TangemTheme.colors.text.tertiary,
+            iconResWebp = R.drawable.img_visa_36,
+        )
+    }
+}
+
+@Composable
+private fun TangemPayMainSelectPlanItem(state: TangemPayMainUM.SelectPlan, modifier: Modifier = Modifier) {
+    BlockCard(
+        modifier = modifier
+            .clip(RoundedCornerShape(size = TangemTheme.dimens.radius14))
+            .background(TangemTheme.colors.background.primary),
+        onClick = state.onClick,
+    ) {
+        InputRowImageBase(
+            modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+            subtitle = resourceReference(R.string.tangempay_payment_account),
+            caption = resourceReference(R.string.tangempay_main_select_plan),
+            subtitleColor = TangemTheme.colors.text.primary1,
             captionColor = TangemTheme.colors.text.tertiary,
             iconResWebp = R.drawable.img_visa_36,
         )
@@ -344,6 +364,7 @@ private class TangemPayMainUMPreviewParameterProvider : CollectionPreviewParamet
         TangemPayMainUM.ExposedDevice,
         TangemPayMainUM.FailedToIssue(onClick = {}),
         TangemPayMainUM.UnderReview(subtitle = resourceReference(R.string.tangempay_kyc_in_progress), onClick = {}),
+        TangemPayMainUM.SelectPlan(onClick = {}),
         TangemPayMainUM.IssuingCard(onClick = {}),
         TangemPayMainUM.Content(
             subtitle = TextReference.Str("*1234"),

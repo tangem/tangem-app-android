@@ -24,7 +24,7 @@ internal class OrganizeAccountItemConverter(
             headerRowUM = TangemHeaderRowUM(
                 id = value.accountId.value,
                 startIconUM = TangemIconUM.Currency(
-                    currencyIconState = AccountIconItemStateConverter(size = AccountIconSize.RedesignExtraSmall)
+                    currencyIconState = AccountIconItemStateConverter(size = AccountIconSize.ExtraSmall)
                         .convert(value.account),
                 ),
                 title = value.account.accountName.toUM().value,
