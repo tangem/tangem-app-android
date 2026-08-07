@@ -18,16 +18,26 @@ internal class PolymarketApprovalCallsTest {
     }
 
     @Test
-    fun `GIVEN canonical batch WHEN build THEN 6 calls in documented order`() {
+    fun `GIVEN the batch WHEN build THEN collateral grants precede the share grants`() {
         // Act
         val calls = PolymarketApprovalCalls.build()
 
         // Assert
         assertThat(calls).hasSize(6)
         assertThat(calls.map { it.target }).containsExactly(
-            collateral, conditionalTokens, collateral, conditionalTokens, collateral, conditionalTokens,
+            collateral, collateral, collateral,
+            conditionalTokens, conditionalTokens, conditionalTokens,
         ).inOrder()
         assertThat(calls.map { it.value }.toSet()).containsExactly("0")
+    }
+
+    @Test
+    fun `GIVEN the deprecated CLOB v1 neg-risk adapter WHEN build THEN it is not a spender`() {
+        // Act
+        val calls = PolymarketApprovalCalls.build()
+
+        // Assert
+        assertThat(calls.none { it.data.contains(DEPRECATED_NEG_RISK_ADAPTER, ignoreCase = true) }).isTrue()
     }
 
     @ParameterizedTest
@@ -43,18 +53,14 @@ internal class PolymarketApprovalCallsTest {
     }
 
     @Test
-    fun `GIVEN CREATE2 constants WHEN read THEN equal the Polymarket reference values`() {
+    fun `GIVEN the deposit-wallet factory WHEN read THEN equals the address Polymarket publishes`() {
         // Assert
         assertThat(PolymarketContracts.DW_FACTORY).isEqualTo("0x00000000000Fb5C9ADea0298D729A0CB3823Cc07")
-        assertThat(PolymarketContracts.DW_IMPLEMENTATION).isEqualTo("0x58CA52ebe0DadfdF531Cde7062e76746de4Db1eB")
-        assertThat(PolymarketContracts.UUPS_INIT_CONST1)
-            .isEqualTo("0xcc3735a920a3ca505d382bbc545af43d6000803e6038573d6000fd5b3d6000f3")
-        assertThat(PolymarketContracts.UUPS_INIT_CONST2)
-            .isEqualTo("0x5155f3363d3d373d3d363d7f360894a13ba1a3210667c828492db98dca3e2076")
     }
 
     internal data class CallModel(val index: Int, val target: String, val data: String)
 
+    /** The set the backend's approvals validator accepts, spelled out rather than derived from the code. */
     private fun provideTestModels() = listOf(
         CallModel(
             index = 0, target = collateral,
@@ -63,34 +69,38 @@ internal class PolymarketApprovalCallsTest {
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 1, target = conditionalTokens,
-            data = "0xa22cb465" +
-                "000000000000000000000000e111180000d2663c0091e4f400237545b87b996b" +
-                "0000000000000000000000000000000000000000000000000000000000000001",
+            index = 1, target = collateral,
+            data = "0x095ea7b3" +
+                "000000000000000000000000e2222d279d744050d28e00520010520000310f59" +
+                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
             index = 2, target = collateral,
             data = "0x095ea7b3" +
-                "000000000000000000000000e2222d279d744050d28e00520010520000310f59" +
+                "000000000000000000000000ada2005600dec949baf300f4c6120000bdb6eaab" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
             index = 3, target = conditionalTokens,
             data = "0xa22cb465" +
+                "000000000000000000000000e111180000d2663c0091e4f400237545b87b996b" +
+                "0000000000000000000000000000000000000000000000000000000000000001",
+        ),
+        CallModel(
+            index = 4, target = conditionalTokens,
+            data = "0xa22cb465" +
                 "000000000000000000000000e2222d279d744050d28e00520010520000310f59" +
                 "0000000000000000000000000000000000000000000000000000000000000001",
         ),
         CallModel(
-            index = 4, target = collateral,
-            data = "0x095ea7b3" +
-                "000000000000000000000000d91e80cf2e7be2e162c6513ced06f1dd0da35296" +
-                "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-        ),
-        CallModel(
             index = 5, target = conditionalTokens,
             data = "0xa22cb465" +
-                "000000000000000000000000d91e80cf2e7be2e162c6513ced06f1dd0da35296" +
+                "000000000000000000000000ada2005600dec949baf300f4c6120000bdb6eaab" +
                 "0000000000000000000000000000000000000000000000000000000000000001",
         ),
     )
+
+    private companion object {
+        const val DEPRECATED_NEG_RISK_ADAPTER = "d91e80cf2e7be2e162c6513ced06f1dd0da35296"
+    }
 }
