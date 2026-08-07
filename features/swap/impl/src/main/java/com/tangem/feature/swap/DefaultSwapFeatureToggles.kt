@@ -9,11 +9,6 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : SwapFeatureToggles {
 
-    override val isYieldDexTransferEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED,
-        )
-
     override val isTronDexSwapEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_16080_TRON_DEX_SWAP_ENABLED,
