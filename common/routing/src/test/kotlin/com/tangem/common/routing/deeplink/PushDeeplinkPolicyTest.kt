@@ -40,7 +40,9 @@ internal class PushDeeplinkPolicyTest {
         Model(scheme = "tangem", host = "survey", expected = true),
         Model(scheme = "tangem", host = "pay-app-main", expected = true),
         Model(scheme = "https", host = "tangem.com", expected = true),
-        // Allowed — unknown / missing hosts are not routable to any handler, so they are harmless
+        // Allowed — this policy only denies the sensitive routes above. An unknown host is not harmless on its
+        // own any more: for a push it now reaches DeepLinkFactory's web fallback, where the host allowlist
+        // (ExternalUrlValidator + APPSFLYER_ONELINK_HOSTS) is what stops it from opening in a browser.
         Model(scheme = "https", host = "evil.com", expected = true),
         Model(scheme = "tangem", host = "unknown_route", expected = true),
         Model(scheme = "tangem", host = null, expected = true),
