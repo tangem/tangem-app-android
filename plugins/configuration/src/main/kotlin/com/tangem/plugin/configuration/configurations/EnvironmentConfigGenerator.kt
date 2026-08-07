@@ -76,7 +76,6 @@ object EnvironmentConfigGenerator {
                     value.isString -> {
                         val stringValue = value.content
                         val propertySpec = PropertySpec.builder(propertyName, STRING)
-                            .addModifiers(KModifier.CONST)
                             .initializer("%S", stringValue)
 
                         builder.addProperty(propertySpec.build())
