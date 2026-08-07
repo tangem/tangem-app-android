@@ -63,6 +63,7 @@ fun MessageBottomSheetV2(state: MessageBottomSheetUM, onDismissRequest: () -> Un
                 type = TangemTopBarType.BottomSheet,
                 endContent = {
                     TangemButton(
+                        modifier = Modifier.testTag(WarningBottomSheetTestTags.CLOSE_BUTTON),
                         iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
                         onClick = stateWithOnDismiss.onDismissRequest,
                         size = TangemButton.Size.X11,

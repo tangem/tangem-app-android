@@ -243,7 +243,7 @@ class UpdateAddFundsTransformerTest {
         // THEN
         verifyOrder {
             onActionDispatched.invoke()
-            clickIntents.onSwapToClick(ScenarioUnavailabilityReason.None)
+            clickIntents.onSwapClick(ScenarioUnavailabilityReason.None)
         }
     }
 
