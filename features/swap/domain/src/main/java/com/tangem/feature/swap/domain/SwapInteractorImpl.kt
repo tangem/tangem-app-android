@@ -1,14 +1,12 @@
 package com.tangem.feature.swap.domain
 
 import android.util.Base64
-import androidx.annotation.VisibleForTesting
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
-import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -167,58 +165,6 @@ internal class SwapInteractorImpl @Inject constructor(
         )
         if (isAllowed) yieldSwapAllowedRouters.add(key)
         return isAllowed
-    }
-
-    /**
-     * The provider's plain ERC-20 transfer to be performed by the yield module via `send()` instead of
-     * being wrapped into its `swap()`, or `null` when that substitution does not apply: the toggle is
-     * off, a non-yield swap, a coin, a flow with no provider call data, or genuine swap call data.
-     *
-     * A decodable transfer can only mean the send path here, because [isYieldPayloadConsistent] has
-     * already refused every payload where the destination and the call data disagree — see the gate in
-     * [loadDexSwapDataNoFee], the single place a payload enters the quote state.
-     */
-    private fun resolveSendInsteadOfYieldSwap(
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        swapData: SwapDataModel?,
-    ): TransferERC20TokenCallData? {
-        if (!swapFeatureToggles.isYieldDexTransferEnabled) return null
-        if (fromSwapCurrencyStatus.currency !is CryptoCurrency.Token) return null
-        if (!fromSwapCurrencyStatus.isYieldSwapActive) return null
-        val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return null
-
-        return TransferERC20TokenCallData(dexTransaction.txData)
-    }
-
-    /**
-     * Whether the transaction destination and the shape of its call data agree. When they do not, the
-     * payload is executable as neither a swap nor a module send, so the provider is skipped. Five
-     * outcomes:
-     *
-     *  - not the token, selector is not `transfer` → swap, the provider's call data is signed as-is;
-     *  - the token, call data decodes as `transfer` → send, the yield module transfers its own tokens;
-     *  - the token, selector is not `transfer` → hidden, an unknown method invoked on the token contract;
-     *  - not the token, selector is `transfer` → hidden, a transfer aimed at something else;
-     *  - the token, selector is `transfer`, arguments are not 64 bytes → hidden, the decoder refuses them.
-     */
-    @VisibleForTesting
-    internal fun isYieldPayloadConsistent(
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        swapData: SwapDataModel?,
-    ): Boolean {
-        if (!swapFeatureToggles.isYieldDexTransferEnabled) return true
-        val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return true
-        if (!fromSwapCurrencyStatus.isYieldSwapActive) return true
-        val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return true
-
-        return if (dexTransaction.txTo.equals(token.contractAddress, ignoreCase = true)) {
-            TransferERC20TokenCallData(dexTransaction.txData) != null
-        } else {
-            !dexTransaction.txData
-                .removePrefix(HEX_PREFIX)
-                .removePrefix(HEX_PREFIX.uppercase())
-                .startsWith(TRANSFER_METHOD_ID, ignoreCase = true)
-        }
     }
 
     override suspend fun getPair(
@@ -478,9 +424,8 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             isAllowanceSatisfied && maybeQuote.isRight()
         }
-
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
-            loadDexSwapDataNoFee(
+            provider to loadDexSwapDataNoFee(
                 provider = provider,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -489,7 +434,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allowanceInfo = allowanceInfo,
                 spenderAddress = spenderAddress,
                 dexRouterSpenderAddress = dexRouterSpenderAddress,
-            )?.let { provider to it }
+            )
         } else {
             val quoteBalanceStatus = if (isBalanceWithoutFeeEnough) {
                 SwapBalanceStatus.Pending // fee not resolved yet
@@ -532,7 +477,7 @@ internal class SwapInteractorImpl @Inject constructor(
         provider: SwapProvider,
         amount: SwapAmount,
         expressOperationType: ExpressOperationType,
-    ): Pair<SwapProvider, SwapState>? {
+    ): Pair<SwapProvider, SwapState> {
         val maybeQuotes = repository.findBestQuote(
             userWallet = fromSwapCurrencyStatus.userWallet,
             fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
@@ -561,7 +506,7 @@ internal class SwapInteractorImpl @Inject constructor(
             SwapBalanceStatus.InsufficientAmount
         }
         return if (quoteBalanceStatus != SwapBalanceStatus.InsufficientAmount && maybeQuotes.isRight()) {
-            loadDexSwapDataNoFee(
+            provider to loadDexSwapDataNoFee(
                 provider = provider,
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -570,7 +515,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allowanceInfo = null,
                 spenderAddress = null,
                 dexRouterSpenderAddress = null,
-            )?.let { provider to it }
+            )
         } else {
             provider to getQuotesState(
                 provider = provider,
@@ -763,22 +708,22 @@ internal class SwapInteractorImpl @Inject constructor(
             return SwapTransactionState.DemoMode
         }
 
-        val yieldSendData = resolveSendInsteadOfYieldSwap(fromSwapCurrencyStatus, swapData)
-        val resolvedExecutionFlow = resolveSwapDataFlow(swapProvider, swapData, yieldSendData)
-
-        return when (resolvedExecutionFlow) {
-            ResolvedFlow.CexLike -> onSwapCexLike(
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                toSwapCurrencyStatus = toSwapCurrencyStatus,
-                swapData = swapData,
-                yieldSwapData = yieldSendData,
-                amountToSwap = amountToSwap,
-                fee = fee,
-                balanceStatus = balanceStatus,
-                swapProvider = swapProvider,
-                expressOperationType = expressOperationType,
-                isTangemPayWithdrawal = isTangemPayWithdrawal,
-            )
+        return when (resolveSwapDataFlow(swapProvider, swapData)) {
+            ResolvedFlow.CexLike -> {
+                val amountDecimal = toBigDecimalOrNull(amountToSwap)
+                val amount = SwapAmount(requireNotNull(amountDecimal), fromSwapCurrencyStatus.currency.decimals)
+                val amountToSwapWithFee = (balanceStatus as? SwapBalanceStatus.FeeAdjustedAmount)?.adjustedAmount
+                    ?: amount
+                onSwapCex(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    amount = amountToSwapWithFee,
+                    swapFee = fee,
+                    swapProvider = swapProvider,
+                    expressOperationType = expressOperationType,
+                    isTangemPayWithdrawal = isTangemPayWithdrawal,
+                )
+            }
             ResolvedFlow.DexLike -> onSwapDexLike(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -823,7 +768,6 @@ internal class SwapInteractorImpl @Inject constructor(
             )
             else -> {
                 if (fee == null) return SwapTransactionState.Error.UnknownError
-
                 onSwapDex(
                     provider = swapProvider,
                     swapData = swapData,
@@ -978,90 +922,6 @@ internal class SwapInteractorImpl @Inject constructor(
             }
             is TransactionFee.Single -> transactionFee.normal
         }
-    }
-
-    @Suppress("LongParameterList", "CanBeNonNullable")
-    private suspend fun onSwapCexLike(
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        toSwapCurrencyStatus: SwapCurrencyStatus,
-        swapData: SwapDataModel?,
-        yieldSwapData: TransferERC20TokenCallData?,
-        amountToSwap: String,
-        fee: SwapFee?,
-        balanceStatus: SwapBalanceStatus,
-        swapProvider: SwapProvider,
-        expressOperationType: ExpressOperationType,
-        isTangemPayWithdrawal: Boolean,
-    ): SwapTransactionState {
-        val amountDecimal = toBigDecimalOrNull(amountToSwap)
-        val amount = SwapAmount(requireNotNull(amountDecimal), fromSwapCurrencyStatus.currency.decimals)
-
-        if (yieldSwapData != null) {
-            return onSwapYieldModuleSend(
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                toSwapCurrencyStatus = toSwapCurrencyStatus,
-                swapProvider = swapProvider,
-                swapData = requireNotNull(swapData),
-                yieldSwapData = yieldSwapData,
-                amount = amount,
-                fee = fee,
-            )
-        }
-
-        val amountToSwapWithFee = (balanceStatus as? SwapBalanceStatus.FeeAdjustedAmount)?.adjustedAmount
-            ?: amount
-
-        return onSwapCex(
-            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-            toSwapCurrencyStatus = toSwapCurrencyStatus,
-            amount = amountToSwapWithFee,
-            swapFee = fee,
-            swapProvider = swapProvider,
-            expressOperationType = expressOperationType,
-            isTangemPayWithdrawal = isTangemPayWithdrawal,
-        )
-    }
-
-    private suspend fun onSwapYieldModuleSend(
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        toSwapCurrencyStatus: SwapCurrencyStatus,
-        swapProvider: SwapProvider,
-        swapData: SwapDataModel,
-        yieldSwapData: TransferERC20TokenCallData,
-        amount: SwapAmount,
-        fee: SwapFee?,
-    ): SwapTransactionState {
-        if (fee == null) return SwapTransactionState.Error.UnknownError
-        val fromCurrency = fromSwapCurrencyStatus.currency
-
-        val callDataAmount = yieldSwapData.amount.value ?: return SwapTransactionState.Error.UnknownError
-        val expectedAmount = amount.value.movePointRight(fromCurrency.decimals).toBigInteger()
-
-        if (callDataAmount.toBigInteger() != expectedAmount) return SwapTransactionState.Error.UnknownError
-
-        val txData = createTransferTransactionUseCase(
-            amount = callDataAmount
-                .movePointLeft(fromCurrency.decimals)
-                .convertToSdkAmount(fromSwapCurrencyStatus.status),
-            fee = fee.fee,
-            memo = null,
-            destination = yieldSwapData.destination,
-            userWalletId = fromSwapCurrencyStatus.userWalletId,
-            network = fromCurrency.network,
-        ).getOrElse { error ->
-            TangemLogger.e("Failed to create yield module send tx data", error)
-            return SwapTransactionState.Error.UnknownError
-        }
-
-        return handleSwapResult(
-            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-            toSwapCurrencyStatus = toSwapCurrencyStatus,
-            provider = swapProvider,
-            swapData = swapData,
-            amount = amount,
-            txData = txData,
-            payInAddress = getPayoutAddress(txData),
-        )
     }
 
     /**
@@ -1461,11 +1321,7 @@ internal class SwapInteractorImpl @Inject constructor(
         if (amount.value.signum() == 0) {
             raise(GetFeeError.UnknownError)
         }
-
-        val yieldSendData = resolveSendInsteadOfYieldSwap(fromStatus, swapData)
-        val resolvedFlow = resolveQuoteFlow(quotesLoadedState.swapProvider, txType, yieldSendData)
-
-        return when (resolvedFlow) {
+        return when (resolveQuoteFlow(quotesLoadedState.swapProvider, txType)) {
             ResolvedFlow.DexLike -> loadDexSwapFee(
                 fromStatus = fromStatus,
                 swapData = swapData,
@@ -2132,7 +1988,7 @@ internal class SwapInteractorImpl @Inject constructor(
         allowanceInfo: AllowanceInfo?,
         spenderAddress: String?,
         dexRouterSpenderAddress: String?,
-    ): SwapState? {
+    ): SwapState {
         val fromNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
         val dexFromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
         val toNetworkAddress = toSwapCurrencyStatus.status.value.networkAddress
@@ -2161,10 +2017,6 @@ internal class SwapInteractorImpl @Inject constructor(
             }
         }.fold(
             ifRight = { swapData ->
-                if (!isYieldPayloadConsistent(fromSwapCurrencyStatus, swapData)) {
-                    return@fold null
-                }
-
                 val preparedSwapConfigState = PreparedSwapConfigState(
                     balanceStatus = SwapBalanceStatus.Pending,
                     hasOutgoingTransaction = hasOutgoingTransaction(fromSwapCurrencyStatus.status),
@@ -2682,43 +2534,31 @@ internal class SwapInteractorImpl @Inject constructor(
      * `provider.type` is the primary gate. Inside the DEX/DEX_BRIDGE branch a quote with
      * `txType=SEND` switches to the CEX-style path; other values keep the DEX path.
      */
-    private fun resolveQuoteFlow(
-        provider: SwapProvider,
-        quoteTxType: ExpressTxType?,
-        sendInsteadOfYieldSwap: TransferERC20TokenCallData? = null,
-    ): ResolvedFlow = when (provider.type) {
-        ExchangeProviderType.CEX -> ResolvedFlow.CexLike
-        ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> when {
-            // The module transfers its own tokens, so the fee is priced like a CEX pay-in.
-            sendInsteadOfYieldSwap != null -> ResolvedFlow.CexLike
-            quoteTxType == ExpressTxType.SEND -> ResolvedFlow.CexLike
-            else -> ResolvedFlow.DexLike
+    private fun resolveQuoteFlow(provider: SwapProvider, quoteTxType: ExpressTxType?): ResolvedFlow =
+        when (provider.type) {
+            ExchangeProviderType.CEX -> ResolvedFlow.CexLike
+            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> when (quoteTxType) {
+                ExpressTxType.SEND -> ResolvedFlow.CexLike
+                ExpressTxType.SWAP, null -> ResolvedFlow.DexLike
+            }
         }
-    }
 
     /**
      * Execution-stage counterpart of [resolveQuoteFlow]. For DEX/DEX_BRIDGE the shape is decided by
      * `swapData.transaction`: a DEX transaction stays on the DEX path, a CEX transaction or null
      * routes to the CEX path (null means the quote already re-routed and didn't pre-build swapData).
      */
-    private fun resolveSwapDataFlow(
-        swapProvider: SwapProvider,
-        swapData: SwapDataModel?,
-        sendInsteadOfYieldSwap: TransferERC20TokenCallData?,
-    ): ResolvedFlow = when (swapProvider.type) {
-        ExchangeProviderType.CEX -> ResolvedFlow.CexLike
-        ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> when {
-            // The module transfers its own tokens, so what gets broadcast is a CEX-like pay-in.
-            sendInsteadOfYieldSwap != null -> ResolvedFlow.CexLike
-            swapData?.transaction is ExpressTransactionModel.DEX -> ResolvedFlow.DexLike
-            else -> ResolvedFlow.CexLike
+    private fun resolveSwapDataFlow(swapProvider: SwapProvider, swapData: SwapDataModel?): ResolvedFlow =
+        when (swapProvider.type) {
+            ExchangeProviderType.CEX -> ResolvedFlow.CexLike
+            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> when (swapData?.transaction) {
+                is ExpressTransactionModel.DEX -> ResolvedFlow.DexLike
+                is ExpressTransactionModel.CEX, null -> ResolvedFlow.CexLike
+            }
         }
-    }
 
     companion object {
         private const val INCREASE_GAS_PRICE_FOR_INTEGRATED_APPROVAL = 115 // 15% increase
-
-        private val TRANSFER_METHOD_ID = TransferERC20TokenCallData.METHOD_ID.removePrefix(HEX_PREFIX)
 
         private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
