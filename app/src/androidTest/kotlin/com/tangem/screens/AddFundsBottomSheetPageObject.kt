@@ -51,6 +51,11 @@ class AddFundsBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractions
         useUnmergedTree = true
     }
 
+    fun titleWithTokenName(tokenTitle: String): KNode = child {
+        hasText(getResourceString(R.string.get_token_title, tokenTitle))
+        useUnmergedTree = true
+    }
+
     fun userTokenWithTitle(tokenTitle: String): KNode = child {
         hasTestTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
         hasAnyDescendant(withTestTag(TokenElementsTestTags.TOKEN_TITLE))

@@ -10,15 +10,17 @@ android {
 
 
 dependencies {
-    /** Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.blockaid.models)
 
-    /** Tangem SDK */
-    implementation(tangemDeps.blockchain)
+    // region Other libraries
+    api(deps.arrow.core)
+    api(tangemDeps.blockchain)
+    // endregion
 
+    // region Domain
+    api(projects.domain.models)
+    // endregion
 
-    /** Other */
-    implementation(deps.moshi.adapters)
+    // region Domain models
+    api(projects.domain.blockaid.models)
+    // endregion
 }

@@ -19,9 +19,9 @@ import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
-import com.tangem.features.send.api.entity.CustomFeeFieldUM
-import com.tangem.features.send.api.entity.FeeItem
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.CustomFeeFieldUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -54,6 +54,42 @@ internal class SwapTransferNotificationsFactoryTest {
         )
 
         assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN isHighNetworkFee true WHEN getNotifications THEN HighNetworkFee warning is added`() = runTest {
+        // Arrange
+        val transferState = buildTransferState()
+
+        // Act
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeSelectorUM = null,
+            feeCryptoCurrencyStatus = null,
+            actions = actions,
+            isHighNetworkFee = true,
+        )
+
+        // Assert
+        assertThat(result).contains(NotificationUM.Warning.HighNetworkFee)
+    }
+
+    @Test
+    fun `GIVEN isHighNetworkFee false WHEN getNotifications THEN HighNetworkFee warning is absent`() = runTest {
+        // Arrange
+        val transferState = buildTransferState()
+
+        // Act
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeSelectorUM = null,
+            feeCryptoCurrencyStatus = null,
+            actions = actions,
+            isHighNetworkFee = false,
+        )
+
+        // Assert
+        assertThat(result).doesNotContain(NotificationUM.Warning.HighNetworkFee)
     }
 
     @Test
@@ -113,7 +149,9 @@ internal class SwapTransferNotificationsFactoryTest {
 
         val result = sut.getNotifications(
             transferState = transferState,
-            feeSelectorUM = null,
+            // A loaded (non-zero) fee is required: the manual dust check is now skipped when feeValue is zero
+            // (fee errored / not yet loaded), so it cannot duplicate the fee-error path's MinimumAmountError.
+            feeSelectorUM = contentWithFee(feeValue = BigDecimal("0.001")),
             feeCryptoCurrencyStatus = null,
             actions = actions,
         )
