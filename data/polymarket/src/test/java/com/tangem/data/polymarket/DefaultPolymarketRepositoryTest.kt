@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
@@ -17,6 +18,7 @@ import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
+import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
@@ -36,6 +38,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -49,6 +52,7 @@ import io.mockk.slot
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -78,6 +82,7 @@ internal class DefaultPolymarketRepositoryTest {
         clobApi = clobApi,
         eventConverter = eventConverter,
         walletConverter = walletConverter,
+        balanceAllowanceConverter = PolymarketBalanceAllowanceConverter(),
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
@@ -432,6 +437,58 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(error?.httpCode).isNull()
         assertThat(error?.detail).isNotNull()
         coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN credentials WHEN getBalanceAllowance THEN signs the read path and converts the base units`() = runTest {
+        // Arrange
+        val headers = slot<Map<String, String>>()
+        val assetType = slot<String>()
+        val signatureType = slot<Int>()
+        coEvery {
+            clobApi.getBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
+        } returns ApiResponse.Success(
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = "1000000"),
+        )
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PolymarketBalanceAllowance(balance = BigDecimal("12.340000"), allowance = BigDecimal("1.000000")).right(),
+        )
+        assertThat(assetType.captured).isEqualTo("COLLATERAL")
+        assertThat(signatureType.captured).isEqualTo(3)
+        val timestamp = headers.captured.getValue("POLY_TIMESTAMP")
+        assertThat(headers.captured["POLY_SIGNATURE"]).isEqualTo(hmac(timestamp + "GET" + "/balance-allowance"))
+    }
+
+    @Test
+    fun `GIVEN an unparsable balance WHEN getBalanceAllowance THEN returns Unknown instead of a wrong amount`() =
+        runTest {
+            // Arrange
+            coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowance = null),
+            )
+
+            // Act
+            val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PolymarketAuthError.Unknown::class.java)
+        }
+
+    @Test
+    fun `GIVEN a 401 WHEN getBalanceAllowance THEN maps to InvalidSignature`() = runTest {
+        // Arrange
+        coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns httpError(Code.UNAUTHORIZED, body = null)
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketAuthError.InvalidSignature.left())
     }
 
     private fun hmac(message: String): String {
