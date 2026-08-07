@@ -44,19 +44,33 @@ class SetTokenListTransformerTest {
         val result = transformer.transform(walletUM(buttonEnabled = true)) as WalletUM.Content
 
         assertThat(result.tokensListUM).isInstanceOf(WalletTokensListUM.Empty::class.java)
-        assertThat(result.buttons).hasSize(1)
-        assertThat(result.buttons.single().isEnabled).isFalse()
+        assertThat(result.buttons.map { it.isEnabled }).containsExactly(false, false, false)
     }
 
     @Test
-    fun `GIVEN non-empty account list WHEN transform THEN tokens not Empty and buttons enabled`() {
-        val transformer = createTransformer(accountList = nonEmptyAccountList())
+    fun `GIVEN actual balance WHEN transform THEN tokens not Empty and all buttons enabled`() {
+        val transformer = createTransformer(
+            accountList = nonEmptyAccountList(TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL)),
+        )
 
         val result = transformer.transform(walletUM(buttonEnabled = false)) as WalletUM.Content
 
         assertThat(result.tokensListUM).isNotInstanceOf(WalletTokensListUM.Empty::class.java)
-        assertThat(result.buttons).hasSize(1)
-        assertThat(result.buttons.single().isEnabled).isTrue()
+        assertThat(result.areActionsAvailable).isTrue()
+        assertThat(result.buttons.map { it.isEnabled }).containsExactly(true, true, true)
+    }
+
+    @Test
+    fun `GIVEN only cached balance WHEN transform THEN Swap disabled while AddFunds and Transfer enabled`() {
+        val transformer = createTransformer(
+            accountList = nonEmptyAccountList(TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ONLY_CACHE)),
+        )
+
+        val result = transformer.transform(walletUM(buttonEnabled = false)) as WalletUM.Content
+
+        assertThat(result.areActionsAvailable).isFalse()
+        // buttons order: AddFunds, Swap, Transfer
+        assertThat(result.buttons.map { it.isEnabled }).containsExactly(true, false, true)
     }
 
     private fun createTransformer(accountList: AccountStatusList): SetTokenListTransformer {
@@ -73,9 +87,8 @@ class SetTokenListTransformerTest {
             clickIntents = mockk<WalletClickIntents>(relaxed = true),
             shouldShowMainPromo = false,
             isAccountsModeEnabled = false,
-            isRedesignEnabled = true,
-            isAddAndManageTokensEnabled = false,
             isMultipleCardsEnabled = false,
+            isPolymarketEnabled = false,
         )
     }
 
@@ -89,11 +102,11 @@ class SetTokenListTransformerTest {
         groupType = TokensGroupType.NONE,
     )
 
-    private fun nonEmptyAccountList(): AccountStatusList {
+    private fun nonEmptyAccountList(totalFiatBalance: TotalFiatBalance): AccountStatusList {
         val token = createToken()
         val tokenList = TokenList.Ungrouped(
             currencies = listOf(createLoadedStatus(token)),
-            totalFiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO, StatusSource.ACTUAL),
+            totalFiatBalance = totalFiatBalance,
             sortedBy = TokensSortType.NONE,
         )
         return AccountStatusList(
@@ -101,7 +114,7 @@ class SetTokenListTransformerTest {
             accountStatuses = listOf(mainCryptoPortfolioStatus(tokenList = tokenList)),
             totalAccounts = 1,
             totalArchivedAccounts = 0,
-            totalFiatBalance = TotalFiatBalance.Loading,
+            totalFiatBalance = totalFiatBalance,
             sortType = TokensSortType.NONE,
             groupType = TokensGroupType.NONE,
         )

@@ -24,87 +24,12 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.news.details.state.RelatedArticleUM
 
 @Composable
 internal fun RelatedNewsItem(relatedArticle: RelatedArticleUM, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        RelatedNewsItemV2(relatedArticle, modifier)
-    } else {
-        RelatedNewsItemV1(relatedArticle, modifier)
-    }
-}
-
-@Composable
-private fun RelatedNewsItemV1(relatedArticle: RelatedArticleUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .sizeIn(maxWidth = 256.dp, minHeight = 132.dp)
-            .background(color = TangemTheme.colors.background.action, shape = RoundedCornerShape(12.dp))
-            .clickable(onClick = relatedArticle.onClick)
-            .padding(12.dp),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 4.dp)) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_explore_16),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.icon.informative,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    SpacerW(4.dp)
-                    Text(
-                        text = relatedArticle.media.name,
-                        style = TangemTheme.typography.caption1,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = TangemTheme.colors.text.tertiary,
-                    )
-                }
-                if (relatedArticle.title.isNotEmpty()) {
-                    SpacerH(4.dp)
-                    Text(
-                        text = relatedArticle.title,
-                        style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.primary1,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            if (relatedArticle.imageUrl != null) {
-                SubcomposeAsyncImage(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    contentScale = ContentScale.Crop,
-                    model = ImageRequest.Builder(context = LocalContext.current)
-                        .data(relatedArticle.imageUrl)
-                        .crossfade(enable = false)
-                        .allowHardware(true)
-                        .memoryCachePolicy(CachePolicy.DISABLED)
-                        .build(),
-                    loading = {
-                        RectangleShimmer(
-                            modifier = Modifier.size(40.dp),
-                            radius = 4.dp,
-                        )
-                    },
-                    error = {},
-                    contentDescription = relatedArticle.media.name,
-                )
-            }
-        }
-        SpacerHMax()
-        Text(
-            text = relatedArticle.publishedAt.resolveReference(),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-        )
-    }
+    RelatedNewsItemV2(relatedArticle, modifier)
 }
 
 @Suppress("LongMethod")

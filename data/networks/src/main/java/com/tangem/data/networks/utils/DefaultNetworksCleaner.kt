@@ -28,6 +28,11 @@ internal class DefaultNetworksCleaner(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : NetworksCleaner {
 
+    override suspend fun clear(userWalletIds: List<UserWalletId>) {
+        runSuspendCatching { networksStatusesStore.remove(userWalletIds) }
+            .onFailure { TangemLogger.e("Failed to remove network statuses for wallets: $userWalletIds", it) }
+    }
+
     override suspend fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) {
             TangemLogger.d("No currencies to clear for wallet: $userWalletId")

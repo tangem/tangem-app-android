@@ -2,13 +2,13 @@ package com.tangem.data.txhistory.fetcher
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.plus
 import javax.inject.Inject
 
 const val TX_HISTORY_TAG = "TxHistory"
@@ -30,6 +30,11 @@ internal interface TxHistoryFetcherUtils {
         fun <T> TxHistoryFetcherUtils.defaultLaunchIn(flow: Flow<T>) = flow
             .retry { error ->
                 logError(error)
+                val event = ExceptionAnalyticsEvent(
+                    exception = error,
+                    params = mapOf("source" to TX_HISTORY_TAG),
+                )
+                analyticsExceptionHandler.sendException(event)
                 true
             }
             .launchIn(fetcherScope)

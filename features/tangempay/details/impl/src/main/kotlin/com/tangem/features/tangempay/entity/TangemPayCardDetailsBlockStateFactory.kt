@@ -13,6 +13,8 @@ internal class TangemPayCardDetailsBlockStateFactory(
     private val displayName: CardDisplayName?,
     private val isEditingNameEnabled: Boolean,
     private val cardState: TangemPayCardState,
+    private val cardImageUrl: String?,
+    private val cardBackgroundImageUrl: String?,
     private val onEditNameClick: () -> Unit,
     private val onReveal: () -> Unit,
     private val onCopy: (String, CardDataType) -> Unit,
@@ -41,6 +43,8 @@ internal class TangemPayCardDetailsBlockStateFactory(
             },
             shouldShowCardDetailsButtonOnCard = shouldShowCardDetailsButtonOnCard,
             cardState = cardState,
+            cardImageUrl = cardImageUrl,
+            cardBackgroundImageUrl = cardBackgroundImageUrl,
         )
     }
 }

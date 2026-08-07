@@ -54,7 +54,6 @@ dependencies {
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
 
     /** DI */

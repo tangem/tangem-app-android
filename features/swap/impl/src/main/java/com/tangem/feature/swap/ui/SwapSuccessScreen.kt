@@ -4,7 +4,8 @@ import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,46 +32,52 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.preview.SwapSuccessStatePreview
-import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.common.ui.FeeBlockSuccess
 
 @Composable
 fun SwapSuccessScreen(state: SwapSuccessStateHolder, feeSelectorUM: FeeSelectorUM?, onBack: () -> Unit) {
-    Scaffold(
-        modifier = Modifier.systemBarsPadding(),
-        containerColor = TangemTheme.colors.background.secondary,
-        content = { padding ->
-            SwapSuccessScreenContent(padding = padding, feeSelectorUM = feeSelectorUM, state = state)
-        },
-        topBar = {
+    Column(
+        modifier = Modifier
+            .systemBarsPadding()
+            .background(TangemTheme.colors.background.secondary),
+    ) {
+        Box(
+            modifier = Modifier.weight(1f),
+        ) {
+            SwapSuccessScreenContent(
+                feeSelectorUM = feeSelectorUM,
+                state = state,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp),
+            )
+            Fade(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                backgroundColor = TangemTheme.colors.background.secondary,
+            )
             AppBarWithBackButton(
                 onBackClick = onBack,
                 iconRes = R.drawable.ic_close_24,
             )
-        },
-        bottomBar = {
-            SwapSuccessScreenButtons(
-                textRes = R.string.common_close,
-                state = state,
-                onDoneClick = onBack,
-            )
-        },
-    )
+        }
+        SwapSuccessScreenButtons(
+            textRes = R.string.common_close,
+            state = state,
+            onDoneClick = onBack,
+        )
+    }
 }
 
 @Composable
 private fun SwapSuccessScreenContent(
     state: SwapSuccessStateHolder,
     feeSelectorUM: FeeSelectorUM?,
-    padding: PaddingValues,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .background(TangemTheme.colors.background.secondary)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = modifier.verticalScroll(rememberScrollState()),
     ) {
+        SpacerH(56.dp)
         TransactionDoneTitle(
             title = if (state.isTransferMode) {
                 resourceReference(R.string.transfer_in_progress_title)
@@ -124,6 +131,7 @@ private fun SwapSuccessScreenContent(
                     .background(TangemTheme.colors.background.action),
             )
         }
+        SpacerH(16.dp)
     }
 }
 
@@ -170,12 +178,19 @@ private fun SwapAmountBlock(
 }
 
 @Composable
-private fun SwapSuccessScreenButtons(@StringRes textRes: Int, state: SwapSuccessStateHolder, onDoneClick: () -> Unit) {
+private fun SwapSuccessScreenButtons(
+    @StringRes textRes: Int,
+    state: SwapSuccessStateHolder,
+    onDoneClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val content = state.navigationUM as? NavigationUM.Content
     Column(
-        modifier = Modifier
-            .background(TangemTheme.colors.background.secondary)
-            .padding(TangemTheme.dimens.spacing16),
+        modifier = modifier.padding(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp,
+        ),
     ) {
         val pairButtons = content?.secondaryPairButtonsUM
         when {

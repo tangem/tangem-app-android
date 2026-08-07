@@ -11,39 +11,51 @@ android {
 }
 dependencies {
 
-    /** Tangem SDKs */
-    implementation(tangemDeps.blockchain)
+    // region Kotlin
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.datetime)
+    // endregion
 
     // region AndroidX libraries
     implementation(deps.androidx.datastore)
     // endregion
 
-    /** Core */
-    implementation(projects.core.datasource)
-    implementation(projects.core.utils)
-    implementation(projects.core.analytics)
+    // region Tangem SDKs
+    implementation(tangemDeps.blockchain)
+    // endregion
 
-    /** Domain */
-    implementation(projects.domain.yieldSupply)
-    implementation(projects.domain.yieldSupply.models)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.txhistory.models)
-
-    implementation(projects.libs.blockchainSdk)
-
-
-    /** DI */
+    // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
 
-    /** Other */
-    implementation(deps.kotlin.datetime)
+    // region Core
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
+    // endregion
 
-    /** tests */
-    testImplementation(projects.common.test)
-    testImplementation(deps.test.junit5)
+    // region Domain
+    api(projects.domain.transaction)
+    api(projects.domain.walletManager)
+    api(projects.domain.yieldSupply)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    // endregion
+
+    // region Domain models
+    implementation(projects.domain.yieldSupply.models)
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
+    // region tests
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    // endregion
 }
