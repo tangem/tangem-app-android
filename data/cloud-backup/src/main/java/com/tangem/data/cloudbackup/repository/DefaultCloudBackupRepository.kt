@@ -188,9 +188,11 @@ internal class DefaultCloudBackupRepository(
         createdAtMillis: Long,
         password: CharArray,
     ): String {
-        val payload = CloudBackupSecret(mnemonic = secret.mnemonic, passphrase = secret.passphrase)
-        val payloadBytes = CloudBackupJson.encodeToString(payload)
-            .toByteArray(Charsets.UTF_8)
+        val payload = CloudBackupSecret.of(
+            mnemonic = secret.mnemonic,
+            isPassphraseRequired = secret.isPassphraseRequired,
+        )
+        val payloadBytes = CloudBackupJson.encodeToString(payload).toByteArray(Charsets.UTF_8)
         val createdAtIso = Instant.fromEpochSeconds(TimeUnit.MILLISECONDS.toSeconds(createdAtMillis)).toString()
         val fileData = try {
             cipher.encrypt(
@@ -398,7 +400,8 @@ private fun Raise<CloudBackupError>.parseSecret(bytes: ByteArray): CloudBackupSe
         bytes.fill(0)
     }
     val secret = ensureNotNull(raw) { CloudBackupError.InvalidBackupFile }
-    return CloudBackupSecretData(mnemonic = secret.mnemonic, passphrase = secret.passphrase)
+    val isPassphraseRequired = ensureNotNull(secret.isPassphraseRequired) { CloudBackupError.InvalidBackupFile }
+    return CloudBackupSecretData(mnemonic = secret.mnemonic, isPassphraseRequired = isPassphraseRequired)
 }
 
 private fun CloudBackupCryptoError.toDomainError(): CloudBackupError = when (this) {
