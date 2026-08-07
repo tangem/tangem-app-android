@@ -6,6 +6,7 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.checkQrCodeBottomSheetScenario
@@ -13,7 +14,7 @@ import com.tangem.scenarios.goToQrCodeBottomSheet
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendFromTokenDetails
 import com.tangem.scenarios.openSwapFromZeroBalanceToken
-import com.tangem.scenarios.pullToRefreshMainScreen
+import com.tangem.scenarios.pullToRefreshTokenDetails
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onDialog
@@ -22,7 +23,6 @@ import com.tangem.screens.onSendScreen
 import com.tangem.screens.onSwapStoriesScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
-import com.tangem.screens.onTokenDetailsTopBar
 import com.tangem.screens.onTransferBottomSheet
 import com.tangem.screens.onTxHistoryScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -376,26 +376,32 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Close the notification dialog") {
                 onDialog { okButton.clickWithAssertion() }
             }
+            // The balance shown while the transaction is active (0.1 DOGE) differs from the completed one
+            // (5.8 DOGE), so its change is a direct signal that the *balance* was re-read — unlike the
+            // transaction history, which `onRefreshSwipe` loads in a parallel coroutine and which therefore
+            // can update while the balance fetch is still running.
+            var balanceWhileActive = ""
+            step("Read the balance while the transaction is active") {
+                onTokenDetailsScreen { balanceWhileActive = fiatBalance.extractText() }
+            }
             step("Set WireMock scenario: '$txHistoryScenarioName' to state: '$completedTxState'") {
                 setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = completedTxState)
             }
-            // Via the top-bar button, not `pressBack()`: a back press right after the dialog is swallowed by
-            // the dismissing bottom sheet and leaves the test on 'Token details'. And refreshed from 'Main',
-            // not from 'Token details': only the main-screen refresh re-issues the balance request the wallet
-            // manager reads the pending transaction from (verified in the WireMock journal).
-            step("Go back to 'Main' screen") {
-                onTokenDetailsTopBar { backButton.clickWithAssertion() }
-            }
-            step("Assert 'Main' screen is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onMainScreen { tokenWithTitleAndAddress(tokenName).assertIsDisplayed() }
+            // Retried because the gesture reaches the refresh container only sometimes: a swipe that misses
+            // issues no request at all (verified in the WireMock journal). Only pull-to-refresh re-reads the
+            // balance — `forceUpdate = true` — while app start serves it from the cache.
+            step("Pull to refresh until the balance is re-read") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 2_000) {
+                    pullToRefreshTokenDetails()
+                    onTokenDetailsScreen {
+                        val current = fiatBalance.extractText()
+                        // AssertionError on purpose: flakySafely only retries its allowed exception types, so
+                        // a require()/error() here would fail the test on the very first missed swipe.
+                        if (current == balanceWhileActive) {
+                            throw AssertionError("Balance is still '$current' — the refresh has not landed yet")
+                        }
+                    }
                 }
-            }
-            step("Pull to refresh on 'Main' screen") {
-                pullToRefreshMainScreen()
-            }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Open the transfer bottom sheet again") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
