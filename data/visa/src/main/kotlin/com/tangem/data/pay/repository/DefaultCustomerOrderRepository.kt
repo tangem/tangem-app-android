@@ -3,6 +3,7 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import com.tangem.data.pay.util.OrderConverter
 import com.tangem.data.pay.util.OrderStatusConverter
+import com.tangem.data.pay.util.PlasticIssueOrderRequestConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
@@ -11,6 +12,7 @@ import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import javax.inject.Inject
@@ -80,6 +82,29 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
             )
         }.map { response ->
             val result = requireNotNull(response.result) { "createOrder returned empty result" }
+            OrderConverter.convert(result)
+        }
+    }
+
+    override suspend fun createPlasticIssueOrder(
+        userWalletId: UserWalletId,
+        specificationName: String,
+        order: PlasticCardOrder,
+        idempotencyKey: String,
+    ): Either<VisaApiError, Order> {
+        val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.createOrder(
+                authHeader = authHeader,
+                body = PlasticIssueOrderRequestConverter.convert(
+                    customerWalletAddress = walletAddress,
+                    specificationName = specificationName,
+                    order = order,
+                    idempotencyKey = idempotencyKey,
+                ),
+            )
+        }.map { response ->
+            val result = requireNotNull(response.result) { "createPlasticIssueOrder returned empty result" }
             OrderConverter.convert(result)
         }
     }
