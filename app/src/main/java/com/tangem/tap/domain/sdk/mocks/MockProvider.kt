@@ -103,7 +103,7 @@ object MockProvider {
     private fun getMockContent(productType: ProductType): MockContent {
         return when (productType) {
             ProductType.Wallet -> WalletMockContent
-            ProductType.Wallet2 -> Wallet3MockContent
+            ProductType.Wallet2 -> Wallet2WithSeedPhraseMockContent
             ProductType.Note -> NoteMockContent
             ProductType.Ring -> RingMockContent
             ProductType.Twins -> TwinsMockContent
