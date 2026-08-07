@@ -70,6 +70,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
         cardNumberEnd = card.lastDigits,
+        cardholderName = card.embossName,
         displayName = card.displayName,
         isEditingNameEnabled = config.isEditingNameEnabled,
         onEditNameClick = onEditNameClick,
@@ -117,6 +118,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
                     uiState.update { uiState ->
                         uiState.copy(
                             numberShort = "${StringsSigns.ASTERISK}${card.lastDigits}",
+                            cardholderName = card.embossName,
                             cardFrozenState = card.frozenState,
                             isActionsAvailable = card.state == TangemPayCardState.Active,
                             cardState = card.state,
@@ -203,11 +205,14 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     private fun copyData(text: String, type: CardDataType) {
         val event = when (type) {
             CardDataType.Number -> TangemPayAnalyticsEvents.CopyCardNumberClicked()
+            CardDataType.CardholderName -> TangemPayAnalyticsEvents.CopyCardholderNameClicked()
             CardDataType.Expiry -> TangemPayAnalyticsEvents.CopyCardExpiryClicked()
             CardDataType.CVV -> TangemPayAnalyticsEvents.CopyCardCVVClicked()
         }
         analytics.send(event)
-        clipboardManager.setText(text = text.filterNot { it.isWhitespace() }, isSensitive = true)
+
+        val copied = if (type == CardDataType.CardholderName) text else text.filterNot { it.isWhitespace() }
+        clipboardManager.setText(text = copied, isSensitive = true)
     }
 
     /** Per-block configuration that does not depend on live card data. */
