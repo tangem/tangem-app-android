@@ -74,6 +74,7 @@ internal class StableOrderTest {
             limit = null,
             frozenState = TangemPayCardFrozenState.Unfrozen,
             lastDigits = "0000",
+            images = emptyList(),
             state = TangemPayCardState.Active,
         )
     }

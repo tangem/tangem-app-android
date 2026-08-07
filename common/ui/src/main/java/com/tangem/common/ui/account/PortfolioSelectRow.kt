@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +29,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -110,7 +108,7 @@ fun PortfolioSelectRowV2(
                     modifier = Modifier.padding(end = TangemTheme.dimens2.x3),
                     name = state.name,
                     icon = state.icon,
-                    size = AccountIconSize.RedesignedDefault,
+                    size = AccountIconSize.Default,
                 )
             }
         } else if (state.imageState != null) {
@@ -190,12 +188,10 @@ private fun PortfolioSelectRowPreview(@PreviewParameter(PreviewProvider::class) 
 @Composable
 private fun PortfolioSelectRowPreviewV2(@PreviewParameter(PreviewProvider::class) state: PortfolioSelectUM) {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            PortfolioSelectRowV2(
-                state = state,
-                modifier = Modifier.background(TangemTheme.colors2.surface.level3),
-            )
-        }
+        PortfolioSelectRowV2(
+            state = state,
+            modifier = Modifier.background(TangemTheme.colors2.surface.level3),
+        )
     }
 }
 

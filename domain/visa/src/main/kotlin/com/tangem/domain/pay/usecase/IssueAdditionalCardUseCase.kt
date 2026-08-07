@@ -77,8 +77,13 @@ class IssueAdditionalCardUseCase(
 
         appCoroutineScope.launch {
             startTangemPayOrderPollingUseCase(
-                order = TangemPayOrderInfo(orderId = order.id, orderStatus = order.status),
+                order = TangemPayOrderInfo.fromOrder(order),
                 userWalletId = userWalletId,
+                onOrderStateChange = { newOrder ->
+                    if (newOrder.orderStatus.isTerminal) {
+                        issueCardRepository.removeIssueOrderId(userWalletId, order.id)
+                    }
+                },
             )
         }
     }

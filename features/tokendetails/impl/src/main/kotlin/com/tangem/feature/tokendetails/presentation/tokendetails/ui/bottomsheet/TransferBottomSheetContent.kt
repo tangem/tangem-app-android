@@ -17,7 +17,6 @@ import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalHazeState
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
@@ -143,13 +142,11 @@ private fun TailLoader() {
 @Composable
 private fun Preview(@PreviewParameter(TransferPreviewProvider::class) state: TransferUM) {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
-            TransferBottomSheetContent(
-                state = state,
-                onCloseClick = {},
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
+        TransferBottomSheetContent(
+            state = state,
+            onCloseClick = {},
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
     }
 }
 

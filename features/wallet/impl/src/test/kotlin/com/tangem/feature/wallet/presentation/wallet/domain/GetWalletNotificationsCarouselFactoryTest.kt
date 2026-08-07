@@ -21,7 +21,6 @@ import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBann
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -48,7 +47,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
     private val notificationsRepository: NotificationsRepository = mockk()
     private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase = mockk()
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase = mockk()
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
     private val userWallet: UserWallet.Hot = mockk(relaxed = true)
@@ -59,7 +57,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         notificationsRepository = notificationsRepository,
         shouldShowYieldBoostMainBannerUseCase = shouldShowYieldBoostMainBannerUseCase,
         yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
-        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
     )
 
@@ -71,7 +68,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
             notificationsRepository,
             shouldShowYieldBoostMainBannerUseCase,
             yieldSupplyGetShouldShowMainPromoUseCase,
-            yieldSupplyFeatureToggles,
             singleAccountStatusListSupplier,
             clickIntents,
             userWallet,
@@ -83,7 +79,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
         every { isReadyToShowRateAppUseCase() } returns flowOf(false)
         every { getWalletsUseCase() } returns flowOf(emptyList())
         every { yieldSupplyGetShouldShowMainPromoUseCase() } returns flowOf(true)
-        every { yieldSupplyFeatureToggles.isYieldPromoEnabled } returns true
         coEvery { shouldShowYieldBoostMainBannerUseCase(any()) } returns Either.Right(true)
         // Balance is loaded by default, so banners gated on balance are not suppressed.
         every {
@@ -100,7 +95,6 @@ internal class GetWalletNotificationsCarouselFactoryTest {
     @MethodSource("provideTestModels")
     fun `GIVEN gating conditions WHEN create THEN yield boost banner visibility matches`(model: Model) = runTest {
         // Arrange
-        every { yieldSupplyFeatureToggles.isYieldPromoEnabled } returns model.toggleEnabled
         every { yieldSupplyGetShouldShowMainPromoUseCase() } returns flowOf(model.shouldShowLocal)
         coEvery { shouldShowYieldBoostMainBannerUseCase(WALLET_ID) } returns model.mainBanner
 
@@ -206,19 +200,16 @@ internal class GetWalletNotificationsCarouselFactoryTest {
     )
 
     internal data class Model(
-        val toggleEnabled: Boolean,
         val shouldShowLocal: Boolean,
         val mainBanner: Either<Throwable, Boolean>,
         val expectedShown: Boolean,
     )
 
     private fun provideTestModels() = listOf(
-        Model(toggleEnabled = true, shouldShowLocal = true, mainBanner = Either.Right(true), expectedShown = true),
-        Model(toggleEnabled = false, shouldShowLocal = true, mainBanner = Either.Right(true), expectedShown = false),
-        Model(toggleEnabled = true, shouldShowLocal = false, mainBanner = Either.Right(true), expectedShown = false),
-        Model(toggleEnabled = true, shouldShowLocal = true, mainBanner = Either.Right(false), expectedShown = false),
+        Model(shouldShowLocal = true, mainBanner = Either.Right(true), expectedShown = true),
+        Model(shouldShowLocal = false, mainBanner = Either.Right(true), expectedShown = false),
+        Model(shouldShowLocal = true, mainBanner = Either.Right(false), expectedShown = false),
         Model(
-            toggleEnabled = true,
             shouldShowLocal = true,
             mainBanner = Either.Left(RuntimeException("boom")),
             expectedShown = false,

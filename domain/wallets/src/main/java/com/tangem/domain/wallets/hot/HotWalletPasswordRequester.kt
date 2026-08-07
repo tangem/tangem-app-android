@@ -2,6 +2,7 @@ package com.tangem.domain.wallets.hot
 
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
+import java.util.UUID
 
 /**
  * Interface for requesting the password for a hot wallet.
@@ -11,13 +12,19 @@ interface HotWalletPasswordRequester {
 
     /**
      * Sets state to show wrong password state.
+     *
+     * The result is attributed to [attemptRequest] (the request that produced it), not to whatever
+     * request currently owns the dialog. This prevents a late callback of one request from
+     * incrementing the failed-attempt counter of a different wallet that meanwhile replaced it.
      */
-    suspend fun wrongPassword()
+    suspend fun wrongPassword(attemptRequest: AttemptRequest)
 
     /**
      * Sets state to show successful authentication state.
+     *
+     * Attributed to [attemptRequest], see [wrongPassword].
      */
-    suspend fun successfulAuthentication()
+    suspend fun successfulAuthentication(attemptRequest: AttemptRequest)
 
     /**
      * Requests the user to enter the password for the hot wallet.
@@ -38,11 +45,14 @@ interface HotWalletPasswordRequester {
      * In auth mode user can be deleted after failed attempts.
      * @param hasBiometry Indicates whether to show biometric authentication option to the user.
      * Will be ignored if the device does not support biometry at the moment of the request.
+     * @param requestId Unique identity of this request, used to bind async result callbacks
+     * (wrong/successful) back to the exact request that produced them.
      */
     data class AttemptRequest(
         val hotWalletId: HotWalletId,
         val authMode: Boolean,
         val hasBiometry: Boolean,
+        val requestId: String = UUID.randomUUID().toString(),
     )
 
     sealed class Result {

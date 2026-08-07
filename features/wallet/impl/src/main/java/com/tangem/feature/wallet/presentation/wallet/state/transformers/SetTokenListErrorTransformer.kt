@@ -12,6 +12,7 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
@@ -64,7 +65,14 @@ internal class SetTokenListErrorTransformer(
                             clickIntents.onAssetsDiscoveryManageClick(walletUM.walletsBalanceUM.id)
                         },
                     ),
-                    buttons = walletUM.disableButtons(),
+                    areActionsAvailable = false,
+                    buttons = createWalletActionButtons(
+                        userWallet = selectedWallet,
+                        clickIntents = clickIntents,
+                        isAddFundsEnabled = false,
+                        isSwapEnabled = false,
+                        isTransferEnabled = false,
+                    ),
                 )
             }
             is WalletUM.Locked -> {
@@ -103,14 +111,14 @@ internal class SetTokenListErrorTransformer(
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
                     fiatCurrencySymbol = appCurrency.symbol,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                 )
             },
             balance = BigDecimal.ZERO.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
                     fiatCurrencySymbol = appCurrency.symbol,
-                    spanStyleReference = { TangemTheme.typography2.headingRegular28.toSpanStyle() },
+                    spanStyleReference = { TangemTheme.typography3.heading.medium.toSpanStyle() },
                 )
             },
             isZeroBalance = true,

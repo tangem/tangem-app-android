@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -31,6 +30,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import kotlinx.collections.immutable.ImmutableList
@@ -60,9 +60,9 @@ internal fun TokenActionContent(
                 tokenRowUM = tokenRowUM,
                 isBalanceHidden = isBalanceHidden,
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens2.x3)
+                    .padding(horizontal = 12.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(TangemTheme.colors2.surface.level3),
+                    .background(TangemTheme.colors3.bg.secondary),
             )
             TangemContextMenu(
                 expanded = true,
@@ -93,17 +93,17 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
     Column(
         modifier = Modifier
             .widthIn(min = 206.dp)
-            .padding(TangemTheme.dimens2.x1_5),
+            .padding(6.dp),
     ) {
         actions.fastForEach { item ->
             Column {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2_5),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .testTag(BaseBottomSheetTestTags.ACTION_BUTTON)
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(TangemTheme.dimens2.x2_5))
+                        .clip(RoundedCornerShape(10.dp))
                         .clickable(
                             enabled = item.isEnabled,
                             onClick = {
@@ -112,39 +112,39 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                             },
                         )
                         .padding(
-                            horizontal = TangemTheme.dimens2.x2_5,
-                            vertical = TangemTheme.dimens2.x2_5,
+                            horizontal = 10.dp,
+                            vertical = 10.dp,
                         ),
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(item.iconResId),
                         contentDescription = null,
                         tint = if (item.isWarning) {
-                            TangemTheme.colors2.graphic.status.warning
+                            TangemTheme.colors3.icon.accent.red
                         } else {
-                            TangemTheme.colors2.graphic.neutral.primary
+                            TangemTheme.colors3.icon.primary
                         },
                         modifier = Modifier
-                            .size(TangemTheme.dimens2.x5)
+                            .size(20.dp)
                             .testTag(BaseBottomSheetTestTags.ACTION_ICON),
                     )
                     Text(
                         text = item.text.resolveReference(),
-                        style = TangemTheme.typography2.headingRegular17,
+                        style = TangemTheme.typography3.body.medium,
                         color = if (item.isWarning) {
-                            TangemTheme.colors2.text.status.warning
+                            TangemTheme.colors3.text.accent.red
                         } else {
-                            TangemTheme.colors2.text.neutral.primary
+                            TangemTheme.colors3.text.primary
                         },
                     )
                 }
                 if (item.hasDivider) {
                     Spacer(
                         modifier = Modifier
-                            .padding(vertical = TangemTheme.dimens2.x1)
+                            .padding(vertical = 4.dp)
                             .fillMaxWidth()
                             .height(1.dp)
-                            .background(TangemTheme.colors2.border.neutral.primary),
+                            .background(TangemTheme.colors3.border.primary),
                     )
                 }
             }

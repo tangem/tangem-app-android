@@ -41,7 +41,9 @@ class UserTokensSaver(
             return@withContext
         }
 
-        val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher)
+        val enrichedResponse = response
+            .withoutDuplicates()
+            .enrichIf(userWalletId = userWalletId, condition = useEnricher)
 
         push(userWallet = userWallet, response = enrichedResponse, onFailSend = onFailSend)
     }
@@ -85,7 +87,46 @@ class UserTokensSaver(
                     apiResponse.bind()
                 }
             },
-            onError = { onFailSend() },
+            onError = { error ->
+                TangemLogger.e("Failed to push ${response.tokens.size} user tokens", error)
+                onFailSend()
+            },
+        )
+    }
+
+    /**
+     * Drops fully identical tokens from the list.
+     *
+     * The API rejects the whole list with `400 All tokens's elements must be unique` if it contains two equal
+     * elements, so a single duplicate discards the update of the entire wallet's token list. Duplicates are not
+     * expected here, hence the error log.
+     *
+     * Tokens are compared by every field of the request instead of [UserTokensResponse.Token.equals], which
+     * deliberately ignores most of them: dropping an element that differs in any way would silently change what the
+     * user has saved.
+     */
+    private fun UserTokensResponse.withoutDuplicates(): UserTokensResponse {
+        val uniqueTokens = tokens.distinctBy { it.toRequestKey() }
+
+        if (uniqueTokens.size == tokens.size) return this
+
+        TangemLogger.e("Dropped ${tokens.size - uniqueTokens.size} duplicated tokens before pushing them")
+
+        return copy(tokens = uniqueTokens)
+    }
+
+    private fun UserTokensResponse.Token.toRequestKey(): List<Any?> {
+        return listOf(
+            id,
+            accountId,
+            networkId,
+            derivationPath,
+            name,
+            symbol,
+            decimals,
+            contractAddress,
+            addresses,
+            dynamicAddressesEnabled,
         )
     }
 

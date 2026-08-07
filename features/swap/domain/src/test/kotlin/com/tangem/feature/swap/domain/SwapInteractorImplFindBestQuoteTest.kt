@@ -1618,11 +1618,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         private val spender = "0xDexRouter"
         private val tokenContract = "0xRegularToken"
 
-        @BeforeEach
-        fun enableIntegrated() {
-            every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
-        }
-
         @Test
         fun `NotEnough allowance with integrated active proceeds to PermissionSettings`() = runTest {
             stubAllowanceForSpender(

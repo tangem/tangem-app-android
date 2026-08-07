@@ -24,6 +24,19 @@ object TangemPayTestTags {
     const val FREEZE_CARD_ROW = "TANGEM_PAY_FREEZE_CARD_ROW"
     const val CARD_FROZEN_BADGE = "TANGEM_PAY_CARD_FROZEN_BADGE"
 
+    // Card page top bar more-actions menu (redesign)
+    const val CARD_PAGE_MORE_BUTTON = "TANGEM_PAY_CARD_PAGE_MORE_BUTTON"
+
+    // Masked card number shown on the card face (e.g. "*4242")
+    const val CARD_NUMBER_SHORT = "TANGEM_PAY_CARD_NUMBER_SHORT"
+
+    // Replace card (reissue) bottom sheet
+    const val REISSUE_SHEET_CONFIRM_BUTTON = "TANGEM_PAY_REISSUE_SHEET_CONFIRM_BUTTON"
+    const val REISSUE_SHEET_FEE_VALUE = "TANGEM_PAY_REISSUE_SHEET_FEE_VALUE"
+
+    // Transaction details bottom sheet
+    const val TRANSACTION_DETAILS_AMOUNT = "TANGEM_PAY_TRANSACTION_DETAILS_AMOUNT"
+
     // Freeze confirmation bottom sheet
     const val FREEZE_CONFIRMATION_SUBMIT_BUTTON = "TANGEM_PAY_FREEZE_CONFIRMATION_SUBMIT_BUTTON"
 
@@ -38,4 +51,18 @@ object TangemPayTestTags {
     const val PIN_SUCCESS_TITLE = "TANGEM_PAY_PIN_SUCCESS_TITLE"
     const val PIN_SUCCESS_DESCRIPTION = "TANGEM_PAY_PIN_SUCCESS_DESCRIPTION"
     const val PIN_DONE_BUTTON = "TANGEM_PAY_PIN_DONE_BUTTON"
+
+    // Daily limit block (card page)
+    const val DAILY_LIMIT_CHANGE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_CHANGE_BUTTON"
+    const val DAILY_LIMIT_CURRENT_VALUE = "TANGEM_PAY_DAILY_LIMIT_CURRENT_VALUE"
+
+    // Daily limit setup screen (amount field reuses SendScreenTestTags.INPUT_TEXT_FIELD from AmountTextField)
+    const val DAILY_LIMIT_HINT = "TANGEM_PAY_DAILY_LIMIT_HINT"
+    const val DAILY_LIMIT_SET_BUTTON = "TANGEM_PAY_DAILY_LIMIT_SET_BUTTON"
+
+    // Daily limit success screen
+    const val DAILY_LIMIT_SUCCESS_TITLE = "TANGEM_PAY_DAILY_LIMIT_SUCCESS_TITLE"
+    const val DAILY_LIMIT_DONE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_DONE_BUTTON"
+
+    fun dailyLimitPresetChip(rawValue: String): String = "TANGEM_PAY_DAILY_LIMIT_PRESET_$rawValue"
 }

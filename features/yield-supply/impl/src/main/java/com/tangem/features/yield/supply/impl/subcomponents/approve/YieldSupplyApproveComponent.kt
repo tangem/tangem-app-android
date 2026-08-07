@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWi
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.YieldSupplyTestTags
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.yield.supply.impl.R
@@ -78,6 +80,7 @@ internal class YieldSupplyApproveComponent(
                 val modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
+                    .testTag(YieldSupplyTestTags.APPROVE_CONFIRM_BUTTON)
 
                 if (state.isHoldToConfirmEnabled) {
                     HoldToConfirmButton(

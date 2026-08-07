@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.extensions.conditional
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
@@ -51,11 +50,7 @@ fun TangemCurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, 
                     modifier = iconModifier,
                     shouldShowTopBadge = shouldDisplayNetwork,
                     networkBadgeSize = 14.dp,
-                    networkBadgeBackground = if (LocalRedesignEnabled.current) {
-                        TangemTheme.colors2.surface.level1
-                    } else {
-                        TangemTheme.colors.background.primary
-                    },
+                    networkBadgeBackground = TangemTheme.colors3.bg.secondary,
                 )
             }
         }
@@ -77,7 +72,7 @@ fun CurrencyIcon(
     modifier: Modifier = Modifier,
     shouldDisplayNetwork: Boolean = true,
     networkBadgeSize: Dp = 14.dp,
-    networkBadgeBackground: Color = TangemTheme.colors.background.primary,
+    networkBadgeBackground: Color = TangemTheme.colors3.bg.secondary,
     withFixedSize: Boolean = true,
     iconSize: Dp = 36.dp,
 ) {

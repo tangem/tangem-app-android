@@ -15,6 +15,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitEr
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.P2PVaultLimitsStore
 import com.tangem.datasource.local.token.StakingActionsStore
@@ -83,6 +84,7 @@ internal object StakingDataModule {
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
         stakingFeatureToggles: StakingFeatureToggles,
+        p2pEthPoolRegionBlockedStore: P2PEthPoolRegionBlockedStore,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
             p2pEthPoolApi = p2pEthPoolApi,
@@ -91,6 +93,7 @@ internal object StakingDataModule {
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
             stakingFeatureToggles = stakingFeatureToggles,
+            p2pEthPoolRegionBlockedStore = p2pEthPoolRegionBlockedStore,
         )
     }
 

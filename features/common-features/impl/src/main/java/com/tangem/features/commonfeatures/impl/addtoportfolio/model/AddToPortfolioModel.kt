@@ -13,7 +13,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
@@ -56,7 +55,6 @@ internal class AddToPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     val portfolioSelectorController: PortfolioSelectorController,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val callbackDelegate: AddToPortfolioCallbackDelegate,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCaseV2,
     private val getTokenMarketCryptoCurrency: GetTokenMarketCryptoCurrency,
@@ -182,9 +180,9 @@ internal class AddToPortfolioModel @Inject constructor(
 
             setupPortfolioSelector(initialData, launchMode)
 
-            val shouldShowUserPortfolio = designFeatureToggles.isRedesignEnabled &&
+            val shouldShowUserPortfolio =
                 launchMode is AddToPortfolioManager.LaunchMode.ViaUserPortfolio &&
-                initialData.hasAnyAddedCurrency(tokenMarketParams.id)
+                    initialData.hasAnyAddedCurrency(tokenMarketParams.id)
 
             if (shouldShowUserPortfolio) {
                 // suspend, must prepare UM before navigate to UserPortfolio
@@ -200,11 +198,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 AddToPortfolioManager.LaunchMode.Preselected -> null
                 is AddToPortfolioManager.LaunchMode.ViaUserPortfolio,
                 AddToPortfolioManager.LaunchMode.DirectAdd,
-                -> if (designFeatureToggles.isRedesignEnabled) {
-                    getInitialSelection(initialData)
-                } else {
-                    null
-                }
+                -> getInitialSelection(initialData)
             }
 
             val firstSelectedPortfolioFlow: Flow<SelectedPortfolio> =
@@ -272,15 +266,11 @@ internal class AddToPortfolioModel @Inject constructor(
             callbackDelegate.onChangePortfolioClick.receiveAsFlow()
                 .onEach {
                     middleNavigationJob?.cancel()
-                    middleNavigationJob = if (designFeatureToggles.isRedesignEnabled) {
-                        changePortfolioNavigationNewFlow(
-                            data = initialData,
-                            orderedNetworks = paramsSnapshot.networks,
-                            tokenParams = tokenMarketParams,
-                        )
-                    } else {
-                        changePortfolioNavigationFlow(initialData)
-                    }.launchIn(this)
+                    middleNavigationJob = changePortfolioNavigationNewFlow(
+                        data = initialData,
+                        orderedNetworks = paramsSnapshot.networks,
+                        tokenParams = tokenMarketParams,
+                    ).launchIn(this)
                     logAccountSelector(isAccountMode)
                     navigation.pushNew(AddToPortfolioRoutes.PortfolioSelector)
                 }
@@ -369,33 +359,6 @@ internal class AddToPortfolioModel @Inject constructor(
             }
     }
 
-    private fun changePortfolioNavigationFlow(data: AvailableToAddData): Flow<Unit> = flow {
-        val selectedPortfolioValue = selectedPortfolio.first()
-        val selectedAccount = selectedPortfolioValue.account.account.account.accountId
-        portfolioSelectorController.selectAccount(selectedAccount)
-        val changedPortfolio = setupPortfolioFlow(data)
-            .drop(1)
-            .onEach { portfolio ->
-                val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
-                if (isSingleAvailableNetwork) {
-                    val singleNetwork = portfolio.account.availableToAddNetworks.first()
-                    callbackDelegate.onNetworkSelected.send(singleNetwork)
-                } else {
-                    navigation.pushNew(routeToNetworkSelector(portfolio))
-                }
-            }
-        val changedNetwork = setupNetworkFlow(changedPortfolio)
-        combine(
-            flow = changedPortfolio,
-            flow2 = changedNetwork,
-            transform = { newPortfolio, newNetwork ->
-                selectedPortfolio.tryEmit(newPortfolio)
-                selectedNetwork.tryEmit(newNetwork)
-                navigation.popToFirst()
-            },
-        ).collect { emit(it) }
-    }
-
     private fun changePortfolioNavigationNewFlow(
         data: AvailableToAddData,
         orderedNetworks: List<TokenMarketInfo.Network>,
@@ -432,7 +395,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 currency = addedToken.currency,
                 accountId = selectedPortfolio.account.account.account.accountId,
             ).onEach { state ->
-                val requestedQuickActions = toQuickActions(state.states, designFeatureToggles.isRedesignEnabled)
+                val requestedQuickActions = toQuickActions(state.states)
                 when {
                     requestedQuickActions.isNotEmpty() -> {
                         timerJob.cancel()

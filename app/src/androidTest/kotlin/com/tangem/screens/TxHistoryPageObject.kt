@@ -31,6 +31,16 @@ class TxHistoryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(TransactionHistoryItemTestTags.STATUS_CONFIRMED)
         useUnmergedTree = true
     }
+
+    fun transactionUnconfirmedStatus(title: String): KNode = transactionItem(title).child {
+        hasTestTag(TransactionHistoryItemTestTags.STATUS_UNCONFIRMED)
+        useUnmergedTree = true
+    }
+
+    fun transactionAddress(title: String, address: String): KNode = transactionItem(title).child {
+        hasText(text = address, substring = true)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onTxHistoryScreen(function: TxHistoryPageObject.() -> Unit) =

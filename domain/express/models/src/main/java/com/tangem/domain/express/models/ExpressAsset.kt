@@ -1,5 +1,6 @@
 package com.tangem.domain.express.models
 
+import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.serialization.Serializable
 
 /**
@@ -38,6 +39,13 @@ data class ExpressAsset(
              */
             operator fun invoke(networkId: String, contractAddress: String?): ID {
                 return ID(networkId = networkId, contractAddress = contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE)
+            }
+
+            operator fun invoke(cryptoCurrency: CryptoCurrency): ID {
+                return ID(
+                    networkId = cryptoCurrency.network.rawId,
+                    contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress,
+                )
             }
         }
     }

@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -31,45 +30,8 @@ internal fun MostlyUsedPlaceholder(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(PLACEHOLDER_ITEMS_COUNT) {
-            if (LocalRedesignEnabled.current) {
-                MostlyUsedItemPlaceholderV2()
-            } else {
-                MostlyUsedItemPlaceholderV1()
-            }
+            MostlyUsedItemPlaceholderV2()
         }
-    }
-}
-
-@Composable
-private fun MostlyUsedItemPlaceholderV1(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .width(148.dp)
-            .height(102.dp)
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .padding(12.dp),
-    ) {
-        CircleShimmer(
-            modifier = Modifier
-                .size(32.dp),
-        )
-        SpacerH(8.dp)
-        RectangleShimmer(
-            modifier = Modifier
-                .width(74.dp)
-                .height(20.dp),
-            radius = 4.dp,
-        )
-        SpacerH(2.dp)
-        RectangleShimmer(
-            modifier = Modifier
-                .width(84.dp)
-                .height(16.dp),
-            radius = 4.dp,
-        )
     }
 }
 

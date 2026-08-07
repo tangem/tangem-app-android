@@ -91,7 +91,6 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
                     .padding(start = TangemTheme.dimens2.x3)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
-                price = model.price.text,
                 priceChangeType = model.price.changeType,
                 priceAnnotated = model.price.annotated,
                 priceValue = model.price.fiatPrice,

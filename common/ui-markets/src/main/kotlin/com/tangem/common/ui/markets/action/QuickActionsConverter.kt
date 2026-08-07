@@ -12,10 +12,9 @@ object QuickActionsConverter {
     fun quickActions(
         cryptoData: CryptoCurrencyData,
         tokenActionsHandler: TokenActionsHandler,
-        isRedesignEnabled: Boolean,
         context: TokenActionsContext = TokenActionsContext.Markets,
     ): QuickActions {
-        val states = toQuickActionStates(cryptoData.actions, isRedesignEnabled, context)
+        val states = toQuickActionStates(cryptoData.actions, context)
         return QuickActions(
             actions = states.map { it.action }.toImmutableList(),
             onQuickActionClick = { quickActionUM ->
@@ -70,21 +69,18 @@ object QuickActionsConverter {
      */
     fun toQuickActions(
         actions: List<TokenActionsState.ActionState>,
-        isRedesignEnabled: Boolean,
         context: TokenActionsContext = TokenActionsContext.Markets,
-    ): ImmutableList<QuickActionUM> =
-        toQuickActionStates(actions, isRedesignEnabled, context).map { it.action }.toImmutableList()
+    ): ImmutableList<QuickActionUM> = toQuickActionStates(actions, context).map { it.action }.toImmutableList()
 
     private fun toQuickActionStates(
         actions: List<TokenActionsState.ActionState>,
-        isRedesignEnabled: Boolean,
         context: TokenActionsContext,
     ): List<QuickActionState> {
         val allowed = context.allowedActionsInOrder
             ?: return actions
                 .filter { it.unavailabilityReason == ScenarioUnavailabilityReason.None }
                 .mapNotNull { action ->
-                    action.toQuickActionUM(isRedesignEnabled)?.let { QuickActionState(it, isEnabled = true) }
+                    action.toQuickActionUM()?.let { QuickActionState(it, isEnabled = true) }
                 }
 
         val byBsAction = actions.associateBy { it.toBsAction() }
@@ -94,13 +90,13 @@ object QuickActionsConverter {
             when (action) {
                 TokenActionsBSContentUM.Action.SendWithSwap ->
                     if (isExchangeAvailable) {
-                        QuickActionState(swapAndSendUM(isRedesignEnabled), isEnabled = true)
+                        QuickActionState(QuickActionUM.V2.SwapAndSend, isEnabled = true)
                     } else {
                         null
                     }
                 else -> {
                     val state = byBsAction[action] ?: return@mapNotNull null
-                    val um = state.toQuickActionUM(isRedesignEnabled) ?: return@mapNotNull null
+                    val um = state.toQuickActionUM() ?: return@mapNotNull null
                     QuickActionState(um, isEnabled = state.unavailabilityReason == ScenarioUnavailabilityReason.None)
                 }
             }
@@ -109,13 +105,7 @@ object QuickActionsConverter {
 
     private data class QuickActionState(val action: QuickActionUM, val isEnabled: Boolean)
 
-    private fun swapAndSendUM(isRedesignEnabled: Boolean): QuickActionUM =
-        if (isRedesignEnabled) QuickActionUM.V2.SwapAndSend else QuickActionUM.V1.SwapAndSend
-
-    private fun TokenActionsState.ActionState.toQuickActionUM(isRedesignEnabled: Boolean): QuickActionUM? =
-        if (isRedesignEnabled) toV2() else toV1()
-
-    private fun TokenActionsState.ActionState.toV2(): QuickActionUM? = when (this) {
+    private fun TokenActionsState.ActionState.toQuickActionUM(): QuickActionUM? = when (this) {
         is TokenActionsState.ActionState.Buy -> QuickActionUM.V2.Buy
         is TokenActionsState.ActionState.Swap -> QuickActionUM.V2.Exchange(shouldShowBadge)
         is TokenActionsState.ActionState.Receive -> QuickActionUM.V2.Receive
@@ -123,17 +113,6 @@ object QuickActionsConverter {
         is TokenActionsState.ActionState.Sell -> QuickActionUM.V2.Sell
         is TokenActionsState.ActionState.Stake -> QuickActionUM.V2.Stake
         is TokenActionsState.ActionState.YieldMode -> QuickActionUM.V2.YieldMode(apy)
-        else -> null
-    }
-
-    private fun TokenActionsState.ActionState.toV1(): QuickActionUM? = when (this) {
-        is TokenActionsState.ActionState.Buy -> QuickActionUM.V1.Buy
-        is TokenActionsState.ActionState.Swap -> QuickActionUM.V1.Exchange(shouldShowBadge)
-        is TokenActionsState.ActionState.Receive -> QuickActionUM.V1.Receive
-        is TokenActionsState.ActionState.Send -> QuickActionUM.V1.Send
-        is TokenActionsState.ActionState.Sell -> QuickActionUM.V1.Sell
-        is TokenActionsState.ActionState.Stake -> QuickActionUM.V1.Stake
-        is TokenActionsState.ActionState.YieldMode -> QuickActionUM.V1.YieldMode(apy)
         else -> null
     }
 

@@ -13,33 +13,37 @@ android {
 dependencies {
 
     /* Project - API */
-    implementation(projects.features.pushNotificationSettings.api)
+    api(projects.features.pushNotificationSettings.api)
+    api(projects.features.walletSettings.api)
     implementation(projects.features.pushNotifications.api)
-    implementation(projects.features.walletSettings.api)
 
     /* Project - Core */
-    implementation(projects.core.decompose)
+    api(projects.core.analytics)
+    api(projects.core.configToggles)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.navigation)
-    implementation(projects.core.analytics)
-    implementation(projects.core.utils)
 
     /* Project - Domain */
+    api(projects.domain.pushNotificationPreferences)
     implementation(projects.domain.models)
-    implementation(projects.domain.account)
-    implementation(projects.domain.pushNotificationPreferences)
+    implementation(projects.domain.notifications)
+    implementation(projects.domain.wallets)
 
     /* AndroidX */
+    implementation(deps.androidx.activity)
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
 
     /* Compose */
+    api(deps.compose.foundation)
     implementation(deps.compose.ui)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.runtime)
-    implementation(deps.compose.shimmer)
     implementation(deps.decompose.ext.compose)
 
     /* DI */
@@ -48,7 +52,9 @@ dependencies {
 
     /* Other */
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /* Tests */
     testImplementation(deps.test.junit5)

@@ -67,7 +67,7 @@ class DefaultDpopProofFactoryTest {
         mockkStatic(UUID::class)
         every { UUID.randomUUID() } returns fixedJti
 
-        coEvery { deviceKeyManager.getPublicKey() } returns Some(devicePublicKey)
+        coEvery { deviceKeyManager.getPublicKeyRawPoint() } returns Some(devicePublicKey)
         coEvery { deviceKeyManager.sign(any()) } returns signatureBytes
 
         factory = DefaultDpopProofFactory(
@@ -133,7 +133,7 @@ class DefaultDpopProofFactoryTest {
 
     @Test
     fun `create returns None when device key unavailable`() = runTest {
-        coEvery { deviceKeyManager.getPublicKey() } returns None
+        coEvery { deviceKeyManager.getPublicKeyRawPoint() } returns None
 
         val result = factory.create("POST", "https://example.com", null)
 

@@ -12,60 +12,52 @@ android {
 }
 dependencies {
     /** Api */
-    implementation(projects.features.createWalletStart.api)
-    implementation(projects.features.hotWallet.api)
-    implementation(projects.features.onboardingV2.api)
+    api(projects.features.createWalletStart.api)
+    api(projects.features.onboardingV2.api)
 
     /** Project - Domain */
-    implementation(projects.domain.card)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.wallets)
+    api(projects.domain.card)
+    api(projects.domain.common)
+    api(projects.domain.hotWallet)
+    api(projects.domain.settings)
+    api(projects.domain.wallets)
     implementation(projects.domain.models)
-    implementation(projects.domain.hotWallet)
     implementation(projects.domain.wallets.models)
 
     /** Core modules */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.analytics)
+    api(projects.core.analytics)
+    api(projects.core.datasource)
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
 
     /** Common */
-    implementation(projects.common.ui)
-    implementation(projects.common.routing)
+    api(projects.common.routing)
+    runtimeOnly(projects.common.ui)
 
     /** Tangem libraries */
-    implementation(projects.libs.tangemSdkApi)
     implementation(tangemDeps.card.core)
-    implementation(tangemDeps.card.android) {
-        exclude(module = "joda-time")
-    }
 
     /** AndroidX libraries */
-    implementation(deps.androidx.core.ktx)
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Compose libraries */
+    api(deps.compose.animation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.coil)
-    implementation(deps.lottie.compose)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.androidx.activity.compose)
-    implementation(deps.androidx.datastore)
 
     /** Other libraries */
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.kotlin.serialization)
+    implementation(deps.lifecycle.compose)
     implementation(deps.firebase.crashlytics)
 
     /** DI */
@@ -75,6 +67,5 @@ dependencies {
     /** Test */
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
 }

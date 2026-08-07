@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.utils
 
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
-import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.Companion.WALLET_TYPE
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -19,11 +18,9 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
-import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
@@ -35,8 +32,6 @@ internal class WalletLoadingStateFactory(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isAddFundsStage1Enabled: Boolean,
-    private val isManageFundsEnabled: Boolean,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -153,38 +148,17 @@ internal class WalletLoadingStateFactory(
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         if (isSingleWalletWithToken) return persistentListOf()
 
-        val firstButton = if (isAddFundsStage1Enabled) {
-            WalletManageButton.AddFunds(
-                enabled = true,
-                dimContent = false,
-                onClick = { clickIntents.onAddFundsClick(userWallet.walletId) },
-            )
-        } else {
-            WalletManageButton.Buy(
-                enabled = true,
-                dimContent = false,
-                onClick = {
-                    clickIntents.onMultiWalletBuyClick(
-                        userWalletId = userWallet.walletId,
-                        WALLET_TYPE,
-                    )
-                },
-            )
-        }
+        val firstButton = WalletManageButton.AddFunds(
+            enabled = true,
+            dimContent = false,
+            onClick = { clickIntents.onAddFundsClick(userWallet.walletId) },
+        )
 
-        val lastButton = if (isManageFundsEnabled) {
-            WalletManageButton.Transfer(
-                enabled = true,
-                dimContent = false,
-                onClick = { clickIntents.onTransferClick(userWallet.walletId) },
-            )
-        } else {
-            WalletManageButton.Sell(
-                enabled = true,
-                dimContent = false,
-                onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
-            )
-        }
+        val lastButton = WalletManageButton.Transfer(
+            enabled = true,
+            dimContent = false,
+            onClick = { clickIntents.onTransferClick(userWallet.walletId) },
+        )
 
         return persistentListOf(
             firstButton,
@@ -198,44 +172,13 @@ internal class WalletLoadingStateFactory(
     }
 
     private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
-        val isSingleWalletWithToken =
-            userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
-        return buildList {
-            add(
-                WalletActionButtons.AddFunds(
-                    isEnabled = false,
-                    onClick = { clickIntents.onAddFundsClick(userWalletId = userWallet.walletId) },
-                ).buttonUM,
-            )
-            addIf(
-                condition = !userWallet.isSingleWallet() && !isSingleWalletWithToken,
-                element = WalletActionButtons.Swap(
-                    isEnabled = false,
-                    onClick = {
-                        clickIntents.onMultiWalletSwapClick(userWalletId = userWallet.walletId)
-                    },
-                ).buttonUM,
-            )
-            if (isManageFundsEnabled) {
-                add(
-                    WalletActionButtons.Transfer(
-                        isEnabled = false,
-                        onClick = {
-                            clickIntents.onTransferClick(userWalletId = userWallet.walletId)
-                        },
-                    ).buttonUM,
-                )
-            } else {
-                add(
-                    WalletActionButtons.Sell(
-                        isEnabled = false,
-                        onClick = {
-                            clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId)
-                        },
-                    ).buttonUM,
-                )
-            }
-        }.toPersistentList()
+        return createWalletActionButtons(
+            userWallet = userWallet,
+            clickIntents = clickIntents,
+            isAddFundsEnabled = false,
+            isSwapEnabled = false,
+            isTransferEnabled = false,
+        )
     }
 
     private fun createDimmedButtons(): PersistentList<WalletManageButton> {

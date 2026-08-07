@@ -11,7 +11,6 @@ import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
-import com.tangem.features.tokendetails.TokenDetailsFeatureToggles
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -19,10 +18,7 @@ import java.math.BigDecimal
 
 internal class QuickTopUpBlockFactoryTest {
 
-    private val featureToggles: TokenDetailsFeatureToggles = mockk {
-        every { isQuickTopUpEnabled } returns true
-    }
-    private val factory = QuickTopUpBlockFactory(featureToggles)
+    private val factory = QuickTopUpBlockFactory()
 
     private val zeroBalanceStatus: CryptoCurrencyStatus = mockk {
         every { value } returns mockk<CryptoCurrencyStatus.Loaded> {
@@ -68,24 +64,6 @@ internal class QuickTopUpBlockFactoryTest {
     )
 
     private val notSupported: OnrampAvailability = OnrampAvailability.NotSupported(country = countryMock)
-
-    @Test
-    fun `returns null when feature toggle is disabled`() {
-        val disabledToggles: TokenDetailsFeatureToggles = mockk {
-            every { isQuickTopUpEnabled } returns false
-        }
-        val disabledFactory = QuickTopUpBlockFactory(disabledToggles)
-
-        val result = disabledFactory.build(
-            currencyStatus = zeroBalanceStatus,
-            isHistoryEmpty = true,
-            onrampAvailability = availableUsd.right(),
-            onPresetClick = { _, _ -> },
-            onOtherClick = {},
-        )
-
-        assertThat(result).isNull()
-    }
 
     @Test
     fun `returns null when balance is non-zero`() {

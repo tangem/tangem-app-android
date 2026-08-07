@@ -8,6 +8,8 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.core.configtoggle.version.Version
 import com.tangem.core.navigation.finisher.AppFinisher
+import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureToggleGroupUM
@@ -65,10 +67,40 @@ internal class FeatureTogglesViewModel @Inject constructor(
         return FeatureTogglesScreenUM(
             topBar = getConfigSetupState(isPrimarySetup = true),
             appVersion = appInfoProvider.appVersion,
-            featureToggleGroups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(),
+            searchBar = initSearchBar(),
+            featureToggleGroups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = ""),
             onToggleValueChange = ::onToggleValueChange,
             onRestartAppClick = {},
         )
+    }
+
+    private fun initSearchBar(): TangemSearch.State {
+        return TangemSearch.State(
+            placeholderText = resourceReference(com.tangem.core.ui.R.string.common_search),
+            query = "",
+            onQueryChange = ::onQueryChange,
+            isActive = false,
+            onActiveChange = ::onActiveChange,
+            onClearClick = ::onClearQuery,
+        )
+    }
+
+    private fun onQueryChange(query: String) {
+        val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = query)
+        state.update { screenUM ->
+            screenUM.copy(
+                searchBar = screenUM.searchBar.copy(query = query),
+                featureToggleGroups = groups,
+            )
+        }
+    }
+
+    private fun onActiveChange(isActive: Boolean) {
+        state.update { it.copy(searchBar = it.searchBar.copy(isActive = isActive)) }
+    }
+
+    private fun onClearQuery() {
+        onQueryChange(query = "")
     }
 
     private fun getConfigSetupState(isPrimarySetup: Boolean): TopBarWithRefreshUM {
@@ -95,7 +127,7 @@ internal class FeatureTogglesViewModel @Inject constructor(
         viewModelScope.launch {
             mutableFeatureTogglesManager.changeToggle(name = name, isEnabled = isEnabled)
 
-            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups()
+            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = state.value.searchBar.query)
             state.update { it.copy(featureToggleGroups = groups) }
 
             // delay for smoothly update animations
@@ -111,13 +143,16 @@ internal class FeatureTogglesViewModel @Inject constructor(
             mutableFeatureTogglesManager.recoverLocalConfig()
 
             val topBar = getConfigSetupState(isPrimarySetup = false)
-            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups()
+            val groups = mutableFeatureTogglesManager.getTesterFeatureToggleGroups(query = state.value.searchBar.query)
             state.update { it.copy(topBar = topBar, featureToggleGroups = groups) }
         }
     }
 
-    private fun MutableFeatureTogglesManager.getTesterFeatureToggleGroups(): ImmutableList<FeatureToggleGroupUM> {
+    private fun MutableFeatureTogglesManager.getTesterFeatureToggleGroups(
+        query: String,
+    ): ImmutableList<FeatureToggleGroupUM> {
         val togglesByStatus = getFeatureToggles()
+            .filter { it.name.contains(query, ignoreCase = true) }
             .sortedWith(featureToggleComparator)
             .map { info ->
                 TesterFeatureToggleUM(

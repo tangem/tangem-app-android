@@ -14,6 +14,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.findCardWithId
@@ -22,7 +23,6 @@ import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -45,7 +45,6 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     private val setTangemPayCardLimitUseCase: SetTangemPayCardLimitUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
-    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: TangemPayCardLimitSetupComponent.Params = paramsContainer.require()
@@ -76,8 +75,6 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.LimitManagementOpened())
         observeCardState()
     }
-
-    fun inRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
 
     private fun observeCardState() {
         paymentAccountStatusSupplier.invoke(userWalletId)
@@ -201,6 +198,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         val label = preset.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         TangemPayCardLimitSetupUM.LimitPresetUM(
             label = label,
+            testTag = TangemPayTestTags.dailyLimitPresetChip(preset.stripTrailingZeros().toPlainString()),
             onClick = { onPresetClick(preset) },
         )
     }.toPersistentList()

@@ -78,6 +78,19 @@ The app uses [Decompose](https://github.com/arkivanov/Decompose) for lifecycle-a
 - Exposes `StateFlow<{Name}UM>` (UM = UI Model, state class in `ui/state/` subpackage)
 - Has `modelScope` (SupervisorJob + mainImmediate), auto-cancelled on destroy
 
+**State exposure (preferred pattern):** expose a public read-only `StateFlow` backed by a Kotlin
+**explicit backing field** rather than a separate `private val _state` + `asStateFlow()`. The project
+enables the `ExplicitBackingFields` compiler feature, so write:
+
+```kotlin
+val uiState: StateFlow<FooUM>
+    field = MutableStateFlow(FooUM())
+// inside the class, mutate via uiState.update { … }; callers see StateFlow<FooUM>
+```
+
+This applies to both Decompose `Model`s and Android `ViewModel`s. Avoid the `_uiState`/`asStateFlow()`
+duplication for new code. References: `ScanFailsModel`, `AppSettingsModel`.
+
 **Child navigation within features:**
 - `childStack()` — stacked screen navigation (back stack)
 - `childSlot()` — optional overlays/bottom sheets (single or no child)
@@ -102,7 +115,7 @@ The app uses [Decompose](https://github.com/arkivanov/Decompose) for lifecycle-a
 - **Async:** Kotlin Coroutines + Flow. Inject `CoroutineDispatcherProvider` (from `core/utils`) instead of using `Dispatchers.*` directly — provides `main`, `mainImmediate`, `io`, `default`, `single`
 - **Error handling:** Arrow's `Either<Error, Success>` pattern throughout domain/data layers. `DataError` sealed hierarchy for domain errors. See `domain/core/CLAUDE.md` for the LCE pattern
 - **Analytics:** `AnalyticsEvent(category, event, params)` in `core/analytics/models/`. Feature events are sealed class hierarchies extending `AnalyticsEvent`. Send via injected `AnalyticsEventHandler`
-- **Feature toggles:** `FeatureTogglesManager` in `core/config-toggles/`. Toggles are defined in `core/config-toggles/src/main/assets/configs/feature_toggles_config.json` and auto-generated into a `FeatureToggles` enum by the convention plugin at build time. Each feature module exposes its own `XxxFeatureToggles` interface (in `api/`) with a `DefaultXxxFeatureToggles` implementation (in `impl/`) that delegates to `FeatureTogglesManager`
+- **Feature toggles:** `FeatureTogglesManager` in `core/config-toggles/`. See `core/config-toggles/CLAUDE.md`.
 - **Supported languages:** `SupportedLanguages` in `core/utils/` defines the app's supported locales: en, ru, de, fr, it, ja, uk, zh, es. `getCurrentSupportedLanguageCode()` returns the device locale if supported, otherwise falls back to English. Used by API calls that accept a language parameter
 
 ### Build System

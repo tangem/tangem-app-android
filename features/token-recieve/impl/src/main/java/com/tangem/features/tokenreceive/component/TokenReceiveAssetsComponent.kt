@@ -9,12 +9,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.model.TokenReceiveAssetsModel
 import com.tangem.features.tokenreceive.ui.TokenReceiveAssetsContent
-import com.tangem.features.tokenreceive.ui.TokenReceiveAssetsContentLegacy
 import kotlinx.collections.immutable.ImmutableList
 
 internal class TokenReceiveAssetsComponent(
@@ -27,11 +25,7 @@ internal class TokenReceiveAssetsComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
-        if (LocalRedesignEnabled.current) {
-            TokenReceiveAssetsContent(assetsUM = state)
-        } else {
-            TokenReceiveAssetsContentLegacy(assetsUM = state)
-        }
+        TokenReceiveAssetsContent(assetsUM = state)
     }
 
     internal interface TokenReceiveAssetsModelCallback {

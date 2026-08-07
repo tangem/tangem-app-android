@@ -38,12 +38,14 @@ sealed class MainScreenAnalyticsEvent(
         event = "Button - Receive",
     )
 
-    class ButtonAddFunds : MainScreenAnalyticsEvent(
+    data class ButtonAddFunds(val status: AnalyticsParam.Status) : MainScreenAnalyticsEvent(
         event = "Button - Add Funds",
+        params = mapOf(AnalyticsParam.STATUS to status.value),
     )
 
-    class ButtonTransfer : MainScreenAnalyticsEvent(
+    data class ButtonTransfer(val status: AnalyticsParam.Status) : MainScreenAnalyticsEvent(
         event = "Button - Transfer",
+        params = mapOf(AnalyticsParam.STATUS to status.value),
     )
 
     class LimitsClicked : MainScreenAnalyticsEvent(
@@ -86,8 +88,6 @@ sealed class MainScreenAnalyticsEvent(
 
     class BuyScreenOpened : MainScreenAnalyticsEvent(event = "Buy Screen Opened")
 
-    class SwapScreenOpened : MainScreenAnalyticsEvent(event = "Swap Screen Opened")
-
     class SellScreenOpened : MainScreenAnalyticsEvent(event = "Sell Screen Opened")
 
     data class BuyTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
@@ -97,21 +97,6 @@ sealed class MainScreenAnalyticsEvent(
 
     data class SellTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
         event = "Sell Token Clicked",
-        params = mapOf(TOKEN_PARAM to currencySymbol),
-    )
-
-    data class SwapTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
-        event = "Swap Token Clicked",
-        params = mapOf(TOKEN_PARAM to currencySymbol),
-    )
-
-    data class ReceiveTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
-        event = "Receive Token Clicked",
-        params = mapOf(TOKEN_PARAM to currencySymbol),
-    )
-
-    data class RemoveTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
-        event = "Remove Button Clicked",
         params = mapOf(TOKEN_PARAM to currencySymbol),
     )
 
