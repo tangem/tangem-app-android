@@ -22,6 +22,7 @@ import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.message.TangemMessageButtonUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.message.TangemMessageIconPosition
 import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
@@ -107,7 +108,22 @@ fun LazyListScope.notifications(
  */
 @Composable
 private fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modifier) {
-    val iconUM = messageUM.iconUM
+    val icon: (@Composable () -> Unit)? = messageUM.iconUM?.let { iconUM ->
+        {
+            TangemIcon(
+                tangemIconUM = iconUM,
+                modifier = Modifier
+                    .size(messageUM.iconSize)
+                    .testTag(NotificationTestTags.ICON),
+            )
+        }
+    }
+    val closeButton: (@Composable () -> Unit)? = messageUM.onCloseClick?.let { onCloseClick ->
+        { TangemMessageBanner.CloseButton(onClick = onCloseClick) }
+    }
+    // The close button owns the end slot, so an icon can only move there when there is no close button.
+    val isIconTrailing = messageUM.iconPosition == TangemMessageIconPosition.Trailing && closeButton == null
+
     TangemMessageBanner(
         modifier = modifier
             .testTag(NotificationTestTags.CONTAINER)
@@ -116,8 +132,8 @@ private fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modif
             },
         title = messageUM.title,
         description = messageUM.subtitle,
-        variant = messageUM.messageEffect.toBannerVariant(),
-        showGlowRing = messageUM.messageEffect.hasGlowRing(),
+        variant = messageUM.variant ?: messageUM.messageEffect.toBannerVariant(),
+        showGlowRing = messageUM.shouldShowGlowRing ?: messageUM.messageEffect.hasGlowRing(),
         contentAlign = if (messageUM.isCentered) {
             TangemMessageBanner.ContentAlign.Center
         } else {
@@ -129,26 +145,20 @@ private fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modif
         primaryButton = messageUM.buttonsUM
             .firstOrNull { it.type != TangemButtonType.Secondary }
             ?.toBannerButton(),
-        slotStart = iconUM?.let {
-            {
-                TangemIcon(
-                    tangemIconUM = it,
-                    modifier = Modifier
-                        .size(messageUM.iconSize)
-                        .testTag(NotificationTestTags.ICON),
-                )
-            }
-        },
-        slotEnd = messageUM.onCloseClick?.let { onCloseClick ->
-            { TangemMessageBanner.CloseButton(onClick = onCloseClick) }
-        },
+        slotStart = icon.takeUnless { isIconTrailing },
+        slotEnd = closeButton ?: icon.takeIf { isIconTrailing },
     )
 }
 
 /**
- * Maps the message [TangemMessageEffect] to the DS3 banner [TangemMessageBanner.Variant] (background):
- * the legacy [Warning][TangemMessageEffect.Warning] alert becomes the red [Error][TangemMessageBanner.Variant.Error],
+ * Legacy fallback used only when [TangemMessageUM.variant] is `null`: maps the DS2
+ * [TangemMessageEffect] to a DS3 banner [TangemMessageBanner.Variant] (background). The legacy
+ * [Warning][TangemMessageEffect.Warning] alert becomes the red [Error][TangemMessageBanner.Variant.Error],
  * everything else keeps the neutral [Solid][TangemMessageBanner.Variant.Solid] background.
+ *
+ * Note this collapses four effects onto **two** of the banner's six variants — `Default`, `Warning`,
+ * `Success` and `Info` are unreachable through it. Set [TangemMessageUM.variant] explicitly rather
+ * than adding cases here; [TangemMessageEffect] is a DS2 leftover and this path is on its way out.
  */
 private fun TangemMessageEffect.toBannerVariant(): TangemMessageBanner.Variant = when (this) {
     TangemMessageEffect.Warning -> TangemMessageBanner.Variant.Error

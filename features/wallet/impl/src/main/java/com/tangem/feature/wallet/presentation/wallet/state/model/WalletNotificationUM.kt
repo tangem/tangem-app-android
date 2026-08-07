@@ -6,7 +6,10 @@ import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessageButtonUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.message.TangemMessageIconPosition
 import com.tangem.core.ui.ds.message.TangemMessageUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -44,12 +47,15 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object SomeNetworksUnreachable : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "SomeNetworksUnreachableNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = false,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_some_networks_unreachable_title),
             subtitle = resourceReference(id = R.string.warning_some_networks_unreachable_message),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.status.attention },
-            ),
             messageEffect = TangemMessageEffect.None,
         ),
         type = WalletNotificationType.Status,
@@ -58,12 +64,15 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object UsedOutdatedData : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "UsedOutdatedDataNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = false,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_cloud_exclamation_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(R.string.warning_outdated_data_title),
             subtitle = resourceReference(R.string.warning_outdated_data_message),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_error_sync_default_24,
-                tintReference = { TangemTheme.colors2.graphic.status.attention },
-            ),
             messageEffect = TangemMessageEffect.None,
         ),
         type = WalletNotificationType.Status,
@@ -72,12 +81,15 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object FailedCardValidation : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "FailedCardValidationNotification",
+            variant = TangemMessageBanner.Variant.Error,
+            shouldShowGlowRing = false,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_error_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.error },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_failed_to_verify_card_title),
             subtitle = resourceReference(id = R.string.warning_failed_to_verify_card_message),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
             messageEffect = TangemMessageEffect.Warning,
         ),
         type = WalletNotificationType.Status,
@@ -86,13 +98,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object DevCard : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "DevCardNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = false,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_developer_card_title),
             subtitle = resourceReference(id = R.string.warning_developer_card_message),
             messageEffect = TangemMessageEffect.None,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
         ),
         type = WalletNotificationType.Status,
     )
@@ -100,13 +115,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object TestnetCard : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TestnetCardNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = false,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_testnet_card_title),
             subtitle = resourceReference(id = R.string.warning_testnet_card_message),
             messageEffect = TangemMessageEffect.None,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
         ),
         type = WalletNotificationType.Status,
     )
@@ -114,13 +132,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object DemoCard : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "DemoCardNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = false,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_demo_mode_title),
             subtitle = resourceReference(id = R.string.warning_demo_mode_message),
             messageEffect = TangemMessageEffect.None,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
         ),
         type = WalletNotificationType.Status,
     )
@@ -130,13 +151,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class BackupError(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "BackupErrorNotification",
+            variant = TangemMessageBanner.Variant.Error,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_error_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.error },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_incomplete_backup_notification_title),
             subtitle = resourceReference(id = R.string.warning_incomplete_backup_notification_message),
             messageEffect = TangemMessageEffect.Warning,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.common_contact_support),
@@ -151,13 +175,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class MissingBackup(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "MissingBackupNotification",
+            variant = TangemMessageBanner.Variant.Error,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_no_backup_title),
             subtitle = resourceReference(id = R.string.warning_no_backup_message),
             messageEffect = TangemMessageEffect.Warning,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.button_start_backup_process),
@@ -172,14 +199,17 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class LowSignatures(val count: Int) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "LowSignaturesNotification",
+            variant = TangemMessageBanner.Variant.Warning,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_low_signatures_title),
             subtitle = resourceReference(
                 id = R.string.warning_low_signatures_message,
                 formatArgs = wrappedList(count.toString()),
-            ),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
             ),
             messageEffect = TangemMessageEffect.None,
         ),
@@ -193,21 +223,19 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "FinishWalletActivationNotification",
+            variant = TangemMessageBanner.Variant.Warning,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(R.string.hw_activation_need_title),
             subtitle = if (isBackupExists) {
                 resourceReference(R.string.hw_activation_need_warning_description)
             } else {
                 resourceReference(R.string.hw_activation_need_description)
             },
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.img_knight_shield_32,
-                tintReference = {
-                    when (messageEffect) {
-                        TangemMessageEffect.Warning -> TangemTheme.colors2.graphic.neutral.primary
-                        else -> TangemTheme.colors2.graphic.status.attention
-                    }
-                },
-            ),
             messageEffect = messageEffect,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
@@ -226,13 +254,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class NumberOfSignedHashesIncorrect(val onCloseClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "NumberOfSignedHashesIncorrectNotification",
+            variant = TangemMessageBanner.Variant.Error,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_error_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.error },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_number_of_signed_hashes_incorrect_title),
             subtitle = resourceReference(id = R.string.warning_number_of_signed_hashes_incorrect_message),
             messageEffect = TangemMessageEffect.Warning,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.img_knight_shield_32,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
             onCloseClick = onCloseClick,
         ),
         type = WalletNotificationType.Critical,
@@ -248,6 +279,13 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "MissingAddressesNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_missing_derivation_title),
             subtitle = pluralReference(
                 id = if (isHotWallet) {
@@ -258,7 +296,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                 count = missingAddressesCount,
                 formatArgs = wrappedList(missingAddressesCount),
             ),
-            isCentered = true,
+            isCentered = false,
             messageEffect = TangemMessageEffect.Card,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
@@ -280,6 +318,13 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class NoAccount(val network: String, val symbol: String, val amount: String) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "NoAccountNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = false,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_no_account_title),
             subtitle = resourceReference(
                 id = R.string.no_account_generic,
@@ -293,6 +338,13 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class UnlockWallets(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "UnlockWalletsNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                iconRes = CoreUiR.drawable.ic_lock_24,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.common_access_denied),
             subtitle = resourceReference(
                 id = R.string.warning_access_denied_message,
@@ -308,7 +360,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                 ),
             ),
             messageEffect = TangemMessageEffect.Card,
-            isCentered = true,
+            isCentered = false,
         ),
         type = WalletNotificationType.Warning,
     )
@@ -320,6 +372,13 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayRefreshNeeded",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.tangempay_sync_needed_title),
             subtitle = resourceReference(id = R.string.tangempay_sync_needed_body),
             buttonsUM = persistentListOf(
@@ -342,13 +401,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object TangemPayUnreachable : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayUnreachable",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.tangempay_temporarily_unavailable),
             subtitle = resourceReference(id = R.string.tangempay_service_unreachable_try_later),
             messageEffect = TangemMessageEffect.Warning,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_alert_circle_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
         ),
         type = WalletNotificationType.Warning,
     )
@@ -356,12 +418,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class SoftUpdateAvailable(val onUpdateClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "SoftUpdateAvailableNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
+            iconPosition = TangemMessageIconPosition.Trailing,
             title = resourceReference(id = CoreResR.string.force_update_banner_title),
             subtitle = resourceReference(id = CoreResR.string.force_update_banner_message),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.status.attention },
-            ),
             messageEffect = TangemMessageEffect.Warning,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
@@ -379,12 +445,15 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class AddFunds(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "AddFundsPromoNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_arrow_down_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = CoreResR.string.main_add_funds_promo_title),
             subtitle = resourceReference(id = CoreResR.string.main_add_funds_promo_description),
-            iconUM = TangemIconUM.Icon(
-                iconRes = CoreUiR.drawable.ic_swap_28,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
             messageEffect = TangemMessageEffect.Magic,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
@@ -400,10 +469,17 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class NoteMigration(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "NoteMigrationNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_logo_tangem_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(R.string.wallet_promo_banner_title),
             subtitle = resourceReference(R.string.wallet_promo_banner_description),
             messageEffect = TangemMessageEffect.Magic,
-            isCentered = true,
+            isCentered = false,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(R.string.wallet_promo_banner_button_title),
@@ -421,7 +497,11 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayPromo",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
             iconUM = TangemIconUM.Image(imageRes = R.drawable.ic_visa_in_banner),
+            iconSize = 40.dp,
+            iconPosition = TangemMessageIconPosition.Trailing,
             title = resourceReference(id = R.string.tangempay_onboarding_banner_title),
             subtitle = resourceReference(id = R.string.tangempay_get_banner_description),
             buttonsUM = persistentListOf(
@@ -447,13 +527,19 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "YieldBoostPromoNotification",
+            // Not present in the Figma reference frame; matched to the other promo banners.
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
             title = combinedReference(
                 resourceReference(CoreResR.string.yield_apy_boost_banner_title),
                 stringReference(" · "),
                 resourceReference(CoreResR.string.yield_apy_boost_banner_title_apy_multiplied),
             ),
             subtitle = resourceReference(CoreResR.string.yield_apy_boost_banner_subtitle),
-            iconUM = TangemIconUM.Image(imageRes = CoreUiR.drawable.ic_yield_32),
+            iconUM = TangemIconUM.Icon(
+                iconRes = CoreUiR.drawable.ic_yield_32,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
             messageEffect = TangemMessageEffect.Magic,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
@@ -481,9 +567,16 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "RateAppNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_logo_tangem_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(id = R.string.warning_rate_app_title),
             subtitle = resourceReference(id = R.string.warning_rate_app_message),
-            isCentered = true,
+            isCentered = false,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.warning_button_could_be_better),
@@ -510,10 +603,15 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "PushNotificationsNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_bell_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(R.string.user_push_notification_banner_title),
             subtitle = resourceReference(R.string.user_push_notification_banner_subtitle),
-            iconUM = TangemIconUM.Image(R.drawable.img_push_reminder),
-            iconSize = 54.dp,
             messageEffect = TangemMessageEffect.Magic,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
@@ -536,12 +634,15 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "CloreMigrationNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(R.string.warning_clore_migration_title),
             subtitle = resourceReference(R.string.warning_clore_migration_description),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.status.attention },
-            ),
             messageEffect = TangemMessageEffect.None,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
@@ -560,12 +661,15 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "AssetsDiscoveryCompletedNotification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_success_20,
+                tintReference = { TangemTheme.colors3.icon.brand },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(R.string.initial_wallet_sync_banner_title),
             subtitle = resourceReference(R.string.initial_wallet_sync_banner_description),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_check_circle_24,
-                tintReference = { TangemTheme.colors2.graphic.status.accent },
-            ),
             messageEffect = TangemMessageEffect.None,
             onCloseClick = onCloseClick,
             buttonsUM = persistentListOf(
