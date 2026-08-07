@@ -32,6 +32,10 @@ different setup.
 5. **Write the test** per Conventions below.
 6. **Build BOTH APKs, install, run, and classify the result** correctly — Allure post-run hook
    failures are not test failures (see `reference/running-and-debugging.md`).
+   **One green run proves nothing when the test was flaky.** A fix for a flaky test is only done after
+   **3 consecutive green runs**; a single pass is exactly what a 1-in-4 race looks like. And before
+   blaming a test, check your local WireMock is started the way CI starts it — a misconfigured local
+   instance fails tests that are fine on CI (see `reference/running-and-debugging.md`).
 7. **Final cleanup pass — remove what you no longer use.** Before declaring done, review every file you
    touched for leftovers from iteration (see "Final cleanup" below). This is a required step, not optional.
 
@@ -242,6 +246,18 @@ Native first, by need:
 
 ### Waits and synchronization
 
+- **Never use the shared `pullToRefresh()` from `common/extensions/UiDeviceExt.kt` on a Compose screen.**
+  It is UiAutomator-based and is a **silent no-op** on Material3 `PullToRefreshBox` — `onRefresh` never
+  fires, no request is made, and the screen keeps serving stale data while the test happily continues.
+  Use a Compose gesture instead: `pullToRefreshTokenDetails()` / `pullToRefreshTangemPay()`, or write the
+  same shape for your screen (`onNode(hasTestTag(CONTAINER)).performTouchInput { swipeDown(...) }`).
+  Details in `reference/compose-traps.md`. The trigger for this rule is **calling the helper**, not
+  recognising the widget — you usually cannot tell from the test which refresh container the screen uses.
+- **A negative assertion never proves an action landed.** `assertDoesNotExist()` / `assertIsNotDisplayed()`
+  pass just as happily when the element is missing for an unrelated reason (not rendered yet, scrolled
+  away, wrong screen). Using one as the "did the refresh happen?" check silently validates nothing. Prove
+  an action took effect with a **positive** change (the new value/state appears), or with the WireMock
+  journal (`/__admin/requests`) showing the request the action was supposed to trigger.
 - **Manual polls are banned** (`onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()` in a loop) — even
   if a bot reviewer suggests one.
 - **Default in the test body: `flakySafely(TIMEOUT) { assertion }`** — the codebase idiom (hundreds of
