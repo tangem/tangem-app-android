@@ -187,6 +187,36 @@ internal class TangemPayCardDetailsControllerTest {
     }
 
     @Test
+    fun `GIVEN copy cardholder name WHEN onCopy invoked THEN spaces kept and analytics sent`() = runTest {
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+
+        controller.uiState.value.onCopy("JOHNNY SILVERHAND", CardDataType.CardholderName)
+
+        verify(exactly = 1) { clipboardManager.setText(text = "JOHNNY SILVERHAND", isSensitive = true) }
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CopyCardholderNameClicked()) }
+    }
+
+    @Test
+    fun `GIVEN card with emboss name WHEN created THEN cardholder name exposed`() = runTest {
+        val controller = createController(
+            scope = backgroundScope,
+            card = card(embossName = "JOHNNY SILVERHAND"),
+        )
+        runCurrent()
+
+        assertThat(controller.uiState.value.cardholderName).isEqualTo("JOHNNY SILVERHAND")
+    }
+
+    @Test
+    fun `GIVEN card without emboss name WHEN created THEN cardholder name is null`() = runTest {
+        val controller = createController(scope = backgroundScope, card = card(embossName = null))
+        runCurrent()
+
+        assertThat(controller.uiState.value.cardholderName).isNull()
+    }
+
+    @Test
     fun `GIVEN disposed WHEN Show received THEN reveal not triggered`() = runTest {
         coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
         val controller = createController(scope = backgroundScope)
@@ -227,6 +257,7 @@ internal class TangemPayCardDetailsControllerTest {
         displayName: CardDisplayName? = null,
         frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
         state: TangemPayCardState = TangemPayCardState.Active,
+        embossName: String? = null,
     ): TangemPayCard = TangemPayCard(
         id = id,
         productInstanceId = "product_$id",
@@ -238,6 +269,7 @@ internal class TangemPayCardDetailsControllerTest {
         lastDigits = lastDigits,
         images = emptyList(),
         state = state,
+        embossName = embossName,
     )
 
     private companion object {
