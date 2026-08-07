@@ -27,6 +27,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
+import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.stories.ShouldShowStoriesUseCase
@@ -104,6 +105,7 @@ internal abstract class SwapModelTestBase {
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
     protected val setSwapUiModeUseCase: SetSwapUiModeUseCase = mockk(relaxed = true)
     protected val calculateAmountUseCase: CalculateAmountUseCase = mockk(relaxed = true)
+    protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
     protected val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase = mockk(relaxed = true)
     protected val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
@@ -128,7 +130,6 @@ internal abstract class SwapModelTestBase {
         coEvery { shouldShowStoriesUseCase.invokeSync(any()) } returns false
         coEvery { initialCurrenciesResolver.invoke(any(), any(), any(), any()) } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
-        every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
     }
 
     protected fun createParams(): SwapComponent.Params = SwapComponent.Params(
@@ -177,6 +178,7 @@ internal abstract class SwapModelTestBase {
         getSwapUiModeUseCase = getSwapUiModeUseCase,
         setSwapUiModeUseCase = setSwapUiModeUseCase,
         calculateAmountUseCase = calculateAmountUseCase,
+        isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
         isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
         sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,

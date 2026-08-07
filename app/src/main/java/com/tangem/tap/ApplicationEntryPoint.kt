@@ -12,11 +12,13 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.log.TangemLoggingInitializer
+import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -58,4 +60,8 @@ interface ApplicationEntryPoint {
     fun getDeviceRegistrar(): DeviceRegistrar
 
     fun getAuthFeatureToggles(): AuthFeatureToggles
+
+    fun getWalletRegistrationLauncher(): WalletRegistrationLauncher
+
+    fun getUserWalletsListRepository(): UserWalletsListRepository
 }

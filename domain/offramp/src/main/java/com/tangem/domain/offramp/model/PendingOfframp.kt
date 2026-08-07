@@ -1,6 +1,7 @@
 package com.tangem.domain.offramp.model
 
 import com.tangem.domain.models.wallet.UserWalletId
+import java.util.concurrent.TimeUnit
 
 /**
  * A locally-recorded marker that the app itself initiated a sell (off-ramp) flow.
@@ -19,4 +20,13 @@ data class PendingOfframp(
     val userWalletId: UserWalletId,
     val currencyId: String,
     val createdAt: Long,
-)
+) {
+
+    /** Whether the record is past its expiry at [nowMillis] and can no longer authenticate a redirect. */
+    fun isExpired(nowMillis: Long): Boolean = nowMillis - createdAt >= EXPIRY_MS
+
+    companion object {
+        /** How long a pending sell stays valid after registration. */
+        val EXPIRY_MS: Long = TimeUnit.HOURS.toMillis(1)
+    }
+}

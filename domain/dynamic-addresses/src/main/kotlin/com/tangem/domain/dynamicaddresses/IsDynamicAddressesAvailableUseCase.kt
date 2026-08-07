@@ -11,12 +11,9 @@ import com.tangem.domain.wallets.derivations.derivationStyleProvider
  * Whether the Dynamic Addresses menu entry should be shown for a given (wallet, currency) pair.
  * Policy check only — hardware XPUB capability is verified by [IsXpubSupportedUseCase].
  */
-class IsDynamicAddressesAvailableUseCase(
-    private val featureToggles: DynamicAddressesFeatureToggles,
-) {
+class IsDynamicAddressesAvailableUseCase {
 
     operator fun invoke(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
-        if (!featureToggles.isDynamicAddressesEnabled) return false
         if (cryptoCurrency !is CryptoCurrency.Coin) return false
 
         val network = cryptoCurrency.network

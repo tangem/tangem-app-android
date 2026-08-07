@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -35,6 +36,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.AddCustomTokenScreenTestTags
 import com.tangem.features.managetokens.component.preview.PreviewCustomTokenFormComponent
 import com.tangem.features.managetokens.entity.customtoken.ClickableFieldUM
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenFormUM
@@ -122,11 +124,15 @@ private fun FormContent(model: CustomTokenFormUM, modifier: Modifier = Modifier)
 
         val derivationPath = model.derivationPath
         if (derivationPath != null) {
-            ClickableField(model = derivationPath)
+            ClickableField(
+                modifier = Modifier.testTag(AddCustomTokenScreenTestTags.DERIVATION_SELECTOR_FIELD),
+                model = derivationPath,
+            )
         }
 
         model.notifications.fastForEach { notification ->
             Notification(
+                modifier = Modifier.testTag(AddCustomTokenScreenTestTags.WARNING_NOTIFICATION),
                 config = notification.config,
                 containerColor = TangemTheme.colors.button.disabled,
             )
@@ -143,14 +149,19 @@ private fun TokenForm(tokenForm: CustomTokenFormUM.TokenFormUM, modifier: Modifi
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             ),
     ) {
-        tokenForm.fields.values.forEach { field ->
-            TextField(model = field)
+        tokenForm.fields.forEach { (key, field) ->
+            TextField(
+                model = field,
+                fieldTestTag = AddCustomTokenScreenTestTags.CONTRACT_ADDRESS_FIELD.takeIf {
+                    key == Field.CONTRACT_ADDRESS
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun TextField(model: TextInputFieldUM, modifier: Modifier = Modifier) {
+private fun TextField(model: TextInputFieldUM, modifier: Modifier = Modifier, fieldTestTag: String? = null) {
     InformationBlock(
         modifier = modifier,
         title = {
@@ -192,6 +203,7 @@ private fun TextField(model: TextInputFieldUM, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .padding(bottom = TangemTheme.dimens.spacing12)
                     .fillMaxWidth()
+                    .then(if (fieldTestTag != null) Modifier.testTag(fieldTestTag) else Modifier)
                     .onFocusChanged {
                         model.onFocusChange(it.isFocused)
                     },

@@ -1,10 +1,8 @@
 package com.tangem.domain.appsflyer.repository
 
-import com.tangem.domain.appsflyer.AppsFlyerDeeplinkSource
-
 interface AppsFlyerRepository {
 
-    suspend fun getDeeplink(source: AppsFlyerDeeplinkSource): String?
+    suspend fun getDeeplink(): String?
 
-    suspend fun clearDeeplink(source: AppsFlyerDeeplinkSource)
+    suspend fun clearDeeplink()
 }

@@ -9,12 +9,12 @@ import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
 data class CreateProductWalletTaskResponse(
     val card: CardDTO,
-    val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
+    val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = emptyMap(),
     val primaryCard: PrimaryCard? = null,
 ) : CommandResponse {
     constructor(
         card: Card,
-        derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
+        derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = emptyMap(),
         primaryCard: PrimaryCard? = null,
     ) : this(
         card = CardDTO(card),

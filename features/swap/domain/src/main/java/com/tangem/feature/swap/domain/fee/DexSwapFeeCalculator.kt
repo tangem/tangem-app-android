@@ -32,9 +32,11 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -66,6 +68,7 @@ class DexSwapFeeCalculator(
     private val walletManagersFacade: WalletManagersFacade,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
 ) {
 
     suspend fun calculate(
@@ -89,6 +92,11 @@ class DexSwapFeeCalculator(
                 otherNativeFee = otherNativeFee,
             )
             isSolana(networkRawId) -> calculateSolanaFee(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                transaction = transaction,
+                otherNativeFee = otherNativeFee,
+            )
+            isTron(networkRawId) && swapFeatureToggles.isTronDexSwapEnabled -> calculateTronFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
                 otherNativeFee = otherNativeFee,
@@ -189,6 +197,47 @@ class DexSwapFeeCalculator(
             transactionFee = patched,
             otherNativeFee = otherNativeFee,
             gas = transaction.gas,
+        )
+    }
+
+    /**
+     * TRON DEX swap fee ([REDACTED_TASK_KEY], gated by [SwapFeatureToggles.isTronDexSwapEnabled]).
+     *
+     * The swap arrives in EVM format — a native-value contract call to the router [txTo] carrying
+     * raw [txData]. TRON has no EVM gas, so unlike [calculateEvmFee] there is no gas-limit bump and
+     * no eth-specific fallback: the fee (bandwidth + energy) is estimated directly for a
+     * [TransactionData.Uncompiled]. The `TronTransactionExtras` produced from [txData] is what makes
+     * the SDK build (and energy-estimate) the tx as a smart-contract call rather than a plain send.
+     */
+    private suspend fun Raise<GetFeeError>.calculateTronFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        otherNativeFee: BigDecimal,
+    ): DexFeeResult {
+        val network = fromSwapCurrencyStatus.currency.network
+        val txValue = transaction.txValue ?: raise(GetFeeError.UnknownError)
+        val extras = createTransactionExtrasUseCase(
+            data = transaction.txData,
+            network = network,
+        ).getOrNull() ?: raise(GetFeeError.UnknownError)
+
+        val transactionData = TransactionData.Uncompiled(
+            amount = createNativeAmountForDex(txValue, network),
+            destinationAddress = transaction.txTo,
+            fee = null,
+            sourceAddress = transaction.txFrom,
+            extras = extras,
+        )
+        val fee = getFeeUseCase(
+            transactionData = transactionData,
+            network = network,
+            userWallet = fromSwapCurrencyStatus.userWallet,
+        ).getOrNull() ?: raise(GetFeeError.UnknownError)
+
+        return DexFeeResult(
+            transactionFee = TransactionFeeResult.Loaded(fee),
+            otherNativeFee = otherNativeFee,
+            gas = null,
         )
     }
 

@@ -9,6 +9,9 @@ import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 internal class DefaultAppsFlyerStore(
     private val appPreferencesStore: AppPreferencesStore,
@@ -56,24 +59,28 @@ internal class DefaultAppsFlyerStore(
         }
     }
 
-    override suspend fun getDeeplink(source: AppsFlyerDeeplinkSource): String? =
-        appPreferencesStore.getSyncOrNull(stringPreferencesKey(source.toStoreKey()))
+    override fun observeNavigationDeeplink(): Flow<String?> = appPreferencesStore.data
+        .map { preferences -> preferences[NAVIGATION_DEEPLINK_KEY] }
+        .distinctUntilChanged()
 
-    override suspend fun storeDeeplink(source: AppsFlyerDeeplinkSource, deeplink: String) {
+    override suspend fun getNavigationDeeplink(): String? = appPreferencesStore.getSyncOrNull(NAVIGATION_DEEPLINK_KEY)
+
+    override suspend fun storeNavigationDeeplink(deepLinkValue: String) {
         appPreferencesStore.editData { preferences ->
-            preferences[stringPreferencesKey(source.toStoreKey())] = deeplink
+            preferences[NAVIGATION_DEEPLINK_KEY] = deepLinkValue
         }
     }
 
-    override suspend fun clearDeeplink(source: AppsFlyerDeeplinkSource) {
+    override suspend fun clearNavigationDeeplink() {
         appPreferencesStore.editData { preferences ->
-            preferences.remove(stringPreferencesKey(source.toStoreKey()))
+            preferences.remove(NAVIGATION_DEEPLINK_KEY)
         }
     }
 
     private companion object {
         val UID_KEY = stringPreferencesKey("APPS_FLYER_UID")
         val CONVERSION_DATA_KEY = stringPreferencesKey("APPS_FLYER_CONVERSION_DATA")
+        val NAVIGATION_DEEPLINK_KEY = stringPreferencesKey("appsflyer_navigation_deeplink")
     }
 }
 
