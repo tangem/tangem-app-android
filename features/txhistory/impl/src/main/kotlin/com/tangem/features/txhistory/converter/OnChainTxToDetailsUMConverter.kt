@@ -70,9 +70,10 @@ internal class OnChainTxToDetailsUMConverter(
             rows = buildList {
                 tx.validatorRow()?.let(::add)
                 tx.protocolRow()?.let(::add)
-                // A received plain transfer's fee was paid by the sender, not the user — omit it here. Non-Transfer
-                // ops the user initiated (Approve, staking) keep their fee even when incoming.
-                if (!tx.isReceivedTransfer()) addAll(tx.toInfoRows())
+                // A received "Receive" transfer's fee was paid by the sender, not the user — omit it here. An own
+                // "Transfer" (both sides the user's) and user-initiated ops (Approve, staking) keep their fee, even
+                // when incoming.
+                if (!tx.isReceive()) addAll(tx.toInfoRows())
             }.toImmutableList(),
         )
     }
@@ -145,8 +146,11 @@ internal class OnChainTxToDetailsUMConverter(
         is ResolvedOwner.External, null -> false
     }
 
-    /** A received plain transfer — its on-chain fee belongs to the sender, so the details omit the fee row. */
-    private fun TxInfo.isReceivedTransfer(): Boolean = type is TxInfo.TransactionType.Transfer && !isOutgoing
+    /**
+     * A "Receive" — an incoming transfer from an external counterparty (not an own "Transfer" between the user's
+     * accounts/wallets). Its on-chain fee belongs to the sender, so the details omit the fee row.
+     */
+    private fun TxInfo.isReceive(): Boolean = type is TxInfo.TransactionType.Transfer && !isOutgoing && !isOwnTransfer()
 
     /**
      * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
