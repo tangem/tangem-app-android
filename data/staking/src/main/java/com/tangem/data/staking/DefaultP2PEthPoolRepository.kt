@@ -99,7 +99,6 @@ internal class DefaultP2PEthPoolRepository(
     }
 
     private fun StakingError.isRegionBlocked(): Boolean {
-        if (!stakingFeatureToggles.isRegionUnavailableHandlingEnabled()) return false
         val httpException = (this as? StakingError.UnknownError)?.exception as? ApiResponseError.HttpException
         return httpException?.code == ApiResponseError.HttpException.Code.UNAVAILABLE_FOR_LEGAL_REASONS
     }
