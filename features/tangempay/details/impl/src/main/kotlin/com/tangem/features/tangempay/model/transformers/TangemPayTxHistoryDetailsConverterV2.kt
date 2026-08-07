@@ -15,7 +15,9 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.ButtonState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUMV2
+import com.tangem.features.tangempay.entity.TransactionDetailUM
 import com.tangem.features.tangempay.entity.TransactionLabelUM
+import com.tangem.features.tangempay.entity.TransactionLoadState
 import com.tangem.features.tangempay.entity.TransactionStateType
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -34,6 +36,7 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
             subtitle = transaction.extractDate(),
             iconState = transaction.extractIcon(),
             transactionTitle = transaction.extractTransactionTitle(),
+            detail = value.extractDetail(),
             transactionCategory = transaction.extractTransactionCategory(),
             mcc = transaction.extractMcc(),
             transactionAmount = transaction.extractAmount(),
@@ -289,6 +292,25 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
         }
     }
 
+    private fun Input.extractDetail(): TransactionDetailUM? {
+        val spend = item as? TangemPayTxHistoryItem.Spend ?: return null
+        return when (transactionLoadState) {
+            TransactionLoadState.Loading -> TransactionDetailUM.Loading
+            TransactionLoadState.Error -> TransactionDetailUM.Error(onRefreshClick = onCardRefreshClick)
+            TransactionLoadState.Loaded -> spend.extractCardDetail()
+        }
+    }
+
+    private fun TangemPayTxHistoryItem.Spend.extractCardDetail(): TransactionDetailUM.Content? {
+        val name = cardName?.takeIf { it.isNotEmpty() }
+        val last4 = cardNumberLast4?.takeIf { it.isNotEmpty() }
+        if (name == null && last4 == null) return null
+        return TransactionDetailUM.Content(
+            cardNumber = last4?.let { stringReference("*$it") },
+            cardName = name?.let(::stringReference),
+        )
+    }
+
     private fun Input.extractButtonState(): ButtonState {
         return ButtonState(
             text = resourceReference(R.string.tangem_pay_get_help),
@@ -299,8 +321,10 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
     data class Input(
         val item: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,
+        val transactionLoadState: TransactionLoadState,
         val onExplorerClick: (String?) -> Unit,
         val onDisputeClick: () -> Unit,
+        val onCardRefreshClick: () -> Unit,
         val onDismiss: () -> Unit,
     )
 }

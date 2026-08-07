@@ -66,24 +66,6 @@ internal class DetailsModelInitTest : DetailsModelTestBase() {
     }
 
     @Test
-    fun `GIVEN usedesk enabled WHEN init THEN buildAll receives isSupportChatAvailable true`() = runTest {
-        every { feedbackFeatureToggles.isUsedeskEnabled } returns true
-
-        createModel(this).also { advanceUntilIdle() }.onDestroy()
-
-        assertThat(chatSlot.captured).isTrue()
-    }
-
-    @Test
-    fun `GIVEN usedesk disabled WHEN init THEN buildAll receives isSupportChatAvailable false`() = runTest {
-        every { feedbackFeatureToggles.isUsedeskEnabled } returns false
-
-        createModel(this).also { advanceUntilIdle() }.onDestroy()
-
-        assertThat(chatSlot.captured).isFalse()
-    }
-
-    @Test
     fun `GIVEN a hot wallet present WHEN init THEN buildAll receives hasAnyMobileWallet true`() = runTest {
         every { getWalletsUseCase.invokeSync() } returns listOf(hotWallet(wallet1))
 

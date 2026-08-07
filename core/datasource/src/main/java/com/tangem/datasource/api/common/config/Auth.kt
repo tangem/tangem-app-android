@@ -43,6 +43,6 @@ internal class Auth : ApiConfig() {
     private companion object {
 
         private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
-        private const val PROD_BASE_URL = "https://authentication.tangem.org/"
+        private const val PROD_BASE_URL = "https://api.tangem.org/"
     }
 }

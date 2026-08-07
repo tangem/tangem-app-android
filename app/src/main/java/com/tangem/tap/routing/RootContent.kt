@@ -44,7 +44,7 @@ internal fun RootContent(
     wcContent: @Composable (modifier: Modifier) -> Unit,
     promoContent: @Composable (modifier: Modifier) -> Unit,
     hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
-    rootDetectedWarningContent: @Composable (modifier: Modifier) -> Unit,
+    startupGateContent: @Composable (modifier: Modifier) -> Unit,
     scanFailsContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
@@ -85,7 +85,7 @@ internal fun RootContent(
 
                 hotAccessCodeContent(Modifier.fillMaxSize())
 
-                rootDetectedWarningContent(Modifier.fillMaxSize())
+                startupGateContent(Modifier.fillMaxSize())
 
                 scanFailsContent(Modifier.fillMaxSize())
 
@@ -98,15 +98,13 @@ internal fun RootContent(
                     hostState = snackbarHostState,
                 )
 
-                if (LocalRedesignEnabled.current) {
-                    TangemTopSnackbarHost(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .statusBarsPadding()
-                            .padding(all = 16.dp),
-                        hostState = LocalTopSnackbarHostState.current,
-                    )
-                }
+                TangemTopSnackbarHost(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(all = 16.dp),
+                    hostState = LocalTopSnackbarHostState.current,
+                )
             }
         }
         EventMessageEffect()

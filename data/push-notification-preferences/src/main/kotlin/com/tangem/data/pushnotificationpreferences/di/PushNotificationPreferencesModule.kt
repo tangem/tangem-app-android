@@ -19,13 +19,13 @@ internal object PushNotificationPreferencesModule {
     @Singleton
     @Provides
     fun providesWalletPushNotificationPreferencesRepository(
-        appPreferencesStore: AppPreferencesStore,
         tangemTechApi: TangemTechApi,
+        appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletPushNotificationPreferencesRepository = DefaultWalletPushNotificationPreferencesRepository(
-        appPreferencesStore = appPreferencesStore,
         tangemTechApi = tangemTechApi,
         cache = RuntimeSharedStore(),
+        appPreferencesStore = appPreferencesStore,
         dispatchers = dispatchers,
     )
 }

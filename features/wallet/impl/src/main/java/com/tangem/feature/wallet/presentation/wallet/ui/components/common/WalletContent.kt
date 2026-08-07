@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
@@ -40,14 +41,15 @@ internal fun WalletListContent(
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     contentPadding: PaddingValues,
+    onOrganizeButtonBoundsChange: (Rect?) -> Unit,
     modifier: Modifier = Modifier,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     walletId: String? = null,
 ) {
-    val containerColor = TangemTheme.colors2.surface.level1
+    val containerColor = TangemTheme.colors3.bg.primary
 
-    val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
-    val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
+    val movableItemModifier = Modifier.padding(horizontal = 12.dp)
+    val itemModifier = movableItemModifier.padding(top = 12.dp)
 
     LazyColumn(
         modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
@@ -71,7 +73,7 @@ internal fun WalletListContent(
             item(key = "PromoBannersBlock") {
                 component.ContentWithPadding(
                     horizontalItemPadding = 12.dp,
-                    modifier = Modifier.padding(top = TangemTheme.dimens2.x3),
+                    modifier = Modifier.padding(top = 12.dp),
                     walletId = walletId,
                 )
             }
@@ -99,7 +101,11 @@ internal fun WalletListContent(
 
         nftCollections2(state = currentWallet, itemModifier = itemModifier)
 
-        organizeTokens2(state = currentWallet, itemModifier = itemModifier)
+        organizeTokens2(
+            state = currentWallet,
+            itemModifier = itemModifier,
+            onButtonBoundsChange = onOrganizeButtonBoundsChange,
+        )
     }
 }
 
