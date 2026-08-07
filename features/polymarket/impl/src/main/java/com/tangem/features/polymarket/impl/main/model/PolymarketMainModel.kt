@@ -5,19 +5,30 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
-import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.pagination.BatchAction
+import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.BatchListState
+import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,14 +37,16 @@ import javax.inject.Inject
 /**
  * Model of the Discovery feed screen.
  *
- * Loads the category tabs once, then (re)loads the events feed for the selected category.
+ * Loads the category tabs once, then serves the events of the selected category page by page. Categories are a
+ * filtering convenience rather than content: when they fail, the tabs stay hidden and the feed runs unfiltered
+ * instead of failing with them.
  */
 @ModelScoped
 internal class PolymarketMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val getPolymarketEventsUseCase: GetPolymarketEventsUseCase,
+    private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase,
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase,
 ) : Model() {
 
@@ -41,7 +54,11 @@ internal class PolymarketMainModel @Inject constructor(
 
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
-            PolymarketMainUM(accessMode = params.accessMode, content = PolymarketMainUM.ContentUM.Loading),
+            PolymarketMainUM(
+                accessMode = params.accessMode,
+                categories = persistentListOf(),
+                content = PolymarketMainUM.ContentUM.Loading,
+            ),
         )
 
     private val converter = PolymarketEventUMConverter(
@@ -49,74 +66,111 @@ internal class PolymarketMainModel @Inject constructor(
         onOutcomeClick = ::onOutcomeClick,
     )
 
+    // Replays the latest action: the first Reload is dispatched while the pagination is still subscribing, and a
+    // shared flow without a replay cache drops what it cannot deliver yet.
+    private val actionsFlow = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+
+    private val eventsBatchFlow = getPolymarketEventsBatchFlowUseCase(
+        context = PolymarketEventsBatchingContext(actionsFlow = actionsFlow, coroutineScope = modelScope),
+    )
+
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
 
-    private val loadJob = JobHolder()
+    private val categoriesJob = JobHolder()
 
     init {
-        load()
+        observeEvents()
+        loadCategories()
     }
 
     fun onBackClick() {
         router.pop()
     }
 
-    /** Initial load: fetch the category tabs, then the events of the first category. */
-    private fun load() {
+    /**
+     * Requests the next page once the feed is scrolled close enough to its end. Ignored while a page is already
+     * on its way, and while the feed is empty or broken — those are driven by [reload] instead.
+     */
+    fun onLoadMore() {
         modelScope.launch {
-            uiState.update { it.copy(content = PolymarketMainUM.ContentUM.Loading) }
+            when (val status = eventsBatchFlow.state.value.status) {
+                is PaginationStatus.Paginating -> {
+                    val lastResult = status.lastResult
+                    // A failed page is worth another attempt as the user keeps scrolling; a last one is not.
+                    val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.last
+                    if (canLoadMore) actionsFlow.emit(BatchAction.LoadMore())
+                }
+                else -> Unit
+            }
+        }
+    }
 
+    /** Categories first: without them the feed does not know which category to ask for. */
+    private fun loadCategories() {
+        modelScope.launch {
             val result = withContext(dispatchers.default) { getPolymarketCategoriesUseCase() }
-            result.fold(
-                ifLeft = {
-                    uiState.update { current ->
-                        current.copy(content = PolymarketMainUM.ContentUM.Error(onRetryClick = ::load))
-                    }
-                },
-                ifRight = { loadedCategories ->
-                    categories = loadedCategories
-                    selectedCategoryId = loadedCategories.firstOrNull()?.id
-                    loadEvents(selectedCategoryId)
-                },
-            )
-        }.saveIn(loadJob)
+            val loadedCategories = result.getOrNull().orEmpty()
+
+            categories = loadedCategories
+            selectedCategoryId = loadedCategories.firstOrNull()?.id
+            uiState.update { it.copy(categories = buildTabs()) }
+
+            reloadEvents()
+        }.saveIn(categoriesJob)
     }
 
     private fun onCategorySelected(categoryId: Int) {
         if (categoryId == selectedCategoryId) return
         selectedCategoryId = categoryId
-        // Highlight the tapped tab immediately; the feed refreshes once its events arrive.
-        uiState.update { current ->
-            val content = current.content
-            if (content is PolymarketMainUM.ContentUM.Content) {
-                current.copy(content = content.copy(categories = buildTabs()))
-            } else {
-                current
-            }
-        }
-        loadEvents(categoryId)
+        // Highlight the tapped tab immediately; the feed catches up once its first page arrives.
+        uiState.update { it.copy(categories = buildTabs()) }
+        reloadEvents()
     }
 
-    private fun loadEvents(category: Int?) {
+    /** Retries the feed and, when the categories were lost too, the tabs along with it. */
+    private fun reload() {
+        if (categories.isEmpty()) loadCategories() else reloadEvents()
+    }
+
+    private fun reloadEvents() {
         modelScope.launch {
-            val newContent = withContext(dispatchers.default) {
-                getPolymarketEventsUseCase(category = category).fold(
-                    ifLeft = { PolymarketMainUM.ContentUM.Error(onRetryClick = ::load) },
-                    ifRight = { events ->
-                        if (events.isEmpty()) {
-                            PolymarketMainUM.ContentUM.Empty
-                        } else {
-                            PolymarketMainUM.ContentUM.Content(
-                                categories = buildTabs(),
-                                events = converter.convertList(events).toImmutableList(),
-                            )
-                        }
-                    },
-                )
+            actionsFlow.emit(
+                BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = selectedCategoryId)),
+            )
+        }
+    }
+
+    private fun observeEvents() {
+        eventsBatchFlow.state
+            .onEach { batchState ->
+                val content = convertContent(batchState)
+                uiState.update { it.copy(content = content) }
             }
-            uiState.update { it.copy(content = newContent) }
-        }.saveIn(loadJob)
+            .launchIn(modelScope)
+    }
+
+    private fun convertContent(batchState: BatchListState<Int, List<PolymarketEvent>>): PolymarketMainUM.ContentUM {
+        return when (batchState.status) {
+            is PaginationStatus.None,
+            is PaginationStatus.InitialLoading,
+            -> PolymarketMainUM.ContentUM.Loading
+            is PaginationStatus.InitialLoadingError -> PolymarketMainUM.ContentUM.Error(onReloadClick = ::reload)
+            is PaginationStatus.NextBatchLoading -> batchState.toContent(isLoadingNextPage = true)
+            is PaginationStatus.Paginating,
+            is PaginationStatus.EndOfPagination,
+            -> batchState.toContent(isLoadingNextPage = false)
+        }
+    }
+
+    private fun BatchListState<Int, List<PolymarketEvent>>.toContent(
+        isLoadingNextPage: Boolean,
+    ): PolymarketMainUM.ContentUM.Content {
+        val events = data.flatMap { batch -> batch.data }
+        return PolymarketMainUM.ContentUM.Content(
+            events = converter.convertList(events).toImmutableList(),
+            isLoadingNextPage = isLoadingNextPage,
+        )
     }
 
     private fun buildTabs(): ImmutableList<PolymarketCategoryTabUM> = categories
