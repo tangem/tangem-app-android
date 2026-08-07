@@ -72,6 +72,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
+import dagger.Lazy
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -165,7 +166,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var passwordRequester: HotWalletPasswordRequester
 
     @Inject
-    internal lateinit var googleAuthActivityResultBridge: GoogleAuthActivityResultBridge
+    internal lateinit var googleAuthActivityResultBridge: Lazy<GoogleAuthActivityResultBridge>
 
     @Inject
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
@@ -285,9 +286,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
             // registerForActivityResult unregisters itself on destroy; the bridge is the only holder
-            googleAuthActivityResultBridge.registerLauncher(
+            val bridge = googleAuthActivityResultBridge.get()
+            bridge.registerLauncher(
                 launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
-                    googleAuthActivityResultBridge.onResult(it)
+                    bridge.onResult(it)
                 },
             )
         }
@@ -350,7 +352,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onDestroy() {
         TangemLogger.i("onDestroy")
-        googleAuthActivityResultBridge.unregisterLauncher()
+        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            googleAuthActivityResultBridge.get().unregisterLauncher()
+        }
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
