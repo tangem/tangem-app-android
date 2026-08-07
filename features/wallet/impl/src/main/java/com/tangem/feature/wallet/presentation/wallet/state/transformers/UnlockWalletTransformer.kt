@@ -18,8 +18,6 @@ internal class UnlockWalletTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isAddFundsStage1Enabled: Boolean,
-    private val isManageFundsEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -27,8 +25,6 @@ internal class UnlockWalletTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
-            isAddFundsStage1Enabled = isAddFundsStage1Enabled,
-            isManageFundsEnabled = isManageFundsEnabled,
         )
     }
 

@@ -20,10 +20,11 @@ import com.tangem.datasource.api.pay.models.request.SetPinRequest
 import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
-import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
@@ -307,6 +308,8 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     ): Either<UniversalError, TangemPayOrderInfo> = either {
         val order = requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getOrder(authHeader, orderId)
+        }.mapLeft { error ->
+            if (error is VisaApiError.NotFound) VisaApiError.OrderNotFound else error
         }.bind()
 
         val result = order.result ?: raise(VisaApiError.Unspecified)
@@ -319,6 +322,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 Status.COMPLETED -> OrderStatus.COMPLETED
                 Status.CANCELED -> OrderStatus.CANCELED
             },
+            orderStep = OrderStep.fromString(result.step),
         )
     }
 

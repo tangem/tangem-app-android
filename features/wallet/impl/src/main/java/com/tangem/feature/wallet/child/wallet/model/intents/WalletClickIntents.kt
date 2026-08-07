@@ -1,9 +1,10 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.ui.DesignFeatureToggles
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -19,7 +20,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
 import kotlinx.coroutines.CoroutineScope
@@ -47,8 +48,8 @@ internal class WalletClickIntents @Inject constructor(
     private val onrampStatusFactory: OnrampStatusFactory,
     private val tangemPayIntents: TangemPayClickIntentsImplementor,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -94,24 +95,9 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onRefreshSwipe(showRefreshState: Boolean) {
-        if (designFeatureToggles.isRedesignEnabled) {
-            when (stateController.getSelectedWalletUM()) {
-                is WalletUM.Content -> refreshMultiCurrencyContent(showRefreshState)
-                is WalletUM.Locked -> Unit
-            }
-        } else {
-            when (stateController.getSelectedWallet()) {
-                is WalletState.MultiCurrency.Content -> {
-                    refreshMultiCurrencyContent(showRefreshState)
-                }
-                is WalletState.SingleCurrency.Content,
-                -> {
-                    refreshSingleCurrencyContent(showRefreshState)
-                }
-                is WalletState.MultiCurrency.Locked,
-                is WalletState.SingleCurrency.Locked,
-                -> Unit
-            }
+        when (stateController.getSelectedWalletUM()) {
+            is WalletUM.Content -> refreshMultiCurrencyContent(showRefreshState)
+            is WalletUM.Locked -> Unit
         }
     }
 
@@ -120,18 +106,36 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onAddFundsClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds())
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds(status = AnalyticsParam.Status.Success))
         router.openAddFunds(userWalletId)
     }
 
     fun onTransferClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonTransfer())
+        val selectedWallet = stateController.getSelectedWalletUM() as? WalletUM.Content
+        val areActionsAvailable = selectedWallet?.areActionsAvailable != false
+
+        analyticsEventHandler.send(
+            MainScreenAnalyticsEvent.ButtonTransfer(
+                status = if (areActionsAvailable) AnalyticsParam.Status.Success else AnalyticsParam.Status.Error,
+            ),
+        )
+
+        if (!areActionsAvailable) {
+            uiMessageSender.send(WalletAlertUM.unavailableOperation())
+            return
+        }
+
         router.openTransfer(userWalletId)
     }
 
     fun onAddFundsPromoClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(WalletScreenAnalyticsEvent.MainScreen.ButtonAddFundsPromo())
         router.openAddFunds(userWalletId)
+    }
+
+    fun onPredictionAccountClick(userWalletId: UserWalletId) {
+        // TODO([REDACTED_TASK_KEY]): add analytics for prediction account entry point
+        router.openPolymarket(userWalletId)
     }
 
     private fun refreshMultiCurrencyContent(showRefreshState: Boolean) {

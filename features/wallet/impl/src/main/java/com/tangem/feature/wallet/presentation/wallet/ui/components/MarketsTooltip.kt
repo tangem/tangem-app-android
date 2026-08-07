@@ -25,21 +25,37 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.MarketTooltipTestTags
 import com.tangem.core.ui.utils.toPx
 import com.tangem.feature.wallet.impl.R
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
+/** Gap between the lifted tooltip and the obstacle below it. */
+private val OBSTACLE_GAP = 4.dp
+
+/**
+ * Onboarding tooltip for the markets bottom sheet, anchored right above the sheet peek.
+ *
+ * @param obstacleBounds provider of root-coordinates bounds of content the tooltip must not cover —
+ * e.g. the "Add & Manage" button. When the anchored tooltip would overlap the obstacle, the tooltip
+ * is lifted to sit just above it.
+ */
+@Suppress("LongParameterList")
 @Composable
 internal fun MarketsTooltip(
     availableHeight: Dp,
@@ -48,17 +64,28 @@ internal fun MarketsTooltip(
     onCloseClick: () -> Unit,
     sheetTopInset: Dp,
     modifier: Modifier = Modifier,
+    obstacleBounds: () -> Rect? = { null },
 ) {
     val density = LocalDensity.current
-    val tooltipOffset by remember(availableHeight, sheetTopInset) {
+    var tooltipHeight by remember { mutableIntStateOf(0) }
+    val tooltipOffset by remember(availableHeight, sheetTopInset, obstacleBounds) {
         derivedStateOf {
-            val bottomSheetOffset = try {
-                // Can throw exception during the first composition
-                with(density) { bottomSheetState.requireOffset().toDp() }
-            } catch (e: Exception) {
-                0.dp
+            // Sheet offset is in root coordinates: the scaffold content fills the screen edge to edge
+            val sheetTop = runCatching { bottomSheetState.requireOffset() }.getOrElse { 0f }
+
+            with(density) {
+                val anchoredBottom = sheetTop + sheetTopInset.toPx()
+                val anchoredTop = anchoredBottom - tooltipHeight
+                val obstacle = obstacleBounds()?.takeIf { tooltipHeight > 0 }
+                val isObstacleInTheWay = obstacle != null &&
+                    obstacle.top < anchoredBottom && obstacle.bottom > anchoredTop
+                val bottom = if (isObstacleInTheWay) {
+                    obstacle.top - OBSTACLE_GAP.toPx()
+                } else {
+                    anchoredBottom
+                }
+                (bottom - availableHeight.toPx()).toDp()
             }
-            bottomSheetOffset + sheetTopInset - availableHeight
         }
     }
 
@@ -86,20 +113,23 @@ internal fun MarketsTooltip(
         ) + fadeIn(),
         exit = fadeOut(),
     ) {
-        MarketsTooltipContent(onCloseClick = onCloseClick)
+        MarketsTooltipContent(
+            onCloseClick = onCloseClick,
+            modifier = Modifier.onSizeChanged { tooltipHeight = it.height },
+        )
     }
 }
 
 @Composable
 internal fun MarketsTooltipContent(onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
-    val backgroundColor = TangemTheme.colors.background.action
+    val backgroundColor = TangemTheme.colors3.bg.tertiary
     val tipDpSize = DpSize(width = 20.dp, height = 8.dp)
     val tooltipShape = remember(tipDpSize) { TooltipShape(cornerRadius = 16.dp, tipSize = tipDpSize) }
 
     Row(
         modifier = modifier
             .shadow(
-                elevation = TangemTheme.dimens.elevation12,
+                elevation = 12.dp,
                 shape = tooltipShape,
                 clip = false,
                 ambientColor = Color.Black.copy(alpha = 0.7f),
@@ -123,27 +153,21 @@ internal fun MarketsTooltipContent(onCloseClick: () -> Unit, modifier: Modifier 
         ) {
             Text(
                 text = stringResourceSafe(id = R.string.markets_tooltip_v2_title),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography3.subheading.medium,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = stringResourceSafe(id = R.string.markets_tooltip_message),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.secondary,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
-        Icon(
-            modifier = Modifier
-                .size(size = 16.dp)
-                .clickable(
-                    interactionSource = null,
-                    indication = null,
-                    onClick = onCloseClick,
-                )
-                .testTag(MarketTooltipTestTags.CLOSE_BUTTON),
-            painter = painterResource(id = R.drawable.ic_close_24),
-            tint = TangemTheme.colors.icon.informative,
-            contentDescription = null,
+        TangemButton(
+            variant = TangemButton.Variant.Ghost,
+            size = TangemButton.Size.X7,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_cross_20),
+            onClick = onCloseClick,
+            modifier = Modifier.testTag(MarketTooltipTestTags.CLOSE_BUTTON),
         )
     }
 }

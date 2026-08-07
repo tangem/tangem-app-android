@@ -1,45 +1,41 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.haze.hazeEffectTangem
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
-import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.LocalHapticManager
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
-import com.tangem.utils.annotations.RemoveWithToggle
-import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
 
 private const val VISIBILITY_THRESHOLD = 0.5f
+private val BRAND_ICON_SLOT_SIZE = 44.dp
 
 /**
  * Wallet screen collapsing top bar
@@ -57,125 +53,56 @@ internal fun WalletTopBar(
     behavior: TangemCollapsingAppBarBehavior,
 ) {
     val hapticManager = LocalHapticManager.current
-    Surface(
-        color = Color.Unspecified,
-        contentColor = Color.Unspecified,
-        modifier = Modifier.hazeEffectTangemTopBar(behavior),
-    ) {
-        val isWrappedBalanceShown by remember {
-            derivedStateOf { behavior.state.collapsedFraction > VISIBILITY_THRESHOLD }
-        }
-
-        val wrappedBalance = remember(walletBalance, isWrappedBalanceShown, isBalanceHidden) {
-            walletBalance?.orMaskWithStars(isBalanceHidden).takeIf { isWrappedBalanceShown }
-        }
-
-        TangemTopBar(
-            title = wrappedBalance,
-            startContent = {
-                TangemTopBarActionContent(
-                    TangemTopBarActionUM(
-                        iconRes = R.drawable.ic_tangem_24,
-                        isActionable = false,
-                    ),
-                )
-            },
-            endContent = {
-                Row(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(
-                            lerp(
-                                start = Color.Transparent,
-                                stop = TangemTheme.colors2.button.backgroundSecondary,
-                                fraction = behavior.state.collapsedFraction,
-                            ),
-                        ),
-                ) {
-                    topBarConfig.endActions.forEach { action ->
-                        TangemTopBarActionContent(
-                            action.copy(
-                                onClick = action.onClick?.let { onClick ->
-                                    {
-                                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                                        onClick()
-                                    }
-                                },
-                            ),
-                            modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON),
-                        )
-                    }
-                }
-            },
-            modifier = Modifier
-                .statusBarsPadding()
-                .testTag(MainScreenTestTags.TOP_BAR),
-        )
+    val isWrappedBalanceShown by remember {
+        derivedStateOf { behavior.state.collapsedFraction > VISIBILITY_THRESHOLD }
     }
-}
 
-/**
- * Wallet screen top bar
- *
- * @param config component config
- */
-@Suppress("MagicNumber")
-@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
-@RemoveWithToggle("APP_REDESIGN_ENABLED")
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun WalletTopBar(config: WalletTopBarConfig) {
-    TopAppBar(
-        title = {
-            Icon(painter = painterResource(id = R.drawable.img_tangem_logo_90_24), contentDescription = null)
+    val wrappedBalance = remember(walletBalance, isWrappedBalanceShown, isBalanceHidden) {
+        walletBalance?.orMaskWithStars(isBalanceHidden).takeIf { isWrappedBalanceShown }
+    }
+
+    TangemTopNavigation(
+        modifier = Modifier.testTag(MainScreenTestTags.TOP_BAR),
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        startButton = {
+            // Non-clickable brand mark, sized to align with the trailing action buttons.
+            Box(modifier = Modifier.size(BRAND_ICON_SLOT_SIZE), contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_tangem_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.primary,
+                )
+            }
         },
-        actions = {
-            config.endActions.forEach { action ->
-                action.onClick?.let { onClick ->
-                    IconButton(onClick = onClick) {
-                        Icon(
-                            painter = painterResource(id = action.iconRes),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .rotate(if (action.iconRes == R.drawable.ic_more_default_24) 90f else 0f)
-                                .testTag(MainScreenTestTags.MORE_BUTTON),
-                        )
-                    }
+        endButtonsGroup = if (topBarConfig.endActions.isNotEmpty()) {
+            {
+                topBarConfig.endActions.forEach { action ->
+                    TangemButton(
+                        variant = TangemButton.Variant.Ghost,
+                        size = TangemButton.Size.X11,
+                        iconStart = TangemIconUM.Icon(iconRes = action.iconRes),
+                        isEnabled = action.isActionable && action.onClick != null,
+                        onClick = {
+                            hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                            action.onClick?.invoke()
+                        },
+                        modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON),
+                    )
+                }
+            }
+        } else {
+            null
+        },
+        isEndButtonsGroupBackgroundShown = isWrappedBalanceShown,
+        fadeEnabled = isWrappedBalanceShown,
+        contentColumn = {
+            AnimatedVisibility(visible = wrappedBalance != null) {
+                wrappedBalance?.let { balance ->
+                    TangemNavigationText(text = balance, role = TangemNavigationText.Role.Title)
                 }
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = TangemTheme.colors.background.secondary,
-            titleContentColor = TangemTheme.colors.icon.primary1,
-            actionIconContentColor = TangemTheme.colors.icon.primary1,
-        ),
-        scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
-        modifier = Modifier.testTag(MainScreenTestTags.TOP_BAR),
     )
-}
-
-@Composable
-private fun Modifier.hazeEffectTangemTopBar(behavior: TangemCollapsingAppBarBehavior): Modifier {
-    val rootBackground by LocalRootBackgroundColor.current
-    val intensity by animateFloatAsState(targetValue = behavior.state.collapsedFraction * 2f)
-
-    return hazeEffectTangem {
-        fallbackTint = HazeTint(rootBackground.copy(alpha = intensity / 2))
-        progressive = HazeProgressive.verticalGradient(
-            startIntensity = intensity,
-            endIntensity = 0f,
-            preferPerformance = true,
-        )
-    }
-}
-
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun Preview_WalletTopBar() {
-    TangemThemePreview {
-        WalletTopBar(config = WalletPreviewDataLegacy.topBarConfig)
-    }
 }
 
 // region Preview
