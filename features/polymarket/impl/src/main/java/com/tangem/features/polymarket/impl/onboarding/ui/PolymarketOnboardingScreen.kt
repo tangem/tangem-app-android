@@ -8,10 +8,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,34 +35,66 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.features.polymarket.impl.regionrestrictions.ui.RegionRestrictionsBottomSheet
 
+/** Empty scroll left below the last FAQ answer, so the content ends above the pinned footer rather than at it. */
+private val TrailingScroll = 80.dp
+
+/** How far into [TrailingScroll] the user must scroll before the legal line fades in. */
+private val LegalRevealOffset = 16.dp
+
+private val FailedStatePadding = 24.dp
+private val FailedStateGap = 16.dp
+
 @Composable
 internal fun PolymarketOnboardingScreen(
     state: PolymarketOnboardingUM,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scrollState = rememberScrollState()
+    var footerHeight by remember { mutableIntStateOf(0) }
+    val errorOverlay = state.overlay as? PolymarketOnboardingUM.Overlay.Error
+
+    // The design draws the bar over a clean hero, but content scrolling under a bare bar is unreadable — so the
+    // DS scrim (which animates its own alpha) is off only while the hero is at rest.
+    val isTopBarScrimShown by remember(scrollState) { derivedStateOf { scrollState.value > 0 } }
+
     TangemTopBarScaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopNavigation(
+                fadeEnabled = isTopBarScrimShown,
                 endButton = { TangemButton.Close(onClick = onCloseClick) },
             )
         },
+        overlay = { contentPadding ->
+            if (errorOverlay == null) {
+                PolymarketWelcomeFooter(
+                    state = state,
+                    scrollState = scrollState,
+                    revealThreshold = TrailingScroll - LegalRevealOffset,
+                    contentPadding = contentPadding,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .onSizeChanged { footerHeight = it.height },
+                )
+            }
+        },
     ) { contentPadding ->
-        if (state.overlay is PolymarketOnboardingUM.Overlay.Error) {
+        if (errorOverlay != null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(TangemTheme.colors3.bg.primary),
                 contentAlignment = Alignment.Center,
             ) {
-                FailedState(onRetryClick = state.overlay.onRetryClick)
+                FailedState(onRetryClick = errorOverlay.onRetryClick)
             }
         } else {
             PolymarketWelcomeContent(
-                state = state,
+                scrollState = scrollState,
                 contentPadding = contentPadding,
+                trailingSpace = with(LocalDensity.current) { footerHeight.toDp() } + TrailingScroll,
             )
         }
     }
@@ -70,9 +110,9 @@ internal fun PolymarketOnboardingScreen(
 @Composable
 private fun FailedState(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(horizontal = 24.dp),
+        modifier = modifier.padding(horizontal = FailedStatePadding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(FailedStateGap),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_something_went_wrong),
