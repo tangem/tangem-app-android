@@ -71,6 +71,23 @@ real backend. By default that's the **remote** WireMock at `wiremock.tests-d.com
 WireMock instead, pass `wiremockBaseUrl`: `WireMockRedirectInterceptor` then rewrites every
 `wiremock.tests-d.com` request to your local instance.
 
+**Start the local instance the way CI does, or you will chase phantom failures.** CI builds the image
+from `tangem-api-mocks/Dockerfile`, whose entrypoint carries flags the official image does not default
+to. Without `--global-response-templating`, templated responses are served raw and tests fail locally
+while being perfectly green on CI:
+
+```bash
+docker rm -f wiremock 2>/dev/null
+docker run -d --name wiremock -p 8081:8080 \
+  -v "$PWD/../tangem-api-mocks/mocks:/home/wiremock" \
+  wiremock/wiremock --global-response-templating --disable-gzip --verbose
+docker inspect wiremock --format '{{.Config.Cmd}}'   # must list the three flags
+```
+
+Check the mocks branch too — CI uses `main`; a local checkout parked on a feature branch is another
+source of "fails only locally". Mount + `POST /__admin/mappings/reset` picks up a branch switch without
+recreating the container.
+
 Emulator addressing matters — `localhost` inside an emulator is the **emulator itself**, not your host:
 
 - Use the host alias **`http://10.0.2.2:8081`** (no extra setup), **or**
@@ -165,6 +182,20 @@ curl http://localhost:8081/__admin/mappings | jq
 curl http://localhost:8081/__admin/scenarios | jq '.scenarios[] | {name, state}'
 ```
 
+- **One URL can be served by two scenarios split on query params — check before picking a state.** The
+  Dogecoin mocks answer `/dogecoin/api/v2/address/{addr}` twice: the **query-less** request (the one the
+  wallet manager refreshes balances from, and therefore the one that decides whether 'Send' is blocked)
+  comes from `dogecoin_balance`, while `?details=txs` comes from `dogecoin_tx_history`. So a state like
+  `UnconfirmedOutgoing` puts a pending transaction on the **history screen only**, and the wallet still
+  sees none. Before trusting a state name, confirm which mapping actually answered:
+  ```bash
+  curl -s 'http://localhost:8081/__admin/requests?limit=100' \
+    | jq -r '.requests[] | select(.request.url | test("<endpoint>")) |
+             "\(.request.url)  <- \(.stubMapping.scenarioName)/\(.stubMapping.requiredScenarioState)"'
+  ```
+- **Running one test on CI: Marathon does not understand `Class#method`.** Passing it as `test_class`
+  filters everything out — Marathon finishes in seconds, uploads no results, and the workflow reports
+  **success**. A green run that took under a minute ran zero tests; always confirm the test count.
 - Mocks repo: default to the sibling directory `../tangem-api-mocks/` (i.e. next to
   `tangem-app-android`). If that path doesn't exist, **ask the user** where the mocks repo is rather
   than guessing.
