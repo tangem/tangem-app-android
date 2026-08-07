@@ -88,7 +88,6 @@ internal class SendDestinationModel @Inject constructor(
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
-    private val addressBookFeatureToggles: AddressBookFeatureToggles,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     contactSelectionListener: ContactSelectionListener,
@@ -149,7 +148,7 @@ internal class SendDestinationModel @Inject constructor(
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
-        syncAddressBooksIfNeeded()
+        syncAddressBooks()
         subscribeOnQRScannerResult()
         initialState()
         resetContactOnEdit()
@@ -301,10 +300,8 @@ internal class SendDestinationModel @Inject constructor(
         }.launchIn(modelScope)
     }
 
-    private fun syncAddressBooksIfNeeded() {
-        if (addressBookFeatureToggles.isAddressBookEnabled) {
-            modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
-        }
+    private fun syncAddressBooks() {
+        modelScope.launch(context = dispatchers.default) { syncAddressBooksUseCase() }
     }
 
     private fun subscribeOnQRScannerResult() {

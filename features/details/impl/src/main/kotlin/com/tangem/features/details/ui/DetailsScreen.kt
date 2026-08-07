@@ -163,12 +163,6 @@ private fun Block(
                     }
                 }
             }
-            is DetailsItemUM.WalletConnect -> {
-                WalletConnectBlock(
-                    modifier = itemModifier,
-                    onClick = model.onClick,
-                )
-            }
             is DetailsItemUM.WalletActionBlock -> {
                 BlockCard {
                     WalletActionsBlock(
