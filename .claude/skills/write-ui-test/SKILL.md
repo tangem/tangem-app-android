@@ -260,6 +260,19 @@ Native first, by need:
   journal (`/__admin/requests`) showing the request the action was supposed to trigger.
 - **Manual polls are banned** (`onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()` in a loop) — even
   if a bot reviewer suggests one.
+- **`flakySafely` only retries its allowed exception types — throw `AssertionError`, never `require()`/
+  `error()`.** A `require()` raises `IllegalArgumentException` and `error()` an `IllegalStateException`;
+  neither is in the retry set, so the block runs **once** and the test fails on the first miss while
+  looking like it retried for the full timeout. Custom wait conditions must be written as
+  `if (notReadyYet) throw AssertionError("…")`.
+  **Diagnostic:** a step wrapped in `flakySafely(LONG)` that fails in a few seconds did not retry —
+  compare the failure time against the timeout before believing "it retried and never succeeded".
+- **Wait on a signal from the same data path as the assertion.** Refresh handlers fan out into parallel
+  coroutines (`TokenDetailsModel.onRefreshSwipe` re-reads balance, transaction history and staking in
+  three `async` blocks), so "the history updated" does not mean "the balance finished loading". Waiting
+  on the wrong one lets the test proceed mid-refresh and assert against stale state. Pick the value the
+  assertion actually depends on — e.g. wait for the *balance* to change before asserting a button whose
+  enabled state is derived from the balance.
 - **Default in the test body: `flakySafely(TIMEOUT) { assertion }`** — the codebase idiom (hundreds of
   uses); reviewers prefer it over `composeTestRule.waitUntil { runCatching { … }.isSuccess }`.
 - **`ComposeNotIdleException` / `AppNotIdleException` ("busy for ~60s") is usually a sick emulator, not
