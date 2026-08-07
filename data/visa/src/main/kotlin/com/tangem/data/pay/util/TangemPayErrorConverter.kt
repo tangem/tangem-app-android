@@ -18,22 +18,31 @@ internal class TangemPayErrorConverter @Inject constructor(
     private val tangemPayErrorAdapter by lazy { moshi.adapter(TangemPayErrorResponse::class.java) }
 
     override fun convert(value: Throwable): VisaApiError {
-        return if (value is ApiResponseError.HttpException) {
-            if (value.isServerError()) return VisaApiError.ServerUnavailable
-            if (value.code == ApiResponseError.HttpException.Code.NOT_FOUND) return VisaApiError.NotFound
-            if (value.code == ApiResponseError.HttpException.Code.UNAUTHORIZED) return VisaApiError.RefreshTokenExpired
-
-            val errorBody = value.errorBody ?: return VisaApiError.UnknownWithoutCode
-            runCatching {
-                tangemPayErrorAdapter.fromJson(errorBody)?.error?.code ?: value.code.numericCode
-            }.map {
-                VisaApiError.fromBackendError(it)
-            }.getOrElse {
-                VisaApiError.UnknownWithoutCode
-            }
-        } else {
+        if (value !is ApiResponseError.HttpException) {
             TangemLogger.e("Not HttpException. ${value.message}", value)
-            VisaApiError.UnknownWithoutCode
+            return VisaApiError.UnknownWithoutCode
         }
+        if (value.isServerError()) return VisaApiError.ServerUnavailable
+        if (value.code == ApiResponseError.HttpException.Code.UNAUTHORIZED) return VisaApiError.RefreshTokenExpired
+
+        val errorBody = value.errorBody ?: return value.fallbackError()
+
+        return runCatching { tangemPayErrorAdapter.fromJson(errorBody)?.error }.fold(
+            onSuccess = { error ->
+                VisaApiError.fromBackendErrorName(error?.name)
+                    ?: if (value.isNotFound()) {
+                        VisaApiError.NotFound
+                    } else {
+                        VisaApiError.fromBackendError(error?.code ?: value.code.numericCode)
+                    }
+            },
+            onFailure = { value.fallbackError() },
+        )
     }
+
+    private fun ApiResponseError.HttpException.isNotFound(): Boolean =
+        code == ApiResponseError.HttpException.Code.NOT_FOUND
+
+    private fun ApiResponseError.HttpException.fallbackError(): VisaApiError =
+        if (isNotFound()) VisaApiError.NotFound else VisaApiError.UnknownWithoutCode
 }
