@@ -2,31 +2,23 @@ package com.tangem.tests.actionButtons
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.checkQrCodeBottomSheetScenario
-import com.tangem.scenarios.enterAmountAndOpenSendConfirm
 import com.tangem.scenarios.goToQrCodeBottomSheet
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendFromTokenDetails
-import com.tangem.scenarios.openSendScreenWithHotWallet
-import com.tangem.scenarios.openSendSuccessScreenViaLongClickOnSendButton
 import com.tangem.scenarios.openSwapFromZeroBalanceToken
-import com.tangem.scenarios.readNetworkFeeAmount
+import com.tangem.scenarios.pullToRefreshTokenDetails
 import com.tangem.scenarios.synchronizeAddresses
-import com.tangem.scenarios.waitUntilNetworkFeeIsStable
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onDialog
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onSendScreen
-import com.tangem.screens.onSendSuccessScreen
 import com.tangem.screens.onSwapStoriesScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
@@ -317,37 +309,42 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
     @DisplayName("Action buttons (token details screen): 'Send' blocked while a transaction is active, works after completion")
     @Test
     fun sendBlockedWhileTransactionActiveTest() {
-        val tokenName = "XRP Ledger"
-        val amount = "1"
-        val userTokensState = "XRPHotWalletSvS"
-        val quotesState = "Ripple"
-        val startedState = "Started"
-        val rippleAccountInfoScenario = "ripple_account_info"
+        val tokenName = "Dogecoin"
+        val txHistoryScenarioName = "dogecoin_tx_history"
+        // "EmptyWithPendingTransaction" is the only state whose mapping also answers the *query-less* address
+        // request — the one the wallet manager updates balances from, and therefore the one that decides whether
+        // 'Send' is blocked. States like "UnconfirmedOutgoing" only answer `?details=txs`, so they populate the
+        // transaction-history screen while the wallet manager still sees no pending transaction.
+        val activeTxState = "EmptyWithPendingTransaction"
+        // "Empty" answers `?details=txs` only, so the query-less request falls through to dogecoin_balance and
+        // reports no pending transaction. Balance stays 5.8 DOGE in both states — only the pending flag changes.
+        // Not "Started"/"OutgoingTransaction": their responses carry an unconfirmed transaction as well.
+        val completedTxState = "Empty"
+        val sendingTitle = getResourceString(R.string.common_sending)
         val pendingSendMessagePrefix =
             getResourceString(R.string.token_button_unavailability_reason_pending_transaction_send).substringBefore("%")
 
         setupHooks().run {
-            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
-                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }
-            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesState'") {
-                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesState)
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$tokenName'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokenName)
             }
-            step("Set WireMock scenario: '$rippleAccountInfoScenario' to state: '$startedState'") {
-                setWireMockScenarioState(scenarioName = rippleAccountInfoScenario, state = startedState)
+            // The active transaction is a precondition of the test case, so it is pinned by the mock instead of
+            // being produced by an actual send: a sent transaction only lives in the wallet manager's memory and
+            // any balance refresh reconciles it away, which made this test race ([REDACTED_TASK_KEY]).
+            step("Set WireMock scenario: '$txHistoryScenarioName' to state: '$activeTxState'") {
+                setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = activeTxState)
             }
-            step("Open the send flow for '$tokenName' on an existing hot wallet") {
-                openSendScreenWithHotWallet(seedPhrase = SVS_SEED_PHRASE_12, tokenName = tokenName)
+            step("Open 'Main Screen'") {
+                openMainScreen()
             }
-            step("Enter amount '$amount' and open the 'Send confirm' screen") {
-                enterAmountAndOpenSendConfirm(amount = amount, recipientAddress = XRP_RECIPIENT_ADDRESS)
+            step("Synchronize addresses") {
+                synchronizeAddresses()
             }
-            waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
-            step("Sign, send and open the 'Transaction sent' screen") {
-                openSendSuccessScreenViaLongClickOnSendButton()
-            }
-            step("Click on 'Close' button") {
-                onSendSuccessScreen { closeButton.clickWithAssertion() }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
@@ -373,8 +370,16 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Close the notification dialog") {
                 onDialog { okButton.clickWithAssertion() }
             }
-            step("Pull to refresh to complete the active transaction") {
-                pullToRefresh()
+            step("Set WireMock scenario: '$txHistoryScenarioName' to state: '$completedTxState'") {
+                setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = completedTxState)
+            }
+            step("Pull to refresh to pick up the completed transaction") {
+                pullToRefreshTokenDetails()
+            }
+            step("Assert the active transaction is gone from the history") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTxHistoryScreen { transactionItem(sendingTitle).assertDoesNotExist() }
+                }
             }
             step("Open the transfer bottom sheet again") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
