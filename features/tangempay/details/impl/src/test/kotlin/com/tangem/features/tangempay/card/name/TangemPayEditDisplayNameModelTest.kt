@@ -160,5 +160,6 @@ internal class TangemPayEditDisplayNameModelTest {
         lastDigits = "1234",
         images = emptyList(),
         state = TangemPayCardState.Active,
+        embossName = null,
     )
 }
