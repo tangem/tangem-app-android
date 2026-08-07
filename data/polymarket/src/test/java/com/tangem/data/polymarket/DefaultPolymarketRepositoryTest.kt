@@ -23,7 +23,6 @@ import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoryDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
@@ -33,7 +32,6 @@ import com.tangem.datasource.api.polymarket.relayer.models.PolymarketNonceRespon
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
@@ -46,7 +44,6 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
@@ -117,34 +114,6 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Act
         val result = repository.getCategories()
-
-        // Assert
-        assertThat(result).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
-    }
-
-    @Test
-    fun `GIVEN events response WHEN getEvents THEN converts events of the requested category`() = runTest {
-        // Arrange
-        coEvery { api.getEvents(category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
-            PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
-        )
-
-        // Act
-        val result = repository.getEvents(category = 5)
-
-        // Assert
-        val events = result.getOrNull().orEmpty()
-        assertThat(events.map(PolymarketEvent::id)).containsExactly("event-id")
-        assertThat(events.single().title).isEqualTo("Event title")
-    }
-
-    @Test
-    fun `GIVEN network exception WHEN getEvents THEN returns left no internet`() = runTest {
-        // Arrange
-        coEvery { api.getEvents(category = null, limit = 20, cursor = null) } returns networkError()
-
-        // Act
-        val result = repository.getEvents(category = null)
 
         // Assert
         assertThat(result).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
