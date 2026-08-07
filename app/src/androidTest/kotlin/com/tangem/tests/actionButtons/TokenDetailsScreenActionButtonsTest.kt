@@ -6,6 +6,7 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.checkQrCodeBottomSheetScenario
@@ -13,7 +14,6 @@ import com.tangem.scenarios.goToQrCodeBottomSheet
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendFromTokenDetails
 import com.tangem.scenarios.openSwapFromZeroBalanceToken
-import com.tangem.scenarios.pullToRefreshTokenDetails
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onDialog
@@ -372,11 +372,22 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Set WireMock scenario: '$txHistoryScenarioName' to state: '$completedTxState'") {
                 setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = completedTxState)
             }
-            // The proof that the refresh landed is the button turning enabled below — the pending transaction
-            // of "EmptyWithPendingTransaction" lives in the balance data only and never renders as a history
-            // item, so asserting on the history here would pass without checking anything.
-            step("Pull to refresh to pick up the completed transaction") {
-                pullToRefreshTokenDetails()
+            // Refreshed from 'Main', not from 'Token details': the token-details pull-to-refresh only re-reads
+            // the transaction history (`?details=txs`), while the pending transaction that blocks 'Send' comes
+            // from the balance request, which is re-issued by the main-screen refresh. Verified in the CI
+            // WireMock log — after a token-details refresh, no balance request is made at all.
+            step("Go back to 'Main' screen") {
+                device.uiDevice.pressBack()
+            }
+            step("Pull to refresh on 'Main' screen") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 2_000) {
+                    pullToRefresh(steps = 10)
+                    waitForIdle()
+                    onMainScreen { tokenWithTitleAndAddress(tokenName).assertIsDisplayed() }
+                }
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Open the transfer bottom sheet again") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
