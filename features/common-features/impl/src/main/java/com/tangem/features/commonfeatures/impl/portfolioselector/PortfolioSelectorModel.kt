@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorButtonUM
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorItemUM
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
@@ -48,31 +49,36 @@ internal class PortfolioSelectorModel @Inject constructor(
     internal val state: StateFlow<PortfolioSelectorUM>
         field = MutableStateFlow<PortfolioSelectorUM>(emptyState())
 
-    init {
-        val selectedAccountState = selectorController.selectedAccount
-            .stateIn(modelScope, started = SharingStarted.Eagerly, initialValue = null)
+    private val innerSelectedAccounts = MutableStateFlow(selectorController.selectedAccountsSync)
 
+    init {
         combine(
             flow = isAccountsModeEnabledUseCase(),
             flow2 = balanceFetcher.data,
             flow3 = walletImageFetcher.allWallets(ArtworkSize.SMALL),
             flow4 = selectorController.isEnabled,
-            flow5 = selectedAccountState,
+            flow5 = innerSelectedAccounts,
             transform = { isAccountsMode, portfolioData, artworks, isEnabled, selectedAccount ->
+                val isAccountsModeEffective = isAccountsMode && !params.settings.isWalletSelectionOnly
                 val uiList = buildUiList(
-                    isAccountsMode = isAccountsMode,
+                    isAccountsMode = isAccountsModeEffective,
                     portfolioData = portfolioData,
                     artworks = artworks,
                     isEnabled = isEnabled,
                     selectedAccount = selectedAccount,
                 )
-                val title = when (isAccountsMode) {
+                val title = when (isAccountsModeEffective) {
                     true -> resourceReference(R.string.common_choose_account)
                     false -> resourceReference(R.string.common_choose_wallet)
                 }
+                val button = PortfolioSelectorButtonUM(
+                    text = resourceReference(R.string.common_apply),
+                    onClick = { onApplyClick() },
+                )
                 state.value = PortfolioSelectorUM(
                     title = title,
                     items = uiList.toImmutableList(),
+                    button = button.takeIf { params.settings.isMultiChoice },
                 )
             },
         )
@@ -85,7 +91,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         portfolioData: PortfolioFetcher.Data,
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
         isEnabled: (UserWallet, AccountStatus) -> Boolean,
-        selectedAccount: AccountId?,
+        selectedAccount: Set<AccountId>,
     ): List<PortfolioSelectorItemUM> = when (isAccountsMode) {
         true -> buildAccountsList(
             portfolioData = portfolioData,
@@ -105,7 +111,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         portfolioData: PortfolioFetcher.Data,
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
         isEnabled: (UserWallet, AccountStatus) -> Boolean,
-        selectedAccount: AccountId?,
+        selectedAccount: Set<AccountId>,
     ): List<PortfolioSelectorItemUM> = buildList {
         val appCurrency = portfolioData.appCurrency
         val isBalanceHidden = portfolioData.isBalanceHidden
@@ -113,25 +119,29 @@ internal class PortfolioSelectorModel @Inject constructor(
         portfolioData.balances.forEach { (_, portfolio) ->
             val balance = portfolio.walletBalance
             val wallet = portfolio.userWallet
+            val mainAccount = portfolio.accountsBalance.mainAccount
+            val isSelected = mainAccount.accountId in selectedAccount
+            val endIcon = if (isSelected) {
+                UserWalletItemUM.EndIcon.Checkmark
+            } else {
+                UserWalletItemUM.EndIcon.None
+            }
             val walletItemUM = UserWalletItemUMConverter(
-                onClick = {
-                    selectorController.selectAccount(portfolio.accountsBalance.mainAccount.account.accountId)
-                },
+                onClick = { onWalletSelected(wallet.walletId, portfolioData, false) },
                 appCurrency = appCurrency,
                 balance = balance,
                 isBalanceHidden = isBalanceHidden,
                 artwork = artworks[wallet.walletId],
                 isAuthMode = false,
+                endIcon = endIcon,
                 mode = UserWalletItemUMConverter.InfoField.Tokens(
                     tokensCount = portfolio.accountsBalance.flattenCurrencies().size,
                 ),
             ).convert(wallet)
             if (walletItemUM.isEnabled) {
-                val mainAccount = portfolio.accountsBalance.mainAccount
                 val isEnabledByFeature = isEnabled(wallet, mainAccount)
                 val finalWalletItemUM =
                     if (isEnabledByFeature) walletItemUM else walletItemUM.copy(isEnabled = false)
-                val isSelected = mainAccount.isSelected(selectedAccount)
                 add(PortfolioSelectorItemUM.Portfolio(finalWalletItemUM, isSelected))
             } else {
                 lockedWallets.add(PortfolioSelectorItemUM.Portfolio(walletItemUM, isSelected = false))
@@ -147,7 +157,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         portfolioData: PortfolioFetcher.Data,
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
         isEnabled: (UserWallet, AccountStatus) -> Boolean,
-        selectedAccount: AccountId?,
+        selectedAccount: Set<AccountId>,
     ): List<PortfolioSelectorItemUM> = buildList {
         val appCurrency = portfolioData.appCurrency
         val isBalanceHidden = portfolioData.isBalanceHidden
@@ -157,7 +167,7 @@ internal class PortfolioSelectorModel @Inject constructor(
             val wallet = portfolio.userWallet
             val walletItemUM = UserWalletItemUMConverter(
                 onClick = {
-                    selectorController.selectAccount(portfolio.accountsBalance.mainAccount.account.accountId)
+                    onAccountSelected(portfolio.accountsBalance.mainAccount.account.accountId)
                 },
                 appCurrency = appCurrency,
                 balance = balance,
@@ -175,9 +185,13 @@ internal class PortfolioSelectorModel @Inject constructor(
                 is PortfolioFetcher.Mode.Wallet -> Unit
                 is PortfolioFetcher.Mode.All -> {
                     if (portfolioData.balances.size > 1) {
+                        val isAllSelected = portfolio.accountsBalance.accountStatuses
+                            .all { accountStatus -> accountStatus.account.accountId in selectedAccount }
                         val walletTitle = PortfolioSelectorItemUM.GroupTitle(
                             id = "GroupTitle ${wallet.walletId.stringValue}",
                             name = stringReference(wallet.name),
+                            isSelected = isAllSelected,
+                            onClick = { onWalletSelected(wallet.walletId, portfolioData, true) },
                             deviceIcon = walletIconUMConverter.convert(getWalletIconUseCase(wallet)),
                         )
 
@@ -190,14 +204,20 @@ internal class PortfolioSelectorModel @Inject constructor(
                 val isEnabledByFeature = isEnabled(wallet, accountStatus)
                 val account = accountStatus.account
                 val accountBalance = accountStatus.tokenList.totalFiatBalance
+                val isSelected = accountStatus.accountId in selectedAccount
+                val endIcon = if (isSelected) {
+                    UserWalletItemUM.EndIcon.Checkmark
+                } else {
+                    UserWalletItemUM.EndIcon.None
+                }
                 val accountItemUM = AccountPortfolioItemUMConverter(
-                    onClick = { selectorController.selectAccount(account.accountId) },
+                    onClick = { onAccountSelected(account.accountId) },
                     appCurrency = appCurrency,
                     accountBalance = accountBalance,
                     isEnabled = isEnabledByFeature,
+                    endIcon = endIcon,
                     isBalanceHidden = isBalanceHidden,
                 ).convert(account)
-                val isSelected = accountStatus.isSelected(selectedAccount)
                 add(PortfolioSelectorItemUM.Portfolio(accountItemUM, isSelected))
             }
         }
@@ -206,11 +226,64 @@ internal class PortfolioSelectorModel @Inject constructor(
         }
     }
 
+    private fun onAccountSelected(accountId: AccountId) {
+        if (params.settings.isMultiChoice) {
+            innerSelectedAccounts.update { selected ->
+                if (accountId in selected) {
+                    selected - accountId
+                } else {
+                    selected + accountId
+                }
+            }
+        } else {
+            selectorController.selectAccount(accountId)
+        }
+    }
+
+    // only isMultiChoice branch
+    private fun onWalletSelected(
+        walletId: UserWalletId,
+        portfolioData: PortfolioFetcher.Data,
+        isAccountMode: Boolean,
+    ) {
+        if (params.settings.isMultiChoice) {
+            val portfolio = portfolioData.balances[walletId] ?: return
+            innerSelectedAccounts.update { selected ->
+                val isAllSelected = if (isAccountMode) {
+                    portfolio.accountsBalance.accountStatuses
+                        .all { accountStatus -> accountStatus.account.accountId in selected }
+                } else {
+                    portfolio.accountsBalance.mainAccount.account.accountId in selected
+                }
+                val walletAccounts = if (isAccountMode) {
+                    portfolio.accountsBalance.accountStatuses
+                        .mapTo(mutableSetOf()) { it.account.accountId }
+                } else {
+                    mutableSetOf(portfolio.accountsBalance.mainAccount.account.accountId)
+                }
+                if (isAllSelected) {
+                    selected - walletAccounts
+                } else {
+                    selected + walletAccounts
+                }
+            }
+        } else {
+            portfolioData.balances[walletId]?.accountsBalance?.mainAccount?.account?.accountId
+                ?.let { accountId -> selectorController.selectAccount(accountId) }
+        }
+    }
+
+    private fun onApplyClick() {
+        selectorController.selectAccount(innerSelectedAccounts.value)
+    }
+
     private fun createLockedWallets(wallets: List<PortfolioSelectorItemUM>): List<PortfolioSelectorItemUM> {
         val lockedWalletsTitle = PortfolioSelectorItemUM.GroupTitle(
             id = "lockedWalletsTitleId",
             name = resourceReference(R.string.common_locked_wallets),
             deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
+            isSelected = false,
+            onClick = {},
         )
 
         return listOf(lockedWalletsTitle) + wallets
@@ -221,5 +294,6 @@ internal class PortfolioSelectorModel @Inject constructor(
     private fun emptyState() = PortfolioSelectorUM(
         items = persistentListOf(),
         title = TextReference.EMPTY,
+        button = null,
     )
 }

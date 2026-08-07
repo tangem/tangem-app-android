@@ -10,13 +10,10 @@ android {
 
 dependencies {
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /** Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.visa.models)
-
-    /** Compose */
-    implementation(deps.compose.runtime)
+    api(projects.domain.models)
+    api(projects.domain.visa.models)
 }

@@ -14,11 +14,14 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PreselectedMarketsInterval
 import com.tangem.domain.markets.PreselectedMarketsOrder
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
@@ -32,6 +35,7 @@ import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
+import com.tangem.features.foryou.TokenSummaryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -142,6 +146,19 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         override fun openSearch(source: String) {
             stackNavigation.bringToFront(FeedEntryChildFactory.Child.Search(source))
         }
+
+        override fun openForYou() {
+            stackNavigation.bringToFront(FeedEntryChildFactory.Child.ForYou)
+        }
+
+        override fun openTokenSummary(userWalletId: UserWalletId, token: TokenSummaryComponent.Token) {
+            innerRouter.push(
+                FeedEntryChildFactory.Child.TokenSummary(
+                    userWalletId = userWalletId,
+                    token = token,
+                ),
+            )
+        }
     }
 
     private val stack: Value<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>> =
@@ -203,13 +220,19 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             router.pop()
         }
 
-        EntryContent(
-            bottomSheetState = bottomSheetState,
-            stackState = stack.subscribeAsState(),
-            onHeaderSizeChange = {},
-            onExpandSheet = {},
-            isOpenedInBottomSheet = false,
-        )
+        val primaryBackground = TangemTheme.colors3.bg.primary
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(primaryBackground) }
+                .apply { value = primaryBackground },
+        ) {
+            EntryContent(
+                bottomSheetState = bottomSheetState,
+                stackState = stack.subscribeAsState(),
+                onHeaderSizeChange = {},
+                onExpandSheet = {},
+                isOpenedInBottomSheet = false,
+            )
+        }
     }
 
     private fun onChildBack() {

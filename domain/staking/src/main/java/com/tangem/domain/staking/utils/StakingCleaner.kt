@@ -46,4 +46,13 @@ interface StakingCleaner {
      * @param stakingIds The set of staking IDs whose associated data should be cleaned.
      */
     suspend operator fun invoke(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
+
+    /**
+     * Removes all cached staking balances for the given [userWalletIds].
+     *
+     * Used on wallet deletion, where the concrete staking ids are no longer available.
+     *
+     * @param userWalletIds the user wallet ids whose staking balances should be removed
+     */
+    suspend fun clear(userWalletIds: List<UserWalletId>)
 }

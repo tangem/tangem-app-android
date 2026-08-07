@@ -5,6 +5,7 @@ import com.tangem.data.pay.util.OrderConverter
 import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.OrderRequest
+import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
@@ -22,6 +23,8 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
     override suspend fun getOrderData(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, OrderData> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getOrder(authHeader = authHeader, orderId = orderId)
+        }.mapLeft { error ->
+            if (error is VisaApiError.NotFound) VisaApiError.OrderNotFound else error
         }.map { response ->
             val status = response.result?.status?.let(OrderStatusConverter::convert) ?: OrderStatus.PROCESSING
             OrderData(
@@ -53,8 +56,10 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
     override suspend fun createOrder(
         userWalletId: UserWalletId,
         type: OrderType,
-        specificationName: String,
+        specificationName: String?,
         idempotencyKey: String,
+        targetTariffPlanId: String?,
+        transitionType: TangemPayTariffPlanTransition.Type?,
     ): Either<VisaApiError, Order> {
         val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
         return requestHelper.performRequest(userWalletId) { authHeader ->
@@ -65,6 +70,8 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                         customerWalletAddress = walletAddress,
                         specificationName = specificationName,
                         type = type.wireValue,
+                        targetTariffPlanId = targetTariffPlanId,
+                        tariffPlanTransitionType = transitionType?.name,
                     ),
                     idempotencyKey = idempotencyKey,
                 ),
@@ -73,5 +80,11 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
             val result = requireNotNull(response.result) { "createOrder returned empty result" }
             OrderConverter.convert(result)
         }
+    }
+
+    override suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.cancelOrder(authHeader = authHeader, orderId = orderId)
+        }.map {}
     }
 }
