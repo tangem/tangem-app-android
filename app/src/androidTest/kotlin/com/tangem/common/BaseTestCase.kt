@@ -128,7 +128,10 @@ abstract class BaseTestCase : TestCase(
         // `additionalBeforeAppLaunchSection` and the activity launch, because scenarios read at app start
         // (`/v1/networks/providers`, stories) must already be reset by the time the app boots. Tests therefore
         // only declare the states they need — they never have to roll them back afterwards.
-        resetWireMockScenarios()
+        check(resetWireMockScenarios()) {
+            "Failed to reset WireMock scenarios at ${wiremockUrl ?: "the remote instance"}. Every test depends " +
+                "on a clean scenario state, so continuing would fail later for an unrelated-looking reason."
+        }
         additionalBeforeAppLaunchSection()
         hiltRule.inject()
         runBlocking {
