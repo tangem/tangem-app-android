@@ -35,7 +35,6 @@ internal class TangemPayDetailsStateFactoryTest {
         onBack = {},
         onOpenMenu = {},
         intents = intents,
-        isRemoveAccountEnabled = true,
         isTiersPlusPlanEnabled = true,
     )
 

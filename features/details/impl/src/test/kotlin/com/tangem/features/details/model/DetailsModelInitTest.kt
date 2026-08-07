@@ -48,24 +48,6 @@ internal class DetailsModelInitTest : DetailsModelTestBase() {
     }
 
     @Test
-    fun `GIVEN addressBook enabled WHEN init THEN buildAll receives isAddressBookAvailable true`() = runTest {
-        every { addressBookFeatureToggles.isAddressBookEnabled } returns true
-
-        createModel(this).also { advanceUntilIdle() }.onDestroy()
-
-        assertThat(abSlot.captured).isTrue()
-    }
-
-    @Test
-    fun `GIVEN addressBook disabled WHEN init THEN buildAll receives isAddressBookAvailable false`() = runTest {
-        every { addressBookFeatureToggles.isAddressBookEnabled } returns false
-
-        createModel(this).also { advanceUntilIdle() }.onDestroy()
-
-        assertThat(abSlot.captured).isFalse()
-    }
-
-    @Test
     fun `GIVEN a hot wallet present WHEN init THEN buildAll receives hasAnyMobileWallet true`() = runTest {
         every { getWalletsUseCase.invokeSync() } returns listOf(hotWallet(wallet1))
 
