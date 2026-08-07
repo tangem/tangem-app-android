@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
+import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.utils.extensions.uriValidate
 import javax.inject.Inject
 
@@ -21,7 +22,9 @@ internal class PushMessageHandler @Inject constructor(
 ) {
 
     fun onMessageReceived(data: Map<String, String>) {
-        val deeplink = PayloadToDeeplinkConverter.convert(data)?.toUri() ?: return
+        val deeplink = PayloadToDeeplinkConverter.convert(data)?.toUri()
+            ?.takeIf { PushDeeplinkPolicy.isOpenableFromPush(scheme = it.scheme, host = it.host) }
+            ?: return
         val queryParams = deeplink.getQueryParams()
         when (deeplink.host) {
             DeepLinkRoute.TokenDetails.host -> tokenDetailsPushHandler.handle(queryParams)

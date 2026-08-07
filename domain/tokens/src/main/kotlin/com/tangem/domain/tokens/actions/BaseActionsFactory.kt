@@ -182,6 +182,7 @@ internal open class BaseActionsFactory(
             )
             is StakingAvailability.Full -> null
             StakingAvailability.Unavailable -> null
+            StakingAvailability.RegionUnavailable -> null
         }
     }
 
