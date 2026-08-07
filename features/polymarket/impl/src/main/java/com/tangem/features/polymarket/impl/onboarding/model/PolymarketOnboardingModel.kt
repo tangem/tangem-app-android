@@ -8,13 +8,13 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
 import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
-import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -29,7 +29,11 @@ import javax.inject.Inject
 /**
  * Model of the entry gate.
  *
- * Resolving the entry may open a card session, so it runs once per gate and is repeated only when the user
+ * The wallet is settled before this screen is reached — `PolymarketEntryModel` resolves it, choosing among
+ * eligible wallets when the caller left that choice to the user. This model only resolves the entry decision
+ * for that already-fixed wallet.
+ *
+ * Resolving the entry may open a card session, so it runs once on init and is repeated only when the user
  * retries. A failed resolution never falls through to the feed: the region is unknown, and treating that as
  * permission would let a restricted user trade — it raises the error overlay instead, which offers only retry.
  *
@@ -50,7 +54,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
-    private val params = paramsContainer.require<PolymarketComponent.Params>()
+    private val userWalletId: UserWalletId = paramsContainer.require<PolymarketOnboardingParams>().userWalletId
 
     private val onPolymarketTermsClick: () -> Unit = { urlOpener.openUrl(POLYMARKET_TERMS_URL) }
     private val onTangemTermsClick: () -> Unit = { urlOpener.openUrl(TANGEM_TERMS_URL) }
@@ -62,7 +66,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val onboardingJob = JobHolder()
 
     init {
-        resolveEntry()
+        resolveEntry(userWalletId)
     }
 
     fun onCloseClick() {
@@ -73,11 +77,11 @@ internal class PolymarketOnboardingModel @Inject constructor(
         openFeed(accessMode = PolymarketAccessMode.READ_ONLY)
     }
 
-    private fun resolveEntry() {
+    private fun resolveEntry(walletId: UserWalletId) {
         modelScope.launch {
             uiState.value = welcome(isStarting = true)
 
-            val result = resolvePolymarketEntryUseCase(params.userWalletId)
+            val result = resolvePolymarketEntryUseCase(walletId)
 
             ensureActive()
 
@@ -85,7 +89,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 ifLeft = {
                     uiState.value = welcome(
                         isStarting = false,
-                        overlay = PolymarketOnboardingUM.Overlay.Error(onRetryClick = ::resolveEntry),
+                        overlay = PolymarketOnboardingUM.Overlay.Error(onRetryClick = { resolveEntry(walletId) }),
                     )
                 },
                 ifRight = { entry ->
@@ -113,7 +117,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
         uiState.value = uiState.value.copy(isStarting = true)
 
         modelScope.launch {
-            runPolymarketOnboardingUseCase(params.userWalletId).collect { progress ->
+            runPolymarketOnboardingUseCase(userWalletId).collect { progress ->
                 ensureActive()
                 render(progress)
             }
@@ -150,7 +154,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun openFeed(accessMode: PolymarketAccessMode) {
-        router.replaceAll(PolymarketRoute.Main(accessMode = accessMode))
+        router.replaceAll(PolymarketRoute.Main(accessMode = accessMode, userWalletId = userWalletId))
     }
 
     private companion object {

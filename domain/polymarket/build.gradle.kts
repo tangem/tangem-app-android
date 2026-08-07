@@ -1,6 +1,11 @@
 plugins {
-    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     id("configuration")
+}
+
+android {
+    namespace = "com.tangem.domain.polymarket"
 }
 
 dependencies {
@@ -16,6 +21,13 @@ dependencies {
     // region Domain
     api(projects.domain.core)
     api(projects.domain.models)
+    api(projects.domain.common)
+    api(projects.domain.account.status)
+    // endregion
+
+    // region SDK
+    implementation(projects.libs.blockchainSdk)
+    implementation(tangemDeps.blockchain)
     // endregion
 
     // region Tests
