@@ -178,6 +178,7 @@ dependencies {
     implementation(projects.domain.earn)
     implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
+    implementation(projects.domain.cloudBackup)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -241,6 +242,7 @@ dependencies {
     implementation(projects.data.polymarket)
     implementation(projects.data.promo)
     implementation(projects.data.hotWallet)
+    implementation(projects.data.cloudBackup)
     implementation(projects.data.news)
     implementation(projects.data.earn)
     implementation(projects.data.search)
