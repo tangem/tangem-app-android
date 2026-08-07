@@ -5,6 +5,7 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
@@ -86,4 +87,14 @@ interface PolymarketRepository {
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
     ): Either<PolymarketAuthError, Unit>
+
+    /**
+     * Read the CLOB's collateral balance and allowance of the owner's deposit wallet
+     * (`GET clob.polymarket.com/balance-allowance`). Authenticated with the L2 HMAC headers derived from
+     * [credentials]; reports the CLOB's cached view, which [syncBalanceAllowance] refreshes.
+     */
+    suspend fun getBalanceAllowance(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+    ): Either<PolymarketAuthError, PolymarketBalanceAllowance>
 }
