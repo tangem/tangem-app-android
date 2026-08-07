@@ -52,7 +52,9 @@ internal class PolymarketOnboardingComponentTest {
     @Test
     fun `GIVEN the gate is created WHEN its model is resolved THEN the settled wallet is handed over`() {
         // Arrange
-        coEvery { resolvePolymarketEntryInteractor(userWalletId) } returns PolymarketEntry.RegionBlocked.right()
+        coEvery {
+            resolvePolymarketEntryInteractor.withoutPrompting(userWalletId)
+        } returns PolymarketEntry.RegionBlocked.right()
         val paramsContainerSlot = slot<ParamsContainer>()
         val appComponentContext = createAppComponentContext(paramsContainerSlot = paramsContainerSlot)
 
