@@ -17,7 +17,7 @@
     },
     {
         "name": "TWI_1602_STAKING_TRANSACTION_VALIDATION",
-        "version": "undefined"
+        "version": "6.2"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
@@ -41,7 +41,7 @@
     },
     {
         "name": "AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED",
-        "version": "undefined"
+        "version": "6.2"
     },
     {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
@@ -57,7 +57,7 @@
     },
     {
         "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
-        "version": "undefined"
+        "version": "6.2"
     },
     {
         "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
@@ -93,6 +93,6 @@
     },
     {
         "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
-        "version": "undefined"
+        "version": "6.2"
     }
 ]
