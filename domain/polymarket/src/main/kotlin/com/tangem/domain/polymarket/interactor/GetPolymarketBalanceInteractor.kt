@@ -9,7 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 
 /**
- * Reads the CLOB's collateral balance of [addresses]'s deposit wallet.
+ * Reads the CLOB's collateral balance and allowance of [addresses]'s deposit wallet.
  *
  * The credentials come from the local store, so a wallet that never finished onboarding fails with
  * [PolymarketAuthError.KeyNotFound] without reaching the network.
