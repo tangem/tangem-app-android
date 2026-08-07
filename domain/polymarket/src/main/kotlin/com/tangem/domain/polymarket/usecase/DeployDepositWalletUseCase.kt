@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
@@ -13,6 +14,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
  */
 class DeployDepositWalletUseCase(
     private val polymarketRepository: PolymarketRepository,
+    private val depositWalletDeriver: PolymarketDepositWalletDeriver,
 ) {
 
     suspend operator fun invoke(
@@ -20,7 +22,7 @@ class DeployDepositWalletUseCase(
     ): Either<PolymarketOnboardingError, PolymarketWalletStatus> = polymarketRepository
         .deployWallet(
             ownerAddress = addresses.ownerAddress,
-            userWalletId = addresses.userWalletId,
+            walletId = depositWalletDeriver.deriveWalletId(addresses.ownerAddress),
             depositWalletAddress = addresses.depositWalletAddress,
         )
         .mapLeft { it.toOnboardingError() }

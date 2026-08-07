@@ -81,8 +81,13 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideDeployDepositWalletUseCase(polymarketRepository: PolymarketRepository): DeployDepositWalletUseCase =
-        DeployDepositWalletUseCase(polymarketRepository = polymarketRepository)
+    fun provideDeployDepositWalletUseCase(
+        polymarketRepository: PolymarketRepository,
+        depositWalletDeriver: PolymarketDepositWalletDeriver,
+    ): DeployDepositWalletUseCase = DeployDepositWalletUseCase(
+        polymarketRepository = polymarketRepository,
+        depositWalletDeriver = depositWalletDeriver,
+    )
 
     @Provides
     @Singleton
