@@ -29,6 +29,8 @@ dependencies {
     //  once per-stream environment config is extracted (e.g. a TangemPayEnvironmentConfig slice).
     api(projects.core.datasource)
     api(projects.core.utils)
+    implementation(projects.core.local)
+    implementation(projects.domain.models)
 
     testImplementation(projects.test.core)
 }
