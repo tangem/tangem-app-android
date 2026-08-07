@@ -375,8 +375,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 .map { managerState -> managerState as? AddToPortfolioManager.State.Ready }
                 .distinctUntilChanged()
                 .onEach { readyState ->
-                    state.update {
-                        it.copy(
+                    state.update { currentState ->
+                        currentState.copy(
                             // The token is already in every account: keep the button, but explain it on click
                             isAddToPortfolioButtonVisible = readyState?.isAvailableToAdd == true ||
                                 readyState?.isAddedEverywhere == true,
