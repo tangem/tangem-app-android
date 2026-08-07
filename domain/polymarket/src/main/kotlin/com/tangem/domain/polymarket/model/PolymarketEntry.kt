@@ -22,4 +22,14 @@ sealed interface PolymarketEntry {
 
     /** The region forbids trading and there is no deposit wallet to fall back to. */
     data object RegionBlocked : PolymarketEntry
+
+    /**
+     * Nothing is decided yet, because deciding needs the owner address and this device has not derived it.
+     * Deriving opens a card session or unlocks the wallet, and neither may happen unasked — so the Welcome
+     * screen is shown and the real decision is taken when the user presses its action button.
+     *
+     * This is emphatically not "there is no deposit wallet": a wallet onboarded on another device resolves
+     * here too, and reporting it as absent would deny that user access to their funds.
+     */
+    data object Undetermined : PolymarketEntry
 }
