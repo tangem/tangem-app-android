@@ -1195,7 +1195,6 @@ internal class SwapModel @Inject constructor(
     }
 
     private suspend fun isHighNetworkFee(swapFee: SwapFee?): Boolean {
-        if (!swapFeatureToggles.isHighFeeWarningEnabled) return false
         swapFee ?: return false
         val totalFeeAmount = swapFee.fee.amount.value ?: return false
         // SwapFeeFactory folds otherNativeFee into fee.amount ONLY for native-coin fees. Recover the
