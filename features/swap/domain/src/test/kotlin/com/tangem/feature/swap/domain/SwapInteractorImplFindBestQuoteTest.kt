@@ -52,7 +52,6 @@ import java.math.BigInteger
  *  - DEX_BRIDGE provider sharing the DEX dispatch branch
  *  - Solana DEX path routing via the Solana-specific branch
  *  - CEX provider dispatch including null txFee edge case
- *  - yieldSupplyStatus.isActive returning [ExpressDataError.DexActiveSupplyError]
  *  - Mixed (DEX + CEX) provider list — each routed to its own path
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -275,36 +274,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 assertThat(result.containsKey(dexProvider)).isTrue()
                 assertThat(result[dexProvider]).isNotNull()
             }
-
-        @Test
-        fun `should return SwapError with DexActiveSupplyError when yieldSupply is active`() = runTest {
-            // Given — yieldSupplyActive=true short-circuits to DexActiveSupplyError
-            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
-            val fromStatus = buildSwapCurrencyStatus(
-                networkRawId = ethNetwork,
-                isCoin = true,
-                amount = BigDecimal("10"),
-                yieldSupplyActive = true,
-            )
-            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
-
-            // When
-            val result = sut.findBestQuote(
-                fromSwapCurrencyStatus = fromStatus,
-                toSwapCurrencyStatus = toStatus,
-                providers = listOf(dexProvider),
-                amountToSwap = "1.0",
-                reduceBalanceBy = BigDecimal.ZERO,
-
-                )
-
-            // Then
-            assertThat(result).hasSize(1)
-            val state = result[dexProvider]
-            assertThat(state).isInstanceOf(SwapState.SwapError::class.java)
-            val swapError = (state ?: error("state must not be null")) as SwapState.SwapError
-            assertThat(swapError.error).isEqualTo(ExpressDataError.DexActiveSupplyError())
-        }
 
         @Test
         fun `should set balanceStatus to InsufficientAmount when from-token balance is less than swap amount`() =
@@ -1242,7 +1211,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
         @BeforeEach
         fun enableYieldSwap() {
-            every { swapFeatureToggles.isYieldSwapEnabled } returns true
             coEvery {
                 yieldModuleAddressProvider.getOrFetch(any(), any())
             } returns yieldProxyAddress
@@ -1501,7 +1469,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
         @BeforeEach
         fun enableYieldSwap() {
-            every { swapFeatureToggles.isYieldSwapEnabled } returns true
             coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns yieldProxyAddress
         }
 

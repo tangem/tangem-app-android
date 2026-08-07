@@ -115,7 +115,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
-        isRemoveAccountEnabled = tangemPayFeatureToggles.isRemoveAccountEnabled,
         isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
     )
 

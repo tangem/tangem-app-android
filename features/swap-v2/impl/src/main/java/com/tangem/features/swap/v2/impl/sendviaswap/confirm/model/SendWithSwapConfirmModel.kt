@@ -47,7 +47,6 @@ import com.tangem.features.send.api.subcomponents.notifications.SendNotification
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.swap.v2.api.SwapFeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -91,7 +90,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val sendNotificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val swapNotificationsUpdateTrigger: SwapNotificationsUpdateTrigger,
@@ -489,7 +487,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     }
 
     private suspend fun isHighNetworkFee(feeCurrency: CryptoCurrency): Boolean {
-        if (!swapFeatureToggles.isHighFeeWarningEnabled) return false
         val feeAmount = confirmData.fee?.amount?.value ?: return false
         return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }

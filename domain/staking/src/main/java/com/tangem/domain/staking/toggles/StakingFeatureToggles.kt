@@ -7,6 +7,4 @@ interface StakingFeatureToggles {
     val isTransactionValidationEnabled: Boolean
 
     fun isIntegrationEnabled(integrationId: StakingIntegrationID): Boolean
-
-    fun isRegionUnavailableHandlingEnabled(): Boolean
 }

@@ -44,7 +44,6 @@ import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransac
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -117,7 +116,6 @@ internal class SendConfirmModel @Inject constructor(
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
-    private val sendFeatureToggles: SendFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -574,7 +572,6 @@ internal class SendConfirmModel @Inject constructor(
     }
 
     private suspend fun isHighNetworkFee(feeCurrency: CryptoCurrency): Boolean {
-        if (!sendFeatureToggles.isHighFeeWarningEnabled) return false
         val feeAmount = confirmData.fee?.amount?.value ?: return false
         return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }

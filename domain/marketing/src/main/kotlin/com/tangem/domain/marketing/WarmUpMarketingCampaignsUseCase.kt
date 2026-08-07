@@ -9,11 +9,9 @@ import kotlinx.coroutines.CancellationException
  */
 class WarmUpMarketingCampaignsUseCase(
     private val repository: MarketingRepository,
-    private val featureToggles: MarketingFeatureToggles,
 ) {
 
     suspend operator fun invoke() {
-        if (!featureToggles.isMarketingBannersEnabled) return
         WARMED_TYPES.forEach { type ->
             try {
                 repository.prefetchBackgroundCampaigns(type)
