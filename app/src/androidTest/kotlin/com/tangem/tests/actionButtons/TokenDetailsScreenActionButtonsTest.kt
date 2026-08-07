@@ -22,6 +22,7 @@ import com.tangem.screens.onSendScreen
 import com.tangem.screens.onSwapStoriesScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
+import com.tangem.screens.onTokenDetailsTopBar
 import com.tangem.screens.onTransferBottomSheet
 import com.tangem.screens.onTxHistoryScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -376,15 +377,19 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             // the transaction history (`?details=txs`), while the pending transaction that blocks 'Send' comes
             // from the balance request, which is re-issued by the main-screen refresh. Verified in the CI
             // WireMock log — after a token-details refresh, no balance request is made at all.
+            // Via the top-bar button, not `pressBack()`: a back press right after the dialog is swallowed by
+            // the dismissing bottom sheet and leaves the test on 'Token details'.
             step("Go back to 'Main' screen") {
-                device.uiDevice.pressBack()
+                onTokenDetailsTopBar { backButton.clickWithAssertion() }
             }
-            step("Pull to refresh on 'Main' screen") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 2_000) {
-                    pullToRefresh(steps = 10)
-                    waitForIdle()
+            step("Assert 'Main' screen is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onMainScreen { tokenWithTitleAndAddress(tokenName).assertIsDisplayed() }
                 }
+            }
+            step("Pull to refresh on 'Main' screen") {
+                pullToRefresh(steps = 10)
+                waitForIdle()
             }
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
