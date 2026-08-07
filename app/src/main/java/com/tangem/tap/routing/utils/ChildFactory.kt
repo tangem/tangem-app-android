@@ -109,6 +109,7 @@ internal class ChildFactory @Inject constructor(
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
     private val walletActivationComponentFactory: WalletActivationComponent.Factory,
     private val createWalletBackupComponentFactory: CreateWalletBackupComponent.Factory,
+    private val createCloudBackupComponentFactory: CreateCloudBackupComponent.Factory,
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val viewPhraseComponentFactory: ViewPhraseComponent.Factory,
     private val forgetWalletComponentFactory: ForgetWalletComponent.Factory,
@@ -594,6 +595,15 @@ internal class ChildFactory @Inject constructor(
                         shouldShowBackButton = route.shouldShowBackButton,
                     ),
                     componentFactory = createWalletBackupComponentFactory,
+                )
+            }
+            is AppRoute.CreateCloudBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = CreateCloudBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = createCloudBackupComponentFactory,
                 )
             }
             is AppRoute.UpdateAccessCode -> {
