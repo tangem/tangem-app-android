@@ -25,6 +25,15 @@ object PasswordStrengthEvaluator {
 
     fun evaluate(password: CharArray): PasswordStrength = evaluate(CharBuffer.wrap(password))
 
+    /**
+     * Same as [evaluate], but `null` while [password] is still too short to rate — the strength meter is
+     * only shown from [SHORT_MAX_LENGTH] + 1 characters on (FR-09).
+     */
+    fun evaluateRated(password: CharArray): PasswordStrength? = evaluateRated(CharBuffer.wrap(password))
+
+    fun evaluateRated(password: CharSequence): PasswordStrength? =
+        if (password.length <= SHORT_MAX_LENGTH) null else evaluate(password)
+
     fun evaluate(password: CharSequence): PasswordStrength {
         val classes = classesOf(password)
         return when {
