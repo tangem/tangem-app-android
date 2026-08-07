@@ -35,8 +35,8 @@ class EnvironmentConfigGeneratorTest {
         val generatedCode = generateAndReadOutput(json)
 
         // Assert
-        assertThat(generatedCode).contains("""const val apiKey: String = "test-api-key"""")
-        assertThat(generatedCode).contains("""const val baseUrl: String = "https://example.com"""")
+        assertThat(generatedCode).contains("""val apiKey: String = "test-api-key"""")
+        assertThat(generatedCode).contains("""val baseUrl: String = "https://example.com"""")
     }
 
     @Test
@@ -180,7 +180,7 @@ class EnvironmentConfigGeneratorTest {
 
         // Assert
         assertThat(generatedCode).contains("object Database {")
-        assertThat(generatedCode).contains("""const val host: String = "localhost"""")
+        assertThat(generatedCode).contains("""val host: String = "localhost"""")
         // KotlinPoet formats numbers >= 1000 with underscores
         assertThat(generatedCode).contains("const val port: Long = 5_432")
     }
@@ -207,7 +207,7 @@ class EnvironmentConfigGeneratorTest {
         assertThat(generatedCode).contains("object Level1 {")
         assertThat(generatedCode).contains("object Level2 {")
         assertThat(generatedCode).contains("object Level3 {")
-        assertThat(generatedCode).contains("""const val deepValue: String = "deep"""")
+        assertThat(generatedCode).contains("""val deepValue: String = "deep"""")
     }
 
     @Test
@@ -231,7 +231,7 @@ class EnvironmentConfigGeneratorTest {
 
         // Assert - object names preserved, property names have first letter lowercased
         assertThat(generatedCode).contains("object AppsFlyer {")
-        assertThat(generatedCode).contains("""const val devKey: String = "key123"""")
+        assertThat(generatedCode).contains("""val devKey: String = "key123"""")
         assertThat(generatedCode).contains("object GetBlockAccessTokens {")
         assertThat(generatedCode).contains("object Ethereum {")
     }
@@ -324,10 +324,10 @@ class EnvironmentConfigGeneratorTest {
         val generatedCode = generateAndReadOutput(json)
 
         // Assert
-        assertThat(generatedCode).contains("const val query: String")
-        assertThat(generatedCode).contains("const val path: String")
-        assertThat(generatedCode).contains("const val newline: String")
-        assertThat(generatedCode).contains("const val unicode: String")
+        assertThat(generatedCode).contains("val query: String")
+        assertThat(generatedCode).contains("val path: String")
+        assertThat(generatedCode).contains("val newline: String")
+        assertThat(generatedCode).contains("val unicode: String")
     }
 
     @Test
@@ -463,14 +463,14 @@ class EnvironmentConfigGeneratorTest {
 
         // Assert
         // Top-level properties
-        assertThat(generatedCode).contains("""const val tangemComApiKey: String = "api-key-123"""")
+        assertThat(generatedCode).contains("""val tangemComApiKey: String = "api-key-123"""")
         assertThat(generatedCode).contains("val mercuryoWidgetId: String? = null")
         assertThat(generatedCode).contains("const val isFeatureEnabled: Boolean = true")
         assertThat(generatedCode).contains("const val maxRetryCount: Long = 3")
 
         // Nested object
         assertThat(generatedCode).contains("object BlockchainSdkConfig {")
-        assertThat(generatedCode).contains("""const val blockchairApiKey: String = "blockchair-key"""")
+        assertThat(generatedCode).contains("""val blockchairApiKey: String = "blockchair-key"""")
         assertThat(generatedCode).contains("val blockcypherTokens: List<String>")
 
         // Deeply nested object
@@ -495,8 +495,8 @@ class EnvironmentConfigGeneratorTest {
         // Assert
         assertThat(generatedCode).contains("object CustomerIo {")
         // Property names have first letter lowercased (Kotlin convention)
-        assertThat(generatedCode).contains("""const val trackSiteID: String = "site-id-123"""")
-        assertThat(generatedCode).contains("""const val trackApiKey: String = "api-key-456"""")
+        assertThat(generatedCode).contains("""val trackSiteID: String = "site-id-123"""")
+        assertThat(generatedCode).contains("""val trackApiKey: String = "api-key-456"""")
     }
 
     @Test
@@ -513,8 +513,8 @@ class EnvironmentConfigGeneratorTest {
         val generatedCode = generateAndReadOutput(json)
 
         // Assert - dots in property names are converted to camelCase
-        assertThat(generatedCode).contains("""const val apiKey: String = "test-key"""")
-        assertThat(generatedCode).contains("""const val serviceUrl: String = "https://example.com"""")
+        assertThat(generatedCode).contains("""val apiKey: String = "test-key"""")
+        assertThat(generatedCode).contains("""val serviceUrl: String = "https://example.com"""")
     }
 
     @Test
@@ -533,8 +533,8 @@ class EnvironmentConfigGeneratorTest {
         val generatedCode = generateAndReadOutput(json)
 
         // Assert - original names preserved exactly
-        assertThat(generatedCode).contains("""const val apiKey: String = "key1"""")
-        assertThat(generatedCode).contains("""const val moonPayApiKey: String = "moon-pay-key"""")
+        assertThat(generatedCode).contains("""val apiKey: String = "key1"""")
+        assertThat(generatedCode).contains("""val moonPayApiKey: String = "moon-pay-key"""")
         assertThat(generatedCode).contains("const val isEnabled: Boolean = true")
         assertThat(generatedCode).contains("const val maxRetryCount: Long = 5")
     }
