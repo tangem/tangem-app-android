@@ -15,11 +15,10 @@ internal class ExpressHistoryConverterTest {
         val item = createExchangeItem()
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = requireNotNull(item.toEntity())
 
         // THEN
         Truth.assertThat(entity.txId).isEqualTo(item.txId)
-        Truth.assertThat(entity.ownerAddress).isEqualTo(OWNER_ADDRESS)
         Truth.assertThat(entity.providerId).isEqualTo(item.providerId)
         Truth.assertThat(entity.fromAddress).isEqualTo(item.fromAddress)
         Truth.assertThat(entity.payinAddress).isEqualTo(item.payinAddress)
@@ -47,7 +46,7 @@ internal class ExpressHistoryConverterTest {
         val item = createExchangeItem(status = "finished")
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = requireNotNull(item.toEntity())
 
         // THEN
         Truth.assertThat(entity.status).isEqualTo("finished")
@@ -59,7 +58,7 @@ internal class ExpressHistoryConverterTest {
         val item = createExchangeItem()
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = requireNotNull(item.toEntity())
 
         // THEN
         Truth.assertThat(entity.from.contractAddress).isEqualTo(item.fromContractAddress)
@@ -95,7 +94,7 @@ internal class ExpressHistoryConverterTest {
         )
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = requireNotNull(item.toEntity())
 
         // THEN
         Truth.assertThat(entity.payinExtraId).isNull()
@@ -113,16 +112,27 @@ internal class ExpressHistoryConverterTest {
     }
 
     @Test
+    fun `GIVEN exchange item with null fromAddress WHEN toEntity THEN returns null`() {
+        // GIVEN
+        val item = createExchangeItem().copy(fromAddress = null)
+
+        // WHEN
+        val entity = item.toEntity()
+
+        // THEN
+        Truth.assertThat(entity).isNull()
+    }
+
+    @Test
     fun `GIVEN onramp item WHEN toEntity THEN all transaction fields are mapped`() {
         // GIVEN
         val item = createOnrampItem()
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = item.toEntity()
 
         // THEN
         Truth.assertThat(entity.txId).isEqualTo(item.txId)
-        Truth.assertThat(entity.ownerAddress).isEqualTo(OWNER_ADDRESS)
         Truth.assertThat(entity.providerId).isEqualTo(item.providerId)
         Truth.assertThat(entity.payoutAddress).isEqualTo(item.payoutAddress)
         Truth.assertThat(entity.failReason).isEqualTo(item.failReason)
@@ -145,7 +155,7 @@ internal class ExpressHistoryConverterTest {
         val item = createOnrampItem(status = "waiting-for-payment")
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = item.toEntity()
 
         // THEN
         Truth.assertThat(entity.status).isEqualTo("waiting-for-payment")
@@ -157,7 +167,7 @@ internal class ExpressHistoryConverterTest {
         val item = createOnrampItem()
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = item.toEntity()
 
         // THEN
         Truth.assertThat(entity.to.contractAddress).isEqualTo(item.toContractAddress)
@@ -180,7 +190,7 @@ internal class ExpressHistoryConverterTest {
         )
 
         // WHEN
-        val entity = item.toEntity(ownerAddress = OWNER_ADDRESS)
+        val entity = item.toEntity()
 
         // THEN
         Truth.assertThat(entity.failReason).isNull()
@@ -269,8 +279,4 @@ internal class ExpressHistoryConverterTest {
         paymentMethod = "card",
         countryCode = "US",
     )
-
-    private companion object {
-        const val OWNER_ADDRESS = "0xowner"
-    }
 }

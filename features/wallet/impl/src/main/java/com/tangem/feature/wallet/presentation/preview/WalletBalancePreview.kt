@@ -29,7 +29,7 @@ internal object WalletBalancePreview {
             styledStringReference(
                 ".56",
                 {
-                    TangemTheme.typography2.headingRegular28.toSpanStyle()
+                    TangemTheme.typography3.heading.medium.toSpanStyle()
                 },
             ),
             stringReference(" $"),
@@ -55,7 +55,7 @@ internal object WalletBalancePreview {
             styledStringReference(
                 ".56",
                 {
-                    TangemTheme.typography2.headingRegular28.toSpanStyle()
+                    TangemTheme.typography3.heading.medium.toSpanStyle()
                 },
             ),
             stringReference(" $"),

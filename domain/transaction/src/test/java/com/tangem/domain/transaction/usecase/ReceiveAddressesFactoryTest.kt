@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -28,7 +27,6 @@ internal class ReceiveAddressesFactoryTest {
     private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase = mockk()
     private val getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase = mockk()
     private val dynamicAddressesRepository: DynamicAddressesRepository = mockk()
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
 
     private val factory = ReceiveAddressesFactory(
@@ -36,7 +34,6 @@ internal class ReceiveAddressesFactoryTest {
         getViewedTokenReceiveWarningUseCase = getViewedTokenReceiveWarningUseCase,
         getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
         dynamicAddressesRepository = dynamicAddressesRepository,
-        dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
         userWalletsListRepository = userWalletsListRepository,
     )
 
@@ -54,7 +51,6 @@ internal class ReceiveAddressesFactoryTest {
             )
         }
 
-        every { dynamicAddressesFeatureToggles.isDynamicAddressesEnabled } returns true
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
         // Single-currency wallets never populate the accounts store, so the status flow never emits ([REDACTED_TASK_KEY])
         every { dynamicAddressesRepository.getStatus(any(), any()) } returns flow { awaitCancellation() }

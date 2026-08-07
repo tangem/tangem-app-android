@@ -1,5 +1,6 @@
 package com.tangem.features.pushnotificationsettings.impl.model
 
+import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -13,13 +14,18 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.pushnotificationpreferences.IsPushNotificationFirstActivationDoneUseCase
+import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.pushnotificationpreferences.ObserveWalletPushNotificationPreferencesUseCase
+import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.pushnotificationpreferences.UpdateWalletPushNotificationPreferenceUseCase
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
+import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
+import com.tangem.domain.wallets.usecase.SetNotificationsEnabledUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotificationsettings.component.PushNotificationSettingsComponent
 import com.tangem.features.pushnotificationsettings.impl.R
@@ -30,9 +36,7 @@ import com.tangem.features.pushnotificationsettings.impl.entity.ToggleId
 import com.tangem.features.pushnotificationsettings.impl.entity.ToggleUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.channels.Channel
@@ -48,6 +52,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -61,7 +66,12 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private val updatePreference: UpdateWalletPushNotificationPreferenceUseCase,
     private val systemNotificationsStateProvider: SystemNotificationsStateProvider,
     private val settingsManager: SettingsManager,
-    private val accountsCRUDRepository: AccountsCRUDRepository,
+    private val setAllPreferences: SetAllWalletPushNotificationPreferencesUseCase,
+    private val setNotificationsEnabled: SetNotificationsEnabledUseCase,
+    private val isFirstActivationDone: IsPushNotificationFirstActivationDoneUseCase,
+    private val markFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase,
+    private val applyFirstActivation: ApplyPushNotificationFirstActivationUseCase,
+    private val notificationsRepository: NotificationsRepository,
 ) : Model() {
 
     private val params: PushNotificationSettingsComponent.Params = paramsContainer.require()
@@ -71,6 +81,7 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private val osNotificationsEnabled = MutableStateFlow(systemNotificationsStateProvider.areNotificationsEnabled())
 
     private var pendingPermissionToggle: ToggleSpec? = null
+    private val wasAutoActivationAttempted = AtomicBoolean(false)
     private val preferencesJobHolder = JobHolder()
 
     private val cachedPrefs: WalletPushNotificationPreferences?
@@ -117,19 +128,48 @@ internal class PushNotificationSettingsModel @Inject constructor(
 
     fun onResume() {
         osNotificationsEnabled.value = systemNotificationsStateProvider.areNotificationsEnabled()
+        if (cachedPrefs == null) return
+
+        // An explicitly tapped toggle wins over the silent first-activation rule.
+        if (pendingPermissionToggle != null) {
+            modelScope.launch { applyPendingToggle() }
+        } else {
+            autoApplyFirstActivationIfNeeded()
+        }
     }
 
     fun onPermissionResult(isGranted: Boolean) {
-        val tapped = pendingPermissionToggle
-        pendingPermissionToggle = null
         modelScope.launch {
-            osNotificationsEnabled.value = systemNotificationsStateProvider.areNotificationsEnabled()
+            // isGranted alone is unreliable: an already-granted-but-OS-disabled wallet returns true
+            // instantly, and pre-Android 13 there is no runtime permission at all.
+            val isNotificationsEnabled = systemNotificationsStateProvider.areNotificationsEnabled()
+            osNotificationsEnabled.value = isNotificationsEnabled
             analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = isGranted))
-            if (isGranted && tapped != null) {
-                applyOptimisticToggle(tapped, newValue = true)
-            } else if (!isGranted) {
+
+            if (isNotificationsEnabled) {
+                applyPendingToggle()
+            } else {
+                // The tapped toggle stays pending until the user comes back from the system settings.
                 showEnableNotificationsDialog()
             }
+        }
+    }
+
+    /**
+     * Applies the toggle the user tapped before the permission ask, once notifications are actually enabled.
+     * A refusal never fixes the first-activation flag, so the rule survives until a real grant.
+     */
+    private suspend fun applyPendingToggle() {
+        val tapped = pendingPermissionToggle ?: return
+        if (!osNotificationsEnabled.value || cachedPrefs == null) return
+        // Consumed before the first suspension point, so a concurrent resume cannot apply it twice.
+        pendingPermissionToggle = null
+
+        if (isFirstActivationDone(userWalletId)) {
+            applyOptimisticToggle(tapped, newValue = true)
+        } else if (enableAllCategories(initiatingToggle = tapped)) {
+            // Fix the flag only after a successful enable, so a transient failure can retry.
+            markFirstActivationDone(userWalletId)
         }
     }
 
@@ -139,9 +179,32 @@ internal class PushNotificationSettingsModel @Inject constructor(
                 // Fall to Failed only when nothing is cached yet; otherwise keep showing the last value.
                 if (loadState.value !is LoadState.Content) loadState.value = LoadState.Failed
             }
-            .onEach { value -> loadState.value = LoadState.Content(value) }
+            .onEach { value ->
+                loadState.value = LoadState.Content(value)
+                autoApplyFirstActivationIfNeeded()
+            }
             .launchIn(modelScope)
             .saveIn(preferencesJobHolder)
+    }
+
+    /**
+     * Silently re-applies the first-activation rule once preferences are loaded: the grant-time attempt
+
+     */
+    private fun autoApplyFirstActivationIfNeeded() {
+        if (!wasAutoActivationAttempted.compareAndSet(false, true)) return
+        modelScope.launch(dispatchers.io) {
+            val areGatesPassed = osNotificationsEnabled.value &&
+                notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
+            if (areGatesPassed) {
+                // Deliberately not retried on failure within this screen instance: a retry fired by the
+                // cache echo of a manual toggle write would force-enable all three against the user's choice.
+                applyFirstActivation(userWalletId)
+            } else {
+                // A gate miss is not an attempt — onResume may retry after the OS state changes.
+                wasAutoActivationAttempted.set(false)
+            }
+        }
     }
 
     private fun buildContent(
@@ -163,7 +226,6 @@ internal class PushNotificationSettingsModel @Inject constructor(
         return TOGGLE_ORDER
             .asSequence()
             .map { id -> id.spec(prefs) }
-            .filter { it.preference.isVisible }
             .map { spec ->
                 ToggleUM(
                     id = spec.id,
@@ -229,23 +291,54 @@ internal class PushNotificationSettingsModel @Inject constructor(
     }
 
     private suspend fun writeToggle(spec: ToggleSpec, newValue: Boolean) {
-        // TODO [REDACTED_TASK_KEY] figure out and maybe swap /tokens and /preferences further calls
-        updatePreference(userWalletId, spec.category, newValue)
-            .onRight {
-                if (spec.category == PushNotificationCategory.TransactionAlerts) {
-                    // Best-effort token sync after the preference write already succeeded:
-                    // log a failure but don't surface it to the user or revert the toggle.
-                    runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
-                        .onFailure { error ->
-                            TangemLogger.e(
-                                messageString = "Failed to sync tokens after enabling " +
-                                    "transaction alerts for $userWalletId",
-                                throwable = error,
-                            )
-                        }
-                }
-            }
-            .onLeft { revertOptimistic(spec, newValue) }
+        if (spec.category == PushNotificationCategory.TransactionAlerts) {
+            writeTransactionAlerts(spec, newValue)
+        } else {
+            updatePreference(userWalletId, spec.category, newValue).onLeft { revertOptimistic(spec, newValue) }
+        }
+    }
+
+    /** Tokens (address re-subscription) first, then preferences; on failure revert and undo the token subscription. */
+    private suspend fun writeTransactionAlerts(spec: ToggleSpec, newValue: Boolean) {
+        val tokensResult = setNotificationsEnabled(userWalletId, isEnabled = newValue)
+        if (tokensResult is Either.Left) {
+            revertOptimistic(spec, newValue)
+            return
+        }
+        updatePreference(userWalletId, spec.category, newValue).onLeft {
+            setNotificationsEnabled(userWalletId, isEnabled = !newValue)
+            revertOptimistic(spec, newValue)
+        }
+    }
+
+    /** Enables all three categories at once (first-activation): tokens first, then preferences. True on full success. */
+    private suspend fun enableAllCategories(initiatingToggle: ToggleSpec?): Boolean {
+        val previous = cachedPrefs ?: return false
+        loadState.value = LoadState.Content(
+            previous.copy(
+                transactionAlerts = previous.transactionAlerts.copy(isEnabled = true),
+                offersUpdates = previous.offersUpdates.copy(isEnabled = true),
+                priceAlerts = previous.priceAlerts.copy(isEnabled = true),
+            ),
+        )
+        val tokensResult = setNotificationsEnabled(userWalletId, isEnabled = true)
+        if (tokensResult is Either.Left) {
+            revertAll(previous, initiatingToggle)
+            return false
+        }
+        return setAllPreferences(
+            userWalletId = userWalletId,
+            transactionAlerts = true,
+            offersUpdates = true,
+            priceAlerts = true,
+        ).fold(
+            ifLeft = {
+                setNotificationsEnabled(userWalletId, isEnabled = false)
+                revertAll(previous, initiatingToggle)
+                false
+            },
+            ifRight = { true },
+        )
     }
 
     private fun revertOptimistic(spec: ToggleSpec, newValue: Boolean) {
@@ -258,9 +351,18 @@ internal class PushNotificationSettingsModel @Inject constructor(
                 state
             }
         }
+        showWriteErrorMessage(toggleType = spec.id.analyticsValue)
+    }
+
+    private fun revertAll(previous: WalletPushNotificationPreferences, initiatingToggle: ToggleSpec?) {
+        loadState.update { state -> if (state is LoadState.Content) LoadState.Content(previous) else state }
+        showWriteErrorMessage(toggleType = (initiatingToggle?.id ?: ToggleId.TransactionAlerts).analyticsValue)
+    }
+
+    private fun showWriteErrorMessage(toggleType: String) {
         analyticsEventHandler.send(
             PushNotificationAnalyticEvents.NotificationSettingsErrorShown(
-                toggleType = spec.id.analyticsValue,
+                toggleType = toggleType,
                 errorType = ERROR_TYPE_WRITE_FAILED,
             ),
         )
@@ -287,7 +389,8 @@ internal class PushNotificationSettingsModel @Inject constructor(
                 ),
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.push_notifications_permission_alert_negative_button),
-                    onClick = {},
+                    // Declining is a final answer: the tapped toggle is dropped.
+                    onClick = { pendingPermissionToggle = null },
                 ),
             ),
         )
