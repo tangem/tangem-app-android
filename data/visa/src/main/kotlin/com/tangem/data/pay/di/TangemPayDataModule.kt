@@ -363,6 +363,21 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideIssuePlasticCardUseCase(
+            customerOffersRepository: CustomerOffersRepository,
+            customerOrderRepository: CustomerOrderRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): IssuePlasticCardUseCase {
+            return IssuePlasticCardUseCase(
+                customerOffersRepository = customerOffersRepository,
+                customerOrderRepository = customerOrderRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
         fun provideCreateVirtualAccountOrderUseCase(
             onboardingRepository: OnboardingRepository,
             pollingUseCase: StartTangemPayOrderPollingUseCase,
