@@ -13,39 +13,37 @@ android {
 
 dependencies {
     api(projects.features.biometry.api)
-    implementation(projects.features.hotWallet.api)
 
     /** Core modules */
+    api(projects.core.decompose)
+    api(projects.core.navigation)
+    api(projects.core.utils)
     implementation(projects.core.ui)
-    implementation(projects.core.res)
-    implementation(projects.core.decompose)
-    implementation(projects.core.analytics)
-    implementation(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
-    implementation(projects.core.navigation)
-    implementation(projects.core.utils)
 
     /** Domain */
-    implementation(projects.domain.wallets)
-    api(projects.domain.models)
-    implementation(projects.domain.settings)
-    implementation(projects.domain.card)
+    api(projects.domain.card)
+    api(projects.domain.common)
+    api(projects.domain.settings)
+    api(projects.domain.wallets)
+    implementation(projects.domain.models)
 
     /** Compose libraries */
+    api(deps.compose.animation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.animation)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
 
     /** Tangem libraries */
-    implementation(projects.libs.tangemSdkApi)
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.card.android) {
-        exclude(module = "joda-time")
-    }
+    api(projects.libs.tangemSdkApi)
 
     /** Other */
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** DI */
     implementation(deps.hilt.android)

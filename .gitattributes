@@ -1,0 +1,36 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# Normalize all text files to LF in the repository and the working tree on
+# every OS, regardless of the contributor's core.autocrlf setting.
+* text=auto eol=lf
+
+# Windows script files must stay CRLF.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# Unix scripts and the Gradle wrapper must stay LF.
+*.sh    text eol=lf
+gradlew text eol=lf
+
+# Binary files must be left untouched (never EOL-normalized or diffed as text).
+# Images
+*.png   binary
+*.webp  binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+# Fonts
+*.ttf   binary
+*.otf   binary
+# JVM / Android artifacts
+*.jar   binary
+*.aar   binary
+*.so    binary
+# Signing keys & keystores
+*.jks       binary
+*.keystore  binary
+# Archives & databases
+*.zip   binary
+*.db    binary

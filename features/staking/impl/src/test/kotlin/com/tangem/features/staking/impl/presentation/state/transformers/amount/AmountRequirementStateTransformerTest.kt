@@ -85,13 +85,11 @@ internal class AmountRequirementStateTransformerTest {
         staked: BigDecimal,
         exitMin: BigDecimal?,
         enterMin: BigDecimal? = null,
-        enabled: Boolean = true,
     ) = AmountRequirementStateTransformer(
         cryptoCurrencyStatus = solanaCryptoStatus(),
         maxAmount = EnterAmountBoundary(amount = staked, fiatAmount = null, fiatRate = null),
         integration = solanaExitIntegration(exitMin = exitMin, enterMin = enterMin),
         actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
-        isSolanaUnstakeValidationEnabled = enabled,
     )
 
     @Test
@@ -285,26 +283,12 @@ internal class AmountRequirementStateTransformerTest {
     }
 
     @Test
-    fun `WHEN Solana validation disabled THEN partial unstake below minimum allowed`() {
-        val transformer = solanaTransformer(
-            staked = BigDecimal("5"),
-            exitMin = BigDecimal("1"),
-            enabled = false,
-        )
-
-        val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data
-
-        assertThat(result.amountTextField.isError).isFalse()
-    }
-
-    @Test
-    fun `WHEN validation enabled but currency is not Solana THEN Solana rule does not apply`() {
+    fun `WHEN currency is not Solana THEN Solana rule does not apply`() {
         val transformer = AmountRequirementStateTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus, // relaxed mock: network.rawId is not "solana"
             maxAmount = EnterAmountBoundary(amount = BigDecimal("5"), fiatAmount = null, fiatRate = null),
             integration = exitIntegrationWith(minimum = null, maximum = null),
             actionType = StakingActionCommonType.Exit(partiallyUnstakeDisabled = false),
-            isSolanaUnstakeValidationEnabled = true,
         )
 
         val result = transformer.transform(amountState(BigDecimal("0.5"))) as AmountState.Data

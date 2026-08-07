@@ -1,7 +1,6 @@
 package com.tangem.features.txhistory.utils
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
@@ -11,15 +10,14 @@ import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
+import com.tangem.domain.txhistory.repository.ExpressHistoryPage
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
-import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.PaginationStatus
 import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,43 +44,41 @@ internal class TxHistoryListManagerTest {
     private val currency = mockk<CryptoCurrency>(relaxed = true)
 
     @Test
-    fun `GIVEN pages that are empty for the token WHEN loading THEN auto-loads through them until the end`() =
-        runTest {
-            // page 0: 2 items, then two empty-for-token pages, then 3 items on the last page → 5 items total.
-            val fetcher = ScriptedFetcher { call ->
-                when (call) {
-                    0 -> page(itemCount = 2, isLast = false)
-                    1 -> page(itemCount = 0, isLast = false)
-                    2 -> page(itemCount = 0, isLast = false)
-                    else -> page(itemCount = 3, isLast = true)
-                }
-            }
-            val repo = fakeRepository(fetcher)
-            val manager = createManager(repo)
-
-            withLoadedManager(manager) {
-                // first fetch + 3 auto-loaded next pages = 4
-                assertThat(fetcher.fetchCount).isEqualTo(4)
-                assertThat(repo.loadedItemsCount()).isEqualTo(5)
-                assertThat(repo.status()).isInstanceOf(PaginationStatus.EndOfPagination::class.java)
+    fun `GIVEN pages that are empty for the token WHEN loading THEN auto-loads through them until the end`() = runTest {
+        // page 0: 2 items, then two empty-for-token pages, then 3 items on the last page → 5 items total.
+        val fetcher = ScriptedFetcher { call ->
+            when (call) {
+                0 -> page(itemCount = 2, isLast = false)
+                1 -> page(itemCount = 0, isLast = false)
+                2 -> page(itemCount = 0, isLast = false)
+                else -> page(itemCount = 3, isLast = true)
             }
         }
+        val repo = fakeRepository(fetcher)
+        val manager = createManager(repo)
+
+        withLoadedManager(manager) {
+            // first fetch + 3 auto-loaded next pages = 4
+            assertThat(fetcher.fetchCount).isEqualTo(4)
+            assertThat(repo.loadedItemsCount()).isEqualTo(5)
+            assertThat(repo.status()).isInstanceOf(PaginationStatus.EndOfPagination::class.java)
+        }
+    }
 
     @Test
-    fun `GIVEN many small non-final pages WHEN loading THEN stops once the list is long enough to scroll`() =
-        runTest {
-            // every page returns 7 items and is never the last page.
-            val fetcher = ScriptedFetcher { page(itemCount = 7, isLast = false) }
-            val repo = fakeRepository(fetcher)
-            val manager = createManager(repo)
+    fun `GIVEN many small non-final pages WHEN loading THEN stops once the list is long enough to scroll`() = runTest {
+        // every page returns 7 items and is never the last page.
+        val fetcher = ScriptedFetcher { page(itemCount = 7, isLast = false) }
+        val repo = fakeRepository(fetcher)
+        val manager = createManager(repo)
 
-            withLoadedManager(manager) {
-                // 7 -> 14 -> 21: stops after crossing AUTO_LOAD_MORE_TARGET_COUNT (20), does not keep loading.
-                assertThat(fetcher.fetchCount).isEqualTo(3)
-                assertThat(repo.loadedItemsCount()).isEqualTo(21)
-                assertThat(repo.status()).isInstanceOf(PaginationStatus.Paginating::class.java)
-            }
+        withLoadedManager(manager) {
+            // 7 -> 14 -> 21: stops after crossing AUTO_LOAD_MORE_TARGET_COUNT (20), does not keep loading.
+            assertThat(fetcher.fetchCount).isEqualTo(3)
+            assertThat(repo.loadedItemsCount()).isEqualTo(21)
+            assertThat(repo.status()).isInstanceOf(PaginationStatus.Paginating::class.java)
         }
+    }
 
     @Test
     fun `GIVEN a full first page WHEN loading THEN does not auto-load more`() = runTest {
@@ -98,36 +94,35 @@ internal class TxHistoryListManagerTest {
     }
 
     @Test
-    fun `GIVEN a gap of empty pages mid-history WHEN scrolled to the end THEN auto-loads through the gap`() =
-        runTest {
-            // A full first page (no auto-load), then two empty-for-token pages (a gap of other-token
-            // activity), then one final item. Mirrors a busy account where a token has a long activity gap.
-            val fetcher = ScriptedFetcher { call ->
-                when (call) {
-                    0 -> page(itemCount = 25, isLast = false)
-                    1 -> page(itemCount = 0, isLast = false)
-                    2 -> page(itemCount = 0, isLast = false)
-                    else -> page(itemCount = 1, isLast = true)
-                }
-            }
-            val repo = fakeRepository(fetcher)
-            val manager = createManager(repo)
-
-            withLoadedManager(manager) {
-                // full first page → no auto-load yet, the list is scrollable.
-                assertThat(fetcher.fetchCount).isEqualTo(1)
-                assertThat(repo.loadedItemsCount()).isEqualTo(25)
-
-                // user scrolls to the bottom → one loadMore; the empty gap must be auto-bridged to the end,
-                // otherwise the list dead-ends and the final transaction is never reached.
-                manager.loadMore(userWalletId, currency)
-                advanceUntilIdle()
-
-                assertThat(fetcher.fetchCount).isEqualTo(4)
-                assertThat(repo.loadedItemsCount()).isEqualTo(26)
-                assertThat(repo.status()).isInstanceOf(PaginationStatus.EndOfPagination::class.java)
+    fun `GIVEN a gap of empty pages mid-history WHEN scrolled to the end THEN auto-loads through the gap`() = runTest {
+        // A full first page (no auto-load), then two empty-for-token pages (a gap of other-token
+        // activity), then one final item. Mirrors a busy account where a token has a long activity gap.
+        val fetcher = ScriptedFetcher { call ->
+            when (call) {
+                0 -> page(itemCount = 25, isLast = false)
+                1 -> page(itemCount = 0, isLast = false)
+                2 -> page(itemCount = 0, isLast = false)
+                else -> page(itemCount = 1, isLast = true)
             }
         }
+        val repo = fakeRepository(fetcher)
+        val manager = createManager(repo)
+
+        withLoadedManager(manager) {
+            // full first page → no auto-load yet, the list is scrollable.
+            assertThat(fetcher.fetchCount).isEqualTo(1)
+            assertThat(repo.loadedItemsCount()).isEqualTo(25)
+
+            // user scrolls to the bottom → one loadMore; the empty gap must be auto-bridged to the end,
+            // otherwise the list dead-ends and the final transaction is never reached.
+            manager.loadMore(userWalletId, currency)
+            advanceUntilIdle()
+
+            assertThat(fetcher.fetchCount).isEqualTo(4)
+            assertThat(repo.loadedItemsCount()).isEqualTo(26)
+            assertThat(repo.status()).isInstanceOf(PaginationStatus.EndOfPagination::class.java)
+        }
+    }
 
     private suspend fun TestScope.withLoadedManager(
         manager: TxHistoryListManager,
@@ -155,14 +150,11 @@ internal class TxHistoryListManagerTest {
         dispatchers = repository.dispatchers,
         userWalletId = userWalletId,
         currency = currency,
-        designFeatureToggles = mockk { every { isRedesignEnabled } returns false },
         txHistoryUiActions = mockk(relaxed = true),
         lookupDataFlow = emptyFlow(),
-        legacyTxHistoryItemConverter = mockk<TxHistoryItemToTransactionStateConverter>(relaxed = true),
     )
 
-    private fun page(itemCount: Int, isLast: Boolean): Page2Spec =
-        Page2Spec(itemCount = itemCount, isLast = isLast)
+    private fun page(itemCount: Int, isLast: Boolean): Page2Spec = Page2Spec(itemCount = itemCount, isLast = isLast)
 
     private fun testDispatchers(dispatcher: CoroutineDispatcher): CoroutineDispatcherProvider =
         object : CoroutineDispatcherProvider {
@@ -230,6 +222,12 @@ internal class TxHistoryListManagerTest {
             currency: CryptoCurrency,
             fromCreatedAtMillis: Long,
         ) = emptyFlow<List<ExpressTx>>()
+
+        override fun getIndexedExpressHistory(
+            userWalletId: UserWalletId,
+            currency: CryptoCurrency,
+            limit: Int,
+        ) = emptyFlow<ExpressHistoryPage>()
 
         fun loadedItemsCount(): Int = batchFlow.state.value.data.sumOf { batch -> batch.data.items.size }
 

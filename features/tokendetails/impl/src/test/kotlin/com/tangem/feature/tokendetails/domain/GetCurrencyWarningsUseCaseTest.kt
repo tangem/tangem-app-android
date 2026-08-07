@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.domain
 
 import arrow.core.none
+import arrow.core.some
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -11,6 +12,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -31,6 +33,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GetCurrencyWarningsUseCaseTest {
@@ -73,6 +76,7 @@ class GetCurrencyWarningsUseCaseTest {
         coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns null
         coEvery { currencyChecksRepository.getFeeResourceAmount(any(), any()) } returns null
         coEvery { walletManagersFacade.getAssetRequirements(any(), any()) } returns null
+        every { dynamicAddressesRepository.hasFundsOnAdditionalAddresses(any(), any()) } returns flowOf(false)
     }
 
     @AfterEach
@@ -130,9 +134,149 @@ class GetCurrencyWarningsUseCaseTest {
         assertThat(result).doesNotContain(DynamicAddressesWarnings.FundsFound)
     }
 
+    @Test
+    fun `GIVEN coin balance above existential deposit WHEN invoke THEN ExistentialDeposit warning is absent`() =
+        runTest {
+            // GIVEN
+            val coin = coin()
+            val coinStatus = statusFor(currency = coin, amount = BigDecimal("0.98910916"))
+            givenCoinStatus(coinStatus)
+            coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns BigDecimal("0.01")
+
+            // WHEN
+            val result = useCase.invoke(userWalletId, coinStatus, derivationPath).first()
+
+            // THEN
+            assertThat(result.filterIsInstance<CryptoCurrencyWarning.ExistentialDeposit>()).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN coin balance equal to existential deposit WHEN invoke THEN ExistentialDeposit warning is present`() =
+        runTest {
+            // GIVEN
+            val coin = coin(name = "Polkadot Asset Hub", symbol = "DOT")
+            val coinStatus = statusFor(currency = coin, amount = BigDecimal("0.01"))
+            givenCoinStatus(coinStatus)
+            coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns BigDecimal("0.01")
+
+            // WHEN
+            val result = useCase.invoke(userWalletId, coinStatus, derivationPath).first()
+
+            // THEN
+            assertThat(result).contains(
+                CryptoCurrencyWarning.ExistentialDeposit(
+                    currencyName = "Polkadot Asset Hub",
+                    edStringValueWithSymbol = "0.01 DOT",
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN coin balance below existential deposit WHEN invoke THEN ExistentialDeposit warning is present`() =
+        runTest {
+            // GIVEN
+            val coin = coin()
+            val coinStatus = statusFor(currency = coin, amount = BigDecimal("0.005"))
+            givenCoinStatus(coinStatus)
+            coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns BigDecimal("0.01")
+
+            // WHEN
+            val result = useCase.invoke(userWalletId, coinStatus, derivationPath).first()
+
+            // THEN
+            assertThat(result.filterIsInstance<CryptoCurrencyWarning.ExistentialDeposit>()).hasSize(1)
+        }
+
+    @Test
+    fun `GIVEN unknown coin balance WHEN invoke THEN ExistentialDeposit warning is absent`() = runTest {
+        // GIVEN
+        val coin = coin()
+        val coinStatus = statusFor(currency = coin, amount = null)
+        givenCoinStatus(coinStatus)
+        coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns BigDecimal("0.01")
+
+        // WHEN
+        val result = useCase.invoke(userWalletId, coinStatus, derivationPath).first()
+
+        // THEN
+        assertThat(result.filterIsInstance<CryptoCurrencyWarning.ExistentialDeposit>()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN network without existential deposit WHEN invoke THEN ExistentialDeposit warning is absent`() = runTest {
+        // GIVEN
+        val coin = coin()
+        val coinStatus = statusFor(currency = coin, amount = BigDecimal.ZERO)
+        givenCoinStatus(coinStatus)
+        coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns null
+
+        // WHEN
+        val result = useCase.invoke(userWalletId, coinStatus, derivationPath).first()
+
+        // THEN
+        assertThat(result.filterIsInstance<CryptoCurrencyWarning.ExistentialDeposit>()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN token with balance AND coin below deposit WHEN invoke THEN warning is built from coin`() = runTest {
+        // GIVEN
+        val coin = coin(name = "Polkadot Asset Hub", symbol = "DOT")
+        val token: CryptoCurrency.Token = mockk(relaxed = true) {
+            every { this@mockk.network } returns this@GetCurrencyWarningsUseCaseTest.network
+            every { this@mockk.name } returns "Tether"
+            every { this@mockk.symbol } returns "USDT"
+        }
+        val coinStatus = statusFor(currency = coin, amount = BigDecimal("0.005"))
+        val tokenStatus = statusFor(currency = token, amount = BigDecimal("100"))
+        givenStatuses(coinStatus = coinStatus, currencyStatus = tokenStatus)
+        coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns BigDecimal("0.01")
+
+        // WHEN
+        val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
+
+        // THEN
+        assertThat(result).contains(
+            CryptoCurrencyWarning.ExistentialDeposit(
+                currencyName = "Polkadot Asset Hub",
+                edStringValueWithSymbol = "0.01 DOT",
+            ),
+        )
+    }
+
+    private fun coin(name: String = "Polkadot", symbol: String = "DOT"): CryptoCurrency.Coin {
+        return mockk(relaxed = true) {
+            every { this@mockk.network } returns this@GetCurrencyWarningsUseCaseTest.network
+            every { this@mockk.name } returns name
+            every { this@mockk.symbol } returns symbol
+        }
+    }
+
+    /** Makes both coin and token lookups resolve to [status], so coin-related warnings are actually built. */
+    private fun givenCoinStatus(status: CryptoCurrencyStatus) {
+        givenStatuses(coinStatus = status, currencyStatus = status)
+    }
+
+    private fun givenStatuses(coinStatus: CryptoCurrencyStatus, currencyStatus: CryptoCurrencyStatus) {
+        with(CryptoCurrencyStatusOperations) {
+            every { accountStatusList.getCoinStatus(any<CryptoCurrency>()) } returns coinStatus.some()
+            every { accountStatusList.getCryptoCurrencyStatus(any<CryptoCurrency>()) } returns currencyStatus.some()
+        }
+    }
+
     private fun statusFor(currency: CryptoCurrency): CryptoCurrencyStatus {
         return mockk(relaxed = true) {
             every { this@mockk.currency } returns currency
+        }
+    }
+
+    private fun statusFor(currency: CryptoCurrency, amount: BigDecimal?): CryptoCurrencyStatus {
+        val statusValue: CryptoCurrencyStatus.Value = mockk(relaxed = true) {
+            every { this@mockk.amount } returns amount
+        }
+
+        return mockk(relaxed = true) {
+            every { this@mockk.currency } returns currency
+            every { this@mockk.value } returns statusValue
         }
     }
 

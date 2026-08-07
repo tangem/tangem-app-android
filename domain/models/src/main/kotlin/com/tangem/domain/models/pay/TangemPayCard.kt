@@ -1,6 +1,7 @@
 package com.tangem.domain.models.pay
 
 import com.tangem.domain.models.account.CardDisplayName
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -16,6 +17,7 @@ import kotlinx.serialization.Serializable
  * @property limit spending limit configuration for the card; `null` if not configured or not yet loaded.
  * @property frozenState whether the card is currently frozen (blocked for payments).
  * @property lastDigits The last four digits of the card number.
+ * @property images card artwork images provided by the backend, keyed by [TangemPayTariffPlan.Image.Type].
  * @property state current lifecycle state of the card (reissuing / closing / active).
  */
 @Serializable
@@ -28,10 +30,9 @@ data class TangemPayCard(
     @SerialName("limit") val limit: TangemPayCardLimitData?,
     @SerialName("frozen_state") val frozenState: TangemPayCardFrozenState,
     @SerialName("last_digits") val lastDigits: String,
+    @SerialName("images") val images: List<TangemPayTariffPlan.Image>,
     @SerialName("state") val state: TangemPayCardState,
 ) {
-
-    /** Backend card status — unknown values map to [UNDEFINED] without crashing. */
     @Serializable
     enum class Status {
         @SerialName("ACTIVE")
@@ -66,3 +67,12 @@ data class TangemPayCard(
 
 val TangemPayCard.isFrozen
     get() = frozenState == TangemPayCardFrozenState.Frozen
+
+val TangemPayCard.thumbnailUrl: String?
+    get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.THUMBNAIL }?.url
+
+val TangemPayCard.mainImageUrl: String?
+    get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url
+
+val TangemPayCard.backgroundImageUrl: String?
+    get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.BACKGROUND }?.url

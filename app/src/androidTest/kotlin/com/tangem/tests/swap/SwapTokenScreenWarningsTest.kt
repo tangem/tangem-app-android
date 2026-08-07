@@ -84,8 +84,8 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val tokenTitle = "USDC"
         val inputAmount = "1000"
         val tokensScenarioState = "SolanaUSDC"
-        val balanceScenarioName = "solana_balance"
-        val balanceScenarioState = "Empty"
+        val balanceScenarioName = "solana_get_account_info_recipient"
+        val balanceScenarioState = "ZeroBalance"
         val pairsScenarioName = "solana_from_pairs"
         val pairsScenarioState = "DexProvider"
         val networkName = "Solana"
@@ -554,7 +554,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     fun solanaRemainingBalanceLessThanRentAmountTest() {
         val tokenTitle = "Solana"
         val receiveTokenName = "USDC"
-        val inputAmount = "0.0016941"
+        val inputAmount = "0.0372"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
         val notificationTitle = getResourceString(R.string.send_notification_invalid_amount_title)

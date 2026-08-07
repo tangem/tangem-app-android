@@ -54,9 +54,7 @@ internal class YieldSupplyToEarnBlockConverterTest {
         assertThat(earnBlock.titleUM.tone).isEqualTo(EarnBlockUM.TitleUM.Tone.Primary)
         assertThat((earnBlock.subtitleUM as EarnBlockUM.SubtitleUM.Text).tone)
             .isEqualTo(EarnBlockUM.SubtitleUM.Tone.Accent)
-        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Button::class.java)
-        val button = earnBlock.trailingUM as EarnBlockUM.TrailingUM.Button
-        assertThat(button.isEnabled).isTrue()
+        assertThat(earnBlock.trailingUM).isEqualTo(EarnBlockUM.TrailingUM.Chevron)
         assertThat(earnBlock.onClick).isNotNull()
         earnBlock.onClick?.invoke()
         assertThat(clicked).isTrue()
@@ -71,7 +69,9 @@ internal class YieldSupplyToEarnBlockConverterTest {
         assertThat(earnBlock.type).isEqualTo(EarnBlockUM.Type.YieldSupply)
         assertThat(earnBlock.backgroundUM).isEqualTo(EarnBlockUM.BackgroundUM.Surface)
         assertThat(earnBlock.iconUM).isInstanceOf(EarnBlockUM.IconUM.Glowing::class.java)
-        assertThat(earnBlock.trailingUM).isNull()
+        assertThat(earnBlock.trailingUM).isEqualTo(
+            EarnBlockUM.TrailingUM.Loader(tone = EarnBlockUM.TrailingUM.Loader.LoaderTone.Positive),
+        )
     }
 
     @Test
@@ -82,12 +82,19 @@ internal class YieldSupplyToEarnBlockConverterTest {
         val earnBlock = result as EarnBlockUM.Content
         assertThat(earnBlock.type).isEqualTo(EarnBlockUM.Type.YieldSupply)
         assertThat(earnBlock.backgroundUM).isEqualTo(EarnBlockUM.BackgroundUM.Surface)
-        assertThat(earnBlock.iconUM).isInstanceOf(EarnBlockUM.IconUM.Plain::class.java)
-        assertThat(earnBlock.trailingUM).isNull()
+        assertThat(earnBlock.iconUM).isEqualTo(
+            EarnBlockUM.IconUM.Glowing(
+                iconRes = com.tangem.core.ui.R.drawable.ic_yield_40,
+                tone = EarnBlockUM.IconUM.Tone.Warning,
+            ),
+        )
+        assertThat(earnBlock.trailingUM).isEqualTo(
+            EarnBlockUM.TrailingUM.Loader(tone = EarnBlockUM.TrailingUM.Loader.LoaderTone.Muted),
+        )
     }
 
     @Test
-    fun `GIVEN Content with showWarningIcon WHEN convert THEN title Warning Icon`() {
+    fun `GIVEN Content with showWarningIcon WHEN convert THEN trailing Warning StatusIcon`() {
         val content = YieldSupplyUM.Content(
             apy = "5.1",
             title = stringReference("Yield Mode"),
@@ -102,13 +109,13 @@ internal class YieldSupplyToEarnBlockConverterTest {
 
         assertThat(result).isInstanceOf(EarnBlockUM.Content::class.java)
         val earnBlock = result as EarnBlockUM.Content
-        assertThat(earnBlock.titleUM.iconUM).isNotNull()
-        assertThat(earnBlock.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Warning)
-        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Button::class.java)
+        assertThat(earnBlock.trailingUM).isEqualTo(
+            EarnBlockUM.TrailingUM.StatusIcon(tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning),
+        )
     }
 
     @Test
-    fun `GIVEN Content with showInfoIcon WHEN convert THEN title Info Icon`() {
+    fun `GIVEN Content with showInfoIcon WHEN convert THEN trailing Info StatusIcon`() {
         val content = YieldSupplyUM.Content(
             apy = "5.1",
             title = stringReference("Yield Mode"),
@@ -123,9 +130,9 @@ internal class YieldSupplyToEarnBlockConverterTest {
 
         assertThat(result).isInstanceOf(EarnBlockUM.Content::class.java)
         val earnBlock = result as EarnBlockUM.Content
-        assertThat(earnBlock.titleUM.iconUM).isNotNull()
-        assertThat(earnBlock.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Info)
-        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Button::class.java)
+        assertThat(earnBlock.trailingUM).isEqualTo(
+            EarnBlockUM.TrailingUM.StatusIcon(tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Info),
+        )
     }
 
     @Test
@@ -143,8 +150,9 @@ internal class YieldSupplyToEarnBlockConverterTest {
         val result = converter.convert(content)
 
         val earnBlock = result as EarnBlockUM.Content
-        assertThat(earnBlock.titleUM.iconUM).isNotNull()
-        assertThat(earnBlock.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Warning)
+        assertThat(earnBlock.trailingUM).isEqualTo(
+            EarnBlockUM.TrailingUM.StatusIcon(tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning),
+        )
     }
 
     @Test

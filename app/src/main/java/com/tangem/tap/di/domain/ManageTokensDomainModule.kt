@@ -58,6 +58,14 @@ internal object ManageTokensDomainModule {
 
     @Provides
     @Singleton
+    fun provideCheckDerivationPathSupportedUseCase(
+        customTokensRepository: CustomTokensRepository,
+    ): CheckDerivationPathSupportedUseCase {
+        return CheckDerivationPathSupportedUseCase(customTokensRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideCheckCurrencyUnsupportedUseCase(repository: ManageTokensRepository): CheckCurrencyUnsupportedUseCase {
         return CheckCurrencyUnsupportedUseCase(repository)
     }
