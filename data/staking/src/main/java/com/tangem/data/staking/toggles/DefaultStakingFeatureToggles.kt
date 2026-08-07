@@ -17,12 +17,6 @@ internal class DefaultStakingFeatureToggles(
         return featureTogglesManager.isFeatureEnabled(toggle)
     }
 
-    override fun isRegionUnavailableHandlingEnabled(): Boolean {
-        return featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED,
-        )
-    }
-
     private fun StakingIntegrationID.getFeatureToggle(): FeatureToggles? = when (this) {
         is StakingIntegrationID.P2PEthPool -> null
         is StakingIntegrationID.StakeKit -> this.getStakeKitFeatureToggle()

@@ -18,7 +18,6 @@ import com.tangem.domain.appupdate.usecase.GetAppUpdateStateUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.features.forceupdate.ForceUpdateComponent
 import com.tangem.features.forceupdate.ForceUpdateContinuation
-import com.tangem.features.forceupdate.ForceUpdateFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.tap.features.root.RootDetectedWarningComponent
@@ -40,7 +39,6 @@ import kotlinx.coroutines.launch
 internal class AppStartupGateComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase,
-    private val forceUpdateFeatureToggles: ForceUpdateFeatureToggles,
     private val forceUpdateContinuation: ForceUpdateContinuation,
     private val forceUpdateComponentFactory: ForceUpdateComponent.Factory,
     private val rootDetectedWarningComponentFactory: RootDetectedWarningComponent.Factory,
@@ -103,8 +101,6 @@ internal class AppStartupGateComponent @AssistedInject constructor(
     }
 
     private suspend fun resolveForceUpdateMode(): ForceUpdateComponent.Mode? {
-        if (!forceUpdateFeatureToggles.isForceUpdateEnabled) return null
-
         val mode = getAppUpdateStateUseCase.getCached().toForceUpdateModeOrNull()
 
         // The force-update screen re-checks on open, so a one-shot refresh is only needed when no screen is shown.
