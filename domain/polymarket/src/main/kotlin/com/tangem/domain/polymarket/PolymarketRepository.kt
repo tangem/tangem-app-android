@@ -9,6 +9,8 @@ import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -23,11 +25,12 @@ interface PolymarketRepository {
     suspend fun getCategories(): Either<DataError, List<PolymarketCategory>>
 
     /**
-     * Fetch the Discovery feed of prediction events (each with its top active markets).
+     * Serve the Discovery feed as a paginated batch flow, page size [batchSize].
      *
-     * @param category optional category id to filter by; `null` for the default (Trending) feed
+     * A page that fails — or, for the very first page, comes back empty — is retried once silently before the
+     * flow reports the failure, so a single hiccup doesn't surface as an error state (see the Discovery contract).
      */
-    suspend fun getEvents(category: Int? = null): Either<DataError, List<PolymarketEvent>>
+    fun getEventsBatchFlow(context: PolymarketEventsBatchingContext, batchSize: Int): PolymarketEventsBatchFlow
 
     /**
      * Fetch the details of a single prediction event, carrying all of its markets
