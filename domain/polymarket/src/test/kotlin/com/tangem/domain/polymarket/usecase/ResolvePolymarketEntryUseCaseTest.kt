@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -28,11 +29,13 @@ internal class ResolvePolymarketEntryUseCaseTest {
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val getWalletStatus: GetPolymarketWalletStatusUseCase = mockk()
+    private val getApiCredentials: GetPolymarketApiCredentialsUseCase = mockk()
 
     private val useCase = ResolvePolymarketEntryUseCase(
         checkPolymarketGeoblockUseCase = checkGeoblock,
         derivePolymarketAddressesUseCase = deriveAddresses,
         getPolymarketWalletStatusUseCase = getWalletStatus,
+        getPolymarketApiCredentialsUseCase = getApiCredentials,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -41,10 +44,12 @@ internal class ResolvePolymarketEntryUseCaseTest {
         depositWalletAddress = "0xDeposit",
         userWalletId = userWalletId,
     )
+    private val credentials = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(checkGeoblock, deriveAddresses, getWalletStatus)
+        clearMocks(checkGeoblock, deriveAddresses, getWalletStatus, getApiCredentials)
+        coEvery { getApiCredentials(any()) } returns credentials
     }
 
     @ParameterizedTest
@@ -157,5 +162,41 @@ internal class ResolvePolymarketEntryUseCaseTest {
 
         // Assert
         assertThat(actual.leftOrNull()).isEqualTo(PolymarketOnboardingError.Network)
+    }
+
+    @Test
+    fun `GIVEN ready status but no stored credentials WHEN resolved THEN onboarding is owed`() = runTest {
+        // Arrange
+        coEvery { checkGeoblock() } returns false.right()
+        coEvery { deriveAddresses(userWalletId) } returns addresses.right()
+        coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
+            depositWalletAddress = addresses.depositWalletAddress,
+            status = PolymarketWalletStatus.READY_TO_TRADE,
+        ).right()
+        coEvery { getApiCredentials(addresses.userWalletId) } returns null
+
+        // Act
+        val actual = useCase(userWalletId)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboard(status = PolymarketWalletStatus.READY_TO_TRADE))
+    }
+
+    @Test
+    fun `GIVEN ready status and stored credentials WHEN resolved THEN the feed is reachable`() = runTest {
+        // Arrange
+        coEvery { checkGeoblock() } returns false.right()
+        coEvery { deriveAddresses(userWalletId) } returns addresses.right()
+        coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
+            depositWalletAddress = addresses.depositWalletAddress,
+            status = PolymarketWalletStatus.READY_TO_TRADE,
+        ).right()
+        coEvery { getApiCredentials(addresses.userWalletId) } returns credentials
+
+        // Act
+        val actual = useCase(userWalletId)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
     }
 }

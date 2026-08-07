@@ -30,7 +30,6 @@ import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusRespons
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.datasource.api.polymarket.relayer.models.PolymarketNonceResponse
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
@@ -222,14 +221,14 @@ internal class DefaultPolymarketRepositoryTest {
         // Act
         val result = repository.deployWallet(
             ownerAddress = OWNER,
-            userWalletId = UserWalletId("0011"),
+            walletId = WALLET_ID,
             depositWalletAddress = "0xDeF0000000000000000000000000000000000002",
         )
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS.right())
         assertThat(request.captured.ownerAddress).isEqualTo(OWNER)
-        assertThat(request.captured.walletId).isEqualTo("0011")
+        assertThat(request.captured.walletId).isEqualTo(WALLET_ID)
         assertThat(request.captured.depositWalletAddress).isEqualTo("0xDeF0000000000000000000000000000000000002")
     }
 
@@ -454,6 +453,7 @@ internal class DefaultPolymarketRepositoryTest {
     private companion object {
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
+        const val WALLET_ID = "0x000000000000000000000000abc0000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
