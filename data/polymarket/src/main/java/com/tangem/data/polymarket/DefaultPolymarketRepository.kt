@@ -17,7 +17,6 @@ import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
@@ -80,7 +79,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
     override suspend fun deployWallet(
         ownerAddress: String,
-        userWalletId: UserWalletId,
+        walletId: String,
         depositWalletAddress: String,
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
         safeApiCall(
@@ -88,7 +87,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 val response = polymarketApi.deployWallet(
                     PolymarketWalletDeployRequest(
                         ownerAddress = ownerAddress,
-                        walletId = userWalletId.stringValue,
+                        walletId = walletId,
                         depositWalletAddress = depositWalletAddress,
                     ),
                 ).bind()
