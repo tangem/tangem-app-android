@@ -23,6 +23,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -202,5 +203,74 @@ internal class ResolvePolymarketEntryInteractorTest {
 
         // Assert
         assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WithoutPrompting {
+
+        @Test
+        fun `GIVEN the address is not stored WHEN withoutPrompting THEN Undetermined AND nothing is derived`() =
+            runTest {
+                // Arrange
+                coEvery { checkGeoblock() } returns false.right()
+                coEvery { deriveAddresses.stored(userWalletId) } returns null
+
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
+
+                // Assert
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Undetermined)
+                coVerify(exactly = 0) { deriveAddresses(userWalletId) }
+                coVerify(exactly = 0) { getWalletStatus(addresses) }
+            }
+
+        @Test
+        fun `GIVEN a blocked region and no stored address WHEN withoutPrompting THEN Undetermined not RegionBlocked`() =
+            runTest {
+                // Arrange
+                coEvery { checkGeoblock() } returns true.right()
+                coEvery { deriveAddresses.stored(userWalletId) } returns null
+
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
+
+                // Assert
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Undetermined)
+                coVerify(exactly = 0) { deriveAddresses(userWalletId) }
+            }
+
+        @Test
+        fun `GIVEN the address is stored WHEN withoutPrompting THEN resolves in full without deriving`() = runTest {
+            // Arrange
+            coEvery { checkGeoblock() } returns false.right()
+            coEvery { deriveAddresses.stored(userWalletId) } returns addresses
+            coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
+                depositWalletAddress = "0xDeposit",
+                status = PolymarketWalletStatus.READY_TO_TRADE,
+            ).right()
+
+            // Act
+            val actual = useCase.withoutPrompting(userWalletId)
+
+            // Assert
+            assertThat(actual.getOrNull())
+                .isEqualTo(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
+            coVerify(exactly = 0) { deriveAddresses(userWalletId) }
+        }
+
+        @Test
+        fun `GIVEN geoblock read fails WHEN withoutPrompting THEN fails without reading the stored address`() =
+            runTest {
+                // Arrange
+                coEvery { checkGeoblock() } returns PolymarketOnboardingError.Network.left()
+
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
+
+                // Assert
+                assertThat(actual.leftOrNull()).isEqualTo(PolymarketOnboardingError.Network)
+                coVerify(exactly = 0) { deriveAddresses.stored(userWalletId) }
+            }
     }
 }
