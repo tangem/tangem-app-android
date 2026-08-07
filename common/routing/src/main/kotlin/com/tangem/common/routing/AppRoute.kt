@@ -297,6 +297,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
 
     @Serializable
+    data class CreateCloudBackup(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_cloud_backup/${userWalletId.stringValue}")
+
+    @Serializable
     data class Markets(
         val preselectedOrder: PreselectedMarketsOrder? = null,
         val preselectedInterval: PreselectedMarketsInterval? = null,
