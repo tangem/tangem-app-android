@@ -20,15 +20,29 @@ class DerivePolymarketAddressesUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketAddresses> =
         eoaDeriver.deriveOwnerEoa(userWalletId = userWalletId)
             .mapLeft { it.toOnboardingError() }
-            .flatMap { ownerAddress ->
-                Either.catch { depositWalletDeriver.deriveDepositWallet(ownerAddress = ownerAddress) }
-                    .mapLeft { PolymarketOnboardingError.Unknown }
-                    .map { depositWalletAddress ->
-                        PolymarketAddresses(
-                            ownerAddress = ownerAddress,
-                            depositWalletAddress = depositWalletAddress,
-                            userWalletId = userWalletId,
-                        )
-                    }
+            .flatMap { ownerAddress -> addresses(userWalletId = userWalletId, ownerAddress = ownerAddress) }
+
+    /**
+     * The addresses if the owner key is already stored on this device, `null` otherwise. Prompts for nothing —
+     * no card session, no wallet unlock — so a screen may call it before the user has acted on it.
+     */
+    suspend fun stored(userWalletId: UserWalletId): PolymarketAddresses? {
+        val ownerAddress = eoaDeriver.storedOwnerEoa(userWalletId = userWalletId) ?: return null
+
+        return addresses(userWalletId = userWalletId, ownerAddress = ownerAddress).getOrNull()
+    }
+
+    private fun addresses(
+        userWalletId: UserWalletId,
+        ownerAddress: String,
+    ): Either<PolymarketOnboardingError, PolymarketAddresses> =
+        Either.catch { depositWalletDeriver.deriveDepositWallet(ownerAddress = ownerAddress) }
+            .mapLeft { PolymarketOnboardingError.Unknown }
+            .map { depositWalletAddress ->
+                PolymarketAddresses(
+                    ownerAddress = ownerAddress,
+                    depositWalletAddress = depositWalletAddress,
+                    userWalletId = userWalletId,
+                )
             }
 }
