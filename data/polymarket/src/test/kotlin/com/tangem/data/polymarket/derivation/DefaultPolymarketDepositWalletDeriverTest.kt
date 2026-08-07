@@ -24,17 +24,32 @@ internal class DefaultPolymarketDepositWalletDeriverTest {
     @Test
     fun `GIVEN owner EOA WHEN deriveDepositWallet THEN output is ERC-55 checksummed not lowercase`() {
         // Act
-        val dw = deriver.deriveDepositWallet("0x1111111111111111111111111111111111111111")
+        val dw = deriver.deriveDepositWallet("0x0491eb219E3D2d05aEF0C35D1079c0a55b19bd2B")
 
         // Assert — the reference vector has upper-case hex letters, so a lowercased impl would fail this
         assertThat(dw).isNotEqualTo(dw.lowercase())
-        assertThat(dw).isEqualTo("0xfAeA0f08159fcF2f573fE24E9E989B0d48f7651B")
+        assertThat(dw).isEqualTo("0xdf1a31b50D3F99d4460ACC1Bc99aB2e09BCcC538")
+    }
+
+    @Test
+    fun `GIVEN owner EOA WHEN deriveWalletId THEN returns the owner left-padded to a 0x-prefixed bytes32`() {
+        // Act
+        val walletId = deriver.deriveWalletId("0xAbC0000000000000000000000000000000000001")
+
+        // Assert
+        assertThat(walletId).isEqualTo("0x000000000000000000000000abc0000000000000000000000000000000000001")
     }
 
     internal data class Vector(val owner: String, val expectedDw: String)
 
+    /**
+     * Real owner→DW pairs read off deployments the factory made on Polygon, so a recipe that only agrees
+     * with itself cannot pass. Recover more with `eth_getLogs` on [PolymarketContracts.DW_FACTORY]: an event's
+     * first indexed topic is the deployed wallet, its second the owner.
+     */
     private fun provideTestModels() = listOf(
-        Vector("0x1111111111111111111111111111111111111111", "0xfAeA0f08159fcF2f573fE24E9E989B0d48f7651B"),
-        Vector("0x0000000000000000000000000000000000000001", "0x57ffBc34De23124fAeb8387fcd689d314E57aCcD"),
+        Vector("0x0491eb219E3D2d05aEF0C35D1079c0a55b19bd2B", "0xdf1a31b50D3F99d4460ACC1Bc99aB2e09BCcC538"),
+        Vector("0xd22b712FAA5f28ebCc3D75aE5356ce8ea2D18F71", "0x5B69409F9bF5034107D361ab3Ac944CF3C74f7D3"),
+        Vector("0x47b7eBE053a75d81cb6F2CC815d077e5057345e5", "0xD6aCb4e9B654e2fD440f490977ED9b686D5D86eb"),
     )
 }
