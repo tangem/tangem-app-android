@@ -20,14 +20,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.components.pager.PagerIndicator
+import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
 import com.tangem.features.promobanners.impl.model.PromoBannerNotificationUM
@@ -67,38 +64,23 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, horizontalItemPadding
 }
 
 @Composable
-private fun bannerContainerColor(placeholder: Placeholder): Color = if (LocalRedesignEnabled.current) {
-    when (placeholder) {
-        Placeholder.MAIN -> TangemTheme.colors2.surface.level1
-        Placeholder.FEED -> TangemTheme.colors2.surface.level3
-    }
-} else {
-    when (placeholder) {
-        Placeholder.MAIN -> TangemTheme.colors.background.primary
-        Placeholder.FEED -> TangemTheme.colors.background.action
-    }
+private fun bannerContainerColor(placeholder: Placeholder): Color = when (placeholder) {
+    Placeholder.MAIN -> TangemTheme.colors2.surface.level1
+    Placeholder.FEED -> TangemTheme.colors2.surface.level3
+    Placeholder.PAYMENT_ACCOUNT_MAIN -> TangemTheme.colors3.bg.opaque.primary
 }
 
 /**
- * Renders a banner either with the redesigned [TangemMessage] component or the legacy [Notification],
- * depending on [LocalRedesignEnabled]. Both accept the same [NotificationConfig], so the banner model
- * and converters stay untouched.
+ * Renders a banner with the [TangemMessage] component. Uses the same [NotificationConfig] as the banner
+ * model and converters, so they stay untouched.
  */
 @Composable
 private fun BannerNotification(config: NotificationConfig, containerColor: Color, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        TangemMessage(
-            config = config,
-            modifier = modifier.fillMaxWidth(),
-            contentColor = containerColor,
-        )
-    } else {
-        Notification(
-            config = config,
-            modifier = modifier.fillMaxWidth(),
-            containerColor = containerColor,
-        )
-    }
+    TangemMessage(
+        config = config,
+        modifier = modifier.fillMaxWidth(),
+        contentColor = containerColor,
+    )
 }
 
 @Composable
@@ -152,10 +134,7 @@ private fun BannersCarousel(
 
         SpacerH8()
 
-        PagerIndicator(
-            pagerState = pagerState,
-            hasBackground = false,
-        )
+        TangemPagerIndicator(pagerState = pagerState)
     }
 }
 
@@ -259,19 +238,6 @@ private fun previewState(bannerCount: Int) = PromoBannersBlockUM(
     onCarouselScrolled = {},
     onPageChanged = {},
 )
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun Preview_PromoBannersBlock_Legacy() {
-    TangemThemePreview {
-        PromoBannersBlock(
-            state = previewState(bannerCount = 2),
-            horizontalItemPadding = 12.dp,
-            modifier = Modifier.padding(vertical = 16.dp),
-        )
-    }
-}
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)

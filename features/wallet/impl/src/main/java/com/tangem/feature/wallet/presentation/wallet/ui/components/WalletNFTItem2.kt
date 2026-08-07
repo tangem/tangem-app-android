@@ -41,7 +41,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun WalletNFTItem2(state: WalletNFTItemUM, modifier: Modifier = Modifier) {
     val nftModifier = modifier
         .clip(RoundedCornerShape(18.dp))
-        .background(TangemTheme.colors2.surface.level3)
+        .background(TangemTheme.colors3.bg.secondary)
     when (state) {
         is WalletNFTItemUM.Hidden -> Unit
         is WalletNFTItemUM.Empty -> WalletNFTItemEmpty(
@@ -70,13 +70,13 @@ private fun WalletNFTItemEmpty(onClick: () -> Unit, modifier: Modifier = Modifie
             painter = painterResource(R.drawable.img_nft_empty_collection),
             contentDescription = null,
             modifier = Modifier
-                .size(TangemTheme.dimens2.x10)
+                .size(40.dp)
                 .layoutId(TangemRowLayoutId.HEAD),
         )
         Text(
             text = stringResourceSafe(R.string.nft_wallet_title),
-            style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
@@ -85,8 +85,8 @@ private fun WalletNFTItemEmpty(onClick: () -> Unit, modifier: Modifier = Modifie
         )
         Text(
             text = stringResourceSafe(R.string.nft_wallet_receive_nft),
-            style = TangemTheme.typography2.captionSemibold12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
@@ -96,7 +96,7 @@ private fun WalletNFTItemEmpty(onClick: () -> Unit, modifier: Modifier = Modifie
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
             contentDescription = null,
-            tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.layoutId(TangemRowLayoutId.TAIL),
         )
     }
@@ -116,9 +116,9 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
         }
         Text(
             text = stringResourceSafe(R.string.nft_wallet_title),
-            style = TangemTheme.typography2.bodySemibold16.applyBladeBrush(
+            style = TangemTheme.typography3.body.medium.applyBladeBrush(
                 isEnabled = state.isFlickering,
-                textColor = TangemTheme.colors2.text.neutral.primary,
+                textColor = TangemTheme.colors3.text.primary,
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -132,9 +132,9 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
                 state.allAssetsCount,
                 state.collectionsCount,
             ),
-            style = TangemTheme.typography2.captionSemibold12.applyBladeBrush(
+            style = TangemTheme.typography3.caption.medium.applyBladeBrush(
                 isEnabled = state.isFlickering,
-                textColor = TangemTheme.colors2.text.neutral.secondary,
+                textColor = TangemTheme.colors3.text.secondary,
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -145,7 +145,7 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
             contentDescription = null,
-            tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.layoutId(TangemRowLayoutId.TAIL),
         )
     }
@@ -173,8 +173,8 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
         }
         Text(
             text = stringResourceSafe(R.string.nft_wallet_title),
-            style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
@@ -183,8 +183,8 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
         )
         Text(
             text = stringResourceSafe(R.string.nft_wallet_unable_to_load),
-            style = TangemTheme.typography2.captionSemibold12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
@@ -207,7 +207,7 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.HEAD),
         )
         TextShimmer(
-            style = TangemTheme.typography2.bodySemibold16,
+            style = TangemTheme.typography3.body.medium,
             radius = TangemTheme.dimens2.x25,
 
             modifier = Modifier
@@ -216,7 +216,7 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
                 .width(TangemTheme.dimens.size110),
         )
         TextShimmer(
-            style = TangemTheme.typography2.captionSemibold12,
+            style = TangemTheme.typography3.caption.medium,
             radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
@@ -251,7 +251,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
                         },
                         error = {
                             Box(
-                                modifier = previewModifier.background(TangemTheme.colors2.surface.level2),
+                                modifier = previewModifier.background(TangemTheme.colors3.bg.primary),
                             )
                         },
                         contentDescription = null,
@@ -259,10 +259,9 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
                 }
                 is CollectionPreview.More -> {
                     Icon(
-                        modifier = previewModifier
-                            .background(TangemTheme.colors2.surface.level2),
+                        modifier = previewModifier.background(TangemTheme.colors3.bg.primary),
                         imageVector = ImageVector.vectorResource(R.drawable.ic_nft_preview_more_16),
-                        tint = TangemTheme.colors2.text.neutral.secondary,
+                        tint = TangemTheme.colors3.text.secondary,
                         contentDescription = null,
                     )
                 }
@@ -289,7 +288,7 @@ private fun BoxScope.previews2Modifiers(): List<Modifier> = listOf(
         .zIndex(1f)
         .padding(TangemTheme.dimens2.x0_5)
         .clip(RoundedCornerShape(topStart = 10.dp))
-        .background(TangemTheme.colors2.surface.level3)
+        .background(TangemTheme.colors3.bg.secondary)
         .padding(start = TangemTheme.dimens2.x0_5, top = TangemTheme.dimens2.x0_5)
         .size(TangemTheme.dimens2.x6)
         .clip(RoundedCornerShape(TangemTheme.dimens2.x2))
@@ -307,7 +306,7 @@ private fun BoxScope.previews3Modifiers(): List<Modifier> = listOf(
         .zIndex(1f)
         .padding(top = 10.dp, end = 1.dp)
         .clip(RoundedCornerShape(8.dp))
-        .background(TangemTheme.colors2.surface.level3)
+        .background(TangemTheme.colors3.bg.secondary)
         .padding(TangemTheme.dimens2.x0_5)
         .size(18.dp)
         .clip(RoundedCornerShape(6.dp))
@@ -347,7 +346,7 @@ private fun Preview_WalletNFTItem(@PreviewParameter(WalletNFTItemProvider2::clas
         WalletNFTItem2(
             state = state,
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1),
+                .background(TangemTheme.colors3.bg.primary),
         )
     }
 }

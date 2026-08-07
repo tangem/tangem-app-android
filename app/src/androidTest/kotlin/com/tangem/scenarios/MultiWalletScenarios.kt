@@ -45,6 +45,21 @@ fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     }
 }
 
+fun BaseTestCase.addNewCardWalletWithoutSync(mockContent: MockContent) {
+    step("Click 'More' button on TopBar") {
+        onMainScreenTopBar { moreButton.clickWithAssertion() }
+    }
+    MockProvider.setMocks(mockContent)
+    step("Click on 'Add Wallet' button (scans a new hardware wallet)") {
+        onDetailsScreen { addWalletButton.clickWithAssertion() }
+    }
+    step("Assert 'Main' screen is displayed with the new wallet") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+            runCatching { onMainScreenTopBar { moreButton.assertIsDisplayed() } }.isSuccess
+        }
+    }
+}
+
 fun BaseTestCase.clickDisplayedTokenOnMain(tokenName: String) {
     step("Click on token '$tokenName' on the visible wallet") {
         onMainScreen { clickDisplayedToken(tokenName) }
@@ -86,13 +101,23 @@ fun BaseTestCase.addMissingReceiveTokenToWallet(token: String, recipientWalletNa
             runCatching { onSwapSelectTokenScreen { marketsTokenWithName(token).performClick() } }.isSuccess
         }
     }
-    // The 'Add token' sheet pre-selects the recipient (the only wallet missing the token, since the source already holds it).
-    step("Assert recipient wallet '$recipientWalletName' is selected") {
+    step("Select recipient wallet '$recipientWalletName'") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            runCatching { onAddToPortfolioScreen { walletName(recipientWalletName).assertIsDisplayed() } }.isSuccess
+            runCatching { onAddToPortfolioScreen { selectedWalletRow.performClick() } }.isSuccess
+        }
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onAddToPortfolioScreen { walletOption(recipientWalletName).performClick() } }.isSuccess
         }
     }
-    step("Click on 'Add' button") {
-        onAddToPortfolioScreen { addButton.performClick() }
+    step("Select network '$token'") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onAddToPortfolioScreen { networkRow.performClick() } }.isSuccess
+        }
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onAddToPortfolioScreen { networkOption(token).performClick() } }.isSuccess
+        }
+    }
+    step("Click on 'Confirm' button") {
+        onAddToPortfolioScreen { confirmButton.performClick() }
     }
 }

@@ -178,7 +178,7 @@ private fun TokenDetailsTitle(titleState: TitleState) {
                     AccountIcon(
                         name = titleState.accountName,
                         icon = titleState.accountIconUM,
-                        size = AccountIconSize.RedesignExtraSmall,
+                        size = AccountIconSize.ExtraSmall,
                     )
                 },
             )
