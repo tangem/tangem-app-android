@@ -21,10 +21,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
-import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -47,19 +44,13 @@ internal fun AddAndManageBottomSheetContent(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors2.surface.level2,
+        containerColor = TangemTheme.colors3.bg.tertiary,
         title = {
-            TangemTopBar(
+            TangemTopNavigation(
                 title = resourceReference(R.string.main_add_and_manage_tokens),
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    TangemButton(
-                        iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_24),
-                        onClick = onDismiss,
-                        size = TangemButton.Size.X11,
-                        variant = TangemButton.Variant.Material,
-                    )
-                },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                blurBackground = false,
+                onClose = onDismiss,
             )
         },
         content = {
@@ -119,8 +110,8 @@ private fun AddAndManageRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
-            .background(TangemTheme.colors2.surface.level3)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(TangemTheme.colors3.bg.tertiary)
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -128,12 +119,12 @@ private fun AddAndManageRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(TangemTheme.colors2.graphic.status.accent.copy(alpha = 0.1f)),
+                .background(TangemTheme.colors3.icon.brand.copy(alpha = 0.1f)),
         ) {
             Icon(
                 modifier = Modifier.size(20.dp),
                 imageVector = ImageVector.vectorResource(id = iconRes),
-                tint = TangemTheme.colors2.markers.iconBlue,
+                tint = TangemTheme.colors3.icon.brand,
                 contentDescription = null,
             )
         }
@@ -144,19 +135,19 @@ private fun AddAndManageRow(
         ) {
             Text(
                 text = stringResourceSafe(id = title),
-                style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = stringResourceSafe(id = subtitle),
-                style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         SpacerW(8.dp)
         Icon(
             imageVector = Icons.ic_chevron_right_24,
-            tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }

@@ -4,7 +4,8 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { buildIcons } from './build-icons.mjs';
+import { buildIcons, buildAssets } from './build-icons.mjs';
+import { stripCr, compareCodeUnits } from './hash-util.mjs';
 
 // ── Paths ──────────────────────────────────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -792,27 +793,28 @@ function computeTokensHash() {
     }
   }
   walk(tokensDir);
-  // Sort by relative path with forward slashes to match Gradle's invariantSeparatorsPath sorting
-  files.sort((a, b) => {
-    const ra = path.relative(tokensDir, a).split(path.sep).join('/');
-    const rb = path.relative(tokensDir, b).split(path.sep).join('/');
-    return ra.localeCompare(rb);
-  });
+  // Sort by forward-slash relative path in UTF-16 code-unit order to match the Kotlin verifier's
+  // sortedBy { …invariantSeparatorsPath } (String.compareTo) deterministically — see hash-util.mjs.
+  files.sort((a, b) => compareCodeUnits(
+    path.relative(tokensDir, a).split(path.sep).join('/'),
+    path.relative(tokensDir, b).split(path.sep).join('/'),
+  ));
 
   const hash = crypto.createHash('sha256');
   for (const file of files) {
     hash.update(path.relative(tokensDir, file).split(path.sep).join('/'));
     hash.update('\0');
-    hash.update(fs.readFileSync(file));
+    hash.update(stripCr(fs.readFileSync(file)));
     hash.update('\0');
   }
   return hash.digest('hex');
 }
 
-// ── Build icons ───────────────────────────────────────────────────────────────
-// Run before writing .tokens-hash so the icons hash can be folded in — Gradle
-// then has a single hash that invalidates on any ds-tokens change (tokens or icons).
+// ── Build icons & assets ────────────────────────────────────────────────────────
+// Run before writing .tokens-hash so both SVG hashes can be folded in — Gradle then
+// has a single hash that invalidates on any ds-tokens change (tokens, icons or assets).
 const { hash: iconsHash } = await buildIcons();
+const { hash: assetsHash } = await buildAssets();
 
 const tokensInputHash = computeTokensHash();
 const tokensHash = crypto
@@ -820,6 +822,8 @@ const tokensHash = crypto
   .update(tokensInputHash)
   .update('\0')
   .update(iconsHash)
+  .update('\0')
+  .update(assetsHash)
   .digest('hex');
 fs.writeFileSync(path.join(outputDir, '.tokens-hash'), tokensHash + '\n');
 console.log(`\n  ✓ .tokens-hash (${tokensHash.substring(0, 12)}…)`);

@@ -75,10 +75,9 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 import com.tangem.core.ui.utils.TangemSharedTransitionLayout
@@ -136,13 +135,7 @@ private val ChooseTokenFullUM.isEmptyState: Boolean
 internal fun ChooseTokenScreen(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(
-                color = if (LocalRedesignEnabled.current) {
-                    TangemTheme.colors2.surface.level2
-                } else {
-                    TangemTheme.colors.background.secondary
-                },
-            )
+            .background(color = TangemTheme.colors2.surface.level2)
             .fillMaxSize()
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -542,9 +535,9 @@ private fun AccountRow(
                     AccountRowComposables(
                         icon = { iconModifier ->
                             val iconSize = if (isExpandedState) {
-                                AccountIconSize.RedesignExtraSmall
+                                AccountIconSize.ExtraSmall
                             } else {
-                                AccountIconSize.RedesignedDefault
+                                AccountIconSize.Default
                             }
                             val sizedIcon = when (val icon = tokenRowUM.headIconUM) {
                                 is TangemIconUM.Currency -> icon.copy(
@@ -807,13 +800,7 @@ private fun LazyListScope.emptyTokensList(modifier: Modifier = Modifier) {
     item("EmptyTokensList") {
         Box(
             modifier = modifier
-                .background(
-                    color = if (LocalRedesignEnabled.current) {
-                        TangemTheme.colors2.surface.level2
-                    } else {
-                        TangemTheme.colors.background.secondary
-                    },
-                )
+                .background(color = TangemTheme.colors2.surface.level2)
                 .fillParentMaxSize(),
         ) {
             Column(modifier = Modifier.align(Alignment.Center)) {
@@ -844,13 +831,7 @@ private fun LazyListScope.tokensNotFound(modifier: Modifier = Modifier) {
     item("TokensNotFound") {
         Box(
             modifier = modifier
-                .background(
-                    color = if (LocalRedesignEnabled.current) {
-                        TangemTheme.colors2.surface.level2
-                    } else {
-                        TangemTheme.colors.background.secondary
-                    },
-                )
+                .background(color = TangemTheme.colors2.surface.level2)
                 .fillParentMaxSize(),
         ) {
             Text(
@@ -870,7 +851,7 @@ private fun LazyListScope.tokensNotFound(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun TokenScreenPreview(@PreviewParameter(ChooseTokenScreenPreviewProvider::class) state: ChooseTokenFullUM) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         ChooseTokenScreen(
             state = state,
             modifier = Modifier,
