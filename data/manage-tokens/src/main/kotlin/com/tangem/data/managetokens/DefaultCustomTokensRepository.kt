@@ -20,10 +20,14 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.config.curvesConfig
+import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
+import com.tangem.lib.crypto.derivation.supportsDerivationPath
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -137,16 +141,44 @@ internal class DefaultCustomTokensRepository(
     ): CryptoCurrency.Coin {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val network = requireNotNull(
-            networkFactory.create(
-                networkId = networkId,
-                derivationPath = derivationPath,
-                userWallet = userWallet,
-            ),
+            createNetwork(networkId = networkId, derivationPath = derivationPath, userWallet = userWallet),
         ) {
             "Network [$networkId] not found while creating coin"
         }
 
         return cryptoCurrencyFactory.createCoin(network)
+    }
+
+    /**
+     * Creates a [Network] for the given [derivationPath].
+     *
+     * A derivation path typed in by the user always arrives as [Network.DerivationPath.Custom], even when it is the
+
+     * currency shares its network with the currencies already present in the account instead of getting a separate
+     * "custom" network for the very same address.
+     */
+    private fun createNetwork(
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+        userWallet: UserWallet,
+    ): Network? {
+        val pathValue = derivationPath.value
+        val blockchain = networkId.toBlockchain()
+
+        val accountIndex = pathValue
+            ?.let { AccountNodeRecognizer(blockchain).recognize(derivationPathValue = it) }
+            ?.let { DerivationIndex(value = it.toInt()).getOrNull() }
+
+        return if (accountIndex == null) {
+            networkFactory.create(networkId = networkId, derivationPath = derivationPath, userWallet = userWallet)
+        } else {
+            networkFactory.create(
+                blockchain = blockchain,
+                extraDerivationPath = pathValue,
+                userWallet = userWallet,
+                accountIndex = accountIndex,
+            )
+        }
     }
 
     override suspend fun createToken(
@@ -172,11 +204,7 @@ internal class DefaultCustomTokensRepository(
     ): CryptoCurrency.Token {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val network = requireNotNull(
-            networkFactory.create(
-                networkId = networkId,
-                derivationPath = derivationPath,
-                userWallet = userWallet,
-            ),
+            createNetwork(networkId = networkId, derivationPath = derivationPath, userWallet = userWallet),
         ) {
             "Network [$networkId] not found while creating custom token"
         }
@@ -215,6 +243,20 @@ internal class DefaultCustomTokensRepository(
                 contractAddress = currency.contractAddress,
             )
         }
+    }
+
+    override suspend fun isDerivationPathSupported(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): Boolean = withContext(dispatchers.io) {
+        val rawPath = derivationPath.value ?: return@withContext true
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        val blockchain = networkId.toBlockchain()
+        val curve = userWallet.curvesConfig.primaryCurve(blockchain) ?: return@withContext false
+        val path = runCatching { DerivationPath(rawPath) }.getOrNull() ?: return@withContext false
+
+        curve.supportsDerivationPath(path)
     }
 
     override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> = withContext(dispatchers.io) {

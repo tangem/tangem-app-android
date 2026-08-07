@@ -3,14 +3,7 @@
 package com.tangem.core.ui.ds2.messagebanner
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.Icon
@@ -33,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
@@ -165,6 +159,49 @@ fun TangemMessageBanner(
     }
 }
 
+/**
+ * Design-system v2 (DS3) **Message Banner** — title/description header with optional slots and an
+ * action-button row.
+ *
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5475-7680&m=dev)
+ *
+ * @param state component state model
+ * @param modifier component Modifier
+ * @param extraBottomSlot Slot under the description, inside the text column.
+ */
+@Suppress("LongParameterList")
+@Composable
+fun TangemMessageBanner(
+    state: TangemMessageBanner.State,
+    modifier: Modifier = Modifier,
+    extraBottomSlot: (@Composable ColumnScope.() -> Unit)? = null,
+) {
+    TangemMessageBanner(
+        modifier = modifier,
+        variant = state.variant,
+        showGlowRing = state.shouldShowGlowRing,
+        secondaryButton = state.secondaryButton,
+        primaryButton = state.primaryButton,
+    ) {
+        MessageBannerContentRow(
+            title = state.title,
+            description = state.description,
+            contentAlign = state.contentAlign,
+            slotStart = if (state.iconStart != null) {
+                { TangemIcon(state.iconStart) }
+            } else {
+                null
+            },
+            slotEnd = if (state.iconEnd != null) {
+                { TangemIcon(state.iconEnd) }
+            } else {
+                null
+            },
+            extraBottomSlot = extraBottomSlot,
+        )
+    }
+}
+
 @Suppress("LongParameterList")
 @Composable
 private fun MessageBannerContentRow(
@@ -190,7 +227,11 @@ private fun MessageBannerContentRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             slotStart?.let { slot -> Box(modifier = Modifier.align(Alignment.Top)) { slot() } }
-            textWrapper(Modifier.weight(1f).align(Alignment.Top))
+            textWrapper(
+                Modifier
+                    .weight(1f)
+                    .align(Alignment.Top),
+            )
             slotEnd?.let { slot -> Box(modifier = Modifier.align(Alignment.Top)) { slot() } }
         }
         TangemMessageBanner.ContentAlign.Center -> Box(modifier = Modifier.fillMaxWidth()) {
@@ -314,6 +355,32 @@ object TangemMessageBanner {
         val iconEnd: TangemIconUM? = null,
         val isEnabled: Boolean = true,
         val isLoading: Boolean = false,
+    )
+
+    /**
+     *  A model holding configuration data for TangemMessageBanner
+     *
+     * @param title Banner headline.
+     * @param variant Visual appearance — background color + glow ring.
+     * @param contentAlign Horizontal alignment of the text block.
+     * @param shouldShowGlowRing Whether the glow ring is drawn around the banner. `false` shows only the
+     * background.
+     * @param description Secondary line under the [title]. `null` hides it.
+     * @param secondaryButton Start action. `null` hides it.
+     * @param primaryButton End action. `null` hides it.
+     * @param iconStart Leading icon before the title. `null` hides it.
+     * @param iconEnd Trailing icon after the title (e.g. the [CloseButton] preset). `null` hides it.
+     */
+    data class State(
+        val title: TextReference,
+        val variant: Variant = Variant.Default,
+        val contentAlign: ContentAlign = ContentAlign.Start,
+        val shouldShowGlowRing: Boolean = true,
+        val description: TextReference? = null,
+        val secondaryButton: Button? = null,
+        val primaryButton: Button? = null,
+        val iconStart: TangemIconUM? = null,
+        val iconEnd: TangemIconUM? = null,
     )
 }
 

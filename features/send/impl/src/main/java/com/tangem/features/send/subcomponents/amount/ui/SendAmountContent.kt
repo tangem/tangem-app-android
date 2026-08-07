@@ -58,6 +58,7 @@ private fun SendConvertTokenButton(onConvertToAnother: () -> Unit) {
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
+            .testTag(SendScreenTestTags.SWAP_TO_ANOTHER_TOKEN_BUTTON)
             .clickable(
                 indication = null,
                 interactionSource = null,
@@ -67,8 +68,7 @@ private fun SendConvertTokenButton(onConvertToAnother: () -> Unit) {
         Row(
             modifier = Modifier
                 .padding(12.dp)
-                .align(Alignment.Center)
-                .testTag(SendScreenTestTags.SWAP_TO_ANOTHER_TOKEN_BUTTON),
+                .align(Alignment.Center),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {

@@ -21,12 +21,12 @@ internal class DefaultHotAccessCodeRequestComponent @AssistedInject constructor(
 
     private val model: HotAccessCodeRequestModel = getOrCreateModel(params)
 
-    override suspend fun wrongPassword() {
-        model.wrongAccessCode()
+    override suspend fun wrongPassword(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        model.wrongAccessCode(attemptRequest)
     }
 
-    override suspend fun successfulAuthentication() {
-        model.successfulAuthentication()
+    override suspend fun successfulAuthentication(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
+        model.successfulAuthentication(attemptRequest)
     }
 
     override suspend fun requestPassword(
