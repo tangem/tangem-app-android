@@ -1,11 +1,13 @@
 package com.tangem.data.polymarket
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
+import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
@@ -22,6 +24,7 @@ import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
@@ -41,6 +44,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val clobApi: PolymarketClobApi,
     private val eventConverter: PolymarketEventConverter,
     private val walletConverter: PolymarketWalletConverter,
+    private val balanceAllowanceConverter: PolymarketBalanceAllowanceConverter,
     private val walletErrorResolver: PolymarketWalletErrorResolver,
     private val authErrorResolver: PolymarketAuthErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
@@ -150,13 +154,11 @@ internal class DefaultPolymarketRepository @Inject constructor(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
     ): Either<PolymarketAuthError, Unit> = withContext(dispatchers.io) {
-        val headers = runCatching {
-            l2HeaderBuilder.build(
-                ownerAddress = ownerAddress,
-                credentials = credentials,
-                requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
-            )
-        }.getOrElse { return@withContext PolymarketAuthError.Unknown(httpCode = null, detail = it.message).left() }
+        val headers = buildL2Headers(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            requestPath = BALANCE_ALLOWANCE_UPDATE_SIGNED_PATH,
+        ).getOrElse { return@withContext it.left() }
 
         safeApiCallWithTimeout(
             timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
@@ -171,6 +173,49 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
+    override suspend fun getBalanceAllowance(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+    ): Either<PolymarketAuthError, PolymarketBalanceAllowance> = withContext(dispatchers.io) {
+        val headers = buildL2Headers(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
+        ).getOrElse { return@withContext it.left() }
+
+        safeApiCallWithTimeout(
+            timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
+            call = {
+                val response = clobApi.getBalanceAllowance(
+                    headers = headers,
+                    assetType = ASSET_TYPE_COLLATERAL,
+                    signatureType = SIGNATURE_TYPE_DEPOSIT_WALLET,
+                ).bind()
+                Either.catch { balanceAllowanceConverter.convert(response) }
+                    .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
+            },
+            onError = { authErrorResolver.resolve(it).left() },
+        )
+    }
+
+    /**
+     * A malformed stored secret makes the HMAC throw, which must not escape past the call's error boundary
+     * into the caller.
+     */
+    private fun buildL2Headers(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        requestPath: String,
+    ): Either<PolymarketAuthError, Map<String, String>> = Either
+        .catch {
+            l2HeaderBuilder.build(
+                ownerAddress = ownerAddress,
+                credentials = credentials,
+                requestPath = requestPath,
+            )
+        }
+        .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
+
     private companion object {
 
         const val DEFAULT_LIMIT = 20
@@ -183,6 +228,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
 
         /** Signed by the HMAC without the query string, unlike the relative path Retrofit resolves. */
-        const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance/update"
+        const val BALANCE_ALLOWANCE_UPDATE_SIGNED_PATH = "/balance-allowance/update"
+
+        const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance"
     }
 }
