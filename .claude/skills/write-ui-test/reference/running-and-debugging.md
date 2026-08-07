@@ -29,6 +29,20 @@ adb shell am instrument -w \
   com.tangem.wallet.mocked.test/com.tangem.common.HiltTestRunner
 ```
 
+## Raw `am instrument` leaves animations ON
+
+`connectedAndroidTest` disables animations for the run (`testOptions { animationsDisabled = true }`) and
+restores them afterwards. A raw `am instrument` run does **not** — the device keeps whatever scales it
+had, gestures and idle-synchronisation behave differently from CI, and results are not comparable with
+Gradle runs. Set them yourself before a raw run:
+
+```bash
+for s in window_animation_scale transition_animation_scale animator_duration_scale; do
+  adb shell settings put global $s 0
+done
+adb shell settings get global window_animation_scale   # must print 0
+```
+
 ## Harness: orchestrator vs. raw `am instrument`
 
 The app is configured `execution = "ANDROIDX_TEST_ORCHESTRATOR"` (`app/build.gradle.kts`). The orchestrator
