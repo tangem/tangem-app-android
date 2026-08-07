@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.visa
+package com.tangem.spend.datasource.pay.store
 
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
