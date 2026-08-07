@@ -3,9 +3,15 @@ package com.tangem.domain.polymarket.approval
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 
 /**
- * The 6 canonical onboarding allowance calls, in the strict order the relayer expects (kb/07 Appendix D).
- * Each call's [PolymarketApprovalCall.data] is ABI-encoded from [PolymarketContracts] on each `build()` call, so the
- * spender address is never duplicated as a literal hex blob.
+ * The 6 onboarding allowance calls the BFF's approvals validator accepts: three spenders, each granted the
+ * right to move both the wallet's collateral (ERC-20 `approve`) and its outcome shares (ERC-1155
+ * `setApprovalForAll`). The collateral grants come first as a group, then the share grants, in the same
+ * spender order.
+ *
+ * The set is defined by the backend, not by us — a batch it does not recognise is rejected with
+ * `invalid approvals batch`, whatever the relayer would have accepted. Each call's
+ * [PolymarketApprovalCall.data] is ABI-encoded from [PolymarketContracts] on every `build()`, so a spender
+ * address is never duplicated as a literal hex blob.
  */
 object PolymarketApprovalCalls {
 
@@ -15,14 +21,13 @@ object PolymarketApprovalCalls {
     private const val BOOL_TRUE = "0000000000000000000000000000000000000000000000000000000000000001"
     private const val WORD_HEX_LENGTH = 64
 
-    fun build(): List<PolymarketApprovalCall> = listOf(
-        approve(spender = PolymarketContracts.CTF_EXCHANGE),
-        setApprovalForAll(operator = PolymarketContracts.CTF_EXCHANGE),
-        approve(spender = PolymarketContracts.NEG_RISK_CTF_EXCHANGE),
-        setApprovalForAll(operator = PolymarketContracts.NEG_RISK_CTF_EXCHANGE),
-        approve(spender = PolymarketContracts.NEG_RISK_ADAPTER),
-        setApprovalForAll(operator = PolymarketContracts.NEG_RISK_ADAPTER),
+    private val SPENDERS = listOf(
+        PolymarketContracts.CTF_EXCHANGE,
+        PolymarketContracts.NEG_RISK_CTF_EXCHANGE,
+        PolymarketContracts.NEG_RISK_CTF_COLLATERAL_ADAPTER,
     )
+
+    fun build(): List<PolymarketApprovalCall> = SPENDERS.map(::approve) + SPENDERS.map(::setApprovalForAll)
 
     private fun approve(spender: String) = PolymarketApprovalCall(
         target = PolymarketContracts.COLLATERAL,
