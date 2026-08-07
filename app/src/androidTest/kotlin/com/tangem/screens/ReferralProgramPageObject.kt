@@ -78,6 +78,11 @@ class ReferralProgramPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         hasTestTag(BaseButtonTestTags.TEXT)
         useUnmergedTree = true
     }
+
+    val personalCodeCard: KNode = child {
+        hasTestTag(ReferralProgramScreenTestTags.PERSONAL_CODE_CARD)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onReferralProgramScreen(function: ReferralProgramPageObject.() -> Unit) =

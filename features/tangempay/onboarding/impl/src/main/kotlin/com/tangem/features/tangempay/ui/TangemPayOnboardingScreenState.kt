@@ -14,4 +14,9 @@ internal sealed class TangemPayOnboardingScreenState {
     ) : TangemPayOnboardingScreenState() {
         data class ButtonConfig(val isLoading: Boolean, val onClick: () -> Unit)
     }
+
+    /**
+     * Shown when the user is not eligible for Tangem Pay. [onBack] also backs the "Got it" button.
+     */
+    data class NotAvailable(override val onBack: () -> Unit) : TangemPayOnboardingScreenState()
 }

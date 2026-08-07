@@ -44,7 +44,7 @@ internal class UpdateTransferTransformer(
                 onClick = {
                     analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSwap())
                     onActionDispatched()
-                    clickIntents.onSwapFromClick(action.unavailabilityReason)
+                    clickIntents.onSwapClick(action.unavailabilityReason)
                 },
             )
         }

@@ -15,11 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.innerShadow
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -43,6 +43,8 @@ import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_right_24
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -55,8 +57,8 @@ private const val GLOW_ALPHA = 0.7f
 private val BorderWidth = 1.dp
 private val InnerShadowBlur = 20.dp
 private val ShimmerSubtitleWidth = 78.dp
-private val LoaderSize = 12.dp
-private val LoaderStrokeWidth = 1.5.dp
+private val LoaderSize = 20.dp
+private val LoaderStrokeWidth = 2.dp
 
 @Composable
 fun EarnBlock(state: EarnBlockUM, modifier: Modifier = Modifier) {
@@ -69,31 +71,31 @@ fun EarnBlock(state: EarnBlockUM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun EarnBlockLoading(modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(TangemTheme.dimens2.x5)
+    val shape = RoundedCornerShape(24.dp)
     TangemRowContainer(
         modifier = modifier
             .clip(shape)
-            .background(TangemTheme.colors2.surface.level3)
-            .border(width = BorderWidth, color = TangemTheme.colors2.border.neutral.primary, shape = shape),
-        contentPadding = PaddingValues(all = TangemTheme.dimens2.x3),
+            .background(TangemTheme.colors3.bg.secondary)
+            .border(width = BorderWidth, color = TangemTheme.colors3.border.primary, shape = shape),
+        contentPadding = PaddingValues(all = 16.dp),
         content = {
             CircleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .size(TangemTheme.dimens2.x10),
+                    .padding(end = 12.dp)
+                    .size(40.dp),
             )
             RectangleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_TOP)
-                    .size(width = ShimmerSubtitleWidth, height = TangemTheme.dimens2.x4),
-                radius = TangemTheme.dimens2.x2,
+                    .size(width = ShimmerSubtitleWidth, height = 16.dp),
+                radius = 8.dp,
             )
             RectangleShimmer(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_BOTTOM)
-                    .size(width = TangemTheme.dimens2.x16, height = TangemTheme.dimens2.x5),
-                radius = TangemTheme.dimens2.x2,
+                    .size(width = 64.dp, height = 20.dp),
+                radius = 8.dp,
             )
         },
     )
@@ -101,7 +103,7 @@ private fun EarnBlockLoading(modifier: Modifier = Modifier) {
 
 @Composable
 private fun EarnBlockContent(state: EarnBlockUM.Content, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(TangemTheme.dimens2.x5)
+    val shape = RoundedCornerShape(24.dp)
 
     val clickModifier = state.onClick?.let { Modifier.clickable(onClick = it) } ?: Modifier
 
@@ -109,14 +111,14 @@ private fun EarnBlockContent(state: EarnBlockUM.Content, modifier: Modifier = Mo
         modifier = modifier
             .clip(shape)
             .then(clickModifier.backgroundModifier(state.type, state.backgroundUM, shape)),
-        contentPadding = PaddingValues(all = TangemTheme.dimens2.x4),
+        contentPadding = PaddingValues(all = 16.dp),
         content = {
             EarnBlockIcon(
                 type = state.type,
                 iconUM = state.iconUM,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3),
+                    .padding(end = 12.dp),
             )
 
             EarnBlockTitle(
@@ -124,12 +126,12 @@ private fun EarnBlockContent(state: EarnBlockUM.Content, modifier: Modifier = Mo
                 type = state.type,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_TOP)
-                    .padding(end = TangemTheme.dimens2.x2),
+                    .padding(end = 8.dp),
             )
 
             val subtitleModifier = Modifier
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .padding(end = TangemTheme.dimens2.x2)
+                .padding(end = 8.dp)
             when (val subtitle = state.subtitleUM) {
                 is EarnBlockUM.SubtitleUM.Text -> EarnBlockSubtitle(
                     subtitle = subtitle,
@@ -151,37 +153,37 @@ private fun EarnBlockContent(state: EarnBlockUM.Content, modifier: Modifier = Mo
 
 @Composable
 private fun EarnBlockPromo(state: EarnBlockUM.Promo, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(TangemTheme.dimens2.x5)
+    val shape = RoundedCornerShape(24.dp)
     Column(
         modifier = modifier
             .clip(shape)
             .backgroundModifier(state.type, state.backgroundUM, shape)
-            .padding(all = TangemTheme.dimens2.x4),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+            .padding(all = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             EarnBlockIcon(
                 type = state.type,
                 iconUM = state.iconUM,
-                modifier = Modifier.padding(end = TangemTheme.dimens2.x3),
+                modifier = Modifier.padding(end = 12.dp),
             )
             Column(
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = state.title.resolveAnnotatedReference(),
-                    style = TangemTheme.typography2.bodyMedium16,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Text(
                     text = state.subtitle.resolveReference(),
-                    style = TangemTheme.typography2.captionMedium12,
+                    style = TangemTheme.typography3.caption.medium,
                     color = state.type.accentText(),
                 )
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             EarnBlockPromoButton(
                 text = resourceReference(CoreResR.string.common_learn_more),
                 type = TangemButtonType.Secondary,
@@ -225,8 +227,8 @@ private fun Modifier.backgroundModifier(
 ): Modifier {
     return when (backgroundUM) {
         is EarnBlockUM.BackgroundUM.Surface -> this
-            .background(TangemTheme.colors2.surface.level3)
-            .border(width = BorderWidth, color = TangemTheme.colors2.border.neutral.primary, shape = shape)
+            .background(TangemTheme.colors3.bg.secondary)
+            .border(width = BorderWidth, color = TangemTheme.colors3.border.primary, shape = shape)
         is EarnBlockUM.BackgroundUM.AccentSoft -> tintedBackground(type.accentSoftTint(), shape)
         is EarnBlockUM.BackgroundUM.AccentStrong -> tintedBackground(type.accentStrongTint(), shape)
     }
@@ -260,24 +262,38 @@ private fun EarnBlockTrailing(type: Type, trailingUM: EarnBlockUM.TrailingUM?, o
                 modifier = Modifier.layoutId(TangemRowLayoutId.TAIL),
             )
         }
-        is EarnBlockUM.TrailingUM.Balance -> {
-            val fiatModifier = Modifier.layoutId(TangemRowLayoutId.END_TOP).let {
-                if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_FIAT_AMOUNT) else it
-            }
-            val cryptoModifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM).let {
-                if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT) else it
-            }
-            Text(
-                text = trailingUM.fiatValue.orMaskWithStars(trailingUM.isBalanceHidden).resolveAnnotatedReference(),
-                style = TangemTheme.typography2.bodySemibold16,
-                color = TangemTheme.colors2.text.neutral.primary,
-                modifier = fiatModifier,
+        is EarnBlockUM.TrailingUM.Balance -> EarnBlockBalance(type = type, trailingUM = trailingUM)
+        is EarnBlockUM.TrailingUM.Chevron -> {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_chevron_right_24,
+                    tintReference = { TangemTheme.colors3.icon.secondary },
+                ),
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.TAIL)
+                    .size(24.dp),
             )
-            Text(
-                text = trailingUM.cryptoValue.orMaskWithStars(trailingUM.isBalanceHidden).resolveReference(),
-                style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                modifier = cryptoModifier,
+        }
+        is EarnBlockUM.TrailingUM.StatusIcon -> {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Icon(
+                    iconRes = trailingUM.tone.iconRes(),
+                    tintReference = { trailingUM.tone.tint() },
+                ),
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.TAIL)
+                    .size(24.dp)
+                    .testTag(TokenDetailsScreenTestTags.EARN_BLOCK_TITLE_ICON),
+            )
+        }
+        is EarnBlockUM.TrailingUM.Loader -> {
+            CircularProgressIndicator(
+                color = trailingUM.tone.color(),
+                strokeWidth = LoaderStrokeWidth,
+                strokeCap = StrokeCap.Round,
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.TAIL)
+                    .size(LoaderSize),
             )
         }
         null -> Unit
@@ -285,50 +301,45 @@ private fun EarnBlockTrailing(type: Type, trailingUM: EarnBlockUM.TrailingUM?, o
 }
 
 @Composable
+private fun EarnBlockBalance(type: Type, trailingUM: EarnBlockUM.TrailingUM.Balance) {
+    val fiatModifier = Modifier.layoutId(TangemRowLayoutId.END_TOP).let {
+        if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_FIAT_AMOUNT) else it
+    }
+    val cryptoModifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM).let {
+        if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT) else it
+    }
+    Text(
+        text = trailingUM.fiatValue.orMaskWithStars(trailingUM.isBalanceHidden).resolveAnnotatedReference(),
+        style = TangemTheme.typography3.body.medium,
+        color = TangemTheme.colors3.text.primary,
+        modifier = fiatModifier,
+    )
+    Text(
+        text = trailingUM.cryptoValue.orMaskWithStars(trailingUM.isBalanceHidden).resolveReference(),
+        style = TangemTheme.typography3.caption.medium,
+        color = TangemTheme.colors3.text.secondary,
+        modifier = cryptoModifier,
+    )
+}
+
+@Composable
 private fun EarnBlockTitle(titleUM: EarnBlockUM.TitleUM, type: Type, modifier: Modifier = Modifier) {
-    val titleText: @Composable () -> Unit = {
-        Text(
-            text = titleUM.text.resolveReference(),
-            style = titleUM.style.textStyle,
-            color = titleUM.tone.color(type),
-        )
-    }
-    val icon = titleUM.iconUM
-    if (icon == null) {
-        Box(modifier = modifier) { titleText() }
-        return
-    }
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        titleText()
-        Spacer(modifier = Modifier.width(TangemTheme.dimens2.x1))
-        TangemIcon(
-            tangemIconUM = TangemIconUM.Icon(
-                iconRes = icon.tone.iconRes(),
-                tintReference = { icon.tone.tint() },
-            ),
-            modifier = Modifier.size(TangemTheme.dimens2.x4),
-        )
-    }
+    Text(
+        text = titleUM.text.resolveReference(),
+        style = titleUM.style.textStyle,
+        color = titleUM.tone.color(type),
+        modifier = modifier,
+    )
 }
 
 @Composable
 private fun EarnBlockSubtitle(subtitle: EarnBlockUM.SubtitleUM.Text, type: Type, modifier: Modifier = Modifier) {
-    val textStyle = subtitle.style.textStyle
-    val textColor = subtitle.tone.color(type)
-    if (subtitle.loader == null) {
-        Text(text = subtitle.text.resolveReference(), style = textStyle, color = textColor, modifier = modifier)
-        return
-    }
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Text(text = subtitle.text.resolveReference(), style = textStyle, color = textColor)
-        Spacer(modifier = Modifier.width(3.dp))
-        CircularProgressIndicator(
-            color = subtitle.loader.tone.color(),
-            strokeWidth = LoaderStrokeWidth,
-            strokeCap = StrokeCap.Round,
-            modifier = Modifier.size(LoaderSize),
-        )
-    }
+    Text(
+        text = subtitle.text.resolveReference(),
+        style = subtitle.style.textStyle,
+        color = subtitle.tone.color(type),
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -349,7 +360,7 @@ private fun EarnBlockAccentedSubtitle(
             }
         },
         style = subtitle.style.textStyle,
-        color = TangemTheme.colors2.text.neutral.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         modifier = modifier,
     )
 }
@@ -358,32 +369,40 @@ private fun EarnBlockAccentedSubtitle(
 private fun EarnBlockIcon(type: Type, iconUM: EarnBlockUM.IconUM, modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.size(TangemTheme.dimens2.x10),
+        modifier = modifier.size(40.dp),
     ) {
-        if (iconUM is EarnBlockUM.IconUM.Glowing) {
-            val glowShape = RoundedCornerShape(percent = 50)
+        val glowColor = when (iconUM) {
+            is EarnBlockUM.IconUM.Glowing -> iconUM.tone.glowColor(type)
+            is EarnBlockUM.IconUM.Plain -> null
+        }
+        if (glowColor != null) {
             Box(
                 modifier = Modifier
-                    .size(TangemTheme.dimens2.x6)
+                    .size(24.dp)
                     .hazeForegroundEffectTangem(
                         style = HazeStyle(
                             backgroundColor = Color.Transparent,
                             tint = HazeTint(Color.Transparent),
-                            blurRadius = TangemTheme.dimens2.x4,
+                            blurRadius = 16.dp,
                         ),
                     ) {
                         blurredEdgeTreatment = BlurredEdgeTreatment.Unbounded
                     }
-                    .background(color = type.accentGlow().copy(alpha = GLOW_ALPHA), shape = glowShape),
+                    .background(color = glowColor.copy(alpha = GLOW_ALPHA), shape = RoundedCornerShape(percent = 50)),
             )
         }
+        val isWarningTone = (iconUM as? EarnBlockUM.IconUM.Glowing)?.tone == EarnBlockUM.IconUM.Tone.Warning
         val iconRes = when (iconUM) {
             is EarnBlockUM.IconUM.Glowing -> iconUM.iconRes
             is EarnBlockUM.IconUM.Plain -> iconUM.iconRes
         }
         TangemIcon(
-            tangemIconUM = TangemIconUM.Image(imageRes = iconRes),
-            modifier = Modifier.size(TangemTheme.dimens2.x10),
+            tangemIconUM = if (isWarningTone) {
+                TangemIconUM.Icon(iconRes = iconRes, tintReference = { TangemTheme.colors3.icon.status.warning })
+            } else {
+                TangemIconUM.Image(imageRes = iconRes)
+            },
+            modifier = Modifier.size(40.dp),
         )
     }
 }
@@ -392,29 +411,36 @@ private fun EarnBlockIcon(type: Type, iconUM: EarnBlockUM.IconUM, modifier: Modi
 @Composable
 @ReadOnlyComposable
 private fun Type.accentText(): Color = when (this) {
-    Type.Staking -> TangemTheme.colors2.text.status.accent
-    Type.YieldSupply -> TangemTheme.colors2.text.status.positive
+    Type.Staking -> TangemTheme.colors3.text.brand
+    Type.YieldSupply -> TangemTheme.colors3.text.accent.green
+}
+
+@Composable
+@ReadOnlyComposable
+private fun EarnBlockUM.IconUM.Tone.glowColor(type: Type): Color = when (this) {
+    EarnBlockUM.IconUM.Tone.Accent -> type.accentGlow()
+    EarnBlockUM.IconUM.Tone.Warning -> TangemTheme.colors3.icon.status.warning
 }
 
 @Composable
 @ReadOnlyComposable
 private fun Type.accentGlow(): Color = when (this) {
-    Type.Staking -> TangemTheme.colors2.border.status.accent
-    Type.YieldSupply -> TangemTheme.colors2.text.status.positive
+    Type.Staking -> TangemTheme.colors3.text.brand
+    Type.YieldSupply -> TangemTheme.colors3.text.accent.green
 }
 
 @Composable
 @ReadOnlyComposable
 private fun Type.accentSoftTint(): Color = when (this) {
-    Type.Staking -> TangemTheme.colors2.markers.backgroundTintedBlue
-    Type.YieldSupply -> TangemTheme.colors2.markers.backgroundTintedGreen
+    Type.Staking -> TangemTheme.colors3.text.brand
+    Type.YieldSupply -> TangemTheme.colors3.text.accent.green
 }
 
 @Composable
 @ReadOnlyComposable
 private fun Type.accentStrongTint(): Color = when (this) {
-    Type.Staking -> TangemTheme.colors2.text.status.accent
-    Type.YieldSupply -> TangemTheme.colors2.text.status.positive
+    Type.Staking -> TangemTheme.colors3.text.brand
+    Type.YieldSupply -> TangemTheme.colors3.text.accent.green
 }
 
 private fun EarnBlockUM.TrailingUM.Button.Style.buttonType(type: Type): TangemButtonType = when (this) {
@@ -428,53 +454,53 @@ private fun EarnBlockUM.TrailingUM.Button.Style.buttonType(type: Type): TangemBu
 @Composable
 @ReadOnlyComposable
 private fun EarnBlockUM.TitleUM.Tone.color(type: Type): Color = when (this) {
-    EarnBlockUM.TitleUM.Tone.Primary -> TangemTheme.colors2.text.neutral.primary
-    EarnBlockUM.TitleUM.Tone.Secondary -> TangemTheme.colors2.text.neutral.secondary
-    EarnBlockUM.TitleUM.Tone.Disabled -> TangemTheme.colors2.text.neutral.tertiary
+    EarnBlockUM.TitleUM.Tone.Primary -> TangemTheme.colors3.text.primary
+    EarnBlockUM.TitleUM.Tone.Secondary -> TangemTheme.colors3.text.secondary
+    EarnBlockUM.TitleUM.Tone.Disabled -> TangemTheme.colors3.text.tertiary
     EarnBlockUM.TitleUM.Tone.Accent -> type.accentText()
 }
 
 @Composable
 @ReadOnlyComposable
 private fun EarnBlockUM.SubtitleUM.Tone.color(type: Type): Color = when (this) {
-    EarnBlockUM.SubtitleUM.Tone.Primary -> TangemTheme.colors2.text.neutral.primary
-    EarnBlockUM.SubtitleUM.Tone.Disabled -> TangemTheme.colors2.text.neutral.tertiary
+    EarnBlockUM.SubtitleUM.Tone.Primary -> TangemTheme.colors3.text.primary
+    EarnBlockUM.SubtitleUM.Tone.Disabled -> TangemTheme.colors3.text.tertiary
     EarnBlockUM.SubtitleUM.Tone.Accent -> type.accentText()
 }
 
-private fun EarnBlockUM.TitleUM.IconTone.iconRes(): Int = when (this) {
-    EarnBlockUM.TitleUM.IconTone.Warning -> R.drawable.ic_attention_default_24
-    EarnBlockUM.TitleUM.IconTone.Info -> R.drawable.ic_alert_circle_24
+private fun EarnBlockUM.TrailingUM.StatusIcon.Tone.iconRes(): Int = when (this) {
+    EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning -> R.drawable.ic_attention_default_24
+    EarnBlockUM.TrailingUM.StatusIcon.Tone.Info -> R.drawable.ic_alert_circle_24
 }
 
 @Composable
 @ReadOnlyComposable
-private fun EarnBlockUM.TitleUM.IconTone.tint(): Color = when (this) {
-    EarnBlockUM.TitleUM.IconTone.Warning -> TangemTheme.colors2.graphic.status.attention
-    EarnBlockUM.TitleUM.IconTone.Info -> TangemTheme.colors2.graphic.neutral.secondary
+private fun EarnBlockUM.TrailingUM.StatusIcon.Tone.tint(): Color = when (this) {
+    EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning -> TangemTheme.colors3.icon.status.warning
+    EarnBlockUM.TrailingUM.StatusIcon.Tone.Info -> TangemTheme.colors3.icon.secondary
 }
 
 @Composable
 @ReadOnlyComposable
-private fun EarnBlockUM.SubtitleUM.LoaderTone.color(): Color = when (this) {
-    EarnBlockUM.SubtitleUM.LoaderTone.Positive -> TangemTheme.colors2.text.status.positive
-    EarnBlockUM.SubtitleUM.LoaderTone.Muted -> TangemTheme.colors2.graphic.neutral.tertiaryConstant
+private fun EarnBlockUM.TrailingUM.Loader.LoaderTone.color(): Color = when (this) {
+    EarnBlockUM.TrailingUM.Loader.LoaderTone.Positive -> TangemTheme.colors3.icon.accent.green
+    EarnBlockUM.TrailingUM.Loader.LoaderTone.Muted -> TangemTheme.colors3.icon.tertiary
 }
 
 private val EarnBlockUM.TitleUM.Style.textStyle: TextStyle
     @Composable
     @ReadOnlyComposable
     get() = when (this) {
-        EarnBlockUM.TitleUM.Style.Large -> TangemTheme.typography2.bodyMedium16
-        EarnBlockUM.TitleUM.Style.Small -> TangemTheme.typography2.captionMedium12
+        EarnBlockUM.TitleUM.Style.Large -> TangemTheme.typography3.body.medium
+        EarnBlockUM.TitleUM.Style.Small -> TangemTheme.typography3.caption.medium
     }
 
 private val EarnBlockUM.SubtitleUM.Style.textStyle: TextStyle
     @Composable
     @ReadOnlyComposable
     get() = when (this) {
-        EarnBlockUM.SubtitleUM.Style.Large -> TangemTheme.typography2.bodyMedium16
-        EarnBlockUM.SubtitleUM.Style.Small -> TangemTheme.typography2.captionMedium12
+        EarnBlockUM.SubtitleUM.Style.Large -> TangemTheme.typography3.body.medium
+        EarnBlockUM.SubtitleUM.Style.Small -> TangemTheme.typography3.caption.medium
     }
 // endregion
 
@@ -486,7 +512,7 @@ private fun EarnBlock_Staking_Preview(@PreviewParameter(EarnBlockStakingPreviewP
     TangemThemePreviewRedesign {
         EarnBlock(
             state = state,
-            modifier = Modifier.padding(TangemTheme.dimens2.x4),
+            modifier = Modifier.padding(16.dp),
         )
     }
 }
@@ -500,7 +526,7 @@ private fun EarnBlock_YieldSupply_Preview(
     TangemThemePreviewRedesign {
         EarnBlock(
             state = state,
-            modifier = Modifier.padding(TangemTheme.dimens2.x4),
+            modifier = Modifier.padding(16.dp),
         )
     }
 }
@@ -610,7 +636,7 @@ private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterPr
             ),
             onClick = {},
         ),
-        // Content — yield enabled, "Details" button
+        // Content — yield enabled, chevron
         EarnBlockUM.Content(
             type = Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
@@ -628,13 +654,10 @@ private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterPr
                 style = EarnBlockUM.SubtitleUM.Style.Large,
                 tone = EarnBlockUM.SubtitleUM.Tone.Accent,
             ),
-            trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = resourceReference(CoreResR.string.details_title),
-                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
-            ),
+            trailingUM = EarnBlockUM.TrailingUM.Chevron,
             onClick = {},
         ),
-        // Content with Warning title icon
+        // Content with Warning status icon in trailing
         EarnBlockUM.Content(
             type = Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
@@ -643,7 +666,6 @@ private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterPr
                 text = resourceReference(CoreResR.string.common_yield_mode),
                 style = EarnBlockUM.TitleUM.Style.Small,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
-                iconUM = EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning),
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = resourceReference(
@@ -653,13 +675,12 @@ private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterPr
                 style = EarnBlockUM.SubtitleUM.Style.Large,
                 tone = EarnBlockUM.SubtitleUM.Tone.Accent,
             ),
-            trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = resourceReference(CoreResR.string.details_title),
-                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
+            trailingUM = EarnBlockUM.TrailingUM.StatusIcon(
+                tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning,
             ),
             onClick = {},
         ),
-        // Content with Info title icon
+        // Content with Info status icon in trailing
         EarnBlockUM.Content(
             type = Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
@@ -668,7 +689,6 @@ private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterPr
                 text = resourceReference(CoreResR.string.common_yield_mode),
                 style = EarnBlockUM.TitleUM.Style.Small,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
-                iconUM = EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info),
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = resourceReference(
@@ -678,47 +698,51 @@ private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterPr
                 style = EarnBlockUM.SubtitleUM.Style.Large,
                 tone = EarnBlockUM.SubtitleUM.Tone.Accent,
             ),
-            trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = resourceReference(CoreResR.string.details_title),
-                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
+            trailingUM = EarnBlockUM.TrailingUM.StatusIcon(
+                tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Info,
             ),
             onClick = {},
         ),
-        // Processing.Enter — enabling, no trailing
+        // Processing.Enter — enabling, single-line title, loader in trailing
         EarnBlockUM.Content(
             type = Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_yield_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.common_yield_mode),
+                text = combinedReference(
+                    resourceReference(CoreResR.string.common_yield_mode),
+                    stringReference(" "),
+                    resourceReference(CoreResR.string.common_enabling),
+                ),
                 style = EarnBlockUM.TitleUM.Style.Small,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
-            subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = resourceReference(CoreResR.string.common_enabling),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
-                tone = EarnBlockUM.SubtitleUM.Tone.Accent,
-                loader = EarnBlockUM.SubtitleUM.Loader(tone = EarnBlockUM.SubtitleUM.LoaderTone.Positive),
+            subtitleUM = null,
+            trailingUM = EarnBlockUM.TrailingUM.Loader(
+                tone = EarnBlockUM.TrailingUM.Loader.LoaderTone.Positive,
             ),
-            trailingUM = null,
         ),
-        // Processing.Exit — disabling, no trailing, plain icon
+        // Processing.Exit — disabling, single-line title, warning icon, loader in trailing
         EarnBlockUM.Content(
             type = Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
-            iconUM = EarnBlockUM.IconUM.Plain(iconRes = R.drawable.ic_yield_disabling_40),
+            iconUM = EarnBlockUM.IconUM.Glowing(
+                iconRes = R.drawable.ic_yield_40,
+                tone = EarnBlockUM.IconUM.Tone.Warning,
+            ),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.common_yield_mode),
+                text = combinedReference(
+                    resourceReference(CoreResR.string.common_yield_mode),
+                    stringReference(" "),
+                    resourceReference(CoreResR.string.common_disabling),
+                ),
                 style = EarnBlockUM.TitleUM.Style.Small,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
-            subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = resourceReference(CoreResR.string.common_disabling),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
-                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
-                loader = EarnBlockUM.SubtitleUM.Loader(tone = EarnBlockUM.SubtitleUM.LoaderTone.Muted),
+            subtitleUM = null,
+            trailingUM = EarnBlockUM.TrailingUM.Loader(
+                tone = EarnBlockUM.TrailingUM.Loader.LoaderTone.Muted,
             ),
-            trailingUM = null,
         ),
     ),
 )

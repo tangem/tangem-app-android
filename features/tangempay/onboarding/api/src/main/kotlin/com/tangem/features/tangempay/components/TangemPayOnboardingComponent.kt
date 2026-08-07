@@ -23,6 +23,9 @@ interface TangemPayOnboardingComponent : ComposableContentComponent {
         data object FromBannerOnMain : Params()
 
         data object FromBannerInSettings : Params()
+
+        /** Like [Deeplink] but for the `tpay_mobileonboard` AppsFlyer link: skips backend deeplink validation. */
+        data object MobileOnboardingDeeplink : Params()
     }
 
     interface Factory : ComponentFactory<Params, TangemPayOnboardingComponent>
