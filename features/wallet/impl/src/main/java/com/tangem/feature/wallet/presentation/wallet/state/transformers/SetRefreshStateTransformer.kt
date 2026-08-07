@@ -3,8 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
-import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 
@@ -36,15 +34,9 @@ internal class SetRefreshStateTransformer(
     override fun transform(walletUM: WalletUM): WalletUM {
         return when (walletUM) {
             is WalletUM.Content -> {
-                val tokensListUM = walletUM.tokensListUM.toUpdatedState()
                 walletUM.copy(
                     pullToRefreshConfig = walletUM.pullToRefreshConfig.toUpdatedState(isRefreshing),
-                    tokensListUM = tokensListUM,
-                    buttons = if (tokensListUM is WalletTokensListUM.Empty) {
-                        walletUM.disableButtons()
-                    } else {
-                        walletUM.enableButtons()
-                    },
+                    tokensListUM = walletUM.tokensListUM.toUpdatedState(),
                 )
             }
             is WalletUM.Locked -> walletUM

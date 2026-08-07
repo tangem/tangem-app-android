@@ -14,7 +14,6 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.domain.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletTransformAction
@@ -546,10 +545,10 @@ internal class DefaultUserWalletsListRepository(
             is HotWalletPasswordRequester.Result.EnteredPassword -> {
                 val decrypted = block(result.password.value)
                 if (decrypted == null) {
-                    passwordRequester.wrongPassword()
+                    passwordRequester.wrongPassword(attemptRequest)
                     requestPasswordRecursive(hotWalletId, block, biometryFallback)
                 } else {
-                    passwordRequester.successfulAuthentication()
+                    passwordRequester.successfulAuthentication(attemptRequest)
                     passwordRequester.dismiss()
                     decrypted.right()
                 }
@@ -557,7 +556,7 @@ internal class DefaultUserWalletsListRepository(
             HotWalletPasswordRequester.Result.UseBiometry -> {
                 biometryFallback()
                     .onRight {
-                        passwordRequester.successfulAuthentication()
+                        passwordRequester.successfulAuthentication(attemptRequest)
                         passwordRequester.dismiss()
                     }
                     .map { null }
@@ -671,11 +670,12 @@ internal class DefaultUserWalletsListRepository(
 
     private suspend fun onFirstWalletCreated() {
         // reset the referral attribution (set from AF deeplink) after creating a new wallet
-        clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.Referral)
+        clearAppsFlyerDeeplinkUseCase()
     }
 
     private suspend fun onAllWalletsDeleted() {
         // reset the referral attribution (set from AF deeplink) after removing the last wallet
-        clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.Referral)
+        clearAppsFlyerDeeplinkUseCase()
+        appPreferencesStore.editData { it.remove(PreferencesKeys.USEDESK_CLIENT_ID_KEY) }
     }
 }

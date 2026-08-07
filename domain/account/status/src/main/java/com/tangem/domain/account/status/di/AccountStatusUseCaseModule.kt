@@ -9,6 +9,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -32,6 +33,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -227,4 +229,10 @@ internal object AccountStatusUseCaseModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @IntoSet
+    fun provideCryptoCurrencyMetadataUserWalletDataCleaner(
+        impl: CryptoCurrencyMetadataCleaner,
+    ): UserWalletDataCleaner = impl
 }

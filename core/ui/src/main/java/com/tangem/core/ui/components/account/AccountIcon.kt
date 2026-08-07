@@ -32,7 +32,13 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 enum class AccountIconSize {
-    Default, Large, Medium, Small, ExtraSmall, RedesignedDefault, RedesignExtraSmall
+    Default,
+    Large,
+    Medium,
+    Small,
+    ExtraSmall,
+    ContactLarge,
+    ContactDefault,
 }
 
 /**
@@ -125,13 +131,13 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
         animationSpec = animation(),
     )
     val textStyle = when (size) {
-        AccountIconSize.Default -> TangemTheme.typography.h3
+        AccountIconSize.Default -> TangemTheme.typography2.headingSemibold28
         AccountIconSize.Large -> TangemTheme.typography.h1
         AccountIconSize.Medium -> TangemTheme.typography.subtitle1
         AccountIconSize.Small -> TangemTheme.typography.subtitle2
-        AccountIconSize.ExtraSmall -> TangemTheme.typography.caption1
-        AccountIconSize.RedesignedDefault -> TangemTheme.typography2.headingSemibold28
-        AccountIconSize.RedesignExtraSmall -> TangemTheme.typography2.captionMedium11
+        AccountIconSize.ExtraSmall -> TangemTheme.typography2.captionMedium11
+        AccountIconSize.ContactLarge -> TangemTheme.typography3.heading.medium
+        AccountIconSize.ContactDefault -> TangemTheme.typography3.body.medium
     }
 
     val textSize by animateFloatAsState(
@@ -164,28 +170,28 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
     AccountIconSize.Medium -> 16.dp
     AccountIconSize.Small -> 12.dp
     AccountIconSize.ExtraSmall -> 8.dp
-    AccountIconSize.RedesignedDefault -> 20.dp
-    AccountIconSize.RedesignExtraSmall -> 8.dp
+    AccountIconSize.ContactLarge -> 32.dp
+    AccountIconSize.ContactDefault -> 20.dp
 }
 
 fun AccountIconSize.toBoxSize(): Dp = when (this) {
-    AccountIconSize.Default -> 36.dp
+    AccountIconSize.Default -> 40.dp
     AccountIconSize.Large -> 88.dp
     AccountIconSize.Medium -> 28.dp
     AccountIconSize.Small -> 20.dp
-    AccountIconSize.ExtraSmall -> 14.dp
-    AccountIconSize.RedesignedDefault -> 40.dp
-    AccountIconSize.RedesignExtraSmall -> 16.dp
+    AccountIconSize.ExtraSmall -> 16.dp
+    AccountIconSize.ContactLarge -> 80.dp
+    AccountIconSize.ContactDefault -> 40.dp
 }
 
 private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
-    AccountIconSize.Default -> 10.dp
+    AccountIconSize.Default -> 12.dp
     AccountIconSize.Large -> 24.dp
     AccountIconSize.Medium -> 8.dp
     AccountIconSize.Small -> 6.dp
-    AccountIconSize.ExtraSmall -> 4.dp
-    AccountIconSize.RedesignedDefault -> 12.dp
-    AccountIconSize.RedesignExtraSmall -> 6.dp
+    AccountIconSize.ExtraSmall -> 6.dp
+    AccountIconSize.ContactLarge -> 80.dp
+    AccountIconSize.ContactDefault -> 100.dp
 }
 
 @Preview(showBackground = true)
@@ -226,9 +232,9 @@ private fun Sample() {
                 AccountIconSize.Large -> AccountIconSize.Medium
                 AccountIconSize.Medium -> AccountIconSize.Small
                 AccountIconSize.Small -> AccountIconSize.ExtraSmall
-                AccountIconSize.ExtraSmall -> AccountIconSize.RedesignedDefault
-                AccountIconSize.RedesignedDefault -> AccountIconSize.RedesignExtraSmall
-                AccountIconSize.RedesignExtraSmall -> AccountIconSize.Default
+                AccountIconSize.ExtraSmall -> AccountIconSize.ContactLarge
+                AccountIconSize.ContactLarge -> AccountIconSize.ContactDefault
+                AccountIconSize.ContactDefault -> AccountIconSize.Default
             }
         }) { Text("Change") }
 
@@ -246,6 +252,5 @@ private fun Sample() {
         AccountCharIcon(char = 'M', color = Color.Magenta, size = AccountIconSize.Medium)
         AccountCharIcon(char = 'S', color = Color.DarkGray, size = AccountIconSize.Small)
         AccountCharIcon(char = 'E', color = Color.Green, size = AccountIconSize.ExtraSmall)
-        AccountCharIcon(char = 'D', color = Color.LightGray, size = AccountIconSize.RedesignExtraSmall)
     }
 }

@@ -63,10 +63,7 @@ internal class WalletScreenContentLoader @Inject constructor(
     }
 
     private fun loadInternal(userWallet: UserWallet, coroutineScope: CoroutineScope, isRefresh: Boolean) {
-        val loader = factory.create(
-            userWallet = userWallet,
-            isRefresh = isRefresh,
-        )
+        val loader = factory.create(userWallet = userWallet)
 
         if (loader == null) {
             TangemLogger.e("Impossible to create loader for $userWallet")

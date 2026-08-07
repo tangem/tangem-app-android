@@ -21,7 +21,6 @@ internal class QuickActionsConverterTest {
         // Act
         val result = QuickActionsConverter.toQuickActions(
             actions = actions,
-            isRedesignEnabled = true,
             context = TokenActionsContext.AddFunds,
         )
 
@@ -45,7 +44,6 @@ internal class QuickActionsConverterTest {
         // Act
         val result = QuickActionsConverter.toQuickActions(
             actions = actions,
-            isRedesignEnabled = true,
             context = TokenActionsContext.Markets,
         )
 
@@ -68,7 +66,6 @@ internal class QuickActionsConverterTest {
         // Act
         val result = QuickActionsConverter.toQuickActions(
             actions = actions,
-            isRedesignEnabled = true,
             context = TokenActionsContext.Markets,
         )
 
@@ -92,7 +89,6 @@ internal class QuickActionsConverterTest {
         // Act
         val result = QuickActionsConverter.toQuickActions(
             actions = actions,
-            isRedesignEnabled = true,
             context = TokenActionsContext.Transfer,
         )
 
@@ -116,7 +112,6 @@ internal class QuickActionsConverterTest {
         // Act
         val result = QuickActionsConverter.toQuickActions(
             actions = actions,
-            isRedesignEnabled = true,
             context = TokenActionsContext.Transfer,
         )
 
@@ -141,7 +136,6 @@ internal class QuickActionsConverterTest {
         // Act
         val result = QuickActionsConverter.toQuickActions(
             actions = actions,
-            isRedesignEnabled = true,
             context = TokenActionsContext.AddFunds,
         )
 
@@ -167,7 +161,6 @@ internal class QuickActionsConverterTest {
         // Act
         val result = QuickActionsConverter.toQuickActions(
             actions = actions,
-            isRedesignEnabled = true,
             context = TokenActionsContext.Transfer,
         )
 
@@ -194,7 +187,6 @@ internal class QuickActionsConverterTest {
         val result = QuickActionsConverter.quickActions(
             cryptoData = cryptoData(actions),
             tokenActionsHandler = mockk(relaxed = true),
-            isRedesignEnabled = true,
             context = TokenActionsContext.Transfer,
         )
 
@@ -215,7 +207,6 @@ internal class QuickActionsConverterTest {
         val result = QuickActionsConverter.quickActions(
             cryptoData = cryptoData(actions),
             tokenActionsHandler = mockk(relaxed = true),
-            isRedesignEnabled = true,
             context = TokenActionsContext.AddFunds,
         )
 

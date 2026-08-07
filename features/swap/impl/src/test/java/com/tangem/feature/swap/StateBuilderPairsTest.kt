@@ -18,7 +18,6 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.ui.StateBuilder
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import io.mockk.every
 import io.mockk.mockk
@@ -33,7 +32,6 @@ internal class StateBuilderPairsTest {
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
-    private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk()
 
     private lateinit var sut: StateBuilder
@@ -62,7 +60,6 @@ internal class StateBuilderPairsTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-            swapFeatureToggles = swapFeatureToggles,
             appRouter = appRouter,
         )
     }
@@ -394,8 +391,7 @@ internal class StateBuilderPairsTest {
     inner class PredefinedButtonsVisibility {
 
         @Test
-        fun `GIVEN toggle on and native coin within same network WHEN updateCurrenciesState THEN MAX button is dropped but percents stay`() {
-            every { swapFeatureToggles.isSwapPredefinedButtonsEnabled } returns true
+        fun `GIVEN native coin within same network WHEN updateCurrenciesState THEN MAX button is dropped but percents stay`() {
             val baseState = buildReadyState(coldWallet)
             val networkId: Network.ID = mockk(relaxed = true)
             val fromStatus = buildCoinSwapCurrencyStatus(coldWallet, networkId)
@@ -420,8 +416,7 @@ internal class StateBuilderPairsTest {
         }
 
         @Test
-        fun `GIVEN toggle on and non-coin WHEN updateCurrenciesState THEN all percents including MAX are built`() {
-            every { swapFeatureToggles.isSwapPredefinedButtonsEnabled } returns true
+        fun `GIVEN non-coin WHEN updateCurrenciesState THEN all percents including MAX are built`() {
             val baseState = buildReadyState(coldWallet)
             val fromStatus = buildSwapCurrencyStatus(coldWallet)
             val toStatus = buildSwapCurrencyStatus(coldWallet)
@@ -438,24 +433,6 @@ internal class StateBuilderPairsTest {
             assertThat(result.predefinedButtons.map { it.id })
                 .containsExactlyElementsIn(PredefinedPercentAmount.entries.map { it.name })
                 .inOrder()
-        }
-
-        @Test
-        fun `GIVEN toggle off WHEN updateCurrenciesState THEN no predefined buttons are built`() {
-            every { swapFeatureToggles.isSwapPredefinedButtonsEnabled } returns false
-            val baseState = buildReadyState(coldWallet)
-            val fromStatus = buildSwapCurrencyStatus(coldWallet)
-            val toStatus = buildSwapCurrencyStatus(coldWallet)
-
-            val result = sut.updateCurrenciesState(
-                uiStateHolder = baseState,
-                emptyAmountState = emptyAmountState,
-                fromSwapCurrencyStatus = fromStatus,
-                toSwapCurrencyStatus = toStatus,
-                shouldResetAmount = false,
-            )
-
-            assertThat(result.predefinedButtons).isEmpty()
         }
 
         @Test
