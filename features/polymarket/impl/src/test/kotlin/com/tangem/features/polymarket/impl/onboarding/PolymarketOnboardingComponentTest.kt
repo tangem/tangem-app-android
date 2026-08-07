@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.onboarding
 
 import arrow.core.right
 import com.arkivanov.essenty.instancekeeper.InstanceKeeperDispatcher
+import com.arkivanov.essenty.statekeeper.StateKeeperDispatcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.ModelComponent
@@ -14,8 +15,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
 import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
-import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
+import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import dagger.hilt.EntryPoints
 import io.mockk.CapturingSlot
@@ -30,9 +31,9 @@ import org.junit.jupiter.api.Test
 import javax.inject.Provider
 
 /**
- * The gate is the feature's initial route, so a model it cannot construct crashes the feature on open. Its model
- * reads [PolymarketComponent.Params] out of the params container, which only reaches it if the component hands
- * the params to `getOrCreateModel`.
+ * The gate is reached only for a wallet the entry route already settled, so a model it cannot construct
+ * crashes the feature on open. Its model reads [PolymarketOnboardingParams] out of the params container, which
+ * only reaches it if the component hands the wallet to `getOrCreateModel`.
  */
 internal class PolymarketOnboardingComponentTest {
 
@@ -42,7 +43,6 @@ internal class PolymarketOnboardingComponentTest {
     private val runPolymarketOnboardingUseCase: RunPolymarketOnboardingUseCase = mockk()
 
     private val userWalletId = UserWalletId("011")
-    private val params = PolymarketComponent.Params(userWalletId = userWalletId)
 
     @AfterEach
     fun unmockEntryPoints() {
@@ -50,17 +50,21 @@ internal class PolymarketOnboardingComponentTest {
     }
 
     @Test
-    fun `GIVEN the gate is created WHEN its model is resolved THEN the feature params are handed over`() {
+    fun `GIVEN the gate is created WHEN its model is resolved THEN the settled wallet is handed over`() {
         // Arrange
         coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns PolymarketEntry.RegionBlocked.right()
         val paramsContainerSlot = slot<ParamsContainer>()
         val appComponentContext = createAppComponentContext(paramsContainerSlot = paramsContainerSlot)
 
         // Act
-        PolymarketOnboardingComponent(appComponentContext = appComponentContext, params = params)
+        PolymarketOnboardingComponent(
+            appComponentContext = appComponentContext,
+            userWalletId = userWalletId,
+        )
 
         // Assert
-        assertThat(paramsContainerSlot.captured.require<PolymarketComponent.Params>()).isEqualTo(params)
+        assertThat(paramsContainerSlot.captured.require<PolymarketOnboardingParams>())
+            .isEqualTo(PolymarketOnboardingParams(userWalletId = userWalletId))
     }
 
     private fun createAppComponentContext(paramsContainerSlot: CapturingSlot<ParamsContainer>): AppComponentContext {
@@ -79,6 +83,7 @@ internal class PolymarketOnboardingComponentTest {
 
         return mockk<AppComponentContext>(relaxed = true).also {
             every { it.instanceKeeper } returns InstanceKeeperDispatcher()
+            every { it.stateKeeper } returns StateKeeperDispatcher()
             every { it.tags } returns HashMap()
             every { it.hiltComponentBuilder } returns hiltComponentBuilder
             every { it.router } returns router
