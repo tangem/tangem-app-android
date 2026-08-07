@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.visa
+package com.tangem.spend.datasource.pay.store
 
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.tangem.datasource.local.preferences.AppPreferencesStore

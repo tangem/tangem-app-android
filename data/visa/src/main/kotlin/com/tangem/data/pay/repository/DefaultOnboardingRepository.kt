@@ -16,7 +16,7 @@ import com.tangem.spend.datasource.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.spend.datasource.pay.models.request.VirtualAccountOrderRequest
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
-import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
+import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
