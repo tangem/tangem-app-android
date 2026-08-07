@@ -10,7 +10,6 @@ import com.tangem.domain.models.ReceiveAddressModel.DisplayType
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 
@@ -19,14 +18,13 @@ import javax.inject.Inject
 internal class TangemPayAddFundsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    virtualAccountToggles: VirtualAccountFeatureToggles,
     tangemPayFeatureToggles: TangemPayFeatureToggles,
     analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayAddFundsComponent.Params>()
 
-    private val isBankTransferShown = virtualAccountToggles.isVaMvp0Enabled && params.virtualAccountOnramp != null
+    private val isBankTransferShown = params.virtualAccountOnramp != null
 
     private val isMultichainEnabled = tangemPayFeatureToggles.isAccountMultichainEnabled
 

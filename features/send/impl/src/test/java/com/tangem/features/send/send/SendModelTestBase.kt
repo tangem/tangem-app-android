@@ -245,7 +245,6 @@ internal abstract class SendModelTestBase {
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
-            sendFeatureToggles = sendFeatureToggles,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,
         )
     }
