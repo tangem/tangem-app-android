@@ -31,12 +31,10 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
-    private val isRemoveAccountEnabled: Boolean,
     private val isTiersPlusPlanEnabled: Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(
         intents = intents,
-        isRemoveAccountEnabled = isRemoveAccountEnabled,
         isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
     )
 
@@ -227,19 +225,17 @@ internal class TangemPayDetailsStateFactory(
                     ),
                 ),
             )
-            if (isRemoveAccountEnabled) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = resourceReference(R.string.tangempay_remove_account),
-                        onClick = intents::onRemoveAccount,
-                        icon = TangemIconUM.Icon(
-                            iconRes = CoreUiR.drawable.ic_trash_24,
-                            tintReference = { TangemTheme.colors3.icon.status.error },
-                        ),
-                        titleColor = { TangemTheme.colors3.text.status.error },
+            add(
+                TangemPayDropDownItemUM(
+                    title = resourceReference(R.string.tangempay_remove_account),
+                    onClick = intents::onRemoveAccount,
+                    icon = TangemIconUM.Icon(
+                        iconRes = CoreUiR.drawable.ic_trash_24,
+                        tintReference = { TangemTheme.colors3.icon.status.error },
                     ),
-                )
-            }
+                    titleColor = { TangemTheme.colors3.text.status.error },
+                ),
+            )
         }.toImmutableList()
     }
 

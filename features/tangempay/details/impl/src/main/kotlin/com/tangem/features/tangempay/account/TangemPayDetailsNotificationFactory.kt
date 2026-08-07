@@ -12,7 +12,6 @@ import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 
 internal class TangemPayDetailsNotificationFactory(
     private val intents: TangemPayDetailIntents,
-    private val isRemoveAccountEnabled: Boolean,
     private val isTiersPlusPlanEnabled: Boolean,
 ) {
     fun createErrorConfig(error: PaymentAccountStatusValue.Error?): NotificationConfig? = when (error) {
@@ -25,14 +24,10 @@ internal class TangemPayDetailsNotificationFactory(
         title = resourceReference(R.string.tangempay_account_deactivated_message_title),
         subtitle = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
         iconResId = R.drawable.ic_alert_circle_24,
-        buttonsState = if (isRemoveAccountEnabled) {
-            NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.tangempay_remove_account),
-                onClick = intents::onRemoveAccount,
-            )
-        } else {
-            null
-        },
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(R.string.tangempay_remove_account),
+            onClick = intents::onRemoveAccount,
+        ),
     )
 
     fun createTiersConfig(tariffPlan: TangemPayTariffPlanState?): NotificationConfig? {

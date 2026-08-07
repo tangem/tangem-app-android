@@ -49,34 +49,6 @@ internal class DefaultStakingFeatureTogglesTest {
     }
 
     @Test
-    fun `GIVEN toggle enabled WHEN isRegionUnavailableHandlingEnabled THEN returns true`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED)
-        } returns true
-
-        // Act
-        val result = toggles.isRegionUnavailableHandlingEnabled()
-
-        // Assert
-        assertThat(result).isTrue()
-    }
-
-    @Test
-    fun `GIVEN toggle disabled WHEN isRegionUnavailableHandlingEnabled THEN returns false`() {
-        // Arrange
-        every {
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED)
-        } returns false
-
-        // Act
-        val result = toggles.isRegionUnavailableHandlingEnabled()
-
-        // Assert
-        assertThat(result).isFalse()
-    }
-
-    @Test
     fun `GIVEN TWI_1602_STAKING_TRANSACTION_VALIDATION enabled WHEN isTransactionValidationEnabled THEN true`() {
         // Arrange
         every {

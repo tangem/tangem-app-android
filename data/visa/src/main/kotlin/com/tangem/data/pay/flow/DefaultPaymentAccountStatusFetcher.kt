@@ -23,7 +23,6 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -64,7 +63,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
-    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
 ) : PaymentAccountStatusFetcher {
@@ -486,7 +484,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638). Gated by the feature toggle.
+     * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638).
      *
      * Resolution order:
      * 1. A product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted VA order id
@@ -500,8 +498,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      *    the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
      */
     private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp? {
-        if (!virtualAccountFeatureToggles.isVaMvp0Enabled) return null
-
         val accountInstance = productInstances.firstOrNull {
             it.specificationDataType == SpecificationDataType.ACCOUNT
         }

@@ -48,7 +48,7 @@ internal fun SendDestinationContent(
     state: DestinationUM,
     clickIntents: SendDestinationClickIntents,
     isBalanceHidden: Boolean,
-    contactsBlock: AddressBookContactsBlockComponent? = null,
+    contactsBlock: AddressBookContactsBlockComponent,
 ) {
     if (state !is DestinationUM.Content) return
     val recipients = state.recent
@@ -77,7 +77,7 @@ internal fun SendDestinationContent(
                 onMemoChange = clickIntents::onRecipientMemoValueChange,
             )
         }
-        if (contactsBlock != null && !state.isRecentHidden) {
+        if (!state.isRecentHidden) {
             item(key = "CONTACTS_BLOCK_KEY") {
                 contactsBlock.Content(
                     modifier = Modifier

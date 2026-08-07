@@ -1,13 +1,10 @@
 package com.tangem.data.feedback.di
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.navigation.email.EmailSender
-import com.tangem.data.feedback.DefaultFeedbackFeatureToggles
 import com.tangem.data.feedback.DefaultFeedbackRepository
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
@@ -36,11 +33,5 @@ internal object FeedbackModule {
             appInfoProvider = appInfoProvider,
             userWalletsListRepository = userWalletsListRepository,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideFeedbackFeatureToggles(featureTogglesManager: FeatureTogglesManager): FeedbackFeatureToggles {
-        return DefaultFeedbackFeatureToggles(featureTogglesManager)
     }
 }

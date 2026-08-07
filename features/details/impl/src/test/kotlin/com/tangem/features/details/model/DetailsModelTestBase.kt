@@ -9,7 +9,6 @@ import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -22,7 +21,6 @@ import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsItemUM
@@ -49,8 +47,6 @@ internal abstract class DetailsModelTestBase {
     protected val buyUrl = "https://tangem.com/buy"
 
     protected val socialsBuilder: SocialsBuilder = mockk()
-    protected val feedbackFeatureToggles: FeedbackFeatureToggles = mockk()
-    protected val addressBookFeatureToggles: AddressBookFeatureToggles = mockk()
     protected val itemsBuilder: ItemsBuilder = mockk()
     protected val appInfoProvider: AppInfoProvider = mockk()
     protected val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase = mockk()
@@ -69,7 +65,6 @@ internal abstract class DetailsModelTestBase {
 
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
     protected val wcSlot = slot<Boolean>()
-    protected val abSlot = slot<Boolean>()
     protected val mobileSlot = slot<Boolean>()
     protected val walletIdSlot = slot<UserWalletId>()
     protected val onSupportSlot = slot<() -> Unit>()
@@ -82,8 +77,6 @@ internal abstract class DetailsModelTestBase {
 
         // Defaults sufficient for model construction (init block).
         coEvery { checkIsWalletConnectAvailableUseCase(any()) } returns false.right()
-        every { addressBookFeatureToggles.isAddressBookEnabled } returns false
-        every { feedbackFeatureToggles.isUsedeskEnabled } returns false
         every { getWalletsUseCase.invokeSync() } returns emptyList()
         every { socialsBuilder.buildAll() } returns persistentListOf()
         every { appInfoProvider.appVersion } returns "1.2.3"
@@ -95,7 +88,6 @@ internal abstract class DetailsModelTestBase {
         every {
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = capture(wcSlot),
-                isAddressBookAvailable = capture(abSlot),
                 hasAnyMobileWallet = capture(mobileSlot),
                 userWalletId = capture(walletIdSlot),
                 onSupportClick = capture(onSupportSlot),
@@ -114,8 +106,6 @@ internal abstract class DetailsModelTestBase {
     protected fun createModel(testScope: TestScope): DetailsModel = DetailsModel(
         socialsBuilder = socialsBuilder,
         paramsContainer = MutableParamsContainer(DetailsComponent.Params(userWalletId)),
-        feedbackFeatureToggles = feedbackFeatureToggles,
-        addressBookFeatureToggles = addressBookFeatureToggles,
         itemsBuilder = itemsBuilder,
         appInfoProvider = appInfoProvider,
         checkIsWalletConnectAvailableUseCase = checkIsWalletConnectAvailableUseCase,
@@ -136,7 +126,7 @@ internal abstract class DetailsModelTestBase {
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {
         every {
-            itemsBuilder.buildAll(any(), any(), any(), any(), any(), any())
+            itemsBuilder.buildAll(any(), any(), any(), any(), any())
         } returns list
     }
 

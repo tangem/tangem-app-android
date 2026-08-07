@@ -122,7 +122,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private val SwapCurrencyStatus.isYieldSwapActive: Boolean
-        get() = swapFeatureToggles.isYieldSwapEnabled && isYieldSupplyActive
+        get() = isYieldSupplyActive
 
     /**
      * Set of integrated-approve contexts for which the simulated swap-fee estimation
@@ -344,16 +344,6 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState>? {
-        if (fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isActive == true &&
-            !swapFeatureToggles.isYieldSwapEnabled
-        ) {
-            return provider to produceDexSwapDataError(
-                error = ExpressDataError.DexActiveSupplyError(),
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                amount = amount,
-            )
-        }
-
         val maybeQuote = repository.findBestQuote(
             userWallet = fromSwapCurrencyStatus.userWallet,
             fromContractAddress = fromSwapCurrencyStatus.currency.getContractAddress(),
