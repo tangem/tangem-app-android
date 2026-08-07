@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.onboarding.model
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -20,6 +21,7 @@ import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboard
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,16 +35,22 @@ import javax.inject.Inject
  * eligible wallets when the caller left that choice to the user. This model only resolves the entry decision
  * for that already-fixed wallet.
  *
- * Resolving the entry may open a card session, so it runs once on init and is repeated only when the user
- * retries. A failed resolution never falls through to the feed: the region is unknown, and treating that as
- * permission would let a restricted user trade — it raises the error overlay instead, which offers only retry.
+ * Opening the gate prompts the user for nothing. It resolves only as far as it can without a card session or a
+ * wallet unlock, so a wallet that has not derived the Polymarket key here lands on the Welcome screen with an
+ * idle button instead of an unasked-for card prompt. The full decision — including that derivation — is taken
+ * when the user presses the button, and it goes through the same use case, so the two can never disagree.
+ *
+ * That decision is deliberately deferred, not guessed: an undetermined wallet is never reported as having no
+ * deposit wallet. A user returning after a reinstall or on a second device presses the button once and is then
+ * taken to their existing wallet rather than being told it does not exist.
+ *
+ * A failed resolution never falls through to the feed: the region is unknown, and treating that as permission
+ * would let a restricted user trade. Which failure surface applies depends on who asked — a failure while the
+ * gate opens raises the error overlay, since there is nothing else on screen to retry from, while a failure
+ * after the user pressed the button returns that button to idle, because the button is itself the retry.
  *
  * A superseded resolution never reports its outcome: the use case turns cancellation into a failure instead of
  * propagating it, so a retried attempt would otherwise overwrite the fresh state with the stale error.
- *
- * A failed run returns the button to idle rather than raising an overlay: pressing Start again resumes the
- * run, which the use case supports. A failure the backend reports as not retryable will fail again — the
- * known gap the error design has to close.
  */
 @ModelScoped
 internal class PolymarketOnboardingModel @Inject constructor(
@@ -81,7 +89,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
         modelScope.launch {
             uiState.value = welcome(isStarting = true)
 
-            val result = resolvePolymarketEntryInteractor(walletId)
+            val result = resolvePolymarketEntryInteractor.withoutPrompting(walletId)
 
             ensureActive()
 
@@ -92,23 +100,26 @@ internal class PolymarketOnboardingModel @Inject constructor(
                         overlay = PolymarketOnboardingUM.Overlay.Error(onRetryClick = { resolveEntry(walletId) }),
                     )
                 },
-                ifRight = { entry ->
-                    when (entry) {
-                        is PolymarketEntry.Onboard -> uiState.value = welcome(
-                            isStarting = false,
-                            startButtonText = startButtonText(status = entry.status),
-                        )
-                        is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
-                        PolymarketEntry.RegionBlocked -> uiState.value = welcome(
-                            isStarting = false,
-                            overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(
-                                onDismiss = ::onRegionRestrictionsDismiss,
-                            ),
-                        )
-                    }
-                },
+                ifRight = { entry -> renderEntry(entry) },
             )
         }.saveIn(resolveJob)
+    }
+
+    private fun renderEntry(entry: PolymarketEntry) {
+        when (entry) {
+            is PolymarketEntry.Onboard -> uiState.value = welcome(
+                isStarting = false,
+                startButtonText = startButtonText(status = entry.status),
+            )
+            PolymarketEntry.Undetermined -> uiState.value = welcome(isStarting = false)
+            is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
+            PolymarketEntry.RegionBlocked -> uiState.value = welcome(
+                isStarting = false,
+                overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(
+                    onDismiss = ::onRegionRestrictionsDismiss,
+                ),
+            )
+        }
     }
 
     private fun startOnboarding() {
@@ -117,11 +128,36 @@ internal class PolymarketOnboardingModel @Inject constructor(
         uiState.value = uiState.value.copy(isStarting = true)
 
         modelScope.launch {
-            runPolymarketOnboardingUseCase(userWalletId).collect { progress ->
-                ensureActive()
-                render(progress)
+            val entry = resolvePolymarketEntryInteractor(userWalletId)
+                .getOrElse {
+                    uiState.value = uiState.value.copy(isStarting = false)
+                    return@launch
+                }
+
+            ensureActive()
+
+            when (entry) {
+                // The gate could not decide, or decided there is onboarding left to do — either way the run is
+                // next, and it re-reads the status itself before signing anything.
+                is PolymarketEntry.Onboard,
+                PolymarketEntry.Undetermined,
+                -> runOnboarding()
+                is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
+                PolymarketEntry.RegionBlocked -> uiState.value = welcome(
+                    isStarting = false,
+                    overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(
+                        onDismiss = ::onRegionRestrictionsDismiss,
+                    ),
+                )
             }
         }.saveIn(onboardingJob)
+    }
+
+    private suspend fun CoroutineScope.runOnboarding() {
+        runPolymarketOnboardingUseCase(userWalletId).collect { progress ->
+            ensureActive()
+            render(progress)
+        }
     }
 
     private fun render(progress: PolymarketOnboardingProgress) {
