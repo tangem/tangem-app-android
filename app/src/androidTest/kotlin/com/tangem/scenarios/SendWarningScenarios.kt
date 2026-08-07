@@ -13,24 +13,37 @@ fun BaseTestCase.checkSendWarning(
 ) {
     val assertDisplay = if (isDisplayed) "displayed" else "not displayed"
 
+    // When we expect the warning to be absent, it may still be finishing its disappear animation right after the
+    // Confirm screen opens (e.g. after re-entering a valid address), so poll the Compose tree until it is actually
+    // gone instead of asserting once. When we expect it to be present, assert straight away.
+    fun assertWarning(block: () -> Unit) {
+        if (isDisplayed) block() else awaitSuccess(block = block)
+    }
+
     step("Assert 'Send confirm screen' is displayed") {
         onSendConfirmScreen {
             appBarTitle.assertIsDisplayed()
         }
     }
     step("Assert warning title is $assertDisplay") {
-        onSendConfirmScreen {
-            warningTitle(title).assertVisibility(isDisplayed)
+        assertWarning {
+            onSendConfirmScreen {
+                warningTitle(title).assertVisibility(isDisplayed)
+            }
         }
     }
     step("Assert warning icon is $assertDisplay") {
-        onSendConfirmScreen {
-            sendWarningIcon(message).assertVisibility(isDisplayed)
+        assertWarning {
+            onSendConfirmScreen {
+                sendWarningIcon(message).assertVisibility(isDisplayed)
+            }
         }
     }
     step("Assert warning message is $assertDisplay") {
-        onSendConfirmScreen {
-            sendWarningMessage(message).assertVisibility(isDisplayed)
+        assertWarning {
+            onSendConfirmScreen {
+                sendWarningMessage(message).assertVisibility(isDisplayed)
+            }
         }
     }
     if (sendButtonIsDisabled)
@@ -41,8 +54,10 @@ fun BaseTestCase.checkSendWarning(
         }
     else
         step("Assert 'Send' button is enabled") {
-            onSendConfirmScreen {
-                sendButton.assertIsEnabled()
+            awaitSuccess {
+                onSendConfirmScreen {
+                    sendButton.assertIsEnabled()
+                }
             }
         }
 }

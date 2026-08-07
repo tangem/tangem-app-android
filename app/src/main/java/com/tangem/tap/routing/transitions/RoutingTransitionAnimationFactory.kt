@@ -29,6 +29,13 @@ object RoutingTransitionAnimationFactory {
                     animationSpec = tween(400),
                 ),
             )
+            is AppRoute.CurrencyDetails,
+            -> slideAndFade(
+                // Token details owns a hazeEffect top bar. Alpha-animating it while it is covered by
+                // or revealed from another screen blinks black over the blurred region — the same
+                // artifact WalletTopBar hit above. Keep the fade only for the FRONT directions.
+                fadeDirections = setOf(Direction.ENTER_FRONT, Direction.EXIT_FRONT),
+            )
             else -> slideAndFade()
         }
     }

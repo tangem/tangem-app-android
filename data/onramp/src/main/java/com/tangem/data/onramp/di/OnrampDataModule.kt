@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.onramp.DefaultHotCryptoRepository
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
@@ -59,6 +60,7 @@ internal object OnrampDataModule {
         dataSignatureVerifier: DataSignatureVerifier,
         onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
         expressHistoryDao: ExpressHistoryDao,
+        expressHistoryRepository: ExpressHistoryRepository,
         txHistoryFeatureToggles: TxHistoryFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): OnrampRepository {
@@ -76,6 +78,7 @@ internal object OnrampDataModule {
             walletManagersFacade = walletManagersFacade,
             dataSignatureVerifier = dataSignatureVerifier,
             expressHistoryDao = expressHistoryDao,
+            expressHistoryRepository = expressHistoryRepository,
             txHistoryFeatureToggles = txHistoryFeatureToggles,
             moshi = moshi,
         )

@@ -16,7 +16,8 @@ import com.tangem.datasource.api.pay.models.request.VirtualAccountOrderRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
-import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.data.pay.store.TangemPayStorage
+import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -28,6 +29,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -50,6 +52,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val paymentAccountStatusStore: PaymentAccountStatusesStore,
+    private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
 ) : OnboardingRepository {
 
     // Save data for a session
@@ -98,8 +101,11 @@ internal class DefaultOnboardingRepository @Inject constructor(
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
             .flatMap { response ->
                 val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
-                val status = result.productInstance?.status
-                val isDeactivated = status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED
+                val productInstances = result.productInstances
+
+                val isDeactivated = productInstances.isNotEmpty() &&
+                    productInstances.all { it.status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED }
+
                 val isFormer = result.state.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
                 if (isDeactivated || isFormer) {
                     tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
@@ -159,7 +165,11 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
             val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
             requestHelper.performRequest(userWalletId) { authHeader ->
-                val data = OrderRequest.Data(customerWalletAddress = walletAddress)
+                val data = OrderRequest.Data(
+                    customerWalletAddress = walletAddress,
+                    specificationName = "SP_000004",
+                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC.wireValue,
+                )
                 tangemPayApi.createOrder(
                     authHeader = authHeader,
                     body = OrderRequest(data = data, idempotencyKey = UUID.randomUUID().toString()),
@@ -254,7 +264,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, shouldShowTangemPayBlock)
             shouldShowTangemPayBlock
         }.mapLeft { error ->
-            if (error is VisaApiError.NotPaeraCustomer) {
+            if (error is VisaApiError.NotFound) {
                 tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, false)
             }
             error
@@ -311,6 +321,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }.map {
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
+            txHistoryItemsStore.remove(userWalletId.stringValue)
             setHideMainOnboardingBanner(userWalletId)
         }
     }

@@ -11,7 +11,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessTokenRequest
 import com.tangem.datasource.api.pay.models.response.TangemPayGetTokensResponse
-import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayAuthTokens

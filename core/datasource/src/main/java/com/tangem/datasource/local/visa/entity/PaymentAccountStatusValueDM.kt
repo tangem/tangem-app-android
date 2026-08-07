@@ -93,6 +93,13 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "admin_daily_limit") val adminDailyLimit: SerializedBigDecimal?,
         @Json(name = "frozen_state") val frozenState: String,
         @Json(name = "last_digits") val lastDigits: String,
+        @Json(name = "images") val images: List<ImageDM>,
         @Json(name = "state") val state: String,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class ImageDM(
+        @Json(name = "type") val type: String,
+        @Json(name = "url") val url: String,
     )
 }

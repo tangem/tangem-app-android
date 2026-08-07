@@ -80,7 +80,7 @@ internal class DefaultWalletsPromoRepository(
     }
 
     @JsonClass(generateAdapter = true)
-    private data class ReferralWalletsBindingData(
+    internal data class ReferralWalletsBindingData(
         @Json(name = "refcode") val refcode: String,
         @Json(name = "campaign") val campaign: String?,
         @Json(name = "done") val isDone: Boolean,

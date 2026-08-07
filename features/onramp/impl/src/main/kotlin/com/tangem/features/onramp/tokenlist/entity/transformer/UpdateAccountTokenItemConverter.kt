@@ -8,7 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
+import com.tangem.features.onramp.tokenlist.entity.AccountAvailabilityUM
 import com.tangem.features.onramp.tokenlist.entity.utils.OnrampTokenItemStateConverterFactory
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
