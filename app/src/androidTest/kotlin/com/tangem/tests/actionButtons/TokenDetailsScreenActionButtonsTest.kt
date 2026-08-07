@@ -6,7 +6,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.checkQrCodeBottomSheetScenario
@@ -14,6 +13,7 @@ import com.tangem.scenarios.goToQrCodeBottomSheet
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSendFromTokenDetails
 import com.tangem.scenarios.openSwapFromZeroBalanceToken
+import com.tangem.scenarios.pullToRefreshMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onDialog
@@ -312,15 +312,15 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
     fun sendBlockedWhileTransactionActiveTest() {
         val tokenName = "Dogecoin"
         val txHistoryScenarioName = "dogecoin_tx_history"
-        // "EmptyWithPendingTransaction" is the only state whose mapping also answers the *query-less* address
-        // request — the one the wallet manager updates balances from, and therefore the one that decides whether
-        // 'Send' is blocked. States like "UnconfirmedOutgoing" only answer `?details=txs`, so they populate the
-        // transaction-history screen while the wallet manager still sees no pending transaction.
-        val activeTxState = "EmptyWithPendingTransaction"
+        // "UnconfirmedOutgoing" answers both address requests: `?details=txs` (the history screen) and the
+        // query-less one (the balance the wallet manager reads), so the transaction is both visible in the
+        // history and blocking 'Send' — which is what the test case expects.
+        val activeTxState = "UnconfirmedOutgoing"
         // "Empty" answers `?details=txs` only, so the query-less request falls through to dogecoin_balance and
-        // reports no pending transaction. Balance stays 5.8 DOGE in both states — only the pending flag changes.
-        // Not "Started"/"OutgoingTransaction": their responses carry an unconfirmed transaction as well.
+        // reports no pending transaction. Not "Started"/"OutgoingTransaction": their responses carry an
+        // unconfirmed transaction as well, so neither can mean "the transaction is done".
         val completedTxState = "Empty"
+        val sendingTitle = getResourceString(R.string.common_sending)
         val pendingSendMessagePrefix =
             getResourceString(R.string.token_button_unavailability_reason_pending_transaction_send).substringBefore("%")
 
@@ -349,6 +349,11 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Assert 'Token details' screen is displayed") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
+            step("Assert active outgoing '$sendingTitle' transaction block is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTxHistoryScreen { transactionItem(sendingTitle).assertIsDisplayed() }
+                }
+            }
             step("Open the transfer bottom sheet") {
                 onTokenDetailsScreen { transferButton.clickWithAssertion() }
             }
@@ -373,12 +378,10 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Set WireMock scenario: '$txHistoryScenarioName' to state: '$completedTxState'") {
                 setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = completedTxState)
             }
-            // Refreshed from 'Main', not from 'Token details': the token-details pull-to-refresh only re-reads
-            // the transaction history (`?details=txs`), while the pending transaction that blocks 'Send' comes
-            // from the balance request, which is re-issued by the main-screen refresh. Verified in the CI
-            // WireMock log — after a token-details refresh, no balance request is made at all.
             // Via the top-bar button, not `pressBack()`: a back press right after the dialog is swallowed by
-            // the dismissing bottom sheet and leaves the test on 'Token details'.
+            // the dismissing bottom sheet and leaves the test on 'Token details'. And refreshed from 'Main',
+            // not from 'Token details': only the main-screen refresh re-issues the balance request the wallet
+            // manager reads the pending transaction from (verified in the WireMock journal).
             step("Go back to 'Main' screen") {
                 onTokenDetailsTopBar { backButton.clickWithAssertion() }
             }
@@ -388,8 +391,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 }
             }
             step("Pull to refresh on 'Main' screen") {
-                pullToRefresh(steps = 10)
-                waitForIdle()
+                pullToRefreshMainScreen()
             }
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
