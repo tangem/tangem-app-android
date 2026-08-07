@@ -188,7 +188,12 @@ internal class PolymarketMainModelTest {
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).events.single().onClick()
 
         // Assert
-        verify { router.push(PolymarketRoute.EventDetails(eventId = "event-1"), any()) }
+        verify {
+            router.push(
+                PolymarketRoute.EventDetails(eventId = "event-1", userWalletId = userWalletId),
+                any(),
+            )
+        }
     }
 
     @Test
@@ -209,7 +214,12 @@ internal class PolymarketMainModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(eventId = "event-1", marketId = "market-1", assetId = "asset-1"),
+                PolymarketRoute.EventDetails(
+                    eventId = "event-1",
+                    userWalletId = userWalletId,
+                    marketId = "market-1",
+                    assetId = "asset-1",
+                ),
                 any(),
             )
         }
@@ -230,11 +240,13 @@ internal class PolymarketMainModelTest {
         verify { router.pop(any()) }
     }
 
+    private val userWalletId = UserWalletId("011")
+
     private fun createModel(testScope: TestScope): PolymarketMainModel {
         return PolymarketMainModel(
             paramsContainer = MutableParamsContainer(
                 value = PolymarketMainParams(
-                    userWalletId = UserWalletId("011"),
+                    userWalletId = userWalletId,
                     accessMode = PolymarketAccessMode.TRADING,
                 ),
             ),
