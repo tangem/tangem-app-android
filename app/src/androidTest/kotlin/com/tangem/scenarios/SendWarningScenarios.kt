@@ -1,6 +1,7 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.screens.onSendConfirmScreen
 import io.qameta.allure.kotlin.Allure.step
@@ -23,6 +24,18 @@ fun BaseTestCase.checkSendWarning(
     step("Assert 'Send confirm screen' is displayed") {
         onSendConfirmScreen {
             appBarTitle.assertIsDisplayed()
+        }
+    }
+    // Every assertion below depends on the fee: it decides whether the reserve warning applies and whether
+    // 'Send' is enabled, and it is re-fetched whenever the recipient changes. Asserting while it is still in
+    // flight makes these tests fail at random (a warning that reappears, a button that never enables).
+    step("Wait for the network fee to finish loading") {
+        var previousFee: String? = null
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            val currentFee = readNetworkFeeAmount()
+            val isStable = currentFee.isNotEmpty() && currentFee == previousFee
+            previousFee = currentFee
+            if (!isStable) throw AssertionError("Network fee is still settling (current='$currentFee')")
         }
     }
     step("Assert warning title is $assertDisplay") {
