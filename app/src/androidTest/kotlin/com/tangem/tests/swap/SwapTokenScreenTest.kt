@@ -25,15 +25,20 @@ import org.junit.Test
 @HiltAndroidTest
 class SwapTokenScreenTest : BaseTestCase() {
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
+    // Express stays on MOCK (the rule's default): pointing it at PROD made the test depend on which
+    // providers the live exchange happened to offer for the pair, which is exactly what made it flaky.
+    // The mocked ETH -> POL (Ethereum) pair carries 1inch alongside the CEX providers, so the ALL/CEX/DEX
+    // filter the case asks for is always there.
     @AllureId("9456")
     @DisplayName("Swap: provider modal shows ALL/CEX/DEX filter and the picked provider appears in the tab")
     @Test
     fun checkProviderTypeFilterTest() {
         val fromTokenSymbol = "ETH"
         val receiveTokenName = "POL (ex-MATIC)"
+        // The wallet holds POL on two networks and only the Ethereum one has a DEX provider (1inch) next to
+        // Picking by name alone lands on the Polygon one about half the time, whose pair is CEX-only, and
+        // then no type filter can ever appear — no amount of reopening the sheet helps.
+        val receiveTokenNetwork = "Ethereum network"
         val inputAmount = "0.1"
         val allFilter = getResourceString(R.string.common_all)
         val cexFilter = "CEX"
@@ -56,7 +61,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 }
             }
             step("Choose receive token '$receiveTokenName'") {
-                chooseReceiveToken(receiveTokenName)
+                chooseReceiveToken(receiveTokenName, receiveTokenNetwork)
             }
             step("Input swap amount '$inputAmount'") {
                 waitForIdle()
