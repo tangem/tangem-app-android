@@ -48,6 +48,9 @@ class TotalBalanceTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses(assertBalance = false)
             }
+            // The shimmer is only rendered for WalletBalanceUM.Loading — an unsynced wallet shows a placeholder
+            // or a dash instead, so the sync above is a precondition, not a delay. The quotes mock is slow
+            // enough (30s) for the balance to still be loading by the time this runs.
             step("Assert shimmer instead of Total balance is displayed") {
                 flakySafely {
                     onMainScreen { totalBalanceShimmer.assertIsDisplayed() }

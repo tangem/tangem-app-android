@@ -26,10 +26,10 @@ fun BaseTestCase.checkSendWarning(
             appBarTitle.assertIsDisplayed()
         }
     }
-    // Every assertion below depends on the fee: it decides whether the reserve warning applies and whether
-    // 'Send' is enabled, and it is re-fetched whenever the recipient changes. Asserting while it is still in
-    // flight makes these tests fail at random (a warning that reappears, a button that never enables).
-    step("Wait for the network fee to finish loading") {
+    // Only when the screen is expected to be usable. The fee decides whether a warning applies and whether
+    // 'Send' is enabled, so the checks race it — but an amount that is invalid on purpose (dust change, for
+    // instance) never gets a fee at all, and waiting for one there hangs until the timeout.
+    if (!isDisplayed) step("Wait for the network fee to finish loading") {
         var previousFee: String? = null
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             val currentFee = readNetworkFeeAmount()
