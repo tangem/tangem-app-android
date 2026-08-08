@@ -1,4 +1,4 @@
-package com.tangem.domain.polymarket.usecase
+package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
 import arrow.core.raise.either
@@ -9,6 +9,10 @@ import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -27,7 +31,7 @@ import com.tangem.utils.logging.TangemLogger
  * leave the status ready with nothing usable to sign with. Such a user still owes onboarding, which derives
  * the credentials before it reports itself finished.
  */
-class ResolvePolymarketEntryUseCase(
+class ResolvePolymarketEntryInteractor(
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
