@@ -13,7 +13,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEntry
-import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingParams
@@ -39,7 +39,7 @@ internal class PolymarketOnboardingComponentTest {
 
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
-    private val resolvePolymarketEntryUseCase: ResolvePolymarketEntryUseCase = mockk()
+    private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor = mockk()
     private val runPolymarketOnboardingUseCase: RunPolymarketOnboardingUseCase = mockk()
 
     private val userWalletId = UserWalletId("011")
@@ -52,7 +52,7 @@ internal class PolymarketOnboardingComponentTest {
     @Test
     fun `GIVEN the gate is created WHEN its model is resolved THEN the settled wallet is handed over`() {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns PolymarketEntry.RegionBlocked.right()
+        coEvery { resolvePolymarketEntryInteractor(userWalletId) } returns PolymarketEntry.RegionBlocked.right()
         val paramsContainerSlot = slot<ParamsContainer>()
         val appComponentContext = createAppComponentContext(paramsContainerSlot = paramsContainerSlot)
 
@@ -94,7 +94,7 @@ internal class PolymarketOnboardingComponentTest {
         paramsContainer = paramsContainer,
         router = router,
         urlOpener = urlOpener,
-        resolvePolymarketEntryUseCase = resolvePolymarketEntryUseCase,
+        resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
         runPolymarketOnboardingUseCase = runPolymarketOnboardingUseCase,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
