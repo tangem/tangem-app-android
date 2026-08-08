@@ -13,7 +13,7 @@ import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
@@ -49,7 +49,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val urlOpener: UrlOpener,
-    private val resolvePolymarketEntryUseCase: ResolvePolymarketEntryUseCase,
+    private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor,
     private val runPolymarketOnboardingUseCase: RunPolymarketOnboardingUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -81,7 +81,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
         modelScope.launch {
             uiState.value = welcome(isStarting = true)
 
-            val result = resolvePolymarketEntryUseCase(walletId)
+            val result = resolvePolymarketEntryInteractor(walletId)
 
             ensureActive()
 
