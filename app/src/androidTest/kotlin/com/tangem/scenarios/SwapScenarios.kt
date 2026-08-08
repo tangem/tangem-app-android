@@ -454,6 +454,16 @@ fun BaseTestCase.chooseReceiveToken(tokenName: String) {
     }
 }
 
+/** Use when the wallet holds [tokenName] on more than one network — see [tokenWithNameAndNetwork]. */
+fun BaseTestCase.chooseReceiveToken(tokenName: String, networkName: String) {
+    step("Click on 'Choose token' button") {
+        onSwapTokenScreen { chooseTokenButton.performClick() }
+    }
+    step("Click on token '$tokenName' on the $networkName network") {
+        onSwapSelectTokenScreen { tokenWithNameAndNetwork(tokenName, networkName).performClick() }
+    }
+}
+
 /** Reopens the receive selector via the receive-card icon and picks [tokenName] directly — the reopened selector keeps the account expanded. */
 fun BaseTestCase.changeReceiveToken(tokenName: String) {
     step("Open receive token selector") {
