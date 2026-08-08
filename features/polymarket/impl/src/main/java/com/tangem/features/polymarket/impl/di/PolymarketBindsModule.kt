@@ -11,7 +11,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.HasPolymarketDepositNetworkUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
@@ -79,12 +79,12 @@ internal object PolymarketDomainUseCasesModule {
 
     @Provides
     @Singleton
-    fun provideResolvePolymarketEntryUseCase(
+    fun provideResolvePolymarketEntryInteractor(
         checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
         derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
-    ): ResolvePolymarketEntryUseCase = ResolvePolymarketEntryUseCase(
+    ): ResolvePolymarketEntryInteractor = ResolvePolymarketEntryInteractor(
         checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
