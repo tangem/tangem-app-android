@@ -1,4 +1,4 @@
-package com.tangem.domain.polymarket.usecase
+package com.tangem.domain.polymarket.interactor
 
 import arrow.core.left
 import arrow.core.right
@@ -12,6 +12,10 @@ import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -24,14 +28,14 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class ResolvePolymarketEntryUseCaseTest {
+internal class ResolvePolymarketEntryInteractorTest {
 
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val getWalletStatus: GetPolymarketWalletStatusUseCase = mockk()
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase = mockk()
 
-    private val useCase = ResolvePolymarketEntryUseCase(
+    private val useCase = ResolvePolymarketEntryInteractor(
         checkPolymarketGeoblockUseCase = checkGeoblock,
         derivePolymarketAddressesUseCase = deriveAddresses,
         getPolymarketWalletStatusUseCase = getWalletStatus,
