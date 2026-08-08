@@ -1,5 +1,6 @@
 package com.tangem.tests.staking
 
+import com.kaspersky.kaspresso.testcases.core.testcontext.TestContext
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
@@ -351,8 +352,7 @@ class StakingTest : BaseTestCase() {
                     var noRewards = false
                     onStakingDetailsScreen { noRewards = noRewardsToClaimText.isDisplayedSafely() }
                     if (!noRewards) {
-                        onSendScreen { closeButton.performClick() }
-                        onTokenDetailsScreen { stakingBlock.clickWithAssertion() }
+                        reopenStakingDetails()
                         throw AssertionError("Rewards are still claimable — the staking balance has not reloaded")
                     }
                 }
@@ -524,9 +524,17 @@ class StakingTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onStakingSuccessScreen { closeButton.performClick() }
             }
+            // Re-enters the screen between attempts, the same way claimRewardsTest does: 'Staking details' has
+            // no pull-to-refresh, so a staking balance cached before the scenario switched is never re-read and
+            // 'Your stakes' never appears no matter how long the wait is.
             step("Check 'Staking details' screen after initial stake") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onStakingDetailsScreen { yourStakesTitle.assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 5_000) {
+                    var staked = false
+                    onStakingDetailsScreen { staked = yourStakesTitle.isDisplayedSafely() }
+                    if (!staked) {
+                        reopenStakingDetails()
+                        throw AssertionError("'Your stakes' is still missing — the staking balance has not reloaded")
+                    }
                 }
                 checkStakingDetailsAfterInitialStake()
             }
@@ -587,6 +595,23 @@ class StakingTest : BaseTestCase() {
                     onMainScreen { totalBalanceText.assertTextContains(totalWalletBalance, substring = true) }
                 }
             }
+        }
+    }
+
+    /**
+     * Best-effort reload of 'Staking details': the screen has no pull-to-refresh, so leaving and entering it
+     * again is the only way to re-read the staking balance.
+     *
+     * Deliberately swallows its own failures. It runs between retries of an assertion, and if the close
+     * click lands mid-animation the app can end up on neither screen — that must not fail the test, because
+     * the next retry can still succeed. Note the two screens share the TOKEN_DETAILS_SCREEN_CONTAINER tag,
+     * so the staking block is the only reliable evidence of being back on 'Token details'.
+     */
+    private fun TestContext<Unit>.reopenStakingDetails() {
+        runCatching {
+            onSendScreen { closeButton.performClick() }
+            awaitSuccess { onTokenDetailsScreen { stakingBlock.assertIsDisplayed() } }
+            onTokenDetailsScreen { stakingBlock.clickWithAssertion() }
         }
     }
 }
