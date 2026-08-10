@@ -17,6 +17,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
@@ -259,8 +260,23 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    var uiState: SwapStateHolder by mutableStateOf(stateBuilder.createInitialLoadingState())
-        internal set
+    private var _uiState: SwapStateHolder by mutableStateOf(
+        stateBuilder.createInitialLoadingState().withReverseForcedHiddenInAccountFlow(),
+    )
+
+    /**
+     * Compose-observable swap screen state. The setter forces [ChangeCardsButtonState.HIDDEN] whenever the
+     * screen is driven by an [AccountFlow] (Tangem Pay top-up/withdraw via swap) with the account-swap-flow
+     * toggle on, regardless of what the caller passes in — the reverse (swap direction) action has no
+     * meaning in a fixed-direction account flow. The very first value (the initializer above) goes through
+     * the same rule so the initial frame — rendered before [initTokens]'s async resolution completes on a
+     * real (non-Unconfined) dispatcher — never briefly shows a visible-but-disabled reverse button.
+     */
+    var uiState: SwapStateHolder
+        get() = _uiState
+        internal set(value) {
+            _uiState = value.withReverseForcedHiddenInAccountFlow()
+        }
 
     val feeSelectorRepository = FeeSelectorRepository()
 
@@ -674,6 +690,7 @@ internal class SwapModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun onChangeCardsClicked() {
+        if (swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow != null) return
         modelScope.launch {
             singleTaskScheduler.cancelTask()
 
@@ -2493,8 +2510,21 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    /** Forces [ChangeCardsButtonState.HIDDEN] when this screen is driven by an [AccountFlow] with the toggle on. */
+    private fun SwapStateHolder.withReverseForcedHiddenInAccountFlow(): SwapStateHolder {
+        return if (swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow != null) {
+            copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
+        } else {
+            this
+        }
+    }
+
     fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
-        return fromSwapCurrencyStatus?.account is Account.Payment
+        return if (swapFeatureToggles.isAccountSwapFlowEnabled) {
+            accountFlow is AccountFlow.Withdraw
+        } else {
+            fromSwapCurrencyStatus?.account is Account.Payment
+        }
     }
 
     private fun List<SwapPairLeast>.filterTangemPayProviders(
