@@ -3,9 +3,9 @@ package com.tangem.features.commonfeatures.impl.portfolioselector.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorFeatureToggles
 import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultPortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultPortfolioSelectorController
