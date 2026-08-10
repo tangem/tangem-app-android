@@ -331,8 +331,9 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     /**
      * Resolves a requested token to a concrete portfolio instance. Scopes to [accountIdParam] when it
      * matches an existing account; prefers [preferAccountId] (FROM's resolved account, for TO
-     * resolution); among the remaining candidates picks the most funded one. Returns `null` when the
-     * token isn't present in the portfolio (caller lets the model degrade).
+     * resolution); among the remaining candidates picks the most funded one. Only swap-eligible
+     * tokens are considered. Returns `null` when the token isn't present in the portfolio or isn't
+     * swap-eligible (caller lets the model degrade).
      */
     private fun resolveToken(
         accounts: List<SwapCurrencyStatus>,
@@ -343,7 +344,11 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     ): SwapCurrencyStatus? {
         if (tokenId.isNullOrBlank() || networkId.isNullOrBlank()) return null
 
-        val matches = accounts.filter { candidate -> candidate.matchesToken(tokenId, networkId) }
+        // Only preselect a token that is actually swap-eligible; a held-but-unavailable token is
+        // treated as not present, so the caller degrades (FROM -> most-funded, TO -> manual).
+        val matches = accounts.filter { candidate ->
+            candidate.matchesToken(tokenId, networkId) && candidate.isAvailableForSwap
+        }
         if (matches.isEmpty()) return null
 
         val scoped = accountIdParam
