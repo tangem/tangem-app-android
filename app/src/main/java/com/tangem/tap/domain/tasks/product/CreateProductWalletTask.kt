@@ -252,8 +252,8 @@ private class CreateWalletTangemWallet(
         // when importing a wallet from a mnemonic, the master secret must be deterministic:
         // the BIP-85 root key (m/83696968') derived from the mnemonic + passphrase
         val bip85MasterKey = runCatching {
-            mnemonic?.let {
-                AnyMasterKeyFactory(mnemonic = it, passphrase = passphrase.orEmpty())
+            mnemonic?.let { mn ->
+                AnyMasterKeyFactory(mnemonic = mn, passphrase = passphrase.orEmpty())
                     .makeMasterKey(EllipticCurve.Secp256k1)
                     .derivePrivateKey(node = DerivationNode.Hardened(BIP85_ROOT_NODE_INDEX))
             }
