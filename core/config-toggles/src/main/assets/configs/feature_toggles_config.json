@@ -98,5 +98,9 @@
     {
         "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1611_JOINT_ACCOUNT_ENABLED",
+        "version": "undefined"
     }
 ]
