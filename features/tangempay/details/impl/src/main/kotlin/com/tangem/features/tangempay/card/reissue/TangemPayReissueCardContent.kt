@@ -80,7 +80,8 @@ private fun Content(state: TangemPayReissueCardUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SpacerH(16.dp)
@@ -105,8 +106,8 @@ private fun Content(state: TangemPayReissueCardUM) {
         if (state.error == TangemPayReissueCardError.InsufficientFunds) {
             SpacerH(8.dp)
             TangemPayInsufficientFundsNotification(onAddFundsClick = state.onAddFundsClick)
+            SpacerH(12.dp)
         }
-        SpacerH(8.dp)
         BottomButtonsBlock(state = state, appearance = appearance)
     }
 }
@@ -204,16 +205,8 @@ private fun BottomButtonsBlock(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(vertical = 16.dp),
     ) {
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Secondary,
-            size = TangemButton.Size.X12,
-            onClick = state.onDismissRequest,
-            text = resourceReference(R.string.common_cancel),
-        )
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
