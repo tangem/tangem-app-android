@@ -54,8 +54,6 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
         .catchOn(dispatchers.io) {
             val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId) ?: return@catchOn null
 
-            // A locked Hot wallet reports no wallets, which reads as "not stored" — unlocking it is exactly
-            // the prompt this function exists to avoid.
             val seedKey = userWallet.secp256k1SeedKey() ?: return@catchOn null
 
             storedExtendedPublicKey(userWalletId, ByteArrayKey(seedKey))
