@@ -465,6 +465,22 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
+    fun `GIVEN no allowance reported WHEN getBalanceAllowance THEN leaves it absent rather than zero`() = runTest {
+        // Arrange
+        coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = null),
+        )
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PolymarketBalanceAllowance(balance = BigDecimal("12.340000"), allowance = null).right(),
+        )
+    }
+
+    @Test
     fun `GIVEN an unparsable balance WHEN getBalanceAllowance THEN returns Unknown instead of a wrong amount`() =
         runTest {
             // Arrange
