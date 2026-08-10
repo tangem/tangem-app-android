@@ -24,6 +24,11 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
             toggle = FeatureToggles.AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION,
         )
 
+    override val isHideZeroBalanceSourceEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_16358_HIDE_ZERO_BALANCE_SWAP_SOURCE,
+        )
+
     override val isSwapDeeplinkEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED,
