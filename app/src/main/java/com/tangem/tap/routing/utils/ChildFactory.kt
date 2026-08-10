@@ -337,15 +337,9 @@ internal class ChildFactory @Inject constructor(
                             AppRoute.Swap.CurrencyPosition.TO -> SwapComponent.Params.CurrencyPosition.TO
                             AppRoute.Swap.CurrencyPosition.ANY -> SwapComponent.Params.CurrencyPosition.ANY
                         },
-                        tangemPayInput = route.tangemPayInput?.let { tangemPayInput ->
-                            SwapComponent.Params.TangemPayInput(
-                                cryptoAmount = tangemPayInput.cryptoAmount,
-                                fiatAmount = tangemPayInput.fiatAmount,
-                                depositAddress = tangemPayInput.depositAddress,
-                            )
-                        },
                         fromAmount = route.fromAmount,
                         providerId = route.providerId,
+                        accountFlow = route.accountFlow,
                     ),
                     componentFactory = swapComponentFactory,
                 )

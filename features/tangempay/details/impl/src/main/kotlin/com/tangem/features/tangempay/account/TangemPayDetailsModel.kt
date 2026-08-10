@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -258,11 +259,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-                tangemPayInput = AppRoute.Swap.TangemPayInput(
-                    cryptoAmount = balance.availableForWithdrawal,
-                    fiatAmount = balance.availableForWithdrawal,
-                    depositAddress = balance.cryptoBalance.depositAddress,
-                ),
+                accountFlow = AccountFlow.Withdraw,
             ),
         )
     }
@@ -334,11 +331,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 userWalletId = data.walletId,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
-                tangemPayInput = AppRoute.Swap.TangemPayInput(
-                    cryptoAmount = data.cryptoBalance,
-                    fiatAmount = data.fiatBalance,
-                    depositAddress = data.depositAddress,
-                ),
+                accountFlow = AccountFlow.TopUp,
             ),
         )
     }
