@@ -3,12 +3,12 @@ package com.tangem.data.account.store
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -38,6 +38,7 @@ internal class AccountsResponseStoreFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     @NetworkMoshi private val moshi: Moshi,
     private val appScope: AppCoroutineScope,
+    private val dataStoreFactory: AppDataStoreFactory,
 ) {
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -52,7 +53,7 @@ internal class AccountsResponseStoreFactory @Inject constructor(
      */
     fun create(userWalletId: UserWalletId): AccountsResponseStore {
         return createdDataStores.computeIfAbsent(userWalletId) {
-            DataStoreFactory.create(
+            dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(defaultValue = null, adapter = adapter),
                 produceFile = { context.dataStoreFile(fileName = "wallet_accounts_${userWalletId.stringValue}") },
                 scope = appScope,

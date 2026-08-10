@@ -1,7 +1,6 @@
 package com.tangem.data.networks.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
@@ -12,6 +11,7 @@ import com.tangem.data.networks.utils.DefaultNetworksCleaner
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
@@ -37,11 +37,12 @@ internal object NetworkDataModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): NetworksStatusesStore {
         return DefaultNetworksStatusesStore(
             context = context,
             runtimeStore = RuntimeSharedStore(),
-            persistenceDataStore = DataStoreFactory.create(
+            persistenceDataStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
