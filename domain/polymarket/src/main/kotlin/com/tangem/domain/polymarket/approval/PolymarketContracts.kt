@@ -21,6 +21,13 @@ object PolymarketContracts {
     const val NEG_RISK_CTF_EXCHANGE: String = "0xe2222d279d744050d28e00520010520000310F59"
     const val NEG_RISK_CTF_COLLATERAL_ADAPTER: String = "0xadA2005600Dec949baf300f4C6120000bDB6eAab"
 
+    /**
+     * Base-unit exponent the CLOB reports [COLLATERAL] amounts in. It describes that API's wire format, not a
+     * currency held in a portfolio: [COLLATERAL] is a different contract from the USDC the app can add on
+     * Polygon, so a portfolio token's `decimals` is not a substitute for this value.
+     */
+    const val COLLATERAL_DECIMALS: Int = 6
+
     const val DW_FACTORY: String = "0x00000000000Fb5C9ADea0298D729A0CB3823Cc07"
     const val DW_BEACON: String = "0x7A18EDfe055488A3128f01F563e5B479D92ffc3a"
 
