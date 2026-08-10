@@ -5,7 +5,6 @@ import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
-import javax.inject.Inject
 
 /**
  * Converts the CLOB's balance/allowance response, whose amounts are decimal strings in the collateral's
@@ -14,7 +13,7 @@ import javax.inject.Inject
  *
  * An absent allowance stays absent: substituting zero would report the one value that means "not approved".
  */
-internal class PolymarketBalanceAllowanceConverter @Inject constructor() :
+internal object PolymarketBalanceAllowanceConverter :
     Converter<PolymarketBalanceAllowanceResponse, PolymarketBalanceAllowance> {
 
     override fun convert(value: PolymarketBalanceAllowanceResponse): PolymarketBalanceAllowance =
@@ -23,6 +22,17 @@ internal class PolymarketBalanceAllowanceConverter @Inject constructor() :
             allowance = value.allowance?.toCollateralAmount(),
         )
 
-    private fun String.toCollateralAmount(): BigDecimal = BigDecimal(this)
-        .movePointLeft(PolymarketContracts.COLLATERAL_DECIMALS)
+    /**
+     * The scale is normalised because `BigDecimal` carries it into `equals`: left as it comes out of the
+     * shift, a zero balance is `0.000000`, which is neither equal to `BigDecimal.ZERO` nor to the `0` a
+     * caller would write in a fixture. Stripping alone would overshoot into a negative scale for round
+     * amounts (`1000.000000` becomes `1E+3`), so the scale is clamped back to zero.
+     */
+    private fun String.toCollateralAmount(): BigDecimal {
+        val amount = BigDecimal(this)
+            .movePointLeft(PolymarketContracts.COLLATERAL_DECIMALS)
+            .stripTrailingZeros()
+
+        return amount.setScale(maxOf(amount.scale(), 0))
+    }
 }

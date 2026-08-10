@@ -4,7 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
@@ -82,7 +81,6 @@ internal class DefaultPolymarketRepositoryTest {
         clobApi = clobApi,
         eventConverter = eventConverter,
         walletConverter = walletConverter,
-        balanceAllowanceConverter = PolymarketBalanceAllowanceConverter(),
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
@@ -456,7 +454,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.340000"), allowance = BigDecimal("1.000000")).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = BigDecimal("1")).right(),
         )
         assertThat(assetType.captured).isEqualTo("COLLATERAL")
         assertThat(signatureType.captured).isEqualTo(3)
@@ -476,9 +474,26 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.340000"), allowance = null).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = null).right(),
         )
     }
+
+    @Test
+    fun `GIVEN an empty wallet WHEN getBalanceAllowance THEN the balance equals zero rather than merely scaling to it`() =
+        runTest {
+            // Arrange
+            coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+                PolymarketBalanceAllowanceResponse(balance = "0", allowance = "1000000000"),
+            )
+
+            // Act
+            val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+            // Assert
+            assertThat(result).isEqualTo(
+                PolymarketBalanceAllowance(balance = BigDecimal.ZERO, allowance = BigDecimal("1000")).right(),
+            )
+        }
 
     @Test
     fun `GIVEN an unparsable balance WHEN getBalanceAllowance THEN returns Unknown instead of a wrong amount`() =
