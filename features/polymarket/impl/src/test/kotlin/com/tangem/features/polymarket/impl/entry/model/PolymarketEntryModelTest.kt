@@ -22,7 +22,9 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -353,6 +355,28 @@ internal class PolymarketEntryModelTest {
                     portfolioSelectorBridge = portfolioSelectorBridge,
                 )
             }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a bridged add sheet WHEN it is built THEN the bridge shares the scope that is cancelled per offer`() =
+        runTest {
+            // Arrange
+            coEvery { getEligibleWalletsUseCase() } returns listOf(walletA)
+            coEvery { hasDepositNetworkUseCase(walletAId) } returns false
+            val bridgeScope = slot<CoroutineScope>()
+            val managerScope = slot<CoroutineScope>()
+
+            // Act
+            val model = createModel(testScope = this, userWalletId = walletAId)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { portfolioSelectorBridgeFactory.create(any(), capture(bridgeScope)) }
+            verify(exactly = 1) {
+                addToPortfolioManagerFactory.create(capture(managerScope), any(), any(), any())
+            }
+            assertThat(bridgeScope.captured).isSameInstanceAs(managerScope.captured)
             model.onDestroy()
         }
 
