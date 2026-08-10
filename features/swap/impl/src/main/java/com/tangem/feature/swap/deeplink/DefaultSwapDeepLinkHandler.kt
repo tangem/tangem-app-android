@@ -23,6 +23,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -109,10 +110,13 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
      *
      * Order: an existing pinned id from `user_wallet_id`/`from_user_wallet_id`/`to_user_wallet_id`
      * (non-existent ids are dropped — degrade, not Main) -> the currently selected wallet ->
-     * (cold-start, no selected wallet) the wallet with the largest total fiat balance.
+     * (cold-start, no selected wallet) the unlocked wallet with the largest total fiat balance
+     * (locked wallets are excluded from this pick, since they expose no balances/accounts).
      *
      * A hard inconsistency (two or more distinct *existing* pinned ids) pushes a bare Main [AppRoute.Swap]
      * for the currently selected wallet (or the first pinned id if there is none) and returns `null`.
+     * A locked explicit target (differing from the currently selected wallet) is never switched to —
+     * it falls back to a bare Swap on the current selected wallet, or aborts if there is none.
      * Returns `null` also when there is no wallet to open at all, or when switching to the resolved
      * target wallet fails.
      */
@@ -120,6 +124,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         val wallets = getWalletsUseCase.invokeSync()
         if (wallets.isEmpty()) return null
         val existingIds = wallets.map { it.walletId }.toSet()
+        val unlockedIds = wallets.filterNot { it.isLocked }.map { it.walletId }.toSet()
 
         // AI-MCP / broadcast wallet ids; drop non-existent ones (degrade, not Main)
         val fromWalletId = queryParams[FROM_USER_WALLET_ID_KEY]?.let(::UserWalletId)?.takeIf { it in existingIds }
@@ -137,8 +142,15 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
 
         val targetWalletId = pinned.firstOrNull()
             ?: selectedWalletId
-            ?: pickLargestBalanceWalletId(existingIds) // cold-start
+            ?: pickLargestBalanceWalletId(unlockedIds) // cold-start, unlocked wallets only
             ?: return null
+
+        // Never switch to a locked wallet — fall back to the current (unlocked) selected wallet.
+        if (targetWalletId != selectedWalletId && targetWalletId !in unlockedIds) {
+            TangemLogger.e("Swap deeplink: target wallet $targetWalletId is locked, not switching")
+            if (selectedWalletId != null) navigateToSwap(selectedWalletId)
+            return null
+        }
 
         if (targetWalletId != selectedWalletId) {
             selectWalletUseCase(targetWalletId).onLeft { error ->
