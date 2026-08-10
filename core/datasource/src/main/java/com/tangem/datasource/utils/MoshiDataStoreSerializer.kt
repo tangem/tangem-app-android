@@ -30,7 +30,7 @@ class MoshiDataStoreSerializer<T>(
      */
     constructor(moshi: Moshi, types: ParameterizedType, defaultValue: T) : this(
         defaultValue = defaultValue,
-        adapter = moshi.adapter<T>(types),
+        adapter = moshi.adapter(types),
     )
 
     override suspend fun readFrom(input: InputStream): T {
