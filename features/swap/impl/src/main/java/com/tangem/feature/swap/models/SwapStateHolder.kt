@@ -138,7 +138,7 @@ data class LegalState(
 )
 
 enum class ChangeCardsButtonState {
-    ENABLED, DISABLED, UPDATE_IN_PROGRESS
+    ENABLED, DISABLED, UPDATE_IN_PROGRESS, HIDDEN
 }
 
 sealed class SwapPermissionUM {
