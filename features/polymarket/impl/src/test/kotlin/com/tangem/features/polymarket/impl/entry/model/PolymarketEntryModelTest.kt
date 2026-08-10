@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.HasPolymarketDepositNetworkUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -41,6 +42,8 @@ internal class PolymarketEntryModelTest {
     private val portfolioSelectorController: PortfolioSelectorController = mockk()
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
+    private val portfolioSelectorBridge: PortfolioSelectorBridge = mockk(relaxed = true)
+    private val portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory = mockk()
 
     private val addToPortfolioManager: AddToPortfolioManager = mockk(relaxed = true)
     private val onDismissChannel = Channel<Unit>()
@@ -62,9 +65,11 @@ internal class PolymarketEntryModelTest {
             addToPortfolioManagerFactory,
             portfolioSelectorController,
             portfolioFetcherFactory,
+            portfolioSelectorBridgeFactory,
             addToPortfolioManager,
         )
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
+        every { portfolioSelectorBridgeFactory.create(any(), any()) } returns portfolioSelectorBridge
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(null)
         every { portfolioSelectorController.isEnabled } returns
             MutableStateFlow { _: UserWallet, _: AccountStatus -> true }
@@ -76,7 +81,7 @@ internal class PolymarketEntryModelTest {
         every { addToPortfolioManager.updateLaunchMode(any()) } just Runs
         every { addToPortfolioManager.setTokenParams(any<RawMarketToken>()) } just Runs
         every { addToPortfolioManager.setTokenNetworks(any()) } just Runs
-        every { addToPortfolioManagerFactory.create(any(), any(), any()) } returns addToPortfolioManager
+        every { addToPortfolioManagerFactory.create(any(), any(), any(), any()) } returns addToPortfolioManager
     }
 
     @Test
@@ -234,7 +239,7 @@ internal class PolymarketEntryModelTest {
                     onComplete = any(),
                 )
             }
-            verify(exactly = 0) { addToPortfolioManagerFactory.create(any(), any(), any()) }
+            verify(exactly = 0) { addToPortfolioManagerFactory.create(any(), any(), any(), any()) }
             model.onDestroy()
         }
 
@@ -315,9 +320,39 @@ internal class PolymarketEntryModelTest {
                     scope = any(),
                     settings = AddToPortfolioManager.Settings(shouldSkipTokenActionsScreen = true),
                     analyticsParams = any(),
+                    portfolioSelectorBridge = any(),
                 )
             }
             verify(exactly = 1) { addToPortfolioManager.updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the deposit network is missing WHEN the add sheet is built THEN it is bridged to the settled wallet alone`() =
+        runTest {
+            // Arrange
+            coEvery { getEligibleWalletsUseCase() } returns listOf(walletA, walletB)
+            coEvery { hasDepositNetworkUseCase(walletAId) } returns false
+
+            // Act
+            val model = createModel(testScope = this, userWalletId = walletAId)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                portfolioSelectorBridgeFactory.create(
+                    mode = PortfolioFetcher.Mode.Wallet(walletAId),
+                    scope = any(),
+                )
+            }
+            verify(exactly = 1) {
+                addToPortfolioManagerFactory.create(
+                    scope = any(),
+                    settings = any(),
+                    analyticsParams = any(),
+                    portfolioSelectorBridge = portfolioSelectorBridge,
+                )
+            }
             model.onDestroy()
         }
 
@@ -347,6 +382,7 @@ internal class PolymarketEntryModelTest {
             getEligibleWalletsUseCase = getEligibleWalletsUseCase,
             hasDepositNetworkUseCase = hasDepositNetworkUseCase,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+            portfolioSelectorBridgeFactory = portfolioSelectorBridgeFactory,
             portfolioSelectorController = portfolioSelectorController,
             portfolioFetcherFactory = portfolioFetcherFactory,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
