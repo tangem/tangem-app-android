@@ -83,7 +83,7 @@ internal fun PolymarketOnboardingScreen(
             PolymarketWelcomeContent(
                 scrollState = scrollState,
                 contentPadding = contentPadding,
-                trailingSpace = with(LocalDensity.current) { footerHeight.toDp() },
+                trailingSpace = with(LocalDensity.current) { footerHeight.toDp() } + 54.dp,
             )
         }
     }
