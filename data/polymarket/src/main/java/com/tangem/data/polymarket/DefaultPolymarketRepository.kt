@@ -42,8 +42,6 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val geoApi: PolymarketGeoApi,
     private val relayerApi: PolymarketRelayerApi,
     private val clobApi: PolymarketClobApi,
-    private val eventConverter: PolymarketEventConverter,
-    private val walletConverter: PolymarketWalletConverter,
     private val walletErrorResolver: PolymarketWalletErrorResolver,
     private val authErrorResolver: PolymarketAuthErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
@@ -66,7 +64,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
             safeApiCall(
                 call = {
                     polymarketApi.getEvents(category = category, limit = DEFAULT_LIMIT, cursor = null)
-                        .bind().events.map(eventConverter::convert).right()
+                        .bind().events.map(PolymarketEventConverter::convert).right()
                 },
                 onError = { DataError.NetworkError.NoInternetConnection.left() },
             )
@@ -75,7 +73,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
     override suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState> =
         withContext(dispatchers.io) {
             safeApiCall(
-                call = { walletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right() },
+                call = {
+                    PolymarketWalletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right()
+                },
                 onError = { walletErrorResolver.resolve(it).left() },
             )
         }
@@ -105,7 +105,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = polymarketApi.submitApprovals(walletConverter.toRequest(batch)).bind()
+                val response = polymarketApi.submitApprovals(PolymarketWalletConverter.toRequest(batch)).bind()
                 PolymarketWalletStatus.fromRaw(response.status).right()
             },
             onError = { walletErrorResolver.resolve(it).left() },
