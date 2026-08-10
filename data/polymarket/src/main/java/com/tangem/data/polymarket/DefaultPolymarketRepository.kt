@@ -157,7 +157,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
         val headers = buildL2Headers(
             ownerAddress = ownerAddress,
             credentials = credentials,
-            requestPath = BALANCE_ALLOWANCE_UPDATE_SIGNED_PATH,
+            requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
         ).getOrElse { return@withContext it.left() }
 
         safeApiCallWithTimeout(
@@ -180,7 +180,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
         val headers = buildL2Headers(
             ownerAddress = ownerAddress,
             credentials = credentials,
-            requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
+            requestPath = BALANCE_ALLOWANCE_READ_SIGNED_PATH,
         ).getOrElse { return@withContext it.left() }
 
         safeApiCallWithTimeout(
@@ -228,7 +228,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
 
         /** Both are signed by the HMAC without the query string, unlike the relative paths Retrofit resolves. */
-        const val BALANCE_ALLOWANCE_UPDATE_SIGNED_PATH = "/balance-allowance/update"
-        const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance"
+        const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance/update"
+        const val BALANCE_ALLOWANCE_READ_SIGNED_PATH = "/balance-allowance"
     }
 }
