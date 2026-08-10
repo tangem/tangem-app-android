@@ -4,8 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.data.polymarket.converter.PolymarketEventConverter
-import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.signer.Base64UrlCodec
@@ -63,8 +61,6 @@ internal class DefaultPolymarketRepositoryTest {
     private val geoApi: PolymarketGeoApi = mockk()
     private val relayerApi: PolymarketRelayerApi = mockk()
     private val clobApi: PolymarketClobApi = mockk()
-    private val eventConverter: PolymarketEventConverter = mockk()
-    private val walletConverter = PolymarketWalletConverter()
     private val walletErrorResolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
     private val authErrorResolver = PolymarketAuthErrorResolver()
     private val dispatchers = TestingCoroutineDispatcherProvider()
@@ -79,8 +75,6 @@ internal class DefaultPolymarketRepositoryTest {
         geoApi = geoApi,
         relayerApi = relayerApi,
         clobApi = clobApi,
-        eventConverter = eventConverter,
-        walletConverter = walletConverter,
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
@@ -126,18 +120,17 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN events response WHEN getEvents THEN converts events of the requested category`() = runTest {
         // Arrange
-        val dto: PolymarketEventDto = mockk()
-        val event: PolymarketEvent = mockk()
         coEvery { api.getEvents(category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
-            PolymarketEventsResponse(events = listOf(dto), cursor = null, hasNext = false),
+            PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
         )
-        every { eventConverter.convert(dto) } returns event
 
         // Act
         val result = repository.getEvents(category = 5)
 
         // Assert
-        assertThat(result).isEqualTo(listOf(event).right())
+        val events = result.getOrNull().orEmpty()
+        assertThat(events.map(PolymarketEvent::id)).containsExactly("event-id")
+        assertThat(events.single().title).isEqualTo("Event title")
     }
 
     @Test
@@ -548,6 +541,30 @@ internal class DefaultPolymarketRepositoryTest {
             apiKey = "k",
             secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
             passphrase = "p",
+        )
+
+        /**
+         * Field-by-field mapping is pinned by `PolymarketEventConverterTest`; here the event only has to come
+         * back out of the repository identifiable.
+         */
+        val EVENT_DTO = PolymarketEventDto(
+            eventId = "event-id",
+            slug = "event-slug",
+            title = "Event title",
+            description = "Event description",
+            polymarketRulesUrl = "https://polymarket.com/rules",
+            icon = null,
+            image = null,
+            status = "active",
+            startDate = null,
+            endDate = null,
+            volume = null,
+            volume24hr = null,
+            liquidity = null,
+            totalMarketsCount = 0,
+            isNegRisk = false,
+            displayMode = "plain_markets",
+            markets = emptyList(),
         )
     }
 }
