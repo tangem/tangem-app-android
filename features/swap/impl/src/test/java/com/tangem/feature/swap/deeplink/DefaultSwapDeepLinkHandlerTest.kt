@@ -613,6 +613,44 @@ internal class DefaultSwapDeepLinkHandlerTest {
         verify { router.push(route = expected, onComplete = any()) }
     }
 
+    @Test
+    fun `GIVEN requested FROM token is not swap-eligible WHEN handle THEN FROM degrades and TO preselected`() =
+        runTest {
+            // Arrange — FROM is held but not swappable; only swap-eligible tokens are preselected.
+            val fromCurrency = currency(tokenId = "btc", networkId = "bitcoin")
+            val toCurrency = currency(tokenId = "eth", networkId = "ethereum")
+            givenPortfolio(statuses = listOf(currencyStatus(fromCurrency), currencyStatus(toCurrency)))
+            coEvery { rampStateManager.availableForSwap(any(), any<List<CryptoCurrency>>()) } answers {
+                secondArg<List<CryptoCurrency>>().associateWith { candidate ->
+                    if (candidate == fromCurrency) {
+                        ScenarioUnavailabilityReason.NotExchangeable(cryptoCurrencyName = "BTC")
+                    } else {
+                        ScenarioUnavailabilityReason.None
+                    }
+                }
+            }
+            val expected = bareSwap(walletId).copy(
+                fromCryptoCurrency = null,
+                toCryptoCurrency = toCurrency,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+            )
+
+            // Act
+            createHandler(
+                this,
+                mapOf(
+                    FROM_TOKEN_ID_KEY to "btc",
+                    FROM_NETWORK_ID_KEY to "bitcoin",
+                    TO_TOKEN_ID_KEY to "eth",
+                    TO_NETWORK_ID_KEY to "ethereum",
+                ),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify { router.push(route = expected, onComplete = any()) }
+        }
+
     // endregion
 
     // region Task 6: provider pre-check
