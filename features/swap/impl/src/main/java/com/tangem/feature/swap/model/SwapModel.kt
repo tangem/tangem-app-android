@@ -73,7 +73,7 @@ import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.domain.stories.ShouldShowStoriesUseCase
+import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -156,7 +156,7 @@ internal class SwapModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
+    private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
@@ -361,7 +361,7 @@ internal class SwapModel @Inject constructor(
 
         modelScope.launch {
             val storyId = StoryContentIds.STORY_FIRST_TIME_SWAP.id
-            if (shouldShowStoriesUseCase.invokeSync(storyId)) {
+            if (shouldShowStoriesInteractor.invokeSync(storyId)) {
                 router.push(
                     AppRoute.Stories(
                         storyId = storyId,
