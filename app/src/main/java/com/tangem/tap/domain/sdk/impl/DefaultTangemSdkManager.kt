@@ -15,6 +15,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.services.secure.AccessCodeRepository
+import com.tangem.common.services.secure.CardAccessTokensRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -93,6 +94,14 @@ internal class DefaultTangemSdkManager(
             secureStorage = tangemSdk.secureStorage,
         )
     }
+
+    private val cardAccessTokensRepository by lazy {
+        CardAccessTokensRepository(
+            keystoreManager = tangemSdk.keystoreManager,
+            secureStorage = tangemSdk.secureStorage,
+        )
+    }
+
     override val isEnrollBiometricsNeeded: Boolean
         get() {
             val isNeedEnrollBiometrics = tangemSdk.authenticationManager.needEnrollBiometrics
@@ -302,10 +311,12 @@ internal class DefaultTangemSdkManager(
     }
 
     override suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit> {
+        cardAccessTokensRepository.deleteTokens(cardsIds)
         return userCodeRepository.delete(cardsIds.toSet())
     }
 
     override suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
+        cardAccessTokensRepository.clear()
         return userCodeRepository.clear()
     }
 
