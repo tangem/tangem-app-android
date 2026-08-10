@@ -44,7 +44,6 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val clobApi: PolymarketClobApi,
     private val eventConverter: PolymarketEventConverter,
     private val walletConverter: PolymarketWalletConverter,
-    private val balanceAllowanceConverter: PolymarketBalanceAllowanceConverter,
     private val walletErrorResolver: PolymarketWalletErrorResolver,
     private val authErrorResolver: PolymarketAuthErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
@@ -191,7 +190,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                     assetType = ASSET_TYPE_COLLATERAL,
                     signatureType = SIGNATURE_TYPE_DEPOSIT_WALLET,
                 ).bind()
-                Either.catch { balanceAllowanceConverter.convert(response) }
+                Either.catch { PolymarketBalanceAllowanceConverter.convert(response) }
                     .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
             },
             onError = { authErrorResolver.resolve(it).left() },
