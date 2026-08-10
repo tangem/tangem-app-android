@@ -2,7 +2,6 @@ package com.tangem.datasource.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
@@ -16,6 +15,7 @@ import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
@@ -38,9 +38,10 @@ internal object StakingStoreModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): StakingYieldsStore {
         return DefaultStakingYieldsStore(
-            dataStore = DataStoreFactory.create(
+            dataStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = listTypes<YieldDTO>(),
@@ -58,8 +59,9 @@ internal object StakingStoreModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): DataStore<Map<String, Set<YieldBalanceWrapperDTO>>> {
-        return DataStoreFactory.create(
+        return dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 moshi = moshi,
                 types = mapWithStringKeyTypes(valueTypes = setTypes<YieldBalanceWrapperDTO>()),
@@ -82,8 +84,9 @@ internal object StakingStoreModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): DataStore<Map<String, Set<P2PEthPoolAccountResponse>>> {
-        return DataStoreFactory.create(
+        return dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 moshi = moshi,
                 types = mapWithStringKeyTypes(valueTypes = setTypes<P2PEthPoolAccountResponse>()),
@@ -100,9 +103,10 @@ internal object StakingStoreModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): P2PEthPoolVaultsStore {
         return DefaultP2PEthPoolVaultsStore(
-            dataStore = DataStoreFactory.create(
+            dataStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = listTypes<P2PEthPoolVault>(),
