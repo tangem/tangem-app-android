@@ -100,7 +100,10 @@ internal class DefaultSwapDeepLinkHandlerTest {
         unmockkObject(TangemLogger)
     }
 
-    private fun wallet(id: UserWalletId): UserWallet = mockk { every { this@mockk.walletId } returns id }
+    private fun wallet(id: UserWalletId, locked: Boolean = false): UserWallet = mockk<UserWallet.Cold> {
+        every { this@mockk.walletId } returns id
+        every { isLocked } returns locked
+    }
 
     private fun bareSwap(id: UserWalletId) = AppRoute.Swap(
         userWalletId = id,
@@ -369,6 +372,48 @@ internal class DefaultSwapDeepLinkHandlerTest {
         // Assert
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
     }
+
+    @Test
+    fun `GIVEN cold-start with a locked richer wallet WHEN handle THEN selects the unlocked wallet`() = runTest {
+        // Arrange: W2 is locked and would look richer, but must be excluded from the balance lookup
+        // entirely — only the unlocked W1 is a valid cold-start pick.
+        val locked = UserWalletId("022")
+        every { getSelectedWalletSyncUseCase() } returns Either.Left(GetUserWalletError.UserWalletNotFound)
+        every { getWalletsUseCase.invokeSync() } returns listOf(wallet(walletId), wallet(locked, locked = true))
+        every { getWalletTotalBalanceUseCase(any()) } returns flowOf(
+            mapOf(
+                walletId to TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+            ).lceContent(),
+        )
+        val expected = bareSwap(walletId)
+
+        // Act
+        createHandler(this, emptyMap())
+        advanceUntilIdle()
+
+        // Assert
+        verify { router.push(route = expected, onComplete = any()) }
+        coVerify(exactly = 1) { selectWalletUseCase(walletId) }
+        coVerify(exactly = 0) { selectWalletUseCase(locked) }
+        coVerify(exactly = 1) { getWalletTotalBalanceUseCase(setOf(walletId)) }
+    }
+
+    @Test
+    fun `GIVEN explicit user_wallet_id points to a locked wallet WHEN handle THEN falls back to current wallet without switching`() =
+        runTest {
+            // Arrange
+            val locked = UserWalletId("022")
+            every { getWalletsUseCase.invokeSync() } returns listOf(wallet(walletId), wallet(locked, locked = true))
+            val expected = bareSwap(walletId)
+
+            // Act
+            createHandler(this, mapOf(WALLET_ID_KEY to locked.stringValue))
+            advanceUntilIdle()
+
+            // Assert
+            verify { router.push(route = expected, onComplete = any()) }
+            coVerify(exactly = 0) { selectWalletUseCase(locked) }
+        }
 
     // region Task 5: token resolution + matrix gating + amount + position
 
