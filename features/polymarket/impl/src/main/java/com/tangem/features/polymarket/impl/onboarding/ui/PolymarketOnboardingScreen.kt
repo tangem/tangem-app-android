@@ -35,15 +35,6 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.features.polymarket.impl.regionrestrictions.ui.RegionRestrictionsBottomSheet
 
-/** Empty scroll left below the last FAQ answer, so the content ends above the pinned footer rather than at it. */
-private val TrailingScroll = 80.dp
-
-/** How far into [TrailingScroll] the user must scroll before the legal line fades in. */
-private val LegalRevealOffset = 16.dp
-
-private val FailedStatePadding = 24.dp
-private val FailedStateGap = 16.dp
-
 @Composable
 internal fun PolymarketOnboardingScreen(
     state: PolymarketOnboardingUM,
@@ -72,7 +63,7 @@ internal fun PolymarketOnboardingScreen(
                 PolymarketWelcomeFooter(
                     state = state,
                     scrollState = scrollState,
-                    revealThreshold = TrailingScroll - LegalRevealOffset,
+                    revealThreshold = 80.dp - 16.dp,
                     contentPadding = contentPadding,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -94,7 +85,7 @@ internal fun PolymarketOnboardingScreen(
             PolymarketWelcomeContent(
                 scrollState = scrollState,
                 contentPadding = contentPadding,
-                trailingSpace = with(LocalDensity.current) { footerHeight.toDp() } + TrailingScroll,
+                trailingSpace = with(LocalDensity.current) { footerHeight.toDp() } + 80.dp,
             )
         }
     }
@@ -110,9 +101,9 @@ internal fun PolymarketOnboardingScreen(
 @Composable
 private fun FailedState(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(horizontal = FailedStatePadding),
+        modifier = modifier.padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(FailedStateGap),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_something_went_wrong),

@@ -53,19 +53,6 @@ private const val HERO_CONTENT_TOP = 495f
 private const val TINT_START = 380f / HERO_IMAGE_HEIGHT
 private const val TINT_END = 600f / HERO_IMAGE_HEIGHT
 
-private val ScreenPadding = 24.dp
-private val HeadlineVerticalPadding = 12.dp
-private val HeadlineGap = 8.dp
-private val BenefitGap = 8.dp
-private val BenefitCardPadding = 16.dp
-private val BenefitCardRadius = 24.dp
-private val BenefitContentMinHeight = 100.dp
-private val IconSize = 24.dp
-private val FaqGap = 12.dp
-private val FaqItemTopPadding = 24.dp
-private val FaqItemBottomPadding = 12.dp
-private val FaqRuleHeight = 1.dp
-
 /**
  * Scrolling body of the Welcome screen. Stateless — the footer overlaying it lives in the scaffold's overlay
  * slot and owns the legal-line reveal.
@@ -139,8 +126,8 @@ private fun WelcomeHero(modifier: Modifier = Modifier) {
 @Composable
 private fun WelcomeHeadline(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(horizontal = ScreenPadding, vertical = HeadlineVerticalPadding),
-        verticalArrangement = Arrangement.spacedBy(HeadlineGap),
+        modifier = modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = stringResourceSafe(R.string.prediction_onboarding_title),
@@ -158,12 +145,12 @@ private fun WelcomeHeadline(modifier: Modifier = Modifier) {
 @Composable
 private fun WelcomeBenefits(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(all = ScreenPadding),
-        verticalArrangement = Arrangement.spacedBy(BenefitGap),
+        modifier = modifier.padding(all = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
             modifier = Modifier.height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(BenefitGap),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             BenefitCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -180,7 +167,7 @@ private fun WelcomeBenefits(modifier: Modifier = Modifier) {
         }
         Row(
             modifier = Modifier.height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(BenefitGap),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             BenefitCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -202,18 +189,13 @@ private fun WelcomeBenefits(modifier: Modifier = Modifier) {
 private fun BenefitCard(icon: ImageVector, title: String, subtitle: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(BenefitCardRadius))
-            .padding(
-                start = BenefitCardPadding,
-                end = ScreenPadding,
-                top = BenefitCardPadding,
-                bottom = BenefitCardPadding,
-            )
-            .heightIn(min = BenefitContentMinHeight),
+            .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(24.dp))
+            .padding(start = 16.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+            .heightIn(min = 100.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Icon(
-            modifier = Modifier.size(IconSize),
+            modifier = Modifier.size(24.dp),
             imageVector = icon,
             contentDescription = null,
             tint = TangemTheme.colors3.icon.primary,
@@ -236,8 +218,8 @@ private fun BenefitCard(icon: ImageVector, title: String, subtitle: String, modi
 @Composable
 private fun WelcomeFaq(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(horizontal = ScreenPadding),
-        verticalArrangement = Arrangement.spacedBy(FaqGap),
+        modifier = modifier.padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         FaqItem(
             hasTopBorder = false,
@@ -262,19 +244,19 @@ private fun FaqItem(hasTopBorder: Boolean, question: String, answer: String, mod
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = FaqItemBottomPadding),
+            .padding(bottom = 12.dp),
     ) {
         if (hasTopBorder) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(FaqRuleHeight)
+                    .height(1.dp)
                     .background(TangemTheme.colors3.border.secondary),
             )
         }
         Column(
-            modifier = Modifier.padding(top = FaqItemTopPadding),
-            verticalArrangement = Arrangement.spacedBy(FaqGap),
+            modifier = Modifier.padding(top = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
                 text = question,
