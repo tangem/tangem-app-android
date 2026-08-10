@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
@@ -32,7 +33,7 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultTangemPayStorageTest {
 
     private val dataStore = MockStateDataStore(default = emptyPreferences())
-    private val prefs = AppPreferencesStore(
+    private val prefs = createAppPreferencesStore(
         moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
@@ -41,6 +42,7 @@ internal class DefaultTangemPayStorageTest {
     private val storage = DefaultTangemPayStorage(
         applicationContext = mockk<Context>(relaxed = true),
         moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
+        sdkMoshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build(),
         dispatcherProvider = TestingCoroutineDispatcherProvider(),
         appPreferencesStore = prefs,
     )
