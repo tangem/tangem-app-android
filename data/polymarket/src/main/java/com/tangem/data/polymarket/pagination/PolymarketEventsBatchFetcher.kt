@@ -7,7 +7,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsPage
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
-import kotlinx.coroutines.CancellationException
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -72,43 +72,40 @@ internal class PolymarketEventsBatchFetcher(
         isFirstBatch: Boolean,
     ): BatchFetchResult<List<PolymarketEvent>> {
         val firstAttempt = runFetch(config = config, cursor = cursor, isFirstBatch = isFirstBatch)
-        if (firstAttempt.isSuccessful) return firstAttempt.result
+        if (firstAttempt is BatchFetchResult.Success) return firstAttempt
 
         delay(retryDelay)
 
-        return runFetch(config = config, cursor = cursor, isFirstBatch = isFirstBatch).result
+        return runFetch(config = config, cursor = cursor, isFirstBatch = isFirstBatch)
     }
 
-    private suspend fun runFetch(config: PolymarketEventsListConfig, cursor: String?, isFirstBatch: Boolean): Attempt {
-        val page = try {
-            fetchPage(config, cursor, batchSize)
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (@Suppress("TooGenericExceptionCaught") throwable: Throwable) {
-            // Any other failure is the pagination's to report, so the batch turns into a retryable error.
-            return Attempt(result = BatchFetchResult.Error(throwable), isSuccessful = false)
-        }
+    private suspend fun runFetch(
+        config: PolymarketEventsListConfig,
+        cursor: String?,
+        isFirstBatch: Boolean,
+    ): BatchFetchResult<List<PolymarketEvent>> = runSuspendCatching { fetchPage(config, cursor, batchSize) }
+        .fold(
+            onSuccess = { page -> toBatchResult(page = page, isFirstBatch = isFirstBatch) },
+            // A failed request is the pagination's to report, so the batch turns into a retryable error.
+            onFailure = { throwable -> BatchFetchResult.Error(throwable) },
+        )
 
+    private fun toBatchResult(
+        page: PolymarketEventsPage,
+        isFirstBatch: Boolean,
+    ): BatchFetchResult<List<PolymarketEvent>> {
         if (isFirstBatch && page.events.isEmpty()) {
-            return Attempt(result = BatchFetchResult.Error(PolymarketEmptyFeedException()), isSuccessful = false)
+            return BatchFetchResult.Error(PolymarketEmptyFeedException())
         }
 
         nextCursor = page.cursor
 
-        return Attempt(
-            result = BatchFetchResult.Success(
-                data = page.events,
-                empty = page.events.isEmpty(),
-                last = !page.hasNext || page.cursor == null,
-            ),
-            isSuccessful = true,
+        return BatchFetchResult.Success(
+            data = page.events,
+            empty = page.events.isEmpty(),
+            last = !page.hasNext || page.cursor == null,
         )
     }
-
-    private data class Attempt(
-        val result: BatchFetchResult<List<PolymarketEvent>>,
-        val isSuccessful: Boolean,
-    )
 
     private companion object {
         val RETRY_DELAY = 2.seconds
