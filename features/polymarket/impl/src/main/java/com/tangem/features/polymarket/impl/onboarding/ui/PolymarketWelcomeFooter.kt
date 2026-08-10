@@ -38,13 +38,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 
-private val HorizontalPadding = 24.dp
-private val VerticalPadding = 12.dp
-private val ContentGap = 12.dp
-
-/** How far the scrim reaches above the footer's content, per the design's fade offset. */
-private val ScrimOvershoot = 16.dp
-
 /**
  * Pinned footer of the Welcome screen: the legal line and the start button over a blurring scrim.
  *
@@ -86,12 +79,12 @@ internal fun PolymarketWelcomeFooter(
         )
         Column(
             modifier = Modifier.padding(
-                start = HorizontalPadding + contentPadding.calculateStartPadding(layoutDirection),
-                end = HorizontalPadding + contentPadding.calculateEndPadding(layoutDirection),
-                top = ScrimOvershoot + VerticalPadding,
-                bottom = contentPadding.calculateBottomPadding() + VerticalPadding,
+                start = 24.dp + contentPadding.calculateStartPadding(layoutDirection),
+                end = 24.dp + contentPadding.calculateEndPadding(layoutDirection),
+                top = 16.dp + 12.dp,
+                bottom = contentPadding.calculateBottomPadding() + 12.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(ContentGap),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             LegalLine(
                 modifier = Modifier.alpha(legalAlpha),
