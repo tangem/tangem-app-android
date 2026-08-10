@@ -468,8 +468,9 @@ internal class SwapModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 initialCryptoCurrency = initialCryptoCurrency,
                 swapCurrencyPosition = params.fromCurrencyPosition,
-                isPaymentAccount = accountFlow != null,
+                accountFlow = accountFlow,
                 initialToCryptoCurrency = params.toCryptoCurrency,
+                applyAccountTopUpFromPriority = swapFeatureToggles.isAccountSwapFlowEnabled,
             )
 
             preselectedFromCurrency = fromSwapCurrencyStatus?.currency
