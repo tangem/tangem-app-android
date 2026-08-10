@@ -19,6 +19,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.HasPolymarketDepositNetworkUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -49,6 +50,7 @@ internal class PolymarketEntryModel @Inject constructor(
     private val getEligibleWalletsUseCase: GetPolymarketEligibleWalletsUseCase,
     private val hasDepositNetworkUseCase: HasPolymarketDepositNetworkUseCase,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val portfolioSelectorBridgeFactory: PortfolioSelectorBridge.Factory,
     val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -154,6 +156,14 @@ internal class PolymarketEntryModel @Inject constructor(
         bottomSheetNavigation.activate(PolymarketEntryBottomSheetConfig.AddDepositNetwork)
     }
 
+    /**
+     * The sheet is bridged to [walletId] alone. Predictions has already settled on that wallet, and a sheet
+     * that offered the others could complete an add on a wallet this model is not waiting for — which it would
+     * then have to refuse, leaving the user on a flow that cannot go forward. Loading one portfolio also means
+     * that a wallet with a single account has nothing left to choose, so the selector is skipped outright.
+     *
+     * The bridge lives on the manager's scope, which is cancelled and rebuilt per offer.
+     */
     private fun createAddToPortfolioManager(walletId: UserWalletId): AddToPortfolioManager {
         addToPortfolioManagerScope?.cancel()
         val managerScope = CoroutineScope(modelScope.coroutineContext + SupervisorJob(modelScope.coroutineContext.job))
@@ -163,6 +173,10 @@ internal class PolymarketEntryModel @Inject constructor(
             scope = managerScope,
             settings = AddToPortfolioManager.Settings(shouldSkipTokenActionsScreen = true),
             analyticsParams = AddToPortfolioManager.AnalyticsParams(source = null),
+            portfolioSelectorBridge = portfolioSelectorBridgeFactory.create(
+                mode = PortfolioFetcher.Mode.Wallet(walletId),
+                scope = managerScope,
+            ),
         ).apply {
             updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
             setTokenParams(depositCoin)
