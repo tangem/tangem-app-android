@@ -10,6 +10,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -17,6 +18,7 @@ import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
@@ -54,6 +56,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -128,7 +131,18 @@ internal abstract class SwapModelTestBase {
         every { getBalanceHidingSettingsUseCase.invoke() } returns emptyFlow()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { shouldShowStoriesInteractor.invokeSync(any()) } returns false
-        coEvery { initialCurrenciesResolver.invoke(any(), any(), any(), any(), any()) } returns (null to null)
+        // Match regardless of `applyAccountTopUpFromPriority` (driven by the account-swap-flow toggle) —
+        // relying on the trailing defaults here would silently only cover the toggle-OFF (false) call.
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                applyAccountTopUpFromPriority = any(),
+            )
+        } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
     }
 
@@ -138,25 +152,33 @@ internal abstract class SwapModelTestBase {
         fromCurrencyPosition: SwapComponent.Params.CurrencyPosition = SwapComponent.Params.CurrencyPosition.ANY,
         fromAmount: java.math.BigDecimal? = null,
         providerId: String? = null,
+        accountFlow: AccountFlow? = null,
     ): SwapComponent.Params = SwapComponent.Params(
         userWalletId = userWalletId,
         fromCryptoCurrency = fromCryptoCurrency,
         screenSource = "Test",
         fromCurrencyPosition = fromCurrencyPosition,
+        accountFlow = accountFlow,
         toCryptoCurrency = toCryptoCurrency,
         fromAmount = fromAmount,
         providerId = providerId,
     )
 
     @Suppress("LongMethod")
-    protected fun createModel(params: SwapComponent.Params = createParams()): SwapModel = SwapModel(
-        paramsContainer = MutableParamsContainer(params),
+    protected fun createModel(
+        params: SwapComponent.Params = createParams(),
+        accountFlow: AccountFlow? = null,
+        dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider(),
+    ): SwapModel = SwapModel(
+        paramsContainer = MutableParamsContainer(
+            if (accountFlow != null) createParams(accountFlow = accountFlow) else params,
+        ),
         getUserCountryUseCase = getUserCountryUseCase,
         getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         chooseTokenBridgeFactory = chooseTokenBridgeFactory,
         router = router,
         appRouter = appRouter,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        dispatchers = dispatchers,
         analyticsEventHandler = analyticsEventHandler,
         analyticsErrorEventHandler = analyticsErrorEventHandler,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
@@ -261,10 +283,12 @@ internal abstract class SwapModelTestBase {
         wallet: UserWallet = mockk(relaxed = true),
         status: CryptoCurrencyStatus = mockk(relaxed = true),
         currency: CryptoCurrency = mockk(relaxed = true),
+        account: Account = mockk(relaxed = true),
     ): SwapCurrencyStatus = mockk(relaxed = true) {
         every { userWallet } returns wallet
         every { this@mockk.status } returns status
         every { this@mockk.currency } returns currency
+        every { this@mockk.account } returns account
     }
 
     // endregion
