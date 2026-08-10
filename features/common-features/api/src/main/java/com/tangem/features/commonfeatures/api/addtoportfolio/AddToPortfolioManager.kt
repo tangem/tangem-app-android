@@ -67,7 +67,9 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
          *  wallet on the device, which is what a caller that has not settled on one wants. A caller that has
          *  settled passes a bridge in [PortfolioFetcher.Mode.Wallet] so the flow cannot land on another wallet.
          *  The wallet must be one the token can actually be added to — the flow has no way to check that, and a
-         *  wallet it loads but cannot add to leaves the selector empty and the flow waiting.
+         *  wallet it loads but cannot add to leaves the selector empty and the flow waiting. Build the bridge on
+         *  this same [scope]: it collects for as long as its own scope lives, so a longer-lived one keeps
+         *  fetching after the flow it was built for is gone.
          */
         fun create(
             scope: CoroutineScope,
