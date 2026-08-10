@@ -15,6 +15,7 @@ dependencies {
 
     /* Project - API */
     api(projects.features.hotWallet.api)
+    api(projects.features.jointAccount.main.api)
     api(projects.features.pushNotificationSettings.api)
     api(projects.features.wallet.api)
     api(projects.features.walletSettings.api)
