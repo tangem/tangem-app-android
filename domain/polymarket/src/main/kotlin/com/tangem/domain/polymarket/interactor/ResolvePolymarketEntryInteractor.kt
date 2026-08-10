@@ -50,14 +50,8 @@ class ResolvePolymarketEntryInteractor(
         either {
             val isBlocked = checkGeoblock().bind()
             val addresses = deriveAddresses(userWalletId).bind()
-            val state = readWalletStatus(addresses).bind()
 
-            val hasCredentials = hasCredentials(addresses)
-            TangemLogger.i("Resolve: credentials found=$hasCredentials")
-
-            val entry = state.toEntry(isBlocked = isBlocked, hasCredentials = hasCredentials)
-            TangemLogger.i("Resolve: entry=$entry")
-            entry
+            entryFor(addresses = addresses, isBlocked = isBlocked).bind()
         }
 
     /**
@@ -77,14 +71,22 @@ class ResolvePolymarketEntryInteractor(
                 return@either PolymarketEntry.Undetermined
             }
 
-            val state = readWalletStatus(addresses).bind()
-            val hasCredentials = hasCredentials(addresses)
-            TangemLogger.i("Resolve: credentials found=$hasCredentials")
-
-            val entry = state.toEntry(isBlocked = isBlocked, hasCredentials = hasCredentials)
-            TangemLogger.i("Resolve: entry=$entry")
-            entry
+            entryFor(addresses = addresses, isBlocked = isBlocked).bind()
         }
+
+    private suspend fun entryFor(
+        addresses: PolymarketAddresses,
+        isBlocked: Boolean,
+    ): Either<PolymarketOnboardingError, PolymarketEntry> = either {
+        val state = readWalletStatus(addresses).bind()
+
+        val hasCredentials = hasCredentials(addresses)
+        TangemLogger.i("Resolve: credentials found=$hasCredentials")
+
+        val entry = state.toEntry(isBlocked = isBlocked, hasCredentials = hasCredentials)
+        TangemLogger.i("Resolve: entry=$entry")
+        entry
+    }
 
     private suspend fun checkGeoblock(): Either<PolymarketOnboardingError, Boolean> =
         checkPolymarketGeoblockUseCase().also { result ->
