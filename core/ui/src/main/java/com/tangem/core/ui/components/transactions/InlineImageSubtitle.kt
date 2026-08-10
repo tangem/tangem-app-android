@@ -61,7 +61,9 @@ internal fun InlineImagesText(
             parts.forEachIndexed { index, part ->
                 // The icon preceding this part (none before the first part); skip a marker that has no matching icon.
                 val iconIndex = index - 1
-                if (iconIndex in icons.indices) appendInlineContent("$INLINE_IMAGE_ID$iconIndex", "")
+                if (iconIndex in icons.indices) {
+                    appendInlineContent("$INLINE_IMAGE_ID$iconIndex", INLINE_IMAGE_PLACEHOLDER)
+                }
                 appendHighlighted(
                     text = part,
                     highlights = highlights,
