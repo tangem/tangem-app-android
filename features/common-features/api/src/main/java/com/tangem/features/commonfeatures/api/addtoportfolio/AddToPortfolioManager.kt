@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -60,7 +61,20 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
     }
 
     interface Factory {
-        fun create(scope: CoroutineScope, settings: Settings, analyticsParams: AnalyticsParams): AddToPortfolioManager
+
+        /**
+         * @param portfolioSelectorBridge the portfolios the flow may add to. `null` loads every multi-currency
+         *  wallet on the device, which is what a caller that has not settled on one wants. A caller that has
+         *  settled passes a bridge in [PortfolioFetcher.Mode.Wallet] so the flow cannot land on another wallet.
+         *  The wallet must be one the token can actually be added to — the flow has no way to check that, and a
+         *  wallet it loads but cannot add to leaves the selector empty and the flow waiting.
+         */
+        fun create(
+            scope: CoroutineScope,
+            settings: Settings,
+            analyticsParams: AnalyticsParams,
+            portfolioSelectorBridge: PortfolioSelectorBridge? = null,
+        ): AddToPortfolioManager
     }
 
     sealed interface LaunchMode {
