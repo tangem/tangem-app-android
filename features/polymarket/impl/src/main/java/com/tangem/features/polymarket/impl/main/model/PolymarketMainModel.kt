@@ -5,25 +5,22 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
-import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
+import com.tangem.features.polymarket.impl.main.model.converter.PolymarketFeedContentUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
-import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,10 +58,15 @@ internal class PolymarketMainModel @Inject constructor(
             ),
         )
 
-    private val converter = PolymarketEventUMConverter(
-        onEventClick = ::onEventClick,
-        onOutcomeClick = ::onOutcomeClick,
+    private val contentConverter = PolymarketFeedContentUMConverter(
+        eventUMConverter = PolymarketEventUMConverter(
+            onEventClick = ::onEventClick,
+            onOutcomeClick = ::onOutcomeClick,
+        ),
+        onReloadClick = ::reload,
     )
+
+    private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
 
     // Replays the latest action: the first Reload is dispatched while the pagination is still subscribing, and a
     // shared flow without a replay cache drops what it cannot deliver yet.
@@ -144,45 +146,18 @@ internal class PolymarketMainModel @Inject constructor(
     private fun observeEvents() {
         eventsBatchFlow.state
             .onEach { batchState ->
-                val content = convertContent(batchState)
+                val content = contentConverter.convert(batchState)
                 uiState.update { it.copy(content = content) }
             }
             .launchIn(modelScope)
     }
 
-    private fun convertContent(batchState: BatchListState<Int, List<PolymarketEvent>>): PolymarketMainUM.ContentUM {
-        return when (batchState.status) {
-            is PaginationStatus.None,
-            is PaginationStatus.InitialLoading,
-            -> PolymarketMainUM.ContentUM.Loading
-            is PaginationStatus.InitialLoadingError -> PolymarketMainUM.ContentUM.Error(onReloadClick = ::reload)
-            is PaginationStatus.NextBatchLoading -> batchState.toContent(isLoadingNextPage = true)
-            is PaginationStatus.Paginating,
-            is PaginationStatus.EndOfPagination,
-            -> batchState.toContent(isLoadingNextPage = false)
-        }
-    }
-
-    private fun BatchListState<Int, List<PolymarketEvent>>.toContent(
-        isLoadingNextPage: Boolean,
-    ): PolymarketMainUM.ContentUM.Content {
-        val events = data.flatMap { batch -> batch.data }
-        return PolymarketMainUM.ContentUM.Content(
-            events = converter.convertList(events).toImmutableList(),
-            isLoadingNextPage = isLoadingNextPage,
-        )
-    }
-
-    private fun buildTabs(): ImmutableList<PolymarketCategoryTabUM> = categories
-        .map { category ->
-            PolymarketCategoryTabUM(
-                id = category.id,
-                label = category.label,
-                isSelected = category.id == selectedCategoryId,
-                onClick = { onCategorySelected(category.id) },
-            )
-        }
-        .toImmutableList()
+    private fun buildTabs() = categoryTabConverter.convert(
+        value = PolymarketCategoryTabUMConverter.Input(
+            categories = categories,
+            selectedCategoryId = selectedCategoryId,
+        ),
+    )
 
     private fun onEventClick(eventId: String) {
         router.push(PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId))
