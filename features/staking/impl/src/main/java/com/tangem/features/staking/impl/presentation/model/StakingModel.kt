@@ -443,8 +443,8 @@ internal class StakingModel @Inject constructor(
                     launchTransactionValidation()
                 },
                 onStakingFeeError = { stakingFeeError ->
-                    stateController.update(AddStakingErrorTransformer)
-                    updateNotifications(stakingError = stakingFeeError)
+                    stakingEventFactory.createStakingErrorAlert(stakingFeeError)
+                    stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                 },
                 onFeeError = { error ->
                     analyticsEventHandler.send(
