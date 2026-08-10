@@ -1,12 +1,15 @@
 package com.tangem.features.polymarket.impl.onboarding.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +40,13 @@ import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboard
  *
  * The legal line is shown at all times, above the button, because consent has to be visible before the
  * action it covers is taken. It is never gated on scroll position.
+ *
+ * The frame's background is a 40dp gradient over a solid block: the legal line's first row sits on the
+ * blurred, still-translucent part with the content faintly showing through, everything from its second
+ * row down — the button included — sits on solid. [TangemFade.Variant.Hard] pins 40dp of *solid* to its
+ * edge and fades whatever is left, i.e. the opposite proportion, so it reproduces the frame only at a
+ * height of exactly twice that block: 40dp of gradient, then 40dp of solid, with this composable
+ * carrying the solid the rest of the way down.
  */
 @Composable
 internal fun PolymarketWelcomeFooter(
@@ -47,17 +57,25 @@ internal fun PolymarketWelcomeFooter(
     val layoutDirection = LocalLayoutDirection.current
 
     Box(modifier = modifier.fillMaxWidth()) {
-        TangemFade(
-            modifier = Modifier.matchParentSize(),
-            position = TangemFade.Position.Bottom,
-            variant = TangemFade.Variant.Hard,
-            blur = true,
-        )
+        Column(modifier = Modifier.matchParentSize()) {
+            TangemFade(
+                modifier = Modifier.height(80.dp),
+                position = TangemFade.Position.Bottom,
+                variant = TangemFade.Variant.Hard,
+                blur = true,
+            )
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(TangemTheme.colors3.bg.primary),
+            )
+        }
         Column(
             modifier = Modifier.padding(
                 start = 24.dp + contentPadding.calculateStartPadding(layoutDirection),
                 end = 24.dp + contentPadding.calculateEndPadding(layoutDirection),
-                top = 16.dp + 12.dp,
+                top = 28.dp,
                 bottom = contentPadding.calculateBottomPadding() + 12.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
