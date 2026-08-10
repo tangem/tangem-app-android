@@ -42,7 +42,9 @@ import javax.inject.Inject
  *
  * That decision is deliberately deferred, not guessed: an undetermined wallet is never reported as having no
  * deposit wallet. A user returning after a reinstall or on a second device presses the button once and is then
- * taken to their existing wallet rather than being told it does not exist.
+ * taken to their existing wallet rather than being told it does not exist. So an undetermined wallet and one
+ * that owes onboarding take the same branch on the button: the run is next either way, and it re-reads the
+ * wallet status itself before signing anything.
  *
  * A failed resolution never falls through to the feed: the region is unknown, and treating that as permission
  * would let a restricted user trade. Which failure surface applies depends on who asked — a failure while the
@@ -113,12 +115,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             )
             PolymarketEntry.Undetermined -> uiState.value = welcome(isStarting = false)
             is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
-            PolymarketEntry.RegionBlocked -> uiState.value = welcome(
-                isStarting = false,
-                overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(
-                    onDismiss = ::onRegionRestrictionsDismiss,
-                ),
-            )
+            PolymarketEntry.RegionBlocked -> showRegionRestrictions()
         }
     }
 
@@ -137,20 +134,20 @@ internal class PolymarketOnboardingModel @Inject constructor(
             ensureActive()
 
             when (entry) {
-                // The gate could not decide, or decided there is onboarding left to do — either way the run is
-                // next, and it re-reads the status itself before signing anything.
                 is PolymarketEntry.Onboard,
                 PolymarketEntry.Undetermined,
                 -> runOnboarding()
                 is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
-                PolymarketEntry.RegionBlocked -> uiState.value = welcome(
-                    isStarting = false,
-                    overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(
-                        onDismiss = ::onRegionRestrictionsDismiss,
-                    ),
-                )
+                PolymarketEntry.RegionBlocked -> showRegionRestrictions()
             }
         }.saveIn(onboardingJob)
+    }
+
+    private fun showRegionRestrictions() {
+        uiState.value = welcome(
+            isStarting = false,
+            overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(onDismiss = ::onRegionRestrictionsDismiss),
+        )
     }
 
     private suspend fun CoroutineScope.runOnboarding() {
