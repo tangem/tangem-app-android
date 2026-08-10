@@ -3,6 +3,8 @@ package com.tangem.feature.walletsettings.model
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -46,6 +48,7 @@ import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -85,11 +88,15 @@ internal class WalletSettingsModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
-    val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
+
+    val isJointAccountCreationEnabled: Boolean
+        get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
     private val walletCardItemDelegate = walletCardItemDelegateFactory.create(
         dialogNavigation = dialogNavigation,
         onUpgradeHotWalletClick = ::onUpgradeWalletClick,
@@ -133,7 +140,7 @@ internal class WalletSettingsModel @Inject constructor(
                 .distinctUntilChanged()
                 .conflate(),
             flow2 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow3 = accountItemsDelegate.loadAccount(wallet),
+            flow3 = accountItemsDelegate.loadAccount(wallet, onAddAccountClick = ::onAddAccountClick),
         ) { nftEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
@@ -427,6 +434,28 @@ internal class WalletSettingsModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun onAddAccountClick() {
+        if (isJointAccountCreationEnabled) {
+            bottomSheetNavigation.activate(WalletSettingsBSConfig.AddAccountType)
+        } else {
+            openCreateCryptoAccount()
+        }
+    }
+
+    fun onAddCryptoAccountClick() {
+        bottomSheetNavigation.dismiss()
+        openCreateCryptoAccount()
+    }
+
+    fun onAddJointAccountClick() {
+        bottomSheetNavigation.dismiss()
+        // TODO([REDACTED_TASK_KEY]): navigate to the joint account promo screen once the onboarding flow exists
+    }
+
+    private fun openCreateCryptoAccount() {
+        router.push(AppRoute.CreateAccount(params.userWalletId))
     }
 
     private fun onAccountReorder(fromIndex: Int, toIndex: Int) {
