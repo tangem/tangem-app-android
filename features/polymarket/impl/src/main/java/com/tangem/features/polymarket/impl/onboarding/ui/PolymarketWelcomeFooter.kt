@@ -1,7 +1,5 @@
 package com.tangem.features.polymarket.impl.onboarding.ui
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,21 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -44,31 +35,16 @@ import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboard
  * Belongs in the scaffold's overlay slot rather than its content slot — the content slot is the haze
  * source, so a blurring child of it would sample itself back as a ghost.
  *
- * @param revealThreshold how much scroll may remain before the legal line fades in. The line stays laid out
- *  at all times and only its alpha animates: the scroll spacer is sized from this footer's measured height,
- *  so a height that varied with the reveal would oscillate.
+ * The legal line is shown at all times, above the button, because consent has to be visible before the
+ * action it covers is taken. It is never gated on scroll position.
  */
 @Composable
 internal fun PolymarketWelcomeFooter(
     state: PolymarketOnboardingUM,
-    scrollState: ScrollState,
-    revealThreshold: Dp,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val layoutDirection = LocalLayoutDirection.current
-    val thresholdPx = with(LocalDensity.current) { revealThreshold.roundToPx() }
-
-    // maxValue is Int.MAX_VALUE until the content is measured, which would otherwise reveal on the first frame.
-    val isLegalRevealed by remember(scrollState, thresholdPx) {
-        derivedStateOf {
-            scrollState.maxValue != Int.MAX_VALUE && scrollState.maxValue - scrollState.value <= thresholdPx
-        }
-    }
-    val legalAlpha by animateFloatAsState(
-        targetValue = if (isLegalRevealed) 1f else 0f,
-        label = "legalLineAlpha",
-    )
 
     Box(modifier = modifier.fillMaxWidth()) {
         TangemFade(
@@ -87,8 +63,6 @@ internal fun PolymarketWelcomeFooter(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             LegalLine(
-                modifier = Modifier.alpha(legalAlpha),
-                isVisible = legalAlpha > 0f,
                 onPolymarketTermsClick = state.onPolymarketTermsClick,
                 onTangemTermsClick = state.onTangemTermsClick,
             )
@@ -112,7 +86,6 @@ internal fun PolymarketWelcomeFooter(
 
 @Composable
 private fun LegalLine(
-    isVisible: Boolean,
     onPolymarketTermsClick: () -> Unit,
     onTangemTermsClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -126,8 +99,8 @@ private fun LegalLine(
     // Handles translations that reorder the %1$s/%2$s placeholders and skips a title that a translation
     // does not contain verbatim — falling back to plain text instead of crashing on an invalid substring range.
     val links = listOf(
-        Triple(fullText.indexOf(polymarketTitle), polymarketTitle) { if (isVisible) onPolymarketTermsClick() },
-        Triple(fullText.indexOf(tangemTitle), tangemTitle) { if (isVisible) onTangemTermsClick() },
+        Triple(fullText.indexOf(polymarketTitle), polymarketTitle, onPolymarketTermsClick),
+        Triple(fullText.indexOf(tangemTitle), tangemTitle, onTangemTermsClick),
     )
         .filter { it.first >= 0 }
         .sortedBy { it.first }
@@ -145,9 +118,7 @@ private fun LegalLine(
         append(fullText.substring(cursor))
     }
     Text(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (isVisible) Modifier else Modifier.clearAndSetSemantics { }),
+        modifier = modifier.fillMaxWidth(),
         text = text,
         style = TangemTheme.typography3.caption.medium,
         color = TangemTheme.colors3.text.secondary,

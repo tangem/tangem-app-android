@@ -62,8 +62,6 @@ internal fun PolymarketOnboardingScreen(
             if (errorOverlay == null) {
                 PolymarketWelcomeFooter(
                     state = state,
-                    scrollState = scrollState,
-                    revealThreshold = 80.dp - 16.dp,
                     contentPadding = contentPadding,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -85,7 +83,7 @@ internal fun PolymarketOnboardingScreen(
             PolymarketWelcomeContent(
                 scrollState = scrollState,
                 contentPadding = contentPadding,
-                trailingSpace = with(LocalDensity.current) { footerHeight.toDp() } + 80.dp,
+                trailingSpace = with(LocalDensity.current) { footerHeight.toDp() },
             )
         }
     }
