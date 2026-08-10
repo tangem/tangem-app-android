@@ -55,9 +55,9 @@ class ResolvePolymarketEntryInteractor(
         }
 
     /**
-     * The decision as far as it can be taken without prompting the user for anything. A wallet that has already
-     * derived the owner address here resolves in full; one that has not yields [PolymarketEntry.Undetermined]
-     * rather than paying for a card session the user never asked for.
+     * The decision as far as it can be taken without prompting the user for anything. A wallet whose addresses
+     * this device can already produce resolves in full; one whose addresses it cannot yields
+     * [PolymarketEntry.Undetermined] rather than paying for a card session the user never asked for.
      *
      * The region is still read, so a blocked region is known before anything is shown.
      */
@@ -67,7 +67,7 @@ class ResolvePolymarketEntryInteractor(
 
             val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
             if (addresses == null) {
-                TangemLogger.i("Resolve: owner address not derived yet, entry=Undetermined")
+                TangemLogger.i("Resolve: no addresses available without prompting, entry=Undetermined")
                 return@either PolymarketEntry.Undetermined
             }
 
