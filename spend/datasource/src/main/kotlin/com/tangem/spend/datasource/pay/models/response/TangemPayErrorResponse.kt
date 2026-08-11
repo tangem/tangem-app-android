@@ -10,6 +10,5 @@ data class TangemPayErrorResponse(
     @JsonClass(generateAdapter = true)
     data class Error(
         @Json(name = "code") val code: Int,
-        @Json(name = "name") val name: String? = null,
     )
 }

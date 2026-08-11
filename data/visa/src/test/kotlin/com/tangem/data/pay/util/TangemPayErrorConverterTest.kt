@@ -31,77 +31,52 @@ internal class TangemPayErrorConverterTest {
             expected = VisaApiError.UnknownWithoutCode,
         ),
         ConvertModel(
-            name = "5xx wins over everything -> ServerUnavailable",
-            throwable = httpException(Code.INTERNAL_SERVER_ERROR, body = named("INSUFFICIENT_FUNDS")),
+            name = "5xx wins over the body code -> ServerUnavailable",
+            throwable = httpException(Code.INTERNAL_SERVER_ERROR, body = coded(CARD_ISSUE_INSUFFICIENT_BALANCE)),
             expected = VisaApiError.ServerUnavailable,
         ),
         ConvertModel(
-            name = "401 wins over a named error -> RefreshTokenExpired",
-            throwable = httpException(Code.UNAUTHORIZED, body = named("PLASTIC_NOT_AVAILABLE")),
+            name = "404 wins over the body code -> NotFound",
+            throwable = httpException(Code.NOT_FOUND, body = coded(CARD_ISSUE_INSUFFICIENT_BALANCE)),
+            expected = VisaApiError.NotFound,
+        ),
+        ConvertModel(
+            name = "401 wins over the body code -> RefreshTokenExpired",
+            throwable = httpException(Code.UNAUTHORIZED, body = coded(CARD_ISSUE_INSUFFICIENT_BALANCE)),
             expected = VisaApiError.RefreshTokenExpired,
         ),
         ConvertModel(
-            name = "404 without a body -> NotFound",
-            throwable = httpException(Code.NOT_FOUND, body = null),
-            expected = VisaApiError.NotFound,
+            name = "409 with the active-order code -> CardIssueActiveOrderExists",
+            throwable = httpException(Code.CONFLICT, body = coded(CARD_ISSUE_ACTIVE_ORDER_EXISTS)),
+            expected = VisaApiError.CardIssueActiveOrderExists,
         ),
         ConvertModel(
-            name = "404 with an unparseable body -> NotFound",
-            throwable = httpException(Code.NOT_FOUND, body = "}not json{"),
-            expected = VisaApiError.NotFound,
+            name = "400 with the offer code -> CardIssueOfferNotAvailable",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ISSUE_OFFER_NOT_AVAILABLE)),
+            expected = VisaApiError.CardIssueOfferNotAvailable,
         ),
         ConvertModel(
-            name = "404 with an unmodelled name -> NotFound",
-            throwable = httpException(Code.NOT_FOUND, body = named("SOMETHING_NEW")),
-            expected = VisaApiError.NotFound,
-        ),
-        ConvertModel(
-            name = "404 with a numeric code but no name still short-circuits -> NotFound",
-            throwable = httpException(Code.NOT_FOUND, body = """{"error":{"code":140116}}"""),
-            expected = VisaApiError.NotFound,
-        ),
-        ConvertModel(
-            name = "404 with a modelled name -> the named error",
-            throwable = httpException(Code.NOT_FOUND, body = named("PLASTIC_NOT_AVAILABLE")),
-            expected = VisaApiError.PlasticNotAvailable,
-        ),
-        ConvertModel(
-            name = "409 ALREADY_HAS_ACTIVE_ORDER -> AlreadyHasActiveOrder",
-            throwable = httpException(Code.CONFLICT, body = named("ALREADY_HAS_ACTIVE_ORDER")),
-            expected = VisaApiError.AlreadyHasActiveOrder,
-        ),
-        ConvertModel(
-            name = "400 INSUFFICIENT_FUNDS -> InsufficientFunds",
-            throwable = httpException(Code.BAD_REQUEST, body = named("INSUFFICIENT_FUNDS")),
-            expected = VisaApiError.InsufficientFunds,
-        ),
-        ConvertModel(
-            name = "400 INVALID_SHIPPING_ADDRESS -> InvalidShippingAddress",
-            throwable = httpException(Code.BAD_REQUEST, body = named("INVALID_SHIPPING_ADDRESS")),
-            expected = VisaApiError.InvalidShippingAddress,
-        ),
-        ConvertModel(
-            name = "400 COUNTRY_NOT_SUPPORTED -> CountryNotSupported",
-            throwable = httpException(Code.BAD_REQUEST, body = named("COUNTRY_NOT_SUPPORTED")),
-            expected = VisaApiError.CountryNotSupported,
-        ),
-        ConvertModel(
-            name = "400 OFFER_NOT_AVAILABLE -> OfferNotAvailable",
-            throwable = httpException(Code.BAD_REQUEST, body = named("OFFER_NOT_AVAILABLE")),
-            expected = VisaApiError.OfferNotAvailable,
-        ),
-        ConvertModel(
-            name = "numeric mapping still applies when no name is present",
-            throwable = httpException(Code.BAD_REQUEST, body = """{"error":{"code":140116}}"""),
+            name = "400 with the balance code -> CardIssueInsufficientBalance",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ISSUE_INSUFFICIENT_BALANCE)),
             expected = VisaApiError.CardIssueInsufficientBalance,
         ),
         ConvertModel(
-            name = "non-404 without a body -> UnknownWithoutCode",
+            name = "400 with the shipping-address code -> CardIssueInvalidShippingAddress",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ISSUE_INVALID_SHIPPING_ADDRESS)),
+            expected = VisaApiError.CardIssueInvalidShippingAddress,
+        ),
+        ConvertModel(
+            name = "400 with an unmodelled code -> Unknown",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(UNMODELLED_CODE)),
+            expected = VisaApiError.Unknown(errorCode = FEATURE_CODE + UNMODELLED_CODE),
+        ),
+        ConvertModel(
+            name = "400 without a body -> UnknownWithoutCode",
             throwable = httpException(Code.BAD_REQUEST, body = null),
             expected = VisaApiError.UnknownWithoutCode,
         ),
         ConvertModel(
-            name = "non-404 with an unparseable body -> UnknownWithoutCode",
+            name = "400 with an unparseable body -> UnknownWithoutCode",
             throwable = httpException(Code.BAD_REQUEST, body = "}not json{"),
             expected = VisaApiError.UnknownWithoutCode,
         ),
@@ -116,12 +91,19 @@ internal class TangemPayErrorConverterTest {
     }
 
     private companion object {
+        const val FEATURE_CODE = 104_000_000
+        const val CARD_ISSUE_ACTIVE_ORDER_EXISTS = 140114
+        const val CARD_ISSUE_OFFER_NOT_AVAILABLE = 140115
+        const val CARD_ISSUE_INSUFFICIENT_BALANCE = 140116
+        const val CARD_ISSUE_INVALID_SHIPPING_ADDRESS = 140126
+        const val UNMODELLED_CODE = 149999
+
         fun httpException(code: Code, body: String?) = ApiResponseError.HttpException(
             code = code,
             message = null,
             errorBody = body,
         )
 
-        fun named(name: String) = """{"error":{"code":0,"name":"$name"}}"""
+        fun coded(code: Int) = """{"error":{"code":$code}}"""
     }
 }

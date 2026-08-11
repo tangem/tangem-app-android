@@ -66,7 +66,6 @@ internal class TangemPayIssueAdditionalCardModel @Inject constructor(
     private fun handleIssueError(error: VisaApiError) {
         when (error) {
             VisaApiError.CardIssueInsufficientBalance,
-            VisaApiError.InsufficientFunds,
             -> uiState.update { it.copy(isBalanceInsufficient = true) }
             else -> {
                 uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
