@@ -21,7 +21,9 @@ import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.toStakingTarget
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -77,12 +79,16 @@ internal open class TxDetailsConverterTestBase {
     protected fun onChainConverter(
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         validators: List<Yield.Validator> = emptyList(),
+        vaults: List<P2PEthPoolVault> = emptyList(),
         lookup: TxHistoryLookupContext = lookupOf(),
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
         menu = menu,
-        validatorsByAddress = validators.associateBy(Yield.Validator::address),
+        targetsByAddress = buildMap {
+            validators.forEach { put(it.address, it.toStakingTarget()) }
+            vaults.forEach { put(it.vaultAddress, it.toStakingTarget()) }
+        },
         onOpenValidator = openedUrls::add,
         lookup = lookup,
     )
@@ -152,6 +158,24 @@ internal open class TxDetailsConverterTestBase {
         preferred = true,
         isStrategicPartner = false,
     )
+
+    protected fun vault(address: String = VAULT_ADDRESS, displayName: String = "P2P Vault"): P2PEthPoolVault =
+        P2PEthPoolVault(
+            vaultAddress = address,
+            displayName = displayName,
+            apy = BigDecimal("0.045"),
+            baseApy = BigDecimal("0.04"),
+            capacity = BigDecimal("1000"),
+            totalAssets = BigDecimal("100"),
+            feePercent = BigDecimal("10"),
+            isPrivate = false,
+            isGenesis = false,
+            isSmoothingPool = true,
+            isErc20 = false,
+            tokenName = null,
+            tokenSymbol = null,
+            createdAt = 0L,
+        )
 
     protected fun provider(name: String): ExpressProvider = ExpressProvider(
         providerId = "provider-1",
@@ -296,6 +320,7 @@ internal open class TxDetailsConverterTestBase {
         const val USER_ADDRESS = "0x1234567890abcdef1234"
         const val VALIDATOR_ADDRESS = "0xvalidator"
         const val VALIDATOR_URL = "https://lido.fi"
+        const val VAULT_ADDRESS = "0xvault"
         const val EXTERNAL_URL = "https://provider.example/tx/swap-1"
         const val FROM_ADDRESS = "0xfromOwnAddress1234"
         const val PAYOUT_ADDRESS = "bc1qPayoutOwnAddress"
