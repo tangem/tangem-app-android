@@ -134,6 +134,12 @@ internal class DefaultStakeKitRepository(
         }
     }
 
+    override fun getPersistedValidatorsFlow(): Flow<List<Yield.Validator>> {
+        return stakingValidatorDao.getAllAsFlow().map { entities ->
+            entities.map(YieldConverter::convertFromEntity)
+        }
+    }
+
     override suspend fun getActions(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
