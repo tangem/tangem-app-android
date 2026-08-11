@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -32,16 +33,16 @@ class GetAvailableFeeTokensUseCase(
      *
      * @param nativeFeeAmount fee the transaction would cost when paid in the native coin, as reported by
      * [com.tangem.domain.transaction.models.TransactionFeeExtended.nativeFee]. When it is known and the
-     * native balance cannot cover it, the native coin is dropped from the result — paying with it would
-     * fail anyway. It is still kept as the only option when no token can pay the fee either.
+     * native balance cannot cover it, the native coin is reported as not enough for the fee — paying with
+     * it would fail anyway. It is still offered normally when no token can pay the fee either.
      *
-     * @return List where the first element is the native currency (for fallback), unless it was filtered out
+     * @return the offered currencies, the native one first, along with those that cannot cover the fee
      */
     suspend operator fun invoke(
         userWallet: UserWallet,
         network: Network,
         nativeFeeAmount: BigDecimal? = null,
-    ): Either<GetFeeError, List<CryptoCurrencyStatus>> {
+    ): Either<GetFeeError, AvailableFeeTokens> {
         return either {
             catch(
                 block = {
@@ -60,14 +61,16 @@ class GetAvailableFeeTokensUseCase(
                     // here — TRX cost depends on the account's bandwidth/energy and an estimation can
                     // overshoot what is actually charged.
                     if (isTron(network.rawId)) {
-                        return@either buildList {
-                            add(nativeCurrencyStatus)
-                            addAll(getTronGaslessTokens(network, userCurrenciesStatuses))
-                        }
+                        return@either AvailableFeeTokens(
+                            tokens = buildList {
+                                add(nativeCurrencyStatus)
+                                addAll(getTronGaslessTokens(network, userCurrenciesStatuses))
+                            },
+                        )
                     }
 
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
-                        return@either listOf(nativeCurrencyStatus)
+                        return@either AvailableFeeTokens(tokens = listOf(nativeCurrencyStatus))
                     }
 
                     buildFeeTokens(
@@ -87,14 +90,17 @@ class GetAvailableFeeTokensUseCase(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         nativeFeeAmount: BigDecimal?,
         tokens: List<CryptoCurrencyStatus>,
-    ): List<CryptoCurrencyStatus> {
-        val shouldDropNative = tokens.any(::hasSpendableBalance) &&
+    ): AvailableFeeTokens {
+        val isNativeNotEnough = tokens.any(::hasSpendableBalance) &&
             !canPayFee(status = nativeCurrencyStatus, feeAmount = nativeFeeAmount)
 
-        return buildList {
-            if (!shouldDropNative) add(nativeCurrencyStatus)
-            addAll(tokens)
-        }
+        return AvailableFeeTokens(
+            tokens = buildList {
+                add(nativeCurrencyStatus)
+                addAll(tokens)
+            },
+            notEnoughForFeeIds = if (isNativeNotEnough) setOf(nativeCurrencyStatus.currency.id) else emptySet(),
+        )
     }
 
     private suspend fun getGaslessTokens(
