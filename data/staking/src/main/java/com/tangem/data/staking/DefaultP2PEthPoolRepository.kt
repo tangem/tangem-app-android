@@ -39,6 +39,7 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -118,6 +119,12 @@ internal class DefaultP2PEthPoolRepository(
             vaultDtos
                 .map { vaultConverter.convert(it) }
                 .filter { it.vaultAddress.lowercase() !in P2PEthPoolStakingConfig.TEST_VAULT_ADDRESSES }
+        }
+    }
+
+    override fun getPersistedVaultsFlow(): Flow<List<P2PEthPoolVault>> {
+        return p2pEthPoolVaultDao.getAllAsFlow().map { entities ->
+            entities.map(vaultConverter::convertFromEntity)
         }
     }
 
