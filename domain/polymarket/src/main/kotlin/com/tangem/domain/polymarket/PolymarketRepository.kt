@@ -57,7 +57,7 @@ interface PolymarketRepository {
     ): Either<PolymarketWalletError, PolymarketWalletStatus>
 
     /**
-     * Relay the fully-signed 6-approval [batch] (BFF `POST /wallet/approvals`). The deposit wallet must
+     * Relay the fully-signed 13-approval [batch] (BFF `POST /wallet/approvals`). The deposit wallet must
      * be deployed first (otherwise the BFF responds 409).
      */
     suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
