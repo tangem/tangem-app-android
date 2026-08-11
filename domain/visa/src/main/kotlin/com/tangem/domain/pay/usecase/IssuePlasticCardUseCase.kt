@@ -17,7 +17,6 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class IssuePlasticCardUseCase(
     private val customerOffersRepository: CustomerOffersRepository,
@@ -28,11 +27,12 @@ class IssuePlasticCardUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         plasticCardOrder: PlasticCardOrder,
+        idempotencyKey: String,
     ): Either<VisaApiError, Unit> = either {
         val offer = catch(
             block = { customerOffersRepository.getOffers(userWalletId).bind().plasticOffer() },
             catch = { handleError(it) },
-        ) ?: raise(VisaApiError.PlasticNotAvailable)
+        ) ?: raise(VisaApiError.CardIssueOfferNotAvailable)
 
         val activeOrders = catch(
             block = {
@@ -48,15 +48,22 @@ class IssuePlasticCardUseCase(
         )
 
         if (OrderResolver.selectActive(orders = activeOrders, type = OrderType.CARD_ISSUE_PLASTIC_RAIN) != null) {
-            raise(VisaApiError.AlreadyHasActiveOrder)
+            raise(VisaApiError.CardIssueActiveOrderExists)
         }
 
-        val order = customerOrderRepository.createPlasticIssueOrder(
-            userWalletId = userWalletId,
-            specificationName = offer.data.specificationName,
-            order = plasticCardOrder,
-            idempotencyKey = UUID.randomUUID().toString(),
-        ).bind()
+        val order = catch(
+            block = {
+                customerOrderRepository
+                    .createPlasticIssueOrder(
+                        userWalletId = userWalletId,
+                        specificationName = offer.data.specificationName,
+                        order = plasticCardOrder,
+                        idempotencyKey = idempotencyKey,
+                    )
+                    .bind()
+            },
+            catch = { handleError(it) },
+        )
 
         appCoroutineScope.launch {
             startTangemPayOrderPollingUseCase(
