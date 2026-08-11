@@ -3,6 +3,7 @@ package com.tangem.feature.swap.model
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.entity.AccountFlow
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -447,6 +448,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
             assertThat(receiveCard.fiatSymbolOverride).isEqualTo("USD")
             assertThat(receiveCard.isSelectionLocked).isTrue()
+            assertThat(receiveCard.currencyIconState).isInstanceOf(CurrencyIconState.PaymentAccount::class.java)
             assertThat(model.uiState.titleId).isEqualTo(R.string.tangempay_card_details_add_funds)
         }
 
@@ -471,10 +473,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         // Act
         val model = createModel(accountFlow = AccountFlow.TopUp)
 
-        // Assert — only the TO (receive) card is abstracted; FROM keeps its real token.
+        // Assert — only the TO (receive) card is abstracted; FROM keeps its real token icon, not the
+        // Payment-account avatar.
         val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
         assertThat(sendCard.fiatSymbolOverride).isNull()
         assertThat(sendCard.isSelectionLocked).isFalse()
+        assertThat(sendCard.currencyIconState).isNotInstanceOf(CurrencyIconState.PaymentAccount::class.java)
     }
 
     @Test
@@ -499,11 +503,13 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Act
             val model = createModel(accountFlow = AccountFlow.Withdraw)
 
-            // Assert — Withdraw only changes the title; TO stays a normal, selectable card.
+            // Assert — Withdraw only changes the title; TO stays a normal, selectable card with its real
+            // token icon, not the Payment-account avatar.
             assertThat(model.uiState.titleId).isEqualTo(R.string.tangempay_card_details_withdraw)
             val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
             assertThat(receiveCard.fiatSymbolOverride).isNull()
             assertThat(receiveCard.isSelectionLocked).isFalse()
+            assertThat(receiveCard.currencyIconState).isNotInstanceOf(CurrencyIconState.PaymentAccount::class.java)
         }
 
     @Test
@@ -540,6 +546,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val toggleOnModel = createModel(accountFlow = AccountFlow.TopUp)
         val toggleOnReceiveCard = toggleOnModel.uiState.receiveCardData as SwapCardState.SwapCardData
         assertThat(toggleOnReceiveCard.fiatSymbolOverride).isEqualTo("USD")
+        assertThat(toggleOnReceiveCard.currencyIconState).isInstanceOf(CurrencyIconState.PaymentAccount::class.java)
         assertThat(toggleOnModel.uiState.titleId).isEqualTo(R.string.tangempay_card_details_add_funds)
 
         // Act
@@ -553,6 +560,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         assertThat(toggleOffReceiveCard.fiatSymbolOverride).isNotEqualTo(toggleOnReceiveCard.fiatSymbolOverride)
         assertThat(toggleOffReceiveCard.fiatSymbolOverride).isNull()
         assertThat(toggleOffReceiveCard.isSelectionLocked).isFalse()
+        assertThat(toggleOffReceiveCard.currencyIconState).isNotInstanceOf(CurrencyIconState.PaymentAccount::class.java)
     }
 
     @Test
