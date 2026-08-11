@@ -44,10 +44,12 @@ internal class TxHistoryTitleConverter {
             confirmed = R.string.transaction_history_staking_reward,
         )
         is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
+        // Send routes through the yield provider (never the user's own account), so "Transfer" is impossible:
+        // a withdraw (funds out of Aave) → Withdrawn, everything else → Receive/Send by direction.
         is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
-            resourceReference(R.string.yield_module_transaction_withdraw)
+            tx.statusAwareTitle(R.string.common_withdrawing, R.string.transaction_history_withdrawn)
         } else {
-            resourceReference(R.string.common_transfer)
+            tx.sendReceiveTitle()
         }
         is TransactionType.YieldSupply.DeployContract ->
             resourceReference(R.string.yield_module_transaction_deploy_contract)
@@ -62,8 +64,13 @@ internal class TxHistoryTitleConverter {
 
     private fun TxInfo.transferTitle(isOwnTransfer: Boolean): TextReference = when {
         isOwnTransfer -> statusAwareTitle(R.string.common_transfer, R.string.common_transferred)
-        isOutgoing -> statusAwareTitle(R.string.common_sending, R.string.common_sent)
-        else -> statusAwareTitle(R.string.common_receiving, R.string.common_received)
+        else -> sendReceiveTitle()
+    }
+
+    private fun TxInfo.sendReceiveTitle(): TextReference = if (isOutgoing) {
+        statusAwareTitle(R.string.common_sending, R.string.common_sent)
+    } else {
+        statusAwareTitle(R.string.common_receiving, R.string.common_received)
     }
 
     private fun TxInfo.pillTitle(spec: PillSpec): TextReference = spec.labels.resolve(status.toUiStatus())
