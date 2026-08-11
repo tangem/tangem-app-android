@@ -579,7 +579,7 @@ internal class DefaultPolymarketRepositoryTest {
     private companion object {
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
-        const val WALLET_ID = "0x000000000000000000000000abc0000000000000000000000000000000000001"
+        const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
