@@ -59,7 +59,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 onBackClick = ::onBackClick,
                 onRetry = ::loadData,
                 onSelectVirtual = params.onSelectVirtual,
-                onSelectPlastic = params.onSelectPlastic,
+                onSelectPlastic = ::onSelectPlastic,
             ),
         )
 
@@ -70,6 +70,11 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
 
     fun onBackClick() {
         router.pop()
+    }
+
+    private fun onSelectPlastic() {
+        val plastic = state.value.plastic ?: return
+        params.onSelectPlastic(plastic.deliveryEtaMaxBusinessDays)
     }
 
     private fun observeCardImage() {
