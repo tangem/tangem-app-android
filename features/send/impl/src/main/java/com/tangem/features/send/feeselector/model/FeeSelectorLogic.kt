@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
@@ -307,7 +308,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 if (selectedToken.currency !is CryptoCurrency.Coin) {
                     raise(error)
                 }
-                emptyList()
+                AvailableFeeTokens(tokens = emptyList())
             },
             ifRight = { it },
         )
@@ -331,25 +332,25 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             }
         }
 
-    private suspend fun getAvailableFeeTokens(
-        nativeFeeAmount: BigDecimal?,
-    ): Either<GetFeeError, List<CryptoCurrencyStatus>> = either {
-        val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
-            GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
-        }.bind()
+    private suspend fun getAvailableFeeTokens(nativeFeeAmount: BigDecimal?): Either<GetFeeError, AvailableFeeTokens> {
+        return either {
+            val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
+                GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
+            }.bind()
 
-        getAvailableFeeTokensUseCase.invoke(
-            userWallet = userWallet,
-            network = params.cryptoCurrencyStatus.currency.network,
-            nativeFeeAmount = nativeFeeAmount,
-        ).bind()
+            getAvailableFeeTokensUseCase.invoke(
+                userWallet = userWallet,
+                network = params.cryptoCurrencyStatus.currency.network,
+                nativeFeeAmount = nativeFeeAmount,
+            ).bind()
+        }
     }
 
     sealed class LoadedFeeResult {
         data class Extended(
             val fee: TransactionFeeExtended,
             val selectedToken: CryptoCurrencyStatus?,
-            val availableTokens: List<CryptoCurrencyStatus>,
+            val availableTokens: AvailableFeeTokens,
         ) : LoadedFeeResult()
 
         data class Basic(val fee: TransactionFee) : LoadedFeeResult()
