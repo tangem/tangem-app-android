@@ -21,18 +21,30 @@ internal class PolymarketEventDetailsContentTransformerTest {
 
     private val sharedSlugs = mutableListOf<String>()
     private val clickedOutcomes = mutableListOf<Pair<String, String>>()
+    private var closedMarketsToggles = 0
+    private var readMoreClicks = 0
 
     // The class is PER_CLASS, so the recorded callbacks would leak between tests.
     @BeforeEach
     fun resetRecordedCallbacks() {
         sharedSlugs.clear()
         clickedOutcomes.clear()
+        closedMarketsToggles = 0
+        readMoreClicks = 0
     }
 
-    private fun transform(event: PolymarketEvent) = PolymarketEventDetailsContentTransformer(
+    private fun transform(
+        event: PolymarketEvent,
+        isClosedMarketsExpanded: Boolean = false,
+        isDescriptionExpanded: Boolean = false,
+    ) = PolymarketEventDetailsContentTransformer(
         event = event,
+        isClosedMarketsExpanded = isClosedMarketsExpanded,
+        isDescriptionExpanded = isDescriptionExpanded,
         onShareClick = { sharedSlugs += it },
         onOutcomeClick = { marketId, assetId -> clickedOutcomes += marketId to assetId },
+        onClosedMarketsClick = { closedMarketsToggles++ },
+        onReadMoreClick = { readMoreClicks++ },
     ).transform(prevState = PolymarketEventDetailsUM.Loading) as PolymarketEventDetailsUM.Content
 
     @Nested
@@ -40,7 +52,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
     inner class MarketsSplit {
 
         @Test
-        fun `GIVEN mixed statuses WHEN transform THEN only tradable markets are shown`() {
+        fun `GIVEN mixed statuses WHEN transform THEN active and closed split and archived dropped`() {
             // Arrange
             val event = createEvent(
                 markets = listOf(
@@ -56,6 +68,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
 
             // Assert
             Truth.assertThat(actual.activeMarkets.map { it.id }).containsExactly("active", "unknown").inOrder()
+            Truth.assertThat(actual.closedMarkets.map { it.id }).containsExactly("closed")
         }
 
         @Test
@@ -76,6 +89,25 @@ internal class PolymarketEventDetailsContentTransformerTest {
             Truth.assertThat(actual.activeMarkets.map { it.id }).containsExactly("first", "second", "third").inOrder()
         }
 
+        @Test
+        fun `GIVEN closed market WHEN transform THEN it carries no outcome buttons`() {
+            // Arrange
+            val event = createEvent(
+                markets = listOf(
+                    createMarket(
+                        id = "closed",
+                        status = PolymarketStatus.CLOSED,
+                        outcomes = listOf(createOutcome(assetId = "yes"), createOutcome(assetId = "no")),
+                    ),
+                ),
+            )
+
+            // Act
+            val actual = transform(event)
+
+            // Assert
+            Truth.assertThat(actual.closedMarkets.single().outcomes).isEmpty()
+        }
     }
 
     @Nested
@@ -152,6 +184,40 @@ internal class PolymarketEventDetailsContentTransformerTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EventDates {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun transformResolutionDate(model: ResolutionDateModel) {
+            // Act
+            val actual = transform(createEvent(endDate = model.endDate))
+
+            // Assert
+            Truth.assertThat(actual.resolutionDate).isEqualTo(model.expected?.let(::stringReference))
+        }
+
+        @Test
+        fun `GIVEN start date WHEN transform THEN market opened date rendered in eastern time`() {
+            // Act
+            val actual = transform(createEvent(startDate = "2026-07-11T22:00:00Z"))
+
+            // Assert
+            Truth.assertThat(actual.marketOpenedDate).isEqualTo(stringReference("Jul 11, 2026, 6:00 PM ET"))
+        }
+
+        private fun provideTestModels(): List<ResolutionDateModel> = listOf(
+            // A summer instant renders in EDT (UTC-4).
+            ResolutionDateModel(endDate = "2026-07-11T22:00:00Z", expected = "Jul 11, 2026, 6:00 PM ET"),
+            // A winter instant renders in EST (UTC-5).
+            ResolutionDateModel(endDate = "2026-01-15T23:00:00Z", expected = "Jan 15, 2026, 6:00 PM ET"),
+            // The upstream date format is not confirmed, so an unparseable value hides the row instead of crashing.
+            ResolutionDateModel(endDate = "tomorrow", expected = null),
+            ResolutionDateModel(endDate = null, expected = null),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Change24h {
 
         // The ratio is asserted directly: going through `transform` would also format the total
@@ -193,6 +259,15 @@ internal class PolymarketEventDetailsContentTransformerTest {
     inner class ContentFields {
 
         @Test
+        fun `GIVEN blank description WHEN transform THEN description is null`() {
+            // Act
+            val actual = transform(createEvent(description = " "))
+
+            // Assert
+            Truth.assertThat(actual.description).isNull()
+        }
+
+        @Test
         fun `GIVEN market without icon WHEN transform THEN card falls back to the event icon`() {
             // Arrange
             val event = createEvent(
@@ -205,6 +280,20 @@ internal class PolymarketEventDetailsContentTransformerTest {
 
             // Assert
             Truth.assertThat(actual.activeMarkets.single().iconUrl).isEqualTo("https://img/event.png")
+        }
+
+        @Test
+        fun `GIVEN fold flags WHEN transform THEN they pass through to the state`() {
+            // Act
+            val actual = transform(
+                event = createEvent(),
+                isClosedMarketsExpanded = true,
+                isDescriptionExpanded = true,
+            )
+
+            // Assert
+            Truth.assertThat(actual.isClosedMarketsExpanded).isTrue()
+            Truth.assertThat(actual.isDescriptionExpanded).isTrue()
         }
     }
 
@@ -242,15 +331,24 @@ internal class PolymarketEventDetailsContentTransformerTest {
         val expected: String,
     )
 
+    internal data class ResolutionDateModel(
+        val endDate: String?,
+        val expected: String?,
+    )
+
     internal data class Change24hModel(
         val volume: BigDecimal?,
         val volume24h: BigDecimal?,
         val expected: BigDecimal?,
     )
 
+    @Suppress("LongParameterList")
     private fun createEvent(
         slug: String = "event-slug",
+        description: String = "Event description",
         iconUrl: String? = null,
+        startDate: String? = null,
+        endDate: String? = null,
         volume: BigDecimal? = null,
         volume24h: BigDecimal? = null,
         displayMode: PolymarketDisplayMode = PolymarketDisplayMode.GROUPED_OUTCOMES,
@@ -259,13 +357,13 @@ internal class PolymarketEventDetailsContentTransformerTest {
         id = "event-1",
         slug = slug,
         title = "Event title",
-        description = "Event description",
+        description = description,
         rulesUrl = "https://polymarket.com/rules",
         iconUrl = iconUrl,
         imageUrl = null,
         status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
+        startDate = startDate,
+        endDate = endDate,
         volume = volume,
         volume24h = volume24h,
         liquidity = null,
