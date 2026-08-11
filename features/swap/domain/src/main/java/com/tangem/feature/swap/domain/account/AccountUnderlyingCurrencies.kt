@@ -1,11 +1,8 @@
 package com.tangem.feature.swap.domain.account
 
-import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import javax.inject.Inject
 
 /**
@@ -17,20 +14,13 @@ interface AccountUnderlyingCurrencies {
 }
 
 internal class PaymentAccountUnderlyingCurrencies @Inject constructor(
-    private val supplier: SingleAccountStatusListSupplier,
+    private val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
 ) : AccountUnderlyingCurrencies {
 
     override suspend fun get(userWalletId: UserWalletId): List<CryptoCurrencyStatus> {
-        val payment = supplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
-            ?.accountStatuses.orEmpty()
-            .filterIsInstance<AccountStatus.Payment>()
-            .firstOrNull() ?: return emptyList()
-
-        val status = when (val value = payment.value) {
-            is PaymentAccountStatusValue.Loaded -> value.cryptoCurrencyStatus
-            is PaymentAccountStatusValue.Deactivated -> value.cryptoCurrencyStatus
-            else -> null
-        }
-        return listOfNotNull(status)
+        val cryptoCurrencyStatus = getPaymentAccountCryptoCurrencyStatusUseCase.invokeSync(userWalletId)
+            .getOrNull()
+            ?.second
+        return listOfNotNull(cryptoCurrencyStatus)
     }
 }
