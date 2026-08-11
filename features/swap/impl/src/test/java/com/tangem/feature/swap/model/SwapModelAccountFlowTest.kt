@@ -13,10 +13,12 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.ChangeCardsButtonState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.presentation.R
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -533,6 +535,184 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Assert — same CTA mode regardless of account flow, and it is a real (non-"Send") mode.
             assertThat(topUpModel.uiState.swapButton.mode).isEqualTo(plainSwapModel.uiState.swapButton.mode)
             assertThat(topUpModel.uiState.swapButton.mode).isEqualTo(SwapButton.Mode.SWAP)
+        }
+
+    // -------------------------------------------------------------------------
+    // [REDACTED_TASK_KEY] Task 8: toggle-OFF regression — legacy behaviour must be untouched by AccountFlow
+    // regardless of which flow value is set, not just Withdraw (already covered above).
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN toggle OFF WHEN TopUp flow THEN legacy slot detection used for isTangemPayWithdrawal`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val model = createModel(accountFlow = AccountFlow.TopUp)
+        val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
+        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk(relaxed = true))
+
+        // Act & Assert — the TopUp AccountFlow value is ignored; only the FROM slot's Account type matters.
+        assertThat(model.isTangemPayWithdrawal(fromWithPaymentAccount)).isTrue()
+        assertThat(model.isTangemPayWithdrawal(fromWithPortfolioAccount)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN toggle OFF WHEN TopUp flow THEN reverse button not forced hidden`() = runTest {
+        // Arrange & Act
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val model = createModel(accountFlow = AccountFlow.TopUp)
+
+        // Assert
+        assertThat(model.uiState.changeCardsButtonState).isNotEqualTo(ChangeCardsButtonState.HIDDEN)
+    }
+
+    @Test
+    fun `GIVEN toggle OFF WHEN TopUp flow THEN from and to selector settings are the legacy SwapFrom and SwapTo`() =
+        runTest {
+            // Arrange & Act — whole-object equality: SwapFrom/WithdrawFrom differ only in chooserBlock, so this
+            // also proves the withdraw-only Market-hiding restriction (Task 7) does not leak into TopUp.
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+            val model = createModel(accountFlow = AccountFlow.TopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.chooseFromTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapFrom)
+            assertThat(model.chooseToTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapTo)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from and to selector settings are the legacy SwapFrom and SwapTo`() =
+        runTest {
+            // Arrange & Act — complements the existing chooserBlock-only checks with a whole-object assertion
+            // and covers the TO side, which toggle-OFF Withdraw had no coverage for yet.
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+            val model = createModel(accountFlow = AccountFlow.Withdraw)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.chooseFromTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapFrom)
+            assertThat(model.chooseToTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapTo)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN toggle OFF WHEN Withdraw flow THEN title stays default Swap`() = runTest {
+        // Arrange & Act — Withdraw+toggle-ON title override (asserted above) must not leak when the toggle is off.
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+
+        // Assert
+        assertThat(model.uiState.titleId).isEqualTo(R.string.common_swap)
+    }
+
+    // -------------------------------------------------------------------------
+    // [REDACTED_TASK_KEY] Task 8: non-account swap entries unchanged (accountFlow = null, toggle ON) — completes the
+    // existing title/reverse coverage with the selector-settings assertion.
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN no account flow and toggle ON WHEN model constructed THEN from and to selector settings are SwapFrom and SwapTo`() =
+        runTest {
+            // Arrange & Act
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val model = createModel(accountFlow = null)
+            advanceUntilIdle()
+
+            // Assert — a regular (non-Tangem-Pay) swap entry is unaffected by the account-swap-flow toggle.
+            assertThat(model.chooseFromTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapFrom)
+            assertThat(model.chooseToTokenBridge.settings).isEqualTo(ChooseTokenBridge.Settings.SwapTo)
+            model.onDestroy()
+        }
+
+    // -------------------------------------------------------------------------
+    // [REDACTED_TASK_KEY] Task 8: transfer <-> swap branch on the FROM token, locked against the mode refactor.
+    // `shouldTransferInsteadOfSwap`/`updateTransfer` are stubbed directly (same technique as the rest of this
+    // file) rather than exercised through the real SwapTransferInteractorImpl (covered by its own domain
+    // tests) — the goal here is only to prove SwapModel reacts correctly to whichever branch the interactor
+    // picks: a real account top-up has FROM = the account's own USDC-Polygon token exactly when the transfer
+    // branch is taken (TO is the abstract-USD card over that same underlying token).
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN TopUp flow WHEN from is transfer-eligible (account's own token) THEN transfer path taken and no provider requested`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val fromStatus = swapCurrencyStatus()
+            val toStatus = swapCurrencyStatus()
+            coEvery {
+                initialCurrenciesResolver.invoke(
+                    userWalletId = any(),
+                    initialCryptoCurrency = any(),
+                    swapCurrencyPosition = any(),
+                    accountFlow = any(),
+                    initialToCryptoCurrency = any(),
+                    applyAccountTopUpFromPriority = any(),
+                )
+            } returns (fromStatus to toStatus)
+            every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+            val transferState: SwapState.Transfer = mockk(relaxed = true)
+            coEvery {
+                swapTransferInteractor.updateTransfer(
+                    fromSwapCurrencyStatus = any(),
+                    toSwapCurrencyStatus = any(),
+                    fromTokenAmount = any(),
+                    feePaidCurrencyStatus = any(),
+                    fee = any(),
+                )
+            } returns transferState
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.TopUp)
+            advanceUntilIdle()
+
+            // Assert — transfer path taken: the transfer state lands in dataState and no provider list was
+            // ever requested from the express backend.
+            assertThat(model.dataState.currentTransferState).isSameInstanceAs(transferState)
+            coVerify(exactly = 0) {
+                swapInteractor.getPair(
+                    fromSwapCurrencyStatus = any(),
+                    toSwapCurrencyStatus = any(),
+                    filterProviderTypes = any(),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN TopUp flow WHEN from is not transfer-eligible (a different token) THEN swap path taken and provider list requested`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val fromStatus = swapCurrencyStatus()
+            val toStatus = swapCurrencyStatus()
+            coEvery {
+                initialCurrenciesResolver.invoke(
+                    userWalletId = any(),
+                    initialCryptoCurrency = any(),
+                    swapCurrencyPosition = any(),
+                    accountFlow = any(),
+                    initialToCryptoCurrency = any(),
+                    applyAccountTopUpFromPriority = any(),
+                )
+            } returns (fromStatus to toStatus)
+            every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.TopUp)
+            advanceUntilIdle()
+
+            // Assert — swap path taken: the provider list was requested for the exact FROM/TO pair, and no
+            // transfer state was ever recorded.
+            coVerify(exactly = 1) {
+                swapInteractor.getPair(
+                    fromSwapCurrencyStatus = fromStatus,
+                    toSwapCurrencyStatus = toStatus,
+                    filterProviderTypes = any(),
+                )
+            }
+            assertThat(model.dataState.currentTransferState).isNull()
+            model.onDestroy()
         }
 
     // -------------------------------------------------------------------------
