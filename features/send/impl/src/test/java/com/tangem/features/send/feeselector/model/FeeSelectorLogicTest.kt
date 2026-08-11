@@ -25,6 +25,7 @@ import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorData
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams.FeeStateConfiguration
@@ -81,6 +82,7 @@ internal class FeeSelectorLogicTest {
         mockk()
 
     private val checkReloadTriggerFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val reloadTriggerFlow = MutableSharedFlow<FeeSelectorData>(extraBufferCapacity = 1)
 
     @BeforeEach
     fun setUp() {
@@ -90,7 +92,7 @@ internal class FeeSelectorLogicTest {
         coEvery { onLoadFee() } returns GetFeeError.UnknownError.left()
         coEvery { onLoadFeeExtended(any()) } returns GetFeeError.UnknownError.left()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
-        every { feeSelectorReloadListener.reloadTriggerFlow } returns emptyFlow()
+        every { feeSelectorReloadListener.reloadTriggerFlow } returns reloadTriggerFlow
         every { feeSelectorReloadListener.loadingStateTriggerFlow } returns emptyFlow()
         every { feeSelectorCheckReloadListener.checkReloadTriggerFlow } returns checkReloadTriggerFlow
         every { isGaslessFeeSupportedForNetwork(any()) } returns false
@@ -143,6 +145,88 @@ internal class FeeSelectorLogicTest {
                 coVerify(exactly = 1) { onLoadFeeExtended(any()) }
                 coVerify(exactly = 1) { onLoadFee() }
                 assertThat(sut.shouldShowOnlySpeedOption.value).isTrue()
+            }
+
+        @Test
+        fun `GIVEN gasless fell back to the native fee WHEN fee reloads THEN gasless is quoted again`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange — the automatic quote fails, the block settles on the basic native fee
+                coEvery { onLoadFeeExtended(any()) } returns GetFeeError.GaslessError.YieldBalanceUnavailable.left()
+                coEvery { onLoadFee() } returns singleFee().right()
+                buildModel(gaslessEnabled = true, nativeFeeCurrency = true)
+                advanceUntilIdle()
+
+                // Act — the amount changed, the fee is reloaded
+                reloadTriggerFlow.tryEmit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Assert — the token fee is quoted on every reload, not abandoned after the first fallback
+                coVerify(exactly = 2) { onLoadFeeExtended(null) }
+            }
+
+        @Test
+        fun `GIVEN token picked in the bottom sheet WHEN fee reloads THEN quote that token`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange — the sheet runs its own selector and hands the pick back as state
+                coEvery { onLoadFeeExtended(any()) } returns GetFeeError.GaslessError.YieldBalanceUnavailable.left()
+                coEvery { onLoadFee() } returns singleFee().right()
+                val sut = buildModel(gaslessEnabled = true, nativeFeeCurrency = true)
+                advanceUntilIdle()
+                sut.uiState.value = contentState(
+                    selected = FeeItem.Market(realFee()),
+                    normalValue = "0.001",
+                    feeCurrency = tokenStatus,
+                    isFeeTokenSelectedByUser = true,
+                )
+                clearMocks(onLoadFee, onLoadFeeExtended, answers = false, recordedCalls = true, childMocks = false)
+
+                // Act
+                reloadTriggerFlow.tryEmit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { onLoadFeeExtended(tokenStatus) }
+                coVerify(exactly = 0) { onLoadFee() }
+            }
+
+        @Test
+        fun `GIVEN token picked by user WHEN gasless fails THEN keep the token and surface the error`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFeeExtended(any()) } returns GetFeeError.GaslessError.YieldBalanceUnavailable.left()
+                coEvery { onLoadFee() } returns singleFee().right()
+                val sut = buildModel(gaslessEnabled = true, nativeFeeCurrency = true)
+                advanceUntilIdle()
+                clearMocks(onLoadFee, onLoadFeeExtended, answers = false, recordedCalls = true, childMocks = false)
+
+                // Act
+                sut.onTokenSelected(tokenStatus)
+                advanceUntilIdle()
+
+                // Assert — the fee stays on the picked token instead of silently returning to the coin
+                coVerify(exactly = 1) { onLoadFeeExtended(tokenStatus) }
+                coVerify(exactly = 0) { onLoadFee() }
+                assertThat(sut.uiState.value).isInstanceOf(FeeSelectorUM.Error::class.java)
+            }
+
+        @Test
+        fun `GIVEN native coin picked by user WHEN load fee THEN quote the basic fee`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange — settle on a loaded block first, the selector is only reachable from there
+                coEvery { onLoadFeeExtended(any()) } returns GetFeeError.GaslessError.YieldBalanceUnavailable.left()
+                coEvery { onLoadFee() } returns singleFee().right()
+                coEvery { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) } returns null
+                val sut = buildModel(gaslessEnabled = true)
+                advanceUntilIdle()
+                clearMocks(onLoadFee, onLoadFeeExtended, answers = false, recordedCalls = true, childMocks = false)
+
+                // Act
+                sut.onTokenSelected(coinStatus)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { onLoadFee() }
+                coVerify(exactly = 0) { onLoadFeeExtended(any()) }
             }
 
         @Test
@@ -278,7 +362,10 @@ internal class FeeSelectorLogicTest {
 
     // region fixtures
 
-    private fun TestScope.buildModel(gaslessEnabled: Boolean): FeeSelectorLogic {
+    private fun TestScope.buildModel(
+        gaslessEnabled: Boolean,
+        nativeFeeCurrency: Boolean = false,
+    ): FeeSelectorLogic {
         val currencyStatus = if (gaslessEnabled) tokenStatus else coinStatus
         every { isGaslessFeeSupportedForNetwork(any()) } returns gaslessEnabled
         val params = FeeSelectorParams.FeeSelectorBlockParams(
@@ -287,7 +374,7 @@ internal class FeeSelectorLogicTest {
             onLoadFeeExtended = if (gaslessEnabled) onLoadFeeExtended else null,
             onLoadFee = onLoadFee,
             cryptoCurrencyStatus = currencyStatus,
-            feeCryptoCurrencyStatus = currencyStatus,
+            feeCryptoCurrencyStatus = if (nativeFeeCurrency) coinStatus else currencyStatus,
             feeStateConfiguration = FeeStateConfiguration.None,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
             analyticsCategoryName = "test_fee",
@@ -311,12 +398,18 @@ internal class FeeSelectorLogicTest {
         )
     }
 
-    private fun contentState(selected: FeeItem, normalValue: String): FeeSelectorUM.Content {
+    private fun contentState(
+        selected: FeeItem,
+        normalValue: String,
+        feeCurrency: CryptoCurrencyStatus = coinStatus,
+        isFeeTokenSelectedByUser: Boolean = false,
+    ): FeeSelectorUM.Content {
         val extraInfo = FeeExtraInfo(
             isFeeApproximate = false,
             isFeeConvertibleToFiat = true,
             isTronToken = false,
-            feeCryptoCurrencyStatus = coinStatus,
+            feeCryptoCurrencyStatus = feeCurrency,
+            isFeeTokenSelectedByUser = isFeeTokenSelectedByUser,
         )
         return FeeSelectorUM.Content(
             isPrimaryButtonEnabled = true,
