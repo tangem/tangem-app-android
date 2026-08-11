@@ -7,6 +7,7 @@ import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.HasPolymarketDepositNetworkUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
@@ -52,6 +53,8 @@ internal class PolymarketEntryModelTest {
     private val onSuccessAddedChannel = Channel<AddToPortfolioManager.Result>()
     private val onAddedTokenClickChannel = Channel<AddToPortfolioManager.Result>()
 
+    private lateinit var isEnabledFlow: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
+
     private val walletAId = UserWalletId("aa")
     private val walletBId = UserWalletId("bb")
     private val walletA: UserWallet = mockWallet(id = walletAId)
@@ -73,8 +76,8 @@ internal class PolymarketEntryModelTest {
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
         every { portfolioSelectorBridgeFactory.create(any(), any()) } returns portfolioSelectorBridge
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(null)
-        every { portfolioSelectorController.isEnabled } returns
-            MutableStateFlow { _: UserWallet, _: AccountStatus -> true }
+        isEnabledFlow = MutableStateFlow { _: UserWallet, _: AccountStatus -> true }
+        every { portfolioSelectorController.isEnabled } returns isEnabledFlow
         coEvery { hasDepositNetworkUseCase(any()) } returns true
 
         every { addToPortfolioManager.onDismiss } returns onDismissChannel
@@ -84,6 +87,28 @@ internal class PolymarketEntryModelTest {
         every { addToPortfolioManager.setTokenParams(any<RawMarketToken>()) } just Runs
         every { addToPortfolioManager.setTokenNetworks(any()) } just Runs
         every { addToPortfolioManagerFactory.create(any(), any(), any(), any()) } returns addToPortfolioManager
+    }
+
+    @Test
+    fun `GIVEN an ineligible wallet WHEN the selector is shown THEN it cannot be picked`() = runTest {
+        // Arrange
+        val ineligible = mockk<UserWallet.Cold> {
+            every { walletId } returns UserWalletId("cc")
+            every { isLocked } returns false
+            every { isMultiCurrency } returns false
+        }
+        coEvery { getEligibleWalletsUseCase() } returns listOf(walletA, walletB)
+        every { getEligibleWalletsUseCase.isEligible(any()) } answers { firstArg<UserWallet>().isMultiCurrency }
+
+        // Act
+        val model = createModel(testScope = this, userWalletId = null)
+        advanceUntilIdle()
+
+        // Assert
+        val isEnabled = isEnabledFlow.value
+        assertThat(isEnabled(ineligible, accountStatusB)).isFalse()
+        assertThat(isEnabled(walletA, accountStatusB)).isTrue()
+        model.onDestroy()
     }
 
     @Test
@@ -415,6 +440,7 @@ internal class PolymarketEntryModelTest {
     private fun mockWallet(id: UserWalletId): UserWallet = mockk<UserWallet.Cold> {
         every { walletId } returns id
         every { isLocked } returns false
+        every { isMultiCurrency } returns true
     }
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
