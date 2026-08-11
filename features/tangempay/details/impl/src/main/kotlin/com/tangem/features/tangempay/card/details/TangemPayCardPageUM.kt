@@ -75,12 +75,14 @@ internal data class TangemPayCardPageSetting(
                 ),
                 onClick = {},
                 iconRes = CoreUiR.drawable.ic_freeze_24,
+                isLoading = true,
             ),
             TangemPayCardPageSetting(
                 id = Id.ChangePin,
                 title = resourceReference(R.string.tangem_pay_pin_code_title),
                 onClick = {},
                 iconRes = CoreUiR.drawable.ic_card_pin_24,
+                isEnabled = false,
             ),
         )
     }
