@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
+import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.signer.Base64UrlCodec
 import com.tangem.data.polymarket.signer.PolymarketHmacSigner
@@ -21,6 +22,7 @@ import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockRespons
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoryDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
+import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
@@ -32,6 +34,7 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -63,6 +66,7 @@ internal class DefaultPolymarketRepositoryTest {
     private val clobApi: PolymarketClobApi = mockk()
     private val walletErrorResolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
     private val authErrorResolver = PolymarketAuthErrorResolver()
+    private val eventErrorResolver = PolymarketEventErrorResolver()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val jvmCodec = object : Base64UrlCodec {
         override fun decode(value: String): ByteArray = JavaBase64.getUrlDecoder().decode(value)
@@ -77,6 +81,7 @@ internal class DefaultPolymarketRepositoryTest {
         clobApi = clobApi,
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
+        eventErrorResolver = eventErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
         dispatchers = dispatchers,
     )
@@ -143,6 +148,46 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+    }
+
+    @Test
+    fun `GIVEN event response WHEN getEvent THEN converts and returns right event`() = runTest {
+        // Arrange
+        coEvery { api.getEvent(eventId = "event-1") } returns ApiResponse.Success(
+            PolymarketEventResponse(event = EVENT_DTO),
+        )
+
+        // Act
+        val result = repository.getEvent(eventId = "event-1")
+
+        // Assert
+        val event = result.getOrNull()
+        assertThat(event?.id).isEqualTo("event-id")
+        assertThat(event?.title).isEqualTo("Event title")
+    }
+
+    @Test
+    fun `GIVEN network exception WHEN getEvent THEN returns left network error`() = runTest {
+        // Arrange
+        coEvery { api.getEvent(eventId = "event-1") } returns networkError()
+
+        // Act
+        val result = repository.getEvent(eventId = "event-1")
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketEventError.Network.left())
+    }
+
+    @Test
+    fun `GIVEN the event is gone WHEN getEvent THEN returns left not found`() = runTest {
+        // Arrange
+        coEvery { api.getEvent(eventId = "event-1") } returns httpError(code = Code.NOT_FOUND, body = null)
+
+        // Act
+        val result = repository.getEvent(eventId = "event-1")
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketEventError.NotFound.left())
     }
 
     @Test

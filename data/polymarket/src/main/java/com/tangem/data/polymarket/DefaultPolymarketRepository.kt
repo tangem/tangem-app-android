@@ -11,6 +11,7 @@ import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
+import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.datasource.api.polymarket.PolymarketApi
@@ -26,6 +27,7 @@ import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -44,6 +46,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val clobApi: PolymarketClobApi,
     private val walletErrorResolver: PolymarketWalletErrorResolver,
     private val authErrorResolver: PolymarketAuthErrorResolver,
+    private val eventErrorResolver: PolymarketEventErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
@@ -67,6 +70,16 @@ internal class DefaultPolymarketRepository @Inject constructor(
                         .bind().events.map(PolymarketEventConverter::convert).right()
                 },
                 onError = { DataError.NetworkError.NoInternetConnection.left() },
+            )
+        }
+
+    override suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent> =
+        withContext(dispatchers.io) {
+            safeApiCall(
+                call = {
+                    PolymarketEventConverter.convert(polymarketApi.getEvent(eventId = eventId).bind().event).right()
+                },
+                onError = { eventErrorResolver.resolve(it).left() },
             )
         }
 
