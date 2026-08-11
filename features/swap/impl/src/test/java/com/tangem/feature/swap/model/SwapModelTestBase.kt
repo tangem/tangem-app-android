@@ -19,6 +19,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
@@ -62,6 +63,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 
 /**
@@ -121,11 +123,19 @@ internal abstract class SwapModelTestBase {
 
     /** Stubs init-block calls so [createModel] has no side effects. Call from `@BeforeEach`. */
     protected fun setUpBase() {
-        val bridge = mockk<ChooseTokenBridge>(relaxed = true) {
-            every { onCurrencyChosen } returns Channel()
-            every { onClose } returns Channel()
+        // Each call gets its own mock echoing back the `settings` it was created with (so
+        // `chooseFromTokenBridge.settings` / `chooseToTokenBridge.settings` reflect what SwapModel
+        // actually passed) and a real MutableStateFlow for `tokenFilter` (so a predicate SwapModel
+        // writes into it can be read back by tests).
+        every { chooseTokenBridgeFactory.create(any(), any(), any()) } answers {
+            val passedSettings = secondArg<ChooseTokenBridge.Settings>()
+            mockk<ChooseTokenBridge>(relaxed = true) {
+                every { settings } returns passedSettings
+                every { onCurrencyChosen } returns Channel()
+                every { onClose } returns Channel()
+                every { tokenFilter } returns MutableStateFlow { _: AccountStatus, _: CryptoCurrencyStatus -> true }
+            }
         }
-        every { chooseTokenBridgeFactory.create(any(), any(), any()) } returns bridge
 
         every { getUserCountryUseCase.invokeSync() } returns UserCountry.Other("US").right()
         every { getBalanceHidingSettingsUseCase.invoke() } returns emptyFlow()
