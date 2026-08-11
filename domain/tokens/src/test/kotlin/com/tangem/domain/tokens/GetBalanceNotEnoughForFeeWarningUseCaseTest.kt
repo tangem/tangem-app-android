@@ -48,29 +48,29 @@ internal class GetBalanceNotEnoughForFeeWarningUseCaseTest {
     }
 
     @Test
-    fun `GIVEN Tron same-token fee WHEN amount plus compensation exceeds balance THEN warning`() = runTest {
-        // Arrange — send 0.15 USDT, compensation 2.74 USDT, balance 2.80 USDT: total 2.89 > 2.80.
+    fun `GIVEN Tron same-token fee WHEN compensation fits balance THEN no warning`() = runTest {
+        // Arrange — max send: the whole 2.80 balance is entered and the 2.74 compensation comes out of it.
+        // The amount-subtraction path reduces the amount, so this must not be reported as insufficient.
         val result = useCase(
             fee = BigDecimal("2.74"),
             userWalletId = userWalletId,
             tokenStatus = statusOf(usdt, balance = BigDecimal("2.80")),
             feeStatus = statusOf(usdt, balance = BigDecimal("2.80")),
-            sendAmount = BigDecimal("0.15"),
         )
 
         // Assert
-        assertThat(result.getOrNull()).isInstanceOf(CryptoCurrencyWarning.BalanceNotEnoughForFee::class.java)
+        assertThat(result.getOrNull()).isNull()
     }
 
     @Test
-    fun `GIVEN Tron same-token fee WHEN amount plus compensation fits balance THEN no warning`() = runTest {
-        // Arrange — total 2.89 <= 3.00.
+    fun `GIVEN Tron same-token fee WHEN compensation alone exceeds balance THEN no warning`() = runTest {
+        // Arrange — even here the warning belongs to TotalExceedsBalance, not to this use case:
+        // reporting both would show two notifications for one problem.
         val result = useCase(
             fee = BigDecimal("2.74"),
             userWalletId = userWalletId,
-            tokenStatus = statusOf(usdt, balance = BigDecimal("3.00")),
-            feeStatus = statusOf(usdt, balance = BigDecimal("3.00")),
-            sendAmount = BigDecimal("0.15"),
+            tokenStatus = statusOf(usdt, balance = BigDecimal("1.00")),
+            feeStatus = statusOf(usdt, balance = BigDecimal("1.00")),
         )
 
         // Assert
@@ -85,7 +85,6 @@ internal class GetBalanceNotEnoughForFeeWarningUseCaseTest {
             userWalletId = userWalletId,
             tokenStatus = statusOf(usdt, balance = BigDecimal("100")),
             feeStatus = statusOf(usdc, balance = BigDecimal("2.00")),
-            sendAmount = BigDecimal("0.15"),
         )
 
         // Assert
@@ -94,13 +93,12 @@ internal class GetBalanceNotEnoughForFeeWarningUseCaseTest {
 
     @Test
     fun `GIVEN Tron cross-token fee WHEN compensation fits fee token balance THEN no warning`() = runTest {
-        // Arrange — the send amount is NOT summed into the USDC balance check.
+        // Arrange — the sent USDT balance is NOT part of the USDC fee check.
         val result = useCase(
             fee = BigDecimal("2.74"),
             userWalletId = userWalletId,
             tokenStatus = statusOf(usdt, balance = BigDecimal("0.15")),
             feeStatus = statusOf(usdc, balance = BigDecimal("3.00")),
-            sendAmount = BigDecimal("0.15"),
         )
 
         // Assert
@@ -141,14 +139,13 @@ internal class GetBalanceNotEnoughForFeeWarningUseCaseTest {
     }
 
     @Test
-    fun `GIVEN Tron fee WHEN fee token balance unknown THEN no warning`() = runTest {
+    fun `GIVEN Tron cross-token fee WHEN fee token balance unknown THEN no warning`() = runTest {
         // Arrange — balance unknown (fee still loads), so the notification-level guard is skipped.
         val result = useCase(
             fee = BigDecimal("2.74"),
             userWalletId = userWalletId,
             tokenStatus = statusOf(usdt, balance = BigDecimal("100")),
-            feeStatus = statusOf(usdt, balance = null),
-            sendAmount = BigDecimal("0.15"),
+            feeStatus = statusOf(usdc, balance = null),
         )
 
         // Assert

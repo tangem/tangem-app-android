@@ -36,7 +36,6 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
         userWalletId: UserWalletId,
         tokenStatus: CryptoCurrencyStatus,
         feeStatus: CryptoCurrencyStatus,
-        sendAmount: BigDecimal = BigDecimal.ZERO,
     ): Either<Throwable, CryptoCurrencyWarning?> = Either.catch {
         withContext(dispatchers.io) {
             val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
@@ -52,7 +51,6 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
                 // don't also fire on it.
                 isTronGaslessScenario(feeStatus) -> resolveTronGaslessWarning(
                     fee = fee,
-                    sendAmount = sendAmount,
                     tokenStatus = tokenStatus,
                     feeStatus = feeStatus,
                 )
@@ -96,19 +94,23 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
     }
 
     /**
-     * Tron gasless: the compensation transfer is paid in the fee token, so its balance must cover the
-     * compensation, plus the send amount when the fee token is the sent token (cross-token pays only
-     * the compensation). Balance unknown → no warning (the fee still loads).
+     * Tron gasless: the compensation transfer is paid in the fee token, so its balance must cover it.
+     *
+     * Only a cross-token fee is checked here. When the fee token IS the sent token, the compensation
+     * comes out of the balance being spent, so the amount-subtraction path owns the case — it reduces
+     * the amount by the fee (see IsAmountSubtractAvailableUseCase), and a fee that doesn't fit even on
+     * its own surfaces as TotalExceedsBalance. Warning here too would just duplicate that.
+     *
+     * Balance unknown → no warning (the fee still loads).
      */
     private fun resolveTronGaslessWarning(
         fee: BigDecimal,
-        sendAmount: BigDecimal,
         tokenStatus: CryptoCurrencyStatus,
         feeStatus: CryptoCurrencyStatus,
     ): CryptoCurrencyWarning? {
+        if (feeStatus.currency.id == tokenStatus.currency.id) return null
         val feeTokenBalance = feeStatus.value.amount ?: return null
-        val required = if (feeStatus.currency.id == tokenStatus.currency.id) fee + sendAmount else fee
-        return if (required > feeTokenBalance) {
+        return if (fee > feeTokenBalance) {
             CryptoCurrencyWarning.BalanceNotEnoughForFee(
                 tokenCurrency = tokenStatus.currency,
                 coinCurrency = feeStatus.currency,
