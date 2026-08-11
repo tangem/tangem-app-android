@@ -1,7 +1,7 @@
-package com.tangem.datasource.local.visa
+package com.tangem.spend.datasource.pay.store
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemDM
+import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemDM
 import com.tangem.datasource.utils.KotlinxDataStoreSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer

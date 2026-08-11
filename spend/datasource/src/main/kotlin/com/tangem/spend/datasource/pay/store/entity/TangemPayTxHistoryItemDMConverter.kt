@@ -1,6 +1,6 @@
-package com.tangem.datasource.local.visa.entity
+package com.tangem.spend.datasource.pay.store.entity
 
-import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemDM.Cashback as CashbackDM
+import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemDM.Cashback as CashbackDM
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback as CashbackDomain
 import com.tangem.utils.converter.Converter
