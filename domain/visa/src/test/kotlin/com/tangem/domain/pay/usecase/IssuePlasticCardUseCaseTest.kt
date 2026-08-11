@@ -236,7 +236,7 @@ internal class IssuePlasticCardUseCaseTest {
         coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns emptyList<Order>().right()
     }
 
-    private fun plasticOffer() = offer(type = Offer.Type.TANGEM_PAY_PLASTIC_VISA)
+    private fun plasticOffer() = offer(type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN)
 
     private fun virtualOffer() = offer(type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN)
 
