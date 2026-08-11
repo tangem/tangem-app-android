@@ -114,7 +114,6 @@ internal class PlasticIssueOrderRequestConverterTest {
             shippingAddress = ShippingAddress(
                 firstName = "Johnny",
                 lastName = "Silverhand",
-                email = "j.silverhand@gmail.com",
                 region = "California",
                 city = "Night City",
                 line1 = "Crescent st. 24",
