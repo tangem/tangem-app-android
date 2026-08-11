@@ -65,6 +65,14 @@ sealed class SwapCardState {
         val isBalanceHidden: Boolean,
         val appCurrency: AppCurrency,
         val amountField: AmountFieldModel? = null,
+        /**
+         * When non-null, overrides the rendered currency label (e.g. "USD") while keeping [currencyIconState]
+         * as-is. Used to abstract the TO card in an account top-up flow (Tangem Pay Add funds via swap),
+         * where the real token is resolved under the hood but the user should see a fiat-abstracted card.
+         */
+        val fiatSymbolOverride: String? = null,
+        /** When `true`, suppresses the "Choose token" tap affordance on this card. */
+        val isSelectionLocked: Boolean = false,
     ) : SwapCardState()
 
     data class Empty(
