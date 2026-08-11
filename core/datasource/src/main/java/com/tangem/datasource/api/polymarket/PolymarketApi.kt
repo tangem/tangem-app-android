@@ -69,7 +69,7 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketWalletOperationResponse>
 
     /**
-     * Relay the fully-signed 6-approval batch (gasless). The DW must be deployed first. Returns as soon
+     * Relay the fully-signed 13-approval batch (gasless). The DW must be deployed first. Returns as soon
      * as the relayer accepts; the client then polls [getWalletStatus].
      */
     @POST("api/predictions/v1/wallet/approvals")
