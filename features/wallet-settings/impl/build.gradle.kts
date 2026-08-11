@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.jointAccount.main.api)
     api(projects.features.wallet.api)
     api(projects.features.walletSettings.api)
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.pushNotifications.api)
 
     /* Project - Core */
@@ -37,6 +38,7 @@ dependencies {
     api(projects.domain.assetsdiscovery)
     api(projects.domain.balanceHiding)
     api(projects.domain.demo)
+    implementation(projects.domain.cloudBackup)
     api(projects.domain.nft)
     api(projects.domain.notifications)
     api(projects.domain.wallets)
