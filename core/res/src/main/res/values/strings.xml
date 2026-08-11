@@ -2274,6 +2274,12 @@
   <string name="tangempay_order_data_region">Region / State</string>
   <string name="tangempay_order_data_subtitle">Check data</string>
   <string name="tangempay_order_data_success_title">Card ordered</string>
+  <plurals name="tangempay_order_success_delivery_eta">
+    <item quantity="one">It will take up to %d business day for delivery</item>
+    <item quantity="other">It will take up to %d business days for delivery</item>
+  </plurals>
+  <string name="tangempay_order_success_email_note">Within 3 business days you will receive an email from logistic company on %s</string>
+  <string name="tangempay_order_success_show_card">Show card</string>
   <plurals name="tangempay_order_type_delivery_eta">
     <item quantity="one">Up to %d business day</item>
     <item quantity="other">Up to %d business days</item>
