@@ -11,9 +11,11 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.P2PVaultLimitsStore
+import com.tangem.datasource.local.txhistory.db.dao.P2PEthPoolVaultDao
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -39,13 +41,17 @@ internal class P2PEthPoolVaultFilterTest {
         every { isIntegrationEnabled(StakingIntegrationID.P2PEthPool) } returns true
     }
     private val regionBlockedStore = mockk<P2PEthPoolRegionBlockedStore>(relaxed = true)
+    private val vaultDao = mockk<P2PEthPoolVaultDao>(relaxed = true)
+    private val txHistoryFeatureToggles = mockk<TxHistoryFeatureToggles>(relaxed = true)
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
         p2pEthPoolVaultsStore = store,
         p2pVaultLimitsStore = limitsStore,
+        p2pEthPoolVaultDao = vaultDao,
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
+        txHistoryFeatureToggle = txHistoryFeatureToggles,
         p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 
