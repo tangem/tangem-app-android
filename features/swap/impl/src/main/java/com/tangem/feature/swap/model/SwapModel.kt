@@ -198,6 +198,14 @@ internal class SwapModel @Inject constructor(
     private val isAccountTopUp: Boolean
         get() = swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow is AccountFlow.TopUp
 
+    /**
+     * Whether this screen is the account withdrawal leg (Tangem Pay "Withdraw" via swap) with the
+     * account-swap-flow toggle on. Gates the FROM selector restriction — see [chooseFromTokenBridge]
+     * and [filterTokensFromSelector].
+     */
+    private val isTangemPayWithdrawFlow: Boolean
+        get() = swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow is AccountFlow.Withdraw
+
     private var isBalanceHidden = true
 
     private var isAccountsMode: Boolean = false
@@ -206,9 +214,13 @@ internal class SwapModel @Inject constructor(
 
     val chooseFromTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
         modelScope = modelScope,
-        settings = ChooseTokenBridge.Settings.SwapFrom.copy(
-            isHideZeroBalanceFilterEnabled = swapFeatureToggles.isHideZeroBalanceSourceEnabled,
-        ),
+        settings = if (isTangemPayWithdrawFlow) {
+            ChooseTokenBridge.Settings.WithdrawFrom
+        } else {
+            ChooseTokenBridge.Settings.SwapFrom.copy(
+                isHideZeroBalanceFilterEnabled = swapFeatureToggles.isHideZeroBalanceSourceEnabled,
+            )
+        },
         analyticsPayload = setOf(
             ChooseTokenAnalyticsPayload.ScreensSources(ScreensSources.Swap.value),
         ),
@@ -2360,7 +2372,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun filterTokensFromSelector() {
-        val tokenFilter = { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
+        val baseFilter = { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
             if (currencyStatus.currency.isCustom) {
                 false
             } else {
@@ -2374,8 +2386,16 @@ internal class SwapModel @Inject constructor(
             }
         }
 
-        chooseFromTokenBridge.tokenFilter.value = tokenFilter
-        chooseToTokenBridge.tokenFilter.value = tokenFilter
+        val fromFilter = if (isTangemPayWithdrawFlow) {
+            { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
+                accountStatus is AccountStatus.Payment && baseFilter(accountStatus, currencyStatus)
+            }
+        } else {
+            baseFilter
+        }
+
+        chooseFromTokenBridge.tokenFilter.value = fromFilter
+        chooseToTokenBridge.tokenFilter.value = baseFilter
     }
 
     private fun sendSuccessSwapEvent(
