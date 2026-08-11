@@ -41,5 +41,5 @@ data class StakingValidatorEntity(
     val votingPower: Double?,
 
     @ColumnInfo(name = "preferred")
-    val preferred: Boolean?,
+    val isPreferred: Boolean?,
 )
