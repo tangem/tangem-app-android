@@ -15,7 +15,7 @@ internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : Pol
 
     override fun deriveDepositWallet(ownerAddress: String): String {
         val factory = PolymarketContracts.DW_FACTORY.hexBytes()
-        val args = factory.leftPad(WORD_SIZE) + walletIdBytes(ownerAddress)
+        val args = factory.leftPad(WORD_SIZE) + paddedOwner(ownerAddress)
         val salt = args.toKeccak()
 
         val initCode = PolymarketContracts.DW_BEACON_INIT_PREFIX.hexBytes() +
@@ -28,10 +28,12 @@ internal class DefaultPolymarketDepositWalletDeriver @Inject constructor() : Pol
         return create2Hash.copyOfRange(WORD_SIZE - ADDRESS_SIZE, WORD_SIZE).toErc55Address()
     }
 
-    override fun deriveWalletId(ownerAddress: String): String =
-        HEX_PREFIX + walletIdBytes(ownerAddress).toHexString().lowercase()
-
-    private fun walletIdBytes(ownerAddress: String): ByteArray = ownerAddress.hexBytes().leftPad(WORD_SIZE)
+    /**
+     * The proxy's second constructor argument: the owner left-padded to a 32-byte word. Despite the shape,
+     * this is not the `walletId` the BFF asks for — that one is the Tangem wallet id and has nothing to do
+     * with this derivation.
+     */
+    private fun paddedOwner(ownerAddress: String): ByteArray = ownerAddress.hexBytes().leftPad(WORD_SIZE)
 
     private fun String.hexBytes(): ByteArray = removePrefix(HEX_PREFIX).hexToBytes()
 

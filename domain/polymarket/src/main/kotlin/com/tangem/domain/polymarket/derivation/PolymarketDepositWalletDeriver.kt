@@ -7,11 +7,4 @@ package com.tangem.domain.polymarket.derivation
 interface PolymarketDepositWalletDeriver {
 
     fun deriveDepositWallet(ownerAddress: String): String
-
-    /**
-     * The CREATE2 wallet id the deposit wallet is derived from — the owner address left-padded to 32 bytes,
-     * as a `0x`-prefixed lowercase hex string. This is the value the BFF expects in `POST /wallet/deploy`,
-     * where it re-derives the deposit wallet from it and cross-checks the address we sent.
-     */
-    fun deriveWalletId(ownerAddress: String): String
 }
