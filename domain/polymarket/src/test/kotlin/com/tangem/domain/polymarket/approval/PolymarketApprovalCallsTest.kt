@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.approval
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -35,7 +36,7 @@ internal class PolymarketApprovalCallsTest {
         val calls = PolymarketApprovalCalls.build()
 
         // Assert
-        assertThat(calls.map { it.target to it.data }.toSet()).hasSize(EXPECTED_CALL_COUNT)
+        assertThat(calls.map { it.target to it.spenderWord() }.toSet()).hasSize(EXPECTED_CALL_COUNT)
     }
 
     @Test
@@ -75,7 +76,17 @@ internal class PolymarketApprovalCallsTest {
         assertThat(PolymarketContracts.DW_FACTORY).isEqualTo("0x00000000000Fb5C9ADea0298D729A0CB3823Cc07")
     }
 
-    internal data class CallModel(val index: Int, val target: String, val spender: String, val data: String)
+    /** The spender word of the ABI-encoded call — the second 32-byte word, after the 4-byte selector. */
+    private fun PolymarketApprovalCall.spenderWord(): String =
+        data.substring(SELECTOR_HEX_LENGTH, SELECTOR_HEX_LENGTH + WORD_HEX_LENGTH)
+
+    /** [spenderLabel] is not asserted — it names the spender in the parameterized test's failure output. */
+    internal data class CallModel(
+        val index: Int,
+        val target: String,
+        val spenderLabel: String,
+        val data: String,
+    )
 
     /**
      * The set and the order Polymarket's own client writes on chain, read back from 80 consecutive
@@ -84,79 +95,79 @@ internal class PolymarketApprovalCallsTest {
      */
     private fun provideTestModels() = listOf(
         CallModel(
-            index = 0, target = collateral, spender = "conditionalTokens",
+            index = 0, target = collateral, spenderLabel = "conditionalTokens",
             data = "0x095ea7b3" +
                 "0000000000000000000000004d97dcd97ec945f40cf65f87097ace5ea0476045" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 1, target = collateral, spender = "ctfExchange",
+            index = 1, target = collateral, spenderLabel = "ctfExchange",
             data = "0x095ea7b3" +
                 "000000000000000000000000e111180000d2663c0091e4f400237545b87b996b" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 2, target = conditionalTokens, spender = "ctfExchange",
+            index = 2, target = conditionalTokens, spenderLabel = "ctfExchange",
             data = "0xa22cb465" +
                 "000000000000000000000000e111180000d2663c0091e4f400237545b87b996b" +
                 "0000000000000000000000000000000000000000000000000000000000000001",
         ),
         CallModel(
-            index = 3, target = collateral, spender = "negRiskCtfExchange",
+            index = 3, target = collateral, spenderLabel = "negRiskCtfExchange",
             data = "0x095ea7b3" +
                 "000000000000000000000000e2222d279d744050d28e00520010520000310f59" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 4, target = collateral, spender = "negRiskAdapter",
+            index = 4, target = collateral, spenderLabel = "negRiskAdapter",
             data = "0x095ea7b3" +
                 "000000000000000000000000d91e80cf2e7be2e162c6513ced06f1dd0da35296" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 5, target = conditionalTokens, spender = "negRiskCtfExchange",
+            index = 5, target = conditionalTokens, spenderLabel = "negRiskCtfExchange",
             data = "0xa22cb465" +
                 "000000000000000000000000e2222d279d744050d28e00520010520000310f59" +
                 "0000000000000000000000000000000000000000000000000000000000000001",
         ),
         CallModel(
-            index = 6, target = conditionalTokens, spender = "negRiskAdapter",
+            index = 6, target = conditionalTokens, spenderLabel = "negRiskAdapter",
             data = "0xa22cb465" +
                 "000000000000000000000000d91e80cf2e7be2e162c6513ced06f1dd0da35296" +
                 "0000000000000000000000000000000000000000000000000000000000000001",
         ),
         CallModel(
-            index = 7, target = collateral, spender = "ctfCollateralAdapter",
+            index = 7, target = collateral, spenderLabel = "ctfCollateralAdapter",
             data = "0x095ea7b3" +
                 "000000000000000000000000ada100db00ca00073811820692005400218fce1f" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 8, target = collateral, spender = "negRiskCtfCollateralAdapter",
+            index = 8, target = collateral, spenderLabel = "negRiskCtfCollateralAdapter",
             data = "0x095ea7b3" +
                 "000000000000000000000000ada2005600dec949baf300f4c6120000bdb6eaab" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 9, target = conditionalTokens, spender = "ctfCollateralAdapter",
+            index = 9, target = conditionalTokens, spenderLabel = "ctfCollateralAdapter",
             data = "0xa22cb465" +
                 "000000000000000000000000ada100db00ca00073811820692005400218fce1f" +
                 "0000000000000000000000000000000000000000000000000000000000000001",
         ),
         CallModel(
-            index = 10, target = conditionalTokens, spender = "negRiskCtfCollateralAdapter",
+            index = 10, target = conditionalTokens, spenderLabel = "negRiskCtfCollateralAdapter",
             data = "0xa22cb465" +
                 "000000000000000000000000ada2005600dec949baf300f4c6120000bdb6eaab" +
                 "0000000000000000000000000000000000000000000000000000000000000001",
         ),
         CallModel(
-            index = 11, target = collateral, spender = "exchangeV3",
+            index = 11, target = collateral, spenderLabel = "exchangeV3",
             data = "0x095ea7b3" +
                 "000000000000000000000000e3333700ca9d93003f00f0f71f8515005f6c00aa" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
         CallModel(
-            index = 12, target = collateral, spender = "routerV3",
+            index = 12, target = collateral, spenderLabel = "routerV3",
             data = "0x095ea7b3" +
                 "00000000000000000000000012121212006e4cd160d18e3f00711da5c3372600" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -168,6 +179,8 @@ internal class PolymarketApprovalCallsTest {
         const val EXPECTED_APPROVE_COUNT = 8
         const val EXPECTED_SET_APPROVAL_COUNT = 5
         const val BOTH_ALLOWANCE_KINDS = 2
+        const val SELECTOR_HEX_LENGTH = 10
+        const val WORD_HEX_LENGTH = 64
         const val NEG_RISK_ADAPTER = "d91e80cf2e7be2e162c6513ced06f1dd0da35296"
         const val CTF_AUTO_REDEEM = "f3cfb6a6ebfeb51876289eb235719eb1c65252b0"
     }
