@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.visa
+package com.tangem.spend.datasource.pay.store
 
 import androidx.datastore.core.DataStore
-import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemDM
-import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemToDMConverter
-import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemToDomainConverter
+import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemDM
+import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemToDMConverter
+import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemToDomainConverter
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import kotlinx.coroutines.flow.first
 
