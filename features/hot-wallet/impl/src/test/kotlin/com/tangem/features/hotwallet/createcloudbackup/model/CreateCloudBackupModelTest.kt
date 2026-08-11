@@ -5,7 +5,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessage
@@ -24,6 +27,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.GetHotWalletContextualUnlockUseCase
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.CreateCloudBackupComponent
@@ -53,6 +57,8 @@ internal class CreateCloudBackupModelTest {
 
     private val router: Router = mockk(relaxUnitFun = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val trackingContextProxy: TrackingContextProxy = mockk(relaxUnitFun = true)
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase = mockk()
     private val getHotWalletContextualUnlockUseCase: GetHotWalletContextualUnlockUseCase = mockk()
@@ -407,6 +413,8 @@ internal class CreateCloudBackupModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             router = router,
             uiMessageSender = uiMessageSender,
+            analyticsEventHandler = analyticsEventHandler,
+            trackingContextProxy = trackingContextProxy,
             getUserWalletUseCase = getUserWalletUseCase,
             exportSeedPhraseUseCase = exportSeedPhraseUseCase,
             getHotWalletContextualUnlockUseCase = getHotWalletContextualUnlockUseCase,
