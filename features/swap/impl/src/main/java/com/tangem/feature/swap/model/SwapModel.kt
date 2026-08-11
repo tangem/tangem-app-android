@@ -34,6 +34,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -2558,8 +2559,9 @@ internal class SwapModel @Inject constructor(
      * the account-swap-flow toggle on, regardless of which [StateBuilder] method produced this
      * [SwapStateHolder] — same pattern as [withReverseForcedHiddenInAccountFlow]:
      *  - screen title becomes "Add funds" (TopUp) / "Withdraw" (Withdraw);
-     *  - on TopUp only, the receive (TO) card is forced into its abstract "USD" locked presentation — the
-     *    real token icon is kept ([SwapCardState.SwapCardData.currencyIconState] untouched), only the
+     *  - on TopUp only, the receive (TO) card is forced into its abstract "USD" locked presentation —
+     *    the real token icon is replaced with the Payment-account avatar
+     *    ([SwapCardState.SwapCardData.currencyIconState] becomes [CurrencyIconState.PaymentAccount]), the
      *    currency label is abstracted ([SwapCardState.SwapCardData.fiatSymbolOverride]) and the "Choose
      *    token" tap is suppressed ([SwapCardState.SwapCardData.isSelectionLocked]).
      *  - the main button (CTA) is intentionally left untouched — it keeps its existing dynamic
@@ -2579,6 +2581,7 @@ internal class SwapModel @Inject constructor(
         val receiveCard = titledState.receiveCardData as? SwapCardState.SwapCardData ?: return titledState
         return titledState.copy(
             receiveCardData = receiveCard.copy(
+                currencyIconState = CurrencyIconState.PaymentAccount(),
                 fiatSymbolOverride = ACCOUNT_TOP_UP_ABSTRACT_SYMBOL,
                 isSelectionLocked = true,
             ),
