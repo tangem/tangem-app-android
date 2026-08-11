@@ -36,3 +36,20 @@ fun AppRouter.pushIfAbsent(
     if (stack.contains(route)) return
     push(route, onComplete)
 }
+
+/**
+ * Opens [route] in place of the current one: pops the current route and pushes [route] on top.
+ *
+ * If an equal [route] is already in the [stack], pops back to it instead of pushing a second copy.
+ *
+ * ***Must be removed after Decompose migration.***
+ *
+ * @param route The route to open.
+ */
+fun AppRouter.popAndPush(route: AppRoute) {
+    when {
+        stack.lastOrNull() == route -> Unit
+        stack.contains(route) -> popTo(route)
+        else -> pop { isSuccess -> if (isSuccess) push(route) }
+    }
+}
