@@ -2387,9 +2387,13 @@ internal class SwapModel @Inject constructor(
         }
 
         val fromFilter = if (isTangemPayWithdrawFlow) {
-            { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
-                accountStatus is AccountStatus.Payment && baseFilter(accountStatus, currencyStatus)
-            }
+            // Show every payment-account token, including the currently-selected FROM: unlike the regular
+            // baseFilter (which excludes the already-picked FROM/TO so the user can't pick the same token
+            // twice), the withdraw FROM selector is restricted to the account's own payment token(s) — once
+            // initTokens() resolves FROM to that token, applying baseFilter's already-picked-FROM exclusion
+            // here would filter it out and leave the selector empty. The TO exclusion is moot: TO is always
+            // a different currency.
+            { accountStatus: AccountStatus, _: CryptoCurrencyStatus -> accountStatus is AccountStatus.Payment }
         } else {
             baseFilter
         }
@@ -2583,7 +2587,12 @@ internal class SwapModel @Inject constructor(
 
     fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
         return if (swapFeatureToggles.isAccountSwapFlowEnabled) {
-            accountFlow is AccountFlow.Withdraw
+            // Mode-based detection (accountFlow is Withdraw) covers the Tangem Pay withdraw-via-swap entry
+            // point, but a regular swap entry (accountFlow == null) still lets the user manually pick the
+            // Payment account as FROM (Settings.SwapFrom keeps isShowPaymentAccount = true) — preserve the
+            // legacy slot-based safety net for that case so it still routes through CEX-only/withdrawal
+            // handling instead of being treated as an ordinary swap.
+            accountFlow is AccountFlow.Withdraw || fromSwapCurrencyStatus?.account is Account.Payment
         } else {
             fromSwapCurrencyStatus?.account is Account.Payment
         }
