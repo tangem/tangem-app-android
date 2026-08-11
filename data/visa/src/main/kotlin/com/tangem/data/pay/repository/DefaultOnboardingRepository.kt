@@ -18,7 +18,7 @@ import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
-import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
+import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
