@@ -9,11 +9,10 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.CardDeliveryContext
-import com.tangem.domain.pay.model.CardDeliveryQuote
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.plasticOffer
-import com.tangem.domain.pay.repository.CardDeliveryQuoteRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.cardMainImageUrl
@@ -23,6 +22,7 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -39,7 +39,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val getCustomerOffers: GetCustomerOffersUseCase,
-    private val cardDeliveryQuoteRepository: CardDeliveryQuoteRepository,
+    private val onboardingRepository: OnboardingRepository,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
@@ -100,14 +100,12 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
 
             val plasticOffer = if (featureToggles.isPlasticCardOrderEnabled) offers.plasticOffer() else null
             val plasticContent = if (plasticOffer != null) {
-                val quote = cardDeliveryQuoteRepository
-                    .getCardDeliveryQuote(params.userWalletId, CardDeliveryContext.ISSUE)
-                    .getOrNull()
-                if (quote == null) {
+                val customerInfo = onboardingRepository.getCustomerInfo(params.userWalletId).getOrNull()
+                if (customerInfo == null) {
                     state.update { it.copy(isLoading = false, isError = true) }
                     return@launch
                 }
-                quote.toPlasticContent()
+                plasticOffer.toPlasticContent(customerInfo)
             } else {
                 null
             }
@@ -128,16 +126,17 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
         }.saveIn(loadDataJobHolder)
     }
 
-    private fun CardDeliveryQuote.toPlasticContent(): TangemPayOrderCardTypeUM.Plastic {
+    private fun Offer.toPlasticContent(customerInfo: CustomerInfo): TangemPayOrderCardTypeUM.Plastic? {
+        val deliveryEta = data.deliveryEta ?: return null
+        val availableBalance = customerInfo.fiatBalance?.availableBalance.orZero()
         val feeState = when {
-            isDeliveryFeeWaived -> TangemPayOrderCardTypeUM.FeeState.FreeDelivery
-            deliveryFee.amount.signum() > 0 && !hasSufficientBalance ->
-                TangemPayOrderCardTypeUM.FeeState.InsufficientFunds
+            fee.amount.signum() == 0 -> TangemPayOrderCardTypeUM.FeeState.FreeDelivery
+            availableBalance < fee.amount -> TangemPayOrderCardTypeUM.FeeState.InsufficientFunds
             else -> TangemPayOrderCardTypeUM.FeeState.Default
         }
         return TangemPayOrderCardTypeUM.Plastic(
-            country = country,
-            deliveryFee = deliveryFee.amount.formatFiat(deliveryFee.currency),
+            country = customerInfo.country.orEmpty(),
+            deliveryFee = fee.amount.formatFiat(fee.currency),
             deliveryEtaMaxBusinessDays = deliveryEta.maxBusinessDays,
             feeState = feeState,
         )
