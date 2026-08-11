@@ -56,7 +56,7 @@ internal class DefaultCloudBackupRepositoryTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    private val secret = CloudBackupSecretData(mnemonic = "m", isPassphraseRequired = false)
+    private val secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false)
 
     private val fileData = CloudBackupFileData(
         version = 1,
@@ -98,7 +98,7 @@ internal class DefaultCloudBackupRepositoryTest {
         val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m", isPassphraseRequired = false).right())
+        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false).right())
         coVerify(exactly = 1) { tokenProvider.invalidate() }
         coVerify(exactly = 2) { api.downloadFileContent(any(), any(), any()) }
     }
