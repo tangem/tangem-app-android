@@ -24,6 +24,7 @@ import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -54,6 +55,7 @@ internal class WelcomeModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
     hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val scanCardProcessor: ScanCardProcessor,
@@ -328,6 +330,7 @@ internal class WelcomeModel @Inject constructor(
                 walletsCount = walletsCount,
                 isImported = userWallet.isImported(),
                 isBackedUp = isWalletBackedUpUseCase(userWallet),
+                completedBackups = getCompletedBackupsUseCase(userWallet),
             ),
         )
     }

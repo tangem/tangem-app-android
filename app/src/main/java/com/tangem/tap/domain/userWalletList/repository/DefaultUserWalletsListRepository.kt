@@ -29,6 +29,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotWalletId
@@ -66,6 +67,7 @@ internal class DefaultUserWalletsListRepository(
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -662,6 +664,7 @@ internal class DefaultUserWalletsListRepository(
                 walletsCount = userWallets.value?.size ?: 0,
                 isImported = userWallet.isImported(),
                 isBackedUp = isWalletBackedUpUseCase(userWallet),
+                completedBackups = getCompletedBackupsUseCase(userWallet),
             ),
         )
     }

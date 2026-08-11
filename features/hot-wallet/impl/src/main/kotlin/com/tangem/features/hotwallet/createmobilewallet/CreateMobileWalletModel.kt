@@ -89,6 +89,11 @@ internal class CreateMobileWalletModel @Inject constructor(
         checkHotWalletCreationSupported(notSupported = { return })
 
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            analyticsEventHandler.send(
+                event = OnboardingAnalyticsEvent.Backup.ImportWalletRequest(
+                    cloudBackup = AnalyticsParam.CloudBackupAvailability.Available,
+                ),
+            )
             importOptionsBottomSheetNavigation.activate(ImportOptionsBottomSheetConfig)
         } else {
             router.push(AppRoute.AddExistingWallet())

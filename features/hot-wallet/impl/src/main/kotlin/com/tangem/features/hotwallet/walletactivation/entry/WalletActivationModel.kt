@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -206,7 +207,11 @@ internal class WalletActivationModel @Inject constructor(
                 event = WalletSettingsAnalyticEvents.BackupCompleteScreen(
                     source = analyticsSource.value,
                     action = analyticsAction.value,
+                    backupType = AnalyticsParam.BackupType.Manual,
                 ),
+            )
+            analyticsEventHandler.send(
+                event = OnboardingAnalyticsEvent.Backup.Finished(backupType = AnalyticsParam.BackupType.Manual),
             )
         }
     }

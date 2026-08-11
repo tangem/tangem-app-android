@@ -5,6 +5,8 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -102,7 +104,11 @@ internal class CreateWalletBackupModel @Inject constructor(
             event = WalletSettingsAnalyticEvents.BackupCompleteScreen(
                 source = params.analyticsSource,
                 action = params.analyticsAction,
+                backupType = AnalyticsParam.BackupType.Manual,
             ),
+        )
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Backup.Finished(backupType = AnalyticsParam.BackupType.Manual),
         )
         stackNavigation.push(
             configuration = CreateWalletBackupRoute.BackupCompleted(

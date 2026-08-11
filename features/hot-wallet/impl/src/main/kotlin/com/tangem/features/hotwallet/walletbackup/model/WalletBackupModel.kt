@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -23,6 +24,8 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cloud_24_filled
 import com.tangem.core.ui.utils.DateTimeFormatters
+import org.joda.time.DateTime
+import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
@@ -42,7 +45,6 @@ import dagger.Lazy
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.joda.time.DateTime
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -71,6 +73,8 @@ internal class WalletBackupModel @Inject constructor(
     private val isFirstResume: AtomicBoolean = AtomicBoolean(true)
 
     private var isCloudVerified: Boolean = false
+    private var isManuallyBackedUp: Boolean? = null
+    private var isCloudStatusResolved: Boolean = !hotWalletFeatureToggles.isGoogleDriveBackupEnabled
 
     private var cloudBackupInfo: CloudBackupInfo? = null
     private var refreshStatusJob: Job? = null
@@ -105,15 +109,11 @@ internal class WalletBackupModel @Inject constructor(
                         TangemLogger.e("Error on getting user wallet: $it")
                     },
                     ifRight = { userWallet ->
-                        if (!isScreenOpenedEventSent.get() && userWallet is UserWallet.Hot) {
-                            analyticsEventHandler.send(
-                                event = WalletSettingsAnalyticEvents.BackupScreenOpened(
-                                    isBackedUp = userWallet.backedUp,
-                                ),
-                            )
-                            isScreenOpenedEventSent.set(true)
-                        }
                         updateBackupStatuses(userWallet)
+                        if (userWallet is UserWallet.Hot) {
+                            isManuallyBackedUp = userWallet.backedUp
+                            sendScreenOpenedEventIfReady()
+                        }
                     },
                 )
             }.launchIn(modelScope)
@@ -183,7 +183,11 @@ internal class WalletBackupModel @Inject constructor(
     private fun refreshCloudBackupStatus(interactive: Boolean = false) {
         refreshStatusJob?.cancel()
         setGoogleDriveStatus(BackupStatus.Loading)
-        refreshStatusJob = modelScope.launch { loadCloudBackup(interactive) }
+        refreshStatusJob = modelScope.launch {
+            loadCloudBackup(interactive)
+            isCloudStatusResolved = true
+            sendScreenOpenedEventIfReady()
+        }
     }
 
     private suspend fun loadCloudBackup(interactive: Boolean): Either<CloudBackupError, CloudBackupInfo?> {
@@ -210,6 +214,23 @@ internal class WalletBackupModel @Inject constructor(
                 setGoogleDriveStatus(resolveFoundStatus(info, wasBackedUp))
                 info
             }
+    }
+
+    /**
+     * Reports the screen opening once, with both backup statuses filled in. The wallet and the cloud
+     * lookup resolve independently, so whichever finishes last triggers the send.
+     */
+    private fun sendScreenOpenedEventIfReady() {
+        val isBackedUp = isManuallyBackedUp ?: return
+        if (!isCloudStatusResolved) return
+        if (isScreenOpenedEventSent.getAndSet(true)) return
+
+        analyticsEventHandler.send(
+            event = WalletSettingsAnalyticEvents.BackupScreenOpened(
+                isBackedUp = isBackedUp,
+                cloudBackupState = uiState.value.googleDriveStatus.toAnalyticsState(),
+            ),
+        )
     }
 
     private fun resolveFoundStatus(info: CloudBackupInfo?, wasBackedUp: Boolean): BackupStatus = when {
@@ -406,6 +427,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun showRemoveBackupSheet(info: CloudBackupInfo) {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CloudBackupDetailsScreen())
         val backupTime = DateTimeFormatters.formatDate(
             date = DateTime(info.createdAtMillis),
             formatter = DateTimeFormatters.dateTimeMMMdYYYY,
@@ -435,6 +457,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun showDeleteConfirmationDialog(fileId: String) {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CloudBackupDeletionRequest())
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(
@@ -468,8 +491,12 @@ internal class WalletBackupModel @Inject constructor(
                 ifLeft = { error ->
                     TangemLogger.e("Error on deleting cloud backup: $error")
                     showCloudErrorDialog(error)
+                    analyticsEventHandler.send(
+                        WalletSettingsAnalyticEvents.CloudBackupDeletionError(errorMessage = error.analyticsMessage()),
+                    )
                 },
                 ifRight = {
+                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.CloudBackupDeleted())
                     setCloudBackupStateUseCase.get()(params.userWalletId.stringValue, isBackedUp = false)
                     cloudBackupInfo = null
                     setGoogleDriveStatus(BackupStatus.NoBackup)
@@ -523,4 +550,18 @@ internal class WalletBackupModel @Inject constructor(
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate())
         router.push(AppRoute.WalletHardwareBackup(params.userWalletId))
     }
+}
+
+/**
+ * Maps the screen status to the `Cloud Backup` analytics value. [BackupStatus.NetworkError] joins
+ * `Action Required`: in both cases the wallet is locally marked as backed up but the file could not be
+ * confirmed. Transient states carry no value.
+ */
+private fun BackupStatus.toAnalyticsState(): AnalyticsParam.CloudBackupState? = when (this) {
+    BackupStatus.Done -> AnalyticsParam.CloudBackupState.Done
+    BackupStatus.NoBackup -> AnalyticsParam.CloudBackupState.Incomplete
+    BackupStatus.NetworkError,
+    is BackupStatus.ActionRequired,
+    -> AnalyticsParam.CloudBackupState.ActionRequired
+    BackupStatus.Loading, BackupStatus.ComingSoon -> null
 }
