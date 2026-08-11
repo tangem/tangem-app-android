@@ -41,6 +41,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.cloudbackup.password.PasswordStrength
+import com.tangem.domain.cloudbackup.password.PasswordStrengthEvaluator
 import com.tangem.domain.cloudbackup.password.PasswordStrengthHint
 import com.tangem.features.hotwallet.common.ui.CloudBackupPasswordField
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
@@ -259,15 +260,22 @@ private fun PasswordStrength?.toUiState(): StrengthUiState = when (this) {
     )
 }
 
-private fun PasswordStrengthHint.toHintRes(): Int = when (this) {
-    PasswordStrengthHint.USE_ALL_CRITERIA -> R.string.hw_cloud_backup_password_rule
-    PasswordStrengthHint.KEEP_GOING -> R.string.hw_cloud_backup_strength_hint_keep_going
-    PasswordStrengthHint.ADD_SYMBOL -> R.string.hw_cloud_backup_strength_hint_symbol
-    PasswordStrengthHint.ADD_NUMBER -> R.string.hw_cloud_backup_strength_hint_number
-    PasswordStrengthHint.ADD_UPPERCASE -> R.string.hw_cloud_backup_strength_hint_uppercase
-    PasswordStrengthHint.ADD_LOWERCASE -> R.string.hw_cloud_backup_strength_hint_lowercase
-    PasswordStrengthHint.ALMOST_LONG -> R.string.hw_cloud_backup_strength_hint_almost
-    PasswordStrengthHint.STRONG -> R.string.hw_cloud_backup_strength_hint_ok
+@Composable
+private fun PasswordStrengthHint.hintText(): String = when (this) {
+    PasswordStrengthHint.USE_ALL_CRITERIA -> stringResourceSafe(
+        R.string.hw_cloud_backup_password_rule_v2,
+        PasswordStrengthEvaluator.MIN_LENGTH,
+    )
+    PasswordStrengthHint.KEEP_GOING -> stringResourceSafe(
+        R.string.hw_cloud_backup_strength_hint_keep_going_v2,
+        PasswordStrengthEvaluator.MIN_LENGTH,
+    )
+    PasswordStrengthHint.ADD_SYMBOL -> stringResourceSafe(R.string.hw_cloud_backup_strength_hint_symbol)
+    PasswordStrengthHint.ADD_NUMBER -> stringResourceSafe(R.string.hw_cloud_backup_strength_hint_number)
+    PasswordStrengthHint.ADD_UPPERCASE -> stringResourceSafe(R.string.hw_cloud_backup_strength_hint_uppercase)
+    PasswordStrengthHint.ADD_LOWERCASE -> stringResourceSafe(R.string.hw_cloud_backup_strength_hint_lowercase)
+    PasswordStrengthHint.ALMOST_LONG -> stringResourceSafe(R.string.hw_cloud_backup_strength_hint_almost)
+    PasswordStrengthHint.STRONG -> stringResourceSafe(R.string.hw_cloud_backup_strength_hint_ok)
 }
 
 @Composable
@@ -327,7 +335,7 @@ private fun StrengthIndicator(strength: PasswordStrength?, hint: PasswordStrengt
             )
         }
         Text(
-            text = stringResourceSafe(hint.toHintRes()),
+            text = hint.hintText(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
         )
