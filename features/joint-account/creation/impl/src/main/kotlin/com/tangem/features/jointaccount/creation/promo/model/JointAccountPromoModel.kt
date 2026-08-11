@@ -12,6 +12,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_lightning_24
 import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24
 import com.tangem.features.jointaccount.creation.impl.R
+import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
 import com.tangem.features.jointaccount.creation.promo.ui.state.JointAccountPromoUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
@@ -59,7 +60,7 @@ internal class JointAccountPromoModel @Inject constructor(
     )
 
     private fun onContinueClick() {
-        // TODO([REDACTED_TASK_KEY]): router.push(JointAccountCreationRoute.Config) — stays inside the flow's inner stack
+        router.push(JointAccountCreationRoute.Config)
     }
 
     private fun onCloseClick() {
