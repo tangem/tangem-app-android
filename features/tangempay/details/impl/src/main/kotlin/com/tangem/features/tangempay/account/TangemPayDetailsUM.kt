@@ -88,9 +88,14 @@ internal enum class TangemPayCardUiState {
     InProgress,
 }
 
-internal enum class CardsProgressBannerUM {
-    Issuing,
-    Reissuing,
+@Immutable
+internal sealed interface CardsProgressBannerUM {
+
+    data object Issuing : CardsProgressBannerUM
+
+    data object Reissuing : CardsProgressBannerUM
+
+    data class Delivering(val onActivateClick: () -> Unit) : CardsProgressBannerUM
 }
 
 internal fun TangemPayCardState.toUiState(): TangemPayCardUiState = when (this) {
@@ -98,5 +103,6 @@ internal fun TangemPayCardState.toUiState(): TangemPayCardUiState = when (this) 
     TangemPayCardState.Issuing,
     TangemPayCardState.Reissuing,
     TangemPayCardState.Closing,
+    TangemPayCardState.Delivering,
     -> TangemPayCardUiState.InProgress
 }

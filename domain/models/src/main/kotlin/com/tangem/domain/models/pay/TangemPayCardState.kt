@@ -24,6 +24,9 @@ enum class TangemPayCardState {
     /** An issue order is in progress; the (additional) card is being issued and not yet provisioned. */
     @SerialName("Issuing")
     Issuing,
+
+    @SerialName("Delivering")
+    Delivering,
     ;
 
     override fun toString() = when (this) {
@@ -31,6 +34,7 @@ enum class TangemPayCardState {
         Reissuing -> "Reissuing"
         Closing -> "Closing"
         Issuing -> "Issuing"
+        Delivering -> "Delivering"
     }
 
     companion object {
@@ -38,6 +42,7 @@ enum class TangemPayCardState {
             "reissuing" -> Reissuing
             "closing" -> Closing
             "issuing" -> Issuing
+            "delivering" -> Delivering
             else -> Active
         }
     }

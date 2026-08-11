@@ -104,12 +104,13 @@ internal class TangemPayDetailsStateFactory(
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
                         .map { cardItem ->
+                            val isAwaitingActivation = cardItem.state == TangemPayCardState.Delivering
                             TangemPayDetailsBalanceBlockState.Card(
-                                lastDigits = cardItem.lastDigits,
-                                imageUrl = cardItem.thumbnailUrl,
+                                lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
+                                imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
                                 onClick = { intents.onCardClick(cardItem.id) },
                                 isEnabled = status.error == null,
-                                isFrozen = cardItem.isFrozen,
+                                isFrozen = cardItem.isFrozen && !isAwaitingActivation,
                                 state = cardItem.state.toUiState(),
                             )
                         }
@@ -126,10 +127,17 @@ internal class TangemPayDetailsStateFactory(
         )
     }
 
-    private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? = when {
-        any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
-        any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
-        else -> null
+    private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? {
+        val deliveringCards = filter { it.state == TangemPayCardState.Delivering }
+        return when {
+            any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
+            any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
+            deliveringCards.size == 1 -> {
+                val cardId = deliveringCards.first().id
+                CardsProgressBannerUM.Delivering(onActivateClick = { intents.onCardClick(cardId) })
+            }
+            else -> null
+        }
     }
 
     fun getDeactivatedState(status: PaymentAccountStatusValue.Deactivated): TangemPayDetailsUM {
