@@ -83,18 +83,41 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN TopUp flow and toggle ON WHEN isTangemPayWithdrawal THEN false`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-        val model = createModel(accountFlow = AccountFlow.TopUp)
-        val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
+    fun `GIVEN TopUp flow and toggle ON WHEN FROM is a normal wallet token THEN isTangemPayWithdrawal false`() =
+        runTest {
+            // Arrange — in a real TopUp flow, FROM is resolved to a wallet token from a crypto-portfolio
+            // account (the Payment account is the TO side); it is never Account.Payment. See
+            // InitialCurrenciesResolver.resolveAccountTopUpFromPriority, which only ever draws FROM from
+            // cryptoPortfolioAccounts/cryptoCurrencyList.
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val model = createModel(accountFlow = AccountFlow.TopUp)
+            val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk(relaxed = true))
 
-        // Act
-        val result = model.isTangemPayWithdrawal(fromWithPaymentAccount)
+            // Act
+            val result = model.isTangemPayWithdrawal(fromWithPortfolioAccount)
 
-        // Assert — mode-based detection ignores the (legacy) Payment-account FROM slot for TopUp.
-        assertThat(result).isFalse()
-    }
+            // Assert
+            assertThat(result).isFalse()
+        }
+
+    @Test
+    fun `GIVEN no account flow and toggle ON WHEN FROM is a Payment account THEN isTangemPayWithdrawal true`() =
+        runTest {
+            // Arrange — FR-2 regression: even with the account-swap-flow toggle ON, a regular (non-Tangem-Pay)
+            // swap entry (accountFlow == null) still lets the user manually pick the Payment account as FROM
+            // (Settings.SwapFrom keeps isShowPaymentAccount = true). The legacy slot-based check must still
+            // catch that case so it is routed through withdrawal handling (CEX-only providers), matching
+            // legacy (toggle-OFF) behaviour.
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val model = createModel(accountFlow = null)
+            val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
+
+            // Act
+            val result = model.isTangemPayWithdrawal(fromWithPaymentAccount)
+
+            // Assert
+            assertThat(result).isTrue()
+        }
 
     @Test
     fun `GIVEN account flow and toggle ON WHEN state emitted THEN reverse button HIDDEN`() = runTest {
@@ -217,6 +240,35 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         assertThat(predicate(cryptoPortfolioStatus, btcStatus)).isFalse()
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN Withdraw flow WHEN FROM is already resolved to the payment token THEN tokenFilter still includes it`() =
+        runTest {
+            // Arrange — FR-1 regression: reproduces the REAL withdraw condition, where initTokens() has
+            // already resolved FROM to the account's payment token before filterTokensFromSelector() runs,
+            // so dataState.fromSwapCurrencyStatus is non-null and points at that very token. baseFilter
+            // (the regular/non-withdraw predicate) excludes the already-picked FROM token — applying that
+            // exclusion here would filter out the only row the Payment-only selector has, rendering it
+            // empty. The predicate above (which leaves fromSwapCurrencyStatus null) does not catch this.
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val model = createModel(accountFlow = AccountFlow.Withdraw)
+            advanceUntilIdle()
+            val paymentAccount = Account.Payment(userWalletId)
+            val paymentAccountStatus = AccountStatus.Payment(
+                account = paymentAccount,
+                value = mockk(relaxed = true),
+            )
+            val usdcPolygonStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+            val resolvedFrom = swapCurrencyStatus(account = paymentAccount, currency = usdcPolygonStatus.currency)
+            model.dataState = model.dataState.copy(fromSwapCurrencyStatus = resolvedFrom)
+
+            // Act
+            val predicate = model.chooseFromTokenBridge.tokenFilter.value
+
+            // Assert — the payment token still appears despite being the currently-selected FROM.
+            assertThat(predicate(paymentAccountStatus, usdcPolygonStatus)).isTrue()
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN Withdraw flow WHEN to selector settings THEN Markets stays shown`() = runTest {
