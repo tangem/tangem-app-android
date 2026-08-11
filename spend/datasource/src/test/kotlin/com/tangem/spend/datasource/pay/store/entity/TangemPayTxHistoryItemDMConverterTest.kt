@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.visa.entity
+package com.tangem.spend.datasource.pay.store.entity
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
