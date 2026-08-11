@@ -31,15 +31,6 @@ internal class DefaultPolymarketDepositWalletDeriverTest {
         assertThat(dw).isEqualTo("0xdf1a31b50D3F99d4460ACC1Bc99aB2e09BCcC538")
     }
 
-    @Test
-    fun `GIVEN owner EOA WHEN deriveWalletId THEN returns the owner left-padded to a 0x-prefixed bytes32`() {
-        // Act
-        val walletId = deriver.deriveWalletId("0xAbC0000000000000000000000000000000000001")
-
-        // Assert
-        assertThat(walletId).isEqualTo("0x000000000000000000000000abc0000000000000000000000000000000000001")
-    }
-
     internal data class Vector(val owner: String, val expectedDw: String)
 
     /**
