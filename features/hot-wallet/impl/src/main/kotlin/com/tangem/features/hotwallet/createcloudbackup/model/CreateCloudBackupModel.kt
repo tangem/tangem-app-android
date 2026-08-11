@@ -204,24 +204,28 @@ internal class CreateCloudBackupModel @Inject constructor(
             }
 
         val secret = CloudBackupSecretData(
-            mnemonic = privateInfo.mnemonic.mnemonicComponents.joinToString(separator = " "),
+            mnemonic = privateInfo.mnemonic.mnemonicComponents.joinToCharArray(separator = ' '),
             isPassphraseRequired = privateInfo.passphrase?.isNotEmpty() == true,
         )
         privateInfo.passphrase?.fill(' ')
 
-        createCloudBackupUseCase(
-            walletId = params.userWalletId.stringValue,
-            walletName = hotWallet.name,
-            secret = secret,
-            password = password,
-        ).fold(
-            ifLeft = ::onUploadError,
-            ifRight = {
-                setCloudBackupStateUseCase(params.userWalletId.stringValue, isBackedUp = true)
-                wipeSecrets()
-                uiState.value = CreateCloudBackupUM.Completed(onFinishClick = ::onFinish)
-            },
-        )
+        try {
+            createCloudBackupUseCase(
+                walletId = params.userWalletId.stringValue,
+                walletName = hotWallet.name,
+                secret = secret,
+                password = password,
+            ).fold(
+                ifLeft = ::onUploadError,
+                ifRight = {
+                    setCloudBackupStateUseCase(params.userWalletId.stringValue, isBackedUp = true)
+                    wipeSecrets()
+                    uiState.value = CreateCloudBackupUM.Completed(onFinishClick = ::onFinish)
+                },
+            )
+        } finally {
+            secret.wipe()
+        }
     }
 
     private fun onFinish() {
@@ -323,4 +327,20 @@ internal class CreateCloudBackupModel @Inject constructor(
 
     private fun Throwable.isUserCancelled(): Boolean =
         this is TangemSdkError.UserCancelled || cause is TangemSdkError.UserCancelled
+}
+
+/**
+ * Joins the words without building a String for the whole phrase, so the only copy the app owns is the
+ * returned array and it can be wiped. The words themselves already come from the SDK as Strings.
+ */
+private fun List<String>.joinToCharArray(separator: Char): CharArray {
+    val separators = (size - 1).coerceAtLeast(minimumValue = 0)
+    val joined = CharArray(sumOf { it.length } + separators)
+    var offset = 0
+    forEachIndexed { index, word ->
+        if (index > 0) joined[offset++] = separator
+        word.toCharArray(destination = joined, destinationOffset = offset)
+        offset += word.length
+    }
+    return joined
 }
