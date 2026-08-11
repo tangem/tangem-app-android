@@ -96,6 +96,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             isPinSet = isPinSet == true,
             images = images.orEmpty().mapNotNull(::convertCardImage),
             embossName = embossName?.trim()?.ifEmpty { null },
+            cardType = CardInfo.CardType.fromString(cardType),
         )
     }
 

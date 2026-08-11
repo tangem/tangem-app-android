@@ -35,7 +35,7 @@ internal class PlasticIssueOrderRequestConverterTest {
                         city = "Night City",
                         region = "California",
                         postalCode = "90210",
-                        phone = "+12345678901",
+                        phoneNumber = "+12345678901",
                     ),
                 ),
                 idempotencyKey = IDEMPOTENCY_KEY,
@@ -61,7 +61,7 @@ internal class PlasticIssueOrderRequestConverterTest {
             "city",
             "region",
             "postal_code",
-            "phone",
+            "phone_number",
         )
     }
 
