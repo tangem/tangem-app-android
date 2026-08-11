@@ -26,9 +26,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.decodeFromStream
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
+import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
@@ -64,7 +67,7 @@ internal class DefaultCloudBackupRepository(
                 createdAtMillis = createdAtMillis,
                 password = password,
             )
-        }
+        } ?: return@withContext Either.Left(CloudBackupError.WriteError())
         withAuthRetry { authInteractive ->
             val auth = authHeader(interactive = authInteractive)
             val existingFiles = findBackupFiles(auth)
@@ -181,18 +184,18 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
+    /** `null` when the secret cannot be serialized, i.e. the mnemonic is not a BIP39 phrase */
     private fun encryptBackup(
         secret: CloudBackupSecretData,
         walletId: String,
         walletName: String,
         createdAtMillis: Long,
         password: CharArray,
-    ): String {
-        val payload = CloudBackupSecret.of(
+    ): String? {
+        val payloadBytes = CloudBackupSecret.encode(
             mnemonic = secret.mnemonic,
             isPassphraseRequired = secret.isPassphraseRequired,
-        )
-        val payloadBytes = CloudBackupJson.encodeToString(payload).toByteArray(Charsets.UTF_8)
+        ) ?: return null
         val createdAtIso = Instant.fromEpochSeconds(TimeUnit.MILLISECONDS.toSeconds(createdAtMillis)).toString()
         val fileData = try {
             cipher.encrypt(
@@ -391,16 +394,23 @@ internal fun resolveUniqueBackupName(walletName: String, extension: String, exis
         .first { it !in existingNames }
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 private fun Raise<CloudBackupError>.parseSecret(bytes: ByteArray): CloudBackupSecretData {
+    // decoded from the stream, not from `bytes.toString()`, so the mnemonic is never held by a String
+    // covering the whole payload — only the wipeable CharArray the parser hands over survives
     val raw = try {
         runCatching {
-            CloudBackupJson.decodeFromString<CloudBackupSecret>(bytes.toString(Charsets.UTF_8))
+            CloudBackupJson.decodeFromStream<CloudBackupSecret>(ByteArrayInputStream(bytes))
         }.getOrNull()
     } finally {
         bytes.fill(0)
     }
     val secret = ensureNotNull(raw) { CloudBackupError.InvalidBackupFile }
-    val isPassphraseRequired = ensureNotNull(secret.isPassphraseRequired) { CloudBackupError.InvalidBackupFile }
+    val isPassphraseRequired = secret.isPassphraseRequired
+    if (isPassphraseRequired == null) {
+        secret.mnemonic.fill(' ')
+        raise(CloudBackupError.InvalidBackupFile)
+    }
     return CloudBackupSecretData(mnemonic = secret.mnemonic, isPassphraseRequired = isPassphraseRequired)
 }
 
