@@ -11,7 +11,6 @@ import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.polymarket.PolymarketDepositBlockchain
@@ -78,7 +77,7 @@ internal class PolymarketEntryModel @Inject constructor(
     }
 
     init {
-        portfolioSelectorController.isEnabled.value = { wallet, _ -> !wallet.isLocked }
+        portfolioSelectorController.isEnabled.value = { wallet, _ -> getEligibleWalletsUseCase.isEligible(wallet) }
         observeWalletSelection()
 
         val settledWalletId = params.userWalletId
