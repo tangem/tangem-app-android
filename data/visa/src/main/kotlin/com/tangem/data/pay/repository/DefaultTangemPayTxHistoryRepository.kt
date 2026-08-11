@@ -6,7 +6,7 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
+import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
