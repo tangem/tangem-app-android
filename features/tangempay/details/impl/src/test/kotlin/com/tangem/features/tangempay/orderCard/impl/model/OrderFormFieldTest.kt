@@ -66,6 +66,7 @@ internal class OrderFormFieldTest {
         postalCode = emptyField(),
         phone = emptyField(),
         isOrderEnabled = false,
+        isSubmitting = false,
         onOrderClick = {},
     )
 
