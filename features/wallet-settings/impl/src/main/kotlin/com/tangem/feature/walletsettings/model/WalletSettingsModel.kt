@@ -451,7 +451,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     fun onAddJointAccountClick() {
         bottomSheetNavigation.dismiss()
-        // TODO([REDACTED_TASK_KEY]): navigate to the joint account promo screen once the onboarding flow exists
+        router.push(AppRoute.JointAccountCreation(params.userWalletId))
     }
 
     private fun openCreateCryptoAccount() {
