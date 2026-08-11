@@ -6,6 +6,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.ksp)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -15,6 +16,8 @@ android {
 
 dependencies {
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.jodatime)
 
     api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
@@ -29,8 +32,10 @@ dependencies {
     //  once per-stream environment config is extracted (e.g. a TangemPayEnvironmentConfig slice).
     api(projects.core.datasource)
     api(projects.core.utils)
-    // Exposed in public store interface signatures (UserWalletId, TangemPayReissueCardFee, ...)
+    // Exposed in public store interface signatures (UserWalletId, TangemPayReissueCardFee,
+    // TangemPayTxHistoryItem, ...)
     api(projects.domain.models)
+    api(projects.domain.visa.models)
     implementation(projects.core.local)
 
     testImplementation(projects.test.core)
