@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.visa.entity
+package com.tangem.spend.datasource.pay.store.entity
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.serialization.SerializedCurrency
