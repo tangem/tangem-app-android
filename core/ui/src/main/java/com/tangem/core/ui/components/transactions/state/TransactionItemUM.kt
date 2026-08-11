@@ -143,6 +143,19 @@ sealed interface TransactionItemUM {
             data class Wallet(val name: String, val deviceIconUM: DeviceIconUM) : AssetOwner
         }
 
+        /**
+         * DeFi provider counterparty — renders as "to/from: <provider icon> <name>", e.g. "from: 🟣 Aave".
+         * Unlike [OwnAccount] (a white-tinted monogram in a colored square), [iconResId] is a bundled full-color
+         * provider drawable rendered untinted in a circle.
+         *
+         * @property iconResId full-color provider drawable, e.g. `img_aave_22`
+         */
+        data class Provider(
+            val direction: Direction,
+            val name: TextReference,
+            @DrawableRes val iconResId: Int,
+        ) : ContentSubtitle
+
         enum class Direction { TO, FROM }
     }
 

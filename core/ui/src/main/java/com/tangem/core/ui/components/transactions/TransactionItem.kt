@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.transactions
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -318,6 +319,7 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
         }
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
         is ContentSubtitle.Asset -> AssetSubtitle(subtitle = subtitle, status = status, modifier = modifier)
+        is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, status = status, modifier = modifier)
     }
 }
 
@@ -385,6 +387,30 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
         textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
     )
+}
+
+@Composable
+private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status, modifier: Modifier = Modifier) {
+    InlineImageSubtitle(
+        template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.name.resolveReference()),
+        color = TangemTheme.colors3.text.secondary,
+        afterIconColor = if (status is Status.Failed) {
+            TangemTheme.colors3.text.secondary
+        } else {
+            TangemTheme.colors3.text.primary
+        },
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    ) {
+        // Full-color provider avatar (its own colors) — clipped to a circle, no tint, unlike OwnAccount.
+        Image(
+            painter = painterResource(subtitle.iconResId),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape),
+        )
+    }
 }
 
 @Composable
@@ -645,6 +671,52 @@ private fun Preview_TransactionItem_Send() {
                     title = "Sending failed",
                     subtitle = "to: 33BdfS...ga2B",
                     amount = "350.31",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_YieldWithdraw() {
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                TransactionItemUM.Content(
+                    txHash = "wd-u",
+                    amount = "+350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Unconfirmed,
+                    direction = Direction.INCOMING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_down_20),
+                    title = stringReference("Withdrawing"),
+                    subtitle = ContentSubtitle.Provider(
+                        direction = ContentSubtitle.Direction.FROM,
+                        name = stringReference("Aave"),
+                        iconResId = R.drawable.img_aave_22,
+                    ),
+                    timestamp = 0L,
+                ),
+                TransactionItemUM.Content(
+                    txHash = "wd-c",
+                    amount = "+350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Confirmed,
+                    direction = Direction.INCOMING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_down_20),
+                    title = stringReference("Withdrawn"),
+                    subtitle = ContentSubtitle.Provider(
+                        direction = ContentSubtitle.Direction.FROM,
+                        name = stringReference("Aave"),
+                        iconResId = R.drawable.img_aave_22,
+                    ),
+                    timestamp = 0L,
                 ),
             ),
         )
