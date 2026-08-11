@@ -44,15 +44,19 @@ internal class IssuePlasticCardUseCaseTest {
     }
 
     @Test
-    fun `GIVEN no plastic offer WHEN invoked THEN returns PlasticNotAvailable and creates no order`() = runTest {
+    fun `GIVEN no plastic offer WHEN invoked THEN returns CardIssueOfferNotAvailable and creates no order`() = runTest {
         // Arrange
         coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(virtualOffer()).right()
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.PlasticNotAvailable)
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardIssueOfferNotAvailable)
         coVerify(exactly = 0) { orderRepository.findOrders(any(), any(), any()) }
         coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
     }
@@ -67,12 +71,16 @@ internal class IssuePlasticCardUseCaseTest {
                 userWalletId = USER_WALLET_ID,
                 specificationName = SPEC_NAME,
                 order = plasticCardOrder(),
-                idempotencyKey = any(),
+                idempotencyKey = IDEMPOTENCY_KEY,
             )
         } returns created.right()
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
         assertThat(result).isEqualTo(Unit.right())
@@ -85,7 +93,7 @@ internal class IssuePlasticCardUseCaseTest {
     }
 
     @Test
-    fun `GIVEN an active plastic order WHEN invoked THEN raises AlreadyHasActiveOrder`() = runTest {
+    fun `GIVEN an active plastic order WHEN invoked THEN raises CardIssueActiveOrderExists`() = runTest {
         // Arrange
         val existing = order(id = "existing", status = OrderStatus.PROCESSING)
         coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(plasticOffer()).right()
@@ -98,10 +106,14 @@ internal class IssuePlasticCardUseCaseTest {
         } returns listOf(existing).right()
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.AlreadyHasActiveOrder)
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardIssueActiveOrderExists)
         coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
         coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any(), any()) }
     }
@@ -112,7 +124,11 @@ internal class IssuePlasticCardUseCaseTest {
         coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
@@ -127,7 +143,11 @@ internal class IssuePlasticCardUseCaseTest {
             VisaApiError.ServerUnavailable.left()
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
@@ -145,7 +165,11 @@ internal class IssuePlasticCardUseCaseTest {
         } returns order(id = "created", status = OrderStatus.NEW).right()
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
         assertThat(result).isEqualTo(Unit.right())
@@ -158,13 +182,17 @@ internal class IssuePlasticCardUseCaseTest {
         givenNoActiveOrders()
         coEvery {
             orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
-        } returns VisaApiError.InvalidShippingAddress.left()
+        } returns VisaApiError.CardIssueInvalidShippingAddress.left()
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.InvalidShippingAddress)
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardIssueInvalidShippingAddress)
         coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any(), any()) }
     }
 
@@ -174,7 +202,30 @@ internal class IssuePlasticCardUseCaseTest {
         coEvery { offersRepository.getOffers(USER_WALLET_ID) } throws IllegalStateException("boom")
 
         // Act
-        val result = useCase(userWalletId = USER_WALLET_ID, plasticCardOrder = plasticCardOrder())
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
+    }
+
+    @Test
+    fun `GIVEN order creation throws WHEN invoked THEN collapses to Unspecified`() = runTest {
+        // Arrange
+        givenNoActiveOrders()
+        coEvery {
+            orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
+        } throws IllegalStateException("Can not find customer address")
+
+        // Act
+        val result = useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
@@ -200,7 +251,6 @@ internal class IssuePlasticCardUseCaseTest {
         shippingAddress = ShippingAddress(
             firstName = "Johnny",
             lastName = "Silverhand",
-            email = "j.silverhand@gmail.com",
             region = "California",
             city = "Night City",
             line1 = "Crescent st. 24",
@@ -229,5 +279,6 @@ internal class IssuePlasticCardUseCaseTest {
     private companion object {
         val USER_WALLET_ID = UserWalletId("1234567890ABCDEF")
         const val SPEC_NAME = "SP_000010"
+        const val IDEMPOTENCY_KEY = "6f1c9e2a-0b3d-4c5e-8a7b-9d0e1f2a3b4c"
     }
 }
