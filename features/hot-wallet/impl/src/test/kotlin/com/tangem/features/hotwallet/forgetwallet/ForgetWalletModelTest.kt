@@ -2,6 +2,7 @@ package com.tangem.features.hotwallet.forgetwallet
 
 import arrow.core.left
 import arrow.core.right
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessage
@@ -15,6 +16,7 @@ import com.tangem.domain.cloudbackup.usecase.DeleteCloudBackupWithRetryUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.common.wallets.error.DeleteWalletError
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.ForgetWalletComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -33,6 +35,7 @@ import org.junit.jupiter.api.Test
 internal class ForgetWalletModelTest {
 
     private val router: Router = mockk(relaxUnitFun = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val deleteWalletUseCase: DeleteWalletUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase = mockk(relaxed = true)
@@ -75,6 +78,9 @@ internal class ForgetWalletModelTest {
             coVerify(exactly = 1) { cloudBackupRepository.findBackups() }
             coVerify(exactly = 1) { deleteCloudBackupWithRetryUseCase(fileId) }
             coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = false) }
+            verify(exactly = 1) {
+                analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletForgotten>())
+            }
         }
 
     @Test
@@ -139,6 +145,9 @@ internal class ForgetWalletModelTest {
         coVerify(exactly = 0) { cloudBackupRepository.findBackups() }
         coVerify(exactly = 0) { deleteCloudBackupWithRetryUseCase(any()) }
         coVerify(exactly = 0) { setCloudBackupStateUseCase(any(), any()) }
+        verify(exactly = 0) {
+            analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletForgotten>())
+        }
     }
 
     @Test
@@ -203,6 +212,7 @@ internal class ForgetWalletModelTest {
             ),
             appScope = testScope.asAppScope(),
             router = router,
+            analyticsEventHandler = analyticsEventHandler,
             deleteWalletUseCase = deleteWalletUseCase,
             uiMessageSender = uiMessageSender,
             startAssetsDiscoveryUseCase = startAssetsDiscoveryUseCase,
