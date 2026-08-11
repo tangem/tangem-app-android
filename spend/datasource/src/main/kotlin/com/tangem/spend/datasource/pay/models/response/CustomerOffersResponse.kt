@@ -25,6 +25,8 @@ data class CustomerOffersResponse(
     data class Data(
         @Json(name = "specification_name") val specificationName: String,
         @Json(name = "order_type") val orderType: String,
+        @Json(name = "delivery_eta_min_days") val deliveryEtaMinDays: Int? = null,
+        @Json(name = "delivery_eta_max_days") val deliveryEtaMaxDays: Int? = null,
     )
 
     @JsonClass(generateAdapter = true)
