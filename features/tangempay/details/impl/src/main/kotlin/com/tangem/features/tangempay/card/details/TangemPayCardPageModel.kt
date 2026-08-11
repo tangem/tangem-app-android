@@ -39,6 +39,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
@@ -59,7 +60,6 @@ import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.balanceOrNull
-import com.tangem.features.tangempay.common.customerId
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.details.impl.R
@@ -71,10 +71,12 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
@@ -85,7 +87,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class TangemPayCardPageModel @Inject constructor(
     paramsContainer: ParamsContainer,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
-    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
@@ -108,22 +110,18 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val frozenStateJobHolder = JobHolder()
     private val reloadLimitsJobHolder = JobHolder()
     private val viewPinAuthJobHolder = JobHolder()
+    private var frozenStateJob: Job? = null
 
     private val currentStatus = MutableStateFlow(params.initialStatus)
     private val userWalletId = currentStatus.value.userWalletId
 
-    /**
-     * Currently focused card in the swipe pager. Per-card actions and the "Details" reveal target it.
-     * Initialized to the card the user tapped on the account screen ([Params.cardId]); falls back to
-     * the first available card if it is gone (handled in [syncCardControllers]).
-     */
-    private val selectedCardId = MutableStateFlow(params.cardId)
-    val selectedCardIdState: StateFlow<String> = selectedCardId
+    val selectedCardId: StateFlow<String>
+        field = MutableStateFlow(params.cardId)
 
     private val cardControllers = linkedMapOf<String, TangemPayCardDetailsController>()
-    private val _cardControllersState: MutableStateFlow<ImmutableList<TangemPayCardDetailsController>> =
-        MutableStateFlow(persistentListOf())
-    val cardControllersState: StateFlow<ImmutableList<TangemPayCardDetailsController>> = _cardControllersState
+
+    val cardControllersState: StateFlow<ImmutableList<TangemPayCardDetailsController>>
+        field = MutableStateFlow(persistentListOf())
 
     private val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
 
@@ -222,7 +220,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
         cardControllers.clear()
         cardControllers.putAll(ordered)
-        _cardControllersState.value = ordered.values.toList().toImmutableList()
+        cardControllersState.update { ordered.values.toPersistentList() }
 
         if (selectedCardId.value !in newIds) {
             ordered.keys.firstOrNull()?.let { selectedCardId.value = it }
@@ -236,7 +234,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
-                    settings = buildSettings(card),
+                    settings = status.buildSettings(card.frozenState),
                     menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                     cardState = card.state,
                 )
@@ -244,6 +242,8 @@ internal class TangemPayCardPageModel @Inject constructor(
         } else {
             uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
         }
+
+        subscribeToCardFrozenState(selectedId)
     }
 
     private fun selectedCard(): TangemPayCard? {
@@ -271,7 +271,22 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    private fun buildSettings(card: TangemPayCard): ImmutableList<TangemPayCardPageSetting> {
+    private fun subscribeToCardFrozenState(cardId: String) {
+        frozenStateJob?.cancel()
+        frozenStateJob = cardDetailsRepository.cardFrozenState(cardId)
+            .onEach { cardFrozenState ->
+                uiState.update { state ->
+                    val settings = currentStatus.value.ifLoadedOrNull { it.buildSettings(cardFrozenState) }
+                    state.copy(settings = settings ?: persistentListOf())
+                }
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun PaymentAccountStatusValue.Loaded.buildSettings(
+        frozenState: TangemPayCardFrozenState,
+    ): ImmutableList<TangemPayCardPageSetting> {
+        val card = findCardWithId(selectedCardId.value) ?: return persistentListOf()
         return persistentListOf(
             TangemPayCardPageSetting(
                 id = TangemPayCardPageSetting.Id.Details,
@@ -279,6 +294,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onClick = ::onClickViewDetails,
                 iconRes = CoreUiR.drawable.ic_visa_card_details_24,
                 testTag = TangemPayTestTags.SHOW_DETAILS_ROW,
+                isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen,
             ),
             TangemPayCardPageSetting(
                 id = TangemPayCardPageSetting.Id.Freeze,
@@ -292,6 +308,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onClick = { onClickFreezeOrUnfreezeCard(card.isFrozen) },
                 iconRes = CoreUiR.drawable.ic_freeze_24,
                 testTag = TangemPayTestTags.FREEZE_CARD_ROW,
+                isLoading = frozenState == TangemPayCardFrozenState.Pending,
             ),
             TangemPayCardPageSetting(
                 id = TangemPayCardPageSetting.Id.ChangePin,
