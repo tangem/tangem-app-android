@@ -63,6 +63,7 @@ dependencies {
     api(projects.domain.staking)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
+    api(projects.domain.txhistory)
     implementation(projects.domain.card)
     // endregion
 
