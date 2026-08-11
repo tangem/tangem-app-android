@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -15,6 +15,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.jointaccount.creation.config.JointAccountConfigComponent
 import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
 import com.tangem.features.jointaccount.creation.promo.JointAccountPromoComponent
 import dagger.assisted.Assisted
@@ -54,7 +55,7 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
         Children(
             stack = childStack,
             modifier = modifier,
-            animation = stackAnimation { fade() },
+            animation = stackAnimation { slide() },
         ) { child ->
             child.instance.Content(Modifier.fillMaxSize())
         }
@@ -67,6 +68,11 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
         is JointAccountCreationRoute.Promo -> JointAccountPromoComponent(
             appComponentContext = childContext,
             params = params,
+        )
+        is JointAccountCreationRoute.Config -> JointAccountConfigComponent(
+            appComponentContext = childContext,
+            params = params,
+            onCloseClick = { router.pop() },
         )
     }
 
