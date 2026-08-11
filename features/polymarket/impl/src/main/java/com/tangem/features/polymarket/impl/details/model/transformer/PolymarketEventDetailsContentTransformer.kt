@@ -19,22 +19,36 @@ import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * Builds the event-details screen content for [event]. The previous state is not read — the content
- * is rebuilt from the domain event alone.
+ * is rebuilt from the domain event and the fold flags alone.
  *
  * @property event event to show
+ * @property isClosedMarketsExpanded whether the closed-markets fold is open
+ * @property isDescriptionExpanded whether the description is shown in full
  * @property onShareClick called with the event slug
  * @property onOutcomeClick called with the market id and the outcome asset id
+ * @property onClosedMarketsClick toggles the closed-markets section
+ * @property onReadMoreClick expands the description
  */
+@Suppress("LongParameterList")
 internal class PolymarketEventDetailsContentTransformer(
     private val event: PolymarketEvent,
+    private val isClosedMarketsExpanded: Boolean,
+    private val isDescriptionExpanded: Boolean,
     private val onShareClick: (String) -> Unit,
     private val onOutcomeClick: (marketId: String, assetId: String) -> Unit,
+    private val onClosedMarketsClick: () -> Unit,
+    private val onReadMoreClick: () -> Unit,
 ) : Transformer<PolymarketEventDetailsUM> {
 
     override fun transform(prevState: PolymarketEventDetailsUM): PolymarketEventDetailsUM {
+        val markets = event.markets.sortedBy(PolymarketMarket::orderIndex)
         return PolymarketEventDetailsUM.Content(
             title = stringReference(event.title),
             iconUrl = event.iconUrl,
@@ -42,24 +56,38 @@ internal class PolymarketEventDetailsContentTransformer(
             change24h = formatChange24h(volume = event.volume, volume24h = event.volume24h),
             // The BFF does not serve subcategories yet; the UI hides the row while the list is empty.
             subcategories = persistentListOf(),
-            activeMarkets = event.markets
-                .sortedBy(PolymarketMarket::orderIndex)
+            activeMarkets = markets
                 .filter { it.status == PolymarketStatus.ACTIVE || it.status == PolymarketStatus.UNKNOWN }
-                .map(::transformMarket)
+                .map { transformMarket(market = it, isTradable = true) }
                 .toImmutableList(),
+            closedMarkets = markets
+                .filter { it.status == PolymarketStatus.CLOSED }
+                .map { transformMarket(market = it, isTradable = false) }
+                .toImmutableList(),
+            isClosedMarketsExpanded = isClosedMarketsExpanded,
+            description = event.description.takeIf(String::isNotBlank)?.let(::stringReference),
+            isDescriptionExpanded = isDescriptionExpanded,
+            resolutionDate = formatEasternDate(raw = event.endDate),
+            marketOpenedDate = formatEasternDate(raw = event.startDate),
             onShareClick = { onShareClick(event.slug) },
+            onClosedMarketsClick = onClosedMarketsClick,
+            onReadMoreClick = onReadMoreClick,
         )
     }
 
-    private fun transformMarket(market: PolymarketMarket): PolymarketDetailsMarketUM {
+    private fun transformMarket(market: PolymarketMarket, isTradable: Boolean): PolymarketDetailsMarketUM {
         return PolymarketDetailsMarketUM(
             id = market.id,
             title = transformMarketTitle(market),
             volume = market.volume?.let { stringReference(it.formatPolymarketVolume()) },
             iconUrl = market.iconUrl ?: event.iconUrl,
-            outcomes = market.outcomes
-                .map { transformOutcome(market = market, outcome = it) }
-                .toImmutableList(),
+            outcomes = if (isTradable) {
+                market.outcomes
+                    .map { transformOutcome(market = market, outcome = it) }
+                    .toImmutableList()
+            } else {
+                emptyList<PolymarketDetailsOutcomeUM>().toImmutableList()
+            },
         )
     }
 
@@ -96,9 +124,25 @@ internal class PolymarketEventDetailsContentTransformer(
         )
     }
 
+    /**
+     * Polymarket states event dates in US Eastern Time, so the raw UTC instant is rendered
+     * in that zone with an explicit "ET" suffix (e.g. "Jul 11, 2026, 6:00 PM ET").
+     */
+    private fun formatEasternDate(raw: String?): TextReference? {
+        raw ?: return null
+        val instant = runCatching { Instant.parse(raw) }.getOrNull() ?: return null
+        val formatted = DateTimeFormatter
+            .ofPattern(RESOLUTION_DATE_PATTERN, Locale.getDefault())
+            .withZone(ZoneId.of(EASTERN_TIME_ZONE))
+            .format(instant)
+        return stringReference("$formatted ET")
+    }
+
     companion object {
         private const val CENT_SIGN = "¢"
         private val CENTS_IN_DOLLAR = BigDecimal(100)
+        private const val EASTERN_TIME_ZONE = "America/New_York"
+        private const val RESOLUTION_DATE_PATTERN = "MMM d, yyyy, h:mm a"
 
         /**
          * Growth ratio of the total traded volume over the last 24 hours, derived from the two
