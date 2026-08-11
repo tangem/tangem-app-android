@@ -5,6 +5,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -15,6 +17,7 @@ import com.tangem.feature.swap.models.ChangeCardsButtonState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.presentation.R
+import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -172,6 +175,118 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
         // Assert — the reverse (swap-direction) action never ran: dataState is untouched.
         assertThat(model.dataState).isSameInstanceAs(dataStateBeforeClick)
+    }
+
+    // -------------------------------------------------------------------------
+    // [REDACTED_TASK_KEY] Task 7: restrict withdraw FROM selector to the Payment account + hide Markets
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `GIVEN Withdraw flow WHEN from selector settings THEN Markets hidden`() = runTest {
+        // Arrange & Act
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.chooseFromTokenBridge.settings.chooserBlock).isInstanceOf(ChooserBlock.None::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN Withdraw flow WHEN from tokenFilter applied THEN only payment account tokens pass`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+        val paymentAccountStatus = AccountStatus.Payment(
+            account = Account.Payment(userWalletId),
+            value = mockk(relaxed = true),
+        )
+        val usdcPolygonStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+        val cryptoPortfolioStatus: AccountStatus.CryptoPortfolio = mockk(relaxed = true)
+        val btcStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+
+        // Act
+        val predicate = model.chooseFromTokenBridge.tokenFilter.value
+
+        // Assert
+        assertThat(predicate(paymentAccountStatus, usdcPolygonStatus)).isTrue()
+        assertThat(predicate(cryptoPortfolioStatus, btcStatus)).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN Withdraw flow WHEN to selector settings THEN Markets stays shown`() = runTest {
+        // Arrange & Act — the TO bridge is unaffected by the withdraw-FROM restriction.
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.chooseToTokenBridge.settings.chooserBlock).isInstanceOf(ChooserBlock.Market::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN TopUp flow WHEN from selector settings THEN Markets stays shown`() = runTest {
+        // Arrange & Act — only Withdraw restricts the FROM selector; TopUp keeps legacy SwapFrom settings.
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.TopUp)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.chooseFromTokenBridge.settings.chooserBlock).isInstanceOf(ChooserBlock.Market::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from selector settings stay legacy`() = runTest {
+        // Arrange & Act — the toggle gates the withdraw-FROM restriction just like it gates everything else.
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.chooseFromTokenBridge.settings.chooserBlock).isInstanceOf(ChooserBlock.Market::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from tokenFilter is not restricted to payment account`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+        val cryptoPortfolioStatus: AccountStatus.CryptoPortfolio = mockk(relaxed = true)
+        val btcStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+
+        // Act
+        val predicate = model.chooseFromTokenBridge.tokenFilter.value
+
+        // Assert — a regular (non-Payment) account's token still passes when the toggle is off.
+        assertThat(predicate(cryptoPortfolioStatus, btcStatus)).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN toggle OFF WHEN Withdraw flow THEN from tokenFilter is byte-for-byte the to tokenFilter`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+        val cryptoPortfolioStatus: AccountStatus.CryptoPortfolio = mockk(relaxed = true)
+        val someStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+
+        // Act
+        val fromPredicate = model.chooseFromTokenBridge.tokenFilter.value
+        val toPredicate = model.chooseToTokenBridge.tokenFilter.value
+
+        // Assert — same base predicate on both sides when not in a Withdraw account flow.
+        assertThat(fromPredicate(cryptoPortfolioStatus, someStatus)).isEqualTo(
+            toPredicate(cryptoPortfolioStatus, someStatus),
+        )
+        model.onDestroy()
     }
 
     @Test
