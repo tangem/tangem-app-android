@@ -192,12 +192,21 @@ internal class SwapModel @Inject constructor(
     private val accountFlow = params.accountFlow
 
     /**
+     * Whether this screen is driven by an [AccountFlow] (Tangem Pay top-up/withdraw via swap) with the
+     * account-swap-flow toggle on. Single source of truth for the account-flow gate — see
+     * [isAccountTopUp], [isTangemPayWithdrawFlow], [onChangeCardsClicked],
+     * [withReverseForcedHiddenInAccountFlow] and [withAccountFlowPresentation].
+     */
+    private val isAccountFlowActive: Boolean
+        get() = swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow != null
+
+    /**
      * Whether this screen is the account top-up leg (Tangem Pay "Add funds" via swap) with the
      * account-swap-flow toggle on. Gates the abstract "USD" TO-card presentation — see
      * [withAccountFlowPresentation].
      */
     private val isAccountTopUp: Boolean
-        get() = swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow is AccountFlow.TopUp
+        get() = isAccountFlowActive && accountFlow is AccountFlow.TopUp
 
     /**
      * Whether this screen is the account withdrawal leg (Tangem Pay "Withdraw" via swap) with the
@@ -205,7 +214,7 @@ internal class SwapModel @Inject constructor(
      * and [filterTokensFromSelector].
      */
     private val isTangemPayWithdrawFlow: Boolean
-        get() = swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow is AccountFlow.Withdraw
+        get() = isAccountFlowActive && accountFlow is AccountFlow.Withdraw
 
     private var isBalanceHidden = true
 
@@ -713,7 +722,7 @@ internal class SwapModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun onChangeCardsClicked() {
-        if (swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow != null) return
+        if (isAccountFlowActive) return
         modelScope.launch {
             singleTaskScheduler.cancelTask()
 
@@ -2547,7 +2556,7 @@ internal class SwapModel @Inject constructor(
 
     /** Forces [ChangeCardsButtonState.HIDDEN] when this screen is driven by an [AccountFlow] with the toggle on. */
     private fun SwapStateHolder.withReverseForcedHiddenInAccountFlow(): SwapStateHolder {
-        return if (swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow != null) {
+        return if (isAccountFlowActive) {
             copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
         } else {
             this
@@ -2570,9 +2579,10 @@ internal class SwapModel @Inject constructor(
      *    normal, selectable card (resolved by the user, restricted separately from this presentation layer).
      */
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder {
-        if (!swapFeatureToggles.isAccountSwapFlowEnabled || accountFlow == null) return this
+        if (!isAccountFlowActive) return this
+        val flow = accountFlow ?: return this
         val titledState = copy(
-            titleId = when (accountFlow) {
+            titleId = when (flow) {
                 is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
                 is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
             },
