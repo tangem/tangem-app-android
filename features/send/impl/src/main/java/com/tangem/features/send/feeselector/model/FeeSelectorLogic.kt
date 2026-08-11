@@ -256,7 +256,13 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             return params.onLoadFee().map { LoadedFeeResult.Basic(it) }
         }
 
-        val selectedTokenOrNull = (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.feeCryptoCurrencyStatus
+        // Only an explicit pick pins the fee token. The state also carries the coin a
+        // gasless quote fell back to, and treating that as a choice made the fallback permanent:
+        // every later reload took the native branch and the token fee was never quoted again.
+        val selectedTokenOrNull = (uiState.value as? FeeSelectorUM.Content)
+            ?.feeExtraInfo
+            ?.takeIf { it.isFeeTokenSelectedByUser }
+            ?.feeCryptoCurrencyStatus
 
         if (selectedTokenOrNull?.currency is CryptoCurrency.Coin) {
             return params.onLoadFee().flatMap { loadedFee ->
@@ -271,10 +277,13 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 
         return extended(selectedTokenOrNull).fold(
             ifLeft = { error ->
-                when (error) {
-                    is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
-                    is GetFeeError.GaslessError -> {
-                        // Something wrong with gasless fee, fallback to basic fee
+                when {
+                    error is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
+                    // Only the automatic choice may fall back to the basic fee. Overriding a token the
+                    // user picked explicitly would move the fee to the network coin behind their back,
+                    // and the speed-only selector it leaves behind offers no way back to the token.
+                    error is GetFeeError.GaslessError && selectedTokenOrNull == null -> {
+                        TangemLogger.i("Gasless fee unavailable ($error), falling back to the native fee")
                         shouldShowOnlySpeedOption.value = true
                         params.onLoadFee().map { LoadedFeeResult.Basic(it) }
                     }
