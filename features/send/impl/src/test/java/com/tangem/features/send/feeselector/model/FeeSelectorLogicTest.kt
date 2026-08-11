@@ -13,12 +13,14 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
@@ -247,6 +249,33 @@ internal class FeeSelectorLogicTest {
                 // Assert
                 coVerify(exactly = 1) { onLoadFeeExtended(any()) }
                 assertThat(sut.shouldShowOnlySpeedOption.value).isFalse()
+            }
+
+        @Test
+        fun `GIVEN an offered token cannot cover the fee WHEN load fee THEN it is reported as not enough`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                val feeExtended = TransactionFeeExtended(
+                    transactionFee = singleFee(),
+                    feeTokenId = tokenStatus.currency.id,
+                )
+                coEvery { onLoadFeeExtended(any()) } returns feeExtended.right()
+                every { getUserWalletUseCase(any<UserWalletId>()) } returns mockk<UserWallet>(relaxed = true).right()
+                coEvery { getAvailableFeeTokensUseCase(any(), any(), any()) } returns AvailableFeeTokens(
+                    tokens = listOf(coinStatus, tokenStatus),
+                    notEnoughForFeeIds = setOf(coinStatus.currency.id),
+                ).right()
+
+                // Act
+                val sut = buildModel(gaslessEnabled = true)
+                advanceUntilIdle()
+
+                // Assert
+                val state = sut.uiState.value as FeeSelectorUM.Content
+                assertThat(state.feeExtraInfo.availableFeeCurrencies)
+                    .containsExactly(coinStatus, tokenStatus)
+                    .inOrder()
+                assertThat(state.feeExtraInfo.notEnoughForFeeCurrencies).containsExactly(coinStatus.currency.id)
             }
     }
 

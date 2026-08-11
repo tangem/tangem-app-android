@@ -16,6 +16,7 @@ import com.tangem.utils.extensions.isZero
 
 internal class FeeTokenForListConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val canPayFee: Boolean,
     private val onTokenClick: () -> Unit,
 ) : Converter<CryptoCurrencyStatus, FeeTokenItemState> {
 
@@ -26,9 +27,10 @@ internal class FeeTokenForListConverter(
 
         val appCurrency = appCurrencyProvider()
         val isBalanceZero = value.value.amount?.isZero() == true
+        val isSelectable = isBalanceZero.not() && canPayFee
         val tokenItemConverter = TokenItemStateConverter(
             appCurrency = appCurrencyProvider(),
-            onItemClick = if (isBalanceZero.not()) {
+            onItemClick = if (isSelectable) {
                 { _, _ -> onTokenClick() }
             } else {
                 null
@@ -60,7 +62,7 @@ internal class FeeTokenForListConverter(
 
         return FeeTokenItemState(
             state = updatedState,
-            isAvailable = isBalanceZero.not(),
+            isAvailable = isSelectable,
         )
     }
 }
