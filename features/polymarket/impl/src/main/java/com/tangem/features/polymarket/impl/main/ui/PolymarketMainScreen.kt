@@ -49,6 +49,7 @@ import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -80,11 +81,6 @@ private val TabShape = RoundedCornerShape(percent = 50)
 private val TabRimBrush = Brush.verticalGradient(
     colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent),
 )
-
-// Texts awaiting their Lokalise keys; each literal swaps to a string resource once the key lands.
-private object PendingStrings {
-    const val EVENTS_LOAD_ERROR = "Failed to load events.\nTap to reload"
-}
 
 @Composable
 internal fun PolymarketMainScreen(
@@ -388,7 +384,7 @@ private fun EventsErrorState(onReloadClick: () -> Unit, modifier: Modifier = Mod
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = PendingStrings.EVENTS_LOAD_ERROR,
+            text = stringResourceSafe(R.string.prediction_main_events_load_error),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.subheading.medium,
             textAlign = TextAlign.Center,
