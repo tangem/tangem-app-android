@@ -9,6 +9,7 @@ import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * Represents the status of a cryptocurrency asset within a network.
@@ -74,7 +75,9 @@ data class CryptoCurrencyStatus(
          * (`com.tangem.common.getExtraBalanceOrNull`). That makes an empty list the switch between the two
          * architectures — the reason it is stored rather than derived from [stakingBalance].
          *
-         * Not serialized: statuses are derived in memory, never persisted.
+         * Not serialized (enforced with `@Transient` on every override): statuses are derived in memory, never
+         * persisted, and [BalanceContribution] is an open interface with no polymorphic registration — encoding
+         * a non-empty list would throw at runtime.
          */
         val contributions: List<BalanceContribution> get() = emptyList()
 
@@ -190,7 +193,7 @@ data class CryptoCurrencyStatus(
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
-        override val contributions: List<BalanceContribution> = emptyList(),
+        @Transient override val contributions: List<BalanceContribution> = emptyList(),
     ) : Value {
 
         override val isError: Boolean = false
@@ -219,7 +222,7 @@ data class CryptoCurrencyStatus(
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
-        override val contributions: List<BalanceContribution> = emptyList(),
+        @Transient override val contributions: List<BalanceContribution> = emptyList(),
     ) : Value {
 
         override val isError: Boolean = false
@@ -242,7 +245,7 @@ data class CryptoCurrencyStatus(
         override val pendingTransactions: Set<TxInfo>,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
-        override val contributions: List<BalanceContribution> = emptyList(),
+        @Transient override val contributions: List<BalanceContribution> = emptyList(),
     ) : Value {
 
         override val isError: Boolean = false
