@@ -2444,6 +2444,7 @@
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
+  <string name="transaction_history_withdrawn">Withdrawn</string>
   <string name="transaction_notifications_warning_description">Notifications are enabled but won\'t work until you allow notifications in your device settings.</string>
   <string name="transaction_notifications_warning_title">Transaction Notifications</string>
   <string name="transfer_in_progress_title">Transfer in progress</string>
