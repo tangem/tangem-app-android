@@ -55,9 +55,73 @@ sealed class WalletSettingsAnalyticEvents(
 
     data class BackupScreenOpened(
         val isBackedUp: Boolean,
+        val cloudBackupState: AnalyticsParam.CloudBackupState?,
     ) : WalletSettingsAnalyticEvents(
         event = "Backup Screen Opened",
-        params = mapOf("Manual Backup" to if (isBackedUp) "Yes" else "No"),
+        params = buildMap {
+            put(AnalyticsParam.MANUAL_BACKUP, isBackedUp.toYesNo())
+            cloudBackupState?.let { put(AnalyticsParam.CLOUD_BACKUP, it.value) }
+        },
+    )
+
+    class SetCloudPasswordScreen : WalletSettingsAnalyticEvents(
+        event = "Set Cloud Password Screen",
+    )
+
+    class ConfirmCloudPasswordScreen : WalletSettingsAnalyticEvents(
+        event = "Confirm Cloud Password Screen",
+    )
+
+    data class CloudBackupCreationError(
+        val errorMessage: String,
+    ) : WalletSettingsAnalyticEvents(
+        event = "Cloud Backup Creation Error",
+        params = mapOf(AnalyticsParam.ERROR_MESSAGE to errorMessage),
+    )
+
+    class CloudBackupScreenClosed : WalletSettingsAnalyticEvents(
+        event = "Cloud Backup Screen Closed",
+    )
+
+    class CloudBackupDetailsScreen : WalletSettingsAnalyticEvents(
+        event = "Cloud Backup Details Screen",
+    )
+
+    class CloudBackupDeletionRequest : WalletSettingsAnalyticEvents(
+        event = "Cloud Backup Deletion Request",
+    )
+
+    /** Sent both when the user removes a backup and when the app removes it (upgrade, forget wallet) */
+    class CloudBackupDeleted : WalletSettingsAnalyticEvents(
+        event = "Cloud Backup Deleted",
+    )
+
+    data class CloudBackupDeletionError(
+        val errorMessage: String,
+    ) : WalletSettingsAnalyticEvents(
+        event = "Cloud Backup Deletion Error",
+        params = mapOf(AnalyticsParam.ERROR_MESSAGE to errorMessage),
+    )
+
+    data class ForgetWalletRequest(
+        val source: String,
+        val cloudBackupState: AnalyticsParam.CloudBackupState?,
+        val isBackedUp: Boolean,
+    ) : WalletSettingsAnalyticEvents(
+        event = "Forget Wallet Request",
+        params = buildMap {
+            put(AnalyticsParam.SOURCE, source)
+            put(AnalyticsParam.MANUAL_BACKUP, isBackedUp.toYesNo())
+            cloudBackupState?.let { put(AnalyticsParam.CLOUD_BACKUP, it.value) }
+        },
+    )
+
+    class ForgetWalletScreen : WalletSettingsAnalyticEvents(
+        event = "Forget Wallet Screen",
+    )
+
+    class WalletForgotten : WalletSettingsAnalyticEvents(
+        event = "Wallet Forgotten",
     )
 
     class ButtonRecoveryPhrase : WalletSettingsAnalyticEvents(
@@ -71,12 +135,16 @@ sealed class WalletSettingsAnalyticEvents(
     data class NoticeBackupFirst(
         val source: String,
         val action: Action,
+        val cloudBackupState: AnalyticsParam.CloudBackupState? = null,
+        val isBackedUp: Boolean? = null,
     ) : WalletSettingsAnalyticEvents(
         event = "Notice - Backup First",
-        params = mapOf(
-            AnalyticsParam.SOURCE to source,
-            ACTION to action.value,
-        ),
+        params = buildMap {
+            put(AnalyticsParam.SOURCE, source)
+            put(ACTION, action.value)
+            cloudBackupState?.let { put(AnalyticsParam.CLOUD_BACKUP, it.value) }
+            isBackedUp?.let { put(AnalyticsParam.MANUAL_BACKUP, it.toYesNo()) }
+        },
     ) {
         enum class Action(val value: String) {
             AccessCode("Access Code"),
@@ -145,12 +213,14 @@ sealed class WalletSettingsAnalyticEvents(
     data class BackupCompleteScreen(
         val source: String,
         val action: String,
+        val backupType: AnalyticsParam.BackupType? = null,
     ) : WalletSettingsAnalyticEvents(
         event = "Backup Complete Screen",
-        params = mapOf(
-            AnalyticsParam.SOURCE to source,
-            ACTION to action,
-        ),
+        params = buildMap {
+            put(AnalyticsParam.SOURCE, source)
+            put(ACTION, action)
+            backupType?.let { put(AnalyticsParam.BACKUP_TYPE, it.value) }
+        },
     )
 
     data class AccessCodeScreenOpened(
@@ -186,3 +256,5 @@ sealed class WalletSettingsAnalyticEvents(
         Remove("Remove"),
     }
 }
+
+private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"
