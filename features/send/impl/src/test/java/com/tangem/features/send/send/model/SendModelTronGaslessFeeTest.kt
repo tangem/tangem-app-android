@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.features.send.api.entity.PredefinedValues
@@ -37,8 +38,15 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
 
-    private val tronToken: CryptoCurrency.Token = mockk(relaxed = true)
+    private val tronNetwork: Network = mockk(relaxed = true)
+    private val tronToken: CryptoCurrency.Token = mockk(relaxed = true) {
+        every { network } returns tronNetwork
+    }
     private val tronCoinId: CryptoCurrency.ID = mockk(relaxed = true)
+    private val tronCoin: CryptoCurrency.Coin = mockk(relaxed = true) {
+        every { network } returns tronNetwork
+        every { id } returns tronCoinId
+    }
     private val gaslessQuote: TronGaslessQuote = mockk(relaxed = true)
 
     @BeforeEach
@@ -56,8 +64,11 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
     @ProvideTestModels
     fun loadFeeExtended(model: TestModel) = runTest {
         // Arrange
-        stubNativeBalance(model.nativeBalance)
-        coEvery { getFeeForGaslessUseCase(any(), any(), any(), any()) } returns nativeFee(model.nativeFee).right()
+        stubNativeBalance(
+            balance = model.nativeBalance,
+            feePaidCurrency = if (model.feePaidFallsBackToSentToken) tronToken else tronCoin,
+        )
+        coEvery { getFeeForGaslessUseCase(any(), any(), any(), any()) } returns nativeFee(model).right()
         val sendModel = createSendModel(this, MutableParamsContainer(defaultSendParams()))
         advanceUntilIdle()
         sendModel.predefinedValues = deeplink(amount = "1.0")
@@ -74,8 +85,14 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
         val nativeFee: BigDecimal,
         val nativeBalance: BigDecimal,
         val expectsGasless: Boolean,
+        /** Non-null builds a [Fee.Tron] carrying the account's energy, as the SDK reports it. */
+        val remainingEnergy: Long? = null,
+        val feeEnergy: Long? = null,
+        /** The fee-paid currency could not be resolved, so the status holds the sent token. */
+        val feePaidFallsBackToSentToken: Boolean = false,
     )
 
+    @Suppress("LongMethod")
     private fun provideTestModels() = listOf(
         // The account's free bandwidth and (often delegated) energy cover the transfer, so the SDK
         // charges nothing. Nothing is covered by the wallet itself, so the sent token is quoted
@@ -89,12 +106,65 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
         TestModel(nativeFee = BigDecimal("6.4285"), nativeBalance = BigDecimal("1.5"), expectsGasless = true),
         // The wallet can pay in TRX — keep the native fee.
         TestModel(nativeFee = BigDecimal("6.4285"), nativeBalance = BigDecimal("10"), expectsGasless = false),
+        // Delegated energy still on the address after a gasless send: the SDK only charges the
+        // bandwidth burn, which a dust TRX balance happens to cover. The wallet cannot pay the real
+        // price of the transfer once the delegation is reclaimed, so the sent token is quoted.
+        TestModel(
+            nativeFee = BigDecimal("0.345"),
+            nativeBalance = BigDecimal("0.346"),
+            expectsGasless = true,
+            remainingEnergy = 173_571,
+            feeEnergy = 64_285,
+        ),
+        // Same, with the balance well above the discounted fee — still not the price it would pay.
+        TestModel(
+            nativeFee = BigDecimal("0.345"),
+            nativeBalance = BigDecimal("10"),
+            expectsGasless = true,
+            remainingEnergy = 173_571,
+            feeEnergy = 64_285,
+        ),
+        // Energy only partially covers the call: the fee is still discounted by what is delegated.
+        TestModel(
+            nativeFee = BigDecimal("3.2"),
+            nativeBalance = BigDecimal("10"),
+            expectsGasless = true,
+            remainingEnergy = 30_000,
+            feeEnergy = 64_285,
+        ),
+        // No energy on the account: the fee is the full burn, and the wallet can pay it.
+        TestModel(
+            nativeFee = BigDecimal("6.4285"),
+            nativeBalance = BigDecimal("10"),
+            expectsGasless = false,
+            remainingEnergy = 0,
+            feeEnergy = 64_285,
+        ),
+        // …but not when the balance falls short of it.
+        TestModel(
+            nativeFee = BigDecimal("6.4285"),
+            nativeBalance = BigDecimal("1.5"),
+            expectsGasless = true,
+            remainingEnergy = 0,
+            feeEnergy = 64_285,
+        ),
+        // TRX is missing from the portfolio, so the fee-paid status falls back to the sent token: the
+        // USDT balance must not be read as TRX the wallet could pay the fee with.
+        TestModel(
+            nativeFee = BigDecimal("6.4285"),
+            nativeBalance = BigDecimal("27.85"),
+            expectsGasless = true,
+            remainingEnergy = 0,
+            feeEnergy = 64_285,
+            feePaidFallsBackToSentToken = true,
+        ),
     )
 
     override fun defaultSendParams() = super.defaultSendParams().copy(currency = tronToken)
 
-    private fun stubNativeBalance(balance: BigDecimal) {
+    private fun stubNativeBalance(balance: BigDecimal, feePaidCurrency: CryptoCurrency = tronCoin) {
         val nativeStatus: CryptoCurrencyStatus = mockk(relaxed = true) {
+            every { currency } returns feePaidCurrency
             every { value } returns mockk<CryptoCurrencyStatus.Loaded>(relaxed = true) {
                 every { amount } returns balance
             }
@@ -107,10 +177,18 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns nativeStatus.right()
     }
 
-    private fun nativeFee(value: BigDecimal) = TransactionFeeExtended(
-        transactionFee = TransactionFee.Single(normal = Fee.Common(Amount(value, Blockchain.Tron))),
-        feeTokenId = tronCoinId,
-    )
+    private fun nativeFee(model: TestModel): TransactionFeeExtended {
+        val amount = Amount(model.nativeFee, Blockchain.Tron)
+        val fee = if (model.remainingEnergy != null && model.feeEnergy != null) {
+            Fee.Tron(amount = amount, remainingEnergy = model.remainingEnergy, feeEnergy = model.feeEnergy)
+        } else {
+            Fee.Common(amount)
+        }
+        return TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(normal = fee),
+            feeTokenId = tronCoinId,
+        )
+    }
 
     private fun gaslessFee() = TransactionFeeExtended(
         transactionFee = TransactionFee.Single(normal = Fee.Common(Amount(BigDecimal("2.4102"), Blockchain.Tron))),
