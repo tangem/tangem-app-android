@@ -21,7 +21,7 @@ internal object StakingValidatorEntityConverter {
             commission = value.commission,
             stakedBalance = value.stakedBalance,
             votingPower = value.votingPower,
-            preferred = value.preferred,
+            isPreferred = value.preferred,
         )
     }
 }
