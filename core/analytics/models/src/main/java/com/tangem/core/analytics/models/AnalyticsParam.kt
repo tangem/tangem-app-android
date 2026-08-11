@@ -264,6 +264,30 @@ sealed class AnalyticsParam {
         AccessCode("Access Code"),
     }
 
+    /** Way a mobile wallet secret is backed up: the recovery phrase written down by hand, or a cloud backup */
+    enum class BackupType(val value: String) {
+        Manual("Manual"),
+        Cloud("Cloud"),
+    }
+
+    /**
+     * Cloud backup state of a wallet as it is shown to the user.
+     *
+
+     * no cloud access or the file is gone.
+     */
+    enum class CloudBackupState(val value: String) {
+        Incomplete("Incomplete"),
+        Done("Done"),
+        ActionRequired("Action Required"),
+    }
+
+    /** Whether a cloud backup can be offered at all — i.e. the platform supports it */
+    enum class CloudBackupAvailability(val value: String) {
+        Available("Available"),
+        Unavailable("Unavailable"),
+    }
+
     companion object Key {
         const val BLOCKCHAIN = "Blockchain"
         const val TOKEN_PARAM = "Token"
@@ -330,10 +354,22 @@ sealed class AnalyticsParam {
         const val WALLETS_COUNT = "Wallets Count"
         const val WALLET_TYPE = "Wallet Type"
         const val BACKUPED = "Backuped"
+        const val COMPLETED_BACKUPS = "Completed Backups"
+        const val CLOUD_BACKUP = "Cloud Backup"
+        const val MANUAL_BACKUP = "Manual Backup"
+        const val BACKUP_TYPE = "Backup Type"
+        const val BACKUP_COUNT = "Backup Count"
+        const val USER_WALLET_ID = "User Wallet Id"
         const val MEMO = "Memo"
         const val VALUE = "Value"
     }
 }
+
+/** Stable order, so "Manual, Cloud" and "Cloud, Manual" don't split into two values in Amplitude */
+fun getCompletedBackupsValue(completedBackups: Set<AnalyticsParam.BackupType>): String =
+    AnalyticsParam.BackupType.entries
+        .filter(completedBackups::contains)
+        .joinToString { it.value }
 
 fun getReferralParams(referralId: String?): List<Pair<String, String>> = listOf(
     REFERRAL to (!referralId.isNullOrBlank()).toString().replaceFirstChar(Char::titlecase),
