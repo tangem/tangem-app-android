@@ -20,6 +20,7 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
+import com.tangem.features.jointaccount.creation.component.JointAccountCreationComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
@@ -116,6 +117,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
+    private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
@@ -642,6 +644,13 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = accountCreateEditComponentFactory,
+                )
+            }
+            is AppRoute.JointAccountCreation -> {
+                createComponentChild(
+                    context = context,
+                    params = JointAccountCreationComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = jointAccountCreationComponentFactory,
                 )
             }
             is AppRoute.EditAccount -> {
