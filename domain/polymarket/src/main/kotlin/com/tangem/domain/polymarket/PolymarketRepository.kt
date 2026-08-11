@@ -42,9 +42,13 @@ interface PolymarketRepository {
     suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState>
 
     /**
-     * Initiate deposit-wallet deployment (BFF `POST /wallet/deploy`). The client supplies both halves of
-     * its own CREATE2 derivation — the [walletId] it derived from and the resulting [depositWalletAddress] —
-     * so the BFF can re-derive and cross-check. Gasless, unsigned; the client then polls `GET /wallet`.
+     * Initiate deposit-wallet deployment (BFF `POST /wallet/deploy`). Gasless, unsigned; the client then
+     * polls `GET /wallet`.
+     *
+     * [walletId] is the Tangem wallet id, sent exactly as stored — a correlation key that ties the deposit
+     * wallet to the wallet across Tangem's applications, bound to the owner on first deploy. It is **not** an
+     * input to any derivation: the BFF derives the deposit wallet from [ownerAddress] alone and cross-checks
+     * the [depositWalletAddress] we send against it.
      */
     suspend fun deployWallet(
         ownerAddress: String,
