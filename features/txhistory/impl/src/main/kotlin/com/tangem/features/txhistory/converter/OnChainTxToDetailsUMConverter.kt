@@ -15,8 +15,8 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
-import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.core.ui.res.generated.icons.ic_stack_20
 import com.tangem.core.ui.res.generated.icons.ic_success_20
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -86,7 +86,8 @@ internal class OnChainTxToDetailsUMConverter(
      * never both.
      */
     private fun TxInfo.protocolRow(): TxHistoryDetailsUM.InfoRowUM? {
-        if (type !is TransactionType.YieldSupply) return null
+        // Send is a plain transfer, not a protocol interaction — no "Validator: Aave" row.
+        if (type !is TransactionType.YieldSupply || type is TransactionType.YieldSupply.Send) return null
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.staking_validator),
             value = resourceReference(R.string.yield_module_provider),
@@ -147,10 +148,15 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * A "Receive" — an incoming transfer from an external counterparty (not an own "Transfer" between the user's
-     * accounts/wallets). Its on-chain fee belongs to the sender, so the details omit the fee row.
+     * A "Receive" — an incoming transfer from an **external** counterparty. Its on-chain fee belongs to the sender,
+     * so the details omit the fee row. An own "Transfer" between the user's own accounts/wallets is not a receive:
+     * the user did pay that fee, so it is kept. A non-withdraw [TxInfo.TransactionType.YieldSupply.Send] is a plain
+     * transfer too and follows the same rule. A withdraw is a user-initiated yield op, so its fee is always kept.
      */
-    private fun TxInfo.isReceive(): Boolean = type is TxInfo.TransactionType.Transfer && !isOutgoing && !isOwnTransfer()
+    private fun TxInfo.isReceive(): Boolean = !isOutgoing && !isOwnTransfer() && (
+        type is TxInfo.TransactionType.Transfer ||
+            (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
+        )
 
     /**
      * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
@@ -214,11 +220,13 @@ internal class OnChainTxToDetailsUMConverter(
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
         // Contract interactions (yield-supply / staking / approve) talk to a protocol/validator, not a real recipient —
-        // no copyable counterparty card.
-        val isContractInteraction = type is TransactionType.YieldSupply ||
+        // no copyable counterparty card. A NON-withdraw Send is exempt: it is a plain transfer and keeps its recipient
+        // card. A withdraw Send stays a yield operation, so it gets no counterparty card (no "from: Aave" in details).
+        val isPlainSend = (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
+        val isProtocolType = type is TransactionType.YieldSupply ||
             type is TransactionType.Staking ||
             type is TransactionType.Approve
-        if (isContractInteraction) return null
+        if (isProtocolType && !isPlainSend) return null
         return when (val owner = resolvedCounterparty()) {
             is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_account),
@@ -307,13 +315,20 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
 }
 
 /** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
-private fun TxInfo.headerIcon(): TxIcon = when (type) {
+private fun TxInfo.headerIcon(): TxIcon = when (val type = type) {
     is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
     is TransactionType.Staking.Stake,
     is TransactionType.Staking.Unstake,
     is TransactionType.Staking.Restake,
     -> TxIcon.Vector(Icons.ic_stack_20)
-    is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
+    // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and keeps the
+    // yield lightning glyph (falls through to the YieldSupply branch below); it only drops the validator/counterparty.
+    is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
+        TxIcon.Vector(Icons.ic_lightning_20)
+    } else {
+        TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+    }
+    is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_lightning_20)
     is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
     is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
     else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
