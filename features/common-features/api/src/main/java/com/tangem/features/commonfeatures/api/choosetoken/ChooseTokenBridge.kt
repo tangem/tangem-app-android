@@ -48,6 +48,17 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 chooserBlock = ChooserBlock.Market,
                 isShowPaymentAccount = true,
             )
+
+            /**
+             * FROM selector for the withdraw-via-swap account flow (Tangem Pay "Withdraw"). Same title as
+             * [SwapFrom], but hides the Markets search — withdrawal only ever draws from the Payment
+             * account's own tokens, so there is nothing to search for.
+             */
+            val WithdrawFrom = Settings(
+                title = resourceReference(R.string.swapping_from_title),
+                chooserBlock = ChooserBlock.None,
+                isShowPaymentAccount = true,
+            )
             val SwapTo = Settings(
                 title = resourceReference(R.string.swapping_to_title),
                 chooserBlock = ChooserBlock.Market,
