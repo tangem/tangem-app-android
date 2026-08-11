@@ -619,13 +619,11 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun updateAmountSubtractAvailability() {
         modelScope.launch {
-            val fee = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal
-            // we assume if feeExtraInfo is empty then pay fee in the main currency
-            val feeTokenId = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.feeTokenId ?: cryptoCurrency.id
+            val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
             isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
                 userWalletId = userWallet.walletId,
                 currency = cryptoCurrency,
-                maybeGaslessFee = fee?.let { feeTokenId to fee },
+                maybeGaslessFee = feeExtended?.let { it.feeTokenId to it.transactionFee.normal },
             ).getOrElse { false }
         }
     }
