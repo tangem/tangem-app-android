@@ -75,6 +75,9 @@ internal class FeeSelectorLoadedTransformer(
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 availableFeeCurrencies = getAvailableFeeCurrencies(),
                 transactionFeeExtended = (fees as? FeeSelectorLogic.LoadedFeeResult.Extended)?.fee,
+                // A quote neither makes nor unmakes the user's pick; carry it across the reload.
+                isFeeTokenSelectedByUser = (prevState as? FeeSelectorUM.Content)
+                    ?.feeExtraInfo?.isFeeTokenSelectedByUser == true,
             ),
             feeFiatRateUM = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
                 FeeFiatRateUM(
