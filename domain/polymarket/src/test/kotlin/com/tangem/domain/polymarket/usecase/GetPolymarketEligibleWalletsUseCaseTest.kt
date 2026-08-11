@@ -44,6 +44,32 @@ internal class GetPolymarketEligibleWalletsUseCaseTest {
     }
 
     @Test
+    fun `GIVEN a single-currency wallet WHEN invoked THEN it is not eligible`() = runTest {
+        // Arrange
+        val singleCurrency = wallet(id = UserWalletId("033"), locked = false, multiCurrency = false)
+        every { repository.userWallets } returns MutableStateFlow(listOf(unlocked, singleCurrency))
+
+        // Act
+        val actual = useCase()
+
+        // Assert
+        assertThat(actual).containsExactly(unlocked)
+    }
+
+    @Test
+    fun `GIVEN every wallet is single-currency WHEN invoked THEN returns empty`() = runTest {
+        // Arrange
+        val singleCurrency = wallet(id = UserWalletId("033"), locked = false, multiCurrency = false)
+        every { repository.userWallets } returns MutableStateFlow(listOf(singleCurrency))
+
+        // Act
+        val actual = useCase()
+
+        // Assert
+        assertThat(actual).isEmpty()
+    }
+
+    @Test
     fun `GIVEN the list is not loaded WHEN invoked THEN returns empty`() = runTest {
         // Arrange
         every { repository.userWallets } returns MutableStateFlow(null)
@@ -70,8 +96,10 @@ internal class GetPolymarketEligibleWalletsUseCaseTest {
         coVerify(exactly = 1) { repository.load() }
     }
 
-    private fun wallet(id: UserWalletId, locked: Boolean): UserWallet = mockk<UserWallet.Cold> {
-        every { walletId } returns id
-        every { isLocked } returns locked
-    }
+    private fun wallet(id: UserWalletId, locked: Boolean, multiCurrency: Boolean = true): UserWallet =
+        mockk<UserWallet.Cold> {
+            every { walletId } returns id
+            every { isLocked } returns locked
+            every { isMultiCurrency } returns multiCurrency
+        }
 }
