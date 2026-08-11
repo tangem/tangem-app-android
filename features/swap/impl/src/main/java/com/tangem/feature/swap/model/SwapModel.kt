@@ -190,6 +190,14 @@ internal class SwapModel @Inject constructor(
     private val initialCryptoCurrency = params.fromCryptoCurrency
     private val accountFlow = params.accountFlow
 
+    /**
+     * Whether this screen is the account top-up leg (Tangem Pay "Add funds" via swap) with the
+     * account-swap-flow toggle on. Gates the abstract "USD" TO-card presentation — see
+     * [withAccountFlowPresentation].
+     */
+    private val isAccountTopUp: Boolean
+        get() = swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow is AccountFlow.TopUp
+
     private var isBalanceHidden = true
 
     private var isAccountsMode: Boolean = false
@@ -261,21 +269,23 @@ internal class SwapModel @Inject constructor(
     }
 
     private var _uiState: SwapStateHolder by mutableStateOf(
-        stateBuilder.createInitialLoadingState().withReverseForcedHiddenInAccountFlow(),
+        stateBuilder.createInitialLoadingState().withReverseForcedHiddenInAccountFlow().withAccountFlowPresentation(),
     )
 
     /**
      * Compose-observable swap screen state. The setter forces [ChangeCardsButtonState.HIDDEN] whenever the
      * screen is driven by an [AccountFlow] (Tangem Pay top-up/withdraw via swap) with the account-swap-flow
      * toggle on, regardless of what the caller passes in — the reverse (swap direction) action has no
-     * meaning in a fixed-direction account flow. The very first value (the initializer above) goes through
-     * the same rule so the initial frame — rendered before [initTokens]'s async resolution completes on a
-     * real (non-Unconfined) dispatcher — never briefly shows a visible-but-disabled reverse button.
+     * meaning in a fixed-direction account flow. It also applies [withAccountFlowPresentation] (screen
+     * title + abstract "USD" TO card on top-up). The very first value (the initializer above) goes through
+     * the same rules so the initial frame — rendered before [initTokens]'s async resolution completes on a
+     * real (non-Unconfined) dispatcher — never briefly shows a visible-but-disabled reverse button or the
+     * wrong title.
      */
     var uiState: SwapStateHolder
         get() = _uiState
         internal set(value) {
-            _uiState = value.withReverseForcedHiddenInAccountFlow()
+            _uiState = value.withReverseForcedHiddenInAccountFlow().withAccountFlowPresentation()
         }
 
     val feeSelectorRepository = FeeSelectorRepository()
@@ -2519,6 +2529,38 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    /**
+     * Applies the account-flow screen presentation whenever this screen is driven by an [AccountFlow] with
+     * the account-swap-flow toggle on, regardless of which [StateBuilder] method produced this
+     * [SwapStateHolder] — same pattern as [withReverseForcedHiddenInAccountFlow]:
+     *  - screen title becomes "Add funds" (TopUp) / "Withdraw" (Withdraw);
+     *  - on TopUp only, the receive (TO) card is forced into its abstract "USD" locked presentation — the
+     *    real token icon is kept ([SwapCardState.SwapCardData.currencyIconState] untouched), only the
+     *    currency label is abstracted ([SwapCardState.SwapCardData.fiatSymbolOverride]) and the "Choose
+     *    token" tap is suppressed ([SwapCardState.SwapCardData.isSelectionLocked]).
+     *  - the main button (CTA) is intentionally left untouched — it keeps its existing dynamic
+     *    Transfer/Swap label regardless of account flow.
+     *  - Withdraw only changes the title: FROM stays the concrete Payment-account currency and TO stays a
+     *    normal, selectable card (resolved by the user, restricted separately from this presentation layer).
+     */
+    private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder {
+        if (!swapFeatureToggles.isAccountSwapFlowEnabled || accountFlow == null) return this
+        val titledState = copy(
+            titleId = when (accountFlow) {
+                is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
+                is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
+            },
+        )
+        if (!isAccountTopUp) return titledState
+        val receiveCard = titledState.receiveCardData as? SwapCardState.SwapCardData ?: return titledState
+        return titledState.copy(
+            receiveCardData = receiveCard.copy(
+                fiatSymbolOverride = ACCOUNT_TOP_UP_ABSTRACT_SYMBOL,
+                isSelectionLocked = true,
+            ),
+        )
+    }
+
     fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
         return if (swapFeatureToggles.isAccountSwapFlowEnabled) {
             accountFlow is AccountFlow.Withdraw
@@ -3153,5 +3195,8 @@ internal class SwapModel @Inject constructor(
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
         const val SWAP_IN_PROGRESS_DELAY = 200L
         const val CHANGELLY_PROVIDER_ID = "changelly"
+
+        /** Abstract currency label for the TO card in an account top-up flow — see [withAccountFlowPresentation]. */
+        const val ACCOUNT_TOP_UP_ABSTRACT_SYMBOL = "USD"
     }
 }
