@@ -11,8 +11,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -872,6 +874,100 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             resourceReference(R.string.staking_validator),
             resourceReference(R.string.common_network_fee_title),
         ).inOrder()
+    }
+
+    // endregion
+
+    // region YieldSupply Send (rendered as a plain transfer)
+
+    @Test
+    fun `GIVEN outgoing yield Send WHEN convert THEN up icon, sent title, minus sign, recipient card, no protocol row`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_sent))
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("- ")
+        assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+        assertThat(result.counterparty?.avatar)
+            .isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
+        // The yield "Validator: Aave" protocol row must not appear — only the network-fee row.
+        assertThat(result.rows.map { it.label })
+            .containsExactly(resourceReference(R.string.common_network_fee_title))
+    }
+
+    @Test
+    fun `GIVEN incoming yield Send with fee WHEN convert THEN down icon, received title, from-address card, no fee row`() {
+        // Arrange — a received transfer's fee belongs to the sender, so it is omitted.
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_received))
+        assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
+        assertThat(result.rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN yield Send withdraw WHEN convert THEN withdrawn title, yield lightning icon, no counterparty, no validator row`() {
+        // Arrange — a withdraw stays a yield operation in details: lightning glyph, no counterparty card, no validator row.
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.transaction_history_withdrawn))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
+        assertThat(result.amountBlock.label).isNull()
+        assertThat(result.amountBlock.icon).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Single::class.java)
+        assertThat(result.counterparty).isNull()
+        assertThat(result.rows.map { it.label })
+            .doesNotContain(resourceReference(R.string.staking_validator))
+    }
+
+    @Test
+    fun `GIVEN incoming non-withdraw yield Send to own account WHEN convert THEN fee row kept`() {
+        // Arrange — a transfer between the user's own accounts: the user did pay the fee, so it stays (unlike a
+        // receive from an external counterparty, whose fee belongs to the sender and is omitted).
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = ownConverter.convert(tx)
+
+        // Assert
+        assertThat(result.rows.map { it.label })
+            .contains(resourceReference(R.string.common_network_fee_title))
     }
 
     // endregion
