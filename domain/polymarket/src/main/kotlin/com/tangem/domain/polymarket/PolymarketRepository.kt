@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -27,6 +28,12 @@ interface PolymarketRepository {
      * @param category optional category id to filter by; `null` for the default (Trending) feed
      */
     suspend fun getEvents(category: Int? = null): Either<DataError, List<PolymarketEvent>>
+
+    /**
+     * Fetch the details of a single prediction event, carrying all of its markets
+     * (unlike the feed, which carries only the top active ones).
+     */
+    suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent>
 
     /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
