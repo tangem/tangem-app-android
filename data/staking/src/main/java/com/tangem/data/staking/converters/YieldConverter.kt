@@ -170,7 +170,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             commission = entity.commission,
             stakedBalance = entity.stakedBalance,
             votingPower = entity.votingPower,
-            preferred = entity.preferred ?: false,
+            preferred = entity.isPreferred == true,
             isStrategicPartner = isStrategicPartner(entity.address, name),
         )
     }
