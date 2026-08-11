@@ -3,15 +3,20 @@ package com.tangem.domain.polymarket.approval
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 
 /**
- * The 6 onboarding allowance calls the BFF's approvals validator accepts: three spenders, each granted the
- * right to move both the wallet's collateral (ERC-20 `approve`) and its outcome shares (ERC-1155
- * `setApprovalForAll`). The collateral grants come first as a group, then the share grants, in the same
- * spender order.
+ * The 13 onboarding allowance calls the BFF's approvals validator accepts: 8 ERC-20 `approve` grants on the
+ * collateral and 5 ERC-1155 `setApprovalForAll` grants on the conditional tokens.
  *
  * The set is defined by the backend, not by us — a batch it does not recognise is rejected with
- * `invalid approvals batch`, whatever the relayer would have accepted. Each call's
- * [PolymarketApprovalCall.data] is ABI-encoded from [PolymarketContracts] on every `build()`, so a spender
- * address is never duplicated as a literal hex blob.
+ * `invalid approvals batch`, whatever the relayer would have accepted. It is **not pinned**: it was 6 calls
+ * with a different spender until 2026-08-11, so treat a `400` here as "the set moved", not as a client bug.
+ *
+ * The validator compares the decoded `{target, selector, spender}` triples as a **set**, so the order below
+ * is not its requirement. It is the order Polymarket's own client writes on chain, mirrored deliberately:
+ * 80 consecutive deposit-wallet approval transactions on Polygon used exactly this sequence, and matching a
+ * live production batch costs nothing while hedging against any downstream expectation nobody wrote down.
+ *
+ * Each call's [PolymarketApprovalCall.data] is ABI-encoded from [PolymarketContracts] on every `build()`, so
+ * a spender address is never duplicated as a literal hex blob.
  */
 object PolymarketApprovalCalls {
 
@@ -21,13 +26,21 @@ object PolymarketApprovalCalls {
     private const val BOOL_TRUE = "0000000000000000000000000000000000000000000000000000000000000001"
     private const val WORD_HEX_LENGTH = 64
 
-    private val SPENDERS = listOf(
-        PolymarketContracts.CTF_EXCHANGE,
-        PolymarketContracts.NEG_RISK_CTF_EXCHANGE,
-        PolymarketContracts.NEG_RISK_CTF_COLLATERAL_ADAPTER,
+    fun build(): List<PolymarketApprovalCall> = listOf(
+        approve(PolymarketContracts.CONDITIONAL_TOKENS),
+        approve(PolymarketContracts.CTF_EXCHANGE),
+        setApprovalForAll(PolymarketContracts.CTF_EXCHANGE),
+        approve(PolymarketContracts.NEG_RISK_CTF_EXCHANGE),
+        approve(PolymarketContracts.NEG_RISK_ADAPTER),
+        setApprovalForAll(PolymarketContracts.NEG_RISK_CTF_EXCHANGE),
+        setApprovalForAll(PolymarketContracts.NEG_RISK_ADAPTER),
+        approve(PolymarketContracts.CTF_COLLATERAL_ADAPTER),
+        approve(PolymarketContracts.NEG_RISK_CTF_COLLATERAL_ADAPTER),
+        setApprovalForAll(PolymarketContracts.CTF_COLLATERAL_ADAPTER),
+        setApprovalForAll(PolymarketContracts.NEG_RISK_CTF_COLLATERAL_ADAPTER),
+        approve(PolymarketContracts.EXCHANGE_V3),
+        approve(PolymarketContracts.ROUTER_V3),
     )
-
-    fun build(): List<PolymarketApprovalCall> = SPENDERS.map(::approve) + SPENDERS.map(::setApprovalForAll)
 
     private fun approve(spender: String) = PolymarketApprovalCall(
         target = PolymarketContracts.COLLATERAL,
