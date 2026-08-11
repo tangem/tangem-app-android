@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
+import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -21,6 +22,8 @@ import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase.Companion.isEligibleFeeToken
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -76,7 +79,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class NativeCoinFiltering {
+    inner class NativeCoinAvailability {
 
         @BeforeEach
         fun resetMocks() {
@@ -87,7 +90,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         }
 
         @Test
-        fun `GIVEN native balance below the fee WHEN invoke THEN native coin is not offered`() = runTest {
+        fun `GIVEN native balance below the fee WHEN invoke THEN native coin is offered but not enough`() = runTest {
             // Arrange
             givenAccountStatusList(nativeBalance = BigDecimal("0.000001"), tokenBalance = BigDecimal("20"))
 
@@ -99,7 +102,8 @@ internal class GetAvailableFeeTokensUseCaseTest {
             )
 
             // Assert
-            assertThat(actual.getOrNull()?.map { it.currency }).containsExactly(usdc)
+            assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).containsExactly(nativeCoin.id)
         }
 
         @Test
@@ -115,11 +119,12 @@ internal class GetAvailableFeeTokensUseCaseTest {
             )
 
             // Assert
-            assertThat(actual.getOrNull()?.map { it.currency }).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
 
         @Test
-        fun `GIVEN no fee amount known WHEN invoke THEN native coin goes first`() = runTest {
+        fun `GIVEN no fee amount known WHEN invoke THEN native coin stays selectable`() = runTest {
             // Arrange
             givenAccountStatusList(nativeBalance = BigDecimal.ZERO, tokenBalance = BigDecimal("20"))
 
@@ -127,11 +132,12 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val actual = createUseCase().invoke(userWallet = userWallet, network = network)
 
             // Assert
-            assertThat(actual.getOrNull()?.map { it.currency }).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
 
         @Test
-        fun `GIVEN every token balance is empty WHEN invoke THEN native coin is kept as the only option`() = runTest {
+        fun `GIVEN every token balance is empty WHEN invoke THEN native coin stays selectable`() = runTest {
             // Arrange
             givenAccountStatusList(nativeBalance = BigDecimal.ZERO, tokenBalance = BigDecimal.ZERO)
 
@@ -143,11 +149,12 @@ internal class GetAvailableFeeTokensUseCaseTest {
             )
 
             // Assert
-            assertThat(actual.getOrNull()?.map { it.currency }).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
 
         @Test
-        fun `GIVEN token balance is unknown WHEN invoke THEN native coin is kept`() = runTest {
+        fun `GIVEN token balance is unknown WHEN invoke THEN native coin stays selectable`() = runTest {
             // Arrange
             givenAccountStatusList(nativeBalance = BigDecimal.ZERO, tokenBalance = null)
 
@@ -159,11 +166,12 @@ internal class GetAvailableFeeTokensUseCaseTest {
             )
 
             // Assert
-            assertThat(actual.getOrNull()?.map { it.currency }).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
 
         @Test
-        fun `GIVEN native balance is unknown WHEN invoke THEN native coin is kept`() = runTest {
+        fun `GIVEN native balance is unknown WHEN invoke THEN native coin stays selectable`() = runTest {
             // Arrange
             givenAccountStatusList(nativeBalance = null, tokenBalance = BigDecimal("20"))
 
@@ -175,7 +183,8 @@ internal class GetAvailableFeeTokensUseCaseTest {
             )
 
             // Assert
-            assertThat(actual.getOrNull()?.map { it.currency }).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin, usdc).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
 
         @Test
@@ -192,7 +201,8 @@ internal class GetAvailableFeeTokensUseCaseTest {
             )
 
             // Assert
-            assertThat(actual.getOrNull()?.map { it.currency }).containsExactly(nativeCoin)
+            assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin)
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
     }
 
@@ -210,6 +220,12 @@ internal class GetAvailableFeeTokensUseCaseTest {
         currencyChecksRepository = currencyChecksRepository,
         isYieldWithdrawEnabled = true,
     )
+
+    private fun Either<GetFeeError, AvailableFeeTokens>.offeredCurrencies(): List<CryptoCurrency>? =
+        getOrNull()?.tokens?.map { it.currency }
+
+    private fun Either<GetFeeError, AvailableFeeTokens>.notEnoughForFeeIds(): Set<CryptoCurrency.ID>? =
+        getOrNull()?.notEnoughForFeeIds
 
     private fun givenAccountStatusList(nativeBalance: BigDecimal?, tokenBalance: BigDecimal?) {
         val statuses = listOf(
