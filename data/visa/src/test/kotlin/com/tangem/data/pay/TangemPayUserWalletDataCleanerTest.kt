@@ -1,7 +1,7 @@
 package com.tangem.data.pay
 
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
-import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
+import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.Runs
 import io.mockk.clearMocks

@@ -1,8 +1,8 @@
-package com.tangem.datasource.local.visa
+package com.tangem.spend.datasource.pay.store
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemToDMConverter
-import com.tangem.datasource.local.visa.entity.TangemPayTxHistoryItemToDomainConverter
+import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemToDMConverter
+import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemToDomainConverter
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.test.core.datastore.MockStateDataStore
 import kotlinx.coroutines.test.runTest
