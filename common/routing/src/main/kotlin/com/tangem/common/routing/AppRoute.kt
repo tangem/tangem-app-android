@@ -427,7 +427,13 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/upgrade_wallet/${userWalletId.stringValue}")
 
     @Serializable
-    object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+    data class AddExistingWallet(
+        val mode: Mode = Mode.RecoveryPhrase,
+    ) : AppRoute(path = "/add_existing_wallet") {
+
+        @Serializable
+        enum class Mode { RecoveryPhrase, CloudRestore }
+    }
 
     @Serializable
     data class WalletActivation(
