@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ef7d85021d23d9883768b35e9f5b6dd0",
+    "identityHash": "c65ea7f408fee83351d3888d2130313c",
     "entities": [
       {
         "tableName": "express_provider",
@@ -611,11 +611,168 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_history_index_address_sort_time_millis_entity_id` ON `${TABLE_NAME}` (`address`, `sort_time_millis`, `entity_id`)"
           }
         ]
+      },
+      {
+        "tableName": "staking_validator",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`address` TEXT NOT NULL, `status` TEXT, `name` TEXT, `image` TEXT, `website` TEXT, `apr` TEXT, `commission` REAL, `staked_balance` TEXT, `voting_power` REAL, `preferred` INTEGER, PRIMARY KEY(`address`))",
+        "fields": [
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "image",
+            "columnName": "image",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "website",
+            "columnName": "website",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "apr",
+            "columnName": "apr",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "commission",
+            "columnName": "commission",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "stakedBalance",
+            "columnName": "staked_balance",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "votingPower",
+            "columnName": "voting_power",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "preferred",
+            "columnName": "preferred",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "address"
+          ]
+        }
+      },
+      {
+        "tableName": "p2p_eth_pool_vault",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vault_address` TEXT NOT NULL, `display_name` TEXT NOT NULL, `apy` TEXT NOT NULL, `base_apy` TEXT NOT NULL, `capacity` TEXT NOT NULL, `total_assets` TEXT NOT NULL, `fee_percent` TEXT NOT NULL, `is_private` INTEGER NOT NULL, `is_genesis` INTEGER NOT NULL, `is_smoothing_pool` INTEGER NOT NULL, `is_erc20` INTEGER NOT NULL, `token_name` TEXT, `token_symbol` TEXT, `created_at` INTEGER NOT NULL, PRIMARY KEY(`vault_address`))",
+        "fields": [
+          {
+            "fieldPath": "vaultAddress",
+            "columnName": "vault_address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "display_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "apy",
+            "columnName": "apy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "baseApy",
+            "columnName": "base_apy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "capacity",
+            "columnName": "capacity",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalAssets",
+            "columnName": "total_assets",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "feePercent",
+            "columnName": "fee_percent",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isPrivate",
+            "columnName": "is_private",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isGenesis",
+            "columnName": "is_genesis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSmoothingPool",
+            "columnName": "is_smoothing_pool",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isErc20",
+            "columnName": "is_erc20",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokenName",
+            "columnName": "token_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tokenSymbol",
+            "columnName": "token_symbol",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "vault_address"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ef7d85021d23d9883768b35e9f5b6dd0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c65ea7f408fee83351d3888d2130313c')"
     ]
   }
 }
