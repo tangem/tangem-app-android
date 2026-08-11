@@ -80,4 +80,5 @@ dependencies {
     testRuntimeOnly(projects.domain.wallets)
     testImplementation(deps.test.junit)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }
