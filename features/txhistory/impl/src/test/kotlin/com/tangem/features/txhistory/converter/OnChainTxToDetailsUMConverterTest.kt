@@ -800,6 +800,100 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN EVM staking tx whose contract interaction address is a known validator WHEN convert THEN row resolved`() {
+        // Arrange — on EVM the staking call's destination is the validator contract, but the SDK types it as
+        // Contract (only Solana ever emits AddressType.Validator), so a Contract address must still resolve.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("Lido Finance")
+    }
+
+    @Test
+    fun `GIVEN staking tx whose address differs in case from the known validator WHEN convert THEN row resolved`() {
+        // Arrange — an EVM address arrives checksummed or lowercased depending on the history provider, while the
+        // staking API picks its own casing.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract("0xVALIDATOR"),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator(address = "0xvalidator"))).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("Lido Finance")
+    }
+
+    @Test
+    fun `GIVEN Vote tx with blank validator address WHEN convert THEN no validator row`() {
+        // Arrange — the Tron vote parser reports a missing validator as an empty string.
+        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = ""))
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator(address = ""))).convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN staking tx to a known P2P vault WHEN convert THEN row shows the vault name`() {
+        // Arrange — a P2P pooled-staking deposit targets a vault contract, resolved from the same target map.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VAULT_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(vaults = listOf(vault())).convert(tx).rows
+
+        // Assert
+        val row = rows.single()
+        assertThat(row.value.resolveString()).isEqualTo("P2P Vault")
+        // The vaults API carries no per-vault page, so there is no link to offer.
+        assertThat(row.trailingIconRes).isNull()
+        assertThat(row.onClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN unrecognized contract call to a known vault WHEN convert THEN row shows the vault name`() {
+        // Arrange — a staking call whose 4-byte selector is not registered in contract_methods.json (e.g. the P2P
+        // exit-queue withdrawal) arrives as UnknownOperation, but its address still identifies the vault.
+        val tx = txInfo(
+            type = TransactionType.UnknownOperation,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VAULT_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(vaults = listOf(vault())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("P2P Vault")
+    }
+
+    @Test
+    fun `GIVEN plain transfer to a known validator address WHEN convert THEN no validator row`() {
+        // Arrange — a value transfer is never a staking interaction, even when the counterparty is a known target.
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
     fun `GIVEN staking tx with address absent from yield WHEN convert THEN no validator row`() {
         // Arrange — the tx carries a validator address, but the current yield does not list it.
         val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = "0xunknown"))
