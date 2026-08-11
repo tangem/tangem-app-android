@@ -127,6 +127,7 @@ internal class WalletModel @Inject constructor(
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -279,6 +280,7 @@ internal class WalletModel @Inject constructor(
                             hasMobileWallet = hasMobileWallet,
                             accountsCount = accountsCount,
                             isBackedUp = isWalletBackedUpUseCase(selectedWallet),
+                            completedBackups = getCompletedBackupsUseCase(selectedWallet),
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
                             referralId = appsFlyerStore.get()?.refcode,
