@@ -19,7 +19,19 @@ object PolymarketContracts {
     const val CONDITIONAL_TOKENS: String = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
     const val CTF_EXCHANGE: String = "0xE111180000d2663C0091e4f400237545B87B996B"
     const val NEG_RISK_CTF_EXCHANGE: String = "0xe2222d279d744050d28e00520010520000310F59"
+    const val NEG_RISK_ADAPTER: String = "0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296"
+    const val CTF_COLLATERAL_ADAPTER: String = "0xAdA100Db00Ca00073811820692005400218FcE1f"
     const val NEG_RISK_CTF_COLLATERAL_ADAPTER: String = "0xadA2005600Dec949baf300f4C6120000bDB6eAab"
+
+    /**
+     * Exchange and router of Polymarket's v3 contract line. Both are ERC-1967 proxies (implementations
+     * `0x7345c6842b244926125ed4054905cac49620b5dc` and `0x6c405da46fdc4172239e5053189b6577e290e62f` as of
+     * 2026-08-11) and neither appears in Polymarket's published contract list. They are here because the
+     * backend's approvals validator requires them and because Polymarket's own client grants them the
+     * collateral allowance in every current batch on chain — not because their role is documented.
+     */
+    const val EXCHANGE_V3: String = "0xe3333700cA9d93003F00f0F71f8515005F6c00Aa"
+    const val ROUTER_V3: String = "0x12121212006e4CD160D18e3f00711DA5c3372600"
 
     /**
      * Base-unit exponent the CLOB reports [COLLATERAL] amounts in. It describes that API's wire format, not a
