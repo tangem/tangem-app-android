@@ -261,7 +261,6 @@ internal class NotificationsModel @Inject constructor(
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
             feeStatus = notificationData.feeCryptoCurrencyStatus,
-            sendAmount = sendingAmount,
         ).getOrNull()
 
         addExceedBalanceNotification(

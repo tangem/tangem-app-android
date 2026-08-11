@@ -400,14 +400,15 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     private fun updateAmountSubtractAvailability() {
         modelScope.launch {
-            val fee = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal
-            val feeTokenId =
-                feeUMV2?.feeExtraInfo?.transactionFeeExtended?.feeTokenId ?: primaryCurrencyStatus.currency.id
+            // No extended fee info means no token-paid fee to reason about, so the use case falls back to
+            // the network's own FeePaidCurrency rules. Take the fee token from the same object as the fee:
+            // pairing the fee with the sent token would make the use case's contract check tautological.
+            val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
             isAmountSubtractAvailable =
                 isAmountSubtractAvailableUseCase(
                     userWalletId = params.userWallet.walletId,
                     currency = primaryCurrencyStatus.currency,
-                    maybeGaslessFee = fee?.let { feeTokenId to fee },
+                    maybeGaslessFee = feeExtended?.let { it.feeTokenId to it.transactionFee.normal },
                 ).getOrElse { false }
         }
     }
