@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.getValidatorsCount
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
@@ -20,6 +21,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -156,6 +159,7 @@ internal class StakingModel @Inject constructor(
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
     private val appRouter: AppRouter,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
@@ -332,7 +336,13 @@ internal class StakingModel @Inject constructor(
     }
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
-        val route = resolveMarketingDeeplink(deeplink).toContextualRoute(
+        val marketing = resolveMarketingDeeplink(deeplink)
+        if (marketing == MarketingDeeplink.SWAP &&
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED)
+        ) {
+            return false
+        }
+        val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
             screenSource = AnalyticsParam.ScreensSources.Staking,
@@ -443,8 +453,8 @@ internal class StakingModel @Inject constructor(
                     launchTransactionValidation()
                 },
                 onStakingFeeError = { stakingFeeError ->
-                    stateController.update(AddStakingErrorTransformer)
-                    updateNotifications(stakingError = stakingFeeError)
+                    stakingEventFactory.createStakingErrorAlert(stakingFeeError)
+                    stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                 },
                 onFeeError = { error ->
                     analyticsEventHandler.send(

@@ -118,6 +118,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         lastFourDigits = "1234",
         isPinSet = true,
         images = emptyList(),
+        embossName = "JOHNNY SILVERHAND",
     )
 
     private val basicPlan = TangemPayTariffPlan(

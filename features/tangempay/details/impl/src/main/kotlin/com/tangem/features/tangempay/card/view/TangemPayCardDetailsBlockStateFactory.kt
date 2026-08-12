@@ -10,6 +10,7 @@ import com.tangem.utils.StringsSigns
 @Suppress("LongParameterList")
 internal class TangemPayCardDetailsBlockStateFactory(
     private val cardNumberEnd: String,
+    private val cardholderName: String?,
     private val displayName: CardDisplayName?,
     private val isEditingNameEnabled: Boolean,
     private val cardState: TangemPayCardState,
@@ -25,6 +26,7 @@ internal class TangemPayCardDetailsBlockStateFactory(
         return TangemPayCardDetailsUM(
             number = "",
             numberShort = "${StringsSigns.ASTERISK}$cardNumberEnd",
+            cardholderName = cardholderName,
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_reveal_text),
