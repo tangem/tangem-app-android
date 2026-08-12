@@ -14,14 +14,17 @@ interface TxHistoryRepositoryV2 {
     /**
      * Reactive stream of express (swap & onramp) operations relevant to [currency] of wallet [userWalletId].
      *
+     * Asset-scoped (owner address + network + contract) and windowed by [fromOnChainTimestampMillis] — the oldest
+     * loaded on-chain timestamp, `0` = no lower bound — to cap the working set; in-progress operations are always
+     * included regardless of the bound. Re-emits live as the express DB is updated.
+     *
 
-     * (the oldest loaded on-chain timestamp; `0` = no lower bound) to cap the working set; in-progress
-     * operations are always included regardless of the bound. Re-emits live as the express DB is updated.
+     * merge tolerates before filtering.
      */
     fun getExpressHistory(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
-        fromCreatedAtMillis: Long,
+        fromOnChainTimestampMillis: Long,
     ): Flow<List<ExpressTx>>
 
     /**
