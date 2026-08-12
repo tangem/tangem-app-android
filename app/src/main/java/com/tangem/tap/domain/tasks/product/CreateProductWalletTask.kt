@@ -11,11 +11,12 @@ import com.tangem.common.map
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.hdWallet.DerivationNode
 import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
-import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
+import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingCommand
@@ -47,7 +48,7 @@ class CreateProductWalletTask(
     private val mnemonic: Mnemonic? = null,
     private val passphrase: String? = null,
     private val shouldReset: Boolean,
-    private val defaultDerivationsHelper: DefaultDerivationsHelper,
+    private val derivationsHelper: DerivationsHelper,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -74,7 +75,7 @@ class CreateProductWalletTask(
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
             else -> CreateWalletTangemWallet(
-                defaultDerivationsHelper = defaultDerivationsHelper,
+                derivationsHelper = derivationsHelper,
                 mnemonic = mnemonic,
                 passphrase = passphrase,
                 shouldReset = shouldReset,
@@ -138,7 +139,7 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
  * Uses for multiWallet 1st and 2nd
  */
 private class CreateWalletTangemWallet(
-    private val defaultDerivationsHelper: DefaultDerivationsHelper,
+    private val derivationsHelper: DerivationsHelper,
     private val mnemonic: Mnemonic?,
     private val passphrase: String?,
     private val shouldReset: Boolean,
@@ -289,7 +290,15 @@ private class CreateWalletTangemWallet(
             when (result) {
                 is CompletionResult.Success -> {
                     if (result.data.masterSecret == null) {
-                        callback(CompletionResult.Failure(TangemSdkError.WalletAlreadyCreated()))
+                        // Distinct from WalletAlreadyCreated: callers treat that error as
+                        // "card already has a wallet" and offer a factory reset dialog
+                        callback(
+                            CompletionResult.Failure(
+                                TangemSdkError.ExceptionError(
+                                    IllegalStateException("Master secret was not created")
+                                )
+                            )
+                        )
                         return@run
                     }
                     checkIfAllWalletsCreated(
@@ -409,9 +418,10 @@ private class CreateWalletTangemWallet(
         createWalletResponses: List<CreateWalletResponse>,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        val derivations = defaultDerivationsHelper.getDefaultDerivations(
+        val derivations = derivationsHelper.getDefaultDerivations(
             derivationStyleProvider = card.derivationStyleProvider,
             cardId = card.cardId,
+            isTestCard = card.isTestCard,
             wallets = createWalletResponses.map { it.wallet },
         )
         val cardEnv = session.environment.card

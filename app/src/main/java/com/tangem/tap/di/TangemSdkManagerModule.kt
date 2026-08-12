@@ -2,10 +2,10 @@ package com.tangem.tap.di
 
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
-import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.domain.card.BuildConfig
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
@@ -39,7 +39,7 @@ internal class TangemSdkManagerModule {
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         analyticsErrorHandler: AnalyticsErrorHandler,
         cardRepository: CardRepository,
-        defaultDerivationsHelper: DefaultDerivationsHelper,
+        derivationsHelper: DerivationsHelper,
         walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
@@ -55,7 +55,7 @@ internal class TangemSdkManagerModule {
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 analyticsErrorHandler = analyticsErrorHandler,
                 cardRepository = cardRepository,
-                defaultDerivationsHelper = defaultDerivationsHelper,
+                derivationsHelper = derivationsHelper,
                 walletRegistrationLauncher = walletRegistrationLauncher,
             )
         }

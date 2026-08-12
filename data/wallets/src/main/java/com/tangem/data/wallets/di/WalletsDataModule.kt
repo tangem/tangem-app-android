@@ -18,6 +18,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
+import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
@@ -95,7 +96,7 @@ internal object WalletsDataModule {
 
     @Provides
     @Singleton
-    fun provideDefaultDerivationsHelper(): DefaultDerivationsHelper {
+    fun provideDerivationsHelper(): DerivationsHelper {
         return DefaultDerivationsHelper(
             demoConfig = DemoConfig,
         )
