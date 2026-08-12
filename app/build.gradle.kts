@@ -109,6 +109,10 @@ configurations.all {
 
 configurations.androidTestImplementation {
     exclude(module = "protobuf-lite")
+    // JUnit 4 (via kaspresso/espresso) drags in hamcrest-core 1.3, which ships the same
+    // org.hamcrest.CoreMatchers and Matcher classes as the hamcrest 2.2 declared below. Two copies on
+    // one classpath make matcher behaviour depend on classpath order; keep only 2.2.
+    exclude(group = "org.hamcrest", module = "hamcrest-core")
 }
 dependencies {
     implementation(projects.domain.legacy)
@@ -160,7 +164,6 @@ dependencies {
     implementation(projects.domain.stories)
     implementation(projects.domain.stories.models)
     implementation(projects.domain.marketing)
-    implementation(projects.domain.marketing.models)
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
@@ -168,7 +171,6 @@ dependencies {
     implementation(projects.domain.swap.models)
     implementation(projects.domain.swap)
     implementation(projects.domain.walletManager)
-    implementation(projects.domain.walletManager.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.polymarket)
     implementation(projects.domain.promo)
@@ -261,7 +263,6 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.swap.impl)
     implementation(projects.features.swap.domain)
-    implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.data)
     implementation(projects.features.swapV2.api)
     implementation(projects.features.swapV2.impl)
@@ -361,19 +362,28 @@ dependencies {
     implementation(projects.features.approval.impl)
     implementation(projects.features.forYou.api)
     implementation(projects.features.forYou.impl)
+    implementation(projects.common.uiCharts)
+    implementation(projects.common.uiMarkets)
+    implementation(projects.core.error)
+    implementation(projects.domain.express.models)
+    implementation(projects.domain.manageTokens.models)
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.referral)
+    implementation(projects.domain.staking.models)
+    implementation(projects.domain.virtualAccount)
+    implementation(projects.domain.visa.models)
+    implementation(projects.features.rating.api)
+    implementation(projects.features.referral.api)
+    implementation(projects.core.biometricAuth.api)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.core.splashScreen)
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.datastore)
-    implementation(deps.androidx.fragment.ktx)
-    implementation(deps.androidx.constraintLayout)
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.browser)
-    implementation(deps.androidx.paging.runtime)
-    implementation(deps.androidx.swipeRefreshLayout)
-    implementation(deps.androidx.fragment.compose)
     implementation(deps.androidx.workmanager)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
@@ -382,17 +392,12 @@ dependencies {
     implementation(deps.hilt.work)
 
     /** Compose libraries */
-    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.coil)
-    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.navigation.hilt)
-    implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.paging)
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
@@ -424,7 +429,6 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.googlePlay.review)
-    implementation(deps.googlePlay.review.ktx)
     implementation(deps.googlePlay.services.wallet)
     implementation(deps.googlePlay.services)
     implementation(deps.googlePlay.advertising)
@@ -438,17 +442,10 @@ dependencies {
     implementation(deps.appsflyer.oaid)
     implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
-    implementation("com.android.installreferrer:installreferrer:2.2")
-    implementation(deps.spongecastle.core)
-    implementation(deps.lottie)
-    implementation(deps.compose.accompanist.appCompatTheme)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.xmlShimmer)
-    implementation(deps.viewBindingDelegate)
+    runtimeOnly("com.android.installreferrer:installreferrer:2.2")
+    runtimeOnly(deps.spongecastle.core)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
-    implementation(deps.reownCore)
-    implementation(deps.reownWeb3)
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.kotlin)
@@ -459,6 +456,8 @@ dependencies {
     /** Testing libraries */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
+    testImplementation(deps.arrow.core)
+    testImplementation(deps.kotlin.coroutines)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)
@@ -468,7 +467,13 @@ dependencies {
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
     androidTestImplementation(deps.test.hilt)
+    androidTestImplementation(deps.arrow.core)
+    androidTestImplementation(deps.kotlin.coroutines)
+    androidTestImplementation(deps.kotlin.datetime)
+    androidTestImplementation(deps.okHttp)
+    androidTestImplementation(deps.jodatime)
     kaptAndroidTest(deps.test.hilt.compiler)
+    kaptAndroidTest(deps.hilt.kapt)
 
     /** Chucker */
     debugImplementation(deps.chucker)
@@ -478,16 +483,27 @@ dependencies {
     releaseImplementation(deps.chuckerStub)
 
     /** Camera */
-    implementation(deps.camera.camera2)
+    runtimeOnly(deps.camera.camera2)
     implementation(deps.camera.lifecycle)
     implementation(deps.camera.view)
     implementation(deps.listenableFuture)
-    implementation(deps.mlKit.barcodeScanning)
+    implementation(deps.androidx.activity)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.core)
+    implementation(deps.androidx.fragment)
+    implementation(deps.androidx.savedState)
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.datetime)
+    implementation(deps.moshi)
+    implementation(deps.okHttp)
+    implementation(deps.haze)
+    runtimeOnly(deps.mlKit.barcodeScanning)
 
     androidTestUtil(deps.test.orchestrator)
 
     /** Leakcanary */
-    debugImplementation(deps.leakcanary)
+    debugRuntimeOnly(deps.leakcanary)
 
     /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
@@ -499,4 +515,5 @@ dependencies {
     "huaweiImplementation"(deps.huawei.push)
     "huaweiImplementation"(deps.agconnect.agcp)
     "huaweiImplementation"(deps.agconnect.core)
+    "huaweiImplementation"(deps.huawei.base)
 }
