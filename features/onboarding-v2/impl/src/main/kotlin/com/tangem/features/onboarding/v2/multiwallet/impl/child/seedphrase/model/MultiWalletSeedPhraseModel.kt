@@ -24,10 +24,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.backup.CardBackupConverter
-import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.usecase.IsWalletAlreadySavedUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -267,23 +264,18 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
 
                     cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
-                        walletCardsBackupReporter.report(
-                            scanResponse = updatedScanResponse,
-                            cards = listOf(
-                                CardBackupConverter.convert(
-                                    card = updatedScanResponse.card,
-                                    role = WalletCardBackup.Role.PRIMARY,
-                                ),
+                    walletCardsBackupReporter.report(
+                        scanResponse = updatedScanResponse,
+                        cards = listOf(
+                            CardBackupConverter.convert(
+                                card = updatedScanResponse.card,
+                                role = WalletCardBackup.Role.PRIMARY,
                             ),
-                            usedSeed = true,
-                        )
+                        ),
+                        usedSeed = true,
+                    )
 
-                        onDone.emit(Unit)
-                    } else {
-                        uiMessageSender.send(
-                            SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
-                        )
-                    }
+                    onDone.emit(Unit)
                 }
                 is CompletionResult.Failure -> {
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
