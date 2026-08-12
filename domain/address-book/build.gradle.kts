@@ -31,7 +31,6 @@ dependencies {
 
     // region Domain
     api(projects.domain.common)
-    api(projects.domain.tokens)
     api(projects.domain.transaction)
     // endregion
 

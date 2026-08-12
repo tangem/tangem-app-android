@@ -19,12 +19,12 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.common.routing)
 
-    implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)
 
     /** Camera */
-    implementation(deps.camera.camera2)
+    api(deps.camera.core)
+    runtimeOnly(deps.camera.camera2)
     implementation(deps.camera.lifecycle)
     implementation(deps.camera.view)
 
@@ -56,9 +56,13 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.material3)
-    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.androidx.activity)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.core)
 
     /** Other dependencies */
-    implementation(deps.arrow.core)
     implementation(tangemDeps.card.core)
+    api(deps.androidx.appCompat)
+    api(deps.decompose)
+    api(deps.kotlin.coroutines)
 }

@@ -16,4 +16,5 @@ dependencies {
 
     /** Project - Domain */
     api(projects.domain.models)
+    api(deps.kotlin.coroutines)
 }

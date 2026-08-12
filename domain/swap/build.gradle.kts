@@ -22,6 +22,7 @@ dependencies {
     // region Core modules
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(deps.jodatime)
     // endregion
 
     // region Domain models
