@@ -6,11 +6,15 @@ import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
@@ -21,11 +25,17 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalan
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import com.tangem.core.res.R as CoreResR
 
 class SetTopBarTitleTransformerTest {
 
     private val tokenName = "Tether"
+    private val networkName = "Ethereum"
     private val walletName = "My Wallet"
     private val deviceIconUM: DeviceIconUM = DeviceIconUM.Card(
         mainColor = Color.DarkGray,
@@ -163,10 +173,73 @@ class SetTopBarTitleTransformerTest {
         assertThat(title.accountIconUM).isEqualTo(expectedIcon)
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Subtitle {
+
+        @ParameterizedTest
+        @MethodSource("provideTestModels")
+        fun subtitle(model: SubtitleModel) {
+            // Arrange
+            val transformer = createTransformer(
+                hasMultipleWallets = false,
+                hasMultipleAccounts = false,
+                account = null,
+                cryptoCurrency = model.currency,
+            )
+
+            // Act
+            val result = transformer.transform(initialState())
+
+            // Assert
+            assertThat(result.topAppBarUM.subtitle).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            // A coin is the network's own currency — naming the network again would say nothing.
+            SubtitleModel(
+                currency = coin(),
+                expected = resourceReference(CoreResR.string.common_main_network),
+            ),
+            SubtitleModel(
+                currency = token(standard = Network.StandardType.ERC20),
+                expected = resourceReference(
+                    CoreResR.string.token_details_toolbar_subtitle_standard,
+                    wrappedList("ERC20", networkName),
+                ),
+            ),
+            SubtitleModel(
+                currency = token(standard = Network.StandardType.Unspecified(name = "")),
+                expected = resourceReference(
+                    CoreResR.string.token_details_toolbar_subtitle_network,
+                    wrappedList(networkName),
+                ),
+            ),
+        )
+    }
+
+    data class SubtitleModel(val currency: CryptoCurrency, val expected: TextReference)
+
+    private fun coin(): CryptoCurrency.Coin = mockk(relaxed = true) {
+        every { name } returns tokenName
+    }
+
+    private fun token(standard: Network.StandardType): CryptoCurrency.Token {
+        val tokenNetwork: Network = mockk(relaxed = true) {
+            every { name } returns networkName
+            every { standardType } returns standard
+        }
+        return mockk(relaxed = true) {
+            every { name } returns tokenName
+            every { network } returns tokenNetwork
+        }
+    }
+
     private fun createTransformer(
         hasMultipleWallets: Boolean,
         hasMultipleAccounts: Boolean,
         account: Account.CryptoPortfolio?,
+        cryptoCurrency: CryptoCurrency = this.cryptoCurrency,
     ) = SetTopBarTitleTransformer(
         cryptoCurrency = cryptoCurrency,
         hasMultipleWallets = hasMultipleWallets,
