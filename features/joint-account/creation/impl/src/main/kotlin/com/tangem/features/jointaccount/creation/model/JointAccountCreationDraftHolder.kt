@@ -23,4 +23,8 @@ internal class JointAccountCreationDraftHolder {
     fun setComposition(composition: JointAccountCreationDraft.Composition) {
         draft.update { it.copy(composition = composition) }
     }
+
+    fun setDisplayName(displayName: String) {
+        draft.update { it.copy(displayName = displayName) }
+    }
 }
