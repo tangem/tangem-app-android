@@ -17,7 +17,6 @@ dependencies {
     implementation(projects.features.marketing.api)
 
     /** Core */
-    implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
     implementation(projects.core.decompose)
     implementation(projects.core.res)
@@ -30,7 +29,6 @@ dependencies {
     /** Compose */
     implementation(tangemDeps.vico.core)
     implementation(tangemDeps.vico.compose)
-    implementation(tangemDeps.vico.compose.m3)
 
     /** Common */
     implementation(projects.common.ui)
@@ -58,10 +56,11 @@ dependencies {
     implementation(projects.domain.stories)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
-    implementation(projects.domain.balanceHiding.models)
-    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.marketing.models)
     implementation(projects.libs.crypto)
+    implementation(projects.common)
+    implementation(projects.domain.account)
+    implementation(projects.domain.onramp.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -69,7 +68,6 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.androidx.activity.compose)
 
     /** Other */
     implementation(deps.decompose)
@@ -79,6 +77,12 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.serialization.core)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
 
     /** Tests */
@@ -86,4 +90,9 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.arrow.core)
+    testImplementation(deps.kotlin.coroutines)
+    api(deps.kotlin.coroutines)
+    api(projects.domain.networks)
+    api(projects.core.configToggles)
 }
