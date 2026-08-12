@@ -195,7 +195,7 @@ internal class SingleAccountStatusListProducerContributionsTest {
                 every { isBalanceContributionsEnabled } returns useContributions
             },
             // the real providers: this is what makes it a wiring test rather than a mock dance
-            contributionProviders = contributionProviders ?: setOf(
+            balanceContributionProviders = contributionProviders ?: setOf(
                 StakingContributionProvider(
                     stakingBalanceSupplier = stakingBalanceSupplier,
                     stakingIdFactory = stakingIdFactory,
