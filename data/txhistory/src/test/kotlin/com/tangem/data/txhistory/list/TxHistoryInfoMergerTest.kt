@@ -620,6 +620,68 @@ internal class TxHistoryInfoMergerTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SharedHashEvents {
+
+        @Test
+        fun `GIVEN swap and gasless fee under one hash WHEN merge THEN fee is a separate row below the merged one`() {
+            // Arrange: a gasless swap surfaces two events of the same hash — the swap leg and the fee charged for it.
+            val onChain = listOf(
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.GaslessFee),
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.Swap),
+            )
+            val express = listOf(createSwap(matchHash = "h1", status = ExpressExchangeStatus.Finished))
+
+            // Act
+            val result = merge(onChain, express)
+
+            // Assert
+            assertThat(result).hasSize(2)
+            val merged = result.first()
+            assertThat(merged).isInstanceOf(ExpressTx.Swap::class.java)
+            assertThat(((merged as ExpressTx).txInfo as OnChainTx.BSDK).txInfo.type)
+                .isEqualTo(TxInfo.TransactionType.Swap)
+            val fee = result.last()
+            assertThat(fee).isInstanceOf(OnChainTx.BSDK::class.java)
+            assertThat((fee as OnChainTx.BSDK).txInfo.type).isEqualTo(TxInfo.TransactionType.GaslessFee)
+        }
+
+        @Test
+        fun `GIVEN only gasless fee under the hash WHEN merge THEN it is claimed as the on-chain leg`() {
+            // Arrange: the payload tx is not part of the loaded page, so the fee event is all the deal can join to.
+            val onChain = listOf(
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.GaslessFee),
+            )
+            val express = listOf(createSwap(matchHash = "h1", status = ExpressExchangeStatus.Finished))
+
+            // Act
+            val result = merge(onChain, express)
+
+            // Assert
+            assertThat(result).hasSize(1)
+            val row = result.single()
+            assertThat(row).isInstanceOf(ExpressTx.Swap::class.java)
+            assertThat((row as ExpressTx).txInfo?.explorerHash).isEqualTo("h1")
+        }
+
+        @Test
+        fun `GIVEN two events of one hash unclaimed by express WHEN merge THEN both pass through`() {
+            // Arrange
+            val onChain = listOf(
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.GaslessFee),
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.Transfer),
+            )
+
+            // Act
+            val result = merge(onChain, express = emptyList())
+
+            // Assert
+            assertThat(result.filterIsInstance<OnChainTx.BSDK>().map { it.txInfo.type })
+                .containsExactly(TxInfo.TransactionType.GaslessFee, TxInfo.TransactionType.Transfer)
+        }
+    }
+
     private fun merge(
         onChain: List<TxInfo>,
         express: List<ExpressTx>,
@@ -633,6 +695,7 @@ internal class TxHistoryInfoMergerTest {
         sourceAddress: String = "addr",
         destinationAddress: String = "addr",
         amount: BigDecimal = BigDecimal.ONE,
+        type: TxInfo.TransactionType = TxInfo.TransactionType.Transfer,
     ) = TxInfo(
         txHash = txHash,
         timestampInMillis = timestamp,
@@ -641,7 +704,7 @@ internal class TxHistoryInfoMergerTest {
         sourceType = TxInfo.SourceType.Single(sourceAddress),
         interactionAddressType = null,
         status = TxInfo.TransactionStatus.Confirmed,
-        type = TxInfo.TransactionType.Transfer,
+        type = type,
         amount = amount,
     )
 
