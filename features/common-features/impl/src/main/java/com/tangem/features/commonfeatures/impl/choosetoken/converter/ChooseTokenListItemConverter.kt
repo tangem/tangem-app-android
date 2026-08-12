@@ -31,6 +31,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.choosetoken.model.ClickIntents
+import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.toPersistentList
 
 internal data class ConverterConfig(
@@ -123,9 +124,20 @@ internal class ChooseTokenListItemConverter(
             params.accountList.accountStatuses.flatMap { account ->
                 when (account) {
                     is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().map { account to it }
-                    else -> emptyList()
+                    is AccountStatus.Payment ->
+                        account.paymentCryptoCurrencyOrNull()?.let { listOf(account to it) }.orEmpty()
+                    is AccountStatus.Virtual -> emptyList()
                 }
             }
+    }
+
+    private fun AccountStatus.Payment.paymentCryptoCurrencyOrNull(): CryptoCurrencyStatus? {
+        if (!config.isShowPaymentAccount) return null
+        return when (val status = value) {
+            is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
+            is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
+            else -> null
+        }
     }
 
     private fun convertAccountList(params: TokenConverterParams.Account): TokenListUMData {
@@ -220,7 +232,7 @@ internal class ChooseTokenListItemConverter(
         }
 
     private fun CryptoCurrencyStatus.passesBalanceFilter(): Boolean =
-        config.balanceFilter == BalanceFilter.All || !isZeroBalance()
+        config.balanceFilter == BalanceFilter.All || value.amount?.isZero() != true
 
     private fun filterTokenList(tokenList: TokenList, account: AccountStatus.CryptoPortfolio): TokenList {
         val filtered = when (tokenList) {
