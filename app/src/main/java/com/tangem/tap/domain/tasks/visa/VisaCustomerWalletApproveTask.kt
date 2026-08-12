@@ -52,8 +52,13 @@ class VisaCustomerWalletApproveTask(
             return
         }
 
+        val publicKey = wallet.publicKey ?: run {
+            callback(CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError))
+            return
+        }
+
         val derivationTask = DeriveWalletPublicKeyTask(
-            walletPublicKey = wallet.publicKey,
+            walletPublicKey = publicKey,
             derivationPath = derivationPath,
         )
 
@@ -92,8 +97,13 @@ class VisaCustomerWalletApproveTask(
             return
         }
 
+        val publicKey = wallet.publicKey ?: run {
+            callback(CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError))
+            return
+        }
+
         signApproveData(
-            targetWalletPublicKey = wallet.publicKey,
+            targetWalletPublicKey = publicKey,
             derivationPath = derivationPath,
             session = session,
             extendedPublicKey = extendedPublicKey,
