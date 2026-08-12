@@ -7,6 +7,5 @@ internal sealed interface JointAccountCreationRoute : Route {
     data object Promo : JointAccountCreationRoute
     data object Config : JointAccountCreationRoute
     data object Composition : JointAccountCreationRoute
-
-    // TODO([REDACTED_TASK_KEY]): DisplayName — the creator's own name, then the card signature
+    data object DisplayName : JointAccountCreationRoute
 }
