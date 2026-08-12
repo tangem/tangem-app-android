@@ -7,6 +7,7 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import kotlinx.coroutines.CoroutineScope
 import java.io.File
 import javax.inject.Inject
