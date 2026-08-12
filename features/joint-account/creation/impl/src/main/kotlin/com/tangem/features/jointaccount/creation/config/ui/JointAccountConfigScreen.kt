@@ -12,6 +12,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -138,6 +140,11 @@ private fun ConfigCard(modifier: Modifier = Modifier, content: @Composable Colum
 
 @Composable
 private fun NameCard(state: JointAccountConfigUM, modifier: Modifier = Modifier) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
     ConfigCard(modifier = modifier) {
         Box(
             modifier = Modifier
@@ -167,6 +174,7 @@ private fun NameCard(state: JointAccountConfigUM, modifier: Modifier = Modifier)
             )
 
             SimpleTextField(
+                modifier = Modifier.focusRequester(focusRequester),
                 centered = true,
                 textStyle = TangemTheme.typography3.heading.medium,
                 placeholder = state.namePlaceholder,

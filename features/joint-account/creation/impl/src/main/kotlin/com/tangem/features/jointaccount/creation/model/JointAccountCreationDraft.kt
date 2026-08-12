@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 internal data class JointAccountCreationDraft(
     val config: Config? = null,
     val composition: Composition? = null,
+    val displayName: String? = null,
 ) {
 
     /**

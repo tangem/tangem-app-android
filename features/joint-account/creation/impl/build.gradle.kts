@@ -18,6 +18,7 @@ dependencies {
 
     /** Api */
     api(projects.features.jointAccount.creation.api)
+    implementation(projects.features.jointAccount.common.api)
 
     /** Common */
     implementation(projects.common.ui)
