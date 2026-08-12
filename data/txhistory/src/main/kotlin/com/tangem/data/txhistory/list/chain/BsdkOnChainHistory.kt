@@ -75,7 +75,7 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
         val mergedFlow: Flow<List<TxHistoryInfo>> = repository.getExpressHistory(
             userWalletId = userWalletId,
             currency = currency,
-            fromCreatedAtMillis = oldestLoadedTimestamp(batchState),
+            fromOnChainTimestampMillis = oldestLoadedTimestamp(batchState),
         ).map { express ->
             val onChain = batchState.data.asSequence()
                 .flatMap { it.data.items.asSequence() }

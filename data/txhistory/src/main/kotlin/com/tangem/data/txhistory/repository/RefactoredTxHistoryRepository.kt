@@ -42,6 +42,7 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.ISODateTimeFormat
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.hours
 
 @Suppress("LongParameterList")
 internal class RefactoredTxHistoryRepository @Inject constructor(
@@ -62,6 +63,25 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     private val TxHistoryListConfig.storeKey get() = TxHistoryItemsStore.Key(userWalletId, currency)
 
     override fun getExpressHistory(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        fromOnChainTimestampMillis: Long,
+    ): Flow<List<ExpressTx>> = observeExpressHistory(
+        userWalletId = userWalletId,
+        currency = currency,
+        fromCreatedAtMillis = fromOnChainTimestampMillis.toCreatedAtBound(),
+    )
+
+    /**
+
+     * produced it — a finished swap drops out of the query the moment its payout becomes the oldest loaded tx.
+     */
+    private fun Long.toCreatedAtBound(): Long = when (this) {
+        NO_LOWER_BOUND -> NO_LOWER_BOUND
+        else -> (this - EXPRESS_CREATED_AT_SKEW).coerceAtLeast(NO_LOWER_BOUND)
+    }
+
+    private fun observeExpressHistory(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         fromCreatedAtMillis: Long,
@@ -128,13 +148,13 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             .observePage(addresses = listOf(address), cursor = null, limit = limit)
             .map { page ->
                 IndexWindow(
-                    fromCreatedAtMillis = page.lastOrNull()?.sortTimeMillis ?: 0L,
+                    fromCreatedAtMillis = page.lastOrNull()?.sortTimeMillis ?: NO_LOWER_BOUND,
                     hasMore = page.size >= limit,
                 )
             }
             .distinctUntilChanged()
             .flatMapLatest { window ->
-                getExpressHistory(userWalletId, currency, window.fromCreatedAtMillis)
+                observeExpressHistory(userWalletId, currency, window.fromCreatedAtMillis)
                     .map { express -> ExpressHistoryPage(items = express, hasMore = window.hasMore) }
             }
         emitAll(pages)
@@ -296,5 +316,16 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
 
     private fun getTxHistoryPageKey(page: Page, config: TxHistoryListConfig): String {
         return "tx_history_page_${config.currency}_${config.userWalletId}_$page"
+    }
+
+    private companion object {
+        /** No on-chain page to window by: load the whole express history of the asset. */
+        const val NO_LOWER_BOUND = 0L
+
+        /**
+
+         * the query must not be narrower than the matching it feeds. Long-stuck refunds can still fall outside it.
+         */
+        val EXPRESS_CREATED_AT_SKEW = 24.hours.inWholeMilliseconds
     }
 }
