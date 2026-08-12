@@ -1,5 +1,9 @@
 [
     {
+        "name": "AND_16522_SWAP_DEEPLINK_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_16359_ONRAMP_THEMED_PAYMENT_METHOD_IMAGES",
         "version": "undefined"
     },
@@ -25,6 +29,10 @@
     },
     {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_16636_YIELD_DEX_TRANSFER_ENABLED",
         "version": "undefined"
     },
     {
@@ -97,6 +105,18 @@
     },
     {
         "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1611_JOINT_ACCOUNT_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1717_BALANCE_CONTRIBUTIONS",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1608_NEW_SHTORKA_ENABLED",
         "version": "undefined"
     }
 ]

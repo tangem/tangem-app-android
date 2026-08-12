@@ -2,11 +2,8 @@ package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.KASPA_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openSendConfirmScreenViaNextButton
@@ -42,13 +39,7 @@ class KaspaWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: check kaspa utxo warning, when sending less than 84 utxo")
     @Test
     fun checkWarningWhenSendingLessThanUTXOLimit() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$moreThanLimitState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = moreThanLimitState)
             }
@@ -84,13 +75,7 @@ class KaspaWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: check kaspa utxo warning, when sending more than 84 utxo")
     @Test
     fun checkWarningWhenSendingMoreThanUTXOLimit() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$moreThanLimitState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = moreThanLimitState)
             }
@@ -125,13 +110,7 @@ class KaspaWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: check kaspa utxo warning, when sending exactly 84 utxo")
     @Test
     fun checkWarningWhenSendingEqualToUTXOLimit() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$moreThanLimitState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = moreThanLimitState)
             }
