@@ -12,7 +12,6 @@ import com.tangem.common.constants.TestConstants.XRP_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.*
@@ -41,13 +40,7 @@ class SendViaSwapTest : BaseTestCase() {
         val warningTitle = getResourceString(R.string.express_swap_not_supported_title, stellar)
         val warningMessage = getResourceString(R.string.express_swap_not_supported_text)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
                 setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
@@ -102,13 +95,7 @@ class SendViaSwapTest : BaseTestCase() {
         val assetsScenarioState = "BitcoinExchangeEnabled"
         val userTokensScenarioState = "Wallet2"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
                 setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
@@ -252,13 +239,7 @@ class SendViaSwapTest : BaseTestCase() {
         val dialogMessage = getResourceString(R.string.send_with_swap_change_token_alert_message)
         val addressHint = getResourceString(R.string.send_enter_address_field_ens)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
                 setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
@@ -412,15 +393,7 @@ class SendViaSwapTest : BaseTestCase() {
         val providersScenarioName = "networks_providers"
         val providersScenarioState = "HotWalletSvS"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(providersScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
@@ -513,14 +486,7 @@ class SendViaSwapTest : BaseTestCase() {
         val providerName = "Changelly"
         val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(ethCallScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(ethNetworkBalanceScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
@@ -599,14 +565,7 @@ class SendViaSwapTest : BaseTestCase() {
         val xrpExchangeQuoteScenarioName = "xrp_exchange_quote"
         val xrpExchangeDataScenarioName = "xrp_exchange_data"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(xrpExchangeQuoteScenarioName)
-                resetWireMockScenarioState(xrpExchangeDataScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
@@ -690,16 +649,7 @@ class SendViaSwapTest : BaseTestCase() {
         val providersScenarioName = "networks_providers"
         val providersScenarioState = "HotWalletSvS"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(coinsScenarioName)
-                resetWireMockScenarioState(providersScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
@@ -881,14 +831,7 @@ class SendViaSwapTest : BaseTestCase() {
         val warningTitle = getResourceString(R.string.express_swap_not_supported_title, algorand)
         val warningMessage = getResourceString(R.string.express_swap_not_supported_text)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(coinsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
                 setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
@@ -953,14 +896,7 @@ class SendViaSwapTest : BaseTestCase() {
         val bannerTitle = getResourceString(R.string.swapping_high_price_impact_title)
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
                 setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
@@ -1047,14 +983,7 @@ class SendViaSwapTest : BaseTestCase() {
         val bannerTitle = getResourceString(R.string.swapping_trade_too_large_title)
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinBalanceScenarioName)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
                 setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)

@@ -1,6 +1,6 @@
 package com.tangem.domain.express.models
 
-import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import java.math.BigDecimal
@@ -20,7 +20,7 @@ import java.math.BigDecimal
  * @property toAsset The crypto asset received.
  * @property externalTxUrl The provider's page for this deal (tracking / refund / KYC); `null` when the provider
  *  supplies none (not provided by all providers).
- * @property country The country the onramp was made from; `null` if not resolved.
+ * @property fiatCurrency The fiat currency the onramp was paid in; `null` if not resolved.
  */
 data class OnrampTransaction(
     val txId: String,
@@ -32,7 +32,7 @@ data class OnrampTransaction(
     /** The [Amount.type] is [AmountType.FiatType] . */
     val fromFiat: Amount,
     val toAsset: ExpressTransactionAsset,
-    val country: OnrampCountry?,
+    val fiatCurrency: OnrampCurrency?,
     val externalTxUrl: String?,
     val toAmount: BigDecimal?,
     val toActualAmount: BigDecimal?,
