@@ -21,6 +21,7 @@ configurations.all {
 dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.core.configToggles)
 
     implementation(projects.common.google)
