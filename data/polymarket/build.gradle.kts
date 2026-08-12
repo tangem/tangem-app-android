@@ -31,6 +31,7 @@ dependencies {
 
     // region DI
     implementation(deps.hilt.android)
+    implementation(projects.domain.core)
     kapt(deps.hilt.kapt)
     // endregion
 
@@ -42,10 +43,12 @@ dependencies {
 
     // region Domain
     api(projects.domain.polymarket)
+    api(deps.moshi)
     implementation(projects.domain.wallets)
     implementation(projects.domain.common)
     implementation(projects.domain.card)
     implementation(projects.data.wallets)
+    implementation(projects.domain.models)
     // endregion
 
     // region tests
