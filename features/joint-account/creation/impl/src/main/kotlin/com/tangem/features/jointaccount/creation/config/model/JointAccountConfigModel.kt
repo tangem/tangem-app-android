@@ -16,14 +16,12 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.features.jointaccount.creation.component.JointAccountCreationComponent
 import com.tangem.features.jointaccount.creation.config.state.JointAccountConfigStateController
-import com.tangem.features.jointaccount.creation.config.state.transformers.SelectColorTransformer
-import com.tangem.features.jointaccount.creation.config.state.transformers.SelectIconTransformer
-import com.tangem.features.jointaccount.creation.config.state.transformers.UpdateAccountNameTransformer
-import com.tangem.features.jointaccount.creation.config.state.transformers.UpdateConfigInitialStateTransformer
-import com.tangem.features.jointaccount.creation.config.state.transformers.UpdateWalletsTransformer
+import com.tangem.features.jointaccount.creation.config.state.transformers.*
 import com.tangem.features.jointaccount.creation.config.ui.state.JointAccountConfigUM
+import com.tangem.features.jointaccount.creation.model.JointAccountCreationChildParams
+import com.tangem.features.jointaccount.creation.model.JointAccountCreationDraft
+import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -46,9 +44,17 @@ internal class JointAccountConfigModel @Inject constructor(
     private val userWalletImageFetcher: UserWalletImageFetcher,
 ) : Model() {
 
-    private val params = paramsContainer.require<JointAccountCreationComponent.Params>()
+    private val params = paramsContainer.require<JointAccountCreationChildParams>()
 
-    private val selectedWalletId = MutableStateFlow(value = params.userWalletId)
+    private val selectedWalletId = MutableStateFlow(
+        value = params
+            .draftHolder
+            .draft
+            .value
+            .config
+            ?.walletId
+            ?: params.userWalletId,
+    )
 
     private val isChooseWalletShown = MutableStateFlow(value = false)
 
@@ -57,6 +63,7 @@ internal class JointAccountConfigModel @Inject constructor(
 
     init {
         updateInitialState()
+        restoreDraft()
         observeWallets()
     }
 
@@ -70,6 +77,12 @@ internal class JointAccountConfigModel @Inject constructor(
                 onBackClick = ::onBackClick,
             ),
         )
+    }
+
+    private fun restoreDraft() {
+        val config = params.draftHolder.draft.value.config ?: return
+
+        stateController.update(RestoreConfigDraftTransformer(draft = config))
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -143,7 +156,18 @@ internal class JointAccountConfigModel @Inject constructor(
     }
 
     private fun onContinueClick() {
-        // TODO([REDACTED_TASK_KEY]): open the composition step once it exists
+        val state = uiState.value
+
+        params.draftHolder.setConfig(
+            JointAccountCreationDraft.Config(
+                name = state.name,
+                icon = state.icon.value,
+                color = state.icon.color,
+                walletId = selectedWalletId.value,
+            ),
+        )
+
+        router.push(JointAccountCreationRoute.Composition)
     }
 
     /** Back returns to the promo step: the flow's inner router pops its own stack first */
