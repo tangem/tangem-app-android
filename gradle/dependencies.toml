@@ -114,7 +114,7 @@ surveysparrow = "1.2.9"
 # region Tools
 detektComposeRules = "1.4.0"
 detekt = "1.23.8"
-dependencyAnalysis = "3.16.0"
+dependencyAnalysis = "3.17.0"
 # endregion Tools
 
 # region Testing
@@ -316,6 +316,7 @@ chuckerStub = { module = "com.github.chuckerteam.chucker:library-no-op", version
 mlKit-barcodeScanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlKit-barcodeScanning" }
 listenableFuture = { module = "com.google.guava:listenablefuture", version.ref = "listenableFuture" }
 camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "androidXCamera" }
+camera-core = { module = "androidx.camera:camera-core", version.ref = "androidXCamera" }
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidXCamera" }
 camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
 web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
