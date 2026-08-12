@@ -126,6 +126,7 @@ internal class WalletModel @Inject constructor(
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -277,7 +278,7 @@ internal class WalletModel @Inject constructor(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
                             accountsCount = accountsCount,
-                            isBackedUp = selectedWallet.isBackedUpForAnalytics(),
+                            isBackedUp = isWalletBackedUpUseCase(selectedWallet),
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
                             referralId = appsFlyerStore.get()?.refcode,

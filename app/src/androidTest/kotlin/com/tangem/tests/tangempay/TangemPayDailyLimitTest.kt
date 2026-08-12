@@ -5,8 +5,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openTangemPayDailyLimitSetup
@@ -33,14 +31,9 @@ class TangemPayDailyLimitTest : BaseTestCase() {
     fun dailyLimitScreenIsDisplayedCorrectlyTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(dailyLimitScenario, highLimitState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(dailyLimitScenario)
-            },
+            }
         ).run {
             step("Open daily limit setup screen") { openTangemPayDailyLimitSetup() }
             step("Assert amount field is displayed") {
@@ -75,14 +68,9 @@ class TangemPayDailyLimitTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(dailyLimitScenario, highLimitState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(dailyLimitScenario)
-            },
+            }
         ).run {
             step("Open daily limit setup screen") { openTangemPayDailyLimitSetup() }
             step("Click on '$presetValue' quick value preset") {
@@ -102,14 +90,9 @@ class TangemPayDailyLimitTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(dailyLimitScenario, highLimitState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(dailyLimitScenario)
-            },
+            }
         ).run {
             step("Open daily limit setup screen") { openTangemPayDailyLimitSetup() }
             step("Enter amount '$amountAboveLimit' above the limit") {
@@ -130,14 +113,9 @@ class TangemPayDailyLimitTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(dailyLimitScenario, highLimitState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(dailyLimitScenario)
-            },
+            }
         ).run {
             step("Open daily limit setup screen") { openTangemPayDailyLimitSetup() }
             step("Enter amount '$newLimit'") {
@@ -173,14 +151,9 @@ class TangemPayDailyLimitTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(dailyLimitScenario, setErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(dailyLimitScenario)
-            },
+            }
         ).run {
             step("Open daily limit setup screen") { openTangemPayDailyLimitSetup() }
             step("Enter amount '$newLimit'") {

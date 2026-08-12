@@ -282,7 +282,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         // "You paid" fiat has no sign — the exact amount paid. It also shows no icon here because this fixture has no
-        // country; the country-flag path is covered by the dedicated flag test below.
+        // fiat currency; the currency-icon path is covered by the dedicated test below.
         assertThat(result.from?.currencyIcon).isNull()
         assertThat(result.from?.amount?.resolveString()).contains("SEK")
         // The fiat leg is number-first ("100.00 SEK"), matching the crypto legs — not "SEK100.00".
@@ -300,13 +300,16 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN onramp with known country WHEN convert THEN paid fiat shows the country flag icon`() {
+    fun `GIVEN onramp with known fiat currency WHEN convert THEN paid fiat shows the currency icon`() {
         // Act
         val result = converter.convert(
-            expressOnramp(status = ExpressOnrampStatus.Finished, country = onrampCountry(flagUrl = "https://flags/se.png")),
+            expressOnramp(
+                status = ExpressOnrampStatus.Finished,
+                fiatCurrency = onrampCurrency(imageUrl = "https://flags/se.png"),
+            ),
         )
 
-        // Assert — the "You paid" leg carries the paid-from country flag as a fiat icon pointing at the country image.
+        // Assert — the "You paid" leg carries the paid fiat currency's icon.
         val icon = result.from?.currencyIcon
         assertThat(icon).isInstanceOf(CurrencyIconState.FiatIcon::class.java)
         assertThat((icon as CurrencyIconState.FiatIcon).url).isEqualTo("https://flags/se.png")
