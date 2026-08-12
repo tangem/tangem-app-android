@@ -94,5 +94,9 @@
     {
         "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
         "version": "6.2"
+    },
+    {
+        "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
+        "version": "undefined"
     }
 ]
