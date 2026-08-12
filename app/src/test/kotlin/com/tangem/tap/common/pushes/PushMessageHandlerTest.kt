@@ -9,7 +9,6 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
-import com.tangem.domain.visa.model.TangemPayPushNotificationType
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
@@ -121,7 +120,7 @@ internal class PushMessageHandlerTest {
         // Tangem Pay keys win over `link` and route to their own host, so no token reaction
         Model(
             payload = mapOf(
-                TYPE_KEY to TangemPayPushNotificationType.CARD_READY.value,
+                TYPE_KEY to "card_ready",
                 CUSTOMER_WALLET_ID_KEY to "wallet123",
                 WEBLINK_KEY to "tangem://token?network_id=ethereum&token_id=0x123",
             ),
