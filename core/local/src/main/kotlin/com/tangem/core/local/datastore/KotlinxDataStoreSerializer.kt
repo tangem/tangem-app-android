@@ -1,4 +1,4 @@
-package com.tangem.datasource.utils
+package com.tangem.core.local.datastore
 
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer
