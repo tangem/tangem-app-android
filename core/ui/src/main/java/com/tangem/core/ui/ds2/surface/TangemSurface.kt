@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.HazeStyle
@@ -143,6 +144,10 @@ object TangemSurface {
  */
 @Composable
 private fun Modifier.materialShadow(shape: Shape, radius: Dp): Modifier {
+    // Inside a transient graphics layer the halo below would be clipped to this surface's bounding
+    // box and read as a hard rectangle around it, so the layer's owner opts the shadow out.
+    if (!LocalMaterialShadowEnabled.current) return this
+
     // Approximates the backdrop: a material surface sitting on a non-root background keeps the
     // root's verdict, which is accurate enough since only near-black backgrounds are rejected.
     val backdrop by LocalRootBackgroundColor.current
