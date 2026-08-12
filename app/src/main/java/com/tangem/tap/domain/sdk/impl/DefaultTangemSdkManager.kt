@@ -25,7 +25,6 @@ import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -34,6 +33,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
+import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -79,7 +79,7 @@ internal class DefaultTangemSdkManager(
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
-    private val defaultDerivationsHelper: DefaultDerivationsHelper,
+    private val derivationsHelper: DerivationsHelper,
     // Lazy breaks a DI cycle: the launcher -> hot wallet accessor -> LegacySettingsRepository ->
     // TangemSdkManager. It's only needed when a scan actually runs.
     private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
@@ -189,7 +189,7 @@ internal class DefaultTangemSdkManager(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
                 shouldReset = shouldReset,
-                defaultDerivationsHelper = defaultDerivationsHelper,
+                derivationsHelper = derivationsHelper,
             ),
             cardId = scanResponse.card.cardId,
             initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
@@ -226,7 +226,7 @@ internal class DefaultTangemSdkManager(
         return runTaskAsync(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
-                defaultDerivationsHelper = defaultDerivationsHelper,
+                derivationsHelper = derivationsHelper,
                 mnemonic = defaultMnemonic,
                 passphrase = passphrase,
                 shouldReset = shouldReset,
