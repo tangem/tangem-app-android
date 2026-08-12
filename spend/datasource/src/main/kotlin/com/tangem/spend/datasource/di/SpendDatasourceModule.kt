@@ -28,14 +28,20 @@ internal object SpendDatasourceModule {
     @Provides
     @IntoMap
     @StringKey(TangemPay.Bff.KEY)
-    fun provideTangemPayBffConfig(environmentConfig: TangemPayEnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
+    fun provideTangemPayBffConfig(
+        environmentConfig: TangemPayEnvironmentConfig,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
         return TangemPay.Bff(environmentConfig, appInfoProvider)
     }
 
     @Provides
     @IntoMap
     @StringKey(TangemPay.Auth.KEY)
-    fun provideTangemPayAuthConfig(environmentConfig: TangemPayEnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
+    fun provideTangemPayAuthConfig(
+        environmentConfig: TangemPayEnvironmentConfig,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
         return TangemPay.Auth(environmentConfig, appInfoProvider)
     }
 
