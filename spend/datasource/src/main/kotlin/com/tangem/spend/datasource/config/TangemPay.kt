@@ -5,13 +5,12 @@ import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
 
 sealed class TangemPay(
-    private val environmentConfig: EnvironmentConfig,
+    private val environmentConfig: TangemPayEnvironmentConfig,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
@@ -80,7 +79,7 @@ sealed class TangemPay(
     }
 
     class Bff(
-        environmentConfig: EnvironmentConfig,
+        environmentConfig: TangemPayEnvironmentConfig,
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
 
@@ -107,7 +106,7 @@ sealed class TangemPay(
     }
 
     class Auth(
-        environmentConfig: EnvironmentConfig,
+        environmentConfig: TangemPayEnvironmentConfig,
         appInfoProvider: AppInfoProvider,
     ) : TangemPay(environmentConfig, appInfoProvider) {
 
