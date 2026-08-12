@@ -1,14 +1,17 @@
 package com.tangem.data.polymarket
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
+import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
+import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.datasource.api.polymarket.PolymarketApi
@@ -17,13 +20,14 @@ import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -40,10 +44,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val geoApi: PolymarketGeoApi,
     private val relayerApi: PolymarketRelayerApi,
     private val clobApi: PolymarketClobApi,
-    private val eventConverter: PolymarketEventConverter,
-    private val walletConverter: PolymarketWalletConverter,
     private val walletErrorResolver: PolymarketWalletErrorResolver,
     private val authErrorResolver: PolymarketAuthErrorResolver,
+    private val eventErrorResolver: PolymarketEventErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
@@ -64,23 +67,35 @@ internal class DefaultPolymarketRepository @Inject constructor(
             safeApiCall(
                 call = {
                     polymarketApi.getEvents(category = category, limit = DEFAULT_LIMIT, cursor = null)
-                        .bind().events.map(eventConverter::convert).right()
+                        .bind().events.map(PolymarketEventConverter::convert).right()
                 },
                 onError = { DataError.NetworkError.NoInternetConnection.left() },
+            )
+        }
+
+    override suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent> =
+        withContext(dispatchers.io) {
+            safeApiCall(
+                call = {
+                    PolymarketEventConverter.convert(polymarketApi.getEvent(eventId = eventId).bind().event).right()
+                },
+                onError = { eventErrorResolver.resolve(it).left() },
             )
         }
 
     override suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState> =
         withContext(dispatchers.io) {
             safeApiCall(
-                call = { walletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right() },
+                call = {
+                    PolymarketWalletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right()
+                },
                 onError = { walletErrorResolver.resolve(it).left() },
             )
         }
 
     override suspend fun deployWallet(
         ownerAddress: String,
-        userWalletId: UserWalletId,
+        walletId: String,
         depositWalletAddress: String,
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
         safeApiCall(
@@ -88,7 +103,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 val response = polymarketApi.deployWallet(
                     PolymarketWalletDeployRequest(
                         ownerAddress = ownerAddress,
-                        walletId = userWalletId.stringValue,
+                        walletId = walletId,
                         depositWalletAddress = depositWalletAddress,
                     ),
                 ).bind()
@@ -103,7 +118,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = polymarketApi.submitApprovals(walletConverter.toRequest(batch)).bind()
+                val response = polymarketApi.submitApprovals(PolymarketWalletConverter.toRequest(batch)).bind()
                 PolymarketWalletStatus.fromRaw(response.status).right()
             },
             onError = { walletErrorResolver.resolve(it).left() },
@@ -151,13 +166,11 @@ internal class DefaultPolymarketRepository @Inject constructor(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
     ): Either<PolymarketAuthError, Unit> = withContext(dispatchers.io) {
-        val headers = runCatching {
-            l2HeaderBuilder.build(
-                ownerAddress = ownerAddress,
-                credentials = credentials,
-                requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
-            )
-        }.getOrElse { return@withContext PolymarketAuthError.Unknown(httpCode = null, detail = it.message).left() }
+        val headers = buildL2Headers(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
+        ).getOrElse { return@withContext it.left() }
 
         safeApiCallWithTimeout(
             timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
@@ -172,6 +185,49 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
+    override suspend fun getBalanceAllowance(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+    ): Either<PolymarketAuthError, PolymarketBalanceAllowance> = withContext(dispatchers.io) {
+        val headers = buildL2Headers(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            requestPath = BALANCE_ALLOWANCE_READ_SIGNED_PATH,
+        ).getOrElse { return@withContext it.left() }
+
+        safeApiCallWithTimeout(
+            timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
+            call = {
+                val response = clobApi.getBalanceAllowance(
+                    headers = headers,
+                    assetType = ASSET_TYPE_COLLATERAL,
+                    signatureType = SIGNATURE_TYPE_DEPOSIT_WALLET,
+                ).bind()
+                Either.catch { PolymarketBalanceAllowanceConverter.convert(response) }
+                    .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
+            },
+            onError = { authErrorResolver.resolve(it).left() },
+        )
+    }
+
+    /**
+     * A malformed stored secret makes the HMAC throw, which must not escape past the call's error boundary
+     * into the caller.
+     */
+    private fun buildL2Headers(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        requestPath: String,
+    ): Either<PolymarketAuthError, Map<String, String>> = Either
+        .catch {
+            l2HeaderBuilder.build(
+                ownerAddress = ownerAddress,
+                credentials = credentials,
+                requestPath = requestPath,
+            )
+        }
+        .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
+
     private companion object {
 
         const val DEFAULT_LIMIT = 20
@@ -183,7 +239,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
 
-        /** Signed by the HMAC without the query string, unlike the relative path Retrofit resolves. */
+        /** Both are signed by the HMAC without the query string, unlike the relative paths Retrofit resolves. */
         const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance/update"
+        const val BALANCE_ALLOWANCE_READ_SIGNED_PATH = "/balance-allowance"
     }
 }

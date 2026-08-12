@@ -10,8 +10,11 @@ internal sealed class TangemPayOrderCardInnerRoute : Route {
     data object Type : TangemPayOrderCardInnerRoute()
 
     @Serializable
-    data object Data : TangemPayOrderCardInnerRoute()
+    data class Data(val deliveryEtaMaxBusinessDays: Int) : TangemPayOrderCardInnerRoute()
 
     @Serializable
-    data object Success : TangemPayOrderCardInnerRoute()
+    data class Success(
+        val deliveryEtaMaxBusinessDays: Int,
+        val email: String,
+    ) : TangemPayOrderCardInnerRoute()
 }

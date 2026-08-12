@@ -14,6 +14,7 @@ android {
 dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
+    implementation(projects.core.configToggles)
 
     implementation(projects.common.google)
     implementation(projects.domain.cloudBackup)
