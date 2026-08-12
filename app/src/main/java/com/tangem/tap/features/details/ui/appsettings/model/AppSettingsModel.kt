@@ -313,7 +313,7 @@ internal class AppSettingsModel @Inject constructor(
         }
     }
 
-    private suspend fun setupPolicyForSelectedWallet() {
+    private fun setupPolicyForSelectedWallet() {
         val selectedWallet = userWalletsListRepository.selectedUserWallet.value ?: return
         if (selectedWallet is UserWallet.Cold) {
             cardSdkConfigRepository.setAccessCodeRequestPolicy(
