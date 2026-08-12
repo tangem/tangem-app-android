@@ -276,7 +276,7 @@ internal class DefaultSwapDeepLinkHandlerTest {
         }
 
     @Test
-    fun `GIVEN broadcast wallet id ne existing from wallet id WHEN handle THEN main for selected without switch`() =
+    fun `GIVEN broadcast wallet id differs from existing from wallet id WHEN handle THEN main for selected without switch`() =
         runTest {
             // Arrange
             val other = UserWalletId("022")
@@ -302,6 +302,20 @@ internal class DefaultSwapDeepLinkHandlerTest {
 
         // Act
         createHandler(this, mapOf(FROM_USER_WALLET_ID_KEY to "099"))
+        advanceUntilIdle()
+
+        // Assert
+        verify { router.push(route = expected, onComplete = any()) }
+        coVerify(exactly = 0) { selectWalletUseCase(any()) }
+    }
+
+    @Test
+    fun `GIVEN malformed non-hex from wallet id WHEN handle THEN degrades without crashing`() = runTest {
+        // Arrange
+        val expected = bareSwap(walletId)
+
+        // Act — a non-hex id from untrusted deeplink input must not crash UserWalletId construction
+        createHandler(this, mapOf(FROM_USER_WALLET_ID_KEY to "not-a-hex-id"))
         advanceUntilIdle()
 
         // Assert
