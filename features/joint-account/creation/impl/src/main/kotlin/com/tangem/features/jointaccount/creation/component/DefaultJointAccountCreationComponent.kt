@@ -16,11 +16,14 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.jointaccount.common.displayname.JointAccountDisplayNameComponent
 import com.tangem.features.jointaccount.creation.composition.JointAccountCompositionComponent
 import com.tangem.features.jointaccount.creation.config.JointAccountConfigComponent
 import com.tangem.features.jointaccount.creation.model.JointAccountCreationChildParams
 import com.tangem.features.jointaccount.creation.model.JointAccountCreationModel
 import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
+import com.tangem.features.jointaccount.creation.impl.R
 import com.tangem.features.jointaccount.creation.promo.JointAccountPromoComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -29,6 +32,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: JointAccountCreationComponent.Params,
+    private val displayNameComponentFactory: JointAccountDisplayNameComponent.Factory,
 ) : JointAccountCreationComponent, AppComponentContext by appComponentContext {
 
     /** Retained across configuration changes; owns the draft the steps accumulate */
@@ -77,20 +81,54 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
         route: JointAccountCreationRoute,
         childContext: AppComponentContext,
     ): ComposableContentComponent = when (route) {
-        is JointAccountCreationRoute.Promo -> JointAccountPromoComponent(
+        is JointAccountCreationRoute.Promo -> createPromoComponent(childContext = childContext)
+        is JointAccountCreationRoute.Config -> createConfigComponent(childContext = childContext)
+        is JointAccountCreationRoute.Composition -> createCompositionComponent(childContext = childContext)
+        is JointAccountCreationRoute.DisplayName -> createDisplayNameComponent(childContext = childContext)
+    }
+
+    private fun createPromoComponent(childContext: AppComponentContext): JointAccountPromoComponent {
+        return JointAccountPromoComponent(
             appComponentContext = childContext,
             params = params,
         )
-        is JointAccountCreationRoute.Config -> JointAccountConfigComponent(
+    }
+
+    private fun createConfigComponent(childContext: AppComponentContext): JointAccountConfigComponent {
+        return JointAccountConfigComponent(
             appComponentContext = childContext,
             params = childParams,
             onCloseClick = { router.pop() },
         )
-        is JointAccountCreationRoute.Composition -> JointAccountCompositionComponent(
+    }
+
+    private fun createCompositionComponent(childContext: AppComponentContext): JointAccountCompositionComponent {
+        return JointAccountCompositionComponent(
             appComponentContext = childContext,
             params = childParams,
             onCloseClick = { router.pop() },
         )
+    }
+
+    private fun createDisplayNameComponent(childContext: AppComponentContext): JointAccountDisplayNameComponent {
+        val draft = model.draftHolder.draft.value
+
+        return displayNameComponentFactory.create(
+            context = childContext,
+            params = JointAccountDisplayNameComponent.Params(
+                userWalletId = draft.config?.walletId ?: params.userWalletId,
+                buttonText = resourceReference(R.string.common_create_account),
+                initialName = draft.displayName,
+                onContinueClick = ::onDisplayNameContinue,
+                onCloseClick = { router.pop() },
+            ),
+        )
+    }
+
+    private fun onDisplayNameContinue(name: String) {
+        model.draftHolder.setDisplayName(name)
+
+        // TODO: start the card-signature (NFC) session — a separate task once the backend contract settles
     }
 
     private fun onChildBack() {
