@@ -3,12 +3,14 @@ package com.tangem.core.ui.ds2.topnavigation
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +31,7 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
@@ -97,7 +100,9 @@ fun TangemTopNavigation(
                         enter = TangemTransition.SlotEnterHorizontally,
                         exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        displayedStart?.invoke()
+                        WithoutMaterialShadowWhileAnimating {
+                            displayedStart?.invoke()
+                        }
                     }
                 }
 
@@ -120,25 +125,12 @@ fun TangemTopNavigation(
                         enter = TangemTransition.SlotEnterHorizontally,
                         exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        displayedGroup?.let { group ->
-                            AnimatedContent(
-                                targetState = isEndButtonsGroupBackgroundShown,
-                                transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
-                                label = "TangemTopNavigation.endButtonsGroupBackground",
-                            ) { shown ->
-                                if (shown) {
-                                    TangemSurface(isMaterial = true, shape = CircleShape) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                            content = group,
-                                        )
-                                    }
-                                } else {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        content = group,
-                                    )
-                                }
+                        WithoutMaterialShadowWhileAnimating {
+                            displayedGroup?.let { group ->
+                                EndButtonsGroup(
+                                    isBackgroundShown = isEndButtonsGroupBackgroundShown,
+                                    group = group,
+                                )
                             }
                         }
                     }
@@ -151,7 +143,9 @@ fun TangemTopNavigation(
                         enter = TangemTransition.SlotEnterHorizontally,
                         exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        displayedEnd?.invoke()
+                        WithoutMaterialShadowWhileAnimating {
+                            displayedEnd?.invoke()
+                        }
                     }
                 }
             },
@@ -295,6 +289,49 @@ fun TangemTopNavigation(
         endButton = endButton,
         contentColumn = { TitleSubtitle(title = title, subtitle = subtitle) },
     )
+}
+
+/**
+ * The group slot's content: the secondary actions, optionally wrapped in a material pill.
+ *
+ * Only the pill cross-fades — [group] is hosted by both branches, so its row is built once and handed
+ * to whichever one is showing.
+ */
+@Composable
+private fun EndButtonsGroup(isBackgroundShown: Boolean, group: @Composable RowScope.() -> Unit) {
+    val buttons: @Composable () -> Unit = {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), content = group)
+    }
+
+    AnimatedContent(
+        targetState = isBackgroundShown,
+        transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
+        label = "TangemTopNavigation.endButtonsGroupBackground",
+    ) { shown ->
+        WithoutMaterialShadowWhileAnimating {
+            if (shown) {
+                TangemSurface(isMaterial = true, shape = CircleShape) { buttons() }
+            } else {
+                buttons()
+            }
+        }
+    }
+}
+
+/**
+ * Runs [content] with the material drop shadow suppressed while this enter/exit transition animates.
+ *
+ * A running transition draws its content into a graphics layer, which clips drawing to the content's
+ * bounding box. A material surface paints its shadow outside its own bounds, so the clip turns the soft
+ * halo into a hard rectangle for the length of the animation. See [LocalMaterialShadowEnabled].
+ */
+@Composable
+private fun AnimatedVisibilityScope.WithoutMaterialShadowWhileAnimating(content: @Composable () -> Unit) {
+    // AND-ed with the current value so an outer animation keeps the shadow off while an inner one idles.
+    val isShadowEnabled = LocalMaterialShadowEnabled.current && !transition.isRunning
+    CompositionLocalProvider(LocalMaterialShadowEnabled provides isShadowEnabled) {
+        content()
+    }
 }
 
 @Composable
