@@ -9,11 +9,14 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.R
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -69,8 +72,10 @@ data class FeeExtraInfo(
     val isTronToken: Boolean,
     val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
     val availableFeeCurrencies: ImmutableList<CryptoCurrencyStatus>? = null,
+    val notEnoughForFeeCurrencies: ImmutableSet<CryptoCurrency.ID> = persistentSetOf(),
     val transactionFeeExtended: TransactionFeeExtended? = null,
     val isNotEnoughFunds: Boolean = false,
+    val isFeeTokenSelectedByUser: Boolean = false,
 )
 
 sealed class FeeNonce {

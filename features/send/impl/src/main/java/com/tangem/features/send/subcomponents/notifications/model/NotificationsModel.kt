@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.utils.popAndPush
 import com.tangem.common.ui.R
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -195,16 +196,12 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private fun showTokenDetails(currency: CryptoCurrency) {
-        appRouter.pop { isSuccess ->
-            if (isSuccess) {
-                appRouter.push(
-                    AppRoute.CurrencyDetails(
-                        userWalletId = userWalletId,
-                        currency = currency,
-                    ),
-                )
-            }
-        }
+        appRouter.popAndPush(
+            AppRoute.CurrencyDetails(
+                userWalletId = userWalletId,
+                currency = currency,
+            ),
+        )
     }
 
     private suspend fun MutableList<NotificationUM>.addDomainNotifications(
@@ -264,7 +261,6 @@ internal class NotificationsModel @Inject constructor(
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
             feeStatus = notificationData.feeCryptoCurrencyStatus,
-            sendAmount = sendingAmount,
         ).getOrNull()
 
         addExceedBalanceNotification(

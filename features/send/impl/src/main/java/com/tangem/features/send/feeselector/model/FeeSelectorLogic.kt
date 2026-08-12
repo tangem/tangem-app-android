@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
@@ -256,7 +257,13 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             return params.onLoadFee().map { LoadedFeeResult.Basic(it) }
         }
 
-        val selectedTokenOrNull = (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.feeCryptoCurrencyStatus
+        // Only an explicit pick pins the fee token. The state also carries the coin a
+        // gasless quote fell back to, and treating that as a choice made the fallback permanent:
+        // every later reload took the native branch and the token fee was never quoted again.
+        val selectedTokenOrNull = (uiState.value as? FeeSelectorUM.Content)
+            ?.feeExtraInfo
+            ?.takeIf { it.isFeeTokenSelectedByUser }
+            ?.feeCryptoCurrencyStatus
 
         if (selectedTokenOrNull?.currency is CryptoCurrency.Coin) {
             return params.onLoadFee().flatMap { loadedFee ->
@@ -271,10 +278,13 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 
         return extended(selectedTokenOrNull).fold(
             ifLeft = { error ->
-                when (error) {
-                    is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
-                    is GetFeeError.GaslessError -> {
-                        // Something wrong with gasless fee, fallback to basic fee
+                when {
+                    error is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
+                    // Only the automatic choice may fall back to the basic fee. Overriding a token the
+                    // user picked explicitly would move the fee to the network coin behind their back,
+                    // and the speed-only selector it leaves behind offers no way back to the token.
+                    error is GetFeeError.GaslessError && selectedTokenOrNull == null -> {
+                        TangemLogger.i("Gasless fee unavailable ($error), falling back to the native fee")
                         shouldShowOnlySpeedOption.value = true
                         params.onLoadFee().map { LoadedFeeResult.Basic(it) }
                     }
@@ -298,7 +308,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 if (selectedToken.currency !is CryptoCurrency.Coin) {
                     raise(error)
                 }
-                emptyList()
+                AvailableFeeTokens(tokens = emptyList())
             },
             ifRight = { it },
         )
@@ -322,25 +332,25 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             }
         }
 
-    private suspend fun getAvailableFeeTokens(
-        nativeFeeAmount: BigDecimal?,
-    ): Either<GetFeeError, List<CryptoCurrencyStatus>> = either {
-        val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
-            GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
-        }.bind()
+    private suspend fun getAvailableFeeTokens(nativeFeeAmount: BigDecimal?): Either<GetFeeError, AvailableFeeTokens> {
+        return either {
+            val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
+                GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
+            }.bind()
 
-        getAvailableFeeTokensUseCase.invoke(
-            userWallet = userWallet,
-            network = params.cryptoCurrencyStatus.currency.network,
-            nativeFeeAmount = nativeFeeAmount,
-        ).bind()
+            getAvailableFeeTokensUseCase.invoke(
+                userWallet = userWallet,
+                network = params.cryptoCurrencyStatus.currency.network,
+                nativeFeeAmount = nativeFeeAmount,
+            ).bind()
+        }
     }
 
     sealed class LoadedFeeResult {
         data class Extended(
             val fee: TransactionFeeExtended,
             val selectedToken: CryptoCurrencyStatus?,
-            val availableTokens: List<CryptoCurrencyStatus>,
+            val availableTokens: AvailableFeeTokens,
         ) : LoadedFeeResult()
 
         data class Basic(val fee: TransactionFee) : LoadedFeeResult()
