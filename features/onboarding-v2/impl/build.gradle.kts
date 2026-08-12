@@ -24,6 +24,7 @@ dependencies {
     api(projects.core.configToggles)
     api(projects.core.datasource)
     api(projects.core.decompose)
+    implementation(projects.spend.datasource)
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)

@@ -11,7 +11,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WALLET_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.restartApp
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
 import com.tangem.screens.*
@@ -68,14 +67,7 @@ class AssetsDiscoveryTest : BaseTestCase() {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, state = SCENARIO_STATE_ASSETS_DISCOVERY_HAPPY_PATH)
                 setWireMockScenarioState(WALLET_TOKENS_API_SCENARIO, state = SCENARIO_STATE_STARTED)
                 setWireMockScenarioState(MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO, state = SCENARIO_STATE_NON_ZERO_EVM_BALANCES)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(PROVIDERS_API_SCENARIO)
-                resetWireMockScenarioState(CREATE_USER_WALLET_API_SCENARIO)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(WALLET_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO)
-            },
+            }
         ).run {
             step("Import a new hot wallet from seed phrase") {
                 openMainScreenWithExistingHotWallet(SEED_PHRASE_HAPPY_PATH)
@@ -150,14 +142,7 @@ class AssetsDiscoveryTest : BaseTestCase() {
                     MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO,
                     state = SCENARIO_STATE_NON_ZERO_EVM_BALANCES_SLOW,
                 )
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(PROVIDERS_API_SCENARIO)
-                resetWireMockScenarioState(CREATE_USER_WALLET_API_SCENARIO)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(WALLET_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO)
-            },
+            }
         ).run {
             step("Import a new hot wallet from seed phrase") {
                 openMainScreenWithExistingHotWallet(SEED_PHRASE_HAPPY_PATH)
@@ -225,12 +210,7 @@ class AssetsDiscoveryTest : BaseTestCase() {
                 setWireMockScenarioState(CREATE_USER_WALLET_API_SCENARIO, state = SCENARIO_STATE_ALREADY_EXISTS)
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, state = SCENARIO_STATE_STARTED)
                 setWireMockScenarioState(MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO, state = SCENARIO_STATE_EMPTY)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(CREATE_USER_WALLET_API_SCENARIO)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO)
-            },
+            }
         ).run {
             step("Import an existing hot wallet from seed phrase") {
                 openMainScreenWithExistingHotWallet(SEED_PHRASE_12)
