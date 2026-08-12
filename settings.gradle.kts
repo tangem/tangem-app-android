@@ -398,6 +398,8 @@ include(":features:joint-account:main:api")
 include(":features:joint-account:main:impl")
 include(":features:joint-account:creation:api")
 include(":features:joint-account:creation:impl")
+include(":features:joint-account:common:api")
+include(":features:joint-account:common:impl")
 
 /* Virtual Accounts */
 include(":features:virtual-accounts:onboarding:api")
