@@ -1,11 +1,12 @@
 package com.tangem.features.jointaccount.creation.config.state.transformers
 
+import com.tangem.common.ui.userwallet.picker.converter.WalletItemConverter
+import com.tangem.common.ui.userwallet.picker.state.ChooseWalletUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.jointaccount.creation.config.state.transformers.converter.WalletItemConverter
 import com.tangem.features.jointaccount.creation.config.ui.state.JointAccountConfigUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
@@ -35,7 +36,7 @@ internal class UpdateWalletsTransformer(
                 null
             },
             chooseWallet = if (walletsInfo.isSheetShown) {
-                JointAccountConfigUM.ChooseWalletUM(
+                ChooseWalletUM(
                     wallets = items.toImmutableList(),
                     onDismiss = intents.onChooseWalletDismiss,
                 )
