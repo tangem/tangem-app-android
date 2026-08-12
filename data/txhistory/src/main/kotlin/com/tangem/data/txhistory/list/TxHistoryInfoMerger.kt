@@ -12,6 +12,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
+import com.tangem.domain.txhistory.model.identityKey
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.abs
@@ -30,15 +31,17 @@ import kotlin.math.abs
  * as the standalone express row and once as its BSDK leg. Matching them collapses the pair into one enriched row.
  *
  * Per outcome:
- *  - matched   → enrich: emit the express row carrying its on-chain leg; the on-chain tx(es) of that hash are
- *                collapsed into this row (not emitted standalone).
+ *  - matched   → enrich: emit the express row carrying its on-chain leg ([expressLeg]); only *that* leg is collapsed
+ *                into the row, not the whole hash.
  *  - unmatched → standalone row (status shown, no on-chain leg), except a terminal-but-unsuccessful incoming swap
  *                leg whose on-chain credit never arrived, which is hidden (see [isHiddenWhenUnmatched]) so it does not
  *                surface as a phantom incoming row. A successful (finished) incoming swap, the outgoing / refund side,
  *                and every onramp purchase are always kept so the user still sees their deals.
  *
- * On-chain transactions that no express op claimed pass through as [OnChainTx].
- * [onChain] is expected to be already de-duplicated (by `identityKey`) by the caller.
+ * On-chain transactions no express op claimed pass through as [OnChainTx]. Claiming is per *tx identity*
+ * (`identityKey` — hash + type), not per hash: a gasless flow surfaces several events under one on-chain hash and each
+ * is a row of its own. Express rows are emitted before the pass-through ones and the sort is stable, so the gasless
+ * fee kept apart from the merged row lands right below it — both carry the block's timestamp.
  *
  * @param currency the open currency: its [ExpressAsset.ID] scopes the heuristics to legs of this token (network +
  *  contract — replacing the per-leg token/network check, since [TxInfo] carries no network of its own), and its
@@ -51,17 +54,17 @@ internal fun mergeTxHistoryInfos(
 ): List<TxHistoryInfo> {
     val currencyAssetId: ExpressAsset.ID = ExpressAsset.ID(currency)
     val isUtxoNetwork: Boolean = currency.network.toBlockchain().isUTXO
-    val onChainByHash = onChain.associateBy { it.txHash }
-    val claimedHashes = mutableSetOf<String>()
+    val onChainByHash: Map<String, List<TxInfo>> = onChain.groupBy { it.txHash }
+    val claimedKeys = mutableSetOf<String>()
     val result = mutableListOf<TxHistoryInfo>()
 
     // Phase 1 — deterministic hash match takes priority (payin_hash / payout_hash via ExpressTx.matchHash).
     val unmatched = mutableListOf<ExpressTx>()
     express.forEach { op ->
-        val byHash = op.matchHash?.let(onChainByHash::get)
-        if (byHash != null && byHash.txHash !in claimedHashes) {
+        val byHash = op.matchHash?.let(onChainByHash::get)?.expressLeg()
+        if (byHash != null) {
             result += op.withMatchedOnChain(OnChainTx.BSDK(byHash))
-            claimedHashes += byHash.txHash
+            claimedKeys += byHash.identityKey()
         } else {
             unmatched += op
         }
@@ -73,21 +76,21 @@ internal fun mergeTxHistoryInfos(
     unmatched.forEach { op ->
         val candidate = onChain
             .filter { tx ->
-                tx.txHash !in claimedHashes && op.matchesOnChainHeuristically(tx, currencyAssetId, isUtxoNetwork)
+                tx.identityKey() !in claimedKeys && op.matchesOnChainHeuristically(tx, currencyAssetId, isUtxoNetwork)
             }
             .minByOrNull { abs(it.timestampInMillis - op.createdAtMillis) }
         when {
             candidate != null -> {
                 result += op.withMatchedOnChain(OnChainTx.BSDK(candidate))
-                claimedHashes += candidate.txHash
+                claimedKeys += candidate.identityKey()
             }
             !op.isHiddenWhenUnmatched() -> result += op
         }
     }
 
-    // Phase 3 — on-chain txs no express op claimed pass through.
+    // Phase 3 — on-chain txs no express op claimed pass through, each event of a shared hash as its own row.
     onChain.forEach { tx ->
-        if (tx.txHash !in claimedHashes) result += OnChainTx.BSDK(tx)
+        if (tx.identityKey() !in claimedKeys) result += OnChainTx.BSDK(tx)
     }
 
     return result.sortedByDescending(TxHistoryInfo::timestampMillis)
@@ -128,6 +131,17 @@ internal fun mergeTangemPay(onChain: List<OnChainTx.TangemPay>, express: List<Ex
 
     return result.sortedByDescending(TxHistoryInfo::timestampMillis)
 }
+
+/**
+ * Which tx of this same-hash group is the express op's on-chain leg.
+ *
+ * A gasless flow surfaces several events under one hash (`GaslessFee` + the payload tx, e.g. the swap): the payload is
+ * the deal's leg, while the fee is a separate charge that stays a row of its own right below the merged one. A group
+ * carrying nothing but the fee event (the payload tx is not part of the loaded page) falls back to it — otherwise the
+ * op would lose its on-chain leg and surface as a standalone live row next to the fee it paid.
+ */
+private fun List<TxInfo>.expressLeg(): TxInfo? = firstOrNull { it.type != TxInfo.TransactionType.GaslessFee }
+    ?: firstOrNull()
 
 private fun ExpressTx.withMatchedOnChain(onChain: OnChainTx): ExpressTx = when (this) {
     is ExpressTx.Swap -> copy(txInfo = onChain)
