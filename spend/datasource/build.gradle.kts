@@ -30,9 +30,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     api(projects.core.remote)
-    // TODO: temporary — the only remaining use of core:datasource is KotlinxDataStoreSerializer.
-    //  Remove this dependency once that serializer is relocated to a leaf module.
-    api(projects.core.datasource)
     api(projects.core.utils)
     // Exposed in public store interface signatures (UserWalletId, TangemPayReissueCardFee,
     // TangemPayTxHistoryItem, ...)
