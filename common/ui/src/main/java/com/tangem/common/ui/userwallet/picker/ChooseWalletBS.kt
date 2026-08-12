@@ -1,8 +1,11 @@
-package com.tangem.features.jointaccount.creation.config.ui
+package com.tangem.common.ui.userwallet.picker
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -11,7 +14,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.CardImage
+import com.tangem.common.ui.userwallet.picker.state.ChooseWalletUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -27,13 +32,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.jointaccount.creation.config.ui.state.JointAccountConfigUM
-import com.tangem.features.jointaccount.creation.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun ChooseWalletBS(state: JointAccountConfigUM.ChooseWalletUM, modifier: Modifier = Modifier) {
+fun ChooseWalletBS(state: ChooseWalletUM, modifier: Modifier = Modifier) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -60,7 +63,7 @@ internal fun ChooseWalletBS(state: JointAccountConfigUM.ChooseWalletUM, modifier
 }
 
 @Composable
-private fun WalletList(wallets: ImmutableList<JointAccountConfigUM.WalletItemUM>, modifier: Modifier = Modifier) {
+private fun WalletList(wallets: ImmutableList<ChooseWalletUM.WalletItemUM>, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -76,7 +79,7 @@ private fun WalletList(wallets: ImmutableList<JointAccountConfigUM.WalletItemUM>
 }
 
 @Composable
-private fun WalletRow(wallet: JointAccountConfigUM.WalletItemUM, modifier: Modifier = Modifier) {
+private fun WalletRow(wallet: ChooseWalletUM.WalletItemUM, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier,
         onClick = wallet.onClick,
@@ -110,7 +113,7 @@ private fun Preview_ChooseWalletContent() {
         ) {
             WalletList(
                 wallets = persistentListOf(
-                    JointAccountConfigUM.WalletItemUM(
+                    ChooseWalletUM.WalletItemUM(
                         id = "1",
                         name = stringReference(value = "My wallet"),
                         image = UserWalletItemUM.ImageState.MobileWallet,
@@ -118,7 +121,7 @@ private fun Preview_ChooseWalletContent() {
                         isSelected = true,
                         onClick = {},
                     ),
-                    JointAccountConfigUM.WalletItemUM(
+                    ChooseWalletUM.WalletItemUM(
                         id = "2",
                         name = stringReference(value = "My wallet 2"),
                         image = UserWalletItemUM.ImageState.MobileWallet,
