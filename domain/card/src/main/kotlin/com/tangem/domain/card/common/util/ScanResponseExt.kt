@@ -59,7 +59,8 @@ private fun ScanResponse.hasDerivation(
 ): Boolean {
     val foundWallet = card.wallets.firstOrNull { it.curve == curve }
         ?: return false
-    val extendedPublicKeysMap = derivedKeys[foundWallet.publicKey.toMapKey()] ?: return false
+    val publicKey = foundWallet.publicKey ?: return false
+    val extendedPublicKeysMap = derivedKeys[publicKey.toMapKey()] ?: return false
     val extendedPublicKey = extendedPublicKeysMap[derivationPath]
     return if (blockchain == Blockchain.Cardano) {
         // Cardano uses extended derivation path

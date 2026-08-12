@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -391,6 +392,7 @@ internal class SendModel @Inject constructor(
      * A zero native fee (the address still has enough free bandwidth / delegated energy for this
      * transfer) does not count as covered: any non-zero TRX balance would otherwise satisfy
      * `balance >= fee` and silently switch the fee row back to TRX right after a successful send.
+     * Neither does a fee the account's energy has discounted — see [isDiscountedByAccountEnergy].
      */
     private suspend fun Either<GetFeeError, TransactionFeeExtended>.recoverWithTronGasless(
         transferTransaction: TransactionData,
@@ -400,9 +402,10 @@ internal class SendModel @Inject constructor(
         val isFeeCoveredByNative = fold(
             ifLeft = { false },
             ifRight = { extended ->
-                val feeValue = extended.transactionFee.normal.amount.value
-                val nativeBalance = feeCryptoCurrencyStatusFlow.value.value.amount
-                feeValue != null && feeValue.signum() > 0 &&
+                val fee = extended.transactionFee.normal
+                val feeValue = fee.amount.value
+                val nativeBalance = nativeBalance(sentToken)
+                feeValue != null && feeValue.signum() > 0 && !fee.isDiscountedByAccountEnergy() &&
                     nativeBalance != null && nativeBalance >= feeValue
             },
         )
@@ -418,6 +421,15 @@ internal class SendModel @Inject constructor(
                 ifLeft = { this },
                 ifRight = { it.right() },
             )
+    }
+
+    private fun Fee.isDiscountedByAccountEnergy(): Boolean = this is Fee.Tron && feeEnergy > 0 && remainingEnergy > 0
+
+    private fun nativeBalance(sentToken: CryptoCurrency.Token): BigDecimal? {
+        val feeStatus = feeCryptoCurrencyStatusFlow.value
+        val currency = feeStatus.currency
+        val isNetworkCoin = currency is CryptoCurrency.Coin && currency.network.id == sentToken.network.id
+        return feeStatus.value.amount.takeIf { isNetworkCoin }
     }
 
     fun showAlertError() {
