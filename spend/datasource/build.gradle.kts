@@ -35,6 +35,7 @@ dependencies {
     // Exposed in public store interface signatures (UserWalletId, TangemPayReissueCardFee,
     // TangemPayTxHistoryItem, ...)
     api(projects.domain.models)
+    // Exposed in VisaAuthTokenStorage (VisaAuthTokens)
     api(projects.domain.visa.models)
     implementation(projects.core.local)
 
