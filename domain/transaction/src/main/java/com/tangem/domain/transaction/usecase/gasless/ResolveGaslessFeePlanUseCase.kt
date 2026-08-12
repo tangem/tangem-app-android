@@ -37,7 +37,11 @@ class ResolveGaslessFeePlanUseCase(
         val feeAmount = tokenFee.amount.value
             ?: raise(GaslessError.DataError(IllegalStateException("token fee amount is null")))
         val totalBalance = tokenStatus.value.amount ?: BigDecimal.ZERO
-        val required = feeAmount + sendAmountInFeeToken
+        val required = resolveRequiredBalance(
+            sendAmountInFeeToken = sendAmountInFeeToken,
+            feeAmount = feeAmount,
+            totalBalance = totalBalance,
+        )
         if (!isYieldActive) {
             val liquidBalance = (totalBalance - resolveModuleBalanceForInactiveYield(userWallet, tokenStatus, token))
                 .coerceAtLeast(BigDecimal.ZERO)
@@ -106,6 +110,18 @@ class ResolveGaslessFeePlanUseCase(
             withdrawCallData = withdrawCallData,
             yieldModuleAddress = yieldModuleAddress,
         )
+    }
+
+    private fun resolveRequiredBalance(
+        sendAmountInFeeToken: BigDecimal,
+        feeAmount: BigDecimal,
+        totalBalance: BigDecimal,
+    ): BigDecimal {
+        val isReducedByFee = totalBalance < sendAmountInFeeToken + feeAmount &&
+            totalBalance >= sendAmountInFeeToken &&
+            feeAmount < sendAmountInFeeToken
+
+        return if (isReducedByFee) totalBalance else sendAmountInFeeToken + feeAmount
     }
 
     private suspend fun resolveModuleBalanceForInactiveYield(

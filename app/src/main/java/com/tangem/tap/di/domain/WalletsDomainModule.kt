@@ -115,8 +115,12 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesIsWalletAlreadySavedUseCase(
         userWalletsListRepository: UserWalletsListRepository,
+        dispatchers: CoroutineDispatcherProvider,
     ): IsWalletAlreadySavedUseCase {
-        return IsWalletAlreadySavedUseCase(userWalletsListRepository = userWalletsListRepository)
+        return IsWalletAlreadySavedUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            dispatchers = dispatchers,
+        )
     }
 
     @Provides

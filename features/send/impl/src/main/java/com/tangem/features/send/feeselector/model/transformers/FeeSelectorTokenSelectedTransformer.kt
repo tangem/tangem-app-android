@@ -19,6 +19,7 @@ class FeeSelectorTokenSelectedTransformer(
                 feeExtraInfo = prevState.feeExtraInfo.copy(
                     feeCryptoCurrencyStatus = selectedToken,
                     isNotEnoughFunds = false,
+                    isFeeTokenSelectedByUser = true,
                 ),
             )
         } else {
