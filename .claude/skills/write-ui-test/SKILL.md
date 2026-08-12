@@ -32,6 +32,10 @@ different setup.
 5. **Write the test** per Conventions below.
 6. **Build BOTH APKs, install, run, and classify the result** correctly — Allure post-run hook
    failures are not test failures (see `reference/running-and-debugging.md`).
+   **One green run proves nothing when the test was flaky.** A fix for a flaky test is only done after
+   **3 consecutive green runs**; a single pass is exactly what a 1-in-4 race looks like. And before
+   blaming a test, check your local WireMock is started the way CI starts it — a misconfigured local
+   instance fails tests that are fine on CI (see `reference/running-and-debugging.md`).
 7. **Final cleanup pass — remove what you no longer use.** Before declaring done, review every file you
    touched for leftovers from iteration (see "Final cleanup" below). This is a required step, not optional.
 
@@ -128,6 +132,23 @@ When the user asks to **port** an iOS test to Android:
   starts with explicit `step("Set WireMock scenario '$name' to '$state'") { setWireMockScenarioState(name, state) }`
   calls, then calls a thin helper (e.g. `openTangemPay()`) that only opens the screen. Mirror the
   `SendViaSwapTest` pattern.
+- **Don't roll scenarios back.** `BaseTestCase.setupHooks` resets *all* WireMock scenario states before
+  every test, in the same window as `additionalBeforeAppLaunchSection` (i.e. before
+  `ActivityScenario.launch`), so scenarios read at app start — `/v1/networks/providers`, stories — are
+  covered. So no `resetWireMockScenarioState(...)` / `resetWireMockScenarios()` in
+  `additionalAfterSection` / `additionalBeforeSection`, and no defensive reset as a first step;
+  `additionalAfterSection` is for **non-WireMock** cleanup only (system properties, clipboard, network
+  toggles). A reset *inside* a test body is legitimate only when it is part of the scenario under test
+  (e.g. "error state → reset → pull-to-refresh → content loads"); `MainScreenActionButtonsTest` and
+  `SwapStoriesTest` are the only such cases today.
+- **The reset covers scenario state, not the request journal.** `/__admin/scenarios/reset` leaves
+  `/__admin/requests` untouched, so `getWireMockRequestCount(...)` still sees calls made by earlier tests
+  in the run. Always assert on a **delta** (`countBefore` → act → `countAfter`), never on an absolute
+  count — mirror `TangemPayTransactionsTest` / `TangemPayBalanceSyncTest`.
+- **The reset is global for the WireMock instance it hits.** Harmless on CI, where each emulator gets its
+  own container, and locally when you run your own instance. But without a `wiremockBaseUrl` arg tests hit
+  the **shared remote** WireMock, and the run then resets scenarios out from under everyone else using it
+  — so pass `wiremockBaseUrl` when running locally (see `reference/running-and-debugging.md`).
 - **Open-the-feature helpers stay thin** — no scenarios-as-parameters, no scenario juggling inside.
 - **Every scenario name + state is a `val`** at the top of the test method. Reviewers reject magic
   strings inside `step(...)`.
@@ -225,8 +246,33 @@ Native first, by need:
 
 ### Waits and synchronization
 
+- **Never use the shared `pullToRefresh()` from `common/extensions/UiDeviceExt.kt` on a Compose screen.**
+  It is UiAutomator-based and is a **silent no-op** on Material3 `PullToRefreshBox` — `onRefresh` never
+  fires, no request is made, and the screen keeps serving stale data while the test happily continues.
+  Use a Compose gesture instead: `pullToRefreshTokenDetails()` / `pullToRefreshTangemPay()`, or write the
+  same shape for your screen (`onNode(hasTestTag(CONTAINER)).performTouchInput { swipeDown(...) }`).
+  Details in `reference/compose-traps.md`. The trigger for this rule is **calling the helper**, not
+  recognising the widget — you usually cannot tell from the test which refresh container the screen uses.
+- **A negative assertion never proves an action landed.** `assertDoesNotExist()` / `assertIsNotDisplayed()`
+  pass just as happily when the element is missing for an unrelated reason (not rendered yet, scrolled
+  away, wrong screen). Using one as the "did the refresh happen?" check silently validates nothing. Prove
+  an action took effect with a **positive** change (the new value/state appears), or with the WireMock
+  journal (`/__admin/requests`) showing the request the action was supposed to trigger.
 - **Manual polls are banned** (`onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()` in a loop) — even
   if a bot reviewer suggests one.
+- **`flakySafely` only retries its allowed exception types — throw `AssertionError`, never `require()`/
+  `error()`.** A `require()` raises `IllegalArgumentException` and `error()` an `IllegalStateException`;
+  neither is in the retry set, so the block runs **once** and the test fails on the first miss while
+  looking like it retried for the full timeout. Custom wait conditions must be written as
+  `if (notReadyYet) throw AssertionError("…")`.
+  **Diagnostic:** a step wrapped in `flakySafely(LONG)` that fails in a few seconds did not retry —
+  compare the failure time against the timeout before believing "it retried and never succeeded".
+- **Wait on a signal from the same data path as the assertion.** Refresh handlers fan out into parallel
+  coroutines (`TokenDetailsModel.onRefreshSwipe` re-reads balance, transaction history and staking in
+  three `async` blocks), so "the history updated" does not mean "the balance finished loading". Waiting
+  on the wrong one lets the test proceed mid-refresh and assert against stale state. Pick the value the
+  assertion actually depends on — e.g. wait for the *balance* to change before asserting a button whose
+  enabled state is derived from the balance.
 - **Default in the test body: `flakySafely(TIMEOUT) { assertion }`** — the codebase idiom (hundreds of
   uses); reviewers prefer it over `composeTestRule.waitUntil { runCatching { … }.isSuccess }`.
 - **`ComposeNotIdleException` / `AppNotIdleException` ("busy for ~60s") is usually a sick emulator, not

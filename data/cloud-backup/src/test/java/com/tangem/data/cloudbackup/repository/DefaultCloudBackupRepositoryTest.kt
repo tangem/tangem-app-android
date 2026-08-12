@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.cloudbackup.CloudBackupJson
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
 import com.tangem.data.cloudbackup.crypto.CloudBackupFileData
@@ -48,15 +49,18 @@ internal class DefaultCloudBackupRepositoryTest {
     // don't pay the Argon2 cost and stay focused on the Drive API orchestration + error mapping.
     private val cipher: CloudBackupCipher = mockk()
 
+    private val featureTogglesManager: FeatureTogglesManager = mockk()
+
     private val repository = DefaultCloudBackupRepository(
         api = api,
         tokenProvider = tokenProvider,
         store = store,
         cipher = cipher,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        featureTogglesManager = featureTogglesManager,
     )
 
-    private val secret = CloudBackupSecretData(mnemonic = "m", passphrase = null)
+    private val secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false)
 
     private val fileData = CloudBackupFileData(
         version = 1,
@@ -80,9 +84,10 @@ internal class DefaultCloudBackupRepositoryTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(api, tokenProvider, cipher)
+        clearMocks(api, tokenProvider, cipher, featureTogglesManager)
         coEvery { tokenProvider.getAccessToken(any()) } returns "token".right()
         every { cipher.encrypt(any(), any(), any(), any()) } returns fileData
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
     }
 
     @Test
@@ -92,13 +97,13 @@ internal class DefaultCloudBackupRepositoryTest {
             errorResponse(HTTP_UNAUTHORIZED),
             successResponse(CloudBackupJson.encodeToString(fileData)),
         )
-        every { cipher.decrypt(any(), any()) } returns SECRET_JSON.toByteArray(Charsets.UTF_8).right()
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
 
         // Act
         val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m", passphrase = null).right())
+        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false).right())
         coVerify(exactly = 1) { tokenProvider.invalidate() }
         coVerify(exactly = 2) { api.downloadFileContent(any(), any(), any()) }
     }
@@ -125,7 +130,7 @@ internal class DefaultCloudBackupRepositoryTest {
             errorResponse(HTTP_UNAUTHORIZED),
             successResponse(CloudBackupJson.encodeToString(fileData)),
         )
-        every { cipher.decrypt(any(), any()) } returns SECRET_JSON.toByteArray(Charsets.UTF_8).right()
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
 
         // Act
         repository.readBackup(fileId = "file-1", password = "p".toCharArray())
@@ -157,6 +162,17 @@ internal class DefaultCloudBackupRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(CloudBackupError.InvalidBackupFile.left())
+    }
+
+    @Test
+    fun `GIVEN feature disabled WHEN isBackedUp THEN returns false despite the stored flag`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
+        store.setBackedUp(WALLET_ID, backedUp = true)
+
+        // Act & Assert
+        assertThat(repository.isBackedUp(WALLET_ID)).isFalse()
+        assertThat(repository.isBackedUpFlow(WALLET_ID).first()).isFalse()
     }
 
     @Test
@@ -434,7 +450,7 @@ internal class DefaultCloudBackupRepositoryTest {
         const val HTTP_UNAUTHORIZED = 401
         const val WALLET_ID = "wallet-1"
         const val FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"
-        const val SECRET_JSON = "{\"mnemonic\":\"m\"}"
+        const val SECRET_PAYLOAD = """{"mnemonic":"m","passphraseRequired":0}"""
         val JSON_MEDIA_TYPE = "application/json".toMediaType()
     }
 }

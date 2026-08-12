@@ -165,6 +165,7 @@ internal class TxHistoryModel @Inject constructor(
             expressConverter = ExpressTxToTransactionItemUMConverter(
                 currency = params.currency,
                 txHistoryUiActions = this,
+                lookup = lookup,
             ),
             txHistoryUiActions = this,
         )

@@ -20,6 +20,7 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
+import com.tangem.features.jointaccount.creation.component.JointAccountCreationComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
@@ -108,6 +109,7 @@ internal class ChildFactory @Inject constructor(
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
     private val walletActivationComponentFactory: WalletActivationComponent.Factory,
     private val createWalletBackupComponentFactory: CreateWalletBackupComponent.Factory,
+    private val createCloudBackupComponentFactory: CreateCloudBackupComponent.Factory,
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val viewPhraseComponentFactory: ViewPhraseComponent.Factory,
     private val forgetWalletComponentFactory: ForgetWalletComponent.Factory,
@@ -116,6 +118,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
+    private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
@@ -339,6 +342,8 @@ internal class ChildFactory @Inject constructor(
                                 depositAddress = tangemPayInput.depositAddress,
                             )
                         },
+                        fromAmount = route.fromAmount,
+                        providerId = route.providerId,
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -594,6 +599,15 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = createWalletBackupComponentFactory,
                 )
             }
+            is AppRoute.CreateCloudBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = CreateCloudBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = createCloudBackupComponentFactory,
+                )
+            }
             is AppRoute.UpdateAccessCode -> {
                 createComponentChild(
                     context = context,
@@ -642,6 +656,13 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = accountCreateEditComponentFactory,
+                )
+            }
+            is AppRoute.JointAccountCreation -> {
+                createComponentChild(
+                    context = context,
+                    params = JointAccountCreationComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = jointAccountCreationComponentFactory,
                 )
             }
             is AppRoute.EditAccount -> {

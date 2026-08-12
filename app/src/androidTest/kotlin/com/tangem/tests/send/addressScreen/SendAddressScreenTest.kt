@@ -8,8 +8,6 @@ import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_SHORTENE
 import com.tangem.common.constants.TestConstants.ENS_NAME
 import com.tangem.common.constants.TestConstants.ETHEREUM_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_X_ADDRESS
@@ -18,7 +16,6 @@ import com.tangem.common.constants.TestConstants.XRP_X_RECIPIENT_ADDRESS_WITH_TA
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.clearClipboard
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
@@ -48,11 +45,7 @@ class SendAddressScreenTest : BaseTestCase() {
         val userTokensScenarioState = "XRP"
         val context = device.context
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
@@ -234,11 +227,7 @@ class SendAddressScreenTest : BaseTestCase() {
         val scenarioState = "EnsName"
         val notAValidAddress = getResourceString(R.string.send_recipient_address_error)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -337,10 +326,6 @@ class SendAddressScreenTest : BaseTestCase() {
 
         setupHooks(
             // openSendAddressScreen sets both scenarios; without a reset they stay set for the next test.
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
         ).run {
 
             step("Open 'Main Screen'") {
@@ -383,10 +368,6 @@ class SendAddressScreenTest : BaseTestCase() {
 
         setupHooks(
             // openSendAddressScreen sets both scenarios; without a reset they stay set for the next test.
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
         ).run {
 
             step("Open 'Main Screen'") {
@@ -441,11 +422,7 @@ class SendAddressScreenTest : BaseTestCase() {
         val userTokensScenarioState = "XRP"
         val optionalText = getResourceString(R.string.send_optional_field)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
@@ -478,11 +455,7 @@ class SendAddressScreenTest : BaseTestCase() {
         val userTokensScenarioState = "XRP"
         val tagAlreadyIncluded = getResourceString(R.string.send_additional_field_already_included)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
@@ -518,11 +491,7 @@ class SendAddressScreenTest : BaseTestCase() {
         val userTokensScenarioState = "XRP"
         val tagAlreadyIncluded = getResourceString(R.string.send_additional_field_already_included)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
@@ -558,11 +527,7 @@ class SendAddressScreenTest : BaseTestCase() {
         val userTokensScenarioState = "XRP"
         val sameAsWalletAddress = getResourceString(R.string.send_error_address_same_as_wallet)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
@@ -600,11 +565,7 @@ class SendAddressScreenTest : BaseTestCase() {
         val userTokensScenarioState = "XRP"
         val tagAlreadyIncluded = getResourceString(R.string.send_additional_field_already_included)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
@@ -649,10 +610,6 @@ class SendAddressScreenTest : BaseTestCase() {
 
         setupHooks(
             // openSendAddressScreen sets both scenarios; without a reset they stay set for the next test.
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
         ).run {
             step("Open 'Main Screen'") {
                 openMainScreen()

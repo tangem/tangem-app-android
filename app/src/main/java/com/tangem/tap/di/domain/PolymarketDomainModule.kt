@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
@@ -32,6 +33,12 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideGetPolymarketEventsUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventsUseCase {
         return GetPolymarketEventsUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketEventUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventUseCase {
+        return GetPolymarketEventUseCase(polymarketRepository = polymarketRepository)
     }
 
     @Provides
@@ -82,7 +89,9 @@ internal object PolymarketDomainModule {
     @Provides
     @Singleton
     fun provideDeployDepositWalletUseCase(polymarketRepository: PolymarketRepository): DeployDepositWalletUseCase =
-        DeployDepositWalletUseCase(polymarketRepository = polymarketRepository)
+        DeployDepositWalletUseCase(
+            polymarketRepository = polymarketRepository,
+        )
 
     @Provides
     @Singleton
