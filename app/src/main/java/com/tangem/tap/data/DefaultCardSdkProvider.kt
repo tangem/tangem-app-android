@@ -29,6 +29,7 @@ import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
+import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -48,6 +49,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val apiConfigsManager: ApiConfigsManager,
+    private val firmwareFeatureToggles: FirmwareFeatureToggles,
     appInfoProvider: AppInfoProvider,
     authProvider: AuthProvider,
 ) : CardSdkProvider, CardSdkOwner {
@@ -148,6 +150,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     }
 
     private fun initialize(activity: FragmentActivity) {
+        val config = createConfig()
         val secureStorage = SecureStorage.create(activity)
         val nfcManager = TangemSdk.initNfcManager(activity)
         val authenticationManager = TangemSdk.initAuthenticationManager(activity)
@@ -217,18 +220,24 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val authenticationManager: AuthenticationManager,
     )
 
-    private companion object {
-
-        val config = Config(
+    private fun createConfig(): Config {
+        return Config(
             linkedTerminal = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.entries.toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 8, minor = 58),
+                maxFirmwareVersion = if (firmwareFeatureToggles.isNewFirmwareSupportEnabled) {
+                    FirmwareVersion(major = 8, minor = 58)
+                } else {
+                    FirmwareVersion(major = 6, minor = 33)
+                },
                 batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
                     items = setOf("0027", "0030", "0031", "0035"),
                 ),
             ),
         )
+    }
+
+    private companion object {
 
         val errorParams = mapOf(
             "Category" to "Tangem SDK",
