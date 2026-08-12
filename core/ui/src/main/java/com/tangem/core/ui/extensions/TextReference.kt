@@ -125,7 +125,7 @@ sealed interface TextReference {
     companion object {
 
         /** Empty string as [TextReference] */
-        val EMPTY: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = "") }
+        val EMPTY: TextReference = Str(value = "")
     }
 }
 
