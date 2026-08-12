@@ -66,7 +66,9 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private fun resolveInitialConfiguration(): TangemPayAccountDetailsInnerRoute {
         val tariffPlan = params.initialStatus.tariffPlan
         return when (params.initialRoute) {
-            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> TangemPayAccountDetailsInnerRoute.AccountDetails
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+            TangemPayDetailsInitialRoute.ADD_FUNDS,
+            -> TangemPayAccountDetailsInnerRoute.AccountDetails
             TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> if (tariffPlan != null) {
                 TangemPayAccountDetailsInnerRoute.SelectPlan(
                     tariffPlan = tariffPlan,

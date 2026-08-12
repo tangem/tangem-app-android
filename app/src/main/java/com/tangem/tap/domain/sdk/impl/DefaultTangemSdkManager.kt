@@ -14,7 +14,8 @@ import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.common.usersCode.UserCodeRepository
+import com.tangem.common.services.secure.AccessCodeRepository
+import com.tangem.common.services.secure.CardAccessTokensRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -32,7 +33,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -48,12 +49,11 @@ import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.domain.tasks.product.*
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateVirtualAccountAddressTask
-import com.tangem.tap.domain.tasks.visa.TangemPaySignWithdrawalHashTask
-import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
-import com.tangem.tap.domain.tasks.visa.VisaCustomerWalletApproveTask
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
+import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
+import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
+import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.visa.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
@@ -79,6 +79,7 @@ internal class DefaultTangemSdkManager(
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
+    private val derivationsHelper: DerivationsHelper,
     // Lazy breaks a DI cycle: the launcher -> hot wallet accessor -> LegacySettingsRepository ->
     // TangemSdkManager. It's only needed when a scan actually runs.
     private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
@@ -88,11 +89,19 @@ internal class DefaultTangemSdkManager(
         get() = cardSdkConfigRepository.sdk
 
     private val userCodeRepository by lazy {
-        UserCodeRepository(
+        AccessCodeRepository(
             keystoreManager = tangemSdk.keystoreManager,
             secureStorage = tangemSdk.secureStorage,
         )
     }
+
+    private val cardAccessTokensRepository by lazy {
+        CardAccessTokensRepository(
+            keystoreManager = tangemSdk.keystoreManager,
+            secureStorage = tangemSdk.secureStorage,
+        )
+    }
+
     override val isEnrollBiometricsNeeded: Boolean
         get() {
             val isNeedEnrollBiometrics = tangemSdk.authenticationManager.needEnrollBiometrics
@@ -179,8 +188,8 @@ internal class DefaultTangemSdkManager(
         return runTaskAsync(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
-                derivationStyleProvider = scanResponse.derivationStyleProvider,
                 shouldReset = shouldReset,
+                derivationsHelper = derivationsHelper,
             ),
             cardId = scanResponse.card.cardId,
             initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
@@ -217,7 +226,7 @@ internal class DefaultTangemSdkManager(
         return runTaskAsync(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
-                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                derivationsHelper = derivationsHelper,
                 mnemonic = defaultMnemonic,
                 passphrase = passphrase,
                 shouldReset = shouldReset,
@@ -301,21 +310,13 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
-        return userCodeRepository.save(
-            cardsIds = cardsIds,
-            userCode = UserCode(
-                type = UserCodeType.AccessCode,
-                stringValue = accessCode,
-            ),
-        )
-    }
-
     override suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit> {
+        cardAccessTokensRepository.deleteTokens(cardsIds)
         return userCodeRepository.delete(cardsIds.toSet())
     }
 
     override suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
+        cardAccessTokensRepository.clear()
         return userCodeRepository.clear()
     }
 

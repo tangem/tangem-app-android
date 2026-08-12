@@ -3,6 +3,8 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -13,6 +15,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.card.BackupValidator
+import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -26,6 +29,8 @@ import com.tangem.domain.models.wallet.requireHotWallet
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.derivations.DerivationsHelper
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -80,6 +85,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val backupValidator: BackupValidator,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val derivationsHelper: DerivationsHelper,
     private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
@@ -220,8 +226,26 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
         if (isRing) hasRing = true
 
-        tangemSdkManager.changeProductType(isRing)
-        backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
+        val primaryCard = multiWalletState.value.currentScanResponse.card
+        // Derivation via defaultDerivations is needed only for V8+ cards (publicKey is null before
+        // backup, so keys can't be derived at wallet creation); for older firmware the default keys
+        // are already derived in CreateProductWalletTask
+        val shouldDeriveKeys = primaryCard.firmwareVersion >= FirmwareVersion.v8 &&
+            cardIndex == backupService.addedBackupCardsCount - 1
+        val defaultDerivations = if (shouldDeriveKeys) {
+            derivationsHelper.getDefaultDerivationsWithCurves(
+                derivationStyleProvider = primaryCard.derivationStyleProvider,
+                cardId = primaryCard.cardId,
+                isTestCard = primaryCard.isTestCard,
+                curves = backupService.primaryCreatedCurves,
+            )
+        } else {
+            emptyMap()
+        }
+        backupService.proceedBackup(
+            iconScanRes = iconScanRes,
+            defaultDerivations = defaultDerivations,
+        ) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
@@ -232,6 +256,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         reportFinalizedCard(role = role, card = CardDTO(result.data))
                     }
                     if (backupService.currentState == BackupService.State.Finished) {
+                        result.data.updateScanResponseForV8()
                         finishBackup()
                     } else {
                         modelScope.launch { onEvent.emit(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded) }
@@ -258,13 +283,36 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         }
     }
 
+    private fun Card.updateScanResponseForV8() {
+        // derivation for V8+ cards only on final backup step so we need to update scan response with derived keys here
+        if (this.firmwareVersion >= FirmwareVersion.v8) {
+            val currentScanResponse = params.multiWalletState.value.currentScanResponse
+            val updatedDerivedKeys = currentScanResponse.derivedKeys.toMutableMap()
+            this.wallets.forEach { wallet ->
+                val publicKey = wallet.publicKey ?: return@forEach
+                val derivedKeysMap = ExtendedPublicKeysMap(wallet.derivedKeys)
+                updatedDerivedKeys[ByteArrayKey(publicKey)] = derivedKeysMap
+            }
+            // update scan response with derived keys and wallets because V8+ cards only after backup have publicKey
+            params.multiWalletState.update { state ->
+                state.copy(
+                    currentScanResponse = currentScanResponse.copy(
+                        derivedKeys = updatedDerivedKeys,
+                        card = currentScanResponse.card.copy(
+                            wallets = this.wallets.map { cardWallet -> CardDTO.Wallet(cardWallet) },
+                        ),
+                    ),
+                )
+            }
+        }
+    }
+
     @Suppress("LongMethod")
     private fun finishBackup() {
         modelScope.launch {
             setLoading(true)
             val scanResponse = params.multiWalletState.value.currentScanResponse
             val userWalletCreated = createUserWallet(scanResponse)
-
             // Validate wallet before saving
             // If something went wrong - start full reset flow
             if (hasWalletBackupError || !backupValidator.isValidFull(scanResponse.card)) {

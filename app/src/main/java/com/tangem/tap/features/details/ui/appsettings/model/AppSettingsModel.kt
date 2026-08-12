@@ -298,12 +298,26 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private suspend fun setBiometricLockForAllWallets() {
+        // Enabling biometrics means access codes are stored under biometric protection
+        // (mirrors AskBiometryModel and the reverse forcing in toggleBiometricsAuthentication)
+        walletsRepository.setRequireAccessCode(value = false)
+        localState.update { it.copy(isAccessCodeRequired = false) }
+        setupPolicyForSelectedWallet()
         val userWallets = userWalletsListRepository.userWalletsSync()
         userWallets.forEach { wallet ->
             userWalletsListRepository.setLock(
                 userWalletId = wallet.walletId,
                 lockMethod = UserWalletsListRepository.LockMethod.Biometric,
                 changeUnsecured = false,
+            )
+        }
+    }
+
+    private fun setupPolicyForSelectedWallet() {
+        val selectedWallet = userWalletsListRepository.selectedUserWallet.value ?: return
+        if (selectedWallet is UserWallet.Cold) {
+            cardSdkConfigRepository.setAccessCodeRequestPolicy(
+                isBiometricsRequestPolicy = selectedWallet.scanResponse.card.isAccessCodeSet,
             )
         }
     }
