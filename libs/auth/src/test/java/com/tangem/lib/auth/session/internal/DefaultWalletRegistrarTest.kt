@@ -88,6 +88,9 @@ class DefaultWalletRegistrarTest {
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
+        // The registrar base64url-decodes the nonce before handing it to the signer; the signer
+        // fakes ignore the bytes, so any fixed value works here.
+        every { android.util.Base64.decode(any<String>(), any()) } returns ByteArray(size = 16) { 7 }
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
