@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.visa
+package com.tangem.spend.datasource.visa.storage
 
 import com.tangem.domain.visa.model.VisaAuthTokens
 
