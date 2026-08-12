@@ -13,6 +13,7 @@ import com.tangem.features.jointaccount.creation.composition.state.transformers.
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
 import com.tangem.features.jointaccount.creation.model.JointAccountCreationChildParams
 import com.tangem.features.jointaccount.creation.model.JointAccountCreationDraft
+import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
@@ -73,7 +74,7 @@ internal class JointAccountCompositionModel @Inject constructor(
             ),
         )
 
-        // TODO([REDACTED_TASK_KEY]): open the display name step once it exists
+        router.push(JointAccountCreationRoute.DisplayName)
     }
 
     private fun onBackClick() {
