@@ -18,15 +18,12 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilterUM
-import com.tangem.features.commonfeatures.impl.R as CommonFeaturesR
 
 /** Header chip that opens a checkmark dropdown to switch [BalanceFilter] in the FROM token selector. */
 @Composable
@@ -36,7 +33,7 @@ internal fun BalanceFilterDropdown(um: BalanceFilterUM, modifier: Modifier = Mod
         TangemFilterItem(
             state = TangemFilterItemUM.Inactive(
                 id = "balance_filter",
-                label = um.selected.labelReference(),
+                label = um.selected.label,
                 onClick = { isExpanded = true },
             ),
             variant = TangemFilterItem.Variant.Transparent,
@@ -59,7 +56,7 @@ internal fun BalanceFilterDropdown(um: BalanceFilterUM, modifier: Modifier = Mod
                             .padding(vertical = 10.dp, horizontal = 16.dp),
                     ) {
                         Text(
-                            text = filter.labelReference().resolveReference(),
+                            text = filter.label.resolveReference(),
                             style = TangemTheme.typography3.body.medium,
                             color = TangemTheme.colors3.text.primary,
                             maxLines = 1,
@@ -92,11 +89,6 @@ internal fun BalanceFilterDropdown(um: BalanceFilterUM, modifier: Modifier = Mod
             }
         }
     }
-}
-
-private fun BalanceFilter.labelReference(): TextReference = when (this) {
-    BalanceFilter.All -> resourceReference(CommonFeaturesR.string.common_all)
-    BalanceFilter.HideZero -> resourceReference(CommonFeaturesR.string.swap_token_selector_filter_hide_zero_balance)
 }
 
 @Preview(name = "Light", showBackground = true)
