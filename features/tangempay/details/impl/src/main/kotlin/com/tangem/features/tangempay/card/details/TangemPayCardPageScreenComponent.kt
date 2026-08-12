@@ -59,7 +59,7 @@ internal class TangemPayCardPageScreenComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val cardControllers by model.cardControllersState.collectAsStateWithLifecycle()
-        val selectedCardId by model.selectedCardIdState.collectAsStateWithLifecycle()
+        val selectedCardId by model.selectedCardId.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         NavigationBar3ButtonsScrim()

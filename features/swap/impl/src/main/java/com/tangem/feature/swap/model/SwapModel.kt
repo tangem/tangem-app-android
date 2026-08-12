@@ -2130,6 +2130,11 @@ internal class SwapModel @Inject constructor(
         return combinedReference(messages.toWrappedList())
     }
 
+    private fun dismissProviderBottomSheet() {
+        uiState = stateBuilder.dismissBottomSheet(uiState)
+        singleTaskScheduler.resumeLastTask(modelScope)
+    }
+
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun createUiActions(): UiActions {
         return UiActions(
@@ -2159,7 +2164,7 @@ internal class SwapModel @Inject constructor(
             onBackClicked = {
                 val bottomSheet = uiState.bottomSheetConfig
                 if (bottomSheet != null && bottomSheet.isShown) {
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                    dismissProviderBottomSheet()
                 } else {
                     router.pop()
                 }
@@ -2198,7 +2203,7 @@ internal class SwapModel @Inject constructor(
                     pricesLowerBest = pricesLowerBest,
                     providersStates = dataState.lastLoadedSwapStates,
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
+                ) { dismissProviderBottomSheet() }
             },
             onProviderSelect = { providerId ->
                 val provider = findAndSelectProvider(providerId)
@@ -2213,7 +2218,7 @@ internal class SwapModel @Inject constructor(
                         feeSelectorReloadTrigger.triggerUpdate()
                     }
                     analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                    dismissProviderBottomSheet()
                     modelScope.launch {
                         setupLoadedState(
                             provider = provider,

@@ -675,6 +675,140 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         }
     }
 
+    // ─── Case 12: the whole balance is sent — the fee comes out of the amount ──────────────────────
+
+    @Test
+    fun `GIVEN the whole balance is sent WHEN yield inactive THEN the fee is taken out of the amount`() = runTest {
+        // Arrange
+        val balance = BigDecimal("10")
+        val tokenStatus = tokenStatus(plainBalance = balance, decimals = 6, isInitialized = false)
+        val tokenFee = tokenFee(feeAmount = BigDecimal("0.35"), decimals = 6)
+
+        // Act
+        val result = useCase(
+            userWallet = mockUserWallet,
+            tokenStatus = tokenStatus,
+            tokenFee = tokenFee,
+            isYieldActive = false,
+            sendAmountInFeeToken = balance,
+        )
+
+        // Assert
+        assertThat(result.getOrNull()).isInstanceOf(GaslessFeePlan.TokenPay::class.java)
+    }
+
+    @Test
+    fun `GIVEN the whole balance is sent WHEN yield active THEN the fee is withdrawn from the module`() = runTest {
+        // Arrange
+        val decimals = 6
+        val balance = BigDecimal("1.377809")
+        val feeAmount = BigDecimal("0.35")
+        val tokenStatus = tokenStatus(plainBalance = balance, decimals = decimals)
+        val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
+        val mockCallData = mockk<SmartContractCallData>(relaxed = true)
+
+        coEvery {
+            gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+        } returns balance
+        coEvery {
+            gaslessYieldRepository.createPartialWithdrawCallData(mockUserWalletId, any(), any())
+        } returns mockCallData
+        coEvery {
+            gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any())
+        } returns "0xmodule"
+
+        // Act
+        val result = useCase(
+            userWallet = mockUserWallet,
+            tokenStatus = tokenStatus,
+            tokenFee = tokenFee,
+            isYieldActive = true,
+            sendAmountInFeeToken = balance,
+        )
+
+        // Assert
+        val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
+        assertThat(plan).isNotNull()
+        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(350_000))
+    }
+
+    @Test
+    fun `GIVEN the balance is below the fee WHEN the amount is sent THEN NotEnoughFunds`() = runTest {
+        // Arrange
+        val tokenStatus = tokenStatus(plainBalance = BigDecimal("0.3"), decimals = 6, isInitialized = false)
+        val tokenFee = tokenFee(feeAmount = BigDecimal("0.35"), decimals = 6)
+
+        // Act
+        val result = useCase(
+            userWallet = mockUserWallet,
+            tokenStatus = tokenStatus,
+            tokenFee = tokenFee,
+            isYieldActive = false,
+            sendAmountInFeeToken = BigDecimal("0.2"),
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NotEnoughFunds)
+    }
+
+    @Test
+    fun `GIVEN the amount is reduced WHEN the liquid part is short of the balance THEN the module must cover it`() =
+        runTest {
+            // Arrange
+            val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = 6)
+            val tokenFee = tokenFee(feeAmount = BigDecimal("1"), decimals = 6)
+
+            coEvery {
+                gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+            } returns BigDecimal("0.3")
+
+            // Act
+            val result = useCase(
+                userWallet = mockUserWallet,
+                tokenStatus = tokenStatus,
+                tokenFee = tokenFee,
+                isYieldActive = true,
+                sendAmountInFeeToken = BigDecimal("9.5"),
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NotEnoughFunds)
+        }
+
+    @Test
+    fun `GIVEN the balance holds the amount and the fee WHEN the liquid part does not THEN the fee is withdrawn`() =
+        runTest {
+            // Arrange
+            val decimals = 6
+            val tokenStatus = tokenStatus(plainBalance = BigDecimal("10"), decimals = decimals)
+            val tokenFee = tokenFee(feeAmount = BigDecimal("1"), decimals = decimals)
+            val mockCallData = mockk<SmartContractCallData>(relaxed = true)
+
+            coEvery {
+                gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+            } returns BigDecimal("2")
+            coEvery {
+                gaslessYieldRepository.createPartialWithdrawCallData(mockUserWalletId, any(), any())
+            } returns mockCallData
+            coEvery {
+                gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any())
+            } returns "0xmodule"
+
+            // Act
+            val result = useCase(
+                userWallet = mockUserWallet,
+                tokenStatus = tokenStatus,
+                tokenFee = tokenFee,
+                isYieldActive = true,
+                sendAmountInFeeToken = BigDecimal("7.5"),
+            )
+
+            // Assert
+            val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
+            assertThat(plan).isNotNull()
+            assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(1_000_000))
+        }
+
     // ─── Helpers ────────────────────────────────────────────────────────────────
 
     /**
