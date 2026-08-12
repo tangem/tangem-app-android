@@ -23,13 +23,11 @@ dependencies {
     implementation(projects.features.swapV2.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.send.api)
-    implementation(projects.features.commonFeatures.api)
 
     /** Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
-    implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
     implementation(projects.core.analytics)
     implementation(projects.core.utils)
@@ -51,7 +49,6 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
-    implementation(projects.domain.card)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.express.models)
@@ -65,13 +62,12 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.settings)
-    implementation(projects.domain.txhistory.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.notifications)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
-    implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.core.analytics.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -92,6 +88,12 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.jodatime)
+    implementation(deps.kotlin.serialization.core)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
 
     /** Test */
@@ -99,5 +101,8 @@ dependencies {
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.kotlin.coroutines)
     testImplementation(projects.common.test)
+    api(deps.kotlin.coroutines)
+    api(projects.domain.quotes)
 }
