@@ -14,6 +14,7 @@ dependencies {
 
     /** Feature */
     implementation(projects.features.polymarket.api)
+    api(projects.features.commonFeatures.api)
 
     /** Core */
     implementation(projects.core.configToggles)
@@ -24,11 +25,15 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.common)
+    implementation(projects.domain.markets)
     implementation(projects.domain.models)
     implementation(projects.domain.polymarket)
 
     /** Kotlin */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Compose */
     implementation(deps.compose.foundation)

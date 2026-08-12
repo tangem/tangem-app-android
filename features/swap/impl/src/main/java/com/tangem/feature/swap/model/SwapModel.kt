@@ -16,6 +16,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
@@ -73,7 +74,7 @@ import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.domain.stories.ShouldShowStoriesUseCase
+import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -156,7 +157,7 @@ internal class SwapModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
+    private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
@@ -278,6 +279,8 @@ internal class SwapModel @Inject constructor(
     private var preselectedFromCurrency: CryptoCurrency? = null
     private var preselectedToCurrency: CryptoCurrency? = null
 
+    private var pendingDeeplinkProviderId: String? = params.providerId
+
     val isPermissionNotNeeded: Boolean
         get() {
             val permissionState = dataState.getCurrentLoadedSwapState()?.permissionState
@@ -361,7 +364,7 @@ internal class SwapModel @Inject constructor(
 
         modelScope.launch {
             val storyId = StoryContentIds.STORY_FIRST_TIME_SWAP.id
-            if (shouldShowStoriesUseCase.invokeSync(storyId)) {
+            if (shouldShowStoriesInteractor.invokeSync(storyId)) {
                 router.push(
                     AppRoute.Stories(
                         storyId = storyId,
@@ -390,7 +393,9 @@ internal class SwapModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val fromCurrency = dataState.fromSwapCurrencyStatus?.currency ?: return false
-        val route = resolveMarketingDeeplink(deeplink).toContextualRoute(
+        val marketing = resolveMarketingDeeplink(deeplink)
+        if (marketing == MarketingDeeplink.SWAP && swapFeatureToggles.isSwapDeeplinkEnabled) return false
+        val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = fromCurrency,
             screenSource = ScreensSources.Swap,
@@ -509,6 +514,8 @@ internal class SwapModel @Inject constructor(
                 )
             }
 
+            applyDeeplinkInitialAmount(fromSwapCurrencyStatus)
+
             // Check swap availability if there is pair
             if (fromSwapCurrencyStatus != null && toSwapCurrencyStatus != null) {
                 initSwapPairs(
@@ -516,6 +523,33 @@ internal class SwapModel @Inject constructor(
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                 )
             }
+        }
+    }
+
+    /**
+     * Applies the FROM amount passed via the swap deeplink so the first quotes request uses it.
+     * No-op when no amount was provided via [SwapComponent.Params.fromAmount] or the FROM currency
+     * could not be resolved.
+     */
+    private suspend fun applyDeeplinkInitialAmount(fromSwapCurrencyStatus: SwapCurrencyStatus?) {
+        val amount = params.fromAmount ?: return
+        val from = fromSwapCurrencyStatus ?: return
+        val cryptoValue = amount.toPlainString()
+        lastAmount.value = cryptoValue
+        val minTxAmount = getMinimumTransactionAmountSyncUseCase(
+            userWalletId = from.userWalletId,
+            cryptoCurrencyStatus = from.status,
+        ).getOrNull()
+        withContext(dispatchers.main) {
+            uiState = stateBuilder.updateSwapAmount(
+                uiState = uiState,
+                amountRaw = cryptoValue,
+                fieldValue = cryptoValue,
+                isFiatValue = false,
+                fromSwapCurrencyStatus = from,
+                minTxAmount = minTxAmount,
+                isPastedAmount = true,
+            )
         }
     }
 
@@ -1092,7 +1126,10 @@ internal class SwapModel @Inject constructor(
                     )
 
                     if (providersState.isNotEmpty()) {
-                        val (provider, state) = updateLoadedQuotes(providersState)
+                        val (provider, state) = applyDeeplinkProviderOverride(
+                            selected = updateLoadedQuotes(providersState),
+                            loadedStates = providersState,
+                        )
 
                         if (feeSelectorRepository.state.value is FeeSelectorUM.Content &&
                             state is SwapState.QuotesLoadedState
@@ -1318,6 +1355,39 @@ internal class SwapModel @Inject constructor(
                 errorMessage = error.message,
             ),
         )
+    }
+
+    /**
+     * Resolves the provider requested via the swap deeplink among the loaded providers.
+     * Returns null when no provider was requested or none matches.
+     */
+    internal fun resolveDeeplinkProvider(pendingId: String?, providers: Collection<SwapProvider>): SwapProvider? {
+        return pendingId?.let { id ->
+            providers.firstOrNull { it.providerId.equals(id, ignoreCase = true) }
+        }
+    }
+
+    /**
+     * Overrides the auto-selected provider with the deeplink-requested one on the first non-empty
+     * quotes load. Applied once (then cleared); if the requested provider is absent, or present but
+     * not in a usable [SwapState.QuotesLoadedState] (e.g. it errored), keeps the auto-selected
+     * default rather than surfacing that provider's error. Subsequent refreshes keep the deeplink
+     * provider via [selectProvider].
+     */
+    internal fun applyDeeplinkProviderOverride(
+        selected: Pair<SwapProvider, SwapState>,
+        loadedStates: Map<SwapProvider, SwapState>,
+    ): Pair<SwapProvider, SwapState> {
+        val hasNonEmpty = loadedStates.values.any { it !is SwapState.EmptyAmountState }
+        if (!hasNonEmpty) return selected
+        // Only override to a provider that actually produced usable quotes; a requested-but-errored
+        // provider keeps the auto-selected default rather than surfacing its error. One-shot regardless.
+        val override = resolveDeeplinkProvider(pendingDeeplinkProviderId, loadedStates.keys)
+            ?.takeIf { loadedStates[it] is SwapState.QuotesLoadedState }
+        pendingDeeplinkProviderId = null
+        if (override == null) return selected
+        dataState = dataState.copy(selectedProvider = override)
+        return override to (loadedStates[override] ?: selected.second)
     }
 
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
