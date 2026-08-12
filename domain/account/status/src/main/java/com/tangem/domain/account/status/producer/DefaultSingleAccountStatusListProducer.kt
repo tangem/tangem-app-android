@@ -93,7 +93,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val stakingIdFactory: StakingIdFactory,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val tokensFeatureToggles: TokensFeatureToggles,
-    private val contributionProviders: Set<@JvmSuppressWildcards BalanceContributionProvider>,
+    private val balanceContributionProviders: Set<@JvmSuppressWildcards BalanceContributionProvider>,
 ) : SingleAccountStatusListProducer {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -307,11 +307,13 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
      * legacy staking join stays the only source then, and no provider flow is even collected.
      */
     private fun contributionResolversFlow(userWallet: UserWallet): Flow<List<ContributionResolver>> {
-        if (!tokensFeatureToggles.isBalanceContributionsEnabled || contributionProviders.isEmpty()) {
+        if (!tokensFeatureToggles.isBalanceContributionsEnabled || balanceContributionProviders.isEmpty()) {
             return flowOf(emptyList())
         }
 
-        return combine(contributionProviders.map { provider -> provider.contributions(userWallet) }) { resolvers ->
+        return combine(
+            balanceContributionProviders.map { provider -> provider.contributions(userWallet) },
+        ) { resolvers ->
             resolvers.toList()
         }
     }
