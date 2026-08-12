@@ -22,8 +22,8 @@ import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.staking.GetYieldUseCase
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.GetStakingTargetsByAddressUseCase
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -44,6 +44,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -64,7 +66,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val getYieldUseCase: GetYieldUseCase,
+    private val getStakingTargetsByAddressUseCase: GetStakingTargetsByAddressUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
@@ -74,17 +76,20 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val params: TxHistoryDetailsComponent.Params = paramsContainer.require()
 
     /**
-     * Validators of the viewed currency's staking yield, keyed by on-chain address. Used to resolve the validator
-     * address carried by a staking [TxInfo] to its display name and page. Empty when the currency has no staking yield
-     * (the use case reads the prefetched yields cache and fails gracefully for non-staking / custom tokens).
+     * Known staking targets (StakeKit validators and P2P vaults) keyed by on-chain address, used to resolve the target
+     * a staking [TxInfo] interacts with to its display name and page.
      *
-     * The yield is fetched only when the viewed tx is a staking op ([requiresValidatorLookup]) — a Send / Swap / onramp
-     * has no validator to resolve, so it skips the use case entirely and stays on the empty map.
+     * Read from the persisted targets rather than the live "enabled yields" cache, so a validator that is no longer
+     * active — or no longer returned by the provider at all — still resolves for an old transaction. The lookup is
+     * subscribed only while the viewed tx is a staking op ([requiresValidatorLookup]); a Send / Swap / onramp has no
+     * target to resolve and stays on the empty map.
      */
-    private val validatorsByAddress: Flow<Map<String, Yield.Validator>> = params.txHistoryInfo
+    private val targetsByAddress: Flow<Map<String, StakingTarget>> = params.txHistoryInfo
         .map { it.requiresValidatorLookup() }
         .distinctUntilChanged()
-        .map { requiresLookup -> if (requiresLookup) loadValidators() else emptyMap() }
+        .flatMapLatest { requiresLookup ->
+            if (requiresLookup) getStakingTargetsByAddressUseCase() else flowOf(emptyMap())
+        }
         .onStart { emit(emptyMap()) }
         .distinctUntilChanged()
         .flowOn(dispatchers.io)
@@ -116,9 +121,9 @@ internal class TxHistoryDetailsModel @Inject constructor(
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
         flow = params.txHistoryInfo,
         flow2 = ownerLookupProducer(),
-        flow3 = validatorsByAddress,
+        flow3 = targetsByAddress,
         flow4 = refundCurrency,
-    ) { txInfo, lookup, validators, refundToken ->
+    ) { txInfo, lookup, stakingTargets, refundToken ->
         // No explorer hash (e.g. an express op with no on-chain leg yet, or a blank on-chain hash) → the "Share" and
         // "Explore" rows are dropped; a blank id drops the "Transaction ID" row.
         val explorerHash = txInfo.explorerHash?.ifBlank { null }
@@ -134,7 +139,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onLearnMoreAboutRefundsClick = ::onLearnMoreAboutRefunds,
             onGoToRefundedTokenClick = params.onOpenTokenDetails,
             lookup = lookup,
-            validatorsByAddress = validators,
+            targetsByAddress = stakingTargets,
             onOpenValidator = urlOpener::openUrl,
         ).convert(txInfo)
     }
@@ -174,23 +179,11 @@ internal class TxHistoryDetailsModel @Inject constructor(
     }
 
     /**
-     * Resolves the viewed currency's staking validators into an address-keyed map. Returns empty when the currency has
-     * no yield (non-staking / custom token) — the use case surfaces that as a [Left] which we treat as "no validators".
-     */
-    private suspend fun loadValidators(): Map<String, Yield.Validator> = getYieldUseCase(
-        cryptoCurrencyId = params.currency.id,
-        symbol = params.currency.symbol,
-    ).fold(
-        ifLeft = { emptyMap() },
-        ifRight = { yield -> yield.validators.associateBy(Yield.Validator::address) },
-    )
-
-    /**
-     * Whether the row is an on-chain staking op — the only case whose validator address can resolve to a validator.
-     * A non-staking on-chain tx, or any express row, carries no validator, so the yield lookup is skipped.
+     * Whether the row is an on-chain tx that could name a staking target (see [mayCarryStakingTarget]). A transfer /
+     * swap / approval, or any express row, never does, so the lookup is skipped for those.
      */
     private fun TxHistoryInfo.requiresValidatorLookup(): Boolean =
-        (this as? OnChainTx.BSDK)?.txInfo?.type is TxInfo.TransactionType.Staking
+        (this as? OnChainTx.BSDK)?.txInfo?.mayCarryStakingTarget() == true
 
     /** Copies a counterparty address to the clipboard — wired into the detail card's copy button via the converter. */
     private fun onCopyAddress(address: String) {

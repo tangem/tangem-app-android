@@ -5,21 +5,28 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.FieldUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
+import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
+
+private const val TAG = "TangemPayOrderCardDataModel"
 
 @Stable
 @ModelScoped
@@ -28,10 +35,13 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val onboardingRepository: OnboardingRepository,
+    private val issuePlasticCard: IssuePlasticCardUseCase,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayOrderCardDataComponent.Params>()
     private val loadDataJobHolder = JobHolder()
+    private val submitJobHolder = JobHolder()
 
     val state: StateFlow<TangemPayOrderCardDataScreenUM>
         field = MutableStateFlow<TangemPayOrderCardDataScreenUM>(createLoadingState())
@@ -73,6 +83,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
             onFocusChange = ::onPhoneFocusChange,
         ),
         isOrderEnabled = false,
+        isSubmitting = false,
         onOrderClick = ::onOrderClick,
     )
 
@@ -126,13 +137,44 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
 
     private fun onOrderClick() {
         val form = state.value as? Form ?: return
-        if (form.isOrderEnabled) {
-            params.onOrderSubmitted(form.toPlasticCardOrder())
-        }
+        if (!form.isOrderEnabled || form.isSubmitting) return
+
+        submitOrder(
+            order = form.toPlasticCardOrder(),
+            email = form.email,
+            idempotencyKey = UUID.randomUUID().toString(),
+        )
+    }
+
+    private fun submitOrder(order: PlasticCardOrder, email: String, idempotencyKey: String) {
+        setSubmitting(isSubmitting = true)
+        modelScope.launch {
+            issuePlasticCard(
+                userWalletId = params.userWalletId,
+                plasticCardOrder = order,
+                idempotencyKey = idempotencyKey,
+            ).fold(
+                ifLeft = { error ->
+                    setSubmitting(isSubmitting = false)
+                    TangemLogger.withTag(TAG).e("Plastic card order was not accepted: $error")
+                    val onRetry = { submitOrder(order, email, idempotencyKey) }
+                        .takeIf { error.isRetryable() }
+                    uiMessageSender.send(TangemPayMessagesFactory.createOrderFailedMessage(onRetry))
+                },
+                ifRight = {
+                    setSubmitting(isSubmitting = false)
+                    params.onOrderAccepted(email)
+                },
+            )
+        }.saveIn(submitJobHolder)
     }
 
     private fun onBackClick() {
         router.pop()
+    }
+
+    private fun setSubmitting(isSubmitting: Boolean) {
+        state.update { current -> if (current is Form) current.copy(isSubmitting = isSubmitting) else current }
     }
 
     private fun updateForm(transform: (Form) -> Form) {
@@ -152,7 +194,6 @@ private fun Form.toPlasticCardOrder() = PlasticCardOrder(
     shippingAddress = ShippingAddress(
         firstName = firstName.value.trim(),
         lastName = lastName.value.trim(),
-        email = email.trim(),
         region = region.value.trim(),
         city = city.value.trim(),
         line1 = addressLine1.value.trim(),

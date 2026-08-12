@@ -22,8 +22,4 @@ internal interface OnrampDeeplinkModule {
     @Binds
     @Singleton
     fun bindSellDeepLinkHandler(impl: DefaultSellDeepLinkHandler.Factory): SellDeepLinkHandler.Factory
-
-    @Binds
-    @Singleton
-    fun bindSwapDeepLinkHandler(impl: DefaultSwapDeepLinkHandler.Factory): SwapDeepLinkHandler.Factory
 }

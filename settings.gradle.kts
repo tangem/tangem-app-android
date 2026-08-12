@@ -393,6 +393,12 @@ include(":features:marketing:impl")
 include(":features:payment:api")
 include(":features:payment:impl")
 
+/* Joint Accounts */
+include(":features:joint-account:main:api")
+include(":features:joint-account:main:impl")
+include(":features:joint-account:creation:api")
+include(":features:joint-account:creation:impl")
+
 /* Virtual Accounts */
 include(":features:virtual-accounts:onboarding:api")
 include(":features:virtual-accounts:onboarding:impl")

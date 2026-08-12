@@ -50,6 +50,32 @@ internal class PasswordStrengthEvaluatorTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EvaluateRated {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun evaluateRated(model: EvaluateRatedModel) {
+            // Act
+            val actual = PasswordStrengthEvaluator.evaluateRated(model.password)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            // 0-3 chars are not rated at all, so the meter stays hidden (FR-09)
+            EvaluateRatedModel(password = "", expected = null),
+            EvaluateRatedModel(password = "A", expected = null),
+            EvaluateRatedModel(password = "Aa1", expected = null),
+            // from the 4th char on the rating matches evaluate()
+            EvaluateRatedModel(password = "Aa1!", expected = PasswordStrength.WEAK),
+            EvaluateRatedModel(password = "abcdeF", expected = PasswordStrength.MEDIUM),
+            EvaluateRatedModel(password = "Abcde1!x", expected = PasswordStrength.STRONG),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Hint {
 
         @ParameterizedTest
@@ -87,6 +113,11 @@ internal class PasswordStrengthEvaluatorTest {
     data class EvaluateModel(
         val password: String,
         val expected: PasswordStrength,
+    )
+
+    data class EvaluateRatedModel(
+        val password: String,
+        val expected: PasswordStrength?,
     )
 
     data class HintModel(
