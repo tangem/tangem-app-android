@@ -1,5 +1,6 @@
 package com.tangem.lib.auth.session.internal
 
+import android.util.Base64
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
@@ -112,8 +113,19 @@ internal class DefaultWalletRegistrar(
             raise(WalletRegistrationError.NonceDecryptionFailed(e))
         }
 
+        // The server issues the nonce as a base64url string but signs/verifies over its raw bytes.
+        // Decode once here so every signer (MOBILE + COLD) operates on the exact bytes the backend
+        // recovers the wallet public key against; the string form is still sent in the request
+        // (`nonce` below) for the server to re-derive.
+        val nonceBytes = try {
+            Base64.decode(nonce, Base64.URL_SAFE or Base64.NO_WRAP)
+        } catch (e: Exception) {
+            TangemLogger.e("Failed to decode wallet nonce", e)
+            raise(WalletRegistrationError.NonceDecryptionFailed(e))
+        }
+
         val bundle = try {
-            signer.sign(nonceBytes = nonce.toByteArray(Charsets.UTF_8))
+            signer.sign(nonceBytes = nonceBytes)
         } catch (e: Exception) {
             TangemLogger.e("Failed to sign wallet-registration payload", e)
             raise(WalletRegistrationError.SigningFailed(e))
