@@ -182,7 +182,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
                 actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = true,
+                    isAddFundsEnabled = false,
                     isWithdrawEnabled = false,
                 ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
