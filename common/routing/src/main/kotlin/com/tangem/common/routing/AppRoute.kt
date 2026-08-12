@@ -233,6 +233,8 @@ sealed class AppRoute(val path: String) : Route {
         val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
         val toCryptoCurrency: CryptoCurrency? = null,
+        val fromAmount: SerializedBigDecimal? = null,
+        val providerId: String? = null,
     ) : AppRoute(
         path = "/swap" +
             "/${fromCryptoCurrency?.id?.value}" +
@@ -295,6 +297,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletHardwareBackup(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
+
+    @Serializable
+    data class CreateCloudBackup(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_cloud_backup/${userWalletId.stringValue}")
 
     @Serializable
     data class Markets(
@@ -471,6 +478,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
 
     @Serializable
+    data class JointAccountCreation(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}")
+
+    @Serializable
     data class EditAccount(
         val account: Account.CryptoPortfolio,
     ) : AppRoute(path = "/edit_account/${account.accountId.value}")
@@ -560,8 +572,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Polymarket(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/polymarket/${userWalletId.stringValue}")
+        val userWalletId: UserWalletId? = null,
+    ) : AppRoute(path = "/polymarket")
 
     @Serializable
     data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")

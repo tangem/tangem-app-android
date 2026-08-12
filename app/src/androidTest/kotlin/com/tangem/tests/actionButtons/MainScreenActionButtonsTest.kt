@@ -475,11 +475,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         val scenarioName = "express_api_assets"
         val scenarioState = "Unreachable"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName, scenarioState)
             }
@@ -535,11 +531,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         val scenarioName = "express_api_assets"
         val scenarioState = "Error"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName, scenarioState)
             }
@@ -590,11 +582,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         val scenarioName = "user_tokens_api"
         val scenarioState = "EmptyTokensList"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
             }
