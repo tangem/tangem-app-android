@@ -106,14 +106,13 @@ private fun AllOffersSheetContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 8.dp)
-                .animateContentSize(),
+                .padding(vertical = 8.dp),
         ) {
             AnimatedContent(
                 targetState = state is AllOffersStateUM.Content && state.currentMethod != null,
                 transitionSpec = {
                     fadeIn(tween(durationMillis = 220)) togetherWith
-                        fadeOut(tween(durationMillis = 220))
+                        fadeOut(tween(durationMillis = 90))
                 },
                 label = "Change offers and payment method state",
             ) { shouldShowOffersScreen ->
