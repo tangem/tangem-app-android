@@ -68,6 +68,7 @@ class ResetToFactorySettingsTask(
         }
 
         if (card.backupStatus == null || card.backupStatus == Card.BackupStatus.NoBackup) {
+            // card reset access tokens after reset backup, so we can skip this step if backup is not required
             resetAccessTokens(session, callback)
             return
         }

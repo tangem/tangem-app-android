@@ -8,15 +8,24 @@ import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 
 class IsWalletAlreadySavedUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     suspend operator fun invoke(mnemonic: Mnemonic, passphrase: String?): Either<SaveWalletError, Boolean> = either {
-        val userWalletId = UserWalletIdBuilder.walletPublicKey(
-            publicKey = deriveMasterPublicKey(mnemonic = mnemonic, passphrase = passphrase),
-        )
+        val masterPublicKey = Either.catch {
+            withContext(dispatchers.default) {
+                deriveMasterPublicKey(mnemonic = mnemonic, passphrase = passphrase)
+            }
+        }
+            .mapLeft { SaveWalletError.DataError(messageId = null) }
+            .bind()
+
+        val userWalletId = UserWalletIdBuilder.walletPublicKey(publicKey = masterPublicKey)
 
         userWalletsListRepository.userWalletsSync()
             .any { it.walletId == userWalletId }
