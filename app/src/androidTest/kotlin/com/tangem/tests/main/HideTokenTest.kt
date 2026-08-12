@@ -4,7 +4,6 @@ import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -70,11 +69,7 @@ class HideTokenTest : BaseTestCase() {
         val scenarioState = "USDT"
         val accountName = "Main account"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
@@ -215,11 +210,7 @@ class HideTokenTest : BaseTestCase() {
         val tokenSymbol = "ETH"
         val scenarioState = "USDT"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
