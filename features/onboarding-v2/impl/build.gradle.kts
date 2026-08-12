@@ -54,9 +54,6 @@ dependencies {
     runtimeOnly(projects.domain.onramp)
     runtimeOnly(projects.domain.transaction)
 
-    /** Data */
-    implementation(projects.data.wallets)
-
     /** Tangem libraries */
     api(tangemDeps.card.core)
     api(projects.libs.tangemSdkApi)
