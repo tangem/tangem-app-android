@@ -11,6 +11,13 @@ android {
     namespace = "com.tangem.data.cloudbackup"
 }
 
+// bcprov-jdk15to18 arrives transitively and ships the same Argon2 classes as the bcprov declared
+// below, so this module was compiling against two copies while :app drops that artifact globally.
+// Match :app so the classpath here is the one that actually ends up in the built app.
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+}
+
 dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
