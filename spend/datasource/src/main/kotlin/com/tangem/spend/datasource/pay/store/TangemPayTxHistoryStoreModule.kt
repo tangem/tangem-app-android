@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
-import com.tangem.datasource.utils.KotlinxDataStoreSerializer
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemDM
 import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemToDMConverter
 import com.tangem.spend.datasource.pay.store.entity.TangemPayTxHistoryItemToDomainConverter

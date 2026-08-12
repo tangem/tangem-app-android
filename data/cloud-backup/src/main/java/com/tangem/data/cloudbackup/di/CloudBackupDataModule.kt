@@ -13,7 +13,7 @@ import com.tangem.data.cloudbackup.datasource.GoogleDriveTokenProvider
 import com.tangem.data.cloudbackup.repository.DefaultCloudBackupRepository
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.data.cloudbackup.store.DefaultCloudBackupStore
-import com.tangem.datasource.utils.KotlinxDataStoreSerializer
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
