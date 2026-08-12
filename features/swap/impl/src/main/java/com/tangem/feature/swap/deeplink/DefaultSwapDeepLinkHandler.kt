@@ -56,7 +56,7 @@ import kotlin.time.Duration.Companion.seconds
  * Toggle ON resolves a target wallet from the AI-MCP / broadcast wallet id params (see
  * [resolveTargetWalletId]), switching the selected wallet if needed, then resolves concrete
  * FROM/TO tokens from the wallet's accounts (or leaves them null to let the model degrade — see
- * [resolveToken]), enforces the corner-case gating matrix, applies `from_amount` only for a
+ * [resolveToken]), gates inconsistent inputs to a bare Main route, applies `from_amount` only for a
  * fully-resolved explicit pair, and pre-checks `provider_id` against the resolved pair's providers
  * (see [findPairProviderIds]) before pushing the final [AppRoute.Swap].
  */
@@ -127,9 +127,9 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         val unlockedIds = wallets.filterNot { it.isLocked }.map { it.walletId }.toSet()
 
         // AI-MCP / broadcast wallet ids; drop non-existent ones (degrade, not Main)
-        val fromWalletId = queryParams[FROM_USER_WALLET_ID_KEY]?.let(::UserWalletId)?.takeIf { it in existingIds }
-        val toWalletId = queryParams[TO_USER_WALLET_ID_KEY]?.let(::UserWalletId)?.takeIf { it in existingIds }
-        val broadcastWalletId = queryParams[WALLET_ID_KEY]?.let(::UserWalletId)?.takeIf { it in existingIds }
+        val fromWalletId = existingWalletId(FROM_USER_WALLET_ID_KEY, existingIds)
+        val toWalletId = existingWalletId(TO_USER_WALLET_ID_KEY, existingIds)
+        val broadcastWalletId = existingWalletId(WALLET_ID_KEY, existingIds)
 
         val selectedWalletId = selectedResult.getOrNull()?.walletId
 
@@ -162,6 +162,16 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         return targetWalletId
     }
 
+    /**
+     * Parses a wallet id from a deeplink query param and returns it only if it belongs to the user.
+     * The value comes from untrusted external input, so a malformed (non-hex) id is treated as absent
+     * rather than crashing on [UserWalletId] construction.
+     */
+    private fun existingWalletId(key: String, existingIds: Set<UserWalletId>): UserWalletId? {
+        val raw = queryParams[key] ?: return null
+        return runCatching { UserWalletId(raw) }.getOrNull()?.takeIf { it in existingIds }
+    }
+
     /** Picks the wallet with the largest [TotalFiatBalance.Loaded] amount, for cold-start resolution. */
     private suspend fun pickLargestBalanceWalletId(walletIds: Set<UserWalletId>): UserWalletId? {
         // Wait for a settled emission (at least one wallet balance is Loaded), not the first (Loading) one,
@@ -190,24 +200,24 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
 
     /**
      * Resolves FROM/TO concrete tokens from [targetWalletId]'s accounts (or leaves them `null` to let
-     * the model degrade), enforces the corner-case gating matrix (cases 2, 4, 6, 9 push a bare Main
-     * [AppRoute.Swap]), applies `from_amount` only when both FROM and TO are explicitly requested AND
-     * both resolve to concrete tokens (assumption A2), pre-checks `provider_id` against the resolved
-     * pair's providers when a concrete pair exists (§7 of the spec; unavailable -> Main, best-effort
-     * dropped otherwise per assumption A3), and pushes the resulting [AppRoute.Swap].
+     * the model degrade), gates inconsistent inputs to a bare Main [AppRoute.Swap], applies
+     * `from_amount` only when both FROM and TO are explicitly requested AND both resolve to concrete
+     * tokens, pre-checks `provider_id` against the resolved pair's providers when a concrete pair
+     * exists (unavailable -> Main, best-effort dropped otherwise), and pushes the resulting
+     * [AppRoute.Swap].
      */
     private suspend fun resolveTokensAndNavigate(targetWalletId: UserWalletId) {
         val isFromRequested = !queryParams[FROM_TOKEN_ID_KEY].isNullOrBlank()
         val isToRequested = !queryParams[TO_TOKEN_ID_KEY].isNullOrBlank()
 
-        // case 2: FROM token without network -> Main
+        // FROM token id without a network -> Main
         if (isFromRequested && queryParams[FROM_NETWORK_ID_KEY].isNullOrBlank()) {
             navigateToSwap(targetWalletId)
             return
         }
 
-        // case 1: nothing requested -> bare Swap; cases 6 & 9: amount/provider with no token at all
-        // -> Main (inconsistent). Both resolve to the same bare Main route, and skip account loading.
+        // Nothing requested, or amount/provider with no token at all: the same bare Main route,
+        // and skip account loading.
         if (!isFromRequested && !isToRequested) {
             navigateToSwap(targetWalletId)
             return
@@ -216,18 +226,18 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         val accounts = loadAccountCurrencies(targetWalletId)
         val (from, to) = resolvePair(accounts, isFromRequested, isToRequested)
 
-        // case 4 last row: both explicitly requested but neither resolved in the portfolio -> Main
+        // Both sides requested but neither resolved in the portfolio -> Main
         if (isUnresolvedPair(isFromRequested = isFromRequested, isToRequested = isToRequested, from = from, to = to)) {
             navigateToSwap(targetWalletId)
             return
         }
 
-        // A2: from_amount is applied only when FROM and TO are both explicitly requested AND both
-        // resolved to concrete tokens; otherwise it's dropped (cases 7/8 degrade one side).
+        // from_amount is applied only when FROM and TO are both explicitly requested and both resolve
+        // to concrete tokens; otherwise it's dropped (a degraded side has no concrete pair).
         val isConcretePair = isFromRequested && isToRequested && from != null && to != null
         val amount = queryParams[FROM_AMOUNT_KEY]?.toBigDecimalOrNull()?.takeIf { isConcretePair }
 
-        // §7: provider pre-check, only when a concrete pair was resolved.
+        // Provider pre-check, only when a concrete pair was resolved.
         val requestedProviderId = queryParams[PROVIDER_ID_KEY]
         val providerId = if (isConcretePair && !requestedProviderId.isNullOrBlank()) {
             val available = findPairProviderIds(requireNotNull(from), requireNotNull(to))
@@ -239,7 +249,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
             }
             matched
         } else {
-            // No concrete pair (or no provider requested): best-effort drop (A3). Provider-only
+            // No concrete pair (or no provider requested): best-effort drop. Provider-only
             // (no tokens at all) is already gated to Main above.
             null
         }
@@ -288,7 +298,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         return from to to
     }
 
-    /** True when both sides were explicitly requested but neither resolved in the portfolio (case 4). */
+    /** True when both sides were explicitly requested but neither resolved in the portfolio. */
     private fun isUnresolvedPair(
         isFromRequested: Boolean,
         isToRequested: Boolean,
@@ -312,16 +322,18 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     private suspend fun loadAccountCurrencies(walletId: UserWalletId): List<SwapCurrencyStatus> {
         val userWallet = getUserWalletUseCase(walletId).getOrNull() ?: return emptyList()
         val accountList = singleAccountStatusListSupplier.getSyncOrNull(walletId) ?: return emptyList()
-        val portfolios = accountList.accountStatuses.filterIsInstance<AccountStatus.CryptoPortfolio>()
-        val allCurrencies = portfolios.flatMap { portfolio -> portfolio.flattenCurrencies().map { it.currency } }
+        val portfolioStatuses = accountList.accountStatuses
+            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .map { portfolio -> portfolio.account to portfolio.flattenCurrencies() }
+        val allCurrencies = portfolioStatuses.flatMap { (_, statuses) -> statuses.map { it.currency } }
         val availability = rampStateManager.availableForSwap(walletId, allCurrencies)
 
-        return portfolios.flatMap { portfolio ->
-            portfolio.flattenCurrencies().map { status ->
+        return portfolioStatuses.flatMap { (account, statuses) ->
+            statuses.map { status ->
                 SwapCurrencyStatus(
                     userWallet = userWallet,
                     status = status,
-                    account = portfolio.account,
+                    account = account,
                     isAvailableForSwap = availability[status.currency] == ScenarioUnavailabilityReason.None,
                 )
             }
