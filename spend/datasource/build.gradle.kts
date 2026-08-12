@@ -30,8 +30,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     api(projects.core.remote)
-    // TODO: temporary — still needed for BuildConfig.BUILD_TYPE and KotlinxDataStoreSerializer.
-    //  Remove this dependency on core:datasource once those two are relocated to leaf modules.
+    // TODO: temporary — the only remaining use of core:datasource is KotlinxDataStoreSerializer.
+    //  Remove this dependency once that serializer is relocated to a leaf module.
     api(projects.core.datasource)
     api(projects.core.utils)
     // Exposed in public store interface signatures (UserWalletId, TangemPayReissueCardFee,
