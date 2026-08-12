@@ -18,7 +18,6 @@ dependencies {
 
     /** Core modules */
     api(projects.core.analytics)
-    api(projects.core.configToggles)
     api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
@@ -50,6 +49,7 @@ dependencies {
 
     /** Tangem libraries */
     api(projects.libs.tangemSdkApi)
+    api(projects.core.configToggles)
     api(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.card.android) {
@@ -83,11 +83,12 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.jodatime)
     kapt(deps.hilt.kapt)
 
     /** Test */
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }

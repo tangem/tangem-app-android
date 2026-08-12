@@ -62,7 +62,6 @@ dependencies {
     /** Core modules */
     api(projects.core.analytics)
     api(projects.core.analytics.models)
-    api(projects.core.configToggles)
     api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
@@ -130,15 +129,12 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
 
     /** Feature Apis */
-    api(projects.features.addressBook.api)
     api(projects.features.biometry.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
-    api(projects.features.hotWallet.api)
     api(projects.features.promoBanners.api)
     api(projects.features.polymarket.api)
     api(projects.features.pushNotifications.api)
-    api(projects.features.pushNotificationSettings.api)
     api(projects.features.send.api)
     api(projects.features.tangempay.details.api)
     api(projects.features.tangempay.main.api)
@@ -159,6 +155,5 @@ dependencies {
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
     testImplementation(deps.kotlin.coroutines)
-    testImplementation(projects.domain.core)
     testImplementation(projects.common.test)
 }
