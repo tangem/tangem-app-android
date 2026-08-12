@@ -26,6 +26,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -47,7 +48,6 @@ import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.common.customerId
 import com.tangem.features.tangempay.common.ifLoadedOrNull
-import com.tangem.features.tangempay.common.tariffPlan
 import com.tangem.features.tangempay.common.typeName
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
@@ -139,6 +139,8 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private var shownTiersBanner: TangemPayTiersBannerType? = null
 
+    private val isInitialRouteHandled = MutableStateFlow(false)
+
     init {
         analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
         handleBalanceHiding()
@@ -149,13 +151,15 @@ internal class TangemPayDetailsModel @Inject constructor(
             .onEach { state ->
                 sendTiersAnalytics(state)
                 when (state) {
-                    is PaymentAccountStatusValue.Deactivated -> uiState.update {
-                        stateFactory.getDeactivatedState(state)
+                    is PaymentAccountStatusValue.Deactivated -> {
+                        uiState.update { stateFactory.getDeactivatedState(state) }
+                        handleInitialRoute()
                     }
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchAddToWalletBanner()
                         fetchCashbackBlock()
                         uiState.update { stateFactory.getLoadedState(state) }
+                        handleInitialRoute()
                     }
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
                         stateFactory.getInactiveState(state)
@@ -172,6 +176,18 @@ internal class TangemPayDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun handleInitialRoute() {
+        if (isInitialRouteHandled.value) return
+
+        isInitialRouteHandled.update { true }
+
+        when (params.initialRoute) {
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> Unit
+            TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> Unit
+            TangemPayDetailsInitialRoute.ADD_FUNDS -> openAddFunds()
+        }
+    }
+
     fun onStart() {
         onRefreshSwipe(refreshState = ShowRefreshState(false))
     }
@@ -184,22 +200,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickAddFunds() {
         analytics.send(TangemPayAnalyticsEvents.AddFundsClicked())
-        val balance = currentStatus.value.balanceOrNull()
-        val address = currentStatus.value.ifLoadedOrNull { it.depositAddress }
-        if (balance == null || address.isNullOrEmpty()) {
-            showBottomSheetError(TangemPayDetailsErrorType.Receive)
-        } else {
-            bottomSheetNavigation.activate(
-                TangemPayDetailsNavigation.AddFunds(
-                    walletId = userWalletId,
-                    fiatBalance = balance.availableForWithdrawal,
-                    cryptoBalance = balance.availableForWithdrawal,
-                    depositAddress = balance.cryptoBalance.depositAddress,
-                    cryptoCurrency = cryptoCurrency,
-                    virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
-                ),
-            )
-        }
+        openAddFunds()
     }
 
     override fun onClickWithdraw() {
@@ -215,6 +216,25 @@ internal class TangemPayDetailsModel @Inject constructor(
                     ),
                 )
             }
+        }
+    }
+
+    private fun openAddFunds() {
+        val balance = currentStatus.value.balanceOrNull()
+        val address = currentStatus.value.ifLoadedOrNull { it.depositAddress }
+        if (balance == null || address.isNullOrEmpty()) {
+            showBottomSheetError(TangemPayDetailsErrorType.Receive)
+        } else {
+            bottomSheetNavigation.activate(
+                TangemPayDetailsNavigation.AddFunds(
+                    walletId = userWalletId,
+                    fiatBalance = balance.availableForWithdrawal,
+                    cryptoBalance = balance.availableForWithdrawal,
+                    depositAddress = balance.cryptoBalance.depositAddress,
+                    cryptoCurrency = cryptoCurrency,
+                    virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
+                ),
+            )
         }
     }
 
