@@ -125,6 +125,7 @@ internal fun tangemPayCard(
     lastDigits: String = "1234",
     frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
     state: TangemPayCardState = TangemPayCardState.Active,
+    embossName: String? = null,
 ): TangemPayCard = TangemPayCard(
     id = id,
     productInstanceId = "product_1",
@@ -136,4 +137,5 @@ internal fun tangemPayCard(
     lastDigits = lastDigits,
     images = emptyList(),
     state = state,
+    embossName = embossName,
 )

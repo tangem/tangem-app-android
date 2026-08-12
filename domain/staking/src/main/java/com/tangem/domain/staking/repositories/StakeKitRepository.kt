@@ -43,6 +43,11 @@ interface StakeKitRepository {
 
     suspend fun getYield(yieldId: String): Yield
 
+    /**
+     * Get a flow of all persisted validators from the local database.
+     */
+    fun getPersistedValidatorsFlow(): Flow<List<Yield.Validator>>
+
     suspend fun getActions(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,

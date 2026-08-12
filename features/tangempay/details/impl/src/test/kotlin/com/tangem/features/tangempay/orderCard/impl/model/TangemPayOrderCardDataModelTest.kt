@@ -5,12 +5,17 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.message.BottomSheetMessage
+import com.tangem.core.ui.message.EventMessage
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
@@ -18,7 +23,9 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardD
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -44,14 +51,24 @@ internal class TangemPayOrderCardDataModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val onboardingRepository: OnboardingRepository = mockk()
+    private val issuePlasticCard: IssuePlasticCardUseCase = mockk()
+    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     private var submitted: PlasticCardOrder? = null
+    private val submittedKeys = mutableListOf<String>()
+    private var acceptedEmail: String? = null
     private var isClosed: Boolean = false
     private var model: TangemPayOrderCardDataModel? = null
 
     @BeforeEach
     fun setUp() {
+        submittedKeys.clear()
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns customerInfo().right()
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submitted = secondArg()
+            submittedKeys += thirdArg<String>()
+            Unit.right()
+        }
     }
 
     @AfterEach
@@ -116,6 +133,7 @@ internal class TangemPayOrderCardDataModelTest {
         // Act
         model.fillValidForm(phoneDigits = "380501234567")
         model.form.onOrderClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(model.form.isOrderEnabled).isTrue()
@@ -153,6 +171,7 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Act
         model.form.onOrderClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(submitted).isEqualTo(
@@ -161,7 +180,6 @@ internal class TangemPayOrderCardDataModelTest {
                 shippingAddress = ShippingAddress(
                     firstName = "Johnny",
                     lastName = "Silverhand",
-                    email = EMAIL,
                     region = "California",
                     city = "Night City",
                     line1 = "Crescent st. 24",
@@ -181,6 +199,7 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Act
         model.form.onOrderClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(submitted?.shippingAddress?.line2).isNull()
@@ -194,6 +213,7 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Act
         model.form.onOrderClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(submitted?.embossName).isEqualTo("JOHNNY SILVERHAND")
@@ -235,6 +255,7 @@ internal class TangemPayOrderCardDataModelTest {
         // Act
         model.form.city.onFocusChange(false)
         model.form.onOrderClick()
+        advanceUntilIdle()
 
         // Assert
         assertThat(model.form.city.error).isEqualTo(OrderFieldError.Invalid)
@@ -423,6 +444,138 @@ internal class TangemPayOrderCardDataModelTest {
         assertThat(isClosed).isTrue()
     }
 
+    @Test
+    fun `GIVEN order accepted WHEN order clicked THEN navigates to success with the customer email`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(acceptedEmail).isEqualTo(EMAIL)
+        assertThat(model.form.isSubmitting).isFalse()
+    }
+
+    @Test
+    fun `GIVEN order rejected WHEN order clicked THEN error shown and stays on the form`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns VisaApiError.CardIssueInsufficientBalance.left()
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(acceptedEmail).isNull()
+        assertThat(model.form.isSubmitting).isFalse()
+        assertThat(model.form.isOrderEnabled).isTrue()
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN submit in flight WHEN order clicked again THEN the order is created once`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            delay(SLOW_LOAD_MS)
+            Unit.right()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        runCurrent()
+        assertThat(model.form.isSubmitting).isTrue()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { issuePlasticCard(userWalletId, any(), any()) }
+        assertThat(acceptedEmail).isEqualTo(EMAIL)
+    }
+
+    @Test
+    fun `GIVEN order rejected WHEN retried THEN a second order is created and success is reached`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns VisaApiError.CardIssueInsufficientBalance.left()
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+        assertThat(acceptedEmail).isNull()
+
+        // Act
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns Unit.right()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { issuePlasticCard(userWalletId, any(), any()) }
+        assertThat(acceptedEmail).isEqualTo(EMAIL)
+    }
+
+    @Test
+    fun `GIVEN invalid form WHEN order clicked THEN no order is created`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm(city = "Москва")
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { issuePlasticCard(any(), any(), any()) }
+        assertThat(acceptedEmail).isNull()
+    }
+
+    @Test
+    fun `GIVEN order rejected WHEN retried from the sheet THEN the same key and payload are replayed`() = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
+            submitted = secondArg()
+            submittedKeys += thirdArg<String>()
+            VisaApiError.ServerUnavailable.left()
+        }
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+        val firstOrder = submitted
+
+        // Act
+        model.form.city.onValueChange("Pacifica")
+        retryLastMessage()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submittedKeys).hasSize(2)
+        assertThat(submittedKeys[1]).isEqualTo(submittedKeys[0])
+        assertThat(submitted).isEqualTo(firstOrder)
+    }
+
+    @Test
+    fun `GIVEN a non-retryable rejection WHEN order clicked THEN the sheet offers no retry`() = runTest {
+        // Arrange
+        coEvery {
+            issuePlasticCard(userWalletId, any(), any())
+        } returns VisaApiError.CardIssueInsufficientBalance.left()
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(lastMessageButtons()).hasSize(1)
+    }
+
     internal data class LoadErrorModel(
         val country: String? = COUNTRY,
         val phoneMask: String? = PHONE_MASK,
@@ -432,6 +585,20 @@ internal class TangemPayOrderCardDataModelTest {
 
     private val TangemPayOrderCardDataModel.form: Form
         get() = state.value as Form
+
+    private fun lastMessageButtons(): List<MessageBottomSheetUM.Button> {
+        val slot = slot<EventMessage>()
+        verify { uiMessageSender.send(capture(slot)) }
+        return (slot.captured as BottomSheetMessage).messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.Button>()
+    }
+
+    private fun retryLastMessage() {
+        val slot = slot<EventMessage>()
+        verify { uiMessageSender.send(capture(slot)) }
+        val sheet = (slot.captured as BottomSheetMessage).messageBottomSheetUM
+        sheet.elements.filterIsInstance<MessageBottomSheetUM.Button>().last().onClick?.invoke(sheet.closeScope)
+    }
 
     private fun TangemPayOrderCardDataModel.fillValidForm(
         embossName: String = "JOHNNY SILVERHAND",
@@ -462,13 +629,15 @@ internal class TangemPayOrderCardDataModelTest {
         paramsContainer = MutableParamsContainer(
             TangemPayOrderCardDataComponent.Params(
                 userWalletId = userWalletId,
-                onOrderSubmitted = { submitted = it },
+                onOrderAccepted = { acceptedEmail = it },
                 onClose = { isClosed = true },
             ),
         ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         onboardingRepository = onboardingRepository,
+        issuePlasticCard = issuePlasticCard,
+        uiMessageSender = uiMessageSender,
     ).also { model = it }
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {

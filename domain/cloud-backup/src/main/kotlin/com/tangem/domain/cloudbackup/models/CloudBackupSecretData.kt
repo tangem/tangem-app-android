@@ -1,13 +1,24 @@
 package com.tangem.domain.cloudbackup.models
 
-/**
- * The wallet secret carried by a cloud backup — the plaintext that is encrypted into the backup file
- * and recovered from it. Used both as the input to a backup upload and the output of a restore.
- *
- * @property mnemonic   space-joined BIP39 words
- * @property passphrase optional BIP39 passphrase (25th word); `null` when the wallet has none
- */
-data class CloudBackupSecretData(
-    val mnemonic: String,
-    val passphrase: String?,
-)
+
+class CloudBackupSecretData(
+    val mnemonic: CharArray,
+    val isPassphraseRequired: Boolean,
+) {
+
+    /** Blanks the mnemonic — call it as soon as the secret has been encrypted or imported. */
+    fun wipe() {
+        mnemonic.fill(' ')
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CloudBackupSecretData) return false
+
+        return mnemonic.contentEquals(other.mnemonic) && isPassphraseRequired == other.isPassphraseRequired
+    }
+
+    override fun hashCode(): Int = 31 * mnemonic.contentHashCode() + isPassphraseRequired.hashCode()
+
+    override fun toString(): String = "CloudBackupSecretData(mnemonic=***, isPassphraseRequired=$isPassphraseRequired)"
+}

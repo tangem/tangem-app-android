@@ -3,10 +3,13 @@ package com.tangem.features.onramp.main.model
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -66,6 +69,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
+    private val featureTogglesManager: FeatureTogglesManager,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
@@ -198,7 +202,13 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
-        val route = resolveMarketingDeeplink(deeplink).toContextualRoute(
+        val marketing = resolveMarketingDeeplink(deeplink)
+        if (marketing == MarketingDeeplink.SWAP &&
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED)
+        ) {
+            return false
+        }
+        val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
             screenSource = AnalyticsParam.ScreensSources.Buy,

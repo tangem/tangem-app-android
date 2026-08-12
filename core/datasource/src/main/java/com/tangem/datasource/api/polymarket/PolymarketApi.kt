@@ -2,6 +2,7 @@ package com.tangem.datasource.api.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
@@ -10,6 +11,7 @@ import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusRespons
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
@@ -42,6 +44,13 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketEventsResponse>
 
     /**
+     * Details of a single prediction event. Unlike the feed, which carries only the top active
+     * markets of an event, this endpoint carries all of them (including closed ones).
+     */
+    @GET("api/predictions/v1/events/{eventId}")
+    suspend fun getEvent(@Path("eventId") eventId: String): ApiResponse<PolymarketEventResponse>
+
+    /**
      * Onboarding status of the owner's deposit wallet — the endpoint the client polls to observe
      * deploy/approval progress. Serves the stored status; no on-chain calls on the read path.
      */
@@ -60,7 +69,7 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketWalletOperationResponse>
 
     /**
-     * Relay the fully-signed 6-approval batch (gasless). The DW must be deployed first. Returns as soon
+     * Relay the fully-signed 13-approval batch (gasless). The DW must be deployed first. Returns as soon
      * as the relayer accepts; the client then polls [getWalletStatus].
      */
     @POST("api/predictions/v1/wallet/approvals")

@@ -1,7 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -31,7 +31,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         isAccountsModeEnabled = false,
         walletInfoById = emptyMap(),
     ),
-    validatorsByAddress: Map<String, Yield.Validator> = emptyMap(),
+    targetsByAddress: Map<String, StakingTarget> = emptyMap(),
     onOpenValidator: (String) -> Unit = {},
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
 
@@ -41,7 +41,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         currency = currency,
         onCopyAddress = onCopyAddress,
         menu = menu,
-        validatorsByAddress = validatorsByAddress,
+        targetsByAddress = targetsByAddress,
         onOpenValidator = onOpenValidator,
         lookup = lookup,
     )

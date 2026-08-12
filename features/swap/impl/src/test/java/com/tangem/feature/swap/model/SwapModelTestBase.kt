@@ -30,7 +30,7 @@ import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
-import com.tangem.domain.stories.ShouldShowStoriesUseCase
+import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.usecase.CalculateAmountUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
@@ -83,7 +83,7 @@ internal abstract class SwapModelTestBase {
     protected val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase =
         mockk(relaxed = true)
     protected val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase = mockk(relaxed = true)
-    protected val shouldShowStoriesUseCase: ShouldShowStoriesUseCase = mockk(relaxed = true)
+    protected val shouldShowStoriesInteractor: ShouldShowStoriesInteractor = mockk(relaxed = true)
     protected val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk(relaxed = true)
     protected val swapInteractor: SwapInteractor = mockk(relaxed = true)
     protected val swapTransferInteractor: SwapTransferInteractor = mockk(relaxed = true)
@@ -127,20 +127,30 @@ internal abstract class SwapModelTestBase {
         every { getUserCountryUseCase.invokeSync() } returns UserCountry.Other("US").right()
         every { getBalanceHidingSettingsUseCase.invoke() } returns emptyFlow()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
-        coEvery { shouldShowStoriesUseCase.invokeSync(any()) } returns false
-        coEvery { initialCurrenciesResolver.invoke(any(), any(), any(), any()) } returns (null to null)
+        coEvery { shouldShowStoriesInteractor.invokeSync(any()) } returns false
+        coEvery { initialCurrenciesResolver.invoke(any(), any(), any(), any(), any()) } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
     }
 
-    protected fun createParams(): SwapComponent.Params = SwapComponent.Params(
+    protected fun createParams(
+        fromCryptoCurrency: CryptoCurrency? = null,
+        toCryptoCurrency: CryptoCurrency? = null,
+        fromCurrencyPosition: SwapComponent.Params.CurrencyPosition = SwapComponent.Params.CurrencyPosition.ANY,
+        fromAmount: java.math.BigDecimal? = null,
+        providerId: String? = null,
+    ): SwapComponent.Params = SwapComponent.Params(
         userWalletId = userWalletId,
-        fromCryptoCurrency = null,
+        fromCryptoCurrency = fromCryptoCurrency,
         screenSource = "Test",
+        fromCurrencyPosition = fromCurrencyPosition,
+        toCryptoCurrency = toCryptoCurrency,
+        fromAmount = fromAmount,
+        providerId = providerId,
     )
 
     @Suppress("LongMethod")
-    protected fun createModel(): SwapModel = SwapModel(
-        paramsContainer = MutableParamsContainer(createParams()),
+    protected fun createModel(params: SwapComponent.Params = createParams()): SwapModel = SwapModel(
+        paramsContainer = MutableParamsContainer(params),
         getUserCountryUseCase = getUserCountryUseCase,
         getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
         chooseTokenBridgeFactory = chooseTokenBridgeFactory,
@@ -157,7 +167,7 @@ internal abstract class SwapModelTestBase {
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         getMinimumTransactionAmountSyncUseCase = getMinimumTransactionAmountSyncUseCase,
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
-        shouldShowStoriesUseCase = shouldShowStoriesUseCase,
+        shouldShowStoriesInteractor = shouldShowStoriesInteractor,
         isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
         swapInteractor = swapInteractor,
         swapTransferInteractor = swapTransferInteractor,

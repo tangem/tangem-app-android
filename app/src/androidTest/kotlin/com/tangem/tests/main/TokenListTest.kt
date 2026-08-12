@@ -5,8 +5,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.addNewCardWalletWithoutSync
 import com.tangem.scenarios.getMainScreenTokensOrder
@@ -108,11 +106,7 @@ class TokenListTest : BaseTestCase() {
         val derivedTokenTitle = "Bitcoin"
         val missedDerivationTokenTitle = "Ethereum"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(bitcoinExchangeScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$bitcoinExchangeScenario' to state: '$bitcoinExchangeState'") {
                 setWireMockScenarioState(bitcoinExchangeScenario, bitcoinExchangeState)
             }
@@ -157,11 +151,7 @@ class TokenListTest : BaseTestCase() {
         val userTokensScenario = USER_TOKENS_API_SCENARIO
         val userTokensState = "EmptyTokensList"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenario' to state: '$userTokensState'") {
                 setWireMockScenarioState(userTokensScenario, userTokensState)
             }
@@ -185,11 +175,7 @@ class TokenListTest : BaseTestCase() {
         val customTokenTitle = "Myria"
         val scenarioState = "CustomDerivation"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
@@ -218,11 +204,7 @@ class TokenListTest : BaseTestCase() {
         val userTokensState = "CustomTokenAdded"
         val customTokenName = "Bitcoin"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenario' to state: '$userTokensState'") {
                 setWireMockScenarioState(userTokensScenario, userTokensState)
             }
@@ -250,11 +232,7 @@ class TokenListTest : BaseTestCase() {
     fun tokenListChangedAfterSwitchingWalletTest() {
         val userTokensState = "ReducedTokens"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }

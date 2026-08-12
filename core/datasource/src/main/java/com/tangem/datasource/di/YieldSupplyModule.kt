@@ -1,7 +1,6 @@
 package com.tangem.datasource.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
@@ -12,6 +11,7 @@ import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostStatusStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -32,9 +32,10 @@ object YieldSupplyModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): YieldMarketsStore {
         return DefaultYieldMarketsStore(
-            persistenceStore = DataStoreFactory.create(
+            persistenceStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = listTypes<YieldSupplyMarketTokenDto>(),

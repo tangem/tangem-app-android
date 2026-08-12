@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.transactions
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.PaymentAccountIcon
@@ -44,6 +46,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.components.transactions.state.asImageVector
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
@@ -91,8 +94,8 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
     ) {
         TangemRowContainer(
             contentPadding = PaddingValues(
-                horizontal = TangemTheme.dimens2.x4,
-                vertical = TangemTheme.dimens2.x3,
+                horizontal = 16.dp,
+                vertical = 12.dp,
             ),
         ) {
             StatusCircle(
@@ -100,8 +103,8 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                 status = state.status,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .size(TangemTheme.dimens2.x10)
+                    .padding(end = 12.dp)
+                    .size(40.dp)
                     .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + state.status.testTagSuffix),
             )
             TitleText(
@@ -116,7 +119,7 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                 status = state.status,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_BOTTOM)
-                    .padding(top = TangemTheme.dimens2.x0_5),
+                    .padding(top = 2.dp),
             )
             state.amount?.let { amount ->
                 AmountText(
@@ -132,7 +135,7 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                 symbol = state.currencySymbol,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.END_BOTTOM)
-                    .padding(top = TangemTheme.dimens2.x0_5)
+                    .padding(top = 2.dp)
                     .testTag(TransactionHistoryItemTestTags.CURRENCY),
             )
         }
@@ -140,9 +143,9 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
             WarningLine(
                 warning = warning,
                 modifier = Modifier.padding(
-                    start = TangemTheme.dimens2.x4,
-                    end = TangemTheme.dimens2.x4,
-                    bottom = TangemTheme.dimens2.x3,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 12.dp,
                 ),
             )
         }
@@ -151,22 +154,21 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
 
 @Composable
 private fun WarningLine(warning: TextReference, modifier: Modifier = Modifier) {
-    val attention = TangemTheme.colors2.text.status.attention
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_alert_triangle_20),
             contentDescription = null,
-            tint = attention,
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            tint = TangemTheme.colors3.icon.status.warning,
+            modifier = Modifier.size(20.dp),
         )
         Text(
             text = warning.resolveReference(),
-            color = attention,
-            style = TangemTheme.typography2.captionMedium12,
+            color = TangemTheme.colors3.text.status.warning,
+            style = TangemTheme.typography3.caption.medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -188,7 +190,7 @@ private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modi
             contentDescription = null,
             tint = status.iconTint,
             modifier = Modifier
-                .size(TangemTheme.dimens2.x5)
+                .size(20.dp)
                 .align(Alignment.Center),
         )
     }
@@ -196,16 +198,16 @@ private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modi
 
 private val Status.backgroundColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors2.markers.backgroundTintedGray
-        is Status.Unconfirmed -> TangemTheme.colors2.markers.backgroundTintedBlue
-        is Status.Failed -> TangemTheme.colors2.markers.backgroundTintedRed
+        is Status.Confirmed -> TangemTheme.colors3.bg.opaque.secondary
+        is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
+        is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
     }
 
 private val Status.iconTint: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors2.fill.neutral.primary
-        is Status.Unconfirmed -> TangemTheme.colors2.markers.iconBlue
-        is Status.Failed -> TangemTheme.colors2.markers.iconRed
+        is Status.Confirmed -> TangemTheme.colors3.icon.primary
+        is Status.Unconfirmed -> TangemTheme.colors3.icon.brand
+        is Status.Failed -> TangemTheme.colors3.icon.status.error
     }
 
 private val Status.testTagSuffix: String
@@ -224,7 +226,7 @@ private fun TitleText(title: TextReference, status: Status, modifier: Modifier =
     Text(
         text = title.resolveReference(),
         color = status.titleColor,
-        style = TangemTheme.typography2.bodyMedium16,
+        style = TangemTheme.typography3.body.medium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
@@ -233,22 +235,22 @@ private fun TitleText(title: TextReference, status: Status, modifier: Modifier =
 
 private val Status.titleColor: Color
     @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors2.text.neutral.primary
-        is Status.Unconfirmed -> TangemTheme.colors2.text.status.accent
-        is Status.Failed -> TangemTheme.colors2.text.status.warning
+        is Status.Confirmed -> TangemTheme.colors3.text.primary
+        is Status.Unconfirmed -> TangemTheme.colors3.text.brand
+        is Status.Failed -> TangemTheme.colors3.text.status.error
     }
 
 @Suppress("LongMethod")
 @Composable
 private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Modifier = Modifier) {
-    val textStyle = TangemTheme.typography2.captionMedium12
-    val tertiary = TangemTheme.colors2.text.neutral.tertiary
-    val primary = TangemTheme.colors2.text.neutral.primary
+    val textStyle = TangemTheme.typography3.caption.medium
+    val secondary = TangemTheme.colors3.text.secondary
+    val primary = TangemTheme.colors3.text.primary
     val isFailed = status is Status.Failed
     when (subtitle) {
         is ContentSubtitle.Plain -> Text(
             text = subtitle.text.resolveReference(),
-            color = tertiary,
+            color = secondary,
             style = textStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -261,8 +263,9 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
         )
         is ContentSubtitle.ExternalAddress -> InlineImageSubtitle(
             template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.briefAddress),
-            color = tertiary,
-            afterIconColor = if (isFailed) tertiary else primary,
+            color = secondary,
+            afterIconColor = if (isFailed) secondary else primary,
+            textStyle = TangemTheme.typography3.caption.medium,
             modifier = modifier,
         ) {
             IdentIcon(
@@ -277,12 +280,13 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                 subtitle.direction.templateResId(),
                 subtitle.accountName.resolveReference(),
             ),
-            color = tertiary,
-            afterIconColor = if (isFailed) tertiary else primary,
+            color = secondary,
+            afterIconColor = if (isFailed) secondary else primary,
+            textStyle = TangemTheme.typography3.caption.medium,
             modifier = modifier,
         ) {
             val backgroundColor = if (isFailed) {
-                TangemTheme.colors2.graphic.neutral.quaternary
+                TangemTheme.colors3.bg.disabled
             } else {
                 subtitle.iconBackgroundColor
             }
@@ -290,14 +294,14 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(TangemTheme.dimens2.x1))
+                    .clip(RoundedCornerShape(4.dp))
                     .background(backgroundColor),
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = subtitle.iconResId),
                     contentDescription = null,
-                    tint = TangemTheme.colors.text.constantWhite,
-                    modifier = Modifier.size(TangemTheme.dimens2.x2_5),
+                    tint = TangemTheme.colors3.icon.staticDark,
+                    modifier = Modifier.size(10.dp),
                 )
             }
         }
@@ -306,19 +310,62 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                 subtitle.direction.templateResId(),
                 subtitle.accountName.resolveReference(),
             ),
-            color = tertiary,
+            color = secondary,
             afterIconColor = primary,
+            textStyle = TangemTheme.typography3.caption.medium,
             modifier = modifier,
         ) {
             PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
         }
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
-        is ContentSubtitle.Asset -> InlineImageSubtitle(
-            template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.symbol),
-            color = tertiary,
-            afterIconColor = if (isFailed) tertiary else primary,
-            modifier = modifier,
-        ) {
+        is ContentSubtitle.Asset -> AssetSubtitle(subtitle = subtitle, status = status, modifier = modifier)
+        is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, status = status, modifier = modifier)
+    }
+}
+
+/**
+ * Express counterparty subtitle: "to:/from: {tokenIcon} {SYMBOL}" and, when the leg settled in a different own
+ * portfolio, the "in {owner}" tail. The whole phrasing (direction prefix, the "… in …" connector and word order) lives
+ * in string resources: the owner tail (`token_details_toolbar_title_token_in_account` / `…_in_wallet`) is nested into
+ * the direction template as its argument, yielding one localized string with two `%image%` markers. Both icons are
+ * inline placeholders in a single ellipsizable [Text]; account / payment put the icon before the name, wallet the name
+ * before the device icon — as the resources already encode.
+ */
+@Composable
+private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modifier: Modifier = Modifier) {
+    val secondary = TangemTheme.colors3.text.secondary
+    val primary = TangemTheme.colors3.text.primary
+    // Only the values (symbol, owner name) are highlighted; the "to:"/"in" template literals stay secondary.
+    val valueColor = if (status is Status.Failed) secondary else primary
+
+    val owner = subtitle.owner
+    val ownerName = when (owner) {
+        is ContentSubtitle.AssetOwner.Account -> owner.name.resolveReference()
+        is ContentSubtitle.AssetOwner.PaymentAccount -> owner.name.resolveReference()
+        is ContentSubtitle.AssetOwner.Wallet -> owner.name
+        null -> null
+    }
+    // The owner tail is nested into the direction template as its %1$s, so the whole "to:/from: … in …" phrasing and
+    // its word order live in string resources; the wallet template puts its icon after the name, the account one before.
+    val template = when (owner) {
+        null -> stringResourceSafe(subtitle.direction.templateResId(), subtitle.symbol)
+        is ContentSubtitle.AssetOwner.Wallet -> stringResourceSafe(
+            subtitle.direction.templateResId(),
+            stringResourceSafe(R.string.token_details_toolbar_title_token_in_wallet, subtitle.symbol, owner.name),
+        )
+        else -> stringResourceSafe(
+            subtitle.direction.templateResId(),
+            stringResourceSafe(
+                R.string.token_details_toolbar_title_token_in_account,
+                subtitle.symbol,
+                ownerName.orEmpty(),
+            ),
+        )
+    }
+
+    // Icons in the order their %image% markers appear in the composed template: token first, then the owner (if any).
+    val icons = buildList<@Composable () -> Unit> {
+        add {
             subtitle.icon?.let { iconState ->
                 CurrencyIcon(
                     state = iconState,
@@ -328,6 +375,74 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                 )
             }
         }
+        if (owner != null) add { AssetOwnerIcon(owner = owner, isFailed = status is Status.Failed) }
+    }
+
+    InlineImagesText(
+        template = template,
+        icons = icons,
+        color = secondary,
+        highlights = listOfNotNull(subtitle.symbol, ownerName),
+        highlightColor = valueColor,
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status, modifier: Modifier = Modifier) {
+    InlineImageSubtitle(
+        template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.name.resolveReference()),
+        color = TangemTheme.colors3.text.secondary,
+        afterIconColor = if (status is Status.Failed) {
+            TangemTheme.colors3.text.secondary
+        } else {
+            TangemTheme.colors3.text.primary
+        },
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    ) {
+        // Full-color provider avatar (its own colors) — clipped to a circle, no tint, unlike OwnAccount.
+        Image(
+            painter = painterResource(subtitle.iconResId),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape),
+        )
+    }
+}
+
+@Composable
+private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean) {
+    when (owner) {
+        is ContentSubtitle.AssetOwner.Account -> {
+            val backgroundColor = if (isFailed) {
+                TangemTheme.colors3.bg.disabled
+            } else {
+                owner.iconBackgroundColor
+            }
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(backgroundColor),
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = owner.iconResId),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.staticDark,
+                    modifier = Modifier.size(10.dp),
+                )
+            }
+        }
+        is ContentSubtitle.AssetOwner.PaymentAccount -> PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
+        is ContentSubtitle.AssetOwner.Wallet -> TangemDeviceIcon(
+            state = owner.deviceIconUM,
+            modifier = Modifier.fillMaxSize(),
+        )
+        null -> Unit
     }
 }
 
@@ -335,9 +450,9 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
 private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Status, modifier: Modifier = Modifier) {
     val full = subtitle.text.resolveReference()
     val highlightColor = if (status is Status.Failed) {
-        TangemTheme.colors2.text.neutral.tertiary
+        TangemTheme.colors3.text.secondary
     } else {
-        TangemTheme.colors2.text.neutral.primary
+        TangemTheme.colors3.text.primary
     }
     val text = remember(full, subtitle.highlight, highlightColor) {
         buildAnnotatedString {
@@ -350,8 +465,8 @@ private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Sta
     }
     Text(
         text = text,
-        color = TangemTheme.colors2.text.neutral.tertiary,
-        style = TangemTheme.typography2.captionMedium12,
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.caption.medium,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
@@ -366,7 +481,7 @@ private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Sta
  */
 @Composable
 private fun OwnWalletSubtitle(subtitle: ContentSubtitle.OwnWallet, modifier: Modifier = Modifier) {
-    val primary = TangemTheme.colors2.text.neutral.primary
+    val primary = TangemTheme.colors3.text.primary
     val full = stringResourceSafe(subtitle.direction.plainTemplateResId(), subtitle.walletName)
     val text = remember(full, subtitle.walletName, primary) {
         buildAnnotatedString {
@@ -380,19 +495,19 @@ private fun OwnWalletSubtitle(subtitle: ContentSubtitle.OwnWallet, modifier: Mod
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = text,
-            color = TangemTheme.colors2.text.neutral.tertiary,
-            style = TangemTheme.typography2.captionMedium12,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(weight = 1f, fill = false),
         )
         TangemDeviceIcon(
             state = subtitle.deviceIconUM,
-            modifier = Modifier.size(TangemTheme.dimens2.x4),
+            modifier = Modifier.size(16.dp),
         )
     }
 }
@@ -417,12 +532,12 @@ private fun AmountText(amount: String, status: Status, isBalanceHidden: Boolean,
     Text(
         text = display.orMaskWithStars(isBalanceHidden),
         color = if (status is Status.Confirmed) {
-            TangemTheme.colors2.text.neutral.primary
+            TangemTheme.colors3.text.primary
         } else {
-            TangemTheme.colors2.text.neutral.tertiary
+            TangemTheme.colors3.text.secondary
         },
         textDecoration = if (status is Status.Failed) TextDecoration.LineThrough else null,
-        style = TangemTheme.typography2.bodyMedium16,
+        style = TangemTheme.typography3.body.medium,
         maxLines = 1,
         modifier = modifier,
     )
@@ -432,8 +547,8 @@ private fun AmountText(amount: String, status: Status, isBalanceHidden: Boolean,
 private fun CurrencyText(symbol: String, modifier: Modifier = Modifier) {
     Text(
         text = symbol,
-        color = TangemTheme.colors2.text.neutral.tertiary,
-        style = TangemTheme.typography2.captionMedium12,
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.caption.medium,
         maxLines = 1,
         modifier = modifier,
     )
@@ -476,9 +591,9 @@ private fun previewContent(
 private fun PreviewColumn(items: List<TransactionItemUM>) {
     Column(
         modifier = Modifier
-            .background(TangemTheme.colors2.surface.level1)
-            .padding(TangemTheme.dimens2.x2),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+            .background(TangemTheme.colors3.bg.primary)
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items.forEach { TransactionItem(state = it, isBalanceHidden = false) }
     }
@@ -556,6 +671,52 @@ private fun Preview_TransactionItem_Send() {
                     title = "Sending failed",
                     subtitle = "to: 33BdfS...ga2B",
                     amount = "350.31",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_YieldWithdraw() {
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                TransactionItemUM.Content(
+                    txHash = "wd-u",
+                    amount = "+350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Unconfirmed,
+                    direction = Direction.INCOMING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_down_20),
+                    title = stringReference("Withdrawing"),
+                    subtitle = ContentSubtitle.Provider(
+                        direction = ContentSubtitle.Direction.FROM,
+                        name = stringReference("Aave"),
+                        iconResId = R.drawable.img_aave_22,
+                    ),
+                    timestamp = 0L,
+                ),
+                TransactionItemUM.Content(
+                    txHash = "wd-c",
+                    amount = "+350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Confirmed,
+                    direction = Direction.INCOMING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_down_20),
+                    title = stringReference("Withdrawn"),
+                    subtitle = ContentSubtitle.Provider(
+                        direction = ContentSubtitle.Direction.FROM,
+                        name = stringReference("Aave"),
+                        iconResId = R.drawable.img_aave_22,
+                    ),
+                    timestamp = 0L,
                 ),
             ),
         )
@@ -662,6 +823,69 @@ private fun Preview_TransactionItem_Express() {
                         direction = ContentSubtitle.Direction.FROM,
                         symbol = "SEK",
                         icon = null,
+                    ),
+                    timestamp = 0L,
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_Express_Owner() {
+    val tokenIcon = CurrencyIconState.CoinIcon(
+        url = null,
+        fallbackResId = R.drawable.ic_custom_token_44,
+        isGrayscale = false,
+        shouldShowCustomBadge = false,
+    )
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                // Cross-account swap: "to: {token} POL in {accountIcon} Family".
+                TransactionItemUM.Content(
+                    txHash = "exp-swap-account",
+                    amount = "-390.00",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Confirmed,
+                    direction = Direction.OUTGOING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
+                    title = stringReference("Swapped"),
+                    subtitle = ContentSubtitle.Asset(
+                        direction = ContentSubtitle.Direction.TO,
+                        symbol = "POL",
+                        icon = tokenIcon,
+                        owner = ContentSubtitle.AssetOwner.Account(
+                            name = stringReference("Family"),
+                            iconResId = R.drawable.ic_wallet_24,
+                            iconBackgroundColor = Color(0xFF0099FF),
+                        ),
+                    ),
+                    timestamp = 0L,
+                ),
+                // Cross-wallet swap: "from: {token} ETH in My Wallet {deviceIcon}".
+                TransactionItemUM.Content(
+                    txHash = "exp-swap-wallet",
+                    amount = "+0.006339",
+                    currencySymbol = "BTC",
+                    time = "",
+                    status = Status.Confirmed,
+                    direction = Direction.INCOMING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
+                    title = stringReference("Swapped"),
+                    subtitle = ContentSubtitle.Asset(
+                        direction = ContentSubtitle.Direction.FROM,
+                        symbol = "ETH",
+                        icon = tokenIcon,
+                        owner = ContentSubtitle.AssetOwner.Wallet(
+                            name = "My Wallet",
+                            deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
+                        ),
                     ),
                     timestamp = 0L,
                 ),

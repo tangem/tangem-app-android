@@ -11,6 +11,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.data.polymarket.secp256k1SeedKey
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.wallet.UserWallet
@@ -49,13 +50,33 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
         }
         .getOrElse { it.toDerivationError().left() }
 
+    override suspend fun storedOwnerEoa(userWalletId: UserWalletId): String? = Either
+        .catchOn(dispatchers.io) {
+            val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId) ?: return@catchOn null
+
+            val seedKey = userWallet.secp256k1SeedKey() ?: return@catchOn null
+
+            storedExtendedPublicKey(userWalletId, ByteArrayKey(seedKey))
+                ?.let(addressFactory::createAddress)
+        }
+        .getOrNull()
+
     private suspend fun extendedPublicKey(userWalletId: UserWalletId, seedKey: ByteArrayKey): ExtendedPublicKey? {
         val path = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH)
 
-        return derivationsRepository.getExistingDerivedKeys(userWalletId, seedKey)[path]
+        return storedExtendedPublicKey(userWalletId, seedKey)
             ?: derivationsRepository
                 .derivePublicKeys(userWalletId, mapOf(seedKey to listOf(path)))[seedKey]
                 ?.get(path)
+    }
+
+    private suspend fun storedExtendedPublicKey(
+        userWalletId: UserWalletId,
+        seedKey: ByteArrayKey,
+    ): ExtendedPublicKey? {
+        val path = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH)
+
+        return derivationsRepository.getExistingDerivedKeys(userWalletId, seedKey)[path]
     }
 
     private fun Throwable.toDerivationError(): PolymarketDerivationError = when (this) {

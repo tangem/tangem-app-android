@@ -4,15 +4,12 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.BITCOIN_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.POLKADOT_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.TERRA_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeVertical
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.*
@@ -35,12 +32,7 @@ class SendFeeScreenTest : BaseTestCase() {
         val tokenAmount = "1"
         val feeAmount = "<$0.01"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName, scenarioName)
             }
@@ -74,12 +66,7 @@ class SendFeeScreenTest : BaseTestCase() {
         val tokenAmount = "1"
         val feeAmount = "$0.05"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName = fullTokenName, mockState = tokenName)
             }
@@ -145,12 +132,7 @@ class SendFeeScreenTest : BaseTestCase() {
         val nonceTooltip = getResourceString(R.string.send_nonce_footer)
         val nonceValue = "1"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName)
             }
@@ -299,12 +281,7 @@ class SendFeeScreenTest : BaseTestCase() {
         val feeScenarioName = "bitcoin_estimate_smart_fee"
         val feeScenarioState = "Started"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(bitcoinUtxoScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$bitcoinUtxoScenarioName' to state: '$bitcoinUtxoScenarioState'") {
                 setWireMockScenarioState(bitcoinUtxoScenarioName, bitcoinUtxoScenarioState)
             }
@@ -400,12 +377,7 @@ class SendFeeScreenTest : BaseTestCase() {
         val fastSelectorItem = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSelectorItem = getResourceString(R.string.common_fee_selector_option_slow)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName = tokenName, mockState = mockState)
             }

@@ -24,7 +24,7 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
         userWalletIds.forEach { userWalletId ->
             runSuspendCatching { credentialsStore.clear(userWalletId) }
-                .onFailure { TangemLogger.e("Failed to clear the Polymarket credentials of $userWalletId", it) }
+                .onFailure { TangemLogger.e("Failed to clear the credentials of $userWalletId", it) }
         }
     }
 }

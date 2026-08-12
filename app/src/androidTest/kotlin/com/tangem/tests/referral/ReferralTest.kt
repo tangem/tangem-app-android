@@ -6,7 +6,6 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.tapBackButton
 import com.tangem.common.utils.AddressComparisonHelper
 import com.tangem.common.utils.getClipboardText
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
@@ -34,11 +33,7 @@ class ReferralTest : BaseTestCase() {
         val tokenNetwork = "Tron"
         val token = "Tether"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Main' screen") {
                 openMainScreen()
             }
@@ -80,11 +75,7 @@ class ReferralTest : BaseTestCase() {
         val tokenNetwork = "Tron"
         val token = "Tether"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set wiremock scenario: $userWalletScenarioName to state $userWalletState") {
                 setWireMockScenarioState(scenarioName = userWalletScenarioName, state = userWalletState)
             }
@@ -144,11 +135,7 @@ class ReferralTest : BaseTestCase() {
         val tokenNetwork = "Tron"
         val expectedDerivationPath = "m/44'/195'/0'/0/0"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Main' screen") {
                 openMainScreen()
             }

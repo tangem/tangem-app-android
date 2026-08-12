@@ -54,7 +54,7 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
         walletsFlow.value.keys.createForNewWallets()
         walletsFlow.value.values.firstOrNull()?.let { wallet ->
             loadExpressProviders(wallet)
-            loadOnrampCountries(wallet)
+            loadOnrampCurrencies(wallet)
         }
 
         selectedWalletUseCase.selectedFlow()
@@ -86,8 +86,8 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
             .launchIn(this)
     }
 
-    private fun ProducerScope<*>.loadOnrampCountries(wallet: UserWallet) {
-        flow { emit(onrampRepository.fetchCountries(userWallet = wallet)) }
+    private fun ProducerScope<*>.loadOnrampCurrencies(wallet: UserWallet) {
+        flow { emit(onrampRepository.fetchCurrencies(userWallet = wallet)) }
             .retryThreeTimes()
             .launchIn(this)
     }
