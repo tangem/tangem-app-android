@@ -295,9 +295,9 @@ private class CreateWalletTangemWallet(
                         callback(
                             CompletionResult.Failure(
                                 TangemSdkError.ExceptionError(
-                                    IllegalStateException("Master secret was not created")
-                                )
-                            )
+                                    IllegalStateException("Master secret was not created"),
+                                ),
+                            ),
                         )
                         return@run
                     }
