@@ -1,11 +1,6 @@
 plugins {
-    alias(deps.plugins.android.library)
-    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.jvm)
     id("configuration")
-}
-
-android {
-    namespace = "com.tangem.domain.qrscanning"
 }
 
 dependencies {
@@ -28,4 +23,5 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.qrScanning.models)
     // endregion
+    implementation(projects.domain.core)
 }

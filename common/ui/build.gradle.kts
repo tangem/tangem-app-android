@@ -62,6 +62,7 @@ dependencies {
     api(projects.domain.staking)
     api(projects.domain.tokens.models)
     api(projects.domain.transaction.models)
+    api(projects.core.decompose)
     implementation(projects.domain.card)
     implementation(projects.domain.staking.models)
     // endregion
