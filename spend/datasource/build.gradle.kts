@@ -30,8 +30,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     api(projects.core.remote)
-    // TODO: temporary — needed only for EnvironmentConfig. Remove this dependency on core:datasource
-    //  once per-stream environment config is extracted (e.g. a TangemPayEnvironmentConfig slice).
+    // TODO: temporary — still needed for BuildConfig.BUILD_TYPE and KotlinxDataStoreSerializer.
+    //  Remove this dependency on core:datasource once those two are relocated to leaf modules.
     api(projects.core.datasource)
     api(projects.core.utils)
     // Exposed in public store interface signatures (UserWalletId, TangemPayReissueCardFee,

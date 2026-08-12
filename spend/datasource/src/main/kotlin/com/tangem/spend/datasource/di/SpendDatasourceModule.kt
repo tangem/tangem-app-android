@@ -5,8 +5,8 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.spend.datasource.config.TangemPay
+import com.tangem.spend.datasource.config.TangemPayEnvironmentConfig
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.TangemPayAuthApi
 import com.tangem.spend.datasource.visa.VisaApi
@@ -28,14 +28,14 @@ internal object SpendDatasourceModule {
     @Provides
     @IntoMap
     @StringKey(TangemPay.Bff.KEY)
-    fun provideTangemPayBffConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
+    fun provideTangemPayBffConfig(environmentConfig: TangemPayEnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
         return TangemPay.Bff(environmentConfig, appInfoProvider)
     }
 
     @Provides
     @IntoMap
     @StringKey(TangemPay.Auth.KEY)
-    fun provideTangemPayAuthConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
+    fun provideTangemPayAuthConfig(environmentConfig: TangemPayEnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
         return TangemPay.Auth(environmentConfig, appInfoProvider)
     }
 
