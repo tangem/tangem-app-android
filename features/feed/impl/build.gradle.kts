@@ -22,7 +22,6 @@ dependencies {
     api(projects.features.feed.api)
     api(projects.features.forYou.api)
     api(projects.features.promoBanners.api)
-    api(projects.features.tokenRecieve.api)
     api(projects.features.marketing.api)
 
     /* Data */
@@ -41,7 +40,6 @@ dependencies {
     api(projects.domain.search)
     api(projects.domain.settings)
     api(projects.domain.tokens)
-    api(projects.domain.transaction)
     api(projects.domain.wallets)
     api(projects.domain.yieldSupply)
     implementation(projects.domain.account)
@@ -91,7 +89,6 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.datasource)
     implementation(projects.core.pagination)
 
     /* Common */

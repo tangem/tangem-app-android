@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
+    implementation(projects.domain.appCurrency.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -48,6 +49,11 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.lifecycle.compose)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.haze)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
+    implementation(tangemDeps.card.core)
 
     /** Tests */
     testImplementation(projects.test.core)

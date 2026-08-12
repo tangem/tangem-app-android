@@ -19,5 +19,9 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
+    implementation(projects.core.utils)
     kapt(deps.hilt.kapt)
 }
