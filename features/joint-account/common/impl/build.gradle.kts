@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.features.jointaccount.creation.impl"
+    namespace = "com.tangem.features.jointaccount.common.impl"
 }
 
 dependencies {
@@ -17,23 +17,14 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Api */
-    api(projects.features.jointAccount.creation.api)
-    implementation(projects.features.jointAccount.common.api)
+    api(projects.features.jointAccount.common.api)
 
     /** Common */
     implementation(projects.common.ui)
 
-    /** Features */
-    implementation(projects.features.wallet.api)
-
     /** Domain */
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.common)
-    implementation(projects.domain.core)
     implementation(projects.domain.models)
-    implementation(projects.domain.appCurrency.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -47,14 +38,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.lifecycle.compose)
-    implementation(deps.androidx.appCompat)
-    implementation(deps.haze)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.serialization.core)
-    implementation(tangemDeps.card.core)
 
     /** Tests */
     testImplementation(projects.test.core)
