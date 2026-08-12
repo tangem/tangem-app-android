@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.account
 
 import arrow.core.right
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -25,6 +26,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -113,6 +115,34 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideInitialAddFundsCases")
+    fun `GIVEN initial route WHEN status loaded twice THEN add funds opened only for ADD_FUNDS and only once`(
+        case: InitialAddFundsCase,
+    ) = runTest {
+        // GIVEN
+        // The status flow keeps emitting while the screen is alive, so two emissions pin that the sheet
+        // requested by the top-up push is opened once and not reopened on every refresh.
+        val model = createModel(testScope = this, initialRoute = case.initialRoute, statusEmissions = 2)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+        // WHEN
+        advanceUntilIdle()
+
+        // THEN
+        assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>())
+            .hasSize(case.expectedAddFundsSheets)
+        // The push path opens the sheet directly, so the "user tapped Add funds" event must not be sent
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.AddFundsClicked>()) }
+        model.onDestroy()
+    }
+
+    private fun SlotNavigation<TangemPayDetailsNavigation>.trackSlot(): List<TangemPayDetailsNavigation?> {
+        val tracked = mutableListOf<TangemPayDetailsNavigation?>()
+        subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
+        return tracked
+    }
+
     private fun createModel(
         testScope: TestScope,
         statusSource: StatusSource = StatusSource.ACTUAL,
@@ -121,11 +151,14 @@ internal class TangemPayDetailsModelTest {
         accountError: PaymentAccountStatusValue.Error? = null,
         statusValue: PaymentAccountStatusValue? = null,
         virtualAccount: VirtualAccountOnramp? = null,
+        initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+        statusEmissions: Int = 1,
     ): TangemPayDetailsModel {
         val loaded: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns statusSource
             every { error } returns accountError
             every { customerId } returns "customer-id"
+            every { depositAddress } returns "address"
             every { this@mockk.virtualAccount } returns virtualAccount
             every { cards } returns listOf(tangemPayCard())
             every { balance } returns PaymentAccountStatusValue.Balance(
@@ -151,10 +184,11 @@ internal class TangemPayDetailsModelTest {
         }
         val params = TangemPayDetailsContainerComponent.Params(
             initialStatus = paymentStatus,
-            initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+            initialRoute = initialRoute,
         )
 
-        every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns flowOf(paymentStatus)
+        every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns
+            List(statusEmissions) { paymentStatus }.asFlow()
         every { cardDetailsRepository.cardFrozenState(any()) } returns flowOf(frozenState)
         coEvery { cardDetailsRepository.isAddToWalletDone(any()) } returns false.right()
 
@@ -209,6 +243,14 @@ internal class TangemPayDetailsModelTest {
         val accountError: PaymentAccountStatusValue.Error? = null,
     )
 
+    internal data class InitialAddFundsCase(
+        val name: String,
+        val initialRoute: TangemPayDetailsInitialRoute,
+        val expectedAddFundsSheets: Int,
+    ) {
+        override fun toString(): String = name
+    }
+
     internal data class TransactionClickCase(
         val name: String,
         val status: PaymentAccountStatusValue?,
@@ -260,6 +302,25 @@ internal class TangemPayDetailsModelTest {
                 statusSource = StatusSource.ACTUAL,
                 accountError = PaymentAccountStatusValue.Error.Unavailable,
                 expectedMuted = true,
+            ),
+        )
+
+        @JvmStatic
+        fun provideInitialAddFundsCases() = listOf(
+            InitialAddFundsCase(
+                name = "top-up push route -> sheet opened once",
+                initialRoute = TangemPayDetailsInitialRoute.ADD_FUNDS,
+                expectedAddFundsSheets = 1,
+            ),
+            InitialAddFundsCase(
+                name = "default route -> sheet not opened",
+                initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+                expectedAddFundsSheets = 0,
+            ),
+            InitialAddFundsCase(
+                name = "tiers route -> sheet not opened",
+                initialRoute = TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
+                expectedAddFundsSheets = 0,
             ),
         )
 
