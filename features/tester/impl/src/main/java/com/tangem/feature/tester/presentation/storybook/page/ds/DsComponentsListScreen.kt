@@ -29,6 +29,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowSto
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.tangemSearchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shtorka.tangemShtorkaStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.tangemTabNavigationStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.tangemTokenIconStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.tangemTokenRowMarketStoryFactory
@@ -56,6 +57,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
     DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
     DsStoryItem(title = "🎛️ TangemFilterGroup", factory = tangemFilterGroupStoryFactory),
+    DsStoryItem(title = "📑 TangemTabNavigation", factory = tangemTabNavigationStoryFactory),
     DsStoryItem(title = "🔤 Text styles", factory = textStyleStoryFactory),
 )
 
