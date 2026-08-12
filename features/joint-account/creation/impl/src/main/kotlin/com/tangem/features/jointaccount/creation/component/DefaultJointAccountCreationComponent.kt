@@ -13,9 +13,13 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.jointaccount.creation.composition.JointAccountCompositionComponent
 import com.tangem.features.jointaccount.creation.config.JointAccountConfigComponent
+import com.tangem.features.jointaccount.creation.model.JointAccountCreationChildParams
+import com.tangem.features.jointaccount.creation.model.JointAccountCreationModel
 import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
 import com.tangem.features.jointaccount.creation.promo.JointAccountPromoComponent
 import dagger.assisted.Assisted
@@ -26,6 +30,14 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: JointAccountCreationComponent.Params,
 ) : JointAccountCreationComponent, AppComponentContext by appComponentContext {
+
+    /** Retained across configuration changes; owns the draft the steps accumulate */
+    private val model: JointAccountCreationModel = getOrCreateModel()
+
+    private val childParams = JointAccountCreationChildParams(
+        userWalletId = params.userWalletId,
+        draftHolder = model.draftHolder,
+    )
 
     private val stackNavigation = StackNavigation<JointAccountCreationRoute>()
 
@@ -71,7 +83,12 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
         )
         is JointAccountCreationRoute.Config -> JointAccountConfigComponent(
             appComponentContext = childContext,
-            params = params,
+            params = childParams,
+            onCloseClick = { router.pop() },
+        )
+        is JointAccountCreationRoute.Composition -> JointAccountCompositionComponent(
+            appComponentContext = childContext,
+            params = childParams,
             onCloseClick = { router.pop() },
         )
     }
