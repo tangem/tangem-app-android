@@ -4,7 +4,7 @@ import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
 
-import com.tangem.datasource.BuildConfig
+import com.tangem.spend.datasource.BuildConfig
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.info.AppInfoProvider
