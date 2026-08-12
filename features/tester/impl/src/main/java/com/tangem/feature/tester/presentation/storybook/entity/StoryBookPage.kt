@@ -17,6 +17,7 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -593,5 +594,46 @@ internal data class TangemBadgeV2Story(
         BgSecondary("bg.secondary"),
         BgBrand("bg.brand"),
         BgInverse("bg.inverse"),
+    }
+}
+
+internal data class TangemTabNavigationStory(
+    val variant: TangemTabItem.Variant,
+    val background: Background,
+    val theme: Theme,
+    val selectedTabId: String,
+    val hasCounter: Boolean,
+    val hasIcon: Boolean,
+    val isLoading: Boolean,
+    val isBlurEnabled: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemTabItem.Variant) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onThemeChange: (Theme) -> Unit,
+    val onTabClick: (String) -> Unit,
+    val onCounterToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the tab preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("primary"),
+        BgSecondary("secondary"),
+        BgBrand("brand"),
+        BgInverse("inverse"),
+    }
+
+    /**
+     * Theme the preview is rendered in, independently of the app's. Forcing it flips the backdrop and
+     * the tab labels together, which is what keeps the labels readable on a light backdrop.
+     */
+    enum class Theme(val label: String) {
+        System("system"),
+        Light("light"),
+        Dark("dark"),
     }
 }
