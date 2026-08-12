@@ -2,7 +2,6 @@ package com.tangem.data.search.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
@@ -11,6 +10,7 @@ import com.tangem.data.search.repository.DefaultSearchRepository
 import com.tangem.data.search.store.DefaultSearchHistoryStore
 import com.tangem.data.search.store.SearchHistoryStore
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -39,8 +39,9 @@ internal object SearchDataModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): DataStore<SearchHistoryDTO> {
-        return DataStoreFactory.create(
+        return dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 defaultValue = SearchHistoryDTO(),
                 adapter = moshi.adapter<SearchHistoryDTO>(),

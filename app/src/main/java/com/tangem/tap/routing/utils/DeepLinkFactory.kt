@@ -18,11 +18,11 @@ import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
-import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
 import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
+import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.virtualaccount.onboarding.deeplink.OnboardVirtualAccountsDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
@@ -243,7 +243,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.TokenExchanges.host -> marketsTokenExchangesDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Buy.host -> buyDeepLink.create()
             DeepLinkRoute.Sell.host -> sellDeepLink.create()
-            DeepLinkRoute.Swap.host -> swapDeepLink.create()
+            DeepLinkRoute.Swap.host -> swapDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
