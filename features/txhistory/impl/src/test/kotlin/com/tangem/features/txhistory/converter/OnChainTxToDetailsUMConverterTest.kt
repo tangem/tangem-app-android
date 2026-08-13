@@ -702,6 +702,24 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN incoming Operation with fee WHEN convert THEN network-fee row shown`() {
+        // A contract call is reported incoming whenever it pays out to the user (an EVM token leg's direction is the
+        // transfer's, not the signer's), yet the user signed and paid it — the fee stays. Only plain transfers hide it.
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows.map { it.label }).containsExactly(resourceReference(R.string.common_network_fee_title))
+    }
+
+    @Test
     fun `GIVEN tx without fee WHEN convert THEN no rows`() {
         // Arrange
         val tx = txInfo(type = TransactionType.Transfer, fee = null)
@@ -1043,9 +1061,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN incoming non-withdraw yield Send to own account WHEN convert THEN fee row kept`() {
-        // Arrange — a transfer between the user's own accounts: the user did pay the fee, so it stays (unlike a
-        // receive from an external counterparty, whose fee belongs to the sender and is omitted).
+    fun `GIVEN incoming non-withdraw yield Send to own account WHEN convert THEN no fee row`() {
+        // Arrange — an own transfer is still a receive on the incoming side: the fee row is dropped like on any other.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
@@ -1060,8 +1077,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val result = ownConverter.convert(tx)
 
         // Assert
-        assertThat(result.rows.map { it.label })
-            .contains(resourceReference(R.string.common_network_fee_title))
+        assertThat(result.rows).isEmpty()
     }
 
     // endregion
