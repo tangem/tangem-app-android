@@ -57,6 +57,7 @@ import com.tangem.core.ui.res.generated.icons.ic_cloud_12_filled
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
+import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
 import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
 
@@ -446,6 +447,39 @@ private fun OrderCardType.titleRes(): Int = when (this) {
     OrderCardType.Plastic -> R.string.tangempay_order_type_segment_plastic
 }
 
+@Suppress("LongParameterList", "MagicNumber")
+private fun previewOrderTypeState(
+    isLoading: Boolean = false,
+    isError: Boolean = false,
+    isPlasticAvailable: Boolean = true,
+    cardImageUrl: String? = null,
+    issueFee: String = "$5",
+    country: String = "Afghanistan",
+    deliveryFee: String = "$10",
+    deliveryEtaMaxBusinessDays: Int = 20,
+    feeState: TangemPayOrderCardTypeUM.FeeState = TangemPayOrderCardTypeUM.FeeState.Default,
+) = TangemPayOrderCardTypeUM(
+    isLoading = isLoading,
+    isError = isError,
+    availableTypes = availableTypesOf(isPlasticAvailable),
+    cardImageUrl = cardImageUrl,
+    virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = issueFee),
+    plastic = if (isPlasticAvailable) {
+        TangemPayOrderCardTypeUM.Plastic(
+            country = country,
+            deliveryFee = deliveryFee,
+            deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
+            feeState = feeState,
+        )
+    } else {
+        null
+    },
+    onBackClick = {},
+    onRetry = {},
+    onSelectVirtual = {},
+    onSelectPlastic = {},
+)
+
 @Preview(showBackground = true, widthDp = 360, heightDp = 780)
 @Preview(showBackground = true, widthDp = 360, heightDp = 780, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -473,11 +507,11 @@ private fun TangemPayOrderCardTypeScreenPreview(
 
 private class OrderCardTypePreviewProvider : CollectionPreviewParameterProvider<TangemPayOrderCardTypeUM>(
     collection = listOf(
-        TangemPayOrderCardTypeUM.stub(feeState = TangemPayOrderCardTypeUM.FeeState.Default),
-        TangemPayOrderCardTypeUM.stub(feeState = TangemPayOrderCardTypeUM.FeeState.FreeDelivery),
-        TangemPayOrderCardTypeUM.stub(feeState = TangemPayOrderCardTypeUM.FeeState.InsufficientFunds),
-        TangemPayOrderCardTypeUM.stub(isPlasticAvailable = false),
-        TangemPayOrderCardTypeUM.stub(isLoading = true, isPlasticAvailable = false, issueFee = ""),
-        TangemPayOrderCardTypeUM.stub(isError = true),
+        previewOrderTypeState(feeState = TangemPayOrderCardTypeUM.FeeState.Default),
+        previewOrderTypeState(feeState = TangemPayOrderCardTypeUM.FeeState.FreeDelivery),
+        previewOrderTypeState(feeState = TangemPayOrderCardTypeUM.FeeState.InsufficientFunds),
+        previewOrderTypeState(isPlasticAvailable = false),
+        previewOrderTypeState(isLoading = true, isPlasticAvailable = false, issueFee = ""),
+        previewOrderTypeState(isError = true),
     ),
 )
