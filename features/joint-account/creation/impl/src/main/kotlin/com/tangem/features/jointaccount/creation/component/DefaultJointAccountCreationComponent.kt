@@ -17,6 +17,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.jointaccount.common.displayname.JointAccountDisplayNameComponent
 import com.tangem.features.jointaccount.creation.composition.JointAccountCompositionComponent
 import com.tangem.features.jointaccount.creation.config.JointAccountConfigComponent
@@ -33,6 +34,7 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: JointAccountCreationComponent.Params,
     private val displayNameComponentFactory: JointAccountDisplayNameComponent.Factory,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : JointAccountCreationComponent, AppComponentContext by appComponentContext {
 
     /** Retained across configuration changes; owns the draft the steps accumulate */
@@ -99,6 +101,7 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
             appComponentContext = childContext,
             params = childParams,
             onCloseClick = { router.pop() },
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         )
     }
 
