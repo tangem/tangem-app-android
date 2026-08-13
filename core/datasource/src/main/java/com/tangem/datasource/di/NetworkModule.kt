@@ -34,6 +34,7 @@ import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
+import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.gasless.TronGaslessApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
@@ -176,6 +177,18 @@ internal object NetworkModule {
             RetrofitApiSpec(
                 apiConfigId = YieldSupply.ID,
                 shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideJointAccountApi(retrofitApiBuilder: RetrofitApiBuilder): JointAccountApi {
+        return retrofitApiBuilder.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
         )
