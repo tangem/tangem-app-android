@@ -9,6 +9,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
+import com.tangem.domain.models.network.isBurnAddress
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.crypto.BlockchainUtils
@@ -60,6 +61,9 @@ class ValidateWalletAddressUseCase(
         allowSelfSend: Boolean,
         isCurrentAddress: (String) -> Boolean,
     ): AddressValidationResult {
+        // A burn address is well-formed, so every check below would accept it.
+        if (address.isBurnAddress()) return AddressValidation.Error.InvalidAddress.left()
+
         val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.rawId)
         val isSelfSendAvailable = walletManagersFacade.checkSelfSendAvailability(userWalletId, network)
 
@@ -76,7 +80,10 @@ class ValidateWalletAddressUseCase(
                     address = addressToValidate,
                 )
 
-                if (resolveAddressResult is ResolveAddressResult.Resolved) {
+                // A name may resolve to a burn address too, so the resolved one goes through the same blacklist.
+                if (resolveAddressResult is ResolveAddressResult.Resolved &&
+                    !resolveAddressResult.address.isBurnAddress()
+                ) {
                     AddressValidation.Success.ValidNamedAddress(resolveAddressResult.address).right()
                 } else {
                     AddressValidation.Error.InvalidAddress.left()
