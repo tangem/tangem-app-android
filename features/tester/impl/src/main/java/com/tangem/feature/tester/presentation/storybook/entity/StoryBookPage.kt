@@ -587,7 +587,6 @@ internal data class TangemBadgeV2Story(
     val onTextScaleChange: (Float) -> Unit,
 ) : DsStoryBookPage {
 
-    /** Backdrop the badge preview is rendered on top of. */
     enum class Background(val label: String) {
         Rainbow("rainbow"),
         BgPrimary("bg.primary"),
@@ -618,7 +617,6 @@ internal data class TangemTabNavigationStory(
     val onTextScaleChange: (Float) -> Unit,
 ) : DsStoryBookPage {
 
-    /** Backdrop the tab preview is rendered on top of. */
     enum class Background(val label: String) {
         Rainbow("rainbow"),
         BgPrimary("primary"),
@@ -627,10 +625,6 @@ internal data class TangemTabNavigationStory(
         BgInverse("inverse"),
     }
 
-    /**
-     * Theme the preview is rendered in, independently of the app's. Forcing it flips the backdrop and
-     * the tab labels together, which is what keeps the labels readable on a light backdrop.
-     */
     enum class Theme(val label: String) {
         System("system"),
         Light("light"),
