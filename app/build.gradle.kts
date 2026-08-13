@@ -195,6 +195,8 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.local)
     implementation(projects.spend.datasource)
+    implementation(projects.store.datasource)
+    implementation(projects.grow.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
     implementation(projects.core.error.ext)
