@@ -366,6 +366,43 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN incoming express swap with matched on-chain leg WHEN convert THEN no network-fee row`() {
+        // Arrange — viewed from the `to` token, so the matched leg is the provider's payout, whose fee is not the user's.
+        val leg = onChain(
+            type = TransactionType.Swap,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(
+            expressSwap(
+                status = ExpressExchangeStatus.Finished,
+                isOutgoing = false,
+                txInfo = leg,
+                fromCurrency = currency,
+            ),
+        )
+
+        // Assert — the rate row stays, the fee row is gone.
+        assertThat(result.rows.map { it.label }).containsExactly(resourceReference(R.string.common_rate))
+    }
+
+    @Test
+    fun `GIVEN express onramp with matched on-chain leg WHEN convert THEN no network-fee row`() {
+        // Arrange — an onramp always matches its payout leg, sent and paid for by the provider.
+        val leg = onChain(
+            type = TransactionType.Transfer,
+            fee = SdkAmount(currencySymbol = "BTC", value = BigDecimal("0.00001"), decimals = 8),
+        )
+
+        // Act
+        val result = converter.convert(expressOnramp(status = ExpressOnrampStatus.Finished, txInfo = leg))
+
+        // Assert
+        assertThat(result.rows.map { it.label }).containsExactly(resourceReference(R.string.common_rate))
+    }
+
+    @Test
     fun `GIVEN express swap with provider and url WHEN convert THEN provider row links to the url`() {
         // Act
         val result = converter.convert(
