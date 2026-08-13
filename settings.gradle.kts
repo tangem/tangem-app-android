@@ -247,6 +247,14 @@ include(":libs:tangem-sdk-api")
 include(":spend:datasource")
 // endregion Spend modules
 
+// region Store modules
+include(":store:datasource")
+// endregion Store modules
+
+// region Grow modules
+include(":grow:datasource")
+// endregion Grow modules
+
 // region Feature modules
 include(":features:address-book:api")
 include(":features:address-book:impl")
