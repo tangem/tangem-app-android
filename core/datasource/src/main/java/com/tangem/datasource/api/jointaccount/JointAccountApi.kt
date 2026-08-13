@@ -12,7 +12,7 @@ import retrofit2.http.Path
 /**
  * Joint accounts API, stage 1: creation and retrieval.
  *
- * Contract: `.claude/docs/joint-accounts/joint-accounts-openapi_v1.1.yaml`.
+ * Contract: OpenAPI spec v1.1.
  */
 interface JointAccountApi {
 
