@@ -238,13 +238,14 @@ internal class RetrofitApiBuilder @Inject constructor(
     @Suppress("UseEmptyCounterpart")
     private companion object {
 
-        // MoonPay lives in grow:datasource, which core:datasource can't reference; its config id is mirrored
-        // by value so the key it passes as a query param stays out of network logs.
-        private const val MOON_PAY_KEY = "MoonPay"
+        // The MoonPay ApiConfig id (its requests carry an apiKey query param, so they're excluded from
+        // network logging). MoonPay moved to grow:datasource, which core:datasource can't import, so the id
+        // is mirrored by value here and must stay in sync with grow's MoonPay.ID.
+        private const val MOON_PAY_CONFIG_KEY = "MoonPay"
 
         val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
             // StakeKit.ID,
-            ApiConfig.ID(MOON_PAY_KEY),
+            ApiConfig.ID(MOON_PAY_CONFIG_KEY),
         )
     }
 }
