@@ -27,7 +27,6 @@ import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.picker.AccountColorPicker
 import com.tangem.common.ui.account.picker.AccountIconPicker
-import com.tangem.common.ui.userwallet.picker.ChooseWalletBS
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.components.haze.hazeSourceTangem
@@ -120,10 +119,6 @@ internal fun JointAccountConfigScreen(
             startButton = { TangemButton.Back(onClick = state.onBackClick) },
             endButton = { TangemButton.Close(onClick = onCloseClick) },
         )
-    }
-
-    state.chooseWallet?.let { chooseWallet ->
-        ChooseWalletBS(state = chooseWallet)
     }
 }
 
@@ -281,7 +276,6 @@ private fun createPreviewState(wallet: JointAccountConfigUM.WalletUM?): JointAcc
     colors = CryptoPortfolioIcon.Color.entries.toImmutableList(),
     icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
     wallet = wallet,
-    chooseWallet = null,
     isContinueEnabled = true,
     onNameChange = {},
     onColorClick = {},

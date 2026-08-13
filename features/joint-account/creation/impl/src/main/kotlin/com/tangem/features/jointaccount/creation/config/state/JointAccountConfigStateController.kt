@@ -30,7 +30,6 @@ internal class JointAccountConfigStateController @Inject constructor() {
         colors = CryptoPortfolioIcon.Color.entries.toImmutableList(),
         icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
         wallet = null,
-        chooseWallet = null,
         // The name starts empty and is required, so the button unlocks with the first valid input
         isContinueEnabled = false,
         onNameChange = {},
