@@ -10,6 +10,7 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
+import com.tangem.tap.domain.tasks.jointaccount.JointAccountCreationSignTask
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateVirtualAccountAddressTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
@@ -36,6 +37,7 @@ internal class TangemSdkManagerModule {
         visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
         tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
         tangemPayVirtualAccountTaskFactory: TangemPayGenerateVirtualAccountAddressTask.Factory,
+        jointAccountCreationSignTaskFactory: JointAccountCreationSignTask.Factory,
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         analyticsErrorHandler: AnalyticsErrorHandler,
         cardRepository: CardRepository,
@@ -52,6 +54,7 @@ internal class TangemSdkManagerModule {
                 visaCardActivationTaskFactory = visaCardActivationTaskFactory,
                 tangemPayChallengeTaskFactory = tangemPayChallengeTaskFactory,
                 tangemPayVirtualAccountTaskFactory = tangemPayVirtualAccountTaskFactory,
+                jointAccountCreationSignTaskFactory = jointAccountCreationSignTaskFactory,
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 analyticsErrorHandler = analyticsErrorHandler,
                 cardRepository = cardRepository,
