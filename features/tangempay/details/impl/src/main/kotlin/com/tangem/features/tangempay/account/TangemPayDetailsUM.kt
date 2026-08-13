@@ -6,14 +6,12 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
-    val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
     val errorNotificationConfig: NotificationConfig?,
     val accountDeactivatedNotificationConfig: NotificationConfig?,
