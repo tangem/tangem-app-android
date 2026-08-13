@@ -12,18 +12,30 @@ android {
 
 dependencies {
     /** Core */
+    api(projects.core.decompose)
+    implementation(projects.core.ui)
+    implementation(projects.core.utils)
     implementation(projects.core.configToggles)
 
-    /** Features */
+    /** Domain */
+    implementation(projects.domain.models)
+
+    /** Common */
+    implementation(projects.common.ui)
+
+    /** Features api */
     implementation(projects.features.jointAccount.main.api)
 
-    /**
-     * Compose
-     *
-     * The `configuration` plugin enables the Compose compiler for every `:impl` module, so the runtime has to be on
-     * the class path even though this module has no Composables yet.
-     */
-    implementation(deps.compose.runtime)
+    /** Compose */
+    api(deps.compose.foundation)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+
+    /** Other */
+    implementation(deps.androidx.appCompat)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
 
     /** DI */
     implementation(deps.hilt.android)
