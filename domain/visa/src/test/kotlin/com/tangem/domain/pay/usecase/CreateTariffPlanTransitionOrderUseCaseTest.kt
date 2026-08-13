@@ -10,13 +10,16 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.test.core.TestAppCoroutineScope
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -125,12 +128,114 @@ internal class CreateTariffPlanTransitionOrderUseCaseTest {
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
     }
 
-    private fun order(id: String, status: OrderStatus): Order = Order(
+    @Test
+    fun `GIVEN order was AWAITING_DEPOSIT WHEN step changes THEN account status is refreshed once`() = runTest {
+        // GIVEN
+        val newOrder = order(id = "new", status = OrderStatus.NEW)
+        stubCreateOrder(newOrder)
+        val onOrderStateChange = captureOnOrderStateChange()
+        useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
+        onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.AWAITING_DEPOSIT))
+
+        // WHEN — PRODUCT_ISSUE and any other unmapped server step resolve to UNKNOWN
+        onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
+        onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
+
+        // THEN — initial invoke, AWAITING_DEPOSIT, and the step right after it; further steps change nothing
+        coVerify(exactly = 3) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+        coVerify(exactly = 0) { issueCardRepository.removeIssueOrderId(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN order created in AWAITING_DEPOSIT WHEN step changes THEN account status is refreshed`() = runTest {
+        // GIVEN
+        val newOrder = order(id = "new", status = OrderStatus.NEW, step = OrderStep.AWAITING_DEPOSIT)
+        stubCreateOrder(newOrder)
+        val onOrderStateChange = captureOnOrderStateChange()
+        useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
+
+        // WHEN — the first observed step is already past AWAITING_DEPOSIT
+        onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
+
+        // THEN — once for the initial invoke, once for the step that follows AWAITING_DEPOSIT
+        coVerify(exactly = 2) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN order never was AWAITING_DEPOSIT WHEN step changes THEN account status is not refreshed`() = runTest {
+        // GIVEN
+        val newOrder = order(id = "new", status = OrderStatus.NEW)
+        stubCreateOrder(newOrder)
+        val onOrderStateChange = captureOnOrderStateChange()
+        useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
+
+        // WHEN
+        onOrderStateChange.captured.invoke(orderInfo(newOrder.id, OrderStep.UNKNOWN))
+
+        // THEN — only the initial invoke refreshed; nothing the screen shows depends on this step
+        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN polled order becomes terminal WHEN state changes THEN order id is forgotten without extra refresh`() =
+        runTest {
+            // GIVEN
+            val newOrder = order(id = "new", status = OrderStatus.NEW)
+            stubCreateOrder(newOrder)
+            val onOrderStateChange = captureOnOrderStateChange()
+            useCase(USER_WALLET_ID, TARGET_PLAN_ID, TangemPayTariffPlanTransition.Type.UPGRADE)
+
+            // WHEN
+            onOrderStateChange.captured.invoke(
+                TangemPayOrderInfo(orderId = newOrder.id, orderStatus = OrderStatus.COMPLETED),
+            )
+
+            // THEN — the poller itself refreshes on a terminal order, so the callback must not do it again
+            coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(USER_WALLET_ID, newOrder.id) }
+            coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+        }
+
+    private fun captureOnOrderStateChange(): CapturingSlot<suspend (TangemPayOrderInfo) -> Unit> {
+        val slot = slot<suspend (TangemPayOrderInfo) -> Unit>()
+        coEvery {
+            startTangemPayOrderPollingUseCase(
+                order = any(),
+                userWalletId = USER_WALLET_ID,
+                onOrderStateChange = capture(slot),
+                timeout = any(),
+            )
+        } returns true
+        return slot
+    }
+
+    private fun stubCreateOrder(newOrder: Order) {
+        coEvery {
+            customerOrderRepository.findOrders(USER_WALLET_ID, ACTIVE_TRANSITION_TYPES, OrderStatus.activeStatuses)
+        } returns emptyList<Order>().right()
+        coEvery {
+            customerOrderRepository.createOrder(
+                userWalletId = USER_WALLET_ID,
+                type = OrderType.TARIFF_PLAN_TRANSITION,
+                specificationName = null,
+                targetTariffPlanId = TARGET_PLAN_ID,
+                transitionType = TangemPayTariffPlanTransition.Type.UPGRADE,
+                idempotencyKey = any(),
+            )
+        } returns newOrder.right()
+    }
+
+    private fun orderInfo(orderId: String, step: OrderStep) = TangemPayOrderInfo(
+        orderId = orderId,
+        orderStatus = OrderStatus.PROCESSING,
+        orderStep = step,
+    )
+
+    private fun order(id: String, status: OrderStatus, step: OrderStep = OrderStep.UNKNOWN): Order = Order(
         id = id,
         customerId = "customer",
         type = OrderType.TARIFF_PLAN_TRANSITION,
         status = status,
-        step = OrderStep.UNKNOWN,
+        step = step,
         stepChangeCode = null,
         productInstanceId = null,
         paymentAccountId = null,
