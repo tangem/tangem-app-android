@@ -225,7 +225,7 @@ internal class RetrofitApiBuilder @Inject constructor(
     }
 
     private fun OkHttpClient.Builder.addLoggers(apiConfigId: ApiConfig.ID, context: Context): OkHttpClient.Builder {
-        if (apiConfigId in excludedApiForLogging) return this
+        if (apiConfigs[apiConfigId.name]?.isLoggable == false) return this
 
         return if (BuildConfig.LOG_ENABLED) {
             addInterceptor(interceptor = ChuckerInterceptor(context))
@@ -233,19 +233,5 @@ internal class RetrofitApiBuilder @Inject constructor(
         } else {
             this
         }
-    }
-
-    @Suppress("UseEmptyCounterpart")
-    private companion object {
-
-        // The MoonPay ApiConfig id (its requests carry an apiKey query param, so they're excluded from
-        // network logging). MoonPay moved to grow:datasource, which core:datasource can't import, so the id
-        // is mirrored by value here and must stay in sync with grow's MoonPay.ID.
-        private const val MOON_PAY_CONFIG_KEY = "MoonPay"
-
-        val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
-            // StakeKit.ID,
-            ApiConfig.ID(MOON_PAY_CONFIG_KEY),
-        )
     }
 }
