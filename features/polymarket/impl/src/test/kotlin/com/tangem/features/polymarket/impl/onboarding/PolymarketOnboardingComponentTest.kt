@@ -14,7 +14,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
-import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -40,7 +40,7 @@ internal class PolymarketOnboardingComponentTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor = mockk()
-    private val runPolymarketOnboardingUseCase: RunPolymarketOnboardingUseCase = mockk()
+    private val runPolymarketOnboardingInteractor: RunPolymarketOnboardingInteractor = mockk()
 
     private val userWalletId = UserWalletId("011")
 
@@ -97,7 +97,7 @@ internal class PolymarketOnboardingComponentTest {
         router = router,
         urlOpener = urlOpener,
         resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
-        runPolymarketOnboardingUseCase = runPolymarketOnboardingUseCase,
+        runPolymarketOnboardingInteractor = runPolymarketOnboardingInteractor,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 }
