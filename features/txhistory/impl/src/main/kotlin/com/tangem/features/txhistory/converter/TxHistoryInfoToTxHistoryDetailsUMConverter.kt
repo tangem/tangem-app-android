@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.converter
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -21,7 +22,8 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     onCopyAddress: (String) -> Unit,
     onGoToProvider: (String) -> Unit,
     onCopyTxId: (() -> Unit)? = null,
-    onShare: (() -> Unit)? = null,
+    shareText: TextReference? = null,
+    onShare: (String) -> Unit = {},
     onExplore: (() -> Unit)? = null,
     refundCurrency: CryptoCurrency? = null,
     onLearnMoreAboutRefundsClick: () -> Unit = {},
@@ -35,7 +37,12 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     onOpenValidator: (String) -> Unit = {},
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
 
-    private val menu = buildDetailsMenu(onCopyTxId, onShare, onExplore)
+    private val menu = buildDetailsMenu(
+        onCopyTxId = onCopyTxId,
+        shareText = shareText,
+        onShare = onShare,
+        onExplore = onExplore,
+    )
 
     private val onChainConverter = OnChainTxToDetailsUMConverter(
         currency = currency,
