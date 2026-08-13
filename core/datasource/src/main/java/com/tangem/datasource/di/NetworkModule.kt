@@ -234,7 +234,6 @@ internal object NetworkModule {
         )
     }
 
-
     @Provides
     @Singleton
     fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
