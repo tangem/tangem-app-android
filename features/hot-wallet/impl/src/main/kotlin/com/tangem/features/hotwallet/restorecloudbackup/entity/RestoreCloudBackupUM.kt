@@ -1,6 +1,7 @@
 package com.tangem.features.hotwallet.restorecloudbackup.entity
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * UI state of the restore-cloud-backup flow, rendered by a single `Content()` that switches on the step.
@@ -12,13 +13,14 @@ import androidx.compose.runtime.Immutable
  *
  * [accountEmail] is the cloud account the backups were loaded from, shown as the screen subtitle.
  */
+@Immutable
 internal sealed interface RestoreCloudBackupUM {
 
     val accountEmail: String?
     val onBack: () -> Unit
 
     data class BackupList(
-        val items: List<BackupRowUM>,
+        val items: ImmutableList<BackupRowUM>,
         override val accountEmail: String?,
         override val onBack: () -> Unit,
     ) : RestoreCloudBackupUM
@@ -67,7 +69,6 @@ internal sealed interface RestoreCloudBackupUM {
     }
 }
 
-@Immutable
 internal data class BackupRowUM(
     val walletName: String,
     val createdAtMillis: Long,
