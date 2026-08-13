@@ -51,7 +51,7 @@ import java.math.RoundingMode
 /**
  * Converts an [ExpressTx] (swap / onramp) to the [TxHistoryDetailsUM.TwoAssets] details card. The `from`/`to` legs come
  * from the express deal ([ExchangeTransaction] asset pair / [OnrampTransaction] fiat→asset), and the network-fee row
- * comes from the matched on-chain leg ([ExpressTx.txInfo]).
+ * comes from the matched on-chain leg ([ExpressTx.txInfo]) — but only on a pay-in leg, see [isPayInLeg].
  */
 internal class ExpressTxToDetailsUMConverter(
     private val onGoToProvider: (String) -> Unit,
@@ -411,7 +411,7 @@ private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
  * Detail rows of an express op, in order: the [provider] row (its name), the effective-[rateRow] row, then the
  * network-fee row from the matched on-chain leg. Each is dropped when its data is absent — the provider while it is
  * unresolved, the rate while an amount is missing / non-positive (see [swapRateRow] / [onrampRateRow]), the fee while
- * no on-chain leg / fee is present.
+ * no on-chain leg / fee is present or the viewed leg is not a pay-in one (see [isPayInLeg]).
  */
 private fun ExpressTx.toInfoRows(
     onProviderClick: (() -> Unit)?,
@@ -420,8 +420,16 @@ private fun ExpressTx.toInfoRows(
 ): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = buildList {
     provider?.let { add(it.providerRow(onProviderClick, showType = showProviderType)) }
     rateRow?.let { add(it) }
-    addAll(txInfo.toInfoRows())
+    if (isPayInLeg) addAll(txInfo.toInfoRows())
 }.toImmutableList()
+
+/**
+ * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
+ * that leg is the user's own pay-in tx. A payout leg — a swap viewed from its `to` token, or any onramp — is sent by
+ * the provider, so its on-chain fee is not the user's and must never surface as "Network fee".
+ */
+private val ExpressTx.isPayInLeg: Boolean
+    get() = this is ExpressTx.Swap && isOutgoing
 
 private fun ExpressProvider.providerRow(onClick: (() -> Unit)?, showType: Boolean): TxHistoryDetailsUM.InfoRowUM =
     TxHistoryDetailsUM.InfoRowUM(
