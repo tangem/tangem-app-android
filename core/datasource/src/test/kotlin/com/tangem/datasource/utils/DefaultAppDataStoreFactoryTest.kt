@@ -1,18 +1,23 @@
 package com.tangem.datasource.utils
 
+import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import kotlinx.coroutines.CoroutineScope
+import com.tangem.utils.coroutines.AppCoroutineScope
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -20,14 +25,19 @@ import java.io.File
 @JsonClass(generateAdapter = true)
 data class SampleDto(val id: String)
 
+@Serializable
+data class SampleSerializable(val id: String)
+
 @OptIn(ExperimentalStdlibApi::class)
-internal class AppDataStoreFactoryTest {
+internal class DefaultAppDataStoreFactoryTest {
 
     @TempDir
     lateinit var tempDir: File
 
     private val moshi = Moshi.Builder().build()
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope = object : AppCoroutineScope {
+        override val coroutineContext = Dispatchers.IO + SupervisorJob()
+    }
 
     private val reported = mutableListOf<ExceptionAnalyticsEvent>()
     private val analyticsExceptionHandler = object : AnalyticsExceptionHandler {
@@ -35,7 +45,19 @@ internal class AppDataStoreFactoryTest {
             reported += event
         }
     }
-    private val factory = AppDataStoreFactory(analyticsExceptionHandler)
+    private val context: Context = mockk()
+    private val factory = DefaultAppDataStoreFactory(
+        context = context,
+        analyticsExceptionHandler = analyticsExceptionHandler,
+        appScope = scope,
+    )
+
+    @BeforeEach
+    fun setUp() {
+        // context.dataStoreFile(name) resolves File(applicationContext.filesDir, "datastore/name").
+        every { context.applicationContext } returns context
+        every { context.filesDir } returns tempDir
+    }
 
     @AfterEach
     fun tearDown() {
@@ -98,5 +120,35 @@ internal class AppDataStoreFactoryTest {
         // Assert
         assertThat(value).containsExactly("a", "b").inOrder()
         assertThat(reported).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN kotlinx serializer and fileName WHEN store is written THEN persists and reads back`() = runBlocking {
+        // Arrange
+        val store = factory.create(
+            defaultValue = SampleSerializable(id = ""),
+            serializer = SampleSerializable.serializer(),
+            fileName = "kotlinx_store",
+        )
+
+        // Act
+        store.updateData { SampleSerializable(id = "hello") }
+        val value = store.data.first()
+
+        // Assert
+        assertThat(value).isEqualTo(SampleSerializable(id = "hello"))
+    }
+
+    @Test
+    fun `GIVEN reified extension WHEN store is written THEN derives serializer and persists`() = runBlocking {
+        // Arrange
+        val store = factory.create(defaultValue = SampleSerializable(id = ""), fileName = "kotlinx_ext_store")
+
+        // Act
+        store.updateData { SampleSerializable(id = "world") }
+        val value = store.data.first()
+
+        // Assert
+        assertThat(value).isEqualTo(SampleSerializable(id = "world"))
     }
 }
