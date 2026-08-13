@@ -34,12 +34,7 @@ internal data class PillBounds(val offset: Dp, val width: Dp)
 
 /**
  * The single pill the whole row shares, drawn behind the tabs and inside the same scrolling content
- * so it travels with them.
- *
- * Two animations run on it, as Figma specifies them separately: a 400ms overshooting tween on offset
- * and width, and a `scaleX` keyframe on top that stretches the pill to 110% mid-flight. The stretch
- * is a draw-phase transform rather than a size animation, so the 110% peak can never push the tabs
- * around, and the labels — which live in a sibling row — are not dragged out of shape with it.
+ * so it travels with them during animation.
  */
 @Composable
 internal fun SelectionPill(
@@ -92,12 +87,6 @@ internal fun SelectionPill(
     )
 }
 
-/**
- * Keeps the selected tab inside the viewport, scrolling by the shortest distance that reveals it and
- * leaving [margin] of breathing room at the edge.
- *
- * A tab that is already fully visible is left alone, so this never fights a scroll the user made.
- */
 @Composable
 internal fun AutoScrollToSelected(scrollState: ScrollState, bounds: PillBounds?, margin: Dp) {
     val density = LocalDensity.current
