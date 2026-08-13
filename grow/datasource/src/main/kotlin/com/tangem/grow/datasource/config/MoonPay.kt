@@ -1,10 +1,10 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.grow.datasource.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
 
-import com.tangem.datasource.BuildConfig
+import com.tangem.grow.datasource.BuildConfig
 
 /**
  * MoonPay [ApiConfig]
