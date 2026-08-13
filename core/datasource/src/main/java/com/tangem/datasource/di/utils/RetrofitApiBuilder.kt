@@ -1,7 +1,5 @@
 package com.tangem.datasource.di.utils
 
-import com.tangem.datasource.api.common.config.MoonPay
-
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
@@ -240,9 +238,13 @@ internal class RetrofitApiBuilder @Inject constructor(
     @Suppress("UseEmptyCounterpart")
     private companion object {
 
+        // MoonPay lives in grow:datasource, which core:datasource can't reference; its config id is mirrored
+        // by value so the key it passes as a query param stays out of network logs.
+        private const val MOON_PAY_KEY = "MoonPay"
+
         val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
             // StakeKit.ID,
-            MoonPay.ID,
+            ApiConfig.ID(MOON_PAY_KEY),
         )
     }
 }
