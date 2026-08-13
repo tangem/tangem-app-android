@@ -215,6 +215,29 @@ internal class PolymarketEventUMConverterTest {
         }
 
         @Test
+        fun `GIVEN labels longer than five characters WHEN convert THEN they are truncated with an ellipsis`() {
+            // Arrange
+            val event = createEvent(
+                markets = listOf(
+                    createMarket(
+                        outcomes = listOf(
+                            createOutcome(assetId = "a", title = "Maybe"),
+                            createOutcome(assetId = "b", title = "Neymar"),
+                        ),
+                    ),
+                ),
+            )
+
+            // Act
+            val actual = converter.convert(event)
+
+            // Assert
+            Truth.assertThat(actual.rows.single().outcomes.map { it.title })
+                .containsExactly(stringReference("Maybe"), stringReference("Neyma…"))
+                .inOrder()
+        }
+
+        @Test
         fun `GIVEN converted event WHEN outcome clicked THEN event market and asset ids are reported`() {
             // Arrange
             val event = createEvent(

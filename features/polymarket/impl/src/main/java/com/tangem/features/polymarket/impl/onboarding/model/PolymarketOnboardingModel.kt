@@ -16,6 +16,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
+import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -66,7 +67,9 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private val userWalletId: UserWalletId = paramsContainer.require<PolymarketOnboardingParams>().userWalletId
 
-    private val onPolymarketTermsClick: () -> Unit = { urlOpener.openUrl(POLYMARKET_TERMS_URL) }
+    private val onPolymarketTermsClick: () -> Unit = {
+        urlOpener.openUrl(PolymarketUrlBuilder.build(page = PolymarketUrlBuilder.Page.Terms))
+    }
     private val onTangemTermsClick: () -> Unit = { urlOpener.openUrl(TANGEM_TERMS_URL) }
 
     val uiState: StateFlow<PolymarketOnboardingUM>
@@ -191,7 +194,6 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private companion object {
-        const val POLYMARKET_TERMS_URL = "https://polymarket.com/tos"
         const val TANGEM_TERMS_URL = "https://tangem.com/tangem_tos.html"
     }
 }
