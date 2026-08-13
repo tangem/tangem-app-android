@@ -4,6 +4,8 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
+import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
@@ -15,7 +17,6 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
 import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
@@ -123,8 +124,18 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetPolymarketBalanceInteractor(
+        polymarketRepository: PolymarketRepository,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): GetPolymarketBalanceInteractor = GetPolymarketBalanceInteractor(
+        polymarketRepository = polymarketRepository,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
     @Suppress("LongParameterList")
-    fun provideRunPolymarketOnboardingUseCase(
+    fun provideRunPolymarketOnboardingInteractor(
         deriveAddresses: DerivePolymarketAddressesUseCase,
         getWalletStatus: GetPolymarketWalletStatusUseCase,
         getRelayerNonce: GetPolymarketRelayerNonceUseCase,
@@ -134,7 +145,7 @@ internal object PolymarketDomainModule {
         deriveApiCredentials: DeriveApiCredentialsUseCase,
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
-    ): RunPolymarketOnboardingUseCase = RunPolymarketOnboardingUseCase(
+    ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
         getRelayerNonce = getRelayerNonce,
