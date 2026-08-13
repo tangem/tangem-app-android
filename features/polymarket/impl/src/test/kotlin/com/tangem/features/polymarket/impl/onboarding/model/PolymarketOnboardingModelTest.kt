@@ -16,7 +16,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
-import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -46,7 +46,7 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class PolymarketOnboardingModelTest {
 
     private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor = mockk()
-    private val runOnboardingUseCase: RunPolymarketOnboardingUseCase = mockk()
+    private val runOnboardingUseCase: RunPolymarketOnboardingInteractor = mockk()
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
 
@@ -661,7 +661,7 @@ internal class PolymarketOnboardingModelTest {
         router = router,
         urlOpener = urlOpener,
         resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
-        runPolymarketOnboardingUseCase = runOnboardingUseCase,
+        runPolymarketOnboardingInteractor = runOnboardingUseCase,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
     )
 
