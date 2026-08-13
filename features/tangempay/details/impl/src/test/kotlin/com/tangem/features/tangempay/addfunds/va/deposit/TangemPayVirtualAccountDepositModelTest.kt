@@ -50,7 +50,6 @@ internal class TangemPayVirtualAccountDepositModelTest {
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase = mockk()
     private val onShowDetails: (BankCredentials) -> Unit = mockk(relaxed = true)
     private val onShowBankingDetailsError: (String) -> Unit = mockk(relaxed = true)
-    private val onContactSupport: () -> Unit = mockk(relaxed = true)
     private val onOrderCreated: () -> Unit = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
@@ -108,7 +107,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
     }
 
     @Test
-    fun `GIVEN fees request fails WHEN model created THEN error content shown`() = runTest {
+    fun `GIVEN fees request fails WHEN model created THEN error banner shown`() = runTest {
         // GIVEN
         coEvery { getOnrampFeesUseCase(userWalletId) } returns VisaApiError.Unspecified.left()
 
@@ -117,9 +116,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
         advanceUntilIdle()
 
         // THEN
-        val fees = model.uiState.value.fees
-        assertThat(fees).isInstanceOf(TangemPayVirtualAccountDepositUM.FeesUM.Error::class.java)
-        assertThat((fees as TangemPayVirtualAccountDepositUM.FeesUM.Error).isRetryLoading).isFalse()
+        assertThat(model.uiState.value.fees).isInstanceOf(TangemPayVirtualAccountDepositUM.FeesUM.Error::class.java)
     }
 
     @Test
@@ -148,7 +145,7 @@ internal class TangemPayVirtualAccountDepositModelTest {
     }
 
     @Test
-    fun `GIVEN retry in flight WHEN retry clicked again THEN use case not invoked again`() = runTest {
+    fun `GIVEN fees error WHEN retry clicked THEN fee block shimmers while request in flight`() = runTest {
         // GIVEN
         val pending = CompletableDeferred<Either<VisaApiError, List<TangemPayOnrampFee>>>()
         var calls = 0
@@ -162,11 +159,9 @@ internal class TangemPayVirtualAccountDepositModelTest {
         // WHEN
         (model.uiState.value.fees as TangemPayVirtualAccountDepositUM.FeesUM.Error).onRetryClick()
         advanceUntilIdle()
-        (model.uiState.value.fees as TangemPayVirtualAccountDepositUM.FeesUM.Error).onRetryClick()
-        advanceUntilIdle()
 
         // THEN
-        assertThat((model.uiState.value.fees as TangemPayVirtualAccountDepositUM.FeesUM.Error).isRetryLoading).isTrue()
+        assertThat(model.uiState.value.fees).isEqualTo(TangemPayVirtualAccountDepositUM.FeesUM.Loading)
         coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId) }
 
         pending.complete(emptyList<TangemPayOnrampFee>().right())
@@ -275,7 +270,6 @@ internal class TangemPayVirtualAccountDepositModelTest {
                 onDismiss = {},
                 onShowDetails = onShowDetails,
                 onShowBankingDetailsError = onShowBankingDetailsError,
-                onContactSupport = onContactSupport,
                 onOrderCreated = onOrderCreated,
             ),
         ),

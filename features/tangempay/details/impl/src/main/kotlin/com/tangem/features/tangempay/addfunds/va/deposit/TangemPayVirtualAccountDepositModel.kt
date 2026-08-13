@@ -72,7 +72,11 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
         modelScope.launch {
             getOnrampFeesUseCase(userWalletId = params.userWalletId).fold(
                 ifLeft = {
-                    uiState.update { state -> state.copy(fees = feesError(isRetryLoading = false)) }
+                    uiState.update { state ->
+                        state.copy(
+                            fees = TangemPayVirtualAccountDepositUM.FeesUM.Error(onRetryClick = ::onRetryFeesClick),
+                        )
+                    }
                 },
                 ifRight = { fees ->
                     val rows = fees.map { fee ->
@@ -94,18 +98,12 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
         }
     }
 
+    // Tapping the error banner swaps it for the loading shimmer, so a second tap can't reach an in-flight request.
     private fun onRetryFeesClick() {
-        val fees = uiState.value.fees
-        if (fees !is TangemPayVirtualAccountDepositUM.FeesUM.Error || fees.isRetryLoading) return
-        uiState.update { it.copy(fees = feesError(isRetryLoading = true)) }
+        if (uiState.value.fees !is TangemPayVirtualAccountDepositUM.FeesUM.Error) return
+        uiState.update { it.copy(fees = TangemPayVirtualAccountDepositUM.FeesUM.Loading) }
         fetchOnrampFees()
     }
-
-    private fun feesError(isRetryLoading: Boolean) = TangemPayVirtualAccountDepositUM.FeesUM.Error(
-        isRetryLoading = isRetryLoading,
-        onRetryClick = ::onRetryFeesClick,
-        onContactSupportClick = params.onContactSupport,
-    )
 
     fun onDismiss() {
         params.onDismiss()
