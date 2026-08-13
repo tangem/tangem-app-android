@@ -13,7 +13,6 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.addFundsButton
@@ -21,7 +20,6 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.withdrawButton
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -43,7 +41,6 @@ internal class TangemPayDetailsModelTest {
     private val userWalletId = UserWalletId("123")
 
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @ParameterizedTest
@@ -53,7 +50,6 @@ internal class TangemPayDetailsModelTest {
         val model = createModel(
             testScope = this,
             statusSource = case.statusSource,
-            frozenState = TangemPayCardFrozenState.Unfrozen,
             availableForWithdrawal = BigDecimal.ZERO,
             accountError = case.accountError,
         )
@@ -146,7 +142,6 @@ internal class TangemPayDetailsModelTest {
     private fun createModel(
         testScope: TestScope,
         statusSource: StatusSource = StatusSource.ACTUAL,
-        frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
         availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         accountError: PaymentAccountStatusValue.Error? = null,
         statusValue: PaymentAccountStatusValue? = null,
@@ -189,8 +184,6 @@ internal class TangemPayDetailsModelTest {
 
         every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns
             List(statusEmissions) { paymentStatus }.asFlow()
-        every { cardDetailsRepository.cardFrozenState(any()) } returns flowOf(frozenState)
-        coEvery { cardDetailsRepository.isAddToWalletDone(any()) } returns false.right()
 
         return TangemPayDetailsModel(
             paramsContainer = MutableParamsContainer(params),
@@ -199,7 +192,6 @@ internal class TangemPayDetailsModelTest {
             analytics = analytics,
             router = mockk(relaxed = true),
             urlOpener = mockk(relaxed = true),
-            cardDetailsRepository = cardDetailsRepository,
             getBalanceHidingSettingsUseCase = mockk(relaxed = true),
             uiMessageSender = mockk(relaxed = true),
             txHistoryUpdateListener = mockk(relaxed = true),
