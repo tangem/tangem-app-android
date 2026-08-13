@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import kotlin.reflect.KClass
 
 internal class TangemPayDetailsStateFactoryTest {
 
@@ -188,6 +190,77 @@ internal class TangemPayDetailsStateFactoryTest {
         assertThat(buttons.withdrawButton.isEnabled).isTrue()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideProgressBannerCases")
+    fun `GIVEN card states WHEN getLoadedState THEN progress banner resolved`(case: ProgressBannerCase) {
+        // Arrange
+        val status = loadedStatus(statusCards = case.cards)
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        val banner = state.balanceBlockState.cardsBlockState?.progressBanner
+        if (case.expectedBanner == null) {
+            assertThat(banner).isNull()
+        } else {
+            assertThat(banner).isInstanceOf(case.expectedBanner.java)
+        }
+    }
+
+    @Test
+    fun `GIVEN exactly one delivering card WHEN banner activate clicked THEN opens that card`() {
+        // Arrange
+        val status = loadedStatus(
+            statusCards = listOf(
+                activeUnfrozenCard,
+                tangemPayCard(id = "plastic", state = TangemPayCardState.Delivering),
+            ),
+        )
+
+        // Act
+        val banner = factory.getLoadedState(status).balanceBlockState.cardsBlockState?.progressBanner
+        (banner as CardsProgressBannerUM.Delivering).onActivateClick()
+
+        // Assert
+        verify(exactly = 1) { intents.onCardClick("plastic") }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideCardTileCases")
+    fun `GIVEN card state WHEN getLoadedState THEN tile hides card identity until activation`(case: CardTileCase) {
+        // Arrange
+        val status = loadedStatus(statusCards = listOf(case.card))
+
+        // Act
+        val tile = factory.getLoadedState(status).balanceBlockState.cardsBlockState?.cards?.single()
+
+        // Assert
+        assertThat(tile?.lastDigits).isEqualTo(case.expectedLastDigits)
+        assertThat(tile?.imageUrl).isEqualTo(case.expectedImageUrl)
+        assertThat(tile?.isFrozen).isEqualTo(case.expectedFrozen)
+        assertThat(tile?.state).isEqualTo(case.expectedUiState)
+    }
+
+    internal data class ProgressBannerCase(
+        val name: String,
+        val cards: List<TangemPayCard>,
+        val expectedBanner: KClass<out CardsProgressBannerUM>?,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class CardTileCase(
+        val name: String,
+        val card: TangemPayCard,
+        val expectedLastDigits: String,
+        val expectedImageUrl: String?,
+        val expectedFrozen: Boolean,
+        val expectedUiState: TangemPayCardUiState,
+    ) {
+        override fun toString(): String = name
+    }
+
     private fun loadedStatus(
         statusSource: StatusSource = StatusSource.ACTUAL,
         statusError: PaymentAccountStatusValue.Error? = null,
@@ -281,5 +354,89 @@ internal class TangemPayDetailsStateFactoryTest {
                 expectedCardEnabled = false,
             ),
         )
+
+        @JvmStatic
+        fun provideProgressBannerCases() = listOf(
+            ProgressBannerCase(
+                name = "no delivering card -> no banner",
+                cards = listOf(tangemPayCard()),
+                expectedBanner = null,
+            ),
+            ProgressBannerCase(
+                name = "exactly one delivering card -> delivering banner",
+                cards = listOf(tangemPayCard(), deliveringCard(id = "plastic")),
+                expectedBanner = CardsProgressBannerUM.Delivering::class,
+            ),
+            ProgressBannerCase(
+                name = "only a delivering card -> delivering banner",
+                cards = listOf(deliveringCard(id = "plastic")),
+                expectedBanner = CardsProgressBannerUM.Delivering::class,
+            ),
+            ProgressBannerCase(
+                name = "two delivering cards -> no banner",
+                cards = listOf(deliveringCard(id = "plastic_1"), deliveringCard(id = "plastic_2")),
+                expectedBanner = null,
+            ),
+            ProgressBannerCase(
+                name = "reissuing card wins over delivering",
+                cards = listOf(
+                    tangemPayCard(id = "virtual", state = TangemPayCardState.Reissuing),
+                    deliveringCard(id = "plastic"),
+                ),
+                expectedBanner = CardsProgressBannerUM.Reissuing::class,
+            ),
+            ProgressBannerCase(
+                name = "issuing card wins over delivering",
+                cards = listOf(
+                    tangemPayCard(id = "virtual", state = TangemPayCardState.Issuing),
+                    deliveringCard(id = "plastic"),
+                ),
+                expectedBanner = CardsProgressBannerUM.Issuing::class,
+            ),
+        )
+
+        @JvmStatic
+        fun provideCardTileCases() = listOf(
+            CardTileCase(
+                name = "active card -> digits and artwork shown",
+                card = tangemPayCard(images = listOf(thumbnail())),
+                expectedLastDigits = "1234",
+                expectedImageUrl = THUMBNAIL_URL,
+                expectedFrozen = false,
+                expectedUiState = TangemPayCardUiState.Active,
+            ),
+            CardTileCase(
+                name = "frozen active card -> digits, artwork and snowflake shown",
+                card = tangemPayCard(
+                    frozenState = TangemPayCardFrozenState.Frozen,
+                    images = listOf(thumbnail()),
+                ),
+                expectedLastDigits = "1234",
+                expectedImageUrl = THUMBNAIL_URL,
+                expectedFrozen = true,
+                expectedUiState = TangemPayCardUiState.Active,
+            ),
+            CardTileCase(
+                name = "delivering card -> blank placeholder despite backend reporting it frozen",
+                card = tangemPayCard(
+                    state = TangemPayCardState.Delivering,
+                    frozenState = TangemPayCardFrozenState.Frozen,
+                    images = listOf(thumbnail()),
+                ),
+                expectedLastDigits = "",
+                expectedImageUrl = null,
+                expectedFrozen = false,
+                expectedUiState = TangemPayCardUiState.InProgress,
+            ),
+        )
+
+        private const val THUMBNAIL_URL = "https://tangem.com/card_thumb.png"
+
+        private fun thumbnail() = TangemPayTariffPlan.Image(
+            type = TangemPayTariffPlan.Image.Type.THUMBNAIL,
+            url = THUMBNAIL_URL,
+        )
+
+        private fun deliveringCard(id: String) = tangemPayCard(id = id, state = TangemPayCardState.Delivering)
     }
 }
