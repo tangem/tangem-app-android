@@ -16,6 +16,7 @@ import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.MnemonicRepository
+import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
 import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResult
 import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResultHolder
@@ -147,7 +148,7 @@ internal class RestoreCloudBackupModelTest {
         every { mnemonicRepository.generateMnemonic(capture(capturedMnemonicString)) } returns mnemonic
         coEvery {
             hotWalletImporter.import(any(), mnemonic, null, "My Wallet")
-        } returns HotWalletImporter.Result.Success(walletId)
+        } returns walletId.right()
 
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
@@ -218,7 +219,7 @@ internal class RestoreCloudBackupModelTest {
         val capturedPassphrase = slot<CharArray>()
         coEvery {
             hotWalletImporter.import(any(), mnemonic, capture(capturedPassphrase), "My Wallet")
-        } returns HotWalletImporter.Result.Success(walletId)
+        } returns walletId.right()
 
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
@@ -246,7 +247,7 @@ internal class RestoreCloudBackupModelTest {
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
             coEvery {
                 hotWalletImporter.import(any(), mnemonic, null, "My Wallet")
-            } returns HotWalletImporter.Result.AlreadySaved
+            } returns HotWalletImportError.AlreadySaved.left()
 
             val model = createModel(this, holderOf(backupInfo))
             advanceUntilIdle()
