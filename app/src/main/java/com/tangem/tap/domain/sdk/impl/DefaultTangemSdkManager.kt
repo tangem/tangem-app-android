@@ -32,6 +32,8 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
+import com.tangem.domain.jointaccount.model.JointAccountCreationSignInput
+import com.tangem.domain.jointaccount.model.JointAccountCreationSignResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
@@ -53,6 +55,7 @@ import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.jointaccount.JointAccountCreationSignTask
 import com.tangem.tap.domain.tasks.visa.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
@@ -76,6 +79,7 @@ internal class DefaultTangemSdkManager(
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
     private val tangemPayVirtualAccountTaskFactory: TangemPayGenerateVirtualAccountAddressTask.Factory,
+    private val jointAccountCreationSignTaskFactory: JointAccountCreationSignTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
@@ -581,6 +585,25 @@ internal class DefaultTangemSdkManager(
                 is CompletionResult.Success<String> -> {
                     WithdrawalSignatureResult.Success(result.data).right()
                 }
+            }
+        }
+    }
+
+    override suspend fun signJointAccountCreation(
+        input: JointAccountCreationSignInput,
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, JointAccountCreationSignResult> {
+        return coroutineScope {
+            val result = runTaskAsyncReturnOnMain(
+                runnable = jointAccountCreationSignTaskFactory.create(coroutineScope = this, input = input),
+                cardId = null,
+                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+                preflightReadFilter = preflightReadFilter,
+            )
+
+            return@coroutineScope when (result) {
+                is CompletionResult.Failure<*> -> result.error.left()
+                is CompletionResult.Success<JointAccountCreationSignResult> -> result.data.right()
             }
         }
     }

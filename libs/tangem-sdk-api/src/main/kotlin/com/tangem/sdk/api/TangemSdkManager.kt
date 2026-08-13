@@ -15,6 +15,8 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.domain.jointaccount.model.JointAccountCreationSignInput
+import com.tangem.domain.jointaccount.model.JointAccountCreationSignResult
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -182,5 +184,17 @@ interface TangemSdkManager {
         hash: String,
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, WithdrawalSignatureResult>
+    // endregion
+
+    // region Joint account
+
+    /**
+     * Derives the joint account owner key and signs the creation payload in a single NFC session.
+     * The returned `derivedKeys` must be persisted via `DerivationsRepository.storeDerivedKeys`.
+     */
+    suspend fun signJointAccountCreation(
+        input: JointAccountCreationSignInput,
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, JointAccountCreationSignResult>
     // endregion
 }
