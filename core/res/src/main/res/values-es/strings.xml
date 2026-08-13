@@ -1296,7 +1296,7 @@
   <string name="promo_campaign_not_active_title">Campaña inactiva</string>
   <string name="promo_campaign_reactivation_summary_description">Gane un reembolso de 0.5% por cada intercambio superior a 500 $, en cualquier par de divisas, excepto entre stablecoins. El pago máximo es de 50 $ por intercambio.\n\nRealice cinco intercambios válidos y desbloquee una bonificación adicional de 10 $.\n\nLas recompensas se abonan semanalmente en USDT o USDC en la dirección seleccionada.</string>
   <string name="promo_campaign_select_cashback_account">Seleccione una cuenta de reembolso</string>
-  <string name="promo_campaign_select_token">Seleccionar token</string>
+  <string name="promo_campaign_select_token">Seleccionar token de cashback</string>
   <string name="promo_campaign_summary_title">Inscríbase en %1$s</string>
   <string name="promo_campaign_terms_agreement">Estoy de acuerdo con %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Estoy de acuerdo con</string>
@@ -1838,7 +1838,7 @@
   <string name="tangempay_bank_transfer_show_details">Mostrar detalles</string>
   <string name="tangempay_bank_transfer_success_subtitle">Esto puede tardar un poco</string>
   <string name="tangempay_bank_transfer_success_title">Preparando sus datos bancarios</string>
-  <string name="tangempay_bank_transfer_swift_warning">Depósito solo vía ACH o FedWire. Las transferencias SWIFT serán devueltas.</string>
+  <string name="tangempay_bank_transfer_swift_warning">No se aceptan transferencias SWIFT; se devolverán los fondos</string>
   <string name="tangempay_cancel_kyc">Ocultar verificación de la pantalla</string>
   <string name="tangempay_card_default_name">Tarjeta Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Agregar fondos</string>
@@ -2104,7 +2104,7 @@
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Reciba USD vía ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Reciba USD vía ACH</string>
   <string name="tangempay_topup_bank_transfer_title">Transferencia bancaria</string>
   <string name="tangempay_topup_receive_body">Envía USDC Polygon a la dirección de tu cuenta</string>
   <string name="tangempay_topup_receive_body_multichain">Envíe USDC o USDT a la dirección de su cuenta</string>
@@ -2159,6 +2159,19 @@
   <string name="token_details_unable_hide_alert_title">No se puede ocultar %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Mostrar código QR</string>
+  <string name="token_summary_can_not_load_token">No se pueden cargar los datos del token.</string>
+  <string name="token_summary_galaxy_score_description">Galaxy Score combina el rendimiento del mercado y la actividad en las redes sociales en una única puntuación del 0 al 100 que refleja el estado general del activo. Fuente: LunarCrush.</string>
+  <string name="token_summary_go_to_swap_button">Ir a intercambiar</string>
+  <string name="token_summary_last_update_subtitle">Última actualización: %1$s</string>
+  <string name="token_summary_ma_cross_description">El MA Cross compara los precios medios de 50 y 200 días para mostrar si el activo cotiza por encima o por debajo de su tendencia a largo plazo. Fuente: taapi.io.</string>
+  <string name="token_summary_macd_description">El indicador MACD compara el impulso de precios a corto y largo plazo para mostrar si el impulso de un activo se está fortaleciendo o debilitando. Fuente: taapi.io.</string>
+  <string name="token_summary_negative_outlook_title">Perspectiva negativa</string>
+  <string name="token_summary_neutral_outlook_title">Perspectiva neutral</string>
+  <string name="token_summary_outlook_is_not_available">No hay previsiones disponibles para este token.</string>
+  <string name="token_summary_positive_outlook_title">Perspectiva positiva</string>
+  <string name="token_summary_rsi_description">El RSI (Índice de Fuerza Relativa) mide si un activo ha sido objeto de un volumen excesivo de compras o ventas en los últimos 14 períodos, lo que permite detectar posibles situaciones de sobrecompra o sobreventa. Fuente: taapi.io.</string>
+  <string name="token_summary_sentiment_description">El índice de sentimiento evalúa el tono de las publicaciones en redes sociales sobre el activo en una escala del 1 al 5, en la que una puntuación más alta indica un debate más positivo. Fuente: LunarCrush.</string>
+  <string name="token_summary_title">Resumen del token</string>
   <string name="token_swap_changelly_promotion_message">Cambie este token por otro por una tarifa de servicio de %1$s del %2$s al %3$s de febrero.</string>
   <string name="token_swap_changelly_promotion_title">Intercambie con Changelly, %s comisiones</string>
   <string name="token_swap_promotion_button">Intercambie ahora</string>
