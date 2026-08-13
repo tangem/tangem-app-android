@@ -1,4 +1,4 @@
-package com.tangem.domain.polymarket.usecase
+package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
@@ -8,6 +8,16 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
+import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
+import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
+import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
+import com.tangem.domain.polymarket.usecase.isRetryable
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -26,7 +36,7 @@ import kotlinx.coroutines.flow.onEach
  * only way it stops waiting is a terminal status, a non-network error, or repeated network failures.
  */
 @Suppress("LongParameterList")
-class RunPolymarketOnboardingUseCase(
+class RunPolymarketOnboardingInteractor(
     private val deriveAddresses: DerivePolymarketAddressesUseCase,
     private val getWalletStatus: GetPolymarketWalletStatusUseCase,
     private val getRelayerNonce: GetPolymarketRelayerNonceUseCase,
