@@ -36,20 +36,8 @@ import kotlinx.collections.immutable.toImmutableList
  * Design-system v2 tab navigation — a horizontally scrollable row of [TangemTabItem]s sharing one
  * animated selection pill.
  *
- * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=6590-2239)
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?m=dev&node-id=6534-619)
  *
- * Behavior notes:
- * - Selection lives on the tabs themselves ([TangemTabItemUM.Content.isSelected]) and is controlled:
- *   nothing moves until the caller reacts to a tab's `onClick` by passing back a list whose selected
- *   tab has changed.
- * - Tabs are mutually exclusive, so the **first** selected tab takes the pill. If none is selected,
- *   or the selected one is still [TangemTabItemUM.Loading], the row renders without a pill.
- * - The pill travels and resizes to the newly selected tab over 400ms, overshooting slightly, while
- *   stretching to 110% of its width mid-flight.
- * - The selected tab is scrolled into view when it isn't fully visible; a tab already on screen never
- *   triggers a scroll.
- *
- * Figma specifies a minimum of two tabs.
  */
 @Composable
 fun TangemTabNavigation(
@@ -108,10 +96,6 @@ fun TangemTabNavigation(
 
 /**
  * Offset and width of the pill, derived from the measured tab widths.
- *
- * Returns `null` until every tab preceding the selected one has been measured: a single unmeasured
- * predecessor makes the whole offset wrong, and one frame without a pill beats one frame with it in
- * the wrong place.
  */
 private fun resolvePillBounds(
     tabs: ImmutableList<TangemTabItemUM>,
