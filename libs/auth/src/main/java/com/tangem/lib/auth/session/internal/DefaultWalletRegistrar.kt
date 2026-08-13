@@ -121,7 +121,7 @@ internal class DefaultWalletRegistrar(
             Base64.decode(nonce, Base64.URL_SAFE or Base64.NO_WRAP)
         } catch (e: Exception) {
             TangemLogger.e("Failed to decode wallet nonce", e)
-            raise(WalletRegistrationError.NonceDecryptionFailed(e))
+            raise(WalletRegistrationError.NonceDecodingFailed(e))
         }
 
         val bundle = try {
