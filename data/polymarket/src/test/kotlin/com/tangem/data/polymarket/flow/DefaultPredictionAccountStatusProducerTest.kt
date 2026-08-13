@@ -1,5 +1,6 @@
 package com.tangem.data.polymarket.flow
 
+import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
@@ -49,20 +50,44 @@ internal class DefaultPredictionAccountStatusProducerTest {
         assertThat(actual).isEqualTo(PredictionAccountStatusValue.Loading)
     }
 
+    /**
+     * The quote producer emits [QuoteStatus.Empty] for any currency nobody has fetched yet, so an empty quote is
+     * "no rate so far", not "this has no price". Reporting the balance unpriced would resolve to a failed
+     * contribution and blank the whole wallet total on every cold start.
+     */
     @Test
-    fun `GIVEN a cached balance and no rate WHEN produce THEN the value is still emitted`() = runTest {
+    fun `GIVEN a cached balance and an empty quote WHEN produce THEN it keeps reporting loading`() = runTest {
         // Arrange
         every { quoteSupplier.invoke(any<SingleQuoteStatusProducer.Params>()) } returns quoteFlow(rate = null)
         val store = createStore(testScope = this)
         store.store(userWalletId = WALLET, value = ACTIVE)
 
-        // Act — the first emission is the loading one the pending quote produces; this is the one after it
-        val actual = createProducer(testScope = this, store = store).produce()
-            .first { it !is PredictionAccountStatusValue.Loading }
+        // Act
+        val actual = createProducer(testScope = this, store = store).produce().first()
 
         // Assert
-        assertThat(actual).isEqualTo(ACTIVE.copy(fiatRate = null))
+        assertThat(actual).isEqualTo(PredictionAccountStatusValue.Loading)
     }
+
+    @Test
+    fun `GIVEN a cached balance WHEN the rate arrives later THEN loading is followed by the priced balance`() =
+        runTest {
+            // Arrange
+            val quotes = MutableSharedFlow<QuoteStatus>(replay = 1)
+            every { quoteSupplier.invoke(any<SingleQuoteStatusProducer.Params>()) } returns quotes
+            val store = createStore(testScope = this)
+            store.store(userWalletId = WALLET, value = ACTIVE)
+            val rate = BigDecimal("0.92")
+
+            // Act & Assert
+            createProducer(testScope = this, store = store).produce().test {
+                assertThat(awaitItem()).isEqualTo(PredictionAccountStatusValue.Loading)
+
+                quotes.emit(quote(rate))
+
+                assertThat(awaitItem()).isEqualTo(ACTIVE.copy(fiatRate = rate))
+            }
+        }
 
     @Test
     fun `GIVEN a cached balance and a rate WHEN produce THEN the rate is mixed in`() = runTest {
@@ -109,7 +134,9 @@ internal class DefaultPredictionAccountStatusProducerTest {
         assertThat(actual).isEqualTo(ONBOARDING)
     }
 
-    private fun quoteFlow(rate: BigDecimal?): Flow<QuoteStatus> {
+    private fun quoteFlow(rate: BigDecimal?): Flow<QuoteStatus> = flowOf(quote(rate))
+
+    private fun quote(rate: BigDecimal?): QuoteStatus {
         val value = if (rate == null) {
             QuoteStatus.Empty
         } else {
@@ -121,7 +148,7 @@ internal class DefaultPredictionAccountStatusProducerTest {
             )
         }
 
-        return flowOf(QuoteStatus(rawCurrencyId = CryptoCurrency.RawID("usd-coin"), value = value))
+        return QuoteStatus(rawCurrencyId = CryptoCurrency.RawID("usd-coin"), value = value)
     }
 
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
