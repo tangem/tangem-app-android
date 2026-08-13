@@ -48,7 +48,6 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal data class DemoTab(val id: String, val label: String, val counter: String)
 
-/** Deliberately wider than the screen, so the row's scrolling and auto-scroll can be exercised. */
 internal val DEMO_TABS = listOf(
     DemoTab(id = "all", label = "All", counter = "12"),
     DemoTab(id = "etfs", label = "ETFs", counter = "3"),
@@ -126,10 +125,6 @@ private fun ComponentPreview(state: TangemTabNavigationStory) {
     }
 }
 
-/**
- * Renders [content] as though the app were in the given theme. Nests safely, so the backdrop and the
- * component can be put in different themes.
- */
 @Composable
 private fun ThemedAs(isDark: Boolean, content: @Composable () -> Unit) {
     if (isDark == LocalIsInDarkTheme.current) {

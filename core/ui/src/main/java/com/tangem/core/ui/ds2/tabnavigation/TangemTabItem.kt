@@ -53,25 +53,13 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * Design-system v2 tab item — a selectable pill inside a tab navigation row.
  *
- * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=6587-3310)
- *
- * Behavior notes:
- * - An unselected tab has no background of its own; only the selected tab is filled.
- * - The label color morphs on the three timings Figma specifies: it dims within 100ms while pressed,
- *   returns over the next 100ms on release, and lights up on selection only after a 200ms delay so a
- *   shared selection pill has time to arrive first.
- * - A selected tab never dims under the finger.
- * - Focus draws the brand ring in place of the pill's border.
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?m=dev&node-id=6534-619)
  *
  * @param state Content, selection and callbacks of the tab. `selected` drives the label color and,
  *   when [background] is [TangemTabItem.Background.Own], the pill fill. See [TangemTabItemUM].
- * @param modifier Modifier applied to the pill. Constrain the width here (e.g.
- *   `Modifier.widthIn(max = 120.dp)`) to make long labels truncate.
  * @param variant Visual style of the selected pill (Figma `APPEARANCE`). See
  *   [TangemTabItem.Variant].
  * @param background Who paints the selected pill. See [TangemTabItem.Background].
- * @param contentDescription Accessibility label announced by TalkBack. When non-null it replaces the
- *   label and counter text; supply it when those alone are ambiguous (e.g. `"Staking, 21 positions"`).
  * @param interactionSource Interaction source for press / focus state.
  */
 @Composable
@@ -168,14 +156,6 @@ private fun TabText(text: TextReference, color: Color) {
     )
 }
 
-/**
- * The `(selected, isPressed)` pair picks both the destination color and the spec to reach it with, so
- * no bookkeeping of which input changed is needed.
- *
- * Both `when`s test `selected` first, and they have to stay that way: selection normally flips while
- * the finger is still down, and if the spec branch let `isPressed` win there, the tab would light up
- * on the 100ms press morph instead of waiting out the pill's travel on the delayed activation morph.
- */
 @Composable
 private fun animateContentColor(selected: Boolean, isPressed: Boolean): Color {
     val colors = TangemTheme.colors3
@@ -227,7 +207,6 @@ private fun TangemTabItemUM.clickHandler(): (() -> Unit)? = when (this) {
     is TangemTabItemUM.Loading -> null
 }
 
-/** Ticks only when the tap will actually move the selection, so re-tapping the active tab is silent. */
 @Composable
 private fun (() -> Unit)?.withSelectionTick(selected: Boolean): (() -> Unit)? {
     val hapticManager = LocalHapticManager.current
@@ -243,10 +222,6 @@ private fun TangemTabItemUM.label(): TextReference = when (this) {
     is TangemTabItemUM.Loading -> TextReference.EMPTY
 }
 
-/**
- * [TangemIconUM.Icon]'s convenience constructor defaults `tint` to a non-null reference, so a
- * caller-supplied tint can't be told apart from "no tint supplied" — the tab's own color always wins.
- */
 private fun TangemIconUM.withTint(color: Color): TangemIconUM = when (this) {
     is TangemIconUM.Icon -> copy(tint = ColorReference2 { color })
     else -> this
