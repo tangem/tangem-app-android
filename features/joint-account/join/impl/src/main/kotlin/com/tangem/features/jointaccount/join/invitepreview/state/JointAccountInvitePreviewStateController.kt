@@ -28,7 +28,6 @@ internal class JointAccountInvitePreviewStateController @Inject constructor() {
         totalMembers = STUB_TOTAL_MEMBERS,
         creatorName = STUB_CREATOR_NAME,
         wallet = null,
-        chooseWallet = null,
         onCreatorInfoClick = {},
         onContinueClick = {},
         onCloseClick = {},

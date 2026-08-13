@@ -3,7 +3,6 @@ package com.tangem.features.jointaccount.join.invitepreview.state.transformers
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.ui.account.AccountIconUM
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -31,7 +30,6 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         totalMembers = 5,
         creatorName = "Igor Sinyak",
         wallet = null,
-        chooseWallet = null,
         onCreatorInfoClick = {},
         onContinueClick = {},
         onCloseClick = {},
@@ -40,7 +38,7 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
     @Test
     fun `GIVEN single wallet WHEN transform THEN wallet row is hidden`() {
         // Arrange
-        val transformer = createTransformer(wallets = listOf(firstWallet))
+        val transformer = createTransformer(wallets = listOf(firstWallet), selectedWallet = firstWallet)
 
         // Act
         val actual = transformer.transform(prevState = initialState)
@@ -52,58 +50,36 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
     @Test
     fun `GIVEN two wallets WHEN transform THEN wallet row shows the selected wallet name`() {
         // Arrange
-        val transformer = createTransformer(wallets = listOf(firstWallet, secondWallet))
+        val transformer = createTransformer(
+            wallets = listOf(firstWallet, secondWallet),
+            selectedWallet = secondWallet,
+        )
 
         // Act
         val actual = transformer.transform(prevState = initialState)
 
         // Assert
-        assertThat(actual.wallet?.name).isEqualTo(firstWallet.name)
+        assertThat(actual.wallet?.name).isEqualTo(secondWallet.name)
     }
 
     @Test
-    fun `GIVEN sheet is hidden WHEN transform THEN choose wallet is null`() {
+    fun `GIVEN no selected wallet WHEN transform THEN wallet row is hidden`() {
         // Arrange
-        val transformer = createTransformer(wallets = listOf(firstWallet, secondWallet), isSheetShown = false)
+        val transformer = createTransformer(wallets = listOf(firstWallet, secondWallet), selectedWallet = null)
 
         // Act
         val actual = transformer.transform(prevState = initialState)
 
         // Assert
-        assertThat(actual.chooseWallet).isNull()
-    }
-
-    @Test
-    fun `GIVEN sheet is shown WHEN transform THEN choose wallet contains all wallets with selection`() {
-        // Arrange
-        val transformer = createTransformer(wallets = listOf(firstWallet, secondWallet), isSheetShown = true)
-
-        // Act
-        val actual = transformer.transform(prevState = initialState)
-
-        // Assert
-        val items = actual.chooseWallet?.wallets.orEmpty()
-        assertThat(items).hasSize(2)
-        assertThat(items.map { it.isSelected }).containsExactly(true, false).inOrder()
+        assertThat(actual.wallet).isNull()
     }
 
     private fun createTransformer(
         wallets: List<UserWallet>,
-        isSheetShown: Boolean = false,
+        selectedWallet: UserWallet?,
     ): UpdateInvitePreviewWalletsTransformer = UpdateInvitePreviewWalletsTransformer(
-        walletsInfo = UpdateInvitePreviewWalletsTransformer.WalletsInfo(
-            wallets = wallets,
-            selectedWalletId = firstWallet.walletId,
-            isSheetShown = isSheetShown,
-            balances = emptyMap(),
-            images = emptyMap(),
-            appCurrency = AppCurrency.Default,
-            isBalanceHidden = false,
-        ),
-        intents = UpdateInvitePreviewWalletsTransformer.Intents(
-            onWalletSelect = {},
-            onWalletRowClick = {},
-            onChooseWalletDismiss = {},
-        ),
+        wallets = wallets,
+        selectedWallet = selectedWallet,
+        onWalletRowClick = {},
     )
 }
