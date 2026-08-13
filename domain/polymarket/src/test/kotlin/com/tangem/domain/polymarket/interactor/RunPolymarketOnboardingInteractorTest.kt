@@ -1,4 +1,4 @@
-package com.tangem.domain.polymarket.usecase
+package com.tangem.domain.polymarket.interactor
 
 import app.cash.turbine.test
 import arrow.core.left
@@ -16,6 +16,15 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
+import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
+import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
+import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
+import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,7 +37,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigInteger
 
-internal class RunPolymarketOnboardingUseCaseTest {
+internal class RunPolymarketOnboardingInteractorTest {
 
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val getWalletStatus: GetPolymarketWalletStatusUseCase = mockk()
@@ -40,7 +49,7 @@ internal class RunPolymarketOnboardingUseCaseTest {
     private val submitApprovals: SubmitApprovalsUseCase = mockk()
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase = mockk()
 
-    private val useCase = RunPolymarketOnboardingUseCase(
+    private val useCase = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
         getRelayerNonce = getRelayerNonce,
