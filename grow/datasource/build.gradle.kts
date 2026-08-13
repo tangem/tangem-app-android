@@ -14,8 +14,6 @@ android {
 }
 
 dependencies {
-    implementation(deps.kotlin.coroutines)
-
     api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     api(deps.retrofit)
