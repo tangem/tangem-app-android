@@ -76,14 +76,62 @@ internal class PredictionAccountStatusStoreTest {
     @Test
     fun `GIVEN a stored value WHEN updateStatusSource THEN only the source changes`() = runTest {
         // Arrange
-        val store = createStore(testScope = this)
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(default = emptyMap())
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
         store.store(userWalletId = WALLET_A, value = ACTIVE)
 
         // Act
         store.updateStatusSource(userWalletId = WALLET_A, source = StatusSource.ONLY_CACHE)
 
-        // Assert
+        // Assert — "could not be refreshed" is about this session, so it must not survive to the next launch
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
+        assertThat(persisted.data.first()[WALLET_A.stringValue]).isEqualTo(ACTIVE)
+    }
+
+    @Test
+    fun `GIVEN a refresh lands while the cache loads WHEN it arrives THEN the newer value wins`() = runTest {
+        // Arrange — the persisted snapshot is older than what the refresh is about to write
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(
+            default = mapOf(WALLET_A.stringValue to ACTIVE, WALLET_B.stringValue to ACTIVE),
+        )
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+        val refreshed = ACTIVE.copy(balance = BigDecimal("99"))
+
+        // Act — the store call happens before the init coroutine gets to run
+        store.store(userWalletId = WALLET_A, value = refreshed)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(refreshed)
+        assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE)
+    }
+
+    @Test
+    fun `GIVEN a wallet cleared while the cache loads WHEN it arrives THEN the entry stays gone`() = runTest {
+        // Arrange — the deleted wallet is still in the snapshot the init coroutine is about to read
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(
+            default = mapOf(WALLET_A.stringValue to ACTIVE),
+        )
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+
+        // Act
+        store.clear(WALLET_A)
+        advanceUntilIdle()
+
+        // Assert — otherwise a re-added wallet inherits the balance of the one the user deleted
+        assertThat(store.getSyncOrNull(WALLET_A)).isNull()
+    }
+
+    @Test
+    fun `GIVEN a priced value WHEN store THEN the rate is not kept`() = runTest {
+        // Arrange
+        val store = createStore(testScope = this)
+
+        // Act — the rate is into the app's selected currency, which the user can change while this stays cached
+        store.store(userWalletId = WALLET_A, value = ACTIVE.copy(fiatRate = BigDecimal("0.9")))
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(fiatRate = null))
     }
 
     @Test
