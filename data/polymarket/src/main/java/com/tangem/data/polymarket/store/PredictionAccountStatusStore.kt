@@ -42,7 +42,9 @@ internal class PredictionAccountStatusStore(
                 .onFailure { logger.e("Failed to read the cached prediction account statuses", it) }
                 .getOrDefault(emptyMap())
 
-            runtimeStore.store(cached)
+            // Merged, not replaced: a refresh that lands while the disk is being read must not be rolled back,
+            // and a wallet deleted in that window must not come back from the snapshot taken before the deletion
+            runtimeStore.update(default = emptyMap()) { current -> cached + current }
         }
     }
 
@@ -58,16 +60,25 @@ internal class PredictionAccountStatusStore(
     }
 
     suspend fun store(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
+        val unpriced = value.withoutFiatRate()
+
         coroutineScope {
-            launch { storeInRuntime(userWalletId = userWalletId, value = value) }
-            launch { storeInPersistence(userWalletId = userWalletId, value = value) }
+            launch { storeInRuntime(userWalletId = userWalletId, value = unpriced) }
+            launch { storeInPersistence(userWalletId = userWalletId, value = unpriced) }
         }
     }
 
+    /**
+     * Marks what is already cached as un-refreshed. Runtime only, and in one atomic update: a refresh that failed
+     * must not overwrite the value a concurrent successful one has just written, and a source saying "could not be
+     * refreshed" must not survive to the next launch, where nothing has been attempted yet.
+     */
     suspend fun updateStatusSource(userWalletId: UserWalletId, source: StatusSource) {
-        val updated = runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)?.copySealed(source = source) ?: return
+        runtimeStore.update(default = emptyMap()) { stored ->
+            val value = stored[userWalletId.stringValue] ?: return@update stored
 
-        store(userWalletId = userWalletId, value = updated)
+            stored + (userWalletId.stringValue to value.copySealed(source = source))
+        }
     }
 
     suspend fun clear(userWalletId: UserWalletId) {
@@ -87,6 +98,11 @@ internal class PredictionAccountStatusStore(
         persistenceDataStore.updateData { stored ->
             stored + (userWalletId.stringValue to value)
         }
+    }
+
+    /** Enforces the "no rate here" contract on write rather than trusting every caller to honour it. */
+    private fun PredictionAccountStatusValue.withoutFiatRate(): PredictionAccountStatusValue {
+        return if (this is PredictionAccountStatusValue.Active) copy(fiatRate = null) else this
     }
 
     private companion object {
