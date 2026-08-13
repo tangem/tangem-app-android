@@ -45,7 +45,6 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
         ) { stored, rate ->
             priced(stored = stored, rate = rate)
         }
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
@@ -54,7 +53,9 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
             .map { quote ->
                 when (val value = quote.value) {
                     is QuoteStatus.Data -> CollateralRate.Known(value.fiatRate)
-                    is QuoteStatus.Empty -> CollateralRate.Missing
+                    // Empty is what the quote producer emits for a currency nobody has fetched yet, so it is
+                    // "no rate so far", never "no rate exists"
+                    is QuoteStatus.Empty -> CollateralRate.Pending
                 }
             }
             .onStart { emit(CollateralRate.Pending) }
@@ -62,9 +63,9 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
     }
 
     /**
-     * A balance nobody can price is reported without a rate, which resolves to a failed contribution — the same
-     * treatment a token without a quote gets in the wallet total. While the quote has merely not arrived yet, the
-     * status stays [PredictionAccountStatusValue.Loading] instead, so a momentary gap cannot blank the total.
+     * Until the rate is known, a cached balance is reported as loading rather than as a balance nobody can price:
+     * an unpriced balance resolves to a failed contribution, and one failed contribution blanks the whole wallet
+     * total, not just this account.
      */
     private fun priced(stored: PredictionAccountStatusValue?, rate: CollateralRate): PredictionAccountStatusValue {
         val value = stored ?: PredictionAccountStatusValue.Loading
@@ -72,18 +73,14 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
 
         return when (rate) {
             CollateralRate.Pending -> PredictionAccountStatusValue.Loading
-            CollateralRate.Missing -> value.copy(fiatRate = null)
             is CollateralRate.Known -> value.copy(fiatRate = rate.value)
         }
     }
 
     private sealed interface CollateralRate {
 
-        /** The quote has not been asked for yet, or has not answered. */
+        /** No rate so far — the quote has not been fetched, or has not answered yet. */
         data object Pending : CollateralRate
-
-        /** The quote answered and carries no rate. */
-        data object Missing : CollateralRate
 
         data class Known(val value: BigDecimal) : CollateralRate
     }
