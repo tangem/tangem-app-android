@@ -9,6 +9,10 @@ plugins {
 
 android {
     namespace = "com.tangem.data.cloudbackup"
+
+    // GoogleDriveTokenProvider transitively touches org.json.JSONObject, which is only a stub in unit
+    // tests; return default values instead of throwing (as :common:google does for the same reason).
+    testOptions.unitTests.isReturnDefaultValues = true
 }
 
 // bcprov-jdk15to18 arrives transitively and ships the same Argon2 classes as the bcprov declared
