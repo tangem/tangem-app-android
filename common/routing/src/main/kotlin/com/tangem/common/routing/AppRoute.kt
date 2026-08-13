@@ -484,6 +484,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}")
 
     @Serializable
+    data class JointAccountJoin(
+        val inviteId: String,
+    ) : AppRoute(path = "/joint_account_join/$inviteId")
+
+    @Serializable
     data class EditAccount(
         val account: Account.CryptoPortfolio,
     ) : AppRoute(path = "/edit_account/${account.accountId.value}")
