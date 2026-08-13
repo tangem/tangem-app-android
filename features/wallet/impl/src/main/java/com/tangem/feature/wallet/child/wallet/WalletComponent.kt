@@ -36,6 +36,7 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.jointaccount.main.component.JointAccountMainBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -58,6 +59,7 @@ internal class WalletComponent @AssistedInject constructor(
     feedEntryComponentFactory: FeedEntryComponent.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     virtualAccountMainBlockComponentFactory: VirtualAccountMainBlockComponent.Factory,
+    jointAccountMainBlockComponentFactory: JointAccountMainBlockComponent.Factory,
     private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
@@ -88,6 +90,12 @@ internal class WalletComponent @AssistedInject constructor(
     private val virtualAccountMainBlockComponent by lazy {
         virtualAccountMainBlockComponentFactory.create(
             context = child("virtualAccountMainBlockComponent"),
+            params = Unit,
+        )
+    }
+    private val jointAccountMainBlockComponent by lazy {
+        jointAccountMainBlockComponentFactory.create(
+            context = child("jointAccountMainBlockComponent"),
             params = Unit,
         )
     }
@@ -297,6 +305,7 @@ internal class WalletComponent @AssistedInject constructor(
             promoBannersBlockComponent = promoBannersBlockComponent,
             tangemPayComponent = tangemPayMainBlockComponent,
             virtualAccountComponent = virtualAccountMainBlockComponent,
+            jointAccountComponent = jointAccountMainBlockComponent,
             modifier = modifier,
             bottomSheetContent = { onExpandSheet ->
                 BottomSheetContent(
