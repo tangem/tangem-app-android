@@ -37,13 +37,15 @@ internal class PolymarketUserWalletDataCleanerTest {
     }
 
     @Test
-    fun `GIVEN two removed wallets WHEN clear THEN the store is cleared for both`() = runTest {
+    fun `GIVEN two removed wallets WHEN clear THEN both stores are cleared for both`() = runTest {
         // Act
         cleaner.clear(listOf(WALLET_A, WALLET_B))
 
         // Assert
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_A) }
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
+        coVerify(exactly = 1) { statusStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { statusStore.clear(WALLET_B) }
     }
 
     @Test
