@@ -33,6 +33,7 @@ import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
 import com.tangem.domain.transaction.error.AddressValidation
+import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.domain.transaction.usecase.IsSelfSendAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
@@ -314,8 +315,14 @@ internal class SendDestinationModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onQrCodeScanned(address: String) {
-        val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull() ?: return
+    private fun onQrCodeScanned(qrCode: String) {
+        val parsedQrCode = parseQrCodeUseCase(qrCode, cryptoCurrency).getOrNull()
+
+        if (parsedQrCode == null || parsedQrCode.address.isBlank()) {
+            sendDestinationAlertFactory.showUnrecognizedQrCodeAlert()
+            return
+        }
+
         _uiState.update(
             SendDestinationPredefinedStateTransformer(
                 address = parsedQrCode.address,
@@ -443,6 +450,8 @@ internal class SendDestinationModel @Inject constructor(
                 allowSelfSend = params.isAllowSelfSend,
             )
 
+            notifyIfQrCodeUnrecognized(type = type, addressValidationResult = addressValidationResult)
+
             if (addressValidationResult.isRight()) {
                 val problematicWalletId = resolveBackupProblematicWallet(address)
                 if (problematicWalletId != null) {
@@ -501,6 +510,21 @@ internal class SendDestinationModel @Inject constructor(
                 )
             }
         }.saveIn(validationJobHolder)
+    }
+
+    /**
+     * The scanned code carries nothing this network accepts as a recipient — a link, an address of another network,
+     * a burn address. Reported as an alert, because the inline field error is easy to miss right after the camera
+     * closes, and a QR that "filled something in" reads as a successfully scanned recipient.
+     */
+    private fun notifyIfQrCodeUnrecognized(
+        type: EnterAddressSource?,
+        addressValidationResult: AddressValidationResult,
+    ) {
+        if (type != EnterAddressSource.QRCode) return
+        if (addressValidationResult.leftOrNull() != AddressValidation.Error.InvalidAddress) return
+
+        sendDestinationAlertFactory.showUnrecognizedQrCodeAlert()
     }
 
     private fun recognizeContact(type: EnterAddressSource?, isValidAddress: Boolean, address: String) {
