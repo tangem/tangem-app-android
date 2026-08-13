@@ -34,6 +34,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.features.hotwallet.common.ui.CloudBackupPasswordField
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.features.hotwallet.restorecloudbackup.entity.BackupRowUM
+import kotlinx.collections.immutable.persistentListOf
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
 import org.joda.time.DateTime
 
@@ -282,7 +283,7 @@ private fun PreviewBackupList() {
     TangemThemePreviewRedesign {
         RestoreCloudBackupContent(
             state = RestoreCloudBackupUM.BackupList(
-                items = listOf(
+                items = persistentListOf(
                     BackupRowUM(walletName = "My Wallet", createdAtMillis = 0L, onClick = {}),
                     BackupRowUM(walletName = "Savings", createdAtMillis = 1_000L, onClick = {}),
                 ),
