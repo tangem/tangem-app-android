@@ -79,10 +79,7 @@ internal class OnChainTxToDetailsUMConverter(
             rows = buildList {
                 tx.validatorRow()?.let(::add)
                 tx.protocolRow()?.let(::add)
-                // A received "Receive" transfer's fee was paid by the sender, not the user — omit it here. An own
-                // "Transfer" (both sides the user's) and user-initiated ops (Approve, staking) keep their fee, even
-                // when incoming.
-                if (!tx.isReceive()) addAll(tx.toInfoRows())
+                if (!tx.hasForeignFee()) addAll(tx.toInfoRows())
             }.toImmutableList(),
         )
     }
@@ -174,13 +171,11 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * A "Receive" — an incoming transfer from an **external** counterparty. Its on-chain fee belongs to the sender,
-     * so the details omit the fee row. An own "Transfer" between the user's own accounts/wallets is not a receive:
-     * the user did pay that fee, so it is kept. A non-withdraw [TxInfo.TransactionType.YieldSupply.Send] is a plain
-     * transfer too and follows the same rule. A withdraw is a user-initiated yield op, so its fee is always kept.
+     * Whether the fee was paid by the counterparty, which drops the fee row: an incoming plain transfer. A non-withdraw
+     * [TxInfo.TransactionType.YieldSupply.Send] is a plain transfer too and follows the same rule.
      */
-    private fun TxInfo.isReceive(): Boolean = !isOutgoing && !isOwnTransfer() && (
-        type is TxInfo.TransactionType.Transfer ||
+    private fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
+        type is TransactionType.Transfer ||
             (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
         )
 
