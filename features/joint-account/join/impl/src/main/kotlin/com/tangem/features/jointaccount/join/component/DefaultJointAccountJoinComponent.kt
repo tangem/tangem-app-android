@@ -18,6 +18,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.jointaccount.common.displayname.JointAccountDisplayNameComponent
 import com.tangem.features.jointaccount.join.invitepreview.JointAccountInvitePreviewComponent
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
@@ -31,6 +32,7 @@ internal class DefaultJointAccountJoinComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: JointAccountJoinComponent.Params,
     private val displayNameComponentFactory: JointAccountDisplayNameComponent.Factory,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : JointAccountJoinComponent, AppComponentContext by appComponentContext {
 
     private val model: JointAccountJoinModel = getOrCreateModel()
@@ -86,6 +88,7 @@ internal class DefaultJointAccountJoinComponent @AssistedInject constructor(
         return JointAccountInvitePreviewComponent(
             appComponentContext = childContext,
             params = childParams,
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         )
     }
 
