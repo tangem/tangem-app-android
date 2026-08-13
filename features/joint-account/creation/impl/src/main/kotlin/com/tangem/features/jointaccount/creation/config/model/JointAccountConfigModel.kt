@@ -1,32 +1,36 @@
 package com.tangem.features.jointaccount.creation.config.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCase
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.jointaccount.creation.config.state.JointAccountConfigStateController
 import com.tangem.features.jointaccount.creation.config.state.transformers.*
 import com.tangem.features.jointaccount.creation.config.ui.state.JointAccountConfigUM
 import com.tangem.features.jointaccount.creation.model.JointAccountCreationChildParams
 import com.tangem.features.jointaccount.creation.model.JointAccountCreationDraft
 import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
-import com.tangem.features.wallet.utils.UserWalletImageFetcher
-import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -37,26 +41,51 @@ internal class JointAccountConfigModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val stateController: JointAccountConfigStateController,
-    private val userWalletsListRepository: UserWalletsListRepository,
-    private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val userWalletImageFetcher: UserWalletImageFetcher,
+    userWalletsListRepository: UserWalletsListRepository,
+    val portfolioSelectorController: PortfolioSelectorController,
+    portfolioFetcherFactory: PortfolioFetcher.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountCreationChildParams>()
 
-    private val selectedWalletId = MutableStateFlow(
-        value = params
-            .draftHolder
-            .draft
-            .value
-            .config
-            ?.walletId
-            ?: params.userWalletId,
-    )
+    val portfolioSelectorNavigation = SlotNavigation<Unit>()
 
-    private val isChooseWalletShown = MutableStateFlow(value = false)
+    val portfolioFetcher: PortfolioFetcher by lazy {
+        portfolioFetcherFactory.create(
+            mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = false),
+            scope = modelScope,
+        )
+    }
+
+    val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
+        override val onDismiss: () -> Unit = { portfolioSelectorNavigation.dismiss() }
+        override val onBack: () -> Unit = { portfolioSelectorNavigation.dismiss() }
+    }
+
+    /** The wallet picked in the selector, if any */
+    private val pickedWallet: StateFlow<UserWallet?> =
+        portfolioSelectorController.selectedAccountWithData(portfolioFetcher)
+            .map { it?.first }
+            .stateIn(modelScope, SharingStarted.Eagerly, null)
+
+    private val unlockedWallets: Flow<List<UserWallet>> = userWalletsListRepository.userWallets
+        .map { wallets -> wallets.orEmpty().filterNot(UserWallet::isLocked) }
+
+    /**
+
+     * to the wallet saved in the draft, then to the wallet the flow was opened from.
+     */
+    private val selectedWallet: StateFlow<UserWallet?> = combine(
+        pickedWallet,
+        unlockedWallets,
+    ) { picked, wallets ->
+        val draftConfig = params.draftHolder.draft.value.config
+        val defaultWalletId = draftConfig?.walletId ?: params.userWalletId
+
+        picked
+            ?: wallets.firstOrNull { it.walletId == defaultWalletId }
+            ?: wallets.firstOrNull()
+    }.stateIn(modelScope, SharingStarted.Eagerly, null)
 
     val uiState: StateFlow<JointAccountConfigUM>
         get() = stateController.uiState
@@ -65,6 +94,7 @@ internal class JointAccountConfigModel @Inject constructor(
         updateInitialState()
         restoreDraft()
         observeWallets()
+        dismissSelectorOnPick()
     }
 
     private fun updateInitialState() {
@@ -85,50 +115,25 @@ internal class JointAccountConfigModel @Inject constructor(
         stateController.update(RestoreConfigDraftTransformer(draft = config))
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeWallets() {
-        combine(
-            flow = userWalletsListRepository.userWallets.map { wallets ->
-                wallets.orEmpty().filterNot(UserWallet::isLocked)
-            },
-            flow2 = selectedWalletId,
-            flow3 = isChooseWalletShown,
-            flow4 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
-            flow5 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
-            transform = ::WalletsState,
-        )
-            .flatMapLatest { state ->
-                combine(
-                    flow = getWalletTotalBalanceUseCase(userWalletIds = state.wallets.map(UserWallet::walletId))
-                        .map { lce -> lce.getOrNull().orEmpty() },
-                    flow2 = userWalletImageFetcher.walletsImage(wallets = state.wallets, size = ArtworkSize.SMALL),
-                ) { balances, images -> createWalletsTransformer(state, balances, images) }
-            }
+        combine(unlockedWallets, selectedWallet) { wallets, selected ->
+            UpdateWalletsTransformer(
+                wallets = wallets,
+                selectedWallet = selected,
+                onWalletRowClick = ::onWalletRowClick,
+            )
+        }
             .onEach(stateController::update)
-            .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
 
-    private fun createWalletsTransformer(
-        state: WalletsState,
-        balances: Map<UserWalletId, TotalFiatBalance>,
-        images: Map<UserWalletId, UserWalletItemUM.ImageState>,
-    ): UpdateWalletsTransformer = UpdateWalletsTransformer(
-        walletsInfo = UpdateWalletsTransformer.WalletsInfo(
-            wallets = state.wallets,
-            selectedWalletId = state.selectedId,
-            isSheetShown = state.isSheetShown,
-            balances = balances,
-            images = images,
-            appCurrency = state.appCurrency,
-            isBalanceHidden = state.isBalanceHidden,
-        ),
-        intents = UpdateWalletsTransformer.Intents(
-            onWalletSelect = ::onWalletSelect,
-            onWalletRowClick = ::onWalletRowClick,
-            onChooseWalletDismiss = ::onChooseWalletDismiss,
-        ),
-    )
+    /** Closes the wallet selector as soon as the user picks a wallet in it */
+    private fun dismissSelectorOnPick() {
+        pickedWallet
+            .filterNotNull()
+            .onEach { portfolioSelectorNavigation.dismiss() }
+            .launchIn(modelScope)
+    }
 
     private fun onNameChange(name: String) {
         stateController.update(UpdateAccountNameTransformer(name = name))
@@ -143,16 +148,7 @@ internal class JointAccountConfigModel @Inject constructor(
     }
 
     private fun onWalletRowClick() {
-        isChooseWalletShown.value = true
-    }
-
-    private fun onChooseWalletDismiss() {
-        isChooseWalletShown.value = false
-    }
-
-    private fun onWalletSelect(walletId: UserWalletId) {
-        selectedWalletId.value = walletId
-        isChooseWalletShown.value = false
+        portfolioSelectorNavigation.activate(Unit)
     }
 
     private fun onContinueClick() {
@@ -163,7 +159,7 @@ internal class JointAccountConfigModel @Inject constructor(
                 name = state.name,
                 icon = state.icon.value,
                 color = state.icon.color,
-                walletId = selectedWalletId.value,
+                walletId = selectedWallet.value?.walletId ?: params.userWalletId,
             ),
         )
 
@@ -174,12 +170,4 @@ internal class JointAccountConfigModel @Inject constructor(
     private fun onBackClick() {
         router.pop()
     }
-
-    private data class WalletsState(
-        val wallets: List<UserWallet>,
-        val selectedId: UserWalletId,
-        val isSheetShown: Boolean,
-        val appCurrency: AppCurrency,
-        val isBalanceHidden: Boolean,
-    )
 }
