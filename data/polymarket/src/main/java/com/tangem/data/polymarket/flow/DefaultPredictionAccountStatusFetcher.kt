@@ -2,10 +2,13 @@ package com.tangem.data.polymarket.flow
 
 import arrow.core.Either
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -16,6 +19,7 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import javax.inject.Inject
 
 /**
@@ -26,12 +30,15 @@ import javax.inject.Inject
  * wallet, and a background refresh may not ask the user for either. No stored addresses means the account has not
  * been set up on this device, which is reported as not onboarded rather than as an error.
  *
- * A failure leaves the cached status in place and marks it as un-refreshed, so a refresh that could not reach the
- * backend does not erase the balance the user was looking at.
+ * Anything it could not find out — an unreachable backend, a locked wallet, a throttled CLOB — leaves the cached
+ * status in place and marks it as un-refreshed. It never writes a state that means "there is nothing here" on the
+ * strength of a failed question: the repository answers with `Either.Left` rather than throwing, so treating a left
+ * as an answer would drop a real balance out of the wallet total and out of the on-disk cache.
  */
 @Suppress("LongParameterList")
 internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val statusStore: PredictionAccountStatusStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
@@ -44,18 +51,29 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
         return Either.catchOn(dispatchers.default) {
             val value = resolve(userWalletId = params.userWalletId)
 
-            statusStore.store(userWalletId = params.userWalletId, value = value)
+            if (value == null) {
+                markUnrefreshed(userWalletId = params.userWalletId)
+            } else {
+                statusStore.store(userWalletId = params.userWalletId, value = value)
+            }
         }.onLeft {
-            statusStore.updateStatusSource(userWalletId = params.userWalletId, source = StatusSource.ONLY_CACHE)
+            markUnrefreshed(userWalletId = params.userWalletId)
         }
     }
 
-    private suspend fun resolve(userWalletId: UserWalletId): PredictionAccountStatusValue {
+    /**
+     * The status if it could be established, `null` if it could not — in which case the caller keeps whatever is
+     * cached instead of replacing it with a state that claims the account is empty or absent.
+     */
+    private suspend fun resolve(userWalletId: UserWalletId): PredictionAccountStatusValue? {
+        val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId) ?: return null
+        // A locked wallet holds no keys to read the addresses from, which says nothing about the account behind them
+        if (userWallet.isLocked) return null
+
         val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = userWalletId)
             ?: return PredictionAccountStatusValue.NotOnboarded
 
-        val state = getPolymarketWalletStatusUseCase(addresses = addresses).getOrNull()
-            ?: return PredictionAccountStatusValue.Error.Unavailable
+        val state = getPolymarketWalletStatusUseCase(addresses = addresses).getOrNull() ?: return null
 
         return when (state.status) {
             PolymarketWalletStatus.NOT_CREATED -> PredictionAccountStatusValue.NotOnboarded
@@ -69,7 +87,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             PolymarketWalletStatus.DEPLOYMENT_FAILED,
             PolymarketWalletStatus.APPROVALS_FAILED,
             -> PredictionAccountStatusValue.Error.OnboardingFailed
-            PolymarketWalletStatus.UNKNOWN -> PredictionAccountStatusValue.Error.Unavailable
+            // A status this build does not know is "not ready, keep polling" by the BFF contract, not an error
+            PolymarketWalletStatus.UNKNOWN -> null
             PolymarketWalletStatus.READY_TO_TRADE -> active(addresses = addresses)
         }
     }
@@ -78,7 +97,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
      * The balance read needs the L2 credentials this device holds. A wallet deployed elsewhere has none here, and
      * that is not an error — its setup is simply unfinished on this device, which is what the deployed stage says.
      */
-    private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusValue {
+    private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusValue? {
         singleQuoteStatusFetcher(
             SingleQuoteStatusFetcher.Params(rawCurrencyId = COLLATERAL_CURRENCY_ID, appCurrencyId = null),
         )
@@ -89,7 +108,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                     is PolymarketAuthError.KeyNotFound -> onboarding(
                         PredictionAccountStatusValue.Onboarding.Stage.DEPLOYED,
                     )
-                    else -> PredictionAccountStatusValue.Error.Unavailable
+                    // Throttled, offline or rejected: the balance is unknown, not zero
+                    else -> null
                 }
             },
             ifRight = { balanceAllowance ->
@@ -113,4 +133,11 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
 
     private fun onboarding(stage: PredictionAccountStatusValue.Onboarding.Stage) =
         PredictionAccountStatusValue.Onboarding(source = StatusSource.ACTUAL, stage = stage)
+
+    /** Guarded: the likeliest reason to be here is that the store itself failed, and this asks it to write again. */
+    private suspend fun markUnrefreshed(userWalletId: UserWalletId) {
+        runSuspendCatching {
+            statusStore.updateStatusSource(userWalletId = userWalletId, source = StatusSource.ONLY_CACHE)
+        }
+    }
 }
