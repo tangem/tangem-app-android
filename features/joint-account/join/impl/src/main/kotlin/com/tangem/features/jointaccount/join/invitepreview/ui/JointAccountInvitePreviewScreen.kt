@@ -316,6 +316,7 @@ private fun createPreviewState(wallet: JointAccountInvitePreviewUM.WalletUM?): J
         totalMembers = 5,
         creatorName = "Igor Sinyak",
         wallet = wallet,
+        confirmation = null,
         onCreatorInfoClick = {},
         onContinueClick = {},
         onCloseClick = {},

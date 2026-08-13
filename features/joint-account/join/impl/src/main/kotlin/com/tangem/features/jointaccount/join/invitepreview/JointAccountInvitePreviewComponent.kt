@@ -11,6 +11,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.jointaccount.join.confirmation.ui.JointAccountJoinConfirmationBS
 import com.tangem.features.jointaccount.join.invitepreview.model.JointAccountInvitePreviewModel
 import com.tangem.features.jointaccount.join.invitepreview.ui.JointAccountInvitePreviewScreen
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
@@ -50,5 +51,9 @@ internal class JointAccountInvitePreviewComponent(
         JointAccountInvitePreviewScreen(state = state, modifier = modifier)
 
         selectorSlot.child?.instance?.BottomSheet()
+
+        state.confirmation?.let { confirmation ->
+            JointAccountJoinConfirmationBS(state = confirmation)
+        }
     }
 }
