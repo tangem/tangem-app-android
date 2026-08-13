@@ -26,6 +26,7 @@ import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
@@ -286,7 +287,7 @@ internal class SendDestinationModelTest {
     inner class QrScan {
 
         @Test
-        fun `GIVEN unparseable QR WHEN scanned THEN do NOT validate`() = runTest {
+        fun `GIVEN unparseable QR WHEN scanned THEN do NOT validate AND show unrecognized alert`() = runTest {
             // Arrange
             val qrFlow = MutableStateFlow("rawQr")
             every { listenToQrScanningUseCase(any()) } returns qrFlow.right()
@@ -307,6 +308,83 @@ internal class SendDestinationModelTest {
                     any()
                 )
             }
+            verify(exactly = 1) { sendDestinationAlertFactory.showUnrecognizedQrCodeAlert() }
+        }
+
+        @Test
+        fun `GIVEN QR without address WHEN scanned THEN keep entered recipient AND show unrecognized alert`() =
+            runTest {
+                // Arrange — the QR parses but yields no address (e.g. an ERC-681 URI for another token)
+                val qrFlow = MutableSharedFlow<String>(extraBufferCapacity = 1)
+                every { listenToQrScanningUseCase(any()) } returns qrFlow.right()
+                every { parseQrCodeUseCase("rawQr", cryptoCurrency) } returns QrResult(address = "").right()
+                val sut = buildModel(initialState = contentState(address = "0xEntered"))
+                advanceUntilIdle()
+
+                // Act
+                qrFlow.tryEmit("rawQr")
+                advanceUntilIdle()
+
+                // Assert — a QR with nothing usable must not wipe what the user already has
+                assertThat(content(sut).addressTextField.value).isEqualTo("0xEntered")
+                verify(exactly = 1) { sendDestinationAlertFactory.showUnrecognizedQrCodeAlert() }
+            }
+
+        @Test
+        fun `GIVEN QR address invalid for network WHEN scanned THEN show unrecognized alert`() = runTest {
+            // Arrange — a scanned link or a foreign-network address the current network rejects
+            val qrFlow = MutableStateFlow("rawQr")
+            every { listenToQrScanningUseCase(any()) } returns qrFlow.right()
+            every { parseQrCodeUseCase("rawQr", cryptoCurrency) } returns QrResult(address = "exchange.com").right()
+            coEvery {
+                validateWalletAddressUseCase(any(), any(), eq("exchange.com"), any<List<CryptoCurrencyAddress>>(), any())
+            } returns AddressValidation.Error.InvalidAddress.left()
+
+            // Act
+            buildModel()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { sendDestinationAlertFactory.showUnrecognizedQrCodeAlert() }
+        }
+
+        @Test
+        fun `GIVEN QR address already in wallet WHEN scanned THEN do NOT show unrecognized alert`() = runTest {
+            // Arrange — self-send is reported inline on the field, the QR itself was read fine
+            val qrFlow = MutableStateFlow("rawQr")
+            every { listenToQrScanningUseCase(any()) } returns qrFlow.right()
+            every { parseQrCodeUseCase("rawQr", cryptoCurrency) } returns QrResult(address = "0xSelf").right()
+            coEvery {
+                validateWalletAddressUseCase(any(), any(), eq("0xSelf"), any<List<CryptoCurrencyAddress>>(), any())
+            } returns AddressValidation.Error.AddressInWallet.left()
+
+            // Act
+            buildModel()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { sendDestinationAlertFactory.showUnrecognizedQrCodeAlert() }
+        }
+
+        @Test
+        fun `GIVEN QR with valid address WHEN scanned THEN fill recipient without alert`() = runTest {
+            // Arrange
+            val qrFlow = MutableStateFlow("rawQr")
+            every { listenToQrScanningUseCase(any()) } returns qrFlow.right()
+            every { parseQrCodeUseCase("rawQr", cryptoCurrency) } returns
+                QrResult(address = "0xValid", memo = "42").right()
+            coEvery {
+                validateWalletAddressUseCase(any(), any(), eq("0xValid"), any<List<CryptoCurrencyAddress>>(), any())
+            } returns AddressValidation.Success.Valid.right()
+            val sut = buildModel(initialState = contentState(address = "", memo = ""))
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(content(sut).addressTextField.value).isEqualTo("0xValid")
+            assertThat(content(sut).memoTextField?.value).isEqualTo("42")
+            verify(exactly = 0) { sendDestinationAlertFactory.showUnrecognizedQrCodeAlert() }
         }
     }
 
