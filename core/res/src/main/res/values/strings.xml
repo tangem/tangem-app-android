@@ -995,6 +995,7 @@
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <string name="joint_account_invite_members_member_info">Member info</string>
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
   <string name="joint_account_invite_members_other_members">Other members</string>
