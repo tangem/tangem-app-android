@@ -8,6 +8,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Message handler that is used to show or remove an [EventMessage] in the UI.
@@ -20,10 +21,19 @@ class EventMessageHandler(
     override fun handleMessage(message: UiMessage) {
         if (message !is EventMessage) return
 
-        events.value = triggeredEvent(message, ::consumeEvent)
+        events.value = triggeredEvent(data = message, onConsume = { consumeEvent(message) })
     }
 
-    private fun consumeEvent() {
-        events.value = consumedEvent()
+    /**
+     * Consumes the [message] only if it is still the triggered one.
+     *
+     * A message may be replaced by a newer one before it is handled, e.g. when a snackbar is replaced by another
+     * snackbar while being displayed. In that case handling of the replaced message is cancelled and it must not reset
+     * the state, otherwise the newer message is consumed before it is handled and thus never shown.
+     */
+    private fun consumeEvent(message: EventMessage) {
+        events.update { event ->
+            if (event is StateEvent.Triggered && event.data === message) consumedEvent() else event
+        }
     }
 }
