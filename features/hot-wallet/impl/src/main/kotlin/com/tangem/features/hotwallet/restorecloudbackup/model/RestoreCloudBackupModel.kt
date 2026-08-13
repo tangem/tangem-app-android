@@ -14,12 +14,15 @@ import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
+import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
 import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResultHolder
 import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.restorecloudbackup.entity.BackupRowUM
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -85,7 +88,11 @@ internal class RestoreCloudBackupModel @Inject constructor(
         if (loaded.isEmpty()) {
             // The import bottom sheet only navigates here with >= 1 backup; guard the impossible case.
             modelScope.launch { onRootBack() }
-            return RestoreCloudBackupUM.BackupList(items = emptyList(), accountEmail = null, onBack = ::onRootBack)
+            return RestoreCloudBackupUM.BackupList(
+                items = persistentListOf(),
+                accountEmail = null,
+                onBack = ::onRootBack,
+            )
         }
 
         accountEmail = result?.accountEmail
@@ -106,7 +113,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
                     createdAtMillis = info.createdAtMillis,
                     onClick = { showEnterPassword(info) },
                 )
-            },
+            }.toImmutableList(),
             accountEmail = accountEmail,
             onBack = ::onRootBack,
         )
@@ -232,21 +239,24 @@ internal class RestoreCloudBackupModel @Inject constructor(
             return
         }
 
-        val result = hotWalletImporter.import(
+        hotWalletImporter.import(
             scope = modelScope,
             mnemonic = mnemonic,
             passphrase = passphrase?.takeIf { it.isNotEmpty() },
             name = name,
-        )
-        when (result) {
-            is HotWalletImporter.Result.Success -> {
+        ).fold(
+            ifLeft = { error ->
+                when (error) {
+                    HotWalletImportError.AlreadySaved -> showAlreadyAdded()
+                    is HotWalletImportError.Unknown -> showError()
+                }
+            },
+            ifRight = { userWalletId ->
                 wipeSecrets()
-                setCloudBackupStateUseCase(result.userWalletId.stringValue, isBackedUp = true)
-                params.callbacks.onWalletImported(result.userWalletId)
-            }
-            HotWalletImporter.Result.AlreadySaved -> showAlreadyAdded()
-            HotWalletImporter.Result.Failure -> showError()
-        }
+                setCloudBackupStateUseCase(userWalletId.stringValue, isBackedUp = true)
+                params.callbacks.onWalletImported(userWalletId)
+            },
+        )
     }
 
     private fun showAlreadyAdded() {
