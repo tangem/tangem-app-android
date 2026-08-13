@@ -13,6 +13,9 @@ class MoonPay : ApiConfig() {
 
     override val id: ApiConfig.ID get() = ID
 
+    // Requests carry the apiKey as a query param, so keep them out of network logs.
+    override val isLoggable: Boolean = false
+
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
