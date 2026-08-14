@@ -5,7 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
-import com.tangem.data.polymarket.store.WalletIdWithPredictionStatus
+import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -264,6 +264,24 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coVerify(exactly = 0) { deriveAddresses.stored(any()) }
     }
 
+    /**
+     * The cached balance still has to be priced. Without the quote the producer reports loading, which contributes
+     * zero to the wallet total — the collateral would read as nothing until some other subsystem fetched the rate.
+     */
+    @Test
+    fun `GIVEN a path that reads nothing WHEN invoke THEN the collateral quote is still refreshed`() = runTest {
+        // Arrange
+        val store = createStore(testScope = this)
+        store.store(userWalletId = WALLET, value = ACTIVE)
+        every { userWallet.isLocked } returns true
+
+        // Act
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+        // Assert
+        coVerify(exactly = 1) { quoteFetcher.invoke(any()) }
+    }
+
     @Test
     fun `GIVEN a status this build does not know WHEN invoke THEN nothing is overwritten`() = runTest {
         // Arrange
@@ -298,7 +316,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
 
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
         runtimeStore = RuntimeSharedStore(),
-        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatus>(default = emptyMap()),
+        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
         scope = TestAppCoroutineScope(testScope),
     )
 
