@@ -1,5 +1,7 @@
 package com.tangem.tests.swap
 
+import com.tangem.datasource.api.common.config.Express
+
 import com.tangem.common.BaseTestCase
 import com.tangem.common.R
 import com.tangem.common.annotations.ApiEnv
@@ -10,8 +12,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chackUnableToCoverFeeNotification
 import com.tangem.scenarios.checkSwapWarning
@@ -30,7 +31,7 @@ import org.junit.Test
 class SwapTokenScreenWarningsTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("580")
     @DisplayName("Swap: check 'Insufficient funds' warning")
@@ -336,6 +337,175 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             }
             step("Click on 'OK' button") {
                 onDialog { okButton.performClick() }
+            }
+        }
+    }
+
+    @ApiEnv(
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
+    )
+    @AllureId("8964")
+    @DisplayName("Warnings: 'High price impact' banner on swap opened from Main screen")
+    @Test
+    fun checkHighPriceImpactWarningFromMainScreenTest() {
+        val swapTokenName = "Polygon"
+        val receiveTokenName = "Ethereum"
+        val inputAmount = "300"
+        // swap-v2 raises the "High price impact" banner already at the MEDIUM threshold — hence the Medium mock.
+        val quotesScenarioState = "MediumPriceImpactMain"
+        val bannerTitle = getResourceString(R.string.swapping_high_price_impact_title)
+        val dialogTitle = getResourceString(R.string.swapping_alert_title)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesScenarioState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesScenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Swap' screen from 'Main' screen") {
+                openSwapScreen(from = SwapEntryPoint.MainScreen)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Click on 'Select token' icon") {
+                onSwapTokenScreen { swapSelectTokenIcon.performClick() }
+            }
+            step("Choose swap token: '$swapTokenName'") {
+                onSwapSelectTokenScreen { tokenWithName(swapTokenName).performClick() }
+                waitForIdle()
+            }
+            step("Choose receive token: '$receiveTokenName'") {
+                chooseReceiveToken(receiveTokenName)
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert fiat amount with warning is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen {
+                        waitForIdle()
+                        receiveFiatAmount.assertTextContains("%", substring = true)
+                    }
+                }
+            }
+            step("Assert 'High price impact' warning banner is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { warningTitle(bannerTitle).assertIsDisplayed() }
+                }
+            }
+            step("Assert receive amount information icon is displayed") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
+            }
+            step("Click on receive amount information icon") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.performClick() }
+            }
+            step("Assert information dialog is displayed") {
+                onDialog { dialogContainer.assertIsDisplayed() }
+            }
+            step("Assert information dialog title is displayed") {
+                onDialog { title.assertTextEquals(dialogTitle) }
+            }
+            step("Assert dialog 'OK' button is displayed") {
+                onDialog { okButton.assertIsDisplayed() }
+            }
+        }
+    }
+
+    @ApiEnv(
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
+    )
+    @AllureId("8965")
+    @DisplayName("Warnings: 'Trade too large' price impact on swap opened from Main screen")
+    @Test
+    fun checkTradeTooLargePriceImpactFromMainScreenTest() {
+        val swapTokenName = "Polygon"
+        val receiveTokenName = "Ethereum"
+        val inputAmount = "300"
+        val quotesScenarioState = "HighPriceImpact"
+        val bannerTitle = getResourceString(R.string.swapping_trade_too_large_title)
+        val dialogTitle = getResourceString(R.string.swapping_alert_title)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesScenarioState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesScenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Swap' screen from 'Main' screen") {
+                openSwapScreen(from = SwapEntryPoint.MainScreen)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Click on 'Select token' icon") {
+                onSwapTokenScreen { swapSelectTokenIcon.performClick() }
+            }
+            step("Choose swap token: '$swapTokenName'") {
+                onSwapSelectTokenScreen { tokenWithName(swapTokenName).performClick() }
+                waitForIdle()
+            }
+            step("Choose receive token: '$receiveTokenName'") {
+                chooseReceiveToken(receiveTokenName)
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert fiat amount with warning is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen {
+                        waitForIdle()
+                        receiveFiatAmount.assertTextContains("%", substring = true)
+                    }
+                }
+            }
+            step("Assert 'Trade too large' warning banner is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { warningTitle(bannerTitle).assertIsDisplayed() }
+                }
+            }
+            step("Assert receive amount information icon is displayed") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
+            }
+            step("Click on receive amount information icon") {
+                onSwapTokenScreen { receiveFiatAmountInformationIcon.performClick() }
+            }
+            step("Assert information dialog is displayed") {
+                onDialog { dialogContainer.assertIsDisplayed() }
+            }
+            step("Assert information dialog title is displayed") {
+                onDialog { title.assertTextEquals(dialogTitle) }
+            }
+            step("Assert dialog 'OK' button is displayed") {
+                onDialog { okButton.assertIsDisplayed() }
             }
         }
     }

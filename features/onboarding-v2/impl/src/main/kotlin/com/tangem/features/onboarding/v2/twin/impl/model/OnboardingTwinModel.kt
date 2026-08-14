@@ -182,13 +182,21 @@ internal class OnboardingTwinModel @Inject constructor(
                         ),
                     )
 
-                    update<OnboardingTwinUM.ScanCard> {
-                        it.copy(
+                    val firstPublicKey = result.data.wallet.publicKey
+                    if (firstPublicKey == null) {
+                        TangemLogger.e("First twin wallet public key is missing")
+                        setLoading(false)
+                        uiMessageSender.send(WalletPublicKeyMissing)
+                        return@launch
+                    }
+
+                    update<OnboardingTwinUM.ScanCard> { um ->
+                        um.copy(
                             isLoading = false,
-                            artworkStep = it.artworkStep.next(),
+                            artworkStep = um.artworkStep.next(),
                             step = OnboardingTwinUM.ScanCard.Step.Second,
                             onScanClick = {
-                                createSecondWallet(firstPublicKey = result.data.wallet.publicKey.toHexString())
+                                createSecondWallet(firstPublicKey = firstPublicKey.toHexString())
                             },
                         )
                     }
@@ -231,14 +239,22 @@ internal class OnboardingTwinModel @Inject constructor(
                         cardRepository.startCardActivation(result.data.cardId)
                     }
 
-                    update<OnboardingTwinUM.ScanCard> {
-                        it.copy(
+                    val secondPublicKey = result.data.wallet.publicKey
+                    if (secondPublicKey == null) {
+                        TangemLogger.e("Second twin wallet public key is missing")
+                        setLoading(false)
+                        uiMessageSender.send(WalletPublicKeyMissing)
+                        return@launch
+                    }
+
+                    update<OnboardingTwinUM.ScanCard> { um ->
+                        um.copy(
                             isLoading = false,
-                            artworkStep = it.artworkStep.next(),
+                            artworkStep = um.artworkStep.next(),
                             step = OnboardingTwinUM.ScanCard.Step.Third,
                             onScanClick = {
                                 createThirdWallet(
-                                    secondCardPublicKey = result.data.wallet.publicKey,
+                                    secondCardPublicKey = secondPublicKey,
                                 )
                             },
                         )

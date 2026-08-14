@@ -143,7 +143,10 @@ class VisaCardActivationTask @AssistedInject constructor(
             card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
                 ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(wallet.publicKey)
+        val publicKey = wallet.publicKey ?: return CompletionResult.Failure(
+            VisaActivationError.PublicKeyIsEmpty.tangemError,
+        )
+        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(publicKey)
             .getOrElse { return CompletionResult.Failure(it.tangemError) }
             .value
 
@@ -261,13 +264,16 @@ class VisaCardActivationTask @AssistedInject constructor(
         val card =
             session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        val wallet =
-            card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
-                ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
+            ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
+        val publicKey = wallet.publicKey ?: return CompletionResult.Failure(
+            VisaActivationError.PublicKeyIsEmpty.tangemError,
+        )
 
         val task = SignHashCommand(
             hash = dataToSign.hashToSign.hexToBytes(),
-            walletPublicKey = wallet.publicKey,
+            walletPublicKey = publicKey,
         )
 
         val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
@@ -286,7 +292,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 handleSignedData(
                     dataToSign = dataToSign,
                     response = result.data,
-                    walletPublicKey = wallet.publicKey,
+                    walletPublicKey = publicKey,
                 )
             }
             is CompletionResult.Failure -> {

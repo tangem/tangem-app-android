@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.innerShadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
@@ -45,6 +46,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_right_24
+import com.tangem.core.ui.res.generated.icons.ic_info_24
+import com.tangem.core.ui.res.generated.icons.ic_warning_24
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -277,7 +280,7 @@ private fun EarnBlockTrailing(type: Type, trailingUM: EarnBlockUM.TrailingUM?, o
         is EarnBlockUM.TrailingUM.StatusIcon -> {
             TangemIcon(
                 tangemIconUM = TangemIconUM.Icon(
-                    iconRes = trailingUM.tone.iconRes(),
+                    imageVector = trailingUM.tone.icon(),
                     tintReference = { trailingUM.tone.tint() },
                 ),
                 modifier = Modifier
@@ -468,16 +471,16 @@ private fun EarnBlockUM.SubtitleUM.Tone.color(type: Type): Color = when (this) {
     EarnBlockUM.SubtitleUM.Tone.Accent -> type.accentText()
 }
 
-private fun EarnBlockUM.TrailingUM.StatusIcon.Tone.iconRes(): Int = when (this) {
-    EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning -> R.drawable.ic_attention_default_24
-    EarnBlockUM.TrailingUM.StatusIcon.Tone.Info -> R.drawable.ic_alert_circle_24
+private fun EarnBlockUM.TrailingUM.StatusIcon.Tone.icon(): ImageVector = when (this) {
+    EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning -> Icons.ic_warning_24
+    EarnBlockUM.TrailingUM.StatusIcon.Tone.Info -> Icons.ic_info_24
 }
 
 @Composable
 @ReadOnlyComposable
 private fun EarnBlockUM.TrailingUM.StatusIcon.Tone.tint(): Color = when (this) {
     EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning -> TangemTheme.colors3.icon.status.warning
-    EarnBlockUM.TrailingUM.StatusIcon.Tone.Info -> TangemTheme.colors3.icon.secondary
+    EarnBlockUM.TrailingUM.StatusIcon.Tone.Info -> TangemTheme.colors3.icon.brand
 }
 
 @Composable

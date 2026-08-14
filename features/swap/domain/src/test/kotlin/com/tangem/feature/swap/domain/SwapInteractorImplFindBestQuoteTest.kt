@@ -6,7 +6,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -49,7 +52,6 @@ import java.math.BigInteger
  *  - DEX_BRIDGE provider sharing the DEX dispatch branch
  *  - Solana DEX path routing via the Solana-specific branch
  *  - CEX provider dispatch including null txFee edge case
- *  - yieldSupplyStatus.isActive returning [ExpressDataError.DexActiveSupplyError]
  *  - Mixed (DEX + CEX) provider list — each routed to its own path
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -58,6 +60,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
     private val ethNetwork = Blockchain.Ethereum.toNetworkId()
     private val solanaNetwork = Blockchain.Solana.toNetworkId()
     private val btcNetwork = Blockchain.Bitcoin.toNetworkId()
+    private val tronNetwork = Blockchain.Tron.toNetworkId()
 
     @BeforeEach
     fun setup() {
@@ -112,6 +115,27 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         } returns (AllowanceInfo.Enough(allowance = BigDecimal("1000")) as AllowanceInfo).right()
         every { createTransactionExtrasUseCase.invoke(data = any(), network = any()) } returns
             mockk<TransactionExtras>(relaxed = true).right()
+        // Separate-approval fee coverage: a small approve fee against the default native balance
+        // of 10 keeps the coverage check passing, so the pre-existing permission-state
+        // assertions are unaffected.
+        coEvery {
+            createApprovalTransactionUseCase.invoke(
+                cryptoCurrencyStatus = any(),
+                userWalletId = any(),
+                amount = any(),
+                contractAddress = any(),
+                spenderAddress = any(),
+            )
+        } returns mockk<TransactionData.Uncompiled>(relaxed = true).right()
+        val approveFeeAmount = mockk<com.tangem.blockchain.common.Amount>(relaxed = true) {
+            every { value } returns BigDecimal("0.001")
+        }
+        val approveFee = mockk<Fee.Common>(relaxed = true) {
+            every { this@mockk.amount } returns approveFeeAmount
+        }
+        coEvery {
+            getFeeUseCase.invoke(transactionData = any(), userWallet = any(), network = any())
+        } returns (TransactionFee.Single(normal = approveFee) as TransactionFee).right()
     }
 
     @Nested
@@ -250,36 +274,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 assertThat(result.containsKey(dexProvider)).isTrue()
                 assertThat(result[dexProvider]).isNotNull()
             }
-
-        @Test
-        fun `should return SwapError with DexActiveSupplyError when yieldSupply is active`() = runTest {
-            // Given — yieldSupplyActive=true short-circuits to DexActiveSupplyError
-            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
-            val fromStatus = buildSwapCurrencyStatus(
-                networkRawId = ethNetwork,
-                isCoin = true,
-                amount = BigDecimal("10"),
-                yieldSupplyActive = true,
-            )
-            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
-
-            // When
-            val result = sut.findBestQuote(
-                fromSwapCurrencyStatus = fromStatus,
-                toSwapCurrencyStatus = toStatus,
-                providers = listOf(dexProvider),
-                amountToSwap = "1.0",
-                reduceBalanceBy = BigDecimal.ZERO,
-
-                )
-
-            // Then
-            assertThat(result).hasSize(1)
-            val state = result[dexProvider]
-            assertThat(state).isInstanceOf(SwapState.SwapError::class.java)
-            val swapError = (state ?: error("state must not be null")) as SwapState.SwapError
-            assertThat(swapError.error).isEqualTo(ExpressDataError.DexActiveSupplyError())
-        }
 
         @Test
         fun `should set balanceStatus to InsufficientAmount when from-token balance is less than swap amount`() =
@@ -1217,7 +1211,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
         @BeforeEach
         fun enableYieldSwap() {
-            every { swapFeatureToggles.isYieldSwapEnabled } returns true
             coEvery {
                 yieldModuleAddressProvider.getOrFetch(any(), any())
             } returns yieldProxyAddress
@@ -1476,7 +1469,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
 
         @BeforeEach
         fun enableYieldSwap() {
-            every { swapFeatureToggles.isYieldSwapEnabled } returns true
             coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns yieldProxyAddress
         }
 
@@ -1697,11 +1689,69 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             return dexProvider
         }
 
+        /**
+         * TRON cannot run the bundled approve+swap: `sendMultiple` accepts only compiled
+         * transaction data there, and `sumEvmFees` cannot combine a non-EVM approval fee with the
+         * swap fee. So a zero allowance must NOT be treated as satisfied — the flow has to fall
+         * back to the separate-approval path instead of letting an unapproved swap through.
+         */
+        @Test
+        fun `NotEnough allowance on TRON does NOT proceed to exchange data`() = runTest {
+            stubAllowanceForSpender(
+                AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE),
+            )
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            invokeRegularToken(dexProvider, networkRawId = tronNetwork)
+
+            coVerify(exactly = 0) {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = any(), rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            }
+        }
+
+        /**
+         * The permission state has to agree with the gate above. `PermissionSettings` would ask the
+         * UI for a combined approve+swap fee, which needs a `swapDataModel` that the gate never
+         * loaded — the fee then never resolves and the approval sheet never appears.
+         */
+        @Test
+        fun `NotEnough allowance on TRON yields separate-approval permission state`() = runTest {
+            stubAllowanceForSpender(
+                AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE),
+            )
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            val result = invokeRegularToken(dexProvider, networkRawId = tronNetwork)
+
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isInstanceOf(PermissionDataState.PermissionRequired::class.java)
+            assertThat((loaded.permissionState as PermissionDataState.PermissionRequired).spenderAddress)
+                .isEqualTo(spender)
+        }
+
+        @Test
+        fun `Enough allowance on TRON still proceeds with permission Empty`() = runTest {
+            stubAllowanceForSpender(AllowanceInfo.Enough(allowance = BigDecimal("100")))
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            val result = invokeRegularToken(dexProvider, networkRawId = tronNetwork)
+
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+        }
+
         private suspend fun invokeRegularToken(
             dexProvider: com.tangem.feature.swap.domain.models.domain.SwapProvider,
+            networkRawId: String = ethNetwork,
         ) = sut.findBestQuote(
             fromSwapCurrencyStatus = buildSwapCurrencyStatus(
-                networkRawId = ethNetwork,
+                networkRawId = networkRawId,
                 contractAddress = tokenContract,
                 isCoin = false,
                 amount = BigDecimal("10"),
