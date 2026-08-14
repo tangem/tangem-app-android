@@ -102,9 +102,15 @@ class JointAccountCreationSignTask @AssistedInject constructor(
         val canonicalPayload = CanonicalJson.canonicalize(payload.toCanonicalMap())
         val hash = hashPersonalMessage(canonicalPayload)
 
-        val signResponse = when (val result = sign(session, hash, seedPublicKey, derivationPath)) {
-            is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
-            is CompletionResult.Success<SignHashResponse> -> result.data
+        val signResult = sign(
+            session = session,
+            hash = hash,
+            seedPublicKey = seedPublicKey,
+            derivationPath = derivationPath,
+        )
+        val signResponse = when (signResult) {
+            is CompletionResult.Failure<*> -> return CompletionResult.Failure(signResult.error)
+            is CompletionResult.Success<SignHashResponse> -> signResult.data
         }
 
         return CompletionResult.Success(
