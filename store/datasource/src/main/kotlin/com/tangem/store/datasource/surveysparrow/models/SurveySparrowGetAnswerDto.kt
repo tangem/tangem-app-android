@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.surveysparrow.models
+package com.tangem.store.datasource.surveysparrow.models
 
 import com.squareup.moshi.Json
 

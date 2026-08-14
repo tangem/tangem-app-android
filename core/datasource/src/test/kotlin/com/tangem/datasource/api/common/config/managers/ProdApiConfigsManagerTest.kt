@@ -111,7 +111,6 @@ internal class ProdApiConfigsManagerTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = appInfoProvider,
             ),
-            SurveySparrow(environmentConfig = environmentConfig),
             Auth(),
             PolymarketWeb(),
             PolymarketRelayer(),
@@ -130,7 +129,6 @@ internal class ProdApiConfigsManagerTest {
         createBlockAidSdkModel(),
         createP2PModel(),
         createNewsModel(),
-        createSurveySparrowModel(),
         createAuthModel(),
         createPolymarketWebModel(),
         createPolymarketRelayerModel(),
@@ -297,19 +295,6 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
                     "accept" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createSurveySparrowModel(): TestModel {
-        return TestModel(
-            id = SurveySparrow.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://eu-api.surveysparrow.com/",
-                headers = mapOf(
-                    "Authorization" to ProviderSuspend { "Bearer $SURVEY_SPARROW_API_KEY" },
                 ),
             ),
         )
