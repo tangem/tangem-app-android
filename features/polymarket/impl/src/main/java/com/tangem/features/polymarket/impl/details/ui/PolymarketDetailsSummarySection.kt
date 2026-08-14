@@ -10,7 +10,12 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
@@ -101,6 +106,8 @@ private fun DescriptionBlock(
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var isClipped by remember { mutableStateOf(false) }
+
     Column(modifier = modifier) {
         Text(
             text = description.resolveReference(),
@@ -108,11 +115,12 @@ private fun DescriptionBlock(
             style = TangemTheme.typography3.body.medium,
             maxLines = if (isExpanded) Int.MAX_VALUE else COLLAPSED_DESCRIPTION_LINES,
             overflow = TextOverflow.Ellipsis,
+            onTextLayout = { isClipped = it.hasVisualOverflow },
         )
-        if (!isExpanded) {
+        if (!isExpanded && isClipped) {
             Text(
                 modifier = Modifier
-                    .clickable(onClick = onReadMoreClick)
+                    .clickable(role = Role.Button, onClick = onReadMoreClick)
                     .padding(top = 4.dp),
                 text = stringResourceSafe(R.string.common_read_more),
                 color = TangemTheme.colors3.text.primary,
