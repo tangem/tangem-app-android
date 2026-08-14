@@ -45,6 +45,8 @@ import kotlinx.coroutines.delay
  * @param placeholder The placeholder text reference to show when the input is empty
  * @param onValueChange Callback invoked when the input value changes, receives the new string value
  * @param onPasteClick Callback invoked when the paste button is clicked, receives the pasted string
+ * @param onClearClick Callback invoked when the cross icon is clicked to clear the field. Separate from
+ * [onPasteClick] on purpose: clearing used to be delivered as a paste of an empty string
  * @param onQrCodeClick Callback invoked when the QR code scan button is clicked
  * @param modifier Optional modifier to apply to the composable
  * @param singleLine Whether the text field should be constrained to a single line (default: false)
@@ -64,6 +66,7 @@ fun InputRowRecipient(
     placeholder: TextReference,
     onValueChange: (String) -> Unit,
     onPasteClick: (String) -> Unit,
+    onClearClick: () -> Unit,
     onQrCodeClick: () -> Unit,
     modifier: Modifier = Modifier,
     singleLine: Boolean = false,
@@ -121,7 +124,7 @@ fun InputRowRecipient(
                             .testTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD),
                     )
                     CrossIcon(
-                        onClick = onPasteClick,
+                        onClick = onClearClick,
                         modifier = Modifier
                             .align(CenterVertically)
                             .padding(start = TangemTheme.dimens.spacing8)
@@ -258,6 +261,7 @@ private fun InputRowRecipientPreview(
             showDivider = true,
             onValueChange = {},
             onPasteClick = {},
+            onClearClick = {},
             onQrCodeClick = {},
             modifier = Modifier.background(TangemTheme.colors.background.primary),
             resolvedAddress = value.resolvedAddress,
