@@ -21,6 +21,7 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -42,10 +43,16 @@ import kotlinx.collections.immutable.persistentListOf
  * the trailing slot uses a plain [Text] tuned to body/medium + secondary instead.
  *
  * @param rows Rows to render in order. An empty list renders nothing — callers should skip the block when empty.
+ * @param isBalanceHidden Masks the values of the [hideable][InfoRowUM.isValueHideable] rows (the network fee) with
+ * stars; the provider and rate rows are unaffected.
  * @param modifier Modifier applied to the list container.
  */
 @Composable
-internal fun TxHistoryDetailsInfoRows(rows: ImmutableList<InfoRowUM>, modifier: Modifier = Modifier) {
+internal fun TxHistoryDetailsInfoRows(
+    rows: ImmutableList<InfoRowUM>,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     if (rows.isEmpty()) return
     Column(
         modifier = modifier,
@@ -63,7 +70,9 @@ internal fun TxHistoryDetailsInfoRows(rows: ImmutableList<InfoRowUM>, modifier: 
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = row.value.resolveReference(),
+                            text = row.value
+                                .orMaskWithStars(isBalanceHidden && row.isValueHideable)
+                                .resolveReference(),
                             color = TangemTheme.colors3.text.secondary,
                             style = TangemTheme.typography3.body.medium,
                             textAlign = TextAlign.End,
@@ -104,18 +113,33 @@ private fun TxHistoryDetailsInfoRowsPreview() {
                         trailingIconRes = R.drawable.ic_arrow_top_right_24,
                     ),
                     InfoRowUM(label = stringReference("Rate"), value = stringReference("1 POL ≈ 0.36 USDT")),
-                    InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+                    previewFeeRow(),
                 ),
+                isBalanceHidden = false,
             )
             // Single row — no divider
             TxHistoryDetailsInfoRows(
                 modifier = Modifier.padding(top = 16.dp),
+                rows = persistentListOf(previewFeeRow()),
+                isBalanceHidden = false,
+            )
+            // Hidden balances — only the fee value is masked, the rate stays readable.
+            TxHistoryDetailsInfoRows(
+                modifier = Modifier.padding(top = 16.dp),
                 rows = persistentListOf(
-                    InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+                    InfoRowUM(label = stringReference("Rate"), value = stringReference("1 POL ≈ 0.36 USDT")),
+                    previewFeeRow(),
                 ),
+                isBalanceHidden = true,
             )
         }
     }
 }
+
+private fun previewFeeRow() = InfoRowUM(
+    label = stringReference("Network fee"),
+    value = stringReference("0.00056 ETH"),
+    isValueHideable = true,
+)
 
 // endregion
