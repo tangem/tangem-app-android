@@ -73,6 +73,5 @@ dependencies {
     testImplementation(deps.test.turbine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testImplementation(projects.core.analytics)
     // endregion
 }
