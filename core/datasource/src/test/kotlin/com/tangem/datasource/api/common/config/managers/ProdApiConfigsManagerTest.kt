@@ -105,7 +105,6 @@ internal class ProdApiConfigsManagerTest {
                 appInfoProvider = appInfoProvider,
             ),
             StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
-            BlockAid(environmentConfig = environmentConfig),
             P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
             News(
                 authProvider = appAuthProvider,
@@ -126,7 +125,6 @@ internal class ProdApiConfigsManagerTest {
         createYieldSupplyModel(),
         createTangemTechModel(),
         createStakeKitModel(),
-        createBlockAidSdkModel(),
         createP2PModel(),
         createNewsModel(),
         createAuthModel(),
@@ -295,21 +293,6 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
                     "accept" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createBlockAidSdkModel(): TestModel {
-        return TestModel(
-            id = BlockAid.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.blockaid.io/v0/",
-                headers = mapOf(
-                    "X-API-KEY" to ProviderSuspend { BLOCK_AID_API_KEY },
-                    "accept" to ProviderSuspend { "application/json" },
-                    "content-type" to ProviderSuspend { "application/json" },
                 ),
             ),
         )
