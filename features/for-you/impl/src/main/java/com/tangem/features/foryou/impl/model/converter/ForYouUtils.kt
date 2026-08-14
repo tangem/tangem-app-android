@@ -4,10 +4,16 @@ import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.markets.CoinIndicators
+import com.tangem.domain.markets.totalSentimentScore
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
@@ -49,13 +55,37 @@ internal fun BigDecimal?.toForYouPercent(totalFiatBalance: BigDecimal): BigDecim
     return divide(totalFiatBalance, RoundingMode.HALF_UP)
 }
 
-// TODO For You: replace this placeholder with the real price-change badge once the design is wired.
-internal fun forYouPlaceholderBadge(): TangemBadgeUM = TangemBadgeUM(
-    text = stringReference("Positive"),
-    size = TangemBadgeSize.X4,
-    type = TangemBadgeType.Tinted,
-    color = TangemBadgeColor.Green,
-)
+/**
+ * Builds the sentiment badge of an asset row from the asset's [coinIndicators] for the selected
+ * [timeframe]. The sign of [totalSentimentScore] — the exact score shown on the token summary
+ * sentiment section — picks the badge, so the row badge always agrees with that screen's overall
+ * outlook. Returns `null` (no badge) only when there is no data for the asset at all.
+ */
+internal fun forYouSentimentBadge(
+    coinIndicators: CoinIndicators?,
+    timeframe: CoinIndicators.Reading.Timeframe,
+): TangemBadgeUM? {
+    if (coinIndicators == null) return null
+
+    val totalScore = coinIndicators.totalSentimentScore(timeframe)
+
+    val (text, color) = when {
+        totalScore > 0 -> resourceReference(R.string.common_positive) to TangemBadgeColor.Green
+        totalScore < 0 -> resourceReference(R.string.common_negative) to TangemBadgeColor.Red
+        else -> resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue
+    }
+
+    return TangemBadgeUM(
+        text = text,
+        size = TangemBadgeSize.X4,
+        type = TangemBadgeType.Tinted,
+        color = color,
+    )
+}
+
+internal fun Map<UserWalletId, AccountStatusList>.availableAccountIds(): Set<AccountId> = values
+    .flatMap { statusList -> statusList.accountStatuses.map { it.accountId } }
+    .toSet()
 
 /**
  * Earn rate resolved for a portfolio currency.
@@ -76,10 +106,13 @@ internal data class EarnApyInfo(
 /**
  * Earn-eligible currencies of one account with their resolved rates.
  *
+ * @property userWalletId the wallet that owns [account]; the For You selection can span several wallets,
+ * so it is carried per account to route token clicks to the right wallet
  * @property accountPotentialReward sum of [EarnApyInfo.potentialRewards] over [earnCurrencies];
  * accounts are ordered by it, descending
  */
 internal data class EarnOpportunities(
+    val userWalletId: UserWalletId,
     val account: Account.CryptoPortfolio,
     val earnCurrencies: Map<CryptoCurrencyStatus, EarnApyInfo>,
     val accountPotentialReward: BigDecimal,

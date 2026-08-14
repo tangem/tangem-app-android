@@ -84,7 +84,7 @@ private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier
             modifier = Modifier
                 .size(36.dp)
                 .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_ICON),
-            imageUrl = methodUM.methodConfig.method.imageUrl,
+            method = methodUM.methodConfig.method,
         )
 
         SpacerW(12.dp)

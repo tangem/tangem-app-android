@@ -51,7 +51,9 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
             )
         }
 
-        val userWalletId = UserWalletIdBuilder.walletPublicKey(wallet.publicKey)
+        val publicKey =
+            wallet.publicKey ?: return CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError)
+        val userWalletId = UserWalletIdBuilder.walletPublicKey(publicKey)
         val challenge = withContext(dispatchersProvider.io) {
             tangemPayRemoteDataSource.getCustomerWalletAuthChallenge(
                 customerWalletAddress = address,
@@ -91,8 +93,10 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
         wallet: CardWallet,
     ): CompletionResult<ExtendedPublicKey> {
         val deferred = CompletableDeferred<CompletionResult<ExtendedPublicKey>>()
+        val publicKey =
+            wallet.publicKey ?: return CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError)
         val derivationTask = DeriveWalletPublicKeyTask(
-            walletPublicKey = wallet.publicKey,
+            walletPublicKey = publicKey,
             derivationPath = VisaUtilities.customDerivationPath,
         )
 

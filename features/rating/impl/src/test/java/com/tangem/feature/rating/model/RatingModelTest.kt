@@ -1,137 +1,247 @@
 package com.tangem.feature.rating.model
 
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.rating.ui.RatingFeedbackBS
 import com.tangem.feature.rating.ui.RatingUM
+import com.tangem.feature.swap.domain.SwapFeedbackUseCase
+import com.tangem.feature.swap.domain.models.domain.SwapRating
 import com.tangem.features.rating.RatingComponent
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.coroutines.CoroutineContext
 
 internal class RatingModelTest {
 
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val swapFeedbackUseCase: SwapFeedbackUseCase = mockk()
+
+    /** Emulates the repository cache for [TX_EXTERNAL_ID]; null = not loaded / no entry */
+    private val cacheFlow = MutableStateFlow<SwapRating?>(null)
+
+    private val appCoroutineScope = object : AppCoroutineScope {
+        override val coroutineContext: CoroutineContext = Dispatchers.Unconfined
+    }
+
+    @BeforeEach
+    fun reset() {
+        clearMocks(swapFeedbackUseCase)
+        cacheFlow.value = null
+    }
 
     private fun buildModel(
-        onLoadRating: suspend () -> Int? = { null },
-        onSubmitRating: suspend (Int, String) -> Unit = { _, _ -> },
+        onEnsureLoaded: suspend () -> Unit = { cacheFlow.value = SwapRating.NotRated },
+        onSubmit: suspend (SwapFeedbackUseCase.SubmitParams) -> Unit = {
+            cacheFlow.value = SwapRating.Rated(it.rating)
+        },
     ): RatingModel {
-        val params = RatingComponent.Params(
-            onLoadRating = onLoadRating,
-            onSubmitRating = onSubmitRating,
-        )
+        every { swapFeedbackUseCase.observeRating(TX_EXTERNAL_ID) } returns cacheFlow
+        coEvery { swapFeedbackUseCase.ensureLoaded(TX_EXTERNAL_ID) } coAnswers { onEnsureLoaded() }
+        coEvery { swapFeedbackUseCase.submit(any()) } coAnswers {
+            onSubmit(firstArg())
+            Unit.right()
+        }
         return RatingModel(
             dispatchers = TestingCoroutineDispatcherProvider(),
-            paramsContainer = MutableParamsContainer(params),
-            uiMessageSender = uiMessageSender,
+            paramsContainer = MutableParamsContainer(params()),
+            swapFeedbackUseCase = swapFeedbackUseCase,
+            appCoroutineScope = appCoroutineScope,
         )
     }
+
+    private fun params() = RatingComponent.Params(
+        txExternalId = TX_EXTERNAL_ID,
+        providerName = PROVIDER_NAME,
+        txExternalUrl = TX_EXTERNAL_URL,
+        userWalletId = UserWalletId(USER_WALLET_ID_HEX),
+    )
 
     private val RatingModel.ratingState get() = state.value.state
     private val RatingModel.feedbackContent get() = state.value.feedbackBottomSheet.content as? RatingFeedbackBS
 
     @Test
-    fun `initial state is Loading before onLoadRating completes`() = runTest {
-        val deferred = CompletableDeferred<Int?>()
-        val model = buildModel(onLoadRating = { deferred.await() })
+    fun `GIVEN load in flight WHEN model created THEN state is Loading until load completes`() = runTest {
+        // Arrange
+        val deferred = CompletableDeferred<Unit>()
+
+        // Act
+        val model = buildModel(onEnsureLoaded = { deferred.await() })
+
+        // Assert
         assertThat(model.ratingState).isInstanceOf(RatingUM.RatingState.Loading::class.java)
-        deferred.complete(null)
+        deferred.complete(Unit)
         assertThat(model.ratingState).isInstanceOf(RatingUM.RatingState.Unrated::class.java)
     }
 
     @Test
-    fun `state is Unrated with no selection when onLoadRating returns null`() = runTest {
-        val model = buildModel(onLoadRating = { null })
+    fun `GIVEN no rating stored WHEN model created THEN state is Unrated with no selection`() = runTest {
+        // Act
+        val model = buildModel()
+
+        // Assert
         val unrated = model.ratingState as RatingUM.RatingState.Unrated
         assertThat(unrated.selectedRating).isNull()
         assertThat(model.state.value.feedbackBottomSheet.isShown).isFalse()
     }
 
     @Test
-    fun `state is AlreadyRated when onLoadRating returns a rating`() = runTest {
-        val model = buildModel(onLoadRating = { 4 })
+    fun `GIVEN load failed and nothing cached WHEN load finishes THEN state is Unrated`() = runTest {
+        // Act — ensureLoaded completes without writing to the cache (load error is not cached)
+        val model = buildModel(onEnsureLoaded = {})
+
+        // Assert
+        assertThat(model.ratingState).isEqualTo(RatingUM.RatingState.Unrated(selectedRating = null))
+    }
+
+    @Test
+    fun `GIVEN rating stored WHEN model created THEN state is AlreadyRated`() = runTest {
+        // Act
+        val model = buildModel(onEnsureLoaded = { cacheFlow.value = SwapRating.Rated(rating = 4) })
+
+        // Assert
         assertThat(model.ratingState).isEqualTo(RatingUM.RatingState.AlreadyRated(rating = 4))
     }
 
     @Test
-    fun `onRatingSelected updates selectedRating and shows feedback bottom sheet`() = runTest {
-        val model = buildModel(onLoadRating = { null })
+    fun `GIVEN Unrated WHEN onRatingSelected THEN selection updated and feedback bottom sheet shown`() = runTest {
+        // Arrange
+        val model = buildModel()
+
+        // Act
         model.onRatingSelected(3)
+
+        // Assert
         val unrated = model.ratingState as RatingUM.RatingState.Unrated
         assertThat(unrated.selectedRating).isEqualTo(3)
         assertThat(model.state.value.feedbackBottomSheet.isShown).isTrue()
     }
 
     @Test
-    fun `onRatingSelected is no-op when state is not Unrated`() = runTest {
-        val model = buildModel(onLoadRating = { 4 })
+    fun `GIVEN AlreadyRated WHEN onRatingSelected THEN state unchanged`() = runTest {
+        // Arrange
+        val model = buildModel(onEnsureLoaded = { cacheFlow.value = SwapRating.Rated(rating = 4) })
+
+        // Act
         model.onRatingSelected(3)
+
+        // Assert
         assertThat(model.ratingState).isEqualTo(RatingUM.RatingState.AlreadyRated(rating = 4))
         assertThat(model.state.value.feedbackBottomSheet.isShown).isFalse()
     }
 
     @Test
-    fun `onFeedbackChanged updates feedbackText in bottom sheet content`() = runTest {
-        val model = buildModel(onLoadRating = { null })
+    fun `GIVEN feedback bottom sheet shown WHEN onFeedbackChanged THEN feedbackText updated`() = runTest {
+        // Arrange
+        val model = buildModel()
         model.onRatingSelected(4)
+
+        // Act
         model.feedbackContent!!.onFeedbackChanged("Great service!")
+
+        // Assert
         assertThat(model.feedbackContent!!.feedbackText).isEqualTo("Great service!")
     }
 
     @Test
-    fun `onSubmit calls onSubmitRating with correct args`() = runTest {
-        val submitMock: suspend (Int, String) -> Unit = mockk(relaxed = true)
-        val model = buildModel(onLoadRating = { null }, onSubmitRating = submitMock)
+    fun `GIVEN rating selected WHEN onSubmit THEN use case called with deal data`() = runTest {
+        // Arrange
+        val model = buildModel()
         model.onRatingSelected(5)
         model.feedbackContent!!.onFeedbackChanged("Excellent!")
+
+        // Act
         model.feedbackContent!!.onSubmit()
-        coVerify(exactly = 1) { submitMock(5, "Excellent!") }
+
+        // Assert
+        coVerify(exactly = 1) {
+            swapFeedbackUseCase.submit(
+                SwapFeedbackUseCase.SubmitParams(
+                    txExternalId = TX_EXTERNAL_ID,
+                    providerName = PROVIDER_NAME,
+                    txExternalUrl = TX_EXTERNAL_URL,
+                    userWalletId = UserWalletId(USER_WALLET_ID_HEX),
+                    rating = 5,
+                    feedback = "Excellent!",
+                ),
+            )
+        }
     }
 
     @Test
-    fun `onSubmit transitions to AlreadyRated and hides bottom sheet on success`() = runTest {
-        val model = buildModel(onLoadRating = { null }, onSubmitRating = { _, _ -> })
+    fun `GIVEN rating selected WHEN onSubmit THEN state is AlreadyRated and bottom sheet hidden`() = runTest {
+        // Arrange
+        val model = buildModel()
         model.onRatingSelected(4)
+
+        // Act
         model.feedbackContent!!.onSubmit()
+
+        // Assert
         assertThat(model.ratingState).isEqualTo(RatingUM.RatingState.AlreadyRated(rating = 4))
         assertThat(model.state.value.feedbackBottomSheet.isShown).isFalse()
     }
 
     @Test
-    fun `onSubmit resets isSubmitting on failure`() = runTest {
-        val model = buildModel(
-            onLoadRating = { null },
-            onSubmitRating = { _, _ -> error("network error") },
-        )
-        model.onRatingSelected(3)
+    fun `GIVEN submitted rating WHEN repository rolls the entry back THEN state returns to Unrated`() = runTest {
+        // Arrange
+        val model = buildModel()
+        model.onRatingSelected(4)
         model.feedbackContent!!.onSubmit()
-        assertThat(model.feedbackContent!!.isSubmitting).isFalse()
+
+        // Act — POST failed, the repository removed the optimistic entry
+        cacheFlow.value = null
+
+        // Assert
+        assertThat(model.ratingState).isEqualTo(RatingUM.RatingState.Unrated(selectedRating = null))
     }
 
     @Test
-    fun `onSubmit shows snackbar on failure`() = runTest {
+    fun `GIVEN POST in flight WHEN model destroyed THEN POST completes anyway`() = runTest {
+        // Arrange
+        val deferred = CompletableDeferred<Unit>()
+        var delivered = false
         val model = buildModel(
-            onLoadRating = { null },
-            onSubmitRating = { _, _ -> error("network error") },
+            onSubmit = {
+                deferred.await()
+                delivered = true
+            },
         )
-        model.onRatingSelected(3)
+        model.onRatingSelected(5)
+
+        // Act — the sheet is closed while the POST is still running
         model.feedbackContent!!.onSubmit()
-        verify(exactly = 1) { uiMessageSender.send(ofType<SnackbarMessage>()) }
+        model.onDestroy()
+        deferred.complete(Unit)
+
+        // Assert
+        assertThat(delivered).isTrue()
     }
 
     @Test
-    fun `onSubmit is no-op when no rating selected`() = runTest {
-        val submitMock: suspend (Int, String) -> Unit = mockk(relaxed = true)
-        val model = buildModel(onLoadRating = { null }, onSubmitRating = submitMock)
-        // open BS without selecting rating (edge case - shouldn't happen in practice)
-        // just verify submit does nothing without a selected rating
-        coVerify(exactly = 0) { submitMock(any(), any()) }
+    fun `GIVEN no rating selected WHEN onSubmit THEN use case not called`() = runTest {
+        // Arrange
+        buildModel()
+
+        // Assert
+        coVerify(exactly = 0) { swapFeedbackUseCase.submit(any()) }
+    }
+
+    private companion object {
+        const val TX_EXTERNAL_ID = "tx-external-id"
+        const val PROVIDER_NAME = "ChangeNow"
+        const val TX_EXTERNAL_URL = "https://provider.example/tx"
+        const val USER_WALLET_ID_HEX = "0011223344556677"
     }
 }

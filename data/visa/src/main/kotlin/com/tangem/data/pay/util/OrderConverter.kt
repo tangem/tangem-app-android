@@ -1,6 +1,6 @@
 package com.tangem.data.pay.util
 
-import com.tangem.datasource.api.pay.models.response.OrderResponse
+import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType

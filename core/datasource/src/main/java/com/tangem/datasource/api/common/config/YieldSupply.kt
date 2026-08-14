@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -8,11 +12,13 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
 /** YieldSupply [ApiConfig] */
-internal class YieldSupply(
+class YieldSupply(
     private val environmentConfig: EnvironmentConfig,
     private val authProvider: AuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -80,5 +86,10 @@ internal class YieldSupply(
             -> environmentConfig.yieldModuleApiKeyDev
             ApiEnvironment.PROD -> environmentConfig.yieldModuleApiKey
         } ?: error("No tangem tech api config provided")
+    }
+
+    companion object {
+        const val KEY = "YieldSupply"
+        val ID = ApiConfig.ID(KEY)
     }
 }

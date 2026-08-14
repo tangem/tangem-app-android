@@ -4,8 +4,10 @@ import arrow.core.Either
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.onramp.model.OnrampAvailability
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.QuickTopUpBlockUM
 import com.tangem.utils.extensions.isZero
@@ -15,10 +17,13 @@ import javax.inject.Inject
 
 internal class QuickTopUpBlockFactory @Inject constructor() {
 
+    @Suppress("LongParameterList")
     fun build(
         currencyStatus: CryptoCurrencyStatus,
         isHistoryEmpty: Boolean,
         onrampAvailability: Either<OnrampError, OnrampAvailability>,
+        selectedOnrampCurrency: OnrampCurrency?,
+        appCurrency: AppCurrency,
         onPresetClick: (BigDecimal, String) -> Unit,
         onOtherClick: () -> Unit,
     ): QuickTopUpBlockUM? {
@@ -27,16 +32,17 @@ internal class QuickTopUpBlockFactory @Inject constructor() {
 
         if (!isHistoryEmpty) return null
 
-        val currency = when (val availability = onrampAvailability.getOrNull()) {
-            is OnrampAvailability.Available -> availability.currency
-            is OnrampAvailability.ConfirmResidency -> {
-                if (!availability.country.onrampAvailable) return null
-                availability.country.defaultCurrency
-            }
-            else -> return null
+        val isOnrampAvailable = when (val availability = onrampAvailability.getOrNull()) {
+            is OnrampAvailability.Available -> true
+            is OnrampAvailability.ConfirmResidency -> availability.country.onrampAvailable
+            else -> false
         }
+        if (!isOnrampAvailable) return null
 
-        val presets = when (currency.code) {
+        val code = selectedOnrampCurrency?.code ?: appCurrency.code
+        val symbol = selectedOnrampCurrency?.unit ?: appCurrency.symbol
+
+        val presets = when (code) {
             USD_CODE -> USD_PRESETS
             EUR_CODE -> EUR_PRESETS
             else -> return null
@@ -44,8 +50,8 @@ internal class QuickTopUpBlockFactory @Inject constructor() {
 
         val presetAmounts = presets.map { value ->
             QuickTopUpBlockUM.QuickTopUpAmountUM(
-                displayValue = stringReference("${currency.unit}$value"),
-                onClick = { onPresetClick(BigDecimal(value), currency.code) },
+                displayValue = stringReference("$symbol$value"),
+                onClick = { onPresetClick(BigDecimal(value), code) },
             )
         }
         val otherAmount = QuickTopUpBlockUM.QuickTopUpAmountUM(

@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader
@@ -7,10 +11,12 @@ import com.tangem.utils.Provider
 import com.tangem.utils.info.AppInfoProvider
 
 /** TangemTech [ApiConfig] */
-internal class TangemTech(
+class TangemTech(
     private val authProvider: AuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -62,5 +68,10 @@ internal class TangemTech(
         putAll(from = RequestHeader.TangemApiKeyHeader(authProvider, Provider { apiEnvironment }).values)
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
         putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
+    }
+
+    companion object {
+        const val KEY = "TangemTech"
+        val ID = ApiConfig.ID(KEY)
     }
 }

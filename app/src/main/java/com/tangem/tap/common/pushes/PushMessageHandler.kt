@@ -13,9 +13,12 @@ import javax.inject.Inject
  *
  * Converts the push payload to a deeplink (via [PayloadToDeeplinkConverter]) and routes by its
  * [host][Uri.getHost] — the same routing key [DeepLinkFactory][com.tangem.tap.routing.utils.DeepLinkFactory] uses
- * for tapped deeplinks. Handlers receive the deeplink query params (not the raw payload), so both flat-key and
- * `deeplink`-style payloads are handled uniformly. Each handler owns its own reaction; add a `when` branch per
- * push type as new in-app reactions appear.
+ * for tapped deeplinks. Handlers receive the deeplink query params (not the raw payload), so flat-key,
+ * `deeplink`- and `link`-style payloads are handled uniformly. Each handler owns its own reaction; add a `when`
+ * branch per push type as new in-app reactions appear.
+ *
+ * Only in-app reactions live here. A payload whose destination is a web page routes nowhere in this path — a
+ * background push must not open a browser — and is opened on tap instead.
  */
 internal class PushMessageHandler @Inject constructor(
     private val tokenDetailsPushHandler: TokenDetailsPushHandler,

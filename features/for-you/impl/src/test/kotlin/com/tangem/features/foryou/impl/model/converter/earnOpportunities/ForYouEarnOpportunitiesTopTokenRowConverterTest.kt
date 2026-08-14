@@ -43,11 +43,9 @@ internal class ForYouEarnOpportunitiesTopTokenRowConverterTest {
                 text = resourceReference(R.string.wallet_network_group_title, wrappedList("Solana")),
             ),
         )
-        assertThat(row.topEndContentUM).isEqualTo(
-            TangemTokenRowUM.EndContentUM.Content(
-                text = resourceReference(R.string.markets_apy_placeholder, wrappedList("7.25".expectedPercent())),
-            ),
-        )
+        val topEnd = row.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
+        assertThat((topEnd.text as TextReference.StyledStr).value)
+            .isEqualTo("APY " + BigDecimal("7.25").format { percent(withPercentSign = false) })
     }
 
     @Test
@@ -109,8 +107,4 @@ internal class ForYouEarnOpportunitiesTopTokenRowConverterTest {
         assertThat(result.isExpanded).isFalse()
         assertThat(result.tokenList).isEmpty()
     }
-
-    /** Mirrors the production APY rendering used by [ForYouEarnOpportunitiesTopTokenRowConverter]. */
-    private fun String.expectedPercent(): TextReference =
-        TextReference.Str(BigDecimal(this).format { percent(withPercentSign = false) })
 }

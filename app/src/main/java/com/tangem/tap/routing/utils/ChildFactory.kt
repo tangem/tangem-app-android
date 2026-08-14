@@ -497,7 +497,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = UsedeskComponent.Params(
-                        userWalletId = route.walletMetaInfo.userWalletId?.stringValue,
+                        walletMetaInfo = route.walletMetaInfo,
                         source = route.source,
                         prefilledMessage = route.prefilledMessage,
                     ),

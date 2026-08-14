@@ -1,7 +1,7 @@
 package com.tangem.features.tokenreceive.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -67,13 +67,16 @@ internal class TokenReceiveModel @Inject constructor(
     }
 
     override fun onQrCodeClick(address: String) {
-        analyticsEventHandler.send(
-            TokenReceiveNewAnalyticsEvent.QrScreenOpened(
-                token = getTokenName(),
-                blockchainName = params.config.cryptoCurrency.network.name,
-            ),
-        )
-        stackNavigation.push(configuration = TokenReceiveRoutes.QrCode(address = address))
+        stackNavigation.pushNew(configuration = TokenReceiveRoutes.QrCode(address = address)) { isSuccess ->
+            if (isSuccess) {
+                analyticsEventHandler.send(
+                    TokenReceiveNewAnalyticsEvent.QrScreenOpened(
+                        token = getTokenName(),
+                        blockchainName = params.config.cryptoCurrency.network.name,
+                    ),
+                )
+            }
+        }
     }
 
     override fun onCopyClick(address: ReceiveAddress, source: TokenReceiveCopyActionSource) {
@@ -86,14 +89,17 @@ internal class TokenReceiveModel @Inject constructor(
     }
 
     override fun onWarningAcknowledged() {
-        modelScope.launch {
-            saveViewedTokenReceiveWarningUseCase.invoke(
-                when (val asset = params.config.asset) {
-                    Asset.Currency -> params.config.cryptoCurrency.name
-                    Asset.NFT -> asset.name
-                },
-            )
-            stackNavigation.push(configuration = TokenReceiveRoutes.ReceiveAssets)
+        stackNavigation.pushNew(configuration = TokenReceiveRoutes.ReceiveAssets) { isSuccess ->
+            if (isSuccess) {
+                modelScope.launch {
+                    saveViewedTokenReceiveWarningUseCase.invoke(
+                        when (val asset = params.config.asset) {
+                            Asset.Currency -> params.config.cryptoCurrency.name
+                            Asset.NFT -> asset.name
+                        },
+                    )
+                }
+            }
         }
     }
 

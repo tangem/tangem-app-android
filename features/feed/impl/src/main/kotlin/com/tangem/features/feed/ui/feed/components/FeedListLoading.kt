@@ -6,13 +6,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.ui.feed.components.articles.DefaultLoadingArticle
@@ -35,11 +36,8 @@ internal fun FeedListLoading(modifier: Modifier = Modifier) {
 
 @Composable
 internal fun MarketLoadingBlock() {
-    RectangleShimmer(
-        modifier = Modifier
-            .padding(start = 16.dp, top = 16.dp)
-            .size(width = 132.dp, height = 24.dp),
-        radius = TangemTheme.dimens2.x25,
+    SectionTitleShimmer(
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp),
     )
     SpacerH(20.dp)
     ChartsLoading(modifier = Modifier.padding(horizontal = 16.dp))
@@ -48,11 +46,8 @@ internal fun MarketLoadingBlock() {
 
 @Composable
 internal fun MarketPulseLoadingBlock() {
-    RectangleShimmer(
-        modifier = Modifier
-            .padding(start = 16.dp, top = 16.dp)
-            .size(width = 132.dp, height = 24.dp),
-        radius = TangemTheme.dimens2.x25,
+    SectionTitleShimmer(
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp),
     )
     SpacerH(15.dp)
     LazyRow(
@@ -63,10 +58,7 @@ internal fun MarketPulseLoadingBlock() {
         state = rememberLazyListState(),
     ) {
         items(DEFAULT_CHART_SIZE_IN_MARKET) {
-            RectangleShimmer(
-                modifier = Modifier.size(width = 112.dp, height = 36.dp),
-                radius = TangemTheme.dimens2.x25,
-            )
+            FilterTabShimmer()
         }
     }
     SpacerH(16.dp)
@@ -77,11 +69,8 @@ internal fun MarketPulseLoadingBlock() {
 @Composable
 internal fun NewsLoadingBlock() {
     Column {
-        RectangleShimmer(
-            modifier = Modifier
-                .padding(start = 16.dp, top = 16.dp)
-                .size(width = 132.dp, height = 24.dp),
-            radius = TangemTheme.dimens2.x25,
+        SectionTitleShimmer(
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
         )
         SpacerH(20.dp)
         TrendingLoadingArticle(modifier = Modifier.padding(horizontal = 16.dp))
@@ -101,11 +90,33 @@ internal fun NewsLoadingBlock() {
 }
 
 @Composable
+private fun SectionTitleShimmer(modifier: Modifier = Modifier) {
+    val lineHeight = with(LocalDensity.current) {
+        TangemTheme.typography3.heading.small.lineHeight.toDp()
+    }
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .width(132.dp)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
+    )
+}
+
+@Composable
+private fun FilterTabShimmer(modifier: Modifier = Modifier) {
+    TangemShimmer(
+        radius = 999.dp,
+        modifier = modifier.size(width = 112.dp, height = 36.dp),
+    )
+}
+
+@Composable
 private fun ChartsLoading(modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier,
         colors = TangemBlockCardColors.copy(
-            containerColor = TangemTheme.colors2.surface.level3,
+            containerColor = TangemTheme.colors3.bg.secondary,
         ),
     ) {
         Column(

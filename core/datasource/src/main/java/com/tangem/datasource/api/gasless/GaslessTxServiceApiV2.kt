@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.gasless
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.gasless.models.GaslessBatchTransactionRequest
 import com.tangem.datasource.api.gasless.models.GaslessServiceResponse
 import com.tangem.datasource.api.gasless.models.GaslessSignedTransactionResultDTO

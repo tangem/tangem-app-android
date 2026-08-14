@@ -11,7 +11,7 @@ import com.tangem.data.virtualaccount.flow.DefaultVirtualAccountStatusProducer
 import com.tangem.data.virtualaccount.repository.DefaultVirtualAccountActivationRepository
 import com.tangem.data.virtualaccount.store.VirtualAccountStatusesStore
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes

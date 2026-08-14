@@ -3,31 +3,26 @@ package com.tangem.features.feed.ui.market.detailed.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.components.MetricsCard
-import com.tangem.features.feed.ui.market.detailed.state.InfoPointUMV2
+import com.tangem.features.feed.ui.market.detailed.state.MetricItemUM
 import com.tangem.features.feed.ui.market.detailed.state.MetricsUM
-import com.tangem.features.feed.ui.market.detailed.state.MetricsV2UM
 
 @Composable
 internal fun MetricsBlock(state: MetricsUM, modifier: Modifier = Modifier) {
-    state.metricsV2?.let {
-        MetricsBlockV2(it, modifier)
-    }
-}
-
-@Composable
-private fun MetricsBlockV2(state: MetricsV2UM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         state.rows.forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Box(Modifier.weight(1f)) {
                     MetricRowItem(row.first)
@@ -44,39 +39,34 @@ private fun MetricsBlockV2(state: MetricsV2UM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MetricRowItem(item: InfoPointUMV2) {
+private fun MetricRowItem(item: MetricItemUM) {
     when (item) {
-        is InfoPointUMV2.CirculatingSupply -> CirculatingSupplyCard(item)
+        is MetricItemUM.CirculatingSupply -> CirculatingSupplyCard(item)
         else -> MetricCard(item)
     }
 }
 
 @Composable
-private fun MetricCard(item: InfoPointUMV2) {
+private fun MetricCard(item: MetricItemUM) {
     when (item) {
-        is InfoPointUMV2.MarketCap -> MarketCapCard(item)
-        is InfoPointUMV2.TradingVolume -> TradingVolumeCard(item)
-        is InfoPointUMV2.MarketPosition -> MarketPositionCard(item)
-        is InfoPointUMV2.FullyDilutedValuation -> FDVCard(item)
-        is InfoPointUMV2.CirculatingSupply -> Unit
+        is MetricItemUM.MarketCap -> MarketCapCard(item)
+        is MetricItemUM.TradingVolume -> TradingVolumeCard(item)
+        is MetricItemUM.MarketPosition -> MarketPositionCard(item)
+        is MetricItemUM.FullyDilutedValuation -> FDVCard(item)
+        is MetricItemUM.CirculatingSupply -> Unit
     }
 }
 
 @Composable
 internal fun MetricsBlockPlaceholder(modifier: Modifier = Modifier) {
-    MetricsBlockPlaceholderV2(modifier)
-}
-
-@Composable
-private fun MetricsBlockPlaceholderV2(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         repeat(2) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 repeat(2) {
                     Box(Modifier.weight(1f)) {
@@ -85,21 +75,19 @@ private fun MetricsBlockPlaceholderV2(modifier: Modifier = Modifier) {
                                 .heightIn(120.dp)
                                 .fillMaxWidth(),
                             title = {
-                                RectangleShimmer(
+                                MetricsShimmerLine(
+                                    style = TangemTheme.typography3.heading.small,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(28.dp)
                                         .padding(end = 10.dp),
-                                    radius = TangemTheme.dimens2.x25,
                                 )
                             },
                             content = {
-                                RectangleShimmer(
+                                MetricsShimmerLine(
+                                    style = TangemTheme.typography3.caption.medium,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(16.dp)
                                         .padding(end = 74.dp),
-                                    radius = TangemTheme.dimens2.x25,
                                 )
                             },
                         )
@@ -126,45 +114,49 @@ private fun CirculatingSupplyCardPlaceholder() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    RectangleShimmer(
-                        modifier = Modifier
-                            .width(104.dp)
-                            .height(16.dp),
-                        radius = TangemTheme.dimens2.x25,
+                    MetricsShimmerLine(
+                        style = TangemTheme.typography3.caption.medium,
+                        width = 104.dp,
                     )
-                    RectangleShimmer(
-                        modifier = Modifier
-                            .width(64.dp)
-                            .height(16.dp),
-                        radius = TangemTheme.dimens2.x25,
+                    MetricsShimmerLine(
+                        style = TangemTheme.typography3.caption.medium,
+                        width = 64.dp,
                     )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    RectangleShimmer(
-                        modifier = Modifier
-                            .width(160.dp)
-                            .height(28.dp),
-                        radius = TangemTheme.dimens2.x25,
+                    MetricsShimmerLine(
+                        style = TangemTheme.typography3.heading.small,
+                        width = 160.dp,
                     )
-                    RectangleShimmer(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(28.dp),
-                        radius = TangemTheme.dimens2.x25,
+                    MetricsShimmerLine(
+                        style = TangemTheme.typography3.heading.small,
+                        width = 48.dp,
                     )
                 }
             }
         },
         content = {
-            RectangleShimmer(
+            TangemShimmer(
+                radius = 999.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp),
-                radius = TangemTheme.dimens2.x25,
             )
         },
+    )
+}
+
+@Composable
+private fun MetricsShimmerLine(style: TextStyle, modifier: Modifier = Modifier, width: Dp? = null) {
+    val lineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .then(if (width != null) Modifier.width(width) else Modifier)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
     )
 }

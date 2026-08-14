@@ -1,9 +1,7 @@
 package com.tangem.core.ui.ds2.button
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
@@ -13,19 +11,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.BaseButtonTestTags
 
 /**
  * Inner content of [TangemButton]: an icon-text-icon row with a cross-fading loader overlay.
@@ -54,6 +54,7 @@ internal fun TangemButtonInternal(
 
     Box(
         modifier = modifier
+            .testTag(BaseButtonTestTags.BUTTON)
             .conditionalCompose(
                 condition = isIconOnly,
                 otherModifier = {
@@ -117,8 +118,8 @@ private fun ContentRow(
     ) {
         AnimatedVisibility(
             visible = iconStart != null,
-            enter = SlotEnterTransition,
-            exit = SlotExitTransition,
+            enter = TangemTransition.SlotEnterHorizontally,
+            exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedIconStart?.let { icon ->
                 TangemIcon(
@@ -130,13 +131,15 @@ private fun ContentRow(
 
         AnimatedVisibility(
             visible = text != null,
-            enter = SlotEnterTransition,
-            exit = SlotExitTransition,
+            enter = TangemTransition.SlotEnterHorizontally,
+            exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedText?.let { textRef ->
                 CompositionLocalProvider(LocalDensity provides cappedFontScaleDensity()) {
                     Text(
-                        modifier = Modifier.padding(horizontal = sizeTokens.textPadding),
+                        modifier = Modifier
+                            .padding(horizontal = sizeTokens.textPadding)
+                            .testTag(BaseButtonTestTags.TEXT),
                         text = textRef.resolveReference(),
                         textAlign = TextAlign.Center,
                         color = if (isEnabled) colorTokens.textColor else colorTokens.disabledTextColor,
@@ -161,8 +164,8 @@ private fun ContentRow(
 
         AnimatedVisibility(
             visible = iconEnd != null,
-            enter = SlotEnterTransition,
-            exit = SlotExitTransition,
+            enter = TangemTransition.SlotEnterHorizontally,
+            exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedIconEnd?.let { icon ->
                 TangemIcon(
@@ -195,14 +198,6 @@ private fun cappedFontScaleDensity(): Density {
 
 private const val MAX_BUTTON_FONT_SCALE = 1.3f
 
-// Shared, snappy specs so size and alpha animations stay in sync across the three slots.
-private val SlotSizeSpec = spring<IntSize>(stiffness = Spring.StiffnessMediumLow)
-private val SlotAlphaSpec = spring<Float>(stiffness = Spring.StiffnessMediumLow)
-private val SlotEnterTransition: EnterTransition =
-    fadeIn(animationSpec = SlotAlphaSpec) + expandHorizontally(animationSpec = SlotSizeSpec)
-private val SlotExitTransition: ExitTransition =
-    fadeOut(animationSpec = SlotAlphaSpec) + shrinkHorizontally(animationSpec = SlotSizeSpec)
-
 /**
  * Forces the variant's icon color (or its disabled variant when [isEnabled] is `false`) onto
  * [TangemIconUM.Icon] — the button's variant always drives icon color, so any caller-supplied
@@ -216,7 +211,7 @@ private val SlotExitTransition: ExitTransition =
 private fun TangemIconUM.resolveTint(colorTokens: ColorTokens, isEnabled: Boolean): TangemIconUM {
     return when (this) {
         is TangemIconUM.Icon -> copy(
-            tint = ColorReference2 {
+            tint = tint ?: ColorReference2 {
                 if (isEnabled) colorTokens.iconTint else colorTokens.disabledIconTint
             },
         )
@@ -267,6 +262,26 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             disabledBackgroundColor = TangemTheme.colors3.bg.opaque.primary,
             disabledTextColor = TangemTheme.colors3.text.primary,
             disabledIconTint = TangemTheme.colors3.icon.primary,
+            focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
+            disabledAlpha = 0.4f,
+        )
+        TangemButton.Variant.SecondaryError -> ColorTokens(
+            backgroundColor = TangemTheme.colors3.bg.status.errorSubtle,
+            textColor = TangemTheme.colors3.text.accent.red,
+            iconTint = TangemTheme.colors3.icon.accent.red,
+            disabledBackgroundColor = TangemTheme.colors3.bg.status.errorSubtle,
+            disabledTextColor = TangemTheme.colors3.text.accent.red,
+            disabledIconTint = TangemTheme.colors3.icon.accent.red,
+            focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
+            disabledAlpha = 0.4f,
+        )
+        TangemButton.Variant.SecondaryInfo -> ColorTokens(
+            backgroundColor = TangemTheme.colors3.bg.status.infoSubtle,
+            textColor = TangemTheme.colors3.text.accent.blue,
+            iconTint = TangemTheme.colors3.icon.accent.blue,
+            disabledBackgroundColor = TangemTheme.colors3.bg.status.infoSubtle,
+            disabledTextColor = TangemTheme.colors3.text.accent.blue,
+            disabledIconTint = TangemTheme.colors3.icon.accent.blue,
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
             disabledAlpha = 0.4f,
         )

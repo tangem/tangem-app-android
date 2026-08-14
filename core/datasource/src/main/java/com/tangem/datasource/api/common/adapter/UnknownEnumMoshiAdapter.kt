@@ -3,6 +3,7 @@ package com.tangem.datasource.api.common.adapter
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.EnumJsonAdapter
+import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO.BalanceTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardClaimingDTO
@@ -45,6 +46,25 @@ fun Moshi.Builder.addStakeKitEnumFallbackAdapters(): Moshi.Builder {
             val enumClass = entry.key
             val unknownValue = entry.value
             add(enumClass, UnknownEnumMoshiAdapter.create(enumClass, unknownValue))
+        }
+    }
+}
+
+fun Moshi.Builder.addCoinIndicatorsEnumFallbackAdapters(): Moshi.Builder {
+    val map = mapOf(
+        Indicator.Type::class.java to Indicator.Type.UNKNOWN,
+        Indicator.Timeframe::class.java to Indicator.Timeframe.UNKNOWN,
+        Indicator.Signal::class.java to Indicator.Signal.UNKNOWN,
+    )
+
+    return apply {
+        map.forEach { entry ->
+            val enumClass = entry.key
+            val unknownValue = entry.value
+            add(
+                enumClass,
+                UnknownEnumMoshiAdapter.create(enumClass, unknownValue).nullSafe(),
+            )
         }
     }
 }

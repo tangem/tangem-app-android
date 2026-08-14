@@ -1,5 +1,7 @@
 package com.tangem.datasource.api.common.response
 
+import com.tangem.core.remote.response.ApiResponse
+
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import retrofit2.Call
 import retrofit2.CallAdapter

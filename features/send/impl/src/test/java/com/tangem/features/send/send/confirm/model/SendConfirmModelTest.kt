@@ -4,11 +4,17 @@ import android.os.SystemClock
 import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -71,7 +77,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
                     )
                 }
                 coVerify(exactly = 0) { feeSelectorCheckReloadTrigger.triggerCheckUpdate() }
@@ -84,7 +90,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
                     )
                 }
                 coVerify(exactly = 1) { feeSelectorCheckReloadTrigger.triggerCheckUpdate() }
@@ -126,7 +132,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                             any(),
                             any(),
                             any(),
-                            any()
+                            any(),
                         )
                     }
                 } else {
@@ -138,7 +144,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                             any(),
                             any(),
                             any(),
-                            any()
+                            any(),
                         )
                     }
                 }
@@ -237,6 +243,90 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     }
 
     @Nested
+    inner class TronGaslessMaxSend {
+
+        @BeforeEach
+        fun stubTronGaslessSend() {
+            // The shared base leaves this one relaxed, which yields an Either that blows up on fold().
+            coEvery {
+                createAndSendTronGaslessTransactionUseCase(any(), any(), any(), any())
+            } returns "txHash".right()
+        }
+
+        @Test
+        fun `GIVEN max amount and Tron gasless fee in the sent token WHEN send THEN amount reduced by the fee`() =
+            runTest {
+                // Arrange — the whole balance is entered and the compensation is paid in that same token.
+                coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+                val amountSlot = slot<Amount>()
+                coEvery {
+                    createTransferTransactionUseCase(
+                        capture(amountSlot),
+                        any<Fee>(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                    )
+                } returns mockk<TransactionData.Uncompiled>(relaxed = true).right()
+                val sut = createSendConfirmModel(this, tronGaslessParams())
+                advanceUntilIdle()
+
+                // Act
+                sut.onSendClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(amountSlot.captured.value).isEqualTo(TRON_BALANCE - TRON_GASLESS_FEE)
+            }
+
+        @Test
+        fun `GIVEN Tron gasless quote WHEN send THEN dispatched through the Tron gasless use case`() = runTest {
+            // Arrange
+            coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
+            val sut = createSendConfirmModel(this, tronGaslessParams())
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { createAndSendTronGaslessTransactionUseCase(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { createAndSendGaslessTransactionUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { sendTransactionUseCase(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN Tron gasless fee WHEN model created THEN subtract availability asked with the token fee`() =
+            runTest {
+                // Arrange — the pair handed to the use case is what decides the reduction; see
+                // IsAmountSubtractAvailableUseCaseTest for the decision itself.
+                val feeSlot = slot<Pair<CryptoCurrency.ID, Fee>>()
+                coEvery {
+                    isAmountSubtractAvailableUseCase(any(), any(), capture(feeSlot))
+                } returns true.right()
+
+                // Act
+                createSendConfirmModel(this, tronGaslessParams())
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(feeSlot.captured.first).isEqualTo(tronUsdt.id)
+                assertThat(feeSlot.captured.second.amount.type).isInstanceOf(AmountType.Token::class.java)
+            }
+
+        private fun tronGaslessParams() = MutableParamsContainer(
+            defaultSendConfirmParams(
+                state = tronGaslessState(),
+                cryptoCurrencyStatus = tronUsdtStatus,
+                feeCryptoCurrencyStatus = tronUsdtStatus,
+            ),
+        )
+    }
+
+    @Nested
     inner class UpdateEditedState {
 
         @Test
@@ -314,9 +404,29 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         ),
     )
 
-    private fun contentState(fee: Fee, transactionFeeExtended: TransactionFeeExtended?): SendUM {
+    /**
+     * Max send of a Tron token whose gasless compensation is charged to that same token: the entered
+     * amount is the whole balance and the fee is a token-denominated [Fee.Common] carrying a quote.
+     */
+    private fun tronGaslessState(): SendUM = contentState(
+        fee = tronGaslessFee(),
+        transactionFeeExtended = TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(normal = tronGaslessFee()),
+            feeTokenId = tronUsdt.id,
+            tronGaslessQuote = mockk(relaxed = true),
+        ),
+        enteredAmount = TRON_BALANCE,
+        feeCryptoCurrencyStatus = tronUsdtStatus,
+    )
+
+    private fun contentState(
+        fee: Fee,
+        transactionFeeExtended: TransactionFeeExtended?,
+        enteredAmount: BigDecimal = BigDecimal.ONE,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
+    ): SendUM {
         val amount = mockk<AmountState.Data>(relaxed = true) {
-            every { amountTextField.cryptoAmount.value } returns BigDecimal.ONE
+            every { amountTextField.cryptoAmount.value } returns enteredAmount
             every { reduceAmountBy } returns BigDecimal.ZERO
             every { isIgnoreReduce } returns false
         }
@@ -327,7 +437,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
         val extraInfo = mockk<FeeExtraInfo>(relaxed = true) {
             every { this@mockk.transactionFeeExtended } returns transactionFeeExtended
-            every { feeCryptoCurrencyStatus } returns loadedFeeStatus
+            every { this@mockk.feeCryptoCurrencyStatus } returns feeCryptoCurrencyStatus
         }
         val feeSelector = mockk<FeeSelectorUM.Content>(relaxed = true) {
             every { selectedFeeItem } returns FeeItem.Market(fee)
@@ -346,6 +456,27 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
     private val loadedFeeStatus: CryptoCurrencyStatus
         get() = com.tangem.features.send.loadedStatus(testCryptoCurrency)
+
+    private val tronUsdt: CryptoCurrency.Token = MockCryptoCurrencyFactory().createToken(
+        blockchain = Blockchain.Tron,
+        id = "tether",
+        contractAddress = "TUsdt",
+    )
+
+    private val tronUsdtStatus: CryptoCurrencyStatus
+        get() = com.tangem.features.send.loadedStatus(tronUsdt, balance = TRON_BALANCE)
+
+    /** Tron gasless denominates the compensation in a token but ships it as a plain [Fee.Common]. */
+    private fun tronGaslessFee(): Fee = Fee.Common(
+        Amount(
+            token = Token(
+                symbol = tronUsdt.symbol,
+                contractAddress = tronUsdt.contractAddress,
+                decimals = tronUsdt.decimals,
+            ),
+            value = TRON_GASLESS_FEE,
+        ),
+    )
 
     // Can't reuse the shared commonFee(): it builds Amount(blockchain) whose value is null, and
     // verifyAndSendTransaction early-returns on `fee.amount.value ?: return` — so the fee needs an explicit value.
@@ -366,6 +497,11 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     data class CheckFeeResultModel(val checkResult: Boolean, val expectedSendInitiated: Boolean)
 
     data class DispatchModel(val isTokenCurrencyFee: Boolean)
+
+    private companion object {
+        val TRON_BALANCE: BigDecimal = BigDecimal("24.929183")
+        val TRON_GASLESS_FEE: BigDecimal = BigDecimal("2.51")
+    }
 
     // endregion
 }

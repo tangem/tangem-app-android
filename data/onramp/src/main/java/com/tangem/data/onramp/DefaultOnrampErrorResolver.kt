@@ -1,7 +1,7 @@
 package com.tangem.data.onramp
 
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.model.error.OnrampPairsError
 import com.tangem.domain.onramp.model.error.OnrampRedirectError

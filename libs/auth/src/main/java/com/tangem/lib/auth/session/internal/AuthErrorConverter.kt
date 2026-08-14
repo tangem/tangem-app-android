@@ -1,7 +1,7 @@
 package com.tangem.lib.auth.session.internal
 
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.AuthErrorResponse
 import com.tangem.utils.converter.Converter

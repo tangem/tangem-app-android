@@ -6,9 +6,10 @@ import com.tangem.utils.converter.Converter
 
 /**
  * Collapses the typed onramp status into a UI [Status] bucket: the single success state
- * ([Finished][ExpressOnrampStatus.Finished]), the failure states ([Failed][ExpressOnrampStatus.Failed]/
- * [Expired][ExpressOnrampStatus.Expired]/[Unknown][ExpressOnrampStatus.Unknown]) → [Failed][Status.Failed],
- * everything in flight → [Unconfirmed][Status.Unconfirmed].
+ * ([Finished][ExpressOnrampStatus.Finished]) → [Confirmed][Status.Confirmed]; the failure terminals
+ * ([Failed][ExpressOnrampStatus.Failed]/[Expired][ExpressOnrampStatus.Expired]/[Refunded][ExpressOnrampStatus.Refunded])
+ * and the terminal client fallback ([Unknown][ExpressOnrampStatus.Unknown]) → [Failed][Status.Failed]; everything in
+ * flight — including a running refund ([RefundInProgress][ExpressOnrampStatus.RefundInProgress]) — → [Unconfirmed][Status.Unconfirmed].
  */
 internal class ExpressOnrampStatusToUiStatusConverter : Converter<ExpressOnrampStatus, Status> {
 
@@ -16,6 +17,7 @@ internal class ExpressOnrampStatusToUiStatusConverter : Converter<ExpressOnrampS
         ExpressOnrampStatus.Finished -> Status.Confirmed
         ExpressOnrampStatus.Failed,
         ExpressOnrampStatus.Expired,
+        ExpressOnrampStatus.Refunded,
         ExpressOnrampStatus.Unknown,
         -> Status.Failed
         ExpressOnrampStatus.Created,
@@ -25,6 +27,7 @@ internal class ExpressOnrampStatusToUiStatusConverter : Converter<ExpressOnrampS
         ExpressOnrampStatus.Paid,
         ExpressOnrampStatus.Sending,
         ExpressOnrampStatus.Paused,
+        ExpressOnrampStatus.RefundInProgress,
         -> Status.Unconfirmed
     }
 }

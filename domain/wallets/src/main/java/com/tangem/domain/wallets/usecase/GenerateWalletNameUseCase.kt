@@ -28,8 +28,8 @@ class GenerateWalletNameUseCase(
         return suggestedWalletName(defaultName, existingNames)
     }
 
-    fun invokeForHot(): String {
-        val defaultName = "Wallet"
+    fun invokeForHot(preferredName: String? = null): String {
+        val defaultName = preferredName?.takeIf { it.isNotBlank() } ?: "Wallet"
         val existingNames = getNamesSet()
         return suggestedWalletName(defaultName, existingNames)
     }

@@ -5,8 +5,8 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.OrderStatusConverter
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.request.CloseCardRequest
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.CloseCardRequest
 import com.tangem.datasource.local.visa.TangemPayCloseCardStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayOrderInfo

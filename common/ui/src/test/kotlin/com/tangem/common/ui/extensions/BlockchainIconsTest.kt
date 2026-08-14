@@ -107,6 +107,8 @@ internal class BlockchainIconsTest {
                 Blockchain.RSK -> R.drawable.img_rsk_22
                 Blockchain.Radiant -> R.drawable.img_radiant_22
                 Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> R.drawable.img_ravencoin_22
+                Blockchain.Robinhood, Blockchain.RobinhoodTestnet -> R.drawable.img_robinhood_22
+                Blockchain.Igra, Blockchain.IgraTestnet -> R.drawable.img_igra_22
                 Blockchain.Scroll, Blockchain.ScrollTestnet -> R.drawable.img_scroll_22
                 Blockchain.Sei, Blockchain.SeiTestnet,
                 Blockchain.SeiEvm, Blockchain.SeiEvmTestnet,
@@ -231,6 +233,8 @@ internal class BlockchainIconsTest {
                 Blockchain.RSK -> R.drawable.ic_rsk_16
                 Blockchain.Radiant -> R.drawable.ic_radiant_22
                 Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> R.drawable.ic_ravencoin_22
+                Blockchain.Robinhood, Blockchain.RobinhoodTestnet -> R.drawable.ic_robinhood_22
+                Blockchain.Igra, Blockchain.IgraTestnet -> R.drawable.ic_igra_22
                 Blockchain.Scroll, Blockchain.ScrollTestnet -> R.drawable.ic_scroll_22
                 Blockchain.Sei, Blockchain.SeiTestnet,
                 Blockchain.SeiEvm, Blockchain.SeiEvmTestnet,

@@ -1,5 +1,7 @@
 package com.tangem.core.ui.utils
 
+import android.icu.text.DateIntervalFormat
+import android.icu.util.DateInterval
 import android.text.format.DateFormat
 import com.tangem.core.ui.utils.DateTimeFormatters.dateDDMMYYYY
 import com.tangem.core.ui.utils.DateTimeFormatters.dateMMMdd
@@ -84,6 +86,13 @@ object DateTimeFormatters {
         getBestFormatterBySkeleton("MMM d, yyyy")
     }
 
+    /**
+     * Example: "Jun 1, 2020, 14:30", "1 Jun 2020, 2:30 PM"
+     */
+    val dateTimeMMMdYYYY: DateTimeFormatter by lazy {
+        getBestFormatterBySkeleton("MMM d, yyyy HH:mm")
+    }
+
     
     val dateMMMd: DateTimeFormatter by lazy {
         getBestFormatterBySkeleton("MMM d")
@@ -123,16 +132,6 @@ object DateTimeFormatters {
     }
 
     /**
-     * Example: "June 1"
-     */
-    val dateMMMMd: DateTimeFormatter by lazy {
-        DateTimeFormatterBuilder()
-            .appendPattern("MMMM d")
-            .toFormatter()
-            .withLocale(Locale.getDefault())
-    }
-
-    /**
      * Example: "31.06.2020 12:00", "06/31/2020 12:00", "06/31/2020 12:00 PM"
      */
     val dateTimeFormatter: DateTimeFormatter by lazy {
@@ -156,6 +155,12 @@ object DateTimeFormatters {
 
     fun formatDate(date: DateTime, formatter: DateTimeFormatter = dateFormatter): String {
         return formatter.print(date)
+    }
+
+    
+    fun formatDateRange(start: DateTime, end: DateTime, skeleton: String): String {
+        return DateIntervalFormat.getInstance(skeleton, Locale.getDefault())
+            .format(DateInterval(start.millis, end.millis))
     }
 
     /**

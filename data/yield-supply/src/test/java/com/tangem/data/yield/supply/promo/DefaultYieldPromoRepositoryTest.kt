@@ -3,7 +3,7 @@ package com.tangem.data.yield.supply.promo
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.yield.supply.promo.converter.YieldBoostPromoConverter
 import com.tangem.data.yield.supply.promo.converter.YieldBoostStatusConverter
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi

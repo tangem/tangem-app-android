@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 
 /**
  * The dispatcher owns three things: routing each [TxHistoryInfo] shape to its sub-converter, building the shared header
- * menu once from the callbacks, and deriving the on-chain own-address set from the lookup. Per-shape conversion detail
+ * menu once from the callbacks, and handing the shared lookup to both sub-converters. Per-shape conversion detail
  * is covered by [OnChainTxToDetailsUMConverterTest] / [ExpressTxToDetailsUMConverterTest].
  */
 internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConverterTestBase() {
@@ -131,11 +131,11 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
 
     // endregion
 
-    // region Lookup -> own addresses threading
+    // region Lookup threading
 
     @Test
     fun `GIVEN incoming Transfer from an address owned on the currency network WHEN convert THEN transferred title`() {
-        // Arrange — the dispatcher derives the own-address set from lookup[currency.network], driving the on-chain title.
+        // Arrange — the dispatcher hands the lookup to the on-chain converter, driving the own-vs-external title.
         val converter = dispatcher(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
@@ -188,7 +188,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         val banner = requireNotNull(result.statusBanner)
         assertThat(banner.copy(subtitle = null)).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Refunded,
                 title = resourceReference(
                     id = R.string.express_exchange_notification_refunded_in_title,
                     formatArgs = wrappedList(bitcoin.symbol),
@@ -228,7 +228,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
     }
 
     @Test
-    fun `GIVEN refunded express swap without refund token WHEN convert THEN fallback error banner and no button`() {
+    fun `GIVEN refunded express swap without refund token WHEN convert THEN fallback refunded banner and no button`() {
         // Act — the refund token is unresolved (e.g. offline / not a bridge deal), even though a provider url exists.
         val result = dispatcher().convert(
             expressSwap(status = ExpressExchangeStatus.Refunded, externalTxUrl = EXTERNAL_URL),
@@ -237,7 +237,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         // Assert
         assertThat(result.statusBanner).isEqualTo(
             TxHistoryDetailsUM.StatusBannerUM(
-                severity = TxHistoryDetailsUM.StatusBannerUM.Severity.Error,
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Refunded,
                 title = resourceReference(R.string.express_exchange_status_refunded),
                 isLoading = false,
             ),
@@ -252,7 +252,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
             as TxHistoryDetailsUM.TwoAssets
 
         // Assert
-        assertThat(result.statusBanner?.severity).isEqualTo(TxHistoryDetailsUM.StatusBannerUM.Severity.Success)
+        assertThat(result.statusBanner?.style).isEqualTo(TxHistoryDetailsUM.StatusBannerUM.Style.Success)
         assertThat(result.providerButton).isNull()
     }
 

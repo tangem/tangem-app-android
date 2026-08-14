@@ -12,14 +12,14 @@ import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
 import com.tangem.datasource.api.auth.models.response.NonceApiResponse
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrationError
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import io.mockk.clearMocks
@@ -49,7 +49,7 @@ class DefaultDeviceRegistrarTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val preferencesDataStore = InMemoryPreferencesDataStore()
-    private val appPreferencesStore = AppPreferencesStore(
+    private val appPreferencesStore = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = dispatchers,
         preferencesDataStore = preferencesDataStore,

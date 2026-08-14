@@ -2,7 +2,7 @@ package com.tangem.data.pushnotificationpreferences.di
 
 import com.tangem.data.pushnotificationpreferences.DefaultWalletPushNotificationPreferencesRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.pushnotificationpreferences.repository.WalletPushNotificationPreferencesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

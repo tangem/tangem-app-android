@@ -3,28 +3,22 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.tokenaction.TokenActionRow
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.ds.button.SecondaryTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
-import dev.chrisbanes.haze.rememberHazeState
 import com.tangem.core.ui.R as CoreR
 
 @Composable
-internal fun TransferBottomSheetContent(state: TransferUM, onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun TransferBottomSheetContent(state: TransferUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
@@ -34,19 +28,7 @@ internal fun TransferBottomSheetContent(state: TransferUM, onCloseClick: () -> U
         SwapAndSendActionRow(state = state)
         SellActionRow(state = state)
 
-        SpacerH(TangemTheme.dimens2.x2)
-
-        CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
-            SecondaryTangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onCloseClick,
-                text = resourceReference(CoreR.string.common_close),
-                size = TangemButtonSize.X12,
-                shape = TangemButtonShape.Rounded,
-            )
-        }
-
-        SpacerH(TangemTheme.dimens2.x4)
+        SpacerH24()
     }
 }
 
@@ -144,7 +126,6 @@ private fun Preview(@PreviewParameter(TransferPreviewProvider::class) state: Tra
     TangemThemePreviewRedesign {
         TransferBottomSheetContent(
             state = state,
-            onCloseClick = {},
             modifier = Modifier.padding(horizontal = 16.dp),
         )
     }

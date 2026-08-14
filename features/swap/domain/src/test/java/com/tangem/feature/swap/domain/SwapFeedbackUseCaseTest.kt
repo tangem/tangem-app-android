@@ -2,13 +2,16 @@ package com.tangem.feature.swap.domain
 
 import arrow.core.left
 import arrow.core.right
-import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
-import com.tangem.feature.swap.domain.models.domain.ExistingRating
-import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.toHexString
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
+import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -18,46 +21,74 @@ internal class SwapFeedbackUseCaseTest {
     private val useCase = SwapFeedbackUseCase(repository)
 
     @Test
-    fun `getExistingRating returns ExistingRating when rated`() = runTest {
-        coEvery { repository.getRating("tx123") } returns ExistingRating(rating = 4).right()
+    fun `GIVEN deal data WHEN submit THEN wallet id is hashed and params delegated to repository`() = runTest {
+        // Arrange
+        val paramsSlot = slot<SwapFeedbackParams>()
+        coEvery { repository.submitFeedback(capture(paramsSlot)) } returns Unit.right()
 
-        val result = useCase.getExistingRating("tx123")
+        // Act
+        val result = useCase.submit(
+            SwapFeedbackUseCase.SubmitParams(
+                txExternalId = "tx123",
+                providerName = "ChangeNOW",
+                txExternalUrl = "https://example.com/tx/abc",
+                userWalletId = UserWalletId(USER_WALLET_ID_HEX),
+                rating = 5,
+                feedback = "Great!",
+            ),
+        )
 
-        assertThat(result.getOrNull()).isEqualTo(ExistingRating(rating = 4))
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(paramsSlot.captured).isEqualTo(
+            SwapFeedbackParams(
+                userWalletIdHash = USER_WALLET_ID_HASH,
+                providerName = "ChangeNOW",
+                txUrl = "https://example.com/tx/abc",
+                txExternalId = "tx123",
+                rating = 5,
+                feedback = "Great!",
+            ),
+        )
     }
 
     @Test
-    fun `getExistingRating returns null when not rated`() = runTest {
-        coEvery { repository.getRating("tx123") } returns null.right()
+    fun `GIVEN repository fails WHEN submit THEN error is returned`() = runTest {
+        // Arrange
+        coEvery { repository.submitFeedback(any()) } returns RuntimeException("Network error").left()
 
-        val result = useCase.getExistingRating("tx123")
+        // Act
+        val result = useCase.submit(
+            SwapFeedbackUseCase.SubmitParams(
+                txExternalId = "tx123",
+                providerName = "ChangeNOW",
+                txExternalUrl = "https://example.com/tx/abc",
+                userWalletId = UserWalletId(USER_WALLET_ID_HEX),
+                rating = 5,
+                feedback = "",
+            ),
+        )
 
-        assertThat(result.getOrNull()).isNull()
-    }
-
-    @Test
-    fun `getExistingRating returns Left on error`() = runTest {
-        coEvery { repository.getRating("tx123") } returns RuntimeException("Network error").left()
-
-        val result = useCase.getExistingRating("tx123")
-
+        // Assert
         assertThat(result.isLeft()).isTrue()
     }
 
     @Test
-    fun `submit delegates to repository`() = runTest {
-        val params = SwapFeedbackParams(
-            userWalletIdHash = "hash",
-            providerName = "ChangeNOW",
-            txUrl = "https://example.com/tx/abc",
-            txExternalId = "tx123",
-            rating = 5,
-            feedback = "Great!",
-        )
-        coEvery { repository.submitFeedback(params) } returns Unit.right()
+    fun `GIVEN tx external id WHEN ensureLoaded THEN delegated to repository`() = runTest {
+        // Arrange
+        coEvery { repository.fetchRatingIfNeeded("tx123") } returns Unit
 
-        useCase.submit(params)
+        // Act
+        useCase.ensureLoaded("tx123")
 
-        coVerify(exactly = 1) { repository.submitFeedback(params) }
+        // Assert
+        coVerify(exactly = 1) { repository.fetchRatingIfNeeded("tx123") }
+    }
+
+    private companion object {
+        const val USER_WALLET_ID_HEX = "0011223344556677"
+
+        /** SHA-256 of [USER_WALLET_ID_HEX] bytes, hex-encoded — mirrors the legacy hashing in TokenDetailsModel */
+        val USER_WALLET_ID_HASH = UserWalletId(USER_WALLET_ID_HEX).value.calculateSha256().toHexString()
     }
 }

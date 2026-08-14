@@ -96,7 +96,6 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.BiometricsAuthenticationFailed,
             is FeedbackEmailType.AppUpdateProblem,
             is FeedbackEmailType.Visa.Dispute,
-            is FeedbackEmailType.Visa.DisputeV2,
             is FeedbackEmailType.Visa.FeatureIsBeta,
             is FeedbackEmailType.Visa.KycRejected,
             -> this

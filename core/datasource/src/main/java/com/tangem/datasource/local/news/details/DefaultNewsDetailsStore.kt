@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.news.details
 
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.news.DetailedArticle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

@@ -10,12 +10,9 @@ interface TangemPayStorage {
     suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String)
     suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String?
 
-    suspend fun clearCustomerWalletAddress(userWalletId: UserWalletId)
-
     suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens)
 
     suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens?
-    suspend fun clearAuthTokens(customerWalletAddress: String)
 
     suspend fun storeOrderId(customerWalletAddress: String, orderId: String)
 
@@ -65,8 +62,20 @@ interface TangemPayStorage {
     suspend fun storeTangemPayEligibility(eligibility: Set<String>)
     suspend fun getTangemPayEligibility(): Set<String>
 
-    suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String)
+    /**
+     * Drops every entry this storage keeps for the wallet, including the auth tokens and the
+     * [customerWalletAddress] they are keyed by. Pass a `null` address when the wallet has none stored —
+     * the wallet-keyed entries are cleared either way. Does not touch the deactivated marker, see
+     * [clearIsTangemPayDeactivated].
+     */
+    suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String?)
 
     suspend fun storeIsTangemPayDeactivated(userWalletId: UserWalletId)
     suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean
+
+    /**
+     * Drops the deactivated marker. Kept out of [clearAll] on purpose: disabling Tangem Pay must not
+     * make a deactivated account look eligible again, while removing the wallet must.
+     */
+    suspend fun clearIsTangemPayDeactivated(userWalletId: UserWalletId)
 }

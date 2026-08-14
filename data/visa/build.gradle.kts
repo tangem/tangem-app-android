@@ -56,7 +56,9 @@ dependencies {
 
     // region Project - Core
     api(projects.core.analytics)
+    implementation(projects.core.local)
     api(projects.core.datasource)
+    api(projects.spend.datasource)
     api(projects.core.security)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
@@ -105,5 +107,6 @@ dependencies {
 
     // region Test
     testImplementation(projects.test.core)
+    testImplementation(deps.moshi.kotlin)
     // endregion
 }

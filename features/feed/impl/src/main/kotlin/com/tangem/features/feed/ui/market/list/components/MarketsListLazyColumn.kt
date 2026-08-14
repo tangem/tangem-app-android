@@ -18,10 +18,9 @@ import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM.Companion.TOKEN_LAZY_LIST_ID_SEPARATOR
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -69,7 +68,7 @@ internal fun MarketsListLazyColumn(
             userScrollEnabled = false,
         ) {
             items(count = 100, key = { it }) {
-                MarketsListItemPlaceholder()
+                MarketsListItemPlaceholder(modifier = Modifier.padding(top = 12.dp, start = 16.dp, end = 16.dp))
             }
         }
     } else {
@@ -105,8 +104,8 @@ internal fun MarketsListLazyColumn(
                             modifier = Modifier.roundedShapeItemDecoration(
                                 currentIndex = index,
                                 lastIndex = state.items.lastIndex,
-                                backgroundColor = TangemTheme.colors2.surface.level3,
-                                radius = TangemTheme.dimens2.x5,
+                                backgroundColor = TangemTheme.colors3.bg.secondary,
+                                radius = 20.dp,
                             ),
                             model = item,
                             onClick = { state.onItemClick(item) },
@@ -169,23 +168,23 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
     Column(
         modifier = modifier
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing12,
+                horizontal = 16.dp,
+                vertical = 12.dp,
             )
             .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResourceSafe(R.string.markets_search_see_tokens_under_100k),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
         )
-        SecondarySmallButton(
-            config = SmallButtonConfig(
-                text = resourceReference(R.string.markets_search_show_tokens),
-                onClick = onShowTokensClick,
-            ),
+        TangemButton(
+            text = resourceReference(R.string.markets_search_show_tokens),
+            onClick = onShowTokensClick,
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X8,
         )
         SpacerH12()
     }
@@ -199,8 +198,8 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResourceSafe(R.string.markets_search_token_no_result_title),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

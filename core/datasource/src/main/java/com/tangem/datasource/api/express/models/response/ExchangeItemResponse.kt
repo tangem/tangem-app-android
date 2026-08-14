@@ -78,10 +78,9 @@ data class ExchangeItemResponse(
     @Json(name = "createdAt")
     val createdAt: String,
 
-    // todo txHistory backend does not send `updatedAt` yet — uncomment once it does.
-    // /** Transaction last-update timestamp in ISO-8601 format */
-    // @Json(name = "updatedAt")
-    // val updatedAt: String,
+    /** Transaction last-update timestamp in ISO-8601 format */
+    @Json(name = "updatedAt")
+    val updatedAt: String,
 
     /** Pay-in expiration timestamp in ISO-8601 format */
     @Json(name = "payTill")

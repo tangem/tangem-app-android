@@ -7,6 +7,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.*
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
@@ -18,8 +19,11 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcSignStep
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.test.runTest
@@ -34,6 +38,7 @@ internal class WcSignUseCaseDelegateTest {
         object : FinalActionCollector<TestSignModel> {}
     private val initSignModel = TestSignModel()
     private val analytics: AnalyticsEventHandler = mockk<AnalyticsEventHandler>(relaxed = true)
+    private val respondService: WcRespondService = mockk(relaxed = true)
     private val simpleResult = "hex".right()
     private val rawRequestMock = WcSdkSessionRequest(
         topic = "",
@@ -103,6 +108,7 @@ internal class WcSignUseCaseDelegateTest {
     ) = WcSignUseCaseDelegate(
         analytics = analytics,
         context = context,
+        respondService = respondService,
         finalActionCollector = finalActionCollector,
         middleActionCollector = middleActionCollector,
     )
@@ -111,6 +117,7 @@ internal class WcSignUseCaseDelegateTest {
     fun setup() {
         middleActionCollector = object : MiddleActionCollector<TestMiddleAction, TestSignModel> {}
         finalActionCollector = object : FinalActionCollector<TestSignModel> {}
+        every { respondService.isRequestActual(any()) } returns true
     }
 
     @Test
@@ -150,6 +157,66 @@ internal class WcSignUseCaseDelegateTest {
             assertEquals(result, awaitItem())
             expectNoEvents()
         }
+    }
+
+    @Test
+    fun `GIVEN request is not actual WHEN sign THEN reject and emit RequestExpired without calling onSign`() = runTest {
+        // Arrange
+        every { respondService.isRequestActual(any()) } returns false
+        var onSignCalled = false
+        val expiredResult = signing.toResult(WcRequestError.RequestExpired.left())
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                onSignCalled = true
+                successSign(state)
+            }
+        }
+        val useCase = createUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
+
+        // Act & Assert
+        useCase.invoke(initSignModel).test {
+            assertEquals(initState, awaitItem())
+            useCase.sign()
+            // The Signing step may be conflated away since the guard resolves without suspension.
+            var item = awaitItem()
+            if (item.domainStep is WcSignStep.Signing) item = awaitItem()
+            assertEquals(expiredResult, item)
+            expectNoEvents()
+        }
+        assertEquals(false, onSignCalled)
+        verify { respondService.rejectRequestNonBlock(rawRequestMock, "") }
+    }
+
+    @Test
+    fun `GIVEN validity check fails WHEN sign THEN emits UnknownError without rejecting`() = runTest {
+        // Arrange
+        every { respondService.isRequestActual(any()) } throws RuntimeException("sdk failure")
+        var onSignCalled = false
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                onSignCalled = true
+            }
+        }
+        val useCase = createUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
+
+        // Act & Assert
+        useCase.invoke(initSignModel).test {
+            assertEquals(initState, awaitItem())
+            useCase.sign()
+            var item = awaitItem()
+            if (item.domainStep is WcSignStep.Signing) item = awaitItem()
+            val result = (item.domainStep as WcSignStep.Result).result
+            assertTrue(result.leftOrNull() is WcRequestError.UnknownError)
+            expectNoEvents()
+        }
+        assertEquals(false, onSignCalled)
+        verify(exactly = 0) { respondService.rejectRequestNonBlock(any(), any()) }
     }
 
     @Test

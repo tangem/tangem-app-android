@@ -23,7 +23,6 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             is FeedbackEmailType.Visa.Activation,
             is FeedbackEmailType.Visa.DirectUserRequest,
             is FeedbackEmailType.Visa.Dispute,
-            is FeedbackEmailType.Visa.DisputeV2,
             is FeedbackEmailType.Visa.FailedIssueCard,
             is FeedbackEmailType.Visa.Withdrawal,
             is FeedbackEmailType.Visa.FeatureIsBeta,

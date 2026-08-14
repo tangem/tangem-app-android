@@ -3,8 +3,10 @@ package com.tangem.features.foryou.impl.model.converter.portfolioReview
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledResourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -17,7 +19,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.foryou.impl.model.converter.forYouPlaceholderBadge
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -48,6 +49,8 @@ internal class ForYouPortfolioReviewTokenRowConverter(
     private val userWalletId: UserWalletId?,
     private val totalFiatBalance: BigDecimal,
     private val onTokenClick: (UserWalletId, CryptoCurrency) -> Unit,
+    private val isBalanceHidden: Boolean = false,
+    private val titleBadge: TangemBadgeUM? = null,
 ) : Converter<List<CryptoCurrencyStatus>, TangemTokenRowUM> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
@@ -92,10 +95,13 @@ internal class ForYouPortfolioReviewTokenRowConverter(
         )
     }
 
-    /** Title: For You always shows the asset name with the placeholder price-change badge. */
+    /**
+     * Title: the asset name with the asset-level sentiment [titleBadge]. Indicators are per-symbol, so
+     * every per-network row of an asset carries the same badge as its parent asset row.
+     */
     private fun toRowTitle(currency: CryptoCurrency): TangemTokenRowUM.TitleUM = TangemTokenRowUM.TitleUM.Content(
         text = stringReference(currency.name),
-        badge = forYouPlaceholderBadge(),
+        badge = titleBadge,
     )
 
     /**
@@ -107,18 +113,15 @@ internal class ForYouPortfolioReviewTokenRowConverter(
         currency: CryptoCurrency,
         cryptoAmount: BigDecimal,
     ): TangemTokenRowUM.SubtitleUM = when (state) {
-        is RowState.Normal -> TangemTokenRowUM.SubtitleUM.Content(
-            text = stringReference(
-                "${currency.network.name} ${StringsSigns.DOT} ${
-                    cryptoAmount.format {
-                        crypto(
-                            cryptoCurrency = currency,
-                        )
-                    }
-                }",
-            ),
-            isFlickering = state.isFlickering,
-        )
+        is RowState.Normal -> {
+            val amount = cryptoAmount.format {
+                crypto(cryptoCurrency = currency)
+            }.orMaskWithStars(isBalanceHidden)
+            TangemTokenRowUM.SubtitleUM.Content(
+                text = stringReference("${currency.network.name} ${StringsSigns.DOT} $amount"),
+                isFlickering = state.isFlickering,
+            )
+        }
         RowState.NoAddress -> TangemTokenRowUM.SubtitleUM.Content(
             text = stringReference("${currency.network.name} ${StringsSigns.DOT} ${StringsSigns.DASH_SIGN}"),
         )
@@ -136,7 +139,7 @@ internal class ForYouPortfolioReviewTokenRowConverter(
                         fiatCurrencyCode = appCurrency.code,
                         fiatCurrencySymbol = appCurrency.symbol,
                     )
-                },
+                }.orMaskWithStars(isBalanceHidden),
             ),
             isFlickering = state.isFlickering,
             startIcons = buildList {

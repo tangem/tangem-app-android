@@ -49,6 +49,7 @@ internal fun AddAndManageBottomSheetContent(
             TangemTopNavigation(
                 title = resourceReference(R.string.main_add_and_manage_tokens),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
                 blurBackground = false,
                 onClose = onDismiss,
             )

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -37,6 +38,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SwapAmountTestTags
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
@@ -163,6 +165,7 @@ private fun SwapPriceImpact(priceImpact: PriceImpact?, onInfoClick: () -> Unit) 
                 PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
                 else -> TangemTheme.colors.text.tertiary
             },
+            modifier = Modifier.testTag(SwapAmountTestTags.PRICE_IMPACT_PERCENT),
         )
     }
     Icon(
@@ -173,6 +176,7 @@ private fun SwapPriceImpact(priceImpact: PriceImpact?, onInfoClick: () -> Unit) 
         contentDescription = null,
         modifier = Modifier
             .size(20.dp)
+            .testTag(SwapAmountTestTags.PRICE_IMPACT_INFO_ICON)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = false),

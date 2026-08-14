@@ -20,12 +20,20 @@ object ExternalUrlValidator {
         "feedback.tangem.com",
     )
 
+    /**
+     * Check if [host] is a trusted Tangem host.
+     *
+     * Prefer this over [isUriTrusted] when the URI is already parsed: it neither re-parses the string nor reports
+     * a malformed one to Crashlytics, which matters for externally supplied values such as a push payload.
+     */
+    fun isHostTrusted(host: String?): Boolean = host?.lowercase() in trustedHosts
+
     /** Check if [externalUri] is trusted */
     fun isUriTrusted(externalUri: String): Boolean {
         return try {
             val uri = URI.create(externalUri)
 
-            uri.scheme == "https" && uri.host in trustedHosts
+            uri.scheme == "https" && isHostTrusted(uri.host)
         } catch (e: Exception) {
             val exception = IllegalStateException("Failed to validate URI: $externalUri", e)
 

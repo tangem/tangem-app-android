@@ -1,10 +1,12 @@
 package com.tangem.features.feed.ui.market.detailed.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,13 +29,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -41,60 +46,42 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.preview.SecurityScorePreviewData
 import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreBottomSheetContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet as TangemBottomSheetV2
 
 @Composable
 internal fun SecurityScoreBottomSheet(config: TangemBottomSheetConfig) {
-    SecurityScoreBottomSheetV2(config)
-}
-
-@Composable
-private fun SecurityScoreBottomSheetV2(config: TangemBottomSheetConfig) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
-    TangemBottomSheetV2<SecurityScoreBottomSheetContent>(
+    TangemBottomSheet<SecurityScoreBottomSheetContent>(
         config = config,
         type = TangemBottomSheetType.Modal,
         title = { content ->
-            TangemTopBar(
+            TangemTopNavigation(
                 title = content.title,
-                type = TangemTopBarType.BottomSheet,
-                endContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_close_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
-                            .clickableSingle(onClick = config.onDismissRequest)
-                            .padding(TangemTheme.dimens2.x2_5),
-                    )
-                },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                onClose = config.onDismissRequest,
             )
         },
         content = { content ->
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TangemTheme.dimens2.x4),
+                    .padding(horizontal = 16.dp),
             ) {
                 Text(
                     text = content.description.resolveReference(),
-                    style = TangemTheme.typography2.bodyRegular15.copy(
-                        color = TangemTheme.colors2.text.neutral.tertiary,
+                    style = TangemTheme.typography3.body.medium.copy(
+                        color = TangemTheme.colors3.text.secondary,
                     ),
                 )
                 SpacerH12()
                 content.providers.fastForEach { provider ->
-                    SecurityScoreProviderRowV2(
+                    SecurityScoreProviderRow(
                         providerUM = provider,
                         onLinkClick = { content.onProviderLinkClick(provider) },
                     )
-                    SpacerH(TangemTheme.dimens2.x2)
+                    SpacerH(8.dp)
                 }
 
                 SpacerH16()
@@ -105,68 +92,68 @@ private fun SecurityScoreBottomSheetV2(config: TangemBottomSheetConfig) {
 }
 
 @Composable
-private fun SecurityScoreProviderRowV2(
+private fun SecurityScoreProviderRow(
     providerUM: SecurityScoreBottomSheetContent.SecurityScoreProviderUM,
     onLinkClick: () -> Unit,
 ) {
     TangemRowContainer(
         modifier = Modifier
             .background(
-                color = TangemTheme.colors2.surface.level4,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                color = TangemTheme.colors3.bg.tertiary,
+                shape = RoundedCornerShape(20.dp),
             )
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors2.border.neutral.primary,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                color = TangemTheme.colors3.border.primary,
+                shape = RoundedCornerShape(20.dp),
             ),
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier
-                .size(size = TangemTheme.dimens.size40)
-                .clip(TangemTheme.shapes.roundedCorners8)
+                .size(size = 40.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .layoutId(TangemRowLayoutId.HEAD),
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(providerUM.iconUrl)
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
-            loading = { RectangleShimmer(radius = TangemTheme.dimens2.x3) },
-            error = { RectangleShimmer(radius = TangemTheme.dimens2.x3) },
+            loading = { TangemShimmer(modifier = Modifier.fillMaxSize(), radius = 8.dp) },
+            error = { TangemShimmer(modifier = Modifier.fillMaxSize(), radius = 8.dp) },
             contentDescription = null,
         )
 
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x2)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.START_TOP),
             text = providerUM.name,
-            style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
         )
 
         providerUM.lastAuditDate?.let { auditDate ->
             Text(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens2.x2)
+                    .padding(start = 8.dp)
                     .layoutId(TangemRowLayoutId.START_BOTTOM),
                 text = auditDate,
-                style = TangemTheme.typography2.captionSemibold12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
 
         StarBlock(
             score = providerUM.score,
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x2)
+                .padding(start = 8.dp)
                 .clickableSingle(onClick = onLinkClick)
                 .layoutId(TangemRowLayoutId.END_TOP),
         )
 
-        UrlBlockV2(
+        UrlBlock(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x2)
+                .padding(start = 8.dp)
                 .clickableSingle(onClick = onLinkClick)
                 .layoutId(TangemRowLayoutId.END_BOTTOM),
             providerUM = providerUM,
@@ -175,7 +162,7 @@ private fun SecurityScoreProviderRowV2(
 }
 
 @Composable
-private fun UrlBlockV2(
+private fun UrlBlock(
     providerUM: SecurityScoreBottomSheetContent.SecurityScoreProviderUM,
     modifier: Modifier = Modifier,
 ) {
@@ -184,19 +171,19 @@ private fun UrlBlockV2(
     if (urlData != null && rootHost != null) {
         Row(
             modifier = modifier,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
                 text = urlData.rootHost,
-                style = TangemTheme.typography2.captionSemibold12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
             )
             Icon(
                 modifier = Modifier
-                    .size(TangemTheme.dimens2.x4),
+                    .size(16.dp),
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_top_right_24),
                 contentDescription = null,
-                tint = TangemTheme.colors2.markers.iconGray,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }
@@ -205,21 +192,21 @@ private fun UrlBlockV2(
 @Suppress("MagicNumber")
 @Composable
 fun StarBlock(score: Float, modifier: Modifier = Modifier) {
-    val grayColor = TangemTheme.colors2.markers.iconGray
+    val grayColor = TangemTheme.colors3.icon.secondary
     val percentage = score / 5
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = score.toString(),
-            style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
         )
         Icon(
             modifier = Modifier
-                .requiredSize(TangemTheme.dimens2.x5)
+                .requiredSize(20.dp)
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                 .drawWithCache {
                     onDrawWithContent {
@@ -234,7 +221,7 @@ fun StarBlock(score: Float, modifier: Modifier = Modifier) {
                 },
             imageVector = ImageVector.vectorResource(R.drawable.ic_star_filled_20),
             contentDescription = null,
-            tint = TangemTheme.colors2.markers.iconBlue,
+            tint = TangemTheme.colors3.icon.brand,
         )
     }
 }

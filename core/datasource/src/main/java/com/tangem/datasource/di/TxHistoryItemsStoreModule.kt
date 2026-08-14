@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
-import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.txhistory.DefaultTxHistoryItemsStore
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.visa.DefaultTangemPayTxHistoryItemsStore
@@ -32,7 +32,7 @@ internal object TxHistoryItemsStoreModule {
     @Singleton
     fun provideTxHistoryItemsStore(): TxHistoryItemsStore {
         return DefaultTxHistoryItemsStore(
-            dataStore = RuntimeDataStore(),
+            store = RuntimeSharedMapStore(),
         )
     }
 

@@ -9,7 +9,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.onramp.converters.HotCryptoCurrencyConverter
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse

@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -140,6 +142,7 @@ private fun TwoAssetsSideLabel(label: TextReference, owner: AssetOwnerUM?, modif
         when (owner) {
             is AssetOwnerUM.Account,
             is AssetOwnerUM.Address,
+            is AssetOwnerUM.PaymentAccount,
             -> {
                 AssetOwnerIcon(owner = owner)
                 LabelText(text = owner.name, modifier = Modifier.weight(weight = 1f, fill = false))
@@ -192,6 +195,10 @@ private fun AssetOwnerIcon(owner: AssetOwnerUM, modifier: Modifier = Modifier) {
         is AssetOwnerUM.Address -> IdentIcon(
             address = owner.rawAddress,
             modifier = iconModifier.clip(CircleShape),
+        )
+        is AssetOwnerUM.PaymentAccount -> PaymentAccountIcon(
+            size = AccountIconSize.ExtraSmall,
+            modifier = iconModifier,
         )
     }
 }

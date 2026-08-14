@@ -21,8 +21,8 @@ internal class VersionNameProvider(
             return project.property("versionName") as String
         }
 
-        // Get current branch name using Provider API (configuration cache compatible)
-        val currentBranch = getCurrentBranchProvider().get()
+        // Resolve the current branch (git, with a CI env fallback for detached checkouts)
+        val currentBranch = resolveCurrentBranch()
 
         // Try to extract version from branch name (releases/X.Y)
         val versionFromBranch = extractVersionFromBranch(currentBranch)
@@ -43,10 +43,41 @@ internal class VersionNameProvider(
         return "1.0.0-SNAPSHOT"
     }
 
-    private fun getCurrentBranchProvider(): Provider<String> {
+    /**
+     * Resolves the current branch name.
+     *
+     * Prefers git, but CI (e.g. the GitHub Actions Docker build used for UI tests) checks out a
+     * detached HEAD, so `git rev-parse --abbrev-ref HEAD` yields "HEAD" (or nothing when git can't
+     * read the mounted workspace). In that case fall back to the branch the CI runner already knows:
+     * `GITHUB_HEAD_REF` for pull requests, `GITHUB_REF_NAME` for branch/tag builds.
+     */
+    private fun resolveCurrentBranch(): String {
+        val gitBranch = runCatching { gitBranchProvider().get() }
+            .getOrDefault("")
+            .trim()
+
+        if (gitBranch.isNotEmpty() && gitBranch != DETACHED_HEAD) {
+            return gitBranch
+        }
+
+        return ciBranchName().ifEmpty { gitBranch }
+    }
+
+    private fun gitBranchProvider(): Provider<String> {
         return project.providers.exec {
             commandLine("git", "rev-parse", "--abbrev-ref", "HEAD")
+            // Never let a git failure (detached HEAD, dubious ownership in a container, missing
+            // binary) abort configuration — fall through to the CI env fallback instead.
+            isIgnoreExitValue = true
         }.standardOutput.asText.map { it.trim() }
+    }
+
+    private fun ciBranchName(): String {
+        val providers = project.providers
+        val headRef = providers.environmentVariable("GITHUB_HEAD_REF").orNull?.trim().orEmpty()
+        if (headRef.isNotEmpty()) return headRef
+
+        return providers.environmentVariable("GITHUB_REF_NAME").orNull?.trim().orEmpty()
     }
 
     private fun findLatestReleaseBranch(): String? {
@@ -56,12 +87,14 @@ internal class VersionNameProvider(
             return null
         }
 
-        val currentBranch = getCurrentBranchProvider().get()
         val outputFile = project.rootProject.file("find-latest-release-branch.output")
 
         return try {
             project.providers.exec {
-                commandLine("sh", scriptPath.absolutePath, currentBranch)
+                // HEAD always resolves to the current commit, even in CI's detached checkout, so the
+                // script can compute which release branch this build descends from without relying on
+                // a local branch ref existing.
+                commandLine("sh", scriptPath.absolutePath, "HEAD")
             }.standardOutput.asText.get()
 
             if (!outputFile.exists()) {
@@ -102,4 +135,7 @@ internal class VersionNameProvider(
         return "$major.$newMinor"
     }
 
+    private companion object {
+        const val DETACHED_HEAD = "HEAD"
+    }
 }

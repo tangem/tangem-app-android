@@ -1,17 +1,23 @@
 package com.tangem.features.commonfeatures.impl.portfolioselector
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorBS
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContentV2
+import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContentV3
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -46,11 +52,35 @@ internal class DefaultPortfolioSelectorComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
         val listBottomPadding = PaddingValues(bottom = LocalTangemBottomSheetContentBottomInset.current)
-        PortfolioSelectorContentV2(
-            state = state,
-            modifier = modifier,
-            contentPadding = listBottomPadding,
-        )
+
+        if (state.isSelectorV3Enabled) {
+            Column(modifier) {
+                PortfolioSelectorContentV3(
+                    state = state,
+                    modifier = Modifier,
+                    contentPadding = listBottomPadding,
+                )
+
+                val button = state.button
+
+                if (button != null) {
+                    SpacerH16()
+
+                    SecondaryButton(
+                        text = button.text.resolveReference(),
+                        onClick = button.onClick,
+                        enabled = button.isEnabled,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        } else {
+            PortfolioSelectorContentV2(
+                state = state,
+                modifier = modifier,
+                contentPadding = listBottomPadding,
+            )
+        }
     }
 
     @AssistedFactory

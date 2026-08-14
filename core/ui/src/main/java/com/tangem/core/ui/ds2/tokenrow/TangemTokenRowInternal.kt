@@ -97,7 +97,7 @@ internal fun TokenRowContainer(
     val density = LocalDensity.current
     val verticalPadding = with(density) { 4.dp.roundToPx() }
     val extraContentPadding = with(density) { 8.dp.roundToPx() }
-    val contentPadding = with(density) { 12.dp.roundToPx() }
+    val contentPadding = with(density) { 16.dp.roundToPx() }
 
     val rowModifier = modifier
         .conditionalCompose(isFocused) {

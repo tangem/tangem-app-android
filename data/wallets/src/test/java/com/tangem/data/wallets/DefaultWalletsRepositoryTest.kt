@@ -5,17 +5,17 @@ import androidx.datastore.preferences.core.Preferences
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.wallet.WalletServerBinder
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
@@ -35,7 +35,7 @@ class DefaultWalletsRepositoryTest {
     private val tangemTechApi: TangemTechApi = mockk()
     private val walletServerBinder: WalletServerBinder = mockk()
 
-    private val appPreferenceStore = AppPreferencesStore(
+    private val appPreferenceStore = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = preferencesDataStore,

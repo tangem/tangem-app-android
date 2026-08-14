@@ -7,116 +7,147 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
-import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
-import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountStatus
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
+import com.tangem.domain.markets.GetCoinIndicatorsUpdatesUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.foryou.TokenSummaryComponent
+import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
+import com.tangem.features.foryou.impl.analytics.toAnalyticsTokenAndNetwork
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
-import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
-import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSentimentUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryBottomSheetConfig
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryHeaderUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
-import com.tangem.features.foryou.impl.tokensummary.model.transformer.TokenSummaryTransformer
+import com.tangem.features.foryou.model.ForYouPeriod
+import com.tangem.features.foryou.impl.tokensummary.entity.*
+import com.tangem.features.foryou.impl.tokensummary.model.converter.AddToPortfolioTargetConverter
+import com.tangem.features.foryou.impl.tokensummary.model.converter.BottomButtonUMConverter
+import com.tangem.features.foryou.impl.tokensummary.model.transformer.SetTokenSentimentTransformer
+import com.tangem.features.foryou.impl.tokensummary.swapchooser.SwapTokenChooserComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.Unit
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class TokenSummaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val appRouter: AppRouter,
-    private val portfolioFetcherFactory: PortfolioFetcher.Factory,
-    private val singleAccountStatusSupplier: SingleAccountStatusSupplier,
-    val portfolioSelectorController: PortfolioSelectorController,
+    private val messageSender: UiMessageSender,
+    private val fetchCoinIndicatorsUseCase: FetchCoinIndicatorsUseCase,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    getCoinIndicatorsUpdatesUseCase: GetCoinIndicatorsUpdatesUseCase,
+    swapHoldingsDelegateFactory: SwapHoldingsDelegate.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<TokenSummaryComponent.Params>()
 
-    private val iconConverter = CryptoCurrencyToIconStateConverter()
-    private val swapNavigationJob = JobHolder()
+    private val tokenSymbol: String = when (val token = params.token) {
+        is TokenSummaryComponent.Token.Portfolio -> token.cryptoCurrency.symbol
+        is TokenSummaryComponent.Token.Market -> token.symbol
+    }
 
+    private val iconConverter = CryptoCurrencyToIconStateConverter()
     private val selectedTokenPeriodId = MutableStateFlow(value = params.selectedTokenPeriodId)
 
-    /** Drives the single bottom-sheet slot hosted by the component (portfolio selector / info). */
     val bottomSheetNavigation: SlotNavigation<TokenSummaryBottomSheetConfig> = SlotNavigation()
 
-    /** Feeds the portfolio selector with the wallet's accounts. */
-    val portfolioFetcher: PortfolioFetcher by lazy {
-        portfolioFetcherFactory.create(
-            mode = PortfolioFetcher.Mode.Wallet(params.userWalletId),
-            scope = modelScope,
-        )
+    private val swapHoldingsDelegate = swapHoldingsDelegateFactory.create(
+        modelScope = modelScope,
+        token = params.token,
+    )
+
+    private val addToPortfolioTarget = AddToPortfolioTargetConverter().convert(params.token)
+
+    private val bottomButtonUMConverter = BottomButtonUMConverter(
+        isAddToPortfolioAvailable = addToPortfolioTarget != null,
+        onAddToPortfolioClick = ::openAddToPortfolio,
+        onAddFundsClick = ::openManageFunds,
+        onSwapClick = ::openSwap,
+    )
+
+    /**
+     * Built on the first add-to-portfolio click and reused afterwards: the summary token never changes, so the manager
+     * only has to be told about it once. `null` for a token the flow has nothing to add.
+     */
+    val addToPortfolioManager: AddToPortfolioManager? by lazy {
+        addToPortfolioTarget?.let(::createAddToPortfolioManager)
     }
 
-    val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
-        override val onDismiss: () -> Unit = { bottomSheetNavigation.dismiss() }
-        override val onBack: () -> Unit = { bottomSheetNavigation.dismiss() }
+    val swapChooserCallbacks = object : SwapTokenChooserComponent.ModelCallbacks {
+        override fun onHoldingSelected(holding: SwapHolding) = onSwapHoldingChosen(holding)
+
+        override fun onDismiss() = bottomSheetNavigation.dismiss()
     }
+
+    val swapHoldings: StateFlow<List<SwapHolding>>
+        field = MutableStateFlow<List<SwapHolding>>(value = emptyList())
 
     val uiState: StateFlow<TokenSummaryUm>
         field = MutableStateFlow<TokenSummaryUm>(buildInitialUiState())
 
     init {
-        selectedTokenPeriodId
-            .onEach { periodId ->
-                uiState.update(
-                    TokenSummaryTransformer(),
-                )
-            }
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.TokenSummary(token = token, blockchain = network))
+
+        modelScope.launch {
+            fetchCoinIndicatorsUseCase(symbols = listOf(tokenSymbol))
+        }
+
+        combine(
+            getCoinIndicatorsUpdatesUseCase().map { it[tokenSymbol.uppercase()] }.distinctUntilChanged(),
+            selectedTokenPeriodId,
+        ) { coinIndicators, periodId ->
+            uiState.update(
+                SetTokenSentimentTransformer(coinIndicators, periodId),
+            )
+        }
             .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+
+        swapHoldingsDelegate.state
+            .onEach { state ->
+                uiState.update { it.copy(bottomButton = bottomButtonUMConverter.convert(state)) }
+                swapHoldings.value = (state as? SwapHoldingsState.Resolved)?.holdings.orEmpty()
+            }
             .launchIn(modelScope)
     }
 
     private fun buildInitialUiState(): TokenSummaryUm {
+        val periodItems = ForYouPeriod.entries
+            .map { period -> TangemSegmentUM(id = period.id, title = period.title) }
+            .toPersistentList()
+
         return TokenSummaryUm(
             header = buildHeader(),
             periodPicker = PeriodPickerUM.Content(
                 TangemSegmentedPickerUM(
-                    items = persistentListOf(
-                        TangemSegmentUM(id = "0", title = stringReference("Day")),
-                        TangemSegmentUM(id = "1", title = stringReference("Week")),
-                        TangemSegmentUM(id = "2", title = stringReference("Month")),
-                    ),
-                    initialSelectedItem = null,
+                    items = periodItems,
+                    initialSelectedItem = periodItems.firstOrNull { it.id == params.selectedTokenPeriodId },
                     isFixed = true,
                     isAltSurface = true,
                 ),
             ),
             tokenSentiment = TokenSentimentUM.Loading,
             aiInsight = AiInsightUM.Hide,
-            onSwapClick = ::onSwapClicked,
+            bottomButton = BottomButtonUM.Loading,
             onPeriodClick = ::onPeriodClick,
             onInfoClick = ::onInfoClick,
             onCloseClick = params.callbacks::onDismiss,
@@ -142,63 +173,112 @@ internal class TokenSummaryModel @Inject constructor(
     private fun onPeriodClick(tangemSegmentUM: TangemSegmentUM) {
         if (tangemSegmentUM.id == selectedTokenPeriodId.value) return
 
-        uiState.update {
-            it.copy(tokenSentiment = TokenSentimentUM.Loading)
-        }
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(
+            ForYouAnalyticsEvent.TokenSummaryInterval(
+                token = token,
+                blockchain = network,
+                period = ForYouPeriod.fromId(tangemSegmentUM.id).analyticsValue,
+            ),
+        )
 
         selectedTokenPeriodId.value = tangemSegmentUM.id
     }
 
-    private fun onSwapClicked() {
-        modelScope.launch {
-            val account = if (portfolioSelectorController.isAccountModeSync()) {
-                portfolioSelectorController.selectAccount(null)
-                bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.PortfolioSelector)
+    /**
+     * Both this and [openAddToPortfolio] sit behind the same "Add funds" label
+     * (see `BottomButtonUMConverter`), so they report the same event — the user sees one button.
+     */
+    private fun openManageFunds() {
+        val rawCurrencyId = params.token.rawCurrencyId ?: return
 
-                val (_, selectedAccount) = portfolioSelectorController
-                    .selectedAccountWithData(portfolioFetcher)
-                    .filterNotNull()
-                    .first()
-
-                bottomSheetNavigation.dismiss()
-                selectedAccount
-            } else {
-                singleAccountStatusSupplier(
-                    SingleAccountStatusProducer.Params(
-                        accountId = AccountId.forMainCryptoPortfolio(params.userWalletId),
-                    ),
-                )
-                    .filterIsInstance<AccountStatus.CryptoPortfolio>()
-                    .first()
-            }
-
-            val currency = account.flattenCurrencies()
-                .map(CryptoCurrencyStatus::currency)
-                .firstOrNull(::matchesSummaryToken)
-
-            navigateToSwap(currency)
-        }.saveIn(swapNavigationJob)
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.AddFunds(token = token, blockchain = network))
+        bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.ManageFunds(rawCurrencyId))
     }
 
-    private fun matchesSummaryToken(currency: CryptoCurrency): Boolean = when (val token = params.token) {
-        is TokenSummaryComponent.Token.Portfolio -> {
-            val summaryCurrency = token.cryptoCurrency
-            currency.id.rawCurrencyId == summaryCurrency.id.rawCurrencyId && currency.network == summaryCurrency.network
+    private fun openAddToPortfolio() {
+        if (addToPortfolioManager == null) return
+
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.AddFunds(token = token, blockchain = network))
+        bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.AddToPortfolio)
+    }
+
+    private fun createAddToPortfolioManager(target: AddToPortfolioTarget): AddToPortfolioManager {
+        val manager = addToPortfolioManagerFactory.create(
+            scope = modelScope,
+            // The user opened the summary of this very token, so the token actions step has nothing left to offer.
+            settings = AddToPortfolioManager.Settings(shouldSkipTokenActionsScreen = true),
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(
+                source = AnalyticsParam.ScreensSources.Markets.value,
+            ),
+        ).apply {
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
+            setTokenParams(target.token)
+            setTokenNetworks(target.networks)
         }
-        is TokenSummaryComponent.Token.Market -> currency.id.rawCurrencyId == token.cryptoCurrencyRawId
+
+        manager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+
+        merge(manager.onSuccessAdded.receiveAsFlow(), manager.onAddedTokenClick.receiveAsFlow())
+            .onEach { result -> onTokenAdded(result) }
+            .launchIn(modelScope)
+
+        return manager
     }
 
-    private fun navigateToSwap(currency: CryptoCurrency?) {
+    private fun onTokenAdded(result: AddToPortfolioManager.Result) {
+        bottomSheetNavigation.dismiss()
         appRouter.push(
-            AppRoute.Swap(
-                userWalletId = params.userWalletId,
-                fromCryptoCurrency = currency,
-                screenSource = "screen source", // TODO
+            AppRoute.CurrencyDetails(
+                userWalletId = result.wallet.walletId,
+                currency = result.addedCurrency.currency,
             ),
         )
     }
 
-    private fun onInfoClick(indicatorType: IndicatorType) {
-        bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.Info(indicatorType))
+    private fun openSwap(holdings: List<SwapHolding>) {
+        val (token, network) = params.token.toAnalyticsTokenAndNetwork()
+        analyticsEventHandler.send(ForYouAnalyticsEvent.GoToSwap(token = token, blockchain = network))
+
+        val onlyHolding = holdings.singleOrNull()
+
+        when {
+            onlyHolding != null -> onSwapHoldingChosen(onlyHolding)
+            holdings.isNotEmpty() -> bottomSheetNavigation.activate(TokenSummaryBottomSheetConfig.SwapChooser)
+        }
+    }
+
+    private fun onSwapHoldingChosen(holding: SwapHolding) {
+        if (!holding.isSwapAvailable) {
+            messageSender.send(DialogMessage(message = holding.unavailabilityReason.getUnavailabilityReasonText()))
+            return
+        }
+
+        bottomSheetNavigation.dismiss()
+        navigateToSwap(
+            userWalletId = holding.entry.wallet.walletId,
+            currency = holding.entry.currencyStatus.currency,
+        )
+    }
+
+    private fun navigateToSwap(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        appRouter.push(
+            AppRoute.Swap(
+                userWalletId = userWalletId,
+                fromCryptoCurrency = currency,
+                screenSource = AnalyticsParam.ScreensSources.ForYou.value,
+            ),
+        )
+    }
+
+    private fun onInfoClick(indicator: TokenIndicatorUM.Loaded) {
+        analyticsEventHandler.send(ForYouAnalyticsEvent.IndicatorInfo(info = indicator.indicatorType.analyticsValue))
+        bottomSheetNavigation.activate(
+            TokenSummaryBottomSheetConfig.Info(indicatorType = indicator.indicatorType, title = indicator.title),
+        )
     }
 }

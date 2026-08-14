@@ -1,7 +1,10 @@
 package com.tangem.domain.pay
 
+import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerInfo
+import java.math.BigDecimal
 
 /**
  * Factory that builds the [CryptoCurrency.Token] used by Tangem Pay (USDC on Polygon) for a given user wallet.
@@ -18,6 +21,21 @@ interface TangemPayCurrencyFactory {
      */
     fun create(userWalletId: UserWalletId): CryptoCurrency.Token
     fun createVirtualAccountToken(userWalletId: UserWalletId): CryptoCurrency.Token
+
+    /**
+     * Builds the domain multichain networks from the raw [networks] delivered by `customer/me`.
+     * Each [CustomerInfo.NetworkInfo] becomes a [PaymentNetworkStatus] tagged by its status:
+     *  - ENABLED -> [PaymentNetworkStatus.Available] (per-token currency + balance + receive address, using [fiatRate]),
+     *  - NOT_ISSUED -> [PaymentNetworkStatus.NotIssued] (currencies only),
+     *  - DISABLED -> [PaymentNetworkStatus.Disabled] (currencies only).
+     *
+     * Networks whose blockchain cannot be resolved are skipped. Returns empty when [networks] is empty.
+     */
+    fun createNetworkStatuses(
+        userWalletId: UserWalletId,
+        networks: List<CustomerInfo.NetworkInfo>,
+        fiatRate: BigDecimal?,
+    ): List<PaymentNetworkStatus>
 
     /** Hardcoded token metadata for the Tangem Pay currency (USDC on Polygon). */
     companion object {

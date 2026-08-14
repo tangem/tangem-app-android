@@ -24,15 +24,15 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 @Composable
 internal fun TokenMarketInformationBlock(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(TangemTheme.dimens2.x6),
-    contentPadding: Dp = TangemTheme.dimens2.x4,
+    shape: Shape = RoundedCornerShape(24.dp),
+    contentPadding: Dp = 16.dp,
     title: (@Composable () -> Unit),
     content: (@Composable BoxScope.() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
             .clip(shape)
-            .background(color = TangemTheme.colors2.surface.level3)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .padding(contentPadding),
         horizontalAlignment = Alignment.Start,
     ) {
@@ -59,15 +59,15 @@ private fun TokenMarketInformationBlockPreview() {
                 ) {
                     Text(
                         text = "Listed on",
-                        style = TangemTheme.typography2.headingSemibold20,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography3.heading.medium,
+                        color = TangemTheme.colors3.text.primary,
                     )
 
                     SpacerWMax()
 
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_24),
-                        tint = TangemTheme.colors2.markers.iconGray,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = null,
                     )
                 }
@@ -76,12 +76,12 @@ private fun TokenMarketInformationBlockPreview() {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(TangemTheme.colors2.surface.level2)
+                        .background(TangemTheme.colors3.bg.primary)
                         .padding(12.dp),
                 ) {
                     Text(
                         text = "Smth",
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 }
             },

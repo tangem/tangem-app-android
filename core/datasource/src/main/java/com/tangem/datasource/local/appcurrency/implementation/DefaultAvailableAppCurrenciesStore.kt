@@ -1,18 +1,16 @@
 package com.tangem.datasource.local.appcurrency.implementation
 
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.local.appcurrency.AvailableAppCurrenciesStore
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
-import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
 
 internal class DefaultAvailableAppCurrenciesStore(
-    private val dataStore: StringKeyDataStore<CurrenciesResponse.Currency>,
-) : AvailableAppCurrenciesStore,
-    StringKeyDataStoreDecorator<String, CurrenciesResponse.Currency>(dataStore) {
+    private val store: RuntimeSharedMapStore<String, CurrenciesResponse.Currency>,
+) : AvailableAppCurrenciesStore {
 
-    override fun provideStringKey(key: String): String {
-        return key
-    }
+    override suspend fun getAllSyncOrNull(): List<CurrenciesResponse.Currency>? = store.getAllSyncOrNull()
+
+    override suspend fun getSyncOrNull(key: String): CurrenciesResponse.Currency? = store.getSyncOrNull(key)
 
     override suspend fun store(response: CurrenciesResponse) {
         val currencies = response.currencies
@@ -24,7 +22,7 @@ internal class DefaultAvailableAppCurrenciesStore(
             }
             .associateBy(CurrenciesResponse.Currency::code)
 
-        dataStore.store(currencies)
+        store.store(currencies)
     }
 
     private companion object {

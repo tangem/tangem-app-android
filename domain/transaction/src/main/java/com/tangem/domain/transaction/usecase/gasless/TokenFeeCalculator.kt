@@ -7,6 +7,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.BlockchainError
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
@@ -200,10 +201,12 @@ internal class TokenFeeCalculator(
     /**
      * Resolves the fee-transfer gas limit from the on-chain estimation result.
      *
-     * On the yield path ([isYieldActive] = true), when the estimation reverts with
-     * [BlockchainSdkError.Ethereum.InsufficientFundsForOperation] (expected for a zero plain balance),
-     * falls back to [FALLBACK_FEE_TRANSFER_GAS_LIMIT] instead of raising [GaslessError.NotEnoughFunds].
-     * All other failures propagate as [GaslessError.DataError] on both paths.
+     * A revert of the probe transfer means the liquid balance does not cover it. Matching
+     * [BlockchainSdkError.Ethereum.InsufficientFundsForOperation] alone misses tokens that revert without a
+     * reason string — USDT reverts with an `INVALID` opcode and arrives as a plain
+     * [BlockchainSdkError.Ethereum.Api] — so any execution error answered by the node is read as "not enough
+     * liquid balance": topped up from the module on the yield path, [GaslessError.NotEnoughFunds] otherwise.
+     * Transport failures still propagate as [GaslessError.DataError].
      */
     private fun Raise<GetFeeError>.resolveFeeTransferGasLimit(
         feeTransferGasLimitResult: Result<BigInteger>,
@@ -212,20 +215,15 @@ internal class TokenFeeCalculator(
         val rawFeeTransferGasLimit: BigInteger = when (feeTransferGasLimitResult) {
             is Result.Success -> feeTransferGasLimitResult.data
             is Result.Failure -> {
-                // If there is a dust on the balance, the gas limit estimation will fail with code
-                if (feeTransferGasLimitResult.error is BlockchainSdkError.WrappedThrowable) {
-                    val cause = feeTransferGasLimitResult.error.cause
-                    if (cause is BlockchainSdkError.Ethereum.InsufficientFundsForOperation) {
-                        if (isYieldActive) {
-                            FALLBACK_FEE_TRANSFER_GAS_LIMIT
-                        } else {
-                            raise(GaslessError.NotEnoughFunds)
-                        }
+                val error = feeTransferGasLimitResult.error
+                if (error.isContractExecutionError()) {
+                    if (isYieldActive) {
+                        FALLBACK_FEE_TRANSFER_GAS_LIMIT
                     } else {
-                        raise(GaslessError.DataError(feeTransferGasLimitResult.error))
+                        raise(GaslessError.NotEnoughFunds)
                     }
                 } else {
-                    raise(GaslessError.DataError(feeTransferGasLimitResult.error))
+                    raise(GaslessError.DataError(error))
                 }
             }
         }
@@ -277,6 +275,11 @@ internal class TokenFeeCalculator(
             is Result.Success -> result.data
             is Result.Failure -> WITHDRAW_GAS_LIMIT
         }
+    }
+
+    private fun BlockchainError.isContractExecutionError(): Boolean {
+        val unwrapped: Any = (this as? BlockchainSdkError.WrappedThrowable)?.cause ?: this
+        return unwrapped is BlockchainSdkError.Ethereum
     }
 
     private fun createTokenAmount(token: CryptoCurrency.Token, value: BigDecimal): Amount = Amount(

@@ -35,6 +35,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SendConfirmScreenTestTags
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -54,6 +55,7 @@ internal fun ProviderItemBlockSimple(state: ProviderState, modifier: Modifier = 
                 onClick = { state.onProviderClick?.invoke(state.id) },
             )
             .fillMaxWidth()
+            .testTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK_SIMPLE)
             .padding(TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
     ) {

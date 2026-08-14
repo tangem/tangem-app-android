@@ -48,7 +48,7 @@ internal fun EntryContent(
     isOpenedInBottomSheet: Boolean,
 ) {
     CompositionLocalProvider(LocalIsOpenedInBottomSheet provides isOpenedInBottomSheet) {
-        EntryContentV2(
+        EntryContent(
             bottomSheetState = bottomSheetState,
             stackState = stackState,
             onHeaderSizeChange = onHeaderSizeChange,
@@ -58,7 +58,7 @@ internal fun EntryContent(
 }
 
 @Composable
-private fun EntryContentV2(
+private fun EntryContent(
     bottomSheetState: State<BottomSheetState>,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     onHeaderSizeChange: (Dp) -> Unit,
@@ -168,7 +168,7 @@ private fun BoxScope.ContentBlock(
                 .hazeSourceTangem(zIndex = 0f, state = LocalHazeState.current)
                 .topFade(
                     height = effectiveFadeHeight,
-                    color = feedTopFadeColor(TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)),
+                    color = feedTopFadeColor(TangemTheme.colors3.bg.primary.copy(BASE_FADE_LEVEL)),
                     solidStop = feedTopFadeSolidStop(),
                 ),
             contentPadding = PaddingValues(top = topBarHeight),

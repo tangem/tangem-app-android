@@ -2,7 +2,7 @@ package com.tangem.datasource.local.visa
 
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
@@ -10,7 +10,7 @@ import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal class DefaultTangemPayReissueCardStore(
-    private val feeStore: RuntimeDataStore<TangemPayReissueCardFee>,
+    private val feeStore: RuntimeSharedMapStore<UserWalletId, TangemPayReissueCardFee>,
     private val prefs: AppPreferencesStore,
 ) : TangemPayReissueCardStore {
 
@@ -18,11 +18,11 @@ internal class DefaultTangemPayReissueCardStore(
         userWalletId: UserWalletId,
         tangemPayReissueCardFee: TangemPayReissueCardFee,
     ) {
-        feeStore.store(userWalletId.stringValue, tangemPayReissueCardFee)
+        feeStore.store(userWalletId, tangemPayReissueCardFee)
     }
 
     override suspend fun getReissueFee(userWalletId: UserWalletId): TangemPayReissueCardFee? {
-        return feeStore.getSyncOrNull(userWalletId.stringValue)
+        return feeStore.getSyncOrNull(userWalletId)
     }
 
     override suspend fun storeReissueOrderId(cardId: String, orderId: String) {

@@ -6,6 +6,7 @@ import java.math.BigDecimal
 /** Cashback program configuration for the customer, from `GET v1/customer/cashback/promotions`. */
 data class CashbackPromotions(
     val cardTiers: List<CardTier>,
+    val monthlyCap: MonthlyCap?,
     val additionalCashback: List<AdditionalCashback>,
 ) {
 
@@ -15,6 +16,11 @@ data class CashbackPromotions(
         val scope: String,
         val minTransactionAmount: BigDecimal?,
         val monthlyCapAmount: BigDecimal?,
+    )
+
+    data class MonthlyCap(
+        val amount: BigDecimal,
+        val currency: String?,
     )
 
     data class AdditionalCashback(

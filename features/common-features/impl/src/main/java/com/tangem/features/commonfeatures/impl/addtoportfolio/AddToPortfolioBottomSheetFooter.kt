@@ -43,6 +43,7 @@ internal fun AddToPortfolioBottomSheetFooter(
             WithLocalHaze {
                 UserPortfolioAddFooter(
                     isEnabled = state.isAddEnabled,
+                    isAddedEverywhere = state.isAddedEverywhere,
                     onClick = onClick,
                 )
             }
@@ -71,7 +72,7 @@ private fun CancelFooterButton(onClick: () -> Unit) {
 }
 
 @Composable
-private fun UserPortfolioAddFooter(isEnabled: Boolean, onClick: () -> Unit) {
+private fun UserPortfolioAddFooter(isEnabled: Boolean, isAddedEverywhere: Boolean, onClick: () -> Unit) {
     TangemRowContainer(
         contentPadding = PaddingValues(
             horizontal = TangemTheme.dimens2.x6,
@@ -80,7 +81,11 @@ private fun UserPortfolioAddFooter(isEnabled: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-            text = stringResourceSafe(R.string.common_add_token),
+            text = if (isAddedEverywhere) {
+                stringResourceSafe(R.string.markets_token_add_all_added_title)
+            } else {
+                stringResourceSafe(R.string.common_add_token)
+            },
             style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors2.text.neutral.primary,
             maxLines = 1,
@@ -89,7 +94,11 @@ private fun UserPortfolioAddFooter(isEnabled: Boolean, onClick: () -> Unit) {
 
         Text(
             modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-            text = stringResourceSafe(R.string.markets_token_add_subtitle),
+            text = if (isAddedEverywhere) {
+                stringResourceSafe(R.string.markets_token_add_all_added_description)
+            } else {
+                stringResourceSafe(R.string.markets_token_add_subtitle)
+            },
             style = TangemTheme.typography2.captionMedium12,
             color = TangemTheme.colors2.text.neutral.secondary,
             maxLines = 1,

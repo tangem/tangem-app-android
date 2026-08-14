@@ -1,7 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.CashbackHistoryResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackHistoryResponse
 import com.tangem.domain.pay.model.CashbackHistory
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest

@@ -3,4 +3,5 @@ package com.tangem.features.onboarding.v2
 interface OnboardingV2FeatureToggles {
     val isVisaOnboardingEnabled: Boolean
     val isAddressSyncEnabled: Boolean
+    val isCardLinkedStatusUpdateEnabled: Boolean
 }

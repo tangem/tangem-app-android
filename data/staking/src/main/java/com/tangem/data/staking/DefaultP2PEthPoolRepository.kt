@@ -5,8 +5,8 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.data.staking.converters.ethpool.*
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
@@ -99,7 +99,6 @@ internal class DefaultP2PEthPoolRepository(
     }
 
     private fun StakingError.isRegionBlocked(): Boolean {
-        if (!stakingFeatureToggles.isRegionUnavailableHandlingEnabled()) return false
         val httpException = (this as? StakingError.UnknownError)?.exception as? ApiResponseError.HttpException
         return httpException?.code == ApiResponseError.HttpException.Code.UNAVAILABLE_FOR_LEGAL_REASONS
     }

@@ -1,6 +1,7 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -14,6 +15,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
+import com.tangem.utils.StringsSigns
+import com.tangem.utils.StringsSigns.THREE_STARS
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -258,17 +261,81 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
             assertThat(topEnd.endIcons).isEmpty()
         }
+
+        @Test
+        fun `GIVEN title badge passed WHEN convert THEN row title carries that badge`() {
+            // Arrange
+            val badge = TangemBadgeUM(text = stringReference("Positive"))
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal.ONE, fiatAmount = BigDecimal("100"))),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"), titleBadge = badge)
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert
+            val title = result.titleUM as TangemTokenRowUM.TitleUM.Content
+            assertThat(title.badge).isEqualTo(badge)
+        }
+
+        @Test
+        fun `GIVEN no title badge WHEN convert THEN row title has no badge`() {
+            // Arrange
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal.ONE, fiatAmount = BigDecimal("100"))),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert
+            val title = result.titleUM as TangemTokenRowUM.TitleUM.Content
+            assertThat(title.badge).isNull()
+        }
+    }
+
+    @Nested
+    inner class BalanceHiding {
+
+        @Test
+        fun `GIVEN balance hidden WHEN convert THEN fiat and crypto masked but network and percentage kept`() {
+            // Arrange
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal("2"), fiatAmount = BigDecimal("400"))),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"), isBalanceHidden = true)
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert — fiat total and crypto amount are masked; the network name and % share stay visible
+            val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            val subtitle = result.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
+            assertThat(topEnd.text).isEqualTo(stringReference(THREE_STARS))
+            assertThat(subtitle.text).isEqualTo(stringReference("Ethereum ${StringsSigns.DOT} $THREE_STARS"))
+            assertThat(bottomEnd.text).isEqualTo(BigDecimal("400").expectedPercentText(BigDecimal("1000")))
+        }
     }
 
     private fun createConverter(
         totalFiatBalance: BigDecimal,
         userWalletId: UserWalletId? = UserWalletId("01"),
         onTokenClick: (UserWalletId, CryptoCurrency) -> Unit = { _, _ -> },
+        titleBadge: TangemBadgeUM? = null,
+        isBalanceHidden: Boolean = false,
     ) = ForYouPortfolioReviewTokenRowConverter(
         appCurrency = appCurrency,
         userWalletId = userWalletId,
         totalFiatBalance = totalFiatBalance,
         onTokenClick = onTokenClick,
+        isBalanceHidden = isBalanceHidden,
+        titleBadge = titleBadge,
     )
 
     /** Mirrors the production fiat rendering used by [ForYouPortfolioReviewTokenRowConverter] for a resolved row. */
