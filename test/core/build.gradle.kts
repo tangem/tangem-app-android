@@ -16,4 +16,5 @@ dependencies {
     api(deps.test.mockk)
     api(deps.test.truth)
     api(deps.test.turbine)
+    api(deps.moshi)
 }
