@@ -57,6 +57,41 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
 
     // endregion
 
+    // region Balance hiding
+
+    @Test
+    fun `GIVEN balances hidden WHEN convert on-chain tx THEN isBalanceHidden set`() {
+        // Act
+        val result = dispatcher(isBalanceHidden = true).convert(onChain(type = TransactionType.Transfer))
+
+        // Assert
+        assertThat(result.isBalanceHidden).isTrue()
+    }
+
+    @Test
+    fun `GIVEN balances hidden WHEN convert express tx THEN isBalanceHidden set`() {
+        // Act
+        val swap = dispatcher(isBalanceHidden = true).convert(expressSwap(status = ExpressExchangeStatus.Finished))
+        val onramp = dispatcher(isBalanceHidden = true).convert(expressOnramp(status = ExpressOnrampStatus.Finished))
+
+        // Assert
+        assertThat(swap.isBalanceHidden).isTrue()
+        assertThat(onramp.isBalanceHidden).isTrue()
+    }
+
+    @Test
+    fun `GIVEN balances shown WHEN convert THEN isBalanceHidden not set`() {
+        // Act
+        val onChain = dispatcher().convert(onChain(type = TransactionType.Transfer))
+        val swap = dispatcher().convert(expressSwap(status = ExpressExchangeStatus.Finished))
+
+        // Assert
+        assertThat(onChain.isBalanceHidden).isFalse()
+        assertThat(swap.isBalanceHidden).isFalse()
+    }
+
+    // endregion
+
     // region Header menu building
 
     @Test
@@ -263,10 +298,12 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onShare: (() -> Unit)? = null,
         onExplore: (() -> Unit)? = null,
         lookup: TxHistoryLookupContext = lookupOf(),
+        isBalanceHidden: Boolean = false,
     ) = TxHistoryInfoToTxHistoryDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
         onGoToProvider = openedUrls::add,
+        isBalanceHidden = isBalanceHidden,
         onCopyTxId = onCopyTxId,
         onShare = onShare,
         onExplore = onExplore,
@@ -281,6 +318,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         currency = currency,
         onCopyAddress = copiedAddresses::add,
         onGoToProvider = openedUrls::add,
+        isBalanceHidden = false,
         refundCurrency = bitcoin,
         onLearnMoreAboutRefundsClick = onLearnMore,
         onGoToRefundedTokenClick = onGoToToken,
