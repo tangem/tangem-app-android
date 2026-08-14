@@ -21,31 +21,31 @@ internal class PaymentAccountUnderlyingCurrenciesTest {
     private val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase = mockk()
     private val sut = PaymentAccountUnderlyingCurrencies(getPaymentAccountCryptoCurrencyStatusUseCase)
 
+    private val walletId = UserWalletId("011")
+
     @BeforeEach
     fun reset() = clearMocks(getPaymentAccountCryptoCurrencyStatusUseCase)
 
     @Test
-    fun `GIVEN payment account present WHEN get THEN returns its single currency status`() = runTest {
+    fun `GIVEN account holds several currencies WHEN get THEN returns all of them`() = runTest {
         // Arrange
-        val walletId = UserWalletId("011")
-        val paymentStatus = MockAccounts.createPaymentAccountStatus(userWalletId = walletId)
-        val expected = (paymentStatus.value as PaymentAccountStatusValue.Loaded).cryptoCurrencyStatus
+        val usdcPolygon = paymentCurrencyStatus()
+        val usdcTron = paymentCurrencyStatus()
         coEvery {
-            getPaymentAccountCryptoCurrencyStatusUseCase.invokeSync(walletId)
-        } returns (paymentStatus to expected).toOption()
+            getPaymentAccountCryptoCurrencyStatusUseCase.invokeSyncCurrencies(walletId)
+        } returns listOf(usdcPolygon, usdcTron)
 
         // Act
         val result = sut.get(walletId)
 
         // Assert
-        assertThat(result).containsExactly(expected)
+        assertThat(result).containsExactly(usdcPolygon, usdcTron).inOrder()
     }
 
     @Test
     fun `GIVEN no payment account WHEN get THEN returns empty`() = runTest {
         // Arrange
-        val walletId = UserWalletId("011")
-        coEvery { getPaymentAccountCryptoCurrencyStatusUseCase.invokeSync(walletId) } returns none()
+        coEvery { getPaymentAccountCryptoCurrencyStatusUseCase.invokeSyncCurrencies(walletId) } returns emptyList()
 
         // Act
         val result = sut.get(walletId)
@@ -53,4 +53,36 @@ internal class PaymentAccountUnderlyingCurrenciesTest {
         // Assert
         assertThat(result).isEmpty()
     }
+
+    @Test
+    fun `GIVEN account holds several currencies WHEN getWithdrawable THEN returns only the default one`() = runTest {
+        // Arrange
+        val defaultCurrency = paymentCurrencyStatus()
+        val paymentStatus = MockAccounts.createPaymentAccountStatus(userWalletId = walletId)
+        coEvery {
+            getPaymentAccountCryptoCurrencyStatusUseCase.invokeSync(walletId)
+        } returns (paymentStatus to defaultCurrency).toOption()
+
+        // Act
+        val result = sut.getWithdrawable(walletId)
+
+        // Assert
+        assertThat(result).containsExactly(defaultCurrency)
+    }
+
+    @Test
+    fun `GIVEN no payment account WHEN getWithdrawable THEN returns empty`() = runTest {
+        // Arrange
+        coEvery { getPaymentAccountCryptoCurrencyStatusUseCase.invokeSync(walletId) } returns none()
+
+        // Act
+        val result = sut.getWithdrawable(walletId)
+
+        // Assert
+        assertThat(result).isEmpty()
+    }
+
+    private fun paymentCurrencyStatus() =
+        (MockAccounts.createPaymentAccountStatus(userWalletId = walletId).value as PaymentAccountStatusValue.Loaded)
+            .cryptoCurrencyStatus
 }
