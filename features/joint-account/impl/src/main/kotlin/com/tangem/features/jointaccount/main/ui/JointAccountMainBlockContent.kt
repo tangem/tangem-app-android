@@ -29,7 +29,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.jointaccount.main.entity.JointAccountMainUM
+import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.core.ui.R as CoreUiR
 
