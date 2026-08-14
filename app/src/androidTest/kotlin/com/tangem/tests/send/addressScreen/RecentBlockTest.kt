@@ -7,7 +7,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeVertical
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.onSendAddressScreen
@@ -33,13 +32,7 @@ class RecentBlockTest : BaseTestCase() {
         val sendAmount = "1"
         val txHistoryScenarioState = "OutgoingTransaction"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }
@@ -107,12 +100,7 @@ class RecentBlockTest : BaseTestCase() {
         val fullTokenName = "Polkadot Asset Hub"
         val sendAmount = "1"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName = fullTokenName, mockState = tokenName)
             }
@@ -142,13 +130,7 @@ class RecentBlockTest : BaseTestCase() {
         val sendAmount = "1"
         val txHistoryScenarioState = "Empty"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }
@@ -185,13 +167,7 @@ class RecentBlockTest : BaseTestCase() {
         val txHistoryScenarioState = "Error"
         val scenarioState = "Dogecoin"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
             }
@@ -229,13 +205,7 @@ class RecentBlockTest : BaseTestCase() {
         val recipientAddressBase = "DJ2TaZ5vvp3mBLugUpKjVM3pRBLi4uYaq"
         val longRecipientAddress = recipientAddressBase + "123456789b"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }
@@ -314,13 +284,7 @@ class RecentBlockTest : BaseTestCase() {
         val sendAmount = "1"
         val txHistoryScenarioState = "2OutgoingTransactions"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(txHistoryScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
             }

@@ -10,7 +10,6 @@ import com.tangem.datasource.api.common.config.BlockAid
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
-import com.tangem.datasource.api.common.config.MoonPay
 import com.tangem.datasource.api.common.config.GaslessTxService
 import com.tangem.datasource.api.common.config.SurveySparrow
 import com.tangem.datasource.api.common.config.Auth
@@ -28,12 +27,12 @@ import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.api.moonpay.MoonPayApi
 import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
+import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.gasless.TronGaslessApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
@@ -183,6 +182,18 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideJointAccountApi(retrofitApiBuilder: RetrofitApiBuilder): JointAccountApi {
+        return retrofitApiBuilder.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideTangemTechMarketsApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechMarketsApi {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
@@ -217,18 +228,6 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
                 apiConfigId = SurveySparrow.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideMoonPayApi(retrofitApiBuilder: RetrofitApiBuilder): MoonPayApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = MoonPay.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),

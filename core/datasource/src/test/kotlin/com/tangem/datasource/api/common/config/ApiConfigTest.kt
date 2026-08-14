@@ -64,7 +64,6 @@ class ApiConfigTest {
             ),
             StakeKit(stakeKitAuthProvider = mockk()),
             BlockAid(environmentConfig = environmentConfig),
-            MoonPay(),
             P2PEthPool(p2pAuthProvider = mockk()),
             News(
                 authProvider = appAuthProvider,

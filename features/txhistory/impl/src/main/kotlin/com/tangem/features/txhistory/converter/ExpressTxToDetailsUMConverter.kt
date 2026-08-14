@@ -38,7 +38,8 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.St
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
-import com.tangem.features.txhistory.model.resolveOwner
+import com.tangem.features.txhistory.model.resolveExpressLegOwner
+import com.tangem.features.txhistory.model.resolveSwapLegOwners
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.toBriefAddressFormat
 import kotlinx.collections.immutable.ImmutableList
@@ -50,7 +51,7 @@ import java.math.RoundingMode
 /**
  * Converts an [ExpressTx] (swap / onramp) to the [TxHistoryDetailsUM.TwoAssets] details card. The `from`/`to` legs come
  * from the express deal ([ExchangeTransaction] asset pair / [OnrampTransaction] fiat→asset), and the network-fee row
- * comes from the matched on-chain leg ([ExpressTx.txInfo]).
+ * comes from the matched on-chain leg ([ExpressTx.txInfo]) — but only on a pay-in leg, see [isPayInLeg].
  */
 internal class ExpressTxToDetailsUMConverter(
     private val onGoToProvider: (String) -> Unit,
@@ -76,7 +77,9 @@ internal class ExpressTxToDetailsUMConverter(
      */
     private fun convertExpressSwap(swap: ExpressTx.Swap): TxHistoryDetailsUM.TwoAssets {
         val status = exchangeStatusConverter.convert(swap.tx.status)
-        val (fromOwner, toOwner) = swap.resolveLegOwners()
+        val legOwners = lookup.resolveSwapLegOwners(swap)
+        val fromOwner = legOwners.from?.toAssetOwnerUM()
+        val toOwner = legOwners.to?.toAssetOwnerUM()
         val refundToken = refundCurrency.takeIf { swap.tx.status == ExpressExchangeStatus.Refunded }
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
@@ -139,7 +142,10 @@ internal class ExpressTxToDetailsUMConverter(
 
     private fun convertExpressOnramp(onramp: ExpressTx.Onramp): TxHistoryDetailsUM.TwoAssets {
         val status = onrampStatusConverter.convert(onramp.tx.status)
-        val toOwner = resolveLeg(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)?.toOwnerUM()
+        val toOwner = lookup.resolveExpressLegOwner(
+            address = onramp.tx.payoutAddress,
+            legCurrency = onramp.tx.toAsset.cryptoCurrency,
+        )?.toAssetOwnerUM()
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 icon = TxIcon.Vector(Icons.ic_card_20),
@@ -154,8 +160,8 @@ internal class ExpressTxToDetailsUMConverter(
             from = onramp.tx.fromFiat.toFiatAssetUM(
                 // The fiat side was paid from a card, not a portfolio address — no owner to resolve.
                 label = resourceReference(R.string.tx_history_you_paid),
-                currencyIcon = onramp.tx.country?.image?.let { flagUrl ->
-                    CurrencyIconState.FiatIcon(url = flagUrl, fallbackResId = R.drawable.ic_currency_24)
+                currencyIcon = onramp.tx.fiatCurrency?.image?.let { imageUrl ->
+                    CurrencyIconState.FiatIcon(url = imageUrl, fallbackResId = R.drawable.ic_currency_24)
                 },
             ),
             to = onramp.tx.toAsset.toAssetUM(
@@ -168,62 +174,6 @@ internal class ExpressTxToDetailsUMConverter(
             rows = onramp.toInfoRows(onProviderClick = onramp.providerClick(), rateRow = onramp.tx.onrampRateRow()),
             providerButton = providerButton(onramp.externalTxUrl, onramp.tx.status.providerButtonLabel()),
         )
-    }
-
-    /** The owners shown under a swap's two legs; either may be `null` (no owner card → "You send" / "You receive"). */
-    private data class LegOwners(
-        val from: TxHistoryDetailsUM.AssetOwnerUM?,
-        val to: TxHistoryDetailsUM.AssetOwnerUM?,
-    )
-
-    /**
-     * The (from, to) owners shown under the swap legs. A swap settled entirely within one own portfolio names no owner —
-     * both legs read "You send" / "You receive". Otherwise each leg shows its owner via [toOwnerUM], which still drops an
-     * own-wallet leg when the user has a single wallet (nothing to disambiguate).
-     */
-    private fun ExpressTx.Swap.resolveLegOwners(): LegOwners {
-        val from = resolveLeg(tx.fromAddress, tx.fromAsset.cryptoCurrency)
-        val to = resolveLeg(tx.payoutAddress, tx.toAsset.cryptoCurrency)
-        return if (isSameOwnPortfolio(from, to)) {
-            LegOwners(from = null, to = null)
-        } else {
-            LegOwners(from = from?.toOwnerUM(), to = to?.toOwnerUM())
-        }
-    }
-
-    /**
-     * Resolves a swap/onramp leg's [address] (on the leg currency's network) to its owner: the user's own account /
-     * wallet, or an external counterparty. `null` when there is no address to resolve (e.g. the very-old-version missing
-     * `fromAddress`, onramp fiat).
-     */
-    private fun resolveLeg(address: String?, legCurrency: CryptoCurrency?): ResolvedOwner? {
-        if (address == null) return null
-        return lookup.resolveOwner(address, legCurrency?.network?.id?.rawId)
-    }
-
-    /**
-     * True when both swap legs settle in the same own portfolio — the same account, or (in wallet mode) the same wallet.
-     * Such a swap has no counterparty to name, so its legs read "You send" / "You receive" with no owner card; legs that
-     * differ (cross-account, cross-wallet, or a send-and-swap to an external address) keep their owner.
-     */
-    private fun isSameOwnPortfolio(from: ResolvedOwner?, to: ResolvedOwner?): Boolean = when {
-        from is ResolvedOwner.OwnAccount && to is ResolvedOwner.OwnAccount ->
-            from.account.accountId == to.account.accountId
-        from is ResolvedOwner.OwnPaymentAccount && to is ResolvedOwner.OwnPaymentAccount ->
-            from.account.accountId == to.account.accountId
-        from is ResolvedOwner.OwnWallet && to is ResolvedOwner.OwnWallet ->
-            from.userWalletId == to.userWalletId
-        else -> false
-    }
-
-    /**
-     * The owner card for a leg, or `null` when it names nothing worth disambiguating: an own-wallet leg is dropped when
-     * the user has a single wallet (there is no other wallet to tell it apart from), so it reads "You send" / "You
-     * receive". An own account (accounts mode) and an external address are always shown.
-     */
-    private fun ResolvedOwner.toOwnerUM(): TxHistoryDetailsUM.AssetOwnerUM? = when {
-        this is ResolvedOwner.OwnWallet && lookup.walletInfoById.size <= 1 -> null
-        else -> toAssetOwnerUM()
     }
 
     /** Maps a resolved leg owner to the model shown under the amount (own account / own wallet / external address). */
@@ -275,16 +225,10 @@ internal class ExpressTxToDetailsUMConverter(
         sign: String,
         isFaded: Boolean,
     ): TxHistoryDetailsUM.AssetUM {
-        val symbol = displaySymbol
-        val formatted = amount.format { crypto(
-            symbol = symbol,
-            decimals = decimals,
-            ignoreSymbolPosition = true,
-        ) }.trim()
         return TxHistoryDetailsUM.AssetUM(
             label = label,
             owner = owner,
-            amount = stringReference((sign + formatted).trim()),
+            amount = stringReference((sign + formatAmount()).trim()),
             currencyIcon = cryptoCurrency?.let(iconStateConverter::convert),
             isFaded = isFaded,
         )
@@ -292,21 +236,18 @@ internal class ExpressTxToDetailsUMConverter(
 
     /**
      * Builds the fiat ("You paid") leg of an onramp. The paid fiat amount is exact and carries no sign — neither `+`/`−`
-     * nor the `~` estimate — so only the value is shown. [currencyIcon] is the paid-from country flag, or `null` when the
-     * onramp carries no country. It never fades: the paid fiat stands as spent even on a failed onramp, where only the
-     * never-received crypto leg is struck.
+     * nor the `~` estimate — so only the value is shown. [currencyIcon] is the paid fiat currency's icon, or `null` when
+     * the onramp carries no resolved fiat currency. It never fades: the paid fiat stands as spent even on a failed
+     * onramp, where only the never-received crypto leg is struck.
      */
     private fun Amount.toFiatAssetUM(
         label: TextReference,
         currencyIcon: CurrencyIconState?,
     ): TxHistoryDetailsUM.AssetUM {
-        val code = fiatCode
-        val formatted = (value ?: BigDecimal.ZERO)
-            .format { fiat(fiatCurrencyCode = code, fiatCurrencySymbol = currencySymbol, ignoreSymbolPosition = true) }
         return TxHistoryDetailsUM.AssetUM(
             label = label,
             owner = null,
-            amount = stringReference(formatted.trim()),
+            amount = stringReference(formatFiatAmount()),
             currencyIcon = currencyIcon,
             isFaded = false,
         )
@@ -461,7 +402,7 @@ private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
  * Detail rows of an express op, in order: the [provider] row (its name), the effective-[rateRow] row, then the
  * network-fee row from the matched on-chain leg. Each is dropped when its data is absent — the provider while it is
  * unresolved, the rate while an amount is missing / non-positive (see [swapRateRow] / [onrampRateRow]), the fee while
- * no on-chain leg / fee is present.
+ * no on-chain leg / fee is present or the viewed leg is not a pay-in one (see [isPayInLeg]).
  */
 private fun ExpressTx.toInfoRows(
     onProviderClick: (() -> Unit)?,
@@ -470,8 +411,16 @@ private fun ExpressTx.toInfoRows(
 ): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = buildList {
     provider?.let { add(it.providerRow(onProviderClick, showType = showProviderType)) }
     rateRow?.let { add(it) }
-    addAll(txInfo.toInfoRows())
+    if (isPayInLeg) addAll(txInfo.toInfoRows())
 }.toImmutableList()
+
+/**
+ * Whether the matched on-chain leg is the one the user paid for. Only a swap viewed from its `from` token qualifies:
+ * that leg is the user's own pay-in tx. A payout leg — a swap viewed from its `to` token, or any onramp — is sent by
+ * the provider, so its on-chain fee is not the user's and must never surface as "Network fee".
+ */
+private val ExpressTx.isPayInLeg: Boolean
+    get() = this is ExpressTx.Swap && isOutgoing
 
 private fun ExpressProvider.providerRow(onClick: (() -> Unit)?, showType: Boolean): TxHistoryDetailsUM.InfoRowUM =
     TxHistoryDetailsUM.InfoRowUM(

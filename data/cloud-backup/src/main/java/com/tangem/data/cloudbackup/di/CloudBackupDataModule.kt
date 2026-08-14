@@ -3,6 +3,7 @@ package com.tangem.data.cloudbackup.di
 import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.CloudBackupJson
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.datasource.DefaultGoogleDriveTokenProvider
@@ -12,7 +13,7 @@ import com.tangem.data.cloudbackup.datasource.GoogleDriveTokenProvider
 import com.tangem.data.cloudbackup.repository.DefaultCloudBackupRepository
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.data.cloudbackup.store.DefaultCloudBackupStore
-import com.tangem.datasource.utils.KotlinxDataStoreSerializer
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -90,6 +91,7 @@ internal object CloudBackupDataModule {
         tokenProvider: GoogleDriveTokenProvider,
         store: CloudBackupStore,
         dispatchers: CoroutineDispatcherProvider,
+        featureTogglesManager: FeatureTogglesManager,
     ): CloudBackupRepository {
         return DefaultCloudBackupRepository(
             api = api,
@@ -97,6 +99,7 @@ internal object CloudBackupDataModule {
             store = store,
             cipher = CloudBackupCipher(),
             dispatchers = dispatchers,
+            featureTogglesManager = featureTogglesManager,
         )
     }
 }

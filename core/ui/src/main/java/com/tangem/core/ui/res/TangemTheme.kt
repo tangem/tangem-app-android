@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
@@ -58,7 +57,6 @@ fun TangemTheme(
         isDark = shouldUseDarkTheme(appThemeMode),
         windowSize = windowSize,
         vibratorHapticManager = uiDependencies.vibratorHapticManager,
-        snackbarHostState = uiDependencies.globalSnackbarHostState,
         eventMessageHandler = uiDependencies.eventMessageHandler,
         topSnackbarHostState = uiDependencies.globalTopSnackbarHostState,
         overrideSystemBarColors = overrideSystemBarColors,
@@ -78,7 +76,6 @@ fun TangemTheme(
     isDark: Boolean = false,
     vibratorHapticManager: VibratorHapticManager? = null,
     eventMessageHandler: EventMessageHandler = remember { EventMessageHandler() },
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     topSnackbarHostState: TangemTopSnackbarHostState = remember { TangemTopSnackbarHostState() },
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
@@ -122,7 +119,6 @@ fun TangemTheme(
             LocalTangemShapes provides shapes,
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
-            LocalSnackbarHostState provides snackbarHostState,
             LocalTopSnackbarHostState provides topSnackbarHostState,
             LocalEventMessageHandler provides eventMessageHandler,
             LocalWindowSize provides windowSize,
@@ -410,10 +406,6 @@ val LocalIsInDarkTheme = staticCompositionLocalOf { false }
 
 val LocalHapticManager = staticCompositionLocalOf<HapticManager> {
     error("No HapticManager provided")
-}
-
-val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
-    error("No SnackbarHostState provided")
 }
 
 val LocalTopSnackbarHostState = staticCompositionLocalOf<TangemTopSnackbarHostState> {

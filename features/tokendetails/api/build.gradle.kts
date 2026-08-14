@@ -11,22 +11,22 @@ android {
 
 dependencies {
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     /** Common */
-    implementation(projects.common.ui)
+    api(projects.common.ui)
 
     /** Domain models */
     api(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
+    api(deps.kotlin.coroutines)
+    api(projects.domain.tokens.models)
 
     /** Compose */
-    implementation(deps.compose.runtime)
-    implementation(deps.compose.ui)
-    implementation(deps.compose.foundation)
+    api(deps.compose.runtime)
+    api(deps.compose.ui)
+    api(deps.compose.foundation)
 
     /** Other */
-    implementation(deps.kotlin.immutable.collections)
+    api(deps.kotlin.immutable.collections)
 }

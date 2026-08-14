@@ -16,10 +16,10 @@ import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
-import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
 import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
+import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.virtualaccount.onboarding.deeplink.OnboardVirtualAccountsDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
@@ -78,7 +78,7 @@ internal class DeepLinkFactoryTest {
         every { create() } returns mockk()
     }
     private val swapDeepLinkFactory = mockk<SwapDeepLinkHandler.Factory>(relaxed = true) {
-        every { create() } returns mockk()
+        every { create(any(), any()) } returns mockk()
     }
 
     private val promoDeepLinkFactory = mockk<PromoDeeplinkHandler.Factory>(relaxed = true) {
@@ -375,7 +375,7 @@ internal class DeepLinkFactoryTest {
         every { mockedUri.host } returns "swap"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
-        verify { swapDeepLinkFactory.create() }
+        verify { swapDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
 
         // Test Buy
         every { mockedUri.host } returns "buy"
@@ -417,7 +417,7 @@ internal class DeepLinkFactoryTest {
             tokenDetailsDeepLinkFactory.create(any(), any(), any())
             buyDeepLinkFactory.create()
             sellDeepLinkFactory.create()
-            swapDeepLinkFactory.create()
+            swapDeepLinkFactory.create(any(), any())
             promoDeepLinkFactory.create(any(), any())
             tangemPayMainDeepLink.create(any(), any())
         }
@@ -512,6 +512,27 @@ internal class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { yieldDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+    }
+
+    @Test
+    fun `GIVEN tangem swap deeplink WHEN handle THEN swap handler created with params`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "swap"
+        every { mockedUri.query } returns "from_token_id=ethereum&from_network_id=ethereum"
+        every { mockedUri.queryParameterNames } returns setOf("from_token_id", "from_network_id")
+        every { mockedUri.getQueryParameter("from_token_id") } returns "ethereum"
+        every { mockedUri.getQueryParameter("from_network_id") } returns "ethereum"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        verify {
+            swapDeepLinkFactory.create(
+                eq(testScope),
+                eq(mapOf("from_token_id" to "ethereum", "from_network_id" to "ethereum")),
+            )
+        }
     }
 
     @Test
