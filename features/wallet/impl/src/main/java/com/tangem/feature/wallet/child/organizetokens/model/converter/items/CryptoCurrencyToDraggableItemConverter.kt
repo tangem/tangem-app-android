@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.organizetokens.model.converter.items
 
+import com.tangem.common.getExtraBalanceOrNull
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
@@ -9,8 +10,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.common.getTotalWithRewardsStakingBalance
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.model.common.getGroupHeaderId
 import com.tangem.feature.wallet.child.organizetokens.model.common.getTokenItemId
@@ -56,10 +55,8 @@ internal class CryptoCurrencyToDraggableItemConverter(
     }
 
     private fun getFormattedFiatAmount(currency: CryptoCurrencyStatus, appCurrency: AppCurrency): String {
-        val stakingBalance = currency.value.stakingBalance as? StakingBalance.Data
         val fiatRate = currency.value.fiatRate ?: BigDecimal.ZERO
-        val fiatStakingBalance = stakingBalance?.getTotalWithRewardsStakingBalance(currency.currency.network.rawId)
-            ?.multiply(fiatRate).orZero()
+        val fiatStakingBalance = currency.getExtraBalanceOrNull()?.multiply(fiatRate).orZero()
 
         val fiatAmount = currency.value.fiatAmount ?: return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
         return (fiatAmount + fiatStakingBalance).format { fiat(appCurrency.code, appCurrency.symbol) }

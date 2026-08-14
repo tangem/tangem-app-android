@@ -13,7 +13,6 @@ android {
 
 dependencies {
     implementation(projects.features.commonFeatures.api)
-    implementation(projects.features.wallet.api)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.send.api)
 
@@ -23,7 +22,6 @@ dependencies {
 
     /** Core */
     implementation(projects.core.analytics)
-    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
@@ -32,8 +30,6 @@ dependencies {
     /** Domain models */
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
-    implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.blockaid.models)
     implementation(projects.domain.models)
     implementation(projects.domain.qrScanning.models)
@@ -44,11 +40,7 @@ dependencies {
     implementation(projects.domain.walletConnect.models)
 
     /** Domain */
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.balanceHiding)
-    implementation(projects.domain.legacy)
     implementation(projects.domain.qrScanning)
-    implementation(projects.domain.tokens)
     implementation(projects.domain.transaction)
     implementation(projects.domain.wallets)
 
@@ -60,7 +52,6 @@ dependencies {
     implementation(deps.androidx.activity.compose)
 
     /** Compose */
-    implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
@@ -69,15 +60,25 @@ dependencies {
 
     /** Data */
     implementation(projects.data.card)
+    implementation(projects.common)
+    implementation(projects.core.analytics.models)
+    implementation(projects.domain.core)
 
     /** Other */
     implementation(deps.arrow.core)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.jodatime)
+    implementation(deps.kotlin.serialization.core)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
 
     /** Test libraries */
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.truth)
+    api(deps.kotlin.coroutines)
 }

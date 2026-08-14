@@ -106,10 +106,6 @@ class CreatePaymentNetworkContractUseCase(
         }
     }
 
-    /** Transient (server/network) failures are retryable; 4xx business errors are not. */
-    private fun VisaApiError.isRetryable(): Boolean =
-        this == VisaApiError.ServerUnavailable || this == VisaApiError.UnknownWithoutCode
-
     private companion object {
         val POLL_TIMEOUT: Duration = 60.seconds
         val RETRY_DELAYS: List<Duration> = listOf(1.seconds, 2.seconds, 4.seconds)
