@@ -57,6 +57,8 @@
   <string name="no_account_send_to_create">Per creare un account, invia fondi a questo indirizzo</string>
   <string name="no_trustline_xlm_asset">The destination account does not have a trustline for the asset being sent.</string>
   <string name="onboarding_create_wallet_button_create_wallet">Crea portafoglio</string>
+  <string name="promo_campaign_select_cashback_account">Seleziona il token di cashback</string>
+  <string name="promo_campaign_select_token">Seleziona il token di cashback</string>
   <string name="send_amount_label">Importo</string>
   <string name="send_error_address_same_as_wallet">L\'indirizzo corrisponde all\'indirizzo del tuo portafoglio</string>
   <string name="send_error_dust_amount_format">L\'importo minimo è di %s</string>
@@ -138,7 +140,7 @@
   <string name="tangempay_bank_transfer_show_details">Mostra dettagli</string>
   <string name="tangempay_bank_transfer_success_subtitle">Potrebbe richiedere un po\' di tempo</string>
   <string name="tangempay_bank_transfer_success_title">Preparazione dati bancari</string>
-  <string name="tangempay_bank_transfer_swift_warning">Deposito solo tramite ACH o FedWire. I bonifici SWIFT saranno restituiti.</string>
+  <string name="tangempay_bank_transfer_swift_warning">I bonifici SWIFT non sono accettati e saranno restituiti</string>
   <string name="tangempay_cancel_kyc">Nascondi verifica dalla schermata</string>
   <string name="tangempay_card_default_name">Carta Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Aggiungi fondi</string>
@@ -404,7 +406,7 @@
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Ricevi USD tramite ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Ricevi USD tramite ACH</string>
   <string name="tangempay_topup_bank_transfer_title">Bonifico bancario</string>
   <string name="tangempay_topup_receive_body">Invia USDC Polygon all\'indirizzo del tuo account</string>
   <string name="tangempay_topup_receive_body_multichain">Invia USDC o USDT all\'indirizzo del tuo conto</string>
