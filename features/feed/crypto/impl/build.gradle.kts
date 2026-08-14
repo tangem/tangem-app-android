@@ -40,7 +40,9 @@ dependencies {
     implementation(deps.lifecycle.compose)
 
     /* Other */
+    implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
+    implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
 
