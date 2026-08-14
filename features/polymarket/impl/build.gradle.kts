@@ -63,6 +63,5 @@ dependencies {
     api(projects.core.utils)
 
     /** Tests */
-    testImplementation(projects.core.pagination)
     testImplementation(projects.test.core)
 }
