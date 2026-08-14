@@ -47,7 +47,6 @@ internal class ProdApiConfigsManagerTest {
     private val appAuthProvider = mockk<AuthProvider>()
     private val appInfoProvider = mockk<AppInfoProvider>()
     private val tangemApiKeyProvider = mockk<ProviderSuspend<String>>()
-    private val tangemGaslessApiKeyProvider = mockk<ProviderSuspend<String>>()
 
     private lateinit var manager: ProdApiConfigsManager
 
@@ -65,8 +64,6 @@ internal class ProdApiConfigsManagerTest {
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { p2pEthPoolAuthProvider.getApiKey() } returns P2P_API_KEY
         every { appAuthProvider.getApiKey(any()) } returns tangemApiKeyProvider
-        every { appAuthProvider.getGaslessServiceApiKey(any()) } returns tangemGaslessApiKeyProvider
-        coEvery { tangemGaslessApiKeyProvider.invoke() } returns TANGEM_GASLESS_API_KEY
         coEvery { tangemApiKeyProvider.invoke() } returns TANGEM_API_KEY
         coEvery { appAuthProvider.getCardId() } returns APP_CARD_ID
         coEvery { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
@@ -114,10 +111,6 @@ internal class ProdApiConfigsManagerTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = appInfoProvider,
             ),
-            GaslessTxService(
-                authProvider = appAuthProvider,
-                appInfoProvider = appInfoProvider,
-            ),
             SurveySparrow(environmentConfig = environmentConfig),
             Auth(),
             PolymarketWeb(),
@@ -137,7 +130,6 @@ internal class ProdApiConfigsManagerTest {
         createBlockAidSdkModel(),
         createP2PModel(),
         createNewsModel(),
-        createGaslessTxServiceModel(),
         createSurveySparrowModel(),
         createAuthModel(),
         createPolymarketWebModel(),
@@ -305,38 +297,6 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
                     "accept" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createGaslessTxServiceModel(): TestModel {
-        val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
-            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
-            DEBUG_BUILD_TYPE,
-            -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
-            INTERNAL_BUILD_TYPE,
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD to "https://gasless.tangem.org/"
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-        }
-        return TestModel(
-            id = GaslessTxService.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = baseUrl,
-                headers = mapOf(
-                    "Authorization" to ProviderSuspend { "Bearer $TANGEM_GASLESS_API_KEY" },
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "android" },
-                    "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
-                    "timezone" to ProviderSuspend {
-                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
-                    },
-                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
                 ),
             ),
         )
