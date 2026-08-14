@@ -120,10 +120,6 @@ internal fun JointAccountConfigScreen(
             endButton = { TangemButton.Close(onClick = onCloseClick) },
         )
     }
-
-    state.chooseWallet?.let { chooseWallet ->
-        ChooseWalletBS(state = chooseWallet)
-    }
 }
 
 @Composable
@@ -280,7 +276,6 @@ private fun createPreviewState(wallet: JointAccountConfigUM.WalletUM?): JointAcc
     colors = CryptoPortfolioIcon.Color.entries.toImmutableList(),
     icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
     wallet = wallet,
-    chooseWallet = null,
     isContinueEnabled = true,
     onNameChange = {},
     onColorClick = {},
