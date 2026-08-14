@@ -109,6 +109,7 @@ data class CustomerInfo(
         val lastFourDigits: String,
         val isPinSet: Boolean,
         val images: List<TangemPayTariffPlan.Image>,
+        val embossName: String?,
     )
 
     /**

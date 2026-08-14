@@ -3,6 +3,7 @@ package com.tangem.data.onramp
 import android.net.Uri
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.extensions.toBigDecimalOrDefault
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.onramp.converters.CountryConverter
@@ -10,7 +11,6 @@ import com.tangem.data.onramp.converters.CurrencyConverter
 import com.tangem.data.onramp.converters.PaymentMethodConverter
 import com.tangem.data.onramp.converters.StatusConverter
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
-import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExchangeProvider
@@ -97,7 +97,7 @@ internal class DefaultOnrampRepository(
     override suspend fun fetchCurrencies(userWallet: UserWallet) = withContext(dispatchers.io) {
         if (!currenciesStore.getSyncOrNull(CURRENCIES_KEY).isNullOrEmpty()) return@withContext
 
-        val result = onrampApi.getCurrencies(
+        val response = onrampApi.getCurrencies(
             userWalletId = userWallet.walletId.stringValue,
             refCode = ExpressUtils.getRefCode(
                 userWallet = userWallet,
@@ -105,8 +105,12 @@ internal class DefaultOnrampRepository(
             ),
         )
             .getOrThrow()
-            .map(currencyConverter::convert)
 
+        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
+            expressHistoryDao.upsertCurrencies(response.map { it.toEntity() })
+        }
+
+        val result = response.map(currencyConverter::convert)
         currenciesStore.store(CURRENCIES_KEY, result)
     }
 
@@ -127,10 +131,6 @@ internal class DefaultOnrampRepository(
             ),
         )
             .getOrThrow()
-
-        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-            expressHistoryDao.upsertCountries(response.map { it.toEntity() })
-        }
 
         val result = response.map(countryConverter::convert)
         countriesStore.store(COUNTRIES_KEY, result)

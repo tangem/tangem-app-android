@@ -131,10 +131,17 @@ internal class PolymarketMainModel @Inject constructor(
         .toImmutableList()
 
     private fun onEventClick(eventId: String) {
-        router.push(PolymarketRoute.EventDetails(eventId = eventId))
+        router.push(PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId))
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
-        router.push(PolymarketRoute.EventDetails(eventId = eventId, marketId = marketId, assetId = assetId))
+        router.push(
+            PolymarketRoute.EventDetails(
+                eventId = eventId,
+                userWalletId = params.userWalletId,
+                marketId = marketId,
+                assetId = assetId,
+            ),
+        )
     }
 }

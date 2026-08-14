@@ -13,6 +13,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,14 +37,20 @@ internal class DefaultFeedbackRepository(
     private val walletManagersStore: WalletManagersStore,
     private val emailSender: EmailSender,
     private val appInfoProvider: AppInfoProvider,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
 
     override suspend fun getUserWalletMetaInfo(userWalletId: UserWalletId): WalletMetaInfo {
         val userWallet = getUserWalletById(userWalletId)
-        return userWallet?.let {
-            WalletMetaInfoConverter.convert(it)
+        return userWallet?.let { wallet ->
+            val metaInfo = WalletMetaInfoConverter.convert(wallet)
+            if (wallet is UserWallet.Hot) {
+                metaInfo.copy(hotWalletIsBackedUp = isWalletBackedUpUseCase(wallet))
+            } else {
+                metaInfo
+            }
         } ?: WalletMetaInfo(userWalletId)
     }
 

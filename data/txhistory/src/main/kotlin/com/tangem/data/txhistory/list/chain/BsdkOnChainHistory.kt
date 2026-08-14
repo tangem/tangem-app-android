@@ -10,7 +10,6 @@ import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
-import com.tangem.domain.txhistory.model.identityKey
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.pagination.BatchAction
@@ -75,12 +74,10 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
         val mergedFlow: Flow<List<TxHistoryInfo>> = repository.getExpressHistory(
             userWalletId = userWalletId,
             currency = currency,
-            fromCreatedAtMillis = oldestLoadedTimestamp(batchState),
+            fromOnChainTimestampMillis = oldestLoadedTimestamp(batchState),
         ).map { express ->
-            val onChain = batchState.data.asSequence()
-                .flatMap { it.data.items.asSequence() }
-                .distinctBy(TxInfo::identityKey)
-                .toList()
+            val onChain = batchState.data
+                .flatMap { it.data.items }
             mergeTxHistoryInfos(onChain = onChain, express = express, currency = currency)
         }
 
