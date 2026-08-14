@@ -153,6 +153,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus)
                 // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
                 is AccountStatus.Virtual -> emptyList()
+                // Prediction account isn't a swap source either — the same MVP rule
+                is AccountStatus.Prediction -> emptyList()
             }
             val availabilityStates = rampStateManager.availableForSwap(
                 userWalletId,
