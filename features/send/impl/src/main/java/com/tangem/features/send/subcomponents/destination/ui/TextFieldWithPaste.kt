@@ -87,7 +87,7 @@ internal fun TextFieldWithPaste(
                         .align(CenterVertically),
                 ) {
                     CrossIcon(
-                        onClick = onPasteClick,
+                        onClick = { onPasteClick("") },
                         modifier = Modifier.testTag(SendAddressScreenTestTags.DESTINATION_TAG_CLEAR_TEXT_FIELD_BUTTON),
                     )
                 }
