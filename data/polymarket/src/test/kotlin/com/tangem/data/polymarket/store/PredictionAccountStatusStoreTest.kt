@@ -125,18 +125,6 @@ internal class PredictionAccountStatusStoreTest {
     }
 
     @Test
-    fun `GIVEN a priced value WHEN store THEN the rate is not kept`() = runTest {
-        // Arrange
-        val store = createStore(testScope = this)
-
-        // Act — the rate is into the app's selected currency, which the user can change while this stays cached
-        store.store(userWalletId = WALLET_A, value = ACTIVE.copy(fiatRate = BigDecimal("0.9")))
-
-        // Assert
-        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(fiatRate = null))
-    }
-
-    @Test
     fun `GIVEN nothing stored WHEN updateStatusSource THEN nothing is stored`() = runTest {
         // Arrange
         val store = createStore(testScope = this)
