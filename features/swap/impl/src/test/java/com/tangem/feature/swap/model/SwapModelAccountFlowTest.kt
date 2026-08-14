@@ -2,7 +2,7 @@ package com.tangem.feature.swap.model
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.entity.AccountFlow
+import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
