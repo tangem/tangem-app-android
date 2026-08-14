@@ -208,6 +208,11 @@ dependencyAnalysis {
                 // datastore-preferences-core arrives through core:datasource rather than through the
                 // datastore-core these modules declare, so the androidx-datastore bundle misses it.
                 exclude("androidx.datastore:datastore-preferences-core")
+                // core:ui exports haze as `api` and puts HazeState in the signatures of public DS
+                // components (TangemPagerIndicator, Fade, TangemModalHost). Every module that renders
+                // one of those ends up referencing haze in bytecode without importing it, so the advice
+                // would reappear for each new screen that uses a bottom sheet.
+                exclude("dev.chrisbanes.haze:haze")
                 // :core:datasource is the data layer's single entry point and deliberately re-exports
                 // these two as `api` (see its build file). Every data module reaches RetrofitFactory and
                 // the local stores through it; declaring them in ~35 modules would duplicate the facade.
@@ -235,6 +240,13 @@ dependencyAnalysis {
                 exclude("com.appsflyer:oaid")
                 // Moshi adapters are registered reflectively when building the Moshi instance.
                 exclude("com.squareup.moshi:moshi-adapters")
+                // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown
+                // artifacts, so these unexcluded declarations are what supply that driver at runtime.
+                // Nothing here references reown by type — dropping them crashes the app on start.
+                exclude(
+                    "com.reown:android-core",
+                    "com.reown:walletkit",
+                )
                 // agcp brings the AGConnect runtime the huawei flavor reads through
                 // AGConnectOptionsBuilder in HuaweiPushNotificationsTokenProvider.
                 exclude("com.huawei.agconnect:agcp")
