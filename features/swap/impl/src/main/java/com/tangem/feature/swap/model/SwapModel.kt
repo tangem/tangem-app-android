@@ -191,28 +191,12 @@ internal class SwapModel @Inject constructor(
     private val initialCryptoCurrency = params.fromCryptoCurrency
     private val accountFlow = params.accountFlow
 
-    /**
-     * Whether this screen is driven by an [AccountFlow] (Tangem Pay top-up/withdraw via swap) with the
-     * account-swap-flow toggle on. Single source of truth for the account-flow gate — see
-     * [isAccountTopUp], [isTangemPayWithdrawFlow], [onChangeCardsClicked],
-     * [withReverseForcedHiddenInAccountFlow] and [withAccountFlowPresentation].
-     */
     private val isAccountFlowActive: Boolean
         get() = swapFeatureToggles.isAccountSwapFlowEnabled && accountFlow != null
 
-    /**
-     * Whether this screen is the account top-up leg (Tangem Pay "Add funds" via swap) with the
-     * account-swap-flow toggle on. Gates the abstract "USD" TO-card presentation — see
-     * [withAccountFlowPresentation].
-     */
     private val isAccountTopUp: Boolean
         get() = isAccountFlowActive && accountFlow is AccountFlow.TopUp
 
-    /**
-     * Whether this screen is the account withdrawal leg (Tangem Pay "Withdraw" via swap) with the
-     * account-swap-flow toggle on. Gates the FROM selector restriction — see [chooseFromTokenBridge]
-     * and [filterTokensFromSelector].
-     */
     private val isTangemPayWithdrawFlow: Boolean
         get() = isAccountFlowActive && accountFlow is AccountFlow.Withdraw
 
@@ -295,14 +279,9 @@ internal class SwapModel @Inject constructor(
     )
 
     /**
-     * Compose-observable swap screen state. The setter forces [ChangeCardsButtonState.HIDDEN] whenever the
-     * screen is driven by an [AccountFlow] (Tangem Pay top-up/withdraw via swap) with the account-swap-flow
-     * toggle on, regardless of what the caller passes in — the reverse (swap direction) action has no
-     * meaning in a fixed-direction account flow. It also applies [withAccountFlowPresentation] (screen
-     * title + abstract "USD" TO card on top-up). The very first value (the initializer above) goes through
-     * the same rules so the initial frame — rendered before [initTokens]'s async resolution completes on a
-     * real (non-Unconfined) dispatcher — never briefly shows a visible-but-disabled reverse button or the
-     * wrong title.
+     * Every assignment goes through the account-flow rules, including the initializer above: the first frame
+     * is rendered before [initTokens] resolves, so seeding it raw would briefly show a reverse button and a
+     * title that do not belong to a fixed-direction account flow.
      */
     var uiState: SwapStateHolder
         get() = _uiState
@@ -2554,7 +2533,6 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    /** Forces [ChangeCardsButtonState.HIDDEN] when this screen is driven by an [AccountFlow] with the toggle on. */
     private fun SwapStateHolder.withReverseForcedHiddenInAccountFlow(): SwapStateHolder {
         return if (isAccountFlowActive) {
             copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
@@ -2564,19 +2542,8 @@ internal class SwapModel @Inject constructor(
     }
 
     /**
-     * Applies the account-flow screen presentation whenever this screen is driven by an [AccountFlow] with
-     * the account-swap-flow toggle on, regardless of which [StateBuilder] method produced this
-     * [SwapStateHolder] — same pattern as [withReverseForcedHiddenInAccountFlow]:
-     *  - screen title becomes "Add funds" (TopUp) / "Withdraw" (Withdraw);
-     *  - on TopUp only, the receive (TO) card is forced into its abstract "USD" locked presentation —
-     *    the real token icon is replaced with the Payment-account avatar
-     *    ([SwapCardState.SwapCardData.currencyIconState] becomes [CurrencyIconState.PaymentAccount]), the
-     *    currency label is abstracted ([SwapCardState.SwapCardData.fiatSymbolOverride]) and the "Choose
-     *    token" tap is suppressed ([SwapCardState.SwapCardData.isSelectionLocked]).
-     *  - the main button (CTA) is intentionally left untouched — it keeps its existing dynamic
-     *    Transfer/Swap label regardless of account flow.
-     *  - Withdraw only changes the title: FROM stays the concrete Payment-account currency and TO stays a
-     *    normal, selectable card (resolved by the user, restricted separately from this presentation layer).
+     * Applied here rather than in [StateBuilder] so every state it produces gets the same treatment. The main
+     * button is deliberately left alone: it keeps its dynamic Transfer/Swap label in account flows too.
      */
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder {
         if (!isAccountFlowActive) return this
