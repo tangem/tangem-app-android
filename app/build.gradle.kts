@@ -303,6 +303,7 @@ dependencies {
     implementation(projects.features.markets.impl)
     implementation(projects.features.feed.api)
     implementation(projects.features.feed.impl)
+    implementation(projects.features.feed.search.api)
     implementation(projects.features.promoBanners.api)
     implementation(projects.features.promoBanners.impl)
     implementation(projects.features.onramp.api)
@@ -484,6 +485,8 @@ dependencies {
     androidTestImplementation(deps.jodatime)
     // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
     androidTestImplementation(deps.zxing.qrCore)
+    // The generated Hilt test component references the @Singleton FeedSearchBarController binding.
+    androidTestImplementation(projects.features.feed.search.api)
     kaptAndroidTest(deps.test.hilt.compiler)
     kaptAndroidTest(deps.hilt.kapt)
 
