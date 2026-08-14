@@ -390,13 +390,10 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideCancelTangemPayOrderUseCase(
             customerOrderRepository: CustomerOrderRepository,
-            issueCardRepository: TangemPayIssueCardRepository,
-            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
         ): CancelTangemPayOrderUseCase {
             return CancelTangemPayOrderUseCase(
                 customerOrderRepository = customerOrderRepository,
-                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
             )
         }

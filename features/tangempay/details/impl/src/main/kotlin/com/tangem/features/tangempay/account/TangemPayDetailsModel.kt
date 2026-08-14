@@ -129,6 +129,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val cashbackBlockJobHolder = JobHolder()
+    private val planSelectionJobHolder = JobHolder()
     private val cashbackDateFormatter = TangemPayCashbackDateFormatter()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
@@ -159,12 +160,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
                         stateFactory.getInactiveState(state)
                     }
-                    is PaymentAccountStatusValue.AwaitingPlanSelection -> router.replaceAll(
-                        TangemPayAccountDetailsInnerRoute.SelectPlan(
-                            tariffPlan = state.tariffPlan,
-                            source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-                        ),
-                    )
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
             }
@@ -184,13 +179,31 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     fun onStart() {
+        observeAwaitingPlanSelection()
         onRefreshSwipe(refreshState = ShowRefreshState(false))
     }
 
     fun onStop() {
+        planSelectionJobHolder.cancel()
         modelScope.launch {
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
         }
+    }
+
+    private fun observeAwaitingPlanSelection() {
+        currentStatus
+            .map { it.value }
+            .filterIsInstance<PaymentAccountStatusValue.AwaitingPlanSelection>()
+            .onEach { status ->
+                router.replaceAll(
+                    TangemPayAccountDetailsInnerRoute.SelectPlan(
+                        tariffPlan = status.tariffPlan,
+                        source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
+                    ),
+                )
+            }
+            .launchIn(modelScope)
+            .saveIn(planSelectionJobHolder)
     }
 
     override fun onClickAddFunds() {
