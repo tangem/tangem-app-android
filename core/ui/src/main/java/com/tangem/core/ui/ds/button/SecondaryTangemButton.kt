@@ -79,9 +79,9 @@ fun SecondaryTangemButton(
         Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
     }
     val contentColor = if (isEnabled) {
-        TangemTheme.colors3.text.primary
+        TangemTheme.colors2.text.neutral.primary
     } else {
-        TangemTheme.colors3.text.tertiary
+        TangemTheme.colors2.text.status.disabled
     }
 
     TangemButtonInternal(
