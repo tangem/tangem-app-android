@@ -56,7 +56,6 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
-import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletBlock
 import com.tangem.features.tangempay.common.PayContextMenuBlock
 import com.tangem.features.tangempay.common.TangemPayActionButton
 import com.tangem.features.tangempay.details.impl.R
@@ -220,15 +219,6 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             }
         }
         null -> {
-            if (state.addToWalletBlockState != null) {
-                item("addToWalletBannerBlock") {
-                    SpacerH12()
-                    TangemPayAddToWalletBlock(
-                        state = state.addToWalletBlockState,
-                        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
-                    )
-                }
-            }
             if (state.accountDeactivatedNotificationConfig != null) {
                 item("deactivationBannerBlock") {
                     SpacerH12()
