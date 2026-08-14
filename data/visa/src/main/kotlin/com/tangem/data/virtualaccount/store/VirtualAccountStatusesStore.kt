@@ -2,7 +2,7 @@ package com.tangem.data.virtualaccount.store
 
 import androidx.datastore.core.DataStore
 import com.tangem.data.virtualaccount.converter.VirtualAccountStatusValueDMConverter
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account

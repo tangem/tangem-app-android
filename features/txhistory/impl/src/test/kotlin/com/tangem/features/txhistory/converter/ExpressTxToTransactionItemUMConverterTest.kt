@@ -73,6 +73,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             ExpressOnrampStatus.Finished to Status.Confirmed,
             ExpressOnrampStatus.Failed to Status.Failed,
             ExpressOnrampStatus.Expired to Status.Failed,
+            ExpressOnrampStatus.Refunded to Status.Failed,
             ExpressOnrampStatus.Unknown to Status.Failed,
             ExpressOnrampStatus.Created to Status.Unconfirmed,
             ExpressOnrampStatus.WaitingForPayment to Status.Unconfirmed,
@@ -81,6 +82,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             ExpressOnrampStatus.Paid to Status.Unconfirmed,
             ExpressOnrampStatus.Sending to Status.Unconfirmed,
             ExpressOnrampStatus.Paused to Status.Unconfirmed,
+            ExpressOnrampStatus.RefundInProgress to Status.Unconfirmed,
         )
         assertThat(cases.keys).containsExactlyElementsIn(ExpressOnrampStatus.entries)
 
@@ -239,6 +241,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
+            externalTxId = null,
             payinAddress = "payin-addr",
             updatedAtMillis = 100,
             refundAssetId = null,

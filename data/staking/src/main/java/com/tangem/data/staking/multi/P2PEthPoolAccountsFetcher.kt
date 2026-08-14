@@ -1,6 +1,6 @@
 package com.tangem.data.staking.multi
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolAccountsListRequest
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse

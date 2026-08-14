@@ -25,18 +25,13 @@ import kotlinx.collections.immutable.ImmutableList
 @Composable
 internal fun EarnBlock(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modifier: Modifier = Modifier) {
     if (earnListUM is EarnListUM.Empty) return
-    EarnBlockV2(onSeeAllClick = onSeeAllClick, earnListUM = earnListUM, modifier = modifier)
-}
-
-@Composable
-private fun EarnBlockV2(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Header(
             title = {
                 Text(
                     text = stringResourceSafe(R.string.markets_earn_common_title),
-                    style = TangemTheme.typography2.headingSemibold20,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography3.heading.small,
+                    color = TangemTheme.colors3.text.primary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
@@ -57,7 +52,7 @@ private fun EarnBlockV2(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modif
                 is EarnListUM.Error -> {
                     BlockCard(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors2.surface.level3),
+                        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
                     ) {
                         EarnErrorBlock(onRetryClick = earnListUM.onRetryClicked)
                     }

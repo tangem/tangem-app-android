@@ -112,6 +112,10 @@ abstract class BaseTestCase : TestCase(
         additionalAfterSection: () -> Unit = {},
     ) = before {
         Allure.label(ALLURE_LABEL_NAME, ALLURE_LABEL_VALUE)
+        // Record the launch-time feature-toggle overrides so the report shows the run configuration.
+        FeatureToggleArgs.rawArg()?.takeIf { it.isNotBlank() }?.let { overrides ->
+            Allure.parameter("feature_toggles", overrides)
+        }
         // Setup WireMock redirect for CI with local WireMock instances
         val wiremockUrl = InstrumentationRegistry.getArguments().getString(WIREMOCK_BASE_URL_ARG)
         WireMockRedirectInterceptor.overriddenBaseUrl = wiremockUrl
@@ -189,22 +193,19 @@ abstract class BaseTestCase : TestCase(
     }
 
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
-        return ApplicationInjectionExecutionRule(
-            toggleStates = mapOf(
-                "SWAP_REDESIGN_ENABLED" to false,
-                "ACCOUNTS_FEATURE_ENABLED" to true,
-                "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
-                "VISA_ONBOARDING_ENABLED" to true,
-                // Version-gated toggles released in versions <= 6.0 — forced on so tests run against the actual
-                // build even when the app version resolves to 1.0.0-SNAPSHOT on CI (then 1.0.0 < x.xx would
-                // disable them). On the releases/6.0 branch every toggle with version <= 6.0 ships enabled.
-                // 6.0
-                "TWI_1326_YIELD_MODE_SWAP_ENABLED" to true,
-                // 6.1
-                "TWI_1638_VA_MVP0_ENABLED" to true,
-                "TWI_1403_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED" to true,
-            )
+        // Toggle states can be set from code here — base defaults for the UI-test build. Launch-time
+        // overrides (the `feature_toggles` GitHub Actions input / Allure TestOps launch parameter, delivered
+        // via the `featureToggles` instrumentation arg) merge on top and win. Keys must be current
+        // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
+        val baseToggles = mapOf(
+            "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
         )
+        // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
+        // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty
+        // when nothing was passed, so the default behaviour is unchanged.
+        val launchOverrides = FeatureToggleArgs.fromInstrumentation()
+
+        return ApplicationInjectionExecutionRule(toggleStates = baseToggles + launchOverrides)
     }
 
     private companion object {

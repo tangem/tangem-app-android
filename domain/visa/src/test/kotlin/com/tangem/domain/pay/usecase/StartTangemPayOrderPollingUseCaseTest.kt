@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class StartTangemPayOrderPollingUseCaseTest {
 
@@ -287,6 +288,34 @@ internal class StartTangemPayOrderPollingUseCaseTest {
         // THEN
         assertThat(result).isTrue()
         assertThat(testScheduler.currentTime).isEqualTo(10_000L)
+    }
+
+    @Test
+    fun `GIVEN never-terminal order WHEN invoke with a short timeout THEN returns false and stops polling`() =
+        runTest {
+            // Arrange — the order never reaches a terminal status across any number of polls.
+            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+            coEvery { cardDetailsRepository.getOrderInfo(USER_WALLET_ID, ORDER_ID) } returns
+                TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING).right()
+
+            // Act — timeout (100ms) is far shorter than the 3s polling delay, so it elapses mid-poll.
+            val result = useCase(order, USER_WALLET_ID, timeout = 100.milliseconds)
+
+            // Assert — timed out without ever reaching a terminal status, so no status fetch either.
+            assertThat(result).isFalse()
+            coVerify(exactly = 0) { paymentAccountStatusFetcher.invoke(any<UserWalletId>()) }
+        }
+
+    @Test
+    fun `GIVEN order already COMPLETED WHEN invoke with a timeout THEN returns true without polling`() = runTest {
+        // A terminal order resolves immediately regardless of timeout — no polling to time out on.
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
+        coEvery { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) } returns Unit.right()
+
+        val result = useCase(order, USER_WALLET_ID, timeout = 100.milliseconds)
+
+        assertThat(result).isTrue()
+        coVerify(exactly = 0) { cardDetailsRepository.getOrderInfo(any(), any()) }
     }
 
     private companion object {

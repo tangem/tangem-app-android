@@ -6,8 +6,6 @@ import arrow.core.toOption
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
 import com.tangem.data.swap.converter.TokenInfoConverter
@@ -58,7 +56,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
-    private val featureTogglesManager: FeatureTogglesManager,
     @NetworkMoshi moshi: Moshi,
 ) : SwapRepositoryV2 {
 
@@ -535,18 +532,14 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
         if (!isYieldSupplyActive) return this
 
-        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED)) {
-            filter { provider ->
-                when (provider.type) {
-                    ExpressProviderType.CEX -> true
-                    ExpressProviderType.DEX,
-                    ExpressProviderType.DEX_BRIDGE,
-                    -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
-                    ExpressProviderType.ONRAMP -> false
-                }
+        return filter { provider ->
+            when (provider.type) {
+                ExpressProviderType.CEX -> true
+                ExpressProviderType.DEX,
+                ExpressProviderType.DEX_BRIDGE,
+                -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
+                ExpressProviderType.ONRAMP -> false
             }
-        } else {
-            filter { it.type == ExpressProviderType.CEX }
         }
     }
 }

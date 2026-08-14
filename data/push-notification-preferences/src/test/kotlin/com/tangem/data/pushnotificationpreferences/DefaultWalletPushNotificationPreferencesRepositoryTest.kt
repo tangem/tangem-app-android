@@ -5,17 +5,17 @@ import app.cash.turbine.test
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesBody
 import com.tangem.datasource.api.tangemTech.models.PushNotificationPreferencesResponse
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationCategory
 import com.tangem.domain.pushnotificationpreferences.models.PushNotificationPreference
 import com.tangem.domain.pushnotificationpreferences.models.WalletPushNotificationPreferences
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,7 +35,7 @@ class DefaultWalletPushNotificationPreferencesRepositoryTest {
     private val otherWalletId = UserWalletId(stringValue = "ffeeddccbbaa9988")
 
     // Real in-memory store so the persisted first-activation flag (a Set<String> merge) is genuinely exercised.
-    private val appPreferencesStore = AppPreferencesStore(
+    private val appPreferencesStore = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = MockStateDataStore(default = emptyPreferences()),

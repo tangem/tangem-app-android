@@ -1,5 +1,9 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.BuildConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
@@ -8,9 +12,11 @@ import com.tangem.utils.ProviderSuspend
 /**
  * P2P.org Ethereum Pooled Staking API configuration
  */
-internal class P2PEthPool(
+class P2PEthPool(
     private val p2pAuthProvider: P2PEthPoolAuthProvider,
 ) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
@@ -55,5 +61,10 @@ internal class P2PEthPool(
         put(key = "Authorization", value = ProviderSuspend { "Bearer ${p2pAuthProvider.getApiKey()}" })
         put(key = "accept", value = ProviderSuspend { "application/json" })
         put(key = "Content-Type", value = ProviderSuspend { "application/json" })
+    }
+
+    companion object {
+        const val KEY = "P2PEthPool"
+        val ID = ApiConfig.ID(KEY)
     }
 }

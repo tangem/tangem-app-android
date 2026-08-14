@@ -7,46 +7,42 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.audits.AuditLabelUM
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.state.ExchangeItemUM
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
 import kotlinx.collections.immutable.toImmutableList
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet as TangemBottomSheetV2
 
 /**
  * Exchanges bottom sheet
@@ -57,34 +53,18 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet as TangemBot
  */
 @Composable
 internal fun ExchangesBottomSheet(config: TangemBottomSheetConfig) {
-    ExchangesBottomSheetV2(config)
-}
-
-@Composable
-private fun ExchangesBottomSheetV2(config: TangemBottomSheetConfig) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
-    TangemBottomSheetV2<ExchangesBottomSheetContent>(
+    TangemBottomSheet<ExchangesBottomSheetContent>(
         config = config,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = { content ->
-            TangemTopBar(
+            TangemTopNavigation(
                 title = resourceReference(content.titleResId),
-                type = TangemTopBarType.BottomSheet,
-                startContent = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
-                        contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
-                        modifier = Modifier
-                            .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
-                            .clickableSingle(onClick = config.onDismissRequest)
-                            .padding(TangemTheme.dimens2.x2),
-                    )
-                },
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                onBack = config.onDismissRequest,
             )
         },
         content = { content ->
@@ -97,14 +77,14 @@ private fun ExchangesBottomSheetV2(config: TangemBottomSheetConfig) {
                         Subtitle(
                             subtitleRes = content.subtitleResId,
                             volumeReference = content.volumeReference,
-                            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x7),
+                            modifier = Modifier.padding(horizontal = 28.dp),
                         )
                     }
 
-                    if (content.exchangeItemsV2.isNotEmpty()) {
-                        val lastIndex = content.exchangeItemsV2.lastIndex
+                    if (content.exchangeItems.isNotEmpty()) {
+                        val lastIndex = content.exchangeItems.lastIndex
                         itemsIndexed(
-                            items = content.exchangeItemsV2,
+                            items = content.exchangeItems,
                             key = { _, item -> item.id },
                         ) { index, item ->
                             ExchangeItemRow(
@@ -113,7 +93,7 @@ private fun ExchangesBottomSheetV2(config: TangemBottomSheetConfig) {
                                     .roundedShapeItemDecoration(
                                         currentIndex = index,
                                         lastIndex = lastIndex,
-                                        backgroundColor = TangemTheme.colors2.surface.level3,
+                                        backgroundColor = TangemTheme.colors3.bg.secondary,
                                     ),
                             )
                         }
@@ -147,20 +127,15 @@ private fun Subtitle(@StringRes subtitleRes: Int, volumeReference: TextReference
 private fun SubtitleText(textReference: TextReference) {
     Text(
         text = textReference.resolveReference(),
-        color = TangemTheme.colors2.text.neutral.secondary,
-        overflow = TextOverflow.Ellipsis,
+        color = TangemTheme.colors3.text.secondary,
+        style = TangemTheme.typography3.caption.medium,
         maxLines = 1,
-        style = TangemTheme.typography2.captionSemibold12,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
 @Composable
 private fun Error(content: ExchangesBottomSheetContent.Error, modifier: Modifier = Modifier) {
-    ErrorV2(content, modifier)
-}
-
-@Composable
-private fun ErrorV2(content: ExchangesBottomSheetContent.Error, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Center,
@@ -168,21 +143,18 @@ private fun ErrorV2(content: ExchangesBottomSheetContent.Error, modifier: Modifi
     ) {
         Text(
             text = stringResourceSafe(id = content.message),
-            color = TangemTheme.colors2.text.neutral.tertiary,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.subheading.medium,
             textAlign = TextAlign.Center,
-            style = TangemTheme.typography2.subheadlineMedium14,
         )
 
         SpacerH(8.dp)
 
         TangemButton(
-            buttonUM = TangemButtonUM(
-                text = resourceReference(com.tangem.core.ui.R.string.try_to_load_data_again_button_title),
-                onClick = content.onRetryClick,
-                type = TangemButtonType.Secondary,
-                size = TangemButtonSize.X8,
-                shape = TangemButtonShape.Rounded,
-            ),
+            variant = TangemButton.Variant.Secondary,
+            text = resourceReference(com.tangem.core.ui.R.string.try_to_load_data_again_button_title),
+            size = TangemButton.Size.X8,
+            onClick = content.onRetryClick,
         )
     }
 }
@@ -209,51 +181,51 @@ private fun ExchangeItemRowContent(exchangeItemUM: ExchangeItemUM.Content, modif
             tangemIconUM = exchangeItemUM.icon,
             modifier = Modifier
                 .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                .size(TangemTheme.dimens2.x10)
+                .size(40.dp)
                 .testTag(TokenElementsTestTags.TOKEN_ICON),
         )
 
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x2)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.START_TOP)
                 .testTag(TokenElementsTestTags.TOKEN_TITLE),
             text = exchangeItemUM.title.resolveReference(),
-            style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
         )
 
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x2)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
                 .testTag(TokenElementsTestTags.TOKEN_PRICE),
             text = exchangeItemUM.subTitle.resolveReference(),
-            style = TangemTheme.typography2.captionSemibold12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
         )
 
         Text(
             modifier = Modifier
-                .padding(start = TangemTheme.dimens2.x2)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.END_TOP)
                 .testTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT_TEXT),
             text = exchangeItemUM.volumeInUsd.resolveReference(),
-            style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
         )
 
         Text(
             modifier = Modifier
                 .background(
-                    color = getColorByTrustValue(exchangeItemUM.auditLabel.type).copy(alpha = .1f),
+                    color = getBgColorByTrustValue(exchangeItemUM.auditLabel.type),
                     shape = CircleShape,
                 )
                 .padding(vertical = 2.dp, horizontal = 6.dp)
                 .layoutId(TangemRowLayoutId.END_BOTTOM)
                 .testTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
             text = exchangeItemUM.auditLabel.text.resolveReference(),
-            style = TangemTheme.typography2.captionSemibold11,
+            style = TangemTheme.typography3.caption.medium,
             color = getColorByTrustValue(exchangeItemUM.auditLabel.type),
         )
     }
@@ -265,62 +237,83 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
     ) {
-        CircleShimmer(
+        TangemShimmer(
+            radius = 999.dp,
             modifier = Modifier
                 .size(40.dp)
                 .layoutId(TangemRowLayoutId.HEAD),
         )
-        RectangleShimmer(
-            radius = TangemTheme.dimens2.x25,
+        ExchangeRowShimmerLine(
+            style = TangemTheme.typography3.body.medium,
+            width = 108.dp,
             modifier = Modifier
-                .width(108.dp)
-                .height(20.dp)
-                .padding(start = 4.dp)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.START_TOP),
         )
-        RectangleShimmer(
-            radius = TangemTheme.dimens2.x25,
+        ExchangeRowShimmerLine(
+            style = TangemTheme.typography3.caption.medium,
+            width = 52.dp,
             modifier = Modifier
-                .width(52.dp)
-                .height(16.dp)
-                .padding(start = 4.dp)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.START_BOTTOM),
         )
-        RectangleShimmer(
-            radius = TangemTheme.dimens2.x25,
+        ExchangeRowShimmerLine(
+            style = TangemTheme.typography3.body.medium,
+            width = 106.dp,
             modifier = Modifier
-                .width(106.dp)
-                .height(20.dp)
-                .padding(start = 4.dp)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.END_TOP),
         )
-        RectangleShimmer(
-            radius = TangemTheme.dimens2.x25,
+        ExchangeRowShimmerLine(
+            style = TangemTheme.typography3.caption.medium,
+            width = 52.dp,
             modifier = Modifier
-                .width(52.dp)
-                .height(16.dp)
-                .padding(start = 4.dp)
+                .padding(start = 8.dp)
                 .layoutId(TangemRowLayoutId.END_BOTTOM),
         )
     }
 }
 
 @Composable
-private fun getColorByTrustValue(type: AuditLabelUM.Type): Color {
+private fun ExchangeRowShimmerLine(style: TextStyle, width: Dp, modifier: Modifier = Modifier) {
+    val lineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .width(width)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
+    )
+}
+
+@Composable
+private fun getBgColorByTrustValue(type: AuditLabelUM.Type): Color {
     return when (type) {
-        AuditLabelUM.Type.Prohibition -> TangemTheme.colors2.fill.status.attention
-        AuditLabelUM.Type.Warning -> TangemTheme.colors2.fill.status.warning
+        AuditLabelUM.Type.Prohibition -> TangemTheme.colors3.bg.status.errorSubtle
+        AuditLabelUM.Type.Warning -> TangemTheme.colors3.bg.status.warningSubtle
         AuditLabelUM.Type.Permit,
         AuditLabelUM.Type.Info,
         AuditLabelUM.Type.General,
-        -> TangemTheme.colors2.fill.status.accent
+        -> TangemTheme.colors3.bg.status.infoSubtle
+    }
+}
+
+@Composable
+private fun getColorByTrustValue(type: AuditLabelUM.Type): Color {
+    return when (type) {
+        AuditLabelUM.Type.Prohibition -> TangemTheme.colors3.text.status.error
+        AuditLabelUM.Type.Warning -> TangemTheme.colors3.text.status.warning
+        AuditLabelUM.Type.Permit,
+        AuditLabelUM.Type.Info,
+        AuditLabelUM.Type.General,
+        -> TangemTheme.colors3.text.status.info
     }
 }
 
 @Preview
 @Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ExchangesBottomSheetV2(
+private fun Preview_ExchangesBottomSheet(
     @PreviewParameter(ExchangesBottomSheetContentProvider::class) content: ExchangesBottomSheetContent,
 ) {
     TangemThemePreviewRedesign {
@@ -338,27 +331,18 @@ private class ExchangesBottomSheetContentProvider : CollectionPreviewParameterPr
     listOf(
         ExchangesBottomSheetContent.Loading(exchangesCount = 13),
         ExchangesBottomSheetContent.Error(onRetryClick = {}),
-        ExchangesBottomSheetContent.ContentV1(
+        ExchangesBottomSheetContent.Content(
             exchangeItems = List(size = 13) { index ->
-                TokenItemState.Content(
+                ExchangeItemUM.Content(
                     id = index.toString(),
-                    iconState = CurrencyIconState.CoinIcon(
-                        url = null,
-                        fallbackResId = R.drawable.ic_facebook_24,
-                        isGrayscale = false,
-                        shouldShowCustomBadge = false,
+                    title = stringReference(value = "OKX"),
+                    subTitle = stringReference(value = "CEX"),
+                    icon = TangemIconUM.Url(url = null, fallbackRes = R.drawable.ic_facebook_24),
+                    volumeInUsd = stringReference(value = "$67.52M"),
+                    auditLabel = AuditLabelUM(
+                        text = stringReference("Caution"),
+                        type = AuditLabelUM.Type.Warning,
                     ),
-                    titleState = TokenItemState.TitleState.Content(text = stringReference(value = "OKX")),
-                    fiatAmountState = TokenItemState.FiatAmountState.Content(text = "$67.52M"),
-                    subtitleState = TokenItemState.SubtitleState.TextContent(value = stringReference(value = "CEX")),
-                    subtitle2State = TokenItemState.Subtitle2State.LabelContent(
-                        auditLabelUM = AuditLabelUM(
-                            text = stringReference("Caution"),
-                            type = AuditLabelUM.Type.Warning,
-                        ),
-                    ),
-                    onItemClick = {},
-                    onItemLongClick = {},
                 )
             }
                 .toImmutableList(),

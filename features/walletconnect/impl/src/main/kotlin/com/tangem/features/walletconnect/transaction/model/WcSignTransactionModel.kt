@@ -6,7 +6,11 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.dapp.CheckDAppResult
+import com.domain.blockaid.models.transaction.CheckTransactionResult
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.domain.core.lce.Lce
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -37,8 +41,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -90,32 +95,41 @@ internal class WcSignTransactionModel @Inject constructor(
             sendSignatureReceivedAnalytics(useCase)
 
             TangemLogger.withTag(WC_TAG).i("Invoking use case...")
-            useCase.invoke()
-                .onEach { signState ->
+            combine(
+                useCase.invoke(),
+                // Guarantee an initial emission: some use cases expose an empty securityStatus
+                // (e.g. Solana message signing, which BlockAid does not support). Without this,
+                // combine would never produce a value and the signing UI would never render.
+                useCase.securityStatus.onStart { emit(Lce.Loading(partialContent = null)) },
+            ) { signState, securityCheck -> signState to securityCheck }
+                .collectLatest { (signState, securityCheck) ->
                     TangemLogger.withTag(WC_TAG).i("Sign state received: ${signState.javaClass.simpleName}")
 
                     if (signingIsDone(signState)) {
                         TangemLogger.withTag(WC_TAG).i("Signing is DONE, not updating UI")
-                        return@onEach
+                        return@collectLatest
                     }
 
+                    val verdict = (securityCheck as? Lce.Content)?.content
+
                     TangemLogger.withTag(WC_TAG).i("Converting to UI state...")
-                    val signTransactionUM = convertToUI(useCase, signState)
+                    val signTransactionUM = convertToUI(useCase, signState, verdict)
                     TangemLogger.withTag(WC_TAG).i("UI state created, emitting...")
                     _uiState.emit(signTransactionUM)
                 }
-                .launchIn(this)
         }
     }
 
     private fun convertToUI(
         useCase: WcMessageSignUseCase,
         signState: WcSignState<WcMessageSignUseCase.SignModel>,
+        verdict: CheckTransactionResult?,
     ): WcSignTransactionUM? {
+        // Capture the verdict for this emission in the sign callback instead of sharing mutable state.
         val actions = WcTransactionActionsUM(
             onShowVerifiedAlert = ::showVerifiedAlert,
             onDismiss = { cancel(useCase) },
-            onSign = useCase::sign,
+            onSign = { onSignClicked(verdict) },
             onCopy = { copyData(useCase.rawSdkRequest.request.params) },
         )
         return when (useCase.method) {
@@ -126,6 +140,7 @@ internal class WcSignTransactionModel @Inject constructor(
                     signModel = signState.signModel,
                     actions = actions,
                     portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
+                    validationResult = verdict?.validation,
                 ),
             )
             is WcEthMethod.MessageSign,
@@ -138,6 +153,7 @@ internal class WcSignTransactionModel @Inject constructor(
                     signModel = signState.signModel,
                     actions = actions,
                     portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
+                    validationResult = verdict?.validation,
                 ),
             )
             else -> {
@@ -167,6 +183,51 @@ internal class WcSignTransactionModel @Inject constructor(
 
     private fun showVerifiedAlert(appName: String) {
         stackNavigation.pushNew(WcTransactionRoutes.Alert(WcTransactionRoutes.Alert.Type.Verified(appName)))
+    }
+
+    // Gate signing on the BlockAid verdict, mirroring the send-transaction path: a malicious/suspicious
+    // message (e.g. an EIP-2612 Permit granting an attacker unlimited allowance) shows an alert instead
+    // of signing straight away.
+    private fun onSignClicked(verdict: CheckTransactionResult?) {
+        when (verdict?.validation) {
+            ValidationResult.UNSAFE -> showMaliciousAlert(verdict.description)
+            ValidationResult.WARNING -> showWarningAlert(verdict.description)
+            ValidationResult.SAFE,
+            ValidationResult.FAILED_TO_VALIDATE,
+            null,
+            -> useCase.sign()
+        }
+    }
+
+    private fun showMaliciousAlert(description: String?) {
+        stackNavigation.pushNew(
+            WcTransactionRoutes.Alert(
+                WcTransactionRoutes.Alert.Type.BlockAidErrorInfo(
+                    description = description,
+                    onClick = ::signFromAlert,
+                    iconType = MessageBottomSheetUM.Icon.Type.Warning,
+                    iconBgType = MessageBottomSheetUM.Icon.BackgroundType.Warning,
+                ),
+            ),
+        )
+    }
+
+    private fun showWarningAlert(description: String?) {
+        stackNavigation.pushNew(
+            WcTransactionRoutes.Alert(
+                WcTransactionRoutes.Alert.Type.BlockAidErrorInfo(
+                    description = description,
+                    onClick = ::signFromAlert,
+                    iconType = MessageBottomSheetUM.Icon.Type.Attention,
+                    iconBgType = MessageBottomSheetUM.Icon.BackgroundType.Attention,
+                ),
+            ),
+        )
+    }
+
+    private fun signFromAlert() {
+        stackNavigation.pop()
+        useCase.sign()
     }
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {

@@ -8,7 +8,18 @@ data class OnrampPaymentMethod(
     val name: String,
     val imageUrl: String,
     val type: PaymentMethodType,
-)
+    val imageUrlLight: String? = null,
+    val imageUrlDark: String? = null,
+) {
+
+    val hasThemedImages: Boolean
+        get() = imageUrlLight != null || imageUrlDark != null
+
+    /** Port of iOS imageURL(isDark:): prefer the theme-matching url, then the other themed url, then legacy [imageUrl]. */
+    fun imageUrl(isDark: Boolean): String = (if (isDark) imageUrlDark else imageUrlLight)
+        ?: (if (isDark) imageUrlLight else imageUrlDark)
+        ?: imageUrl
+}
 
 enum class PaymentMethodType(val id: String?) {
     GOOGLE_PAY(id = "google-pay"),

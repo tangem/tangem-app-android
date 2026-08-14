@@ -77,6 +77,9 @@ internal fun darkColors3() =
                 green = TangemColorPalette.Green.`50`,
                 neutral = TangemColorPalette.Neutral.`50`,
             ),
+            special = TangemColors3.Bg.Special(
+                control = TangemColorPalette.Opaque.BaseWhite.`10`,
+            ),
         ),
         icon = TangemColors3.Icon(
             primary = TangemColorPalette.Base.white,
@@ -133,11 +136,12 @@ internal fun darkColors3() =
             ),
         ),
         overlay = TangemColors3.Overlay(
-            modal = TangemColorPalette.Opaque.BaseBlack.`80`,
+            modal = TangemColorPalette.Opaque.BaseBlack.`50`,
         ),
         interaction = TangemColors3.Interaction(
             press = TangemColors3.Interaction.Press(
                 default = TangemColorPalette.Opaque.BaseWhite.`10`,
+                light = TangemColorPalette.Opaque.BaseWhite.`10`,
                 staticLight = TangemColorPalette.Opaque.BaseBlack.`10`,
                 staticDark = TangemColorPalette.Opaque.BaseWhite.`10`,
                 inverse = TangemColorPalette.Opaque.BaseBlack.`10`,
@@ -223,14 +227,14 @@ internal fun darkColors3() =
         ),
         material = TangemColors3.Material(
             tint = TangemColors3.Material.Tint(
-                glass = Color(0x662C2C2C),
+                glass = Color(0x991B1B1B),
                 blur = Color(0x00000000),
                 solid = Color(0x1AFFFFFF),
             ),
             fill = TangemColors3.Material.Fill(
                 glass = Color(0x00000000),
                 blur = Color(0x1AFFFFFF),
-                solid = Color(0xE62C2C2C),
+                solid = TangemColorPalette.Neutral.`80`,
             ),
             lighten = TangemColors3.Material.Lighten(
                 glass = Color(0x33181818),
@@ -243,6 +247,60 @@ internal fun darkColors3() =
                 solid = Color(0x00000000),
             ),
             border = TangemColors3.Material.Border(
+                start = Color(0x33FFFFFF),
+                mid = Color(0x00FFFFFF),
+                end = Color(0x1AFFFFFF),
+            ),
+        ),
+        materialInverted = TangemColors3.MaterialInverted(
+            tint = TangemColors3.MaterialInverted.Tint(
+                glass = Color(0xB3FFFFFF),
+                blur = Color(0x00000000),
+                solid = Color(0x1AFFFFFF),
+            ),
+            fill = TangemColors3.MaterialInverted.Fill(
+                glass = Color(0x00000000),
+                blur = Color(0xB3FFFFFF),
+                solid = Color(0xF2FFFFFF),
+            ),
+            lighten = TangemColors3.MaterialInverted.Lighten(
+                glass = Color(0x33FFFFFF),
+                blur = Color(0x00000000),
+                solid = Color(0x00000000),
+            ),
+            softLight = TangemColors3.MaterialInverted.SoftLight(
+                glass = Color(0x1AFFFFFF),
+                blur = Color(0x00000000),
+                solid = Color(0x00000000),
+            ),
+            border = TangemColors3.MaterialInverted.Border(
+                start = Color(0x33FFFFFF),
+                mid = Color(0x00FFFFFF),
+                end = Color(0x1AFFFFFF),
+            ),
+        ),
+        materialModal = TangemColors3.MaterialModal(
+            tint = TangemColors3.MaterialModal.Tint(
+                glass = Color(0x662C2C2C),
+                blur = Color(0x00000000),
+                solid = Color(0x1AFFFFFF),
+            ),
+            fill = TangemColors3.MaterialModal.Fill(
+                glass = Color(0x00000000),
+                blur = Color(0x1AFFFFFF),
+                solid = Color(0xE62C2C2C),
+            ),
+            lighten = TangemColors3.MaterialModal.Lighten(
+                glass = Color(0x33181818),
+                blur = Color(0x00000000),
+                solid = Color(0x00000000),
+            ),
+            softLight = TangemColors3.MaterialModal.SoftLight(
+                glass = Color(0x1A000000),
+                blur = Color(0x00000000),
+                solid = Color(0x00000000),
+            ),
+            border = TangemColors3.MaterialModal.Border(
                 start = Color(0x33FFFFFF),
                 mid = Color(0x00FFFFFF),
                 end = Color(0x1AFFFFFF),

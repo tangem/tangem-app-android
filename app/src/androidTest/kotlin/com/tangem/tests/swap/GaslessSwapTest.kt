@@ -295,6 +295,81 @@ class GaslessSwapTest : BaseTestCase() {
         }
     }
 
+    @AllureId("10211")
+    @DisplayName("Gasless Swap: CEX swap pays the fee in the token when the network coin balance is zero")
+    @Test
+    fun checkCexGaslessSwapWithZeroNativeBalanceTest() {
+        val hotWalletTokensState = "PolygonUSDCHotWallet"
+        val receiveTokenName = "Polygon"
+        val providerName = "Changelly"
+        val nativeBalanceScenario = "polygon_coin_balance"
+        val zeroBalanceState = "ZeroBalance"
+        val exchangeStatusScenario = "exchange_status_provider"
+        val changellyStatusState = "Changelly"
+        val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(nativeBalanceScenario)
+                resetWireMockScenarioState(exchangeStatusScenario)
+            }
+        ).run {
+            step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletTokensState)
+            }
+            step("Set WireMock scenario '$QUOTES_API_SCENARIO' to '$quotesState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesState)
+            }
+            step("Set WireMock scenario '$assetsScenarioName' to '$assetsExchangeEnabledState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsExchangeEnabledState)
+            }
+            step("Set WireMock scenario '$nativeBalanceScenario' to '$zeroBalanceState'") {
+                setWireMockScenarioState(scenarioName = nativeBalanceScenario, state = zeroBalanceState)
+            }
+            step("Set WireMock scenario '$exchangeStatusScenario' to '$changellyStatusState'") {
+                setWireMockScenarioState(scenarioName = exchangeStatusScenario, state = changellyStatusState)
+            }
+
+            step("Open the swap amount screen for '$tokenName' -> '$receiveTokenName' on an existing hot wallet") {
+                openSwapAmountScreen(
+                    fromTokenName = tokenName,
+                    receiveTokenName = receiveTokenName,
+                    amount = inputAmount,
+                    seedPhrase = SVS_SEED_PHRASE_12,
+                )
+            }
+            step("Assert the recommended provider block is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
+                }
+            }
+            step("Assert the network fee is paid in '$currencySymbol', not the zero-balance network coin") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { feeBlockCurrency(currencySymbol).assertIsDisplayed() }
+                }
+            }
+            step("Confirm the swap by holding the 'Swap' button and sign") {
+                confirmSwapByHolding()
+            }
+            step("Assert the 'Swap in progress' screen is displayed (transaction sent to provider)") {
+                onSwapSuccessScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { title.assertIsDisplayed() }
+                }
+            }
+            step("Click on 'Close' button") {
+                onSwapSuccessScreen { closeButton.performClick() }
+            }
+            step("Assert 'Express status' item with title '$expressStatusItemTitle' is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
     @AllureId("5118")
     @DisplayName("Gasless Swap: insufficient stablecoin balance to cover the fee shows an error and blocks the swap")
     @Test

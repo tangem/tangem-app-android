@@ -1,6 +1,7 @@
 package com.tangem.data.pay.store
 
 import android.content.Context
+import androidx.datastore.preferences.core.MutablePreferences
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -8,6 +9,7 @@ import com.tangem.data.pay.entity.WithdrawStoreData
 import com.tangem.data.pay.util.WithdrawStateConverter
 import com.tangem.data.pay.util.WithdrawStoreDataConverter
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
@@ -34,6 +36,7 @@ private const val WITHDRAW_ORDER_ID_KEY = "tangem_pay_withdraw_order_id_key"
 internal class DefaultTangemPayStorage @Inject constructor(
     @ApplicationContext applicationContext: Context,
     @NetworkMoshi moshi: Moshi,
+    @SdkMoshi private val sdkMoshi: Moshi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
 ) : TangemPayStorage {
@@ -57,7 +60,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
         Types.newParameterizedType(Map::class.java, String::class.java, listType)
     }
     private val adapter: JsonAdapter<Map<String, List<WithdrawStoreData>>> by lazy {
-        appPreferencesStore.moshi.adapter(mapType)
+        sdkMoshi.adapter(mapType)
     }
 
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
@@ -70,10 +73,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
             key = PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId),
         )
             .takeIf { !it.isNullOrEmpty() }
-    }
-
-    override suspend fun clearCustomerWalletAddress(userWalletId: UserWalletId) {
-        appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
     }
 
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) =
@@ -101,12 +100,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
                     tokens
                 }
             }
-        }
-    }
-
-    override suspend fun clearAuthTokens(customerWalletAddress: String) {
-        withContext(dispatcherProvider.io) {
-            secureStorage.delete(createAuthTokensKey(customerWalletAddress))
         }
     }
 
@@ -218,16 +211,31 @@ internal class DefaultTangemPayStorage @Inject constructor(
     }
 
     override suspend fun deleteActiveWithdrawOrder(userWalletId: UserWalletId) {
-        appPreferencesStore.editData { mutablePreferences ->
+        appPreferencesStore.editData { it.deleteActiveWithdrawOrderInternal(userWalletId) }
+    }
+
+    private fun MutablePreferences.deleteActiveWithdrawOrderInternal(userWalletId: UserWalletId) {
+        val mutablePreferences = this
+
+        // make as context parameter to avoid shadowing the outer `this` reference
+        with(appPreferencesStore) {
             val orders = mutablePreferences.getObjectMap<String>(
                 PreferencesKeys.TANGEM_PAY_ACTIVE_WITHDRAW_ORDERS_KEY,
             )
                 .minus(createWithdrawOrderIdKey(userWalletId))
+
             mutablePreferences.setObjectMap(
                 key = PreferencesKeys.TANGEM_PAY_ACTIVE_WITHDRAW_ORDERS_KEY,
                 value = orders,
             )
         }
+    }
+
+    private fun MutablePreferences.deleteWithdrawOrdersInternal(userWalletId: UserWalletId) {
+        val walletKey = createWithdrawOrderIdKey(userWalletId)
+        val currentMap = this[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY]?.let(adapter::fromJson).orEmpty()
+
+        this[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY] = adapter.toJson(currentMap - walletKey)
     }
 
     override suspend fun deleteWithdrawOrder(userWalletId: UserWalletId, orderId: String) {
@@ -287,28 +295,36 @@ internal class DefaultTangemPayStorage @Inject constructor(
         return appPreferencesStore.getSyncOrNull(key) == true
     }
 
-    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) {
-        withContext(dispatcherProvider.io) {
-            secureStorage.delete(createAuthTokensKey(customerWalletAddress))
+    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String?) {
+        if (customerWalletAddress != null) {
+            withContext(dispatcherProvider.io) {
+                secureStorage.delete(createAuthTokensKey(customerWalletAddress))
+            }
         }
-        appPreferencesStore.store(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId), false)
-        appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
-        appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
-        appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), false)
-        appPreferencesStore.store(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId), false)
-        // Clear the withdraw order hints together with the rest of the cache.
-        deleteActiveWithdrawOrder(userWalletId)
-        clearWithdrawOrders(userWalletId)
+
+        // Keys are removed, not overwritten with empty values: `checkCustomerWalletResult` is a nullable
+        // tri-state where `false` is a cached "this wallet has no Tangem Pay" that short-circuits the
+        // network check, so writing it would keep the block hidden instead of forcing a re-check. Doing it
+        // in a single transaction also keeps a crash from leaving half of the wallet's data behind.
+        appPreferencesStore.editData { preferences ->
+            if (customerWalletAddress != null) {
+                preferences.remove(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress))
+                preferences.remove(PreferencesKeys.getTangemPayVirtualAccountOrderIdKey(customerWalletAddress))
+                preferences.remove(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress))
+                preferences.remove(PreferencesKeys.getTangemPayCashbackDeactivationDismissedKey(customerWalletAddress))
+            }
+            preferences.remove(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId))
+            preferences.remove(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId))
+            preferences.remove(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId))
+            // Both withdraw stores live inside a single preference holding a map, so the wallet's entry is
+            // removed from it rather than the key itself.
+            preferences.deleteActiveWithdrawOrderInternal(userWalletId)
+            preferences.deleteWithdrawOrdersInternal(userWalletId)
+        }
     }
 
-    private suspend fun clearWithdrawOrders(userWalletId: UserWalletId) {
-        appPreferencesStore.editData { prefs ->
-            val walletKey = createWithdrawOrderIdKey(userWalletId)
-            val currentMap = prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY]?.let(adapter::fromJson)
-                .orEmpty()
-            val updatedMap = currentMap - walletKey
-            prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY] = adapter.toJson(updatedMap)
-        }
+    override suspend fun clearIsTangemPayDeactivated(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { it.remove(PreferencesKeys.getTangemPayDeactivatedKey(userWalletId)) }
     }
 
     private fun createAuthTokensKey(address: String): String = "${AUTH_TOKENS_DEFAULT_KEY}_$address"

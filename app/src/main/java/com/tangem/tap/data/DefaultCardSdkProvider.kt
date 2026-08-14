@@ -1,5 +1,7 @@
 package com.tangem.tap.data
 
+import com.tangem.datasource.api.common.config.TangemTech
+
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -16,8 +18,7 @@ import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.utils.AddHeadersInterceptor
@@ -28,6 +29,7 @@ import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
+import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -47,6 +49,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val apiConfigsManager: ApiConfigsManager,
+    private val firmwareFeatureToggles: FirmwareFeatureToggles,
     appInfoProvider: AppInfoProvider,
     authProvider: AuthProvider,
 ) : CardSdkProvider, CardSdkOwner {
@@ -62,7 +65,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val mutableManager = apiConfigsManager as? MutableApiConfigsManager
 
         mutableManager?.addListener(
-            object : MutableApiConfigsManager.ApiConfigEnvChangeListener(id = ApiConfig.ID.TangemTech) {
+            object : MutableApiConfigsManager.ApiConfigEnvChangeListener(id = TangemTech.ID) {
                 override fun onChange(environmentConfig: ApiEnvironmentConfig) {
                     holder?.sdk?.config?.tangemApiBaseUrl = environmentConfig.baseUrl
                 }
@@ -70,7 +73,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         )
 
         val apiEnvironment = Provider {
-            apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemTech).environment
+            apiConfigsManager.getEnvironmentConfig(TangemTech.ID).environment
         }
         val platformHeaders = RequestHeader.AppVersionPlatformHeaders(appInfoProvider)
         val apiKeyHeader = RequestHeader.TangemApiKeyHeader(authProvider, apiEnvironment)
@@ -147,6 +150,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     }
 
     private fun initialize(activity: FragmentActivity) {
+        val config = createConfig()
         val secureStorage = SecureStorage.create(activity)
         val nfcManager = TangemSdk.initNfcManager(activity)
         val authenticationManager = TangemSdk.initAuthenticationManager(activity)
@@ -165,7 +169,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             keystoreManager = keystoreManager,
             wordlist = Wordlist.getWordlist(),
             config = config.apply {
-                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech)
+                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = TangemTech.ID)
                 tangemApiBaseUrl = apiConfig.baseUrl
             },
         )
@@ -216,18 +220,24 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val authenticationManager: AuthenticationManager,
     )
 
-    private companion object {
-
-        val config = Config(
+    private fun createConfig(): Config {
+        return Config(
             linkedTerminal = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.entries.toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
+                maxFirmwareVersion = if (firmwareFeatureToggles.isNewFirmwareSupportEnabled) {
+                    FirmwareVersion(major = 8, minor = 58)
+                } else {
+                    FirmwareVersion(major = 6, minor = 33)
+                },
                 batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
                     items = setOf("0027", "0030", "0031", "0035"),
                 ),
             ),
         )
+    }
+
+    private companion object {
 
         val errorParams = mapOf(
             "Category" to "Tangem SDK",

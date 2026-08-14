@@ -1,11 +1,17 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 
-internal class BlockAid(
+class BlockAid(
     private val environmentConfig: EnvironmentConfig,
 ) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
 
@@ -27,4 +33,9 @@ internal class BlockAid(
             put("content-type", ProviderSuspend { "application/json" })
         },
     )
+
+    companion object {
+        const val KEY = "BlockAid"
+        val ID = ApiConfig.ID(KEY)
+    }
 }
