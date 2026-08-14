@@ -31,7 +31,6 @@ dependencies {
     /** Features api */
     api(projects.features.tangempay.details.api)
     api(projects.features.tokenRecieve.api)
-    api(projects.features.tokendetails.api)
     api(projects.features.promoBanners.api)
     api(projects.features.virtualAccounts.details.api)
 
