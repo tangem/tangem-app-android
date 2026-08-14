@@ -138,6 +138,14 @@ internal class AccountListTest {
             ),
             CreateTestModel(
                 accounts = listOf(
+                    Account.CryptoPortfolio.createMainAccount(userWalletId),
+                    Account.Prediction(userWalletId),
+                    Account.Prediction(userWalletId),
+                ),
+                expected = AccountList.Error.ExceedsMaxPredictionAccountsCount.left(),
+            ),
+            CreateTestModel(
+                accounts = listOf(
                     createAccount(derivationIndex = 1),
                 ),
                 expected = AccountList.Error.MainAccountNotFound.left(),
