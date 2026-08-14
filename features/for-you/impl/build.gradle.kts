@@ -54,12 +54,11 @@ dependencies {
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.markets.models)
-    implementation(projects.core.analytics.models)
     implementation(projects.core.pagination)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
-    implementation(projects.libs.crypto)
     implementation(projects.domain.yieldSupply.models)
+    implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
 
     /** Compose */
