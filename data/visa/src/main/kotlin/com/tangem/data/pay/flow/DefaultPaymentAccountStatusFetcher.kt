@@ -23,7 +23,6 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -64,7 +63,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
-    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
 ) : PaymentAccountStatusFetcher {
@@ -357,6 +355,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val cryptoBalance = cryptoBalance
         val hasCardData = cards.isNotEmpty() && productInstances.isNotEmpty()
         val isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled
+        val multichainNetworkStatuses by lazy {
+            if (tangemPayFeatureToggles.isAccountMultichainEnabled) {
+                tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
+            } else {
+                emptyList()
+            }
+        }
         return when {
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.ACTUAL,
@@ -376,6 +381,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                         availableForWithdrawal = availableForWithdrawal.orZero(),
                     ),
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                    networks = multichainNetworkStatuses,
                     fiatRate = quotesData?.fiatRate,
                     error = null,
                 )
@@ -386,6 +392,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     cryptoBalance = cryptoBalance,
                     fiatRate = quotesData?.fiatRate,
                     customerId = customerId,
+                    networks = multichainNetworkStatuses,
                 )
             else -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
@@ -403,6 +410,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
         customerId: String,
         fiatRate: BigDecimal?,
+        networks: List<PaymentNetworkStatus>,
     ): PaymentAccountStatusValue {
         val cardsById = cards.associateBy { it.cardId }
         val tangemPayCards = cardProductInstances.mapNotNull { productInstance ->
@@ -456,6 +464,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             customerId = customerId,
             depositAddress = cryptoBalance.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+            networks = networks,
             fiatRate = fiatRate,
             cards = allCards,
             balance = PaymentAccountStatusValue.Balance(
@@ -475,12 +484,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638). Gated by the feature toggle.
+     * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638).
      *
      * Resolution order:
      * 1. A product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted VA order id
-     *    (idempotent) and eagerly fetches its bank credentials ([VirtualAccountOnramp.Available], or
-     *    [VirtualAccountOnramp.BankCredentialsError] on failure).
+     *    (idempotent) and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank credentials are
+     *    fetched on demand by the deposit screen, not here.
      * 2. Otherwise, a VA order id is persisted locally — checks its status via `getOrderData`:
      *    NEW/PROCESSING/COMPLETED (or a transient lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
      *    or a [VisaApiError.OrderNotFound] (the persisted id went stale) clears the persisted id and falls through
@@ -489,26 +498,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      *    the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
      */
     private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp? {
-        if (!virtualAccountFeatureToggles.isVaMvp0Enabled) return null
-
         val accountInstance = productInstances.firstOrNull {
             it.specificationDataType == SpecificationDataType.ACCOUNT
         }
         if (accountInstance != null) {
             // Order provisioned into an ACCOUNT product instance — drop the in-flight order hint (idempotent).
             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
-            return onboardingRepository.getBankCredentials(userWalletId, accountInstance.id).fold(
-                ifLeft = { error ->
-                    logger.e("getBankCredentials failed for ${accountInstance.id}: $error")
-                    VirtualAccountOnramp.BankCredentialsError
-                },
-                ifRight = { credentials ->
-                    VirtualAccountOnramp.Available(
-                        productInstanceId = accountInstance.id,
-                        bankCredentials = credentials,
-                    )
-                },
-            )
+            return VirtualAccountOnramp.Available(productInstanceId = accountInstance.id)
         }
 
         val vaOrderId = onboardingRepository.getVirtualAccountOrderId(userWalletId)

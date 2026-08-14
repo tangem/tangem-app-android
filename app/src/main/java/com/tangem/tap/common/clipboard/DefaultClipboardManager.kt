@@ -17,7 +17,11 @@ internal class DefaultClipboardManager(private val clipboardManager: AndroidClip
             if (isSensitive) description.setAsSensitive()
         }
 
-        clipboardManager.setPrimaryClip(clip)
+        runCatching {
+            clipboardManager.setPrimaryClip(clip)
+        }.onFailure {
+            TangemLogger.e("Error", it)
+        }
     }
 
     @Suppress("UseIsNullOrEmpty")

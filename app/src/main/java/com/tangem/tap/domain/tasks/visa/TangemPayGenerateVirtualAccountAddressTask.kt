@@ -48,8 +48,10 @@ class TangemPayGenerateVirtualAccountAddressTask @AssistedInject constructor(
 
         val address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey = extendedPublicKey)
 
+        val publicKey =
+            wallet.publicKey ?: return CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError)
         val derivedKeys = mapOf(
-            wallet.publicKey.toMapKey() to ExtendedPublicKeysMap(
+            publicKey.toMapKey() to ExtendedPublicKeysMap(
                 mapOf(VisaUtilities.virtualAccountDerivationPath to extendedPublicKey),
             ),
         )
@@ -64,8 +66,10 @@ class TangemPayGenerateVirtualAccountAddressTask @AssistedInject constructor(
         wallet: CardWallet,
     ): CompletionResult<ExtendedPublicKey> {
         val deferred = CompletableDeferred<CompletionResult<ExtendedPublicKey>>()
+        val publicKey =
+            wallet.publicKey ?: return CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError)
         val derivationTask = DeriveWalletPublicKeyTask(
-            walletPublicKey = wallet.publicKey,
+            walletPublicKey = publicKey,
             derivationPath = VisaUtilities.virtualAccountDerivationPath,
         )
 
