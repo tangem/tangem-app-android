@@ -1896,7 +1896,7 @@
   <string name="tangempay_bank_transfer_show_details">Показать детали</string>
   <string name="tangempay_bank_transfer_success_subtitle">Это может занять некоторое время</string>
   <string name="tangempay_bank_transfer_success_title">Подготовка ваших банковских реквизитов</string>
-  <string name="tangempay_bank_transfer_swift_warning">Пополнение только через ACH или FedWire. Переводы SWIFT будут возвращены.</string>
+  <string name="tangempay_bank_transfer_swift_warning">SWIFT-переводы не принимаются и будут возвращены</string>
   <string name="tangempay_cancel_kyc">Скрыть KYC с главной</string>
   <string name="tangempay_card_default_name">Карта Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
@@ -2164,7 +2164,7 @@
   <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Получайте фиатные USD через ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Получайте фиатные USD через ACH</string>
   <string name="tangempay_topup_bank_transfer_title">Банковский перевод</string>
   <string name="tangempay_topup_receive_body">Отправьте USDC Polygon на адрес вашего аккаунта</string>
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>
