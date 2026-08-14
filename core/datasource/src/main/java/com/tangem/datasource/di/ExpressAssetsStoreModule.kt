@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.api.express.models.response.Asset
-import com.tangem.datasource.local.datastore.RuntimeDataStore
 import com.tangem.datasource.local.token.DefaultExpressAssetsStore
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
@@ -40,7 +40,7 @@ internal object ExpressAssetsStoreModule {
                 produceFile = { context.dataStoreFile("express_assets") },
                 scope = appScope,
             ),
-            runtimeStore = RuntimeDataStore(),
+            runtimeStore = RuntimeSharedMapStore(),
         )
     }
 }

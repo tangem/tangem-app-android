@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
@@ -58,7 +59,9 @@ internal class TangemPayCashbackModel @Inject constructor(
     private val accrualsConverter = TangemPayCashbackAccrualsConverter(onDocClick = urlOpener::openUrl)
 
     val detailsSheet: StateFlow<TangemPayCashbackDetailsUM>
-        field = MutableStateFlow(detailsConverter.convert(emptyList()))
+        field = MutableStateFlow(
+            detailsConverter.convert(tiers = emptyList(), payoutCurrency = null, monthlyCap = null),
+        )
 
     val accrualsSheet: StateFlow<TangemPayCashbackAccrualsUM>
         field = MutableStateFlow(accrualsConverter.convert(emptyList()))
@@ -97,6 +100,8 @@ internal class TangemPayCashbackModel @Inject constructor(
             val history = if (summary is CashbackSummary.Enabled) loadHistory() else null
             val plan = planDeferred.await()
             val tiers = promotions?.let(tiersConverter::convert).orEmpty()
+            val payoutCurrency = (summary as? CashbackSummary.Enabled)?.cashback?.payoutCurrency
+                ?: TangemPayCurrencyFactory.TOKEN_NAME
 
             uiState.value = TangemPayCashbackScreenUM.Content(
                 onCloseClick = router::pop,
@@ -109,7 +114,11 @@ internal class TangemPayCashbackModel @Inject constructor(
                     ?.let { additionalCashbackConverter.convert(it.additionalCashback) }
                     ?.takeIf { it.items.isNotEmpty() },
             )
-            detailsSheet.value = detailsConverter.convert(tiers)
+            detailsSheet.value = detailsConverter.convert(
+                tiers = tiers,
+                payoutCurrency = payoutCurrency,
+                monthlyCap = promotions?.monthlyCap,
+            )
             accrualsSheet.value = accrualsConverter.convert(docsDeferred.await())
         }
     }

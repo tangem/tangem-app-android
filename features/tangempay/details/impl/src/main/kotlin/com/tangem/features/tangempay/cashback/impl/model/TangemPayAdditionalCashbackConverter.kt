@@ -1,6 +1,9 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayAdditionalCashbackUM
 import com.tangem.utils.converter.Converter
@@ -10,7 +13,6 @@ internal class TangemPayAdditionalCashbackConverter(
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
 ) : Converter<List<CashbackPromotions.AdditionalCashback>, TangemPayAdditionalCashbackUM> {
 
-    // TODO([REDACTED_TASK_KEY]): move hardcoded strings to string resources
     override fun convert(value: List<CashbackPromotions.AdditionalCashback>): TangemPayAdditionalCashbackUM {
         return TangemPayAdditionalCashbackUM(
             items = value.map { promo ->
@@ -30,7 +32,10 @@ internal class TangemPayAdditionalCashbackConverter(
             TangemPayAdditionalCashbackUM.Badge.Permanent
         } else {
             TangemPayAdditionalCashbackUM.Badge.Until(
-                text = stringReference("Until ${dateFormatter.formatNumericDate(expiry)}"),
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_additional_until,
+                    formatArgs = wrappedList(dateFormatter.formatNumericDate(expiry)),
+                ),
             )
         }
     }

@@ -116,7 +116,7 @@ internal class ChooseTokenModel @Inject constructor(
     )
 
     init {
-        if (bridge.settings.chooserBlock is ChooserBlock.Market) {
+        if (bridge.settings.chooserBlock == ChooserBlock.Market) {
             modelScope.launch {
                 delay(MARKETS_INITIAL_LOAD_DELAY)
                 marketBlockDelegate.loadDefaultMarkets()
