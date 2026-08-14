@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
+    implementation(projects.core.pagination)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
@@ -62,5 +63,6 @@ dependencies {
     api(projects.core.utils)
 
     /** Tests */
+    testImplementation(projects.core.pagination)
     testImplementation(projects.test.core)
 }
