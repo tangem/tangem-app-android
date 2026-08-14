@@ -3,7 +3,7 @@ package com.tangem.domain.jointaccount.derivation
 import com.tangem.crypto.hdWallet.DerivationPath
 
 /**
- * The joint account owner key derivation path. Must match others platforms — pinned by a unit test.
+ * The joint account owner key derivation path. Must match other platforms — pinned by a unit test.
  * The index tells the owner keys of a participant's joint accounts apart.
  */
 const val JOINT_ACCOUNT_OWNER_DERIVATION_PATH_TEMPLATE: String = "m/44'/60'/888888'/0/%d"
