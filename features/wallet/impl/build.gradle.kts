@@ -132,6 +132,7 @@ dependencies {
     api(projects.features.biometry.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
+    api(projects.features.jointAccount.main.api)
     api(projects.features.promoBanners.api)
     api(projects.features.polymarket.api)
     api(projects.features.pushNotifications.api)
