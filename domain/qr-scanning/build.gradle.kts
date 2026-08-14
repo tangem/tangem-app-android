@@ -28,4 +28,8 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.qrScanning.models)
     // endregion
+
+    // region Test
+    testImplementation(projects.test.core)
+    // endregion
 }
