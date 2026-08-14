@@ -97,9 +97,10 @@ internal fun customerTariffPlan(
     plan: TangemPayTariffPlan = tariffPlan(),
     nextBillingAt: DateTime? = null,
     pendingPlan: TangemPayTariffPlan? = null,
+    source: TangemPayCustomerTariffPlan.Source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
 ): TangemPayCustomerTariffPlan = TangemPayCustomerTariffPlan(
     status = status,
-    source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
+    source = source,
     plan = plan,
     nextBillingAt = nextBillingAt,
     pendingPlan = pendingPlan,

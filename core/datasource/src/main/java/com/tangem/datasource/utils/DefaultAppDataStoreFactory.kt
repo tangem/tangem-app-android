@@ -1,33 +1,45 @@
 package com.tangem.datasource.utils
 
+import android.content.Context
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.dataStoreFile
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
+import com.tangem.utils.coroutines.AppCoroutineScope
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.KSerializer
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
- * Creates [DataStore]s that recover from on-disk corruption instead of crashing, regardless of the [Serializer]
- * backing them (e.g. [MoshiDataStoreSerializer] or [KotlinxDataStoreSerializer]).
+ * Default [AppDataStoreFactory].
  *
  * When the persisted file cannot be parsed, the [Serializer.readFrom] throws a [CorruptionException]; the store then
  * replaces the corrupted file with [Serializer.defaultValue] and reports the failure to [analyticsExceptionHandler]
  * as a non-fatal event enriched with diagnostics (file name, size, corruption kind and a short head sample), so its
  * frequency and the affected file stay observable.
  */
-@Singleton
-class AppDataStoreFactory @Inject constructor(
+internal class DefaultAppDataStoreFactory @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
-) {
+    private val appScope: AppCoroutineScope,
+) : AppDataStoreFactory {
 
-    fun <T> create(serializer: Serializer<T>, scope: CoroutineScope, produceFile: () -> File): DataStore<T> {
+    override fun <T> create(defaultValue: T, serializer: KSerializer<T>, fileName: String): DataStore<T> {
+        return create(
+            serializer = KotlinxDataStoreSerializer(defaultValue = defaultValue, serializer = serializer),
+            scope = appScope,
+            produceFile = { context.dataStoreFile(fileName) },
+        )
+    }
+
+    override fun <T> create(serializer: Serializer<T>, scope: CoroutineScope, produceFile: () -> File): DataStore<T> {
         val file = produceFile()
         return DataStoreFactory.create(
             serializer = serializer,
