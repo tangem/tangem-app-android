@@ -14,9 +14,12 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
@@ -27,6 +30,7 @@ import com.tangem.features.send.send.SendModelTestBase
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -327,6 +331,78 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     }
 
     @Nested
+    inner class AddTokenToWallet {
+
+        @BeforeEach
+        fun stubSuccessfulAdd() {
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns "txHash".right()
+            coEvery {
+                manageCryptoCurrenciesUseCase(any(), any<CryptoCurrency>(), any(), any())
+            } returns Unit.right()
+        }
+
+        @Test
+        fun `GIVEN own accounts on several EVM networks WHEN send succeeds THEN token added on its own network`() =
+            runTest {
+                // Arrange — every EVM account shares one address, and the foreign network is listed first,
+                // so matching by address alone would resolve Polygon for a token that lives on Ethereum.
+                val networkSlot = slot<Network>()
+                every { currenciesRepository.createTokenCurrency(any(), capture(networkSlot)) } returns ethereumUsdc
+                val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+                every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+                createSendConfirmModel(this, tokenParams(persistentListOf(polygonRecipient, ethereumRecipient)))
+                advanceUntilIdle()
+
+                // Act
+                resultFlow.tryEmit(true)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(networkSlot.captured).isEqualTo(ethereumUsdc.network)
+            }
+
+        @Test
+        fun `GIVEN own account only on a foreign network WHEN send succeeds THEN token is not added`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            createSendConfirmModel(this, tokenParams(persistentListOf(polygonRecipient)))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { manageCryptoCurrenciesUseCase(any(), any<CryptoCurrency>(), any(), any()) }
+        }
+
+        private fun tokenParams(destinationWallets: ImmutableList<DestinationRecipientListUM>) =
+            MutableParamsContainer(
+                defaultSendConfirmParams(
+                    state = contentState(
+                        fee = realFee(),
+                        transactionFeeExtended = null,
+                        destinationWallets = destinationWallets,
+                    ),
+                    cryptoCurrencyStatus = com.tangem.features.send.loadedStatus(ethereumUsdc),
+                    feeCryptoCurrencyStatus = loadedFeeStatus,
+                ),
+            )
+
+        private fun recipient(network: Network) = DestinationRecipientListUM(
+            id = network.rawId,
+            address = DESTINATION_ADDRESS,
+            network = network,
+            accountId = AccountId.forMainCryptoPortfolio(testUserWalletId),
+        )
+
+        private val ethereumRecipient get() = recipient(ethereumUsdc.network)
+
+        private val polygonRecipient get() = recipient(polygonUsdc.network)
+    }
+
+    @Nested
     inner class UpdateEditedState {
 
         @Test
@@ -424,6 +500,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         transactionFeeExtended: TransactionFeeExtended?,
         enteredAmount: BigDecimal = BigDecimal.ONE,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus = loadedFeeStatus,
+        destinationWallets: ImmutableList<DestinationRecipientListUM> = persistentListOf(),
     ): SendUM {
         val amount = mockk<AmountState.Data>(relaxed = true) {
             every { amountTextField.cryptoAmount.value } returns enteredAmount
@@ -431,9 +508,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             every { isIgnoreReduce } returns false
         }
         val destination = mockk<DestinationUM.Content>(relaxed = true) {
-            every { addressTextField.actualAddress } returns "destinationAddr"
+            every { addressTextField.actualAddress } returns DESTINATION_ADDRESS
             every { memoTextField } returns null
-            every { wallets } returns persistentListOf()
+            every { wallets } returns destinationWallets
         }
         val extraInfo = mockk<FeeExtraInfo>(relaxed = true) {
             every { this@mockk.transactionFeeExtended } returns transactionFeeExtended
@@ -456,6 +533,19 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
     private val loadedFeeStatus: CryptoCurrencyStatus
         get() = com.tangem.features.send.loadedStatus(testCryptoCurrency)
+
+    /** Real USDC contracts — the two that got mixed across networks in [REDACTED_TASK_KEY]. */
+    private val ethereumUsdc: CryptoCurrency.Token = MockCryptoCurrencyFactory().createToken(
+        blockchain = Blockchain.Ethereum,
+        id = "usd-coin",
+        contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    )
+
+    private val polygonUsdc: CryptoCurrency.Token = MockCryptoCurrencyFactory().createToken(
+        blockchain = Blockchain.Polygon,
+        id = "usd-coin",
+        contractAddress = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+    )
 
     private val tronUsdt: CryptoCurrency.Token = MockCryptoCurrencyFactory().createToken(
         blockchain = Blockchain.Tron,
@@ -501,6 +591,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     private companion object {
         val TRON_BALANCE: BigDecimal = BigDecimal("24.929183")
         val TRON_GASLESS_FEE: BigDecimal = BigDecimal("2.51")
+        const val DESTINATION_ADDRESS = "destinationAddr"
     }
 
     // endregion
