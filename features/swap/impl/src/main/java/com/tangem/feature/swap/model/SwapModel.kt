@@ -96,6 +96,7 @@ import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapProviderResolver
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
+import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -177,6 +178,7 @@ internal class SwapModel @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val messageSender: UiMessageSender,
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
+    private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
@@ -307,6 +309,9 @@ internal class SwapModel @Inject constructor(
 
     private var preselectedFromCurrency: CryptoCurrency? = null
     private var preselectedToCurrency: CryptoCurrency? = null
+
+    /** Empty until resolved, and while empty the withdraw selector falls back to every payment-account token. */
+    private var withdrawableCurrencyIds: Set<CryptoCurrency.ID> = emptySet()
 
     private var pendingDeeplinkProviderId: String? = params.providerId
 
@@ -491,7 +496,7 @@ internal class SwapModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
 
-            val (fromSwapCurrencyStatus, toSwapCurrencyStatus) = initialCurrenciesResolver(
+            val (resolvedFromCurrencyStatus, resolvedToCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
                 initialCryptoCurrency = initialCryptoCurrency,
                 swapCurrencyPosition = params.fromCurrencyPosition,
@@ -499,6 +504,16 @@ internal class SwapModel @Inject constructor(
                 initialToCryptoCurrency = params.toCryptoCurrency,
                 applyAccountTopUpFromPriority = swapFeatureToggles.isAccountSwapFlowEnabled,
             )
+
+            if (isTangemPayWithdrawFlow) {
+                withdrawableCurrencyIds = accountUnderlyingCurrencies.getWithdrawable(params.userWalletId)
+                    .mapTo(mutableSetOf()) { it.currency.id }
+            }
+
+            val fromSwapCurrencyStatus = resolvedFromCurrencyStatus
+            val toSwapCurrencyStatus = fromSwapCurrencyStatus
+                ?.let { resolveAccountTopUpDestination(from = it, currentTo = resolvedToCurrencyStatus) }
+                ?: resolvedToCurrencyStatus
 
             preselectedFromCurrency = fromSwapCurrencyStatus?.currency
             preselectedToCurrency = toSwapCurrencyStatus?.currency
@@ -596,11 +611,15 @@ internal class SwapModel @Inject constructor(
         }
 
         val (fromSwapCurrencyStatus, toSwapCurrencyStatus) = if (isFromDirection) {
-            SwapCurrencyStatus(
+            val selectedFrom = SwapCurrencyStatus(
                 userWallet = selectedUserWallet,
                 status = selectedCurrencyStatus,
                 account = selectedAccount,
-            ) to dataState.toSwapCurrencyStatus
+            )
+            selectedFrom to resolveAccountTopUpDestination(
+                from = selectedFrom,
+                currentTo = dataState.toSwapCurrencyStatus,
+            )
         } else {
             dataState.fromSwapCurrencyStatus to SwapCurrencyStatus(
                 userWallet = selectedUserWallet,
@@ -2376,13 +2395,15 @@ internal class SwapModel @Inject constructor(
         }
 
         val fromFilter = if (isTangemPayWithdrawFlow) {
-            // Show every payment-account token, including the currently-selected FROM: unlike the regular
-            // baseFilter (which excludes the already-picked FROM/TO so the user can't pick the same token
-            // twice), the withdraw FROM selector is restricted to the account's own payment token(s) — once
-            // initTokens() resolves FROM to that token, applying baseFilter's already-picked-FROM exclusion
-            // here would filter it out and leave the selector empty. The TO exclusion is moot: TO is always
-            // a different currency.
-            { accountStatus: AccountStatus, _: CryptoCurrencyStatus -> accountStatus is AccountStatus.Payment }
+            // Show the payment-account tokens the withdraw endpoint can actually move, including the
+            // currently-selected FROM: unlike the regular baseFilter (which excludes the already-picked
+            // FROM/TO so the user can't pick the same token twice), the withdraw FROM selector is restricted
+            // to the account itself — once initTokens() resolves FROM to that token, applying baseFilter's
+            // already-picked-FROM exclusion here would filter it out and leave the selector empty. The TO
+            // exclusion is moot: TO is always a different currency.
+            { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
+                accountStatus is AccountStatus.Payment && isWithdrawable(currencyStatus)
+            }
         } else {
             baseFilter
         }
@@ -2531,6 +2552,30 @@ internal class SwapModel @Inject constructor(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
         )
+    }
+
+    private fun isWithdrawable(currencyStatus: CryptoCurrencyStatus): Boolean =
+        withdrawableCurrencyIds.isEmpty() || currencyStatus.currency.id in withdrawableCurrencyIds
+
+    /**
+     * Keeps the anchored TO in step with the source the user picked: an account currency identical to it makes
+     * the operation a plain transfer, another account currency on the same network keeps the swap within that
+     * network. Falls back to the currently anchored currency (the account's default) for anything else.
+     */
+    private suspend fun resolveAccountTopUpDestination(
+        from: SwapCurrencyStatus,
+        currentTo: SwapCurrencyStatus?,
+    ): SwapCurrencyStatus? {
+        if (!isAccountTopUp || currentTo == null) return currentTo
+
+        val accountCurrencies = accountUnderlyingCurrencies.get(params.userWalletId)
+        if (accountCurrencies.size < 2) return currentTo
+
+        val sameCurrency = accountCurrencies.firstOrNull { it.currency.id == from.currency.id }
+        val sameNetwork = accountCurrencies.firstOrNull { it.currency.network.id == from.currency.network.id }
+        val resolved = sameCurrency ?: sameNetwork ?: return currentTo
+
+        return if (resolved.currency.id == currentTo.currency.id) currentTo else currentTo.copy(status = resolved)
     }
 
     private fun SwapStateHolder.withReverseForcedHiddenInAccountFlow(): SwapStateHolder {
