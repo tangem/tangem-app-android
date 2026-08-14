@@ -17,7 +17,6 @@ dependencies {
     api(projects.features.commonFeatures.api)
 
     /** Domain */
-    api(projects.domain.account)
     api(projects.domain.addressBook)
     api(projects.domain.wallets)
     implementation(projects.domain.models)
@@ -29,10 +28,12 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Core modules */
-    api(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.ui)
     api(projects.core.utils)
+    api(projects.core.analytics)
+    api(projects.core.analytics.models)
+    api(projects.domain.common)
     implementation(projects.core.navigation)
 
     /** Compose */
@@ -57,13 +58,15 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization.core)
+    implementation(deps.haze)
 
     /** Utils */
     implementation(projects.libs.blockchainSdk)
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 
     /** Tests */
     testImplementation(projects.test.core)
-    testImplementation(projects.test.mock)
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.transaction)
 }

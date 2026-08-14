@@ -3,13 +3,20 @@ package com.tangem.features.polymarket.impl.di
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
+import com.tangem.domain.polymarket.usecase.HasPolymarketDepositNetworkUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
+import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
+import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
@@ -49,6 +56,16 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketOnboardingModel::class)
     fun bindPolymarketOnboardingModel(impl: PolymarketOnboardingModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketEntryModel::class)
+    fun bindPolymarketEntryModel(impl: PolymarketEntryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketEventDetailsModel::class)
+    fun bindPolymarketEventDetailsModel(impl: PolymarketEventDetailsModel): Model
 }
 
 @Module
@@ -68,13 +85,31 @@ internal object PolymarketDomainUseCasesModule {
 
     @Provides
     @Singleton
-    fun provideResolvePolymarketEntryUseCase(
+    fun provideResolvePolymarketEntryInteractor(
         checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
         derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
-    ): ResolvePolymarketEntryUseCase = ResolvePolymarketEntryUseCase(
+        getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
+    ): ResolvePolymarketEntryInteractor = ResolvePolymarketEntryInteractor(
         checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
+        getPolymarketApiCredentialsUseCase = getPolymarketApiCredentialsUseCase,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketEligibleWalletsUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): GetPolymarketEligibleWalletsUseCase = GetPolymarketEligibleWalletsUseCase(
+        userWalletsListRepository = userWalletsListRepository,
+    )
+
+    @Provides
+    @Singleton
+    fun provideHasPolymarketDepositNetworkUseCase(
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    ): HasPolymarketDepositNetworkUseCase = HasPolymarketDepositNetworkUseCase(
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
     )
 }

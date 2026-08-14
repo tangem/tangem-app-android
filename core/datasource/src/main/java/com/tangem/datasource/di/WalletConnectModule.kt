@@ -1,11 +1,11 @@
 package com.tangem.datasource.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.local.walletconnect.DefaultWalletConnectStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.setTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -28,9 +28,10 @@ object WalletConnectModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): WalletConnectStore {
         return DefaultWalletConnectStore(
-            persistenceStore = DataStoreFactory.create(
+            persistenceStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = setTypes<WcSessionDTO>(),
@@ -39,7 +40,7 @@ object WalletConnectModule {
                 produceFile = { context.dataStoreFile(fileName = "wallet_connect_sessions") },
                 scope = scope,
             ),
-            pendingApprovalSessionsStore = DataStoreFactory.create(
+            pendingApprovalSessionsStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = setTypes<WcPendingApprovalSessionDTO>(),

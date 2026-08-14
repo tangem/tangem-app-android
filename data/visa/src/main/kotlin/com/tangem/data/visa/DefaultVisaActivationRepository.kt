@@ -16,7 +16,7 @@ import com.tangem.spend.datasource.pay.models.response.TangemPayErrorResponse
 import com.tangem.spend.datasource.visa.VisaApi
 import com.tangem.spend.datasource.visa.models.request.*
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.datasource.local.visa.VisaAuthTokenStorage
+import com.tangem.spend.datasource.visa.storage.VisaAuthTokenStorage
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.*

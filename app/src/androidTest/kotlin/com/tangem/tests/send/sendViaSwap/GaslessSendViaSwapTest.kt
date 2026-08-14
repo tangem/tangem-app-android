@@ -8,7 +8,6 @@ import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -43,14 +42,7 @@ class GaslessSendViaSwapTest : BaseTestCase() {
     @DisplayName("Gasless Send via Swap: the network fee is selectable and payable with the stablecoin")
     @Test
     fun checkFeeTokenSelectionForSwapTest() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(PROVIDERS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletTokensState)
             }
@@ -117,15 +109,7 @@ class GaslessSendViaSwapTest : BaseTestCase() {
         val usdcBalanceScenario = "polygon_usdc_balance"
         val lowBalanceState = "LowBalance"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(PROVIDERS_API_SCENARIO)
-                resetWireMockScenarioState(usdcBalanceScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$usdcBalanceScenario' to '$lowBalanceState'") {
                 setWireMockScenarioState(scenarioName = usdcBalanceScenario, state = lowBalanceState)
             }
@@ -180,15 +164,7 @@ class GaslessSendViaSwapTest : BaseTestCase() {
         val changellyStatusState = "Changelly"
         val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(PROVIDERS_API_SCENARIO)
-                resetWireMockScenarioState(exchangeStatusScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletTokensState)
             }

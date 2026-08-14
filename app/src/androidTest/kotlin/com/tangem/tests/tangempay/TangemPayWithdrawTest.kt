@@ -7,8 +7,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.utils.getWireMockRequestCount
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -52,15 +50,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -115,14 +105,9 @@ class TangemPayWithdrawTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, zeroBalanceState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert balance contains '$zeroBalanceText'") {
@@ -164,15 +149,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -212,15 +189,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -262,15 +231,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -329,15 +290,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
