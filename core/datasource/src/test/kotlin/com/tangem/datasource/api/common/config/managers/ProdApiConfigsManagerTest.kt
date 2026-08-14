@@ -109,7 +109,6 @@ internal class ProdApiConfigsManagerTest {
             ),
             StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
             BlockAid(environmentConfig = environmentConfig),
-            MoonPay(),
             P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
             News(
                 authProvider = appAuthProvider,
@@ -136,7 +135,6 @@ internal class ProdApiConfigsManagerTest {
         createTangemTechModel(),
         createStakeKitModel(),
         createBlockAidSdkModel(),
-        createMoonPayModel(),
         createP2PModel(),
         createNewsModel(),
         createGaslessTxServiceModel(),
@@ -368,16 +366,6 @@ internal class ProdApiConfigsManagerTest {
                     "accept" to ProviderSuspend { "application/json" },
                     "content-type" to ProviderSuspend { "application/json" },
                 ),
-            ),
-        )
-    }
-
-    private fun createMoonPayModel(): TestModel {
-        return TestModel(
-            id = MoonPay.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.moonpay.com/",
             ),
         )
     }
