@@ -85,13 +85,6 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(BlockAid.KEY)
-    fun provideBlockAidConfig(environmentConfig: EnvironmentConfig): ApiConfig {
-        return BlockAid(environmentConfig)
-    }
-
-    @Provides
-    @IntoMap
     @StringKey(Auth.KEY)
     fun provideAuthConfig(): ApiConfig {
         return Auth()
