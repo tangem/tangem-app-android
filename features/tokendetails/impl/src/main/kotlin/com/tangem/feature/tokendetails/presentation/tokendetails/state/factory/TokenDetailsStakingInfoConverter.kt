@@ -17,6 +17,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.optionOrNull
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
@@ -70,7 +71,7 @@ internal class TokenDetailsStakingInfoConverter(
         state: TokenDetailsState,
         isBetaMode: Boolean,
     ): StakingBlockUM? {
-        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingBalance = status.value.stakingBalanceData
 
         val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
 
@@ -125,7 +126,7 @@ internal class TokenDetailsStakingInfoConverter(
     }
 
     private fun getStakedBlockOrNull(status: CryptoCurrencyStatus): StakingBlockUM? {
-        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingBalance = status.value.stakingBalanceData
         val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
         val hasPendingBalances = when (stakingBalance) {
             is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.isNotEmpty()
@@ -223,14 +224,14 @@ internal class TokenDetailsStakingInfoConverter(
             ),
             rewardValue = getRewardText(status, stakingRewardAmount),
             onStakeClicked = clickIntents::onStakeBannerClick,
-            isBetaMode = status.value.stakingBalance is StakingBalance.Data.P2PEthPool,
+            isBetaMode = status.value.stakingBalanceData is StakingBalance.Data.P2PEthPool,
         )
     }
 
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
         val blockchainId = status.currency.network.rawId
         val isCoin = status.currency.id.isCoin
-        val stakingBalance = status.value.stakingBalance
+        val stakingBalance = status.value.stakingBalanceData
 
         val rewardBlockType = when {
             stakingBalance is StakingBalance.Data.P2PEthPool -> {

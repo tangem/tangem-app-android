@@ -24,16 +24,11 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Features */
-    implementation(projects.features.wallet.api)
+    implementation(projects.features.commonFeatures.api)
 
     /** Domain */
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.common)
-    implementation(projects.domain.core)
     implementation(projects.domain.models)
-    implementation(projects.domain.appCurrency.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -54,7 +49,6 @@ dependencies {
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization.core)
-    implementation(tangemDeps.card.core)
 
     /** Tests */
     testImplementation(projects.test.core)

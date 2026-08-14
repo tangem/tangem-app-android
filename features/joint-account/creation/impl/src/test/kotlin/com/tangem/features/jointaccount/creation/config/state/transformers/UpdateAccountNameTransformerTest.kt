@@ -62,7 +62,6 @@ internal class UpdateAccountNameTransformerTest {
             colors = persistentListOf(),
             icons = persistentListOf(),
             wallet = null,
-            chooseWallet = null,
             isContinueEnabled = isContinueEnabled,
             onNameChange = {},
             onColorClick = {},

@@ -38,7 +38,9 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.lifecycle.compose)
 
     /** Tests */

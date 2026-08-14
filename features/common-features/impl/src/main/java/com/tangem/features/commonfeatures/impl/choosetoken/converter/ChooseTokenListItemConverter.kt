@@ -127,6 +127,7 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.Payment ->
                         account.paymentCryptoCurrencyOrNull()?.let { listOf(account to it) }.orEmpty()
                     is AccountStatus.Virtual -> emptyList()
+                    is AccountStatus.Prediction -> emptyList()
                 }
             }
     }
@@ -148,6 +149,7 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.CryptoPortfolio -> accountStatus.toPortfolioItem(params)
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
                     is AccountStatus.Virtual -> null
+                    is AccountStatus.Prediction -> null
                 }
             }
             .filter { portfolio -> portfolio.tokens.isNotEmpty() }

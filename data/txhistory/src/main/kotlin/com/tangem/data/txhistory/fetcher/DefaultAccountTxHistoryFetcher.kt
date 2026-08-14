@@ -69,6 +69,8 @@ internal class DefaultAccountTxHistoryFetcher @AssistedInject constructor(
             }
             // Virtual account tx-history isn't wired yet (separate task) — no express fetchers for now.
             is Account.Virtual -> Unit
+            // Same for the prediction account: its history lives on the prediction side, not in express.
+            is Account.Prediction -> Unit
         }
 
         receiveTrigger().onEach { trigger ->
