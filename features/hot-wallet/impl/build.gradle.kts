@@ -35,11 +35,16 @@ dependencies {
     api(projects.domain.hotWallet)
     api(projects.domain.settings)
     api(projects.domain.wallets)
+    implementation(projects.domain.cloudBackup)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
 
+    /** Data */
+    implementation(projects.data.cloudBackup)
+
     /** Common */
+    implementation(projects.common.google)
     implementation(projects.common.routing)
     runtimeOnly(projects.common.ui)
 
@@ -84,4 +89,5 @@ dependencies {
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
 }

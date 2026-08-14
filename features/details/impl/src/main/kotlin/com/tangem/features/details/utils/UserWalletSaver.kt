@@ -22,9 +22,12 @@ import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.usecase.ReportMissingWalletCardsBackupUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.details.impl.R
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -40,6 +43,8 @@ internal class UserWalletSaver @Inject constructor(
     private val messageSender: UiMessageSender,
     private val router: Router,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+    private val reportMissingWalletCardsBackupUseCase: ReportMissingWalletCardsBackupUseCase,
+    private val appScope: AppCoroutineScope,
 ) {
 
     suspend fun scanAndSaveUserWallet(scope: CoroutineScope) {
@@ -94,6 +99,8 @@ internal class UserWalletSaver @Inject constructor(
                 }
             },
             transform = {
+                reportMissingCardsBackup(userWallet)
+
                 if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
                     router.push(
                         AppRoute.Onboarding(
@@ -109,6 +116,18 @@ internal class UserWalletSaver @Inject constructor(
                 }
             },
         )
+    }
+
+    private fun reportMissingCardsBackup(userWallet: UserWallet) {
+        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
+
+        // deliberately not the caller's scope: saving the wallet navigates away right after this, which would
+        // cancel the request mid-flight and leave the backend believing nothing about a wallet already known to
+        // be broken — exactly the state this reporting exists to make visible
+        appScope.launch {
+            reportMissingWalletCardsBackupUseCase(userWallet)
+                .onLeft { error -> TangemLogger.e("Unable to report cards backup state: $error") }
+        }
     }
 
     private fun selectUserWallet() {

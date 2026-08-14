@@ -95,7 +95,7 @@ internal class TxHistoryItemStateConverter(
             is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_exit)
             TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
             is TransactionType.YieldSupply.Send -> {
-                if (type.isYieldSupplyWithdraw || isOutgoing) {
+                if (type.isYieldSupplyWithdraw) {
                     resourceReference(R.string.yield_module_transaction_withdraw)
                 } else {
                     resourceReference(R.string.common_transfer)

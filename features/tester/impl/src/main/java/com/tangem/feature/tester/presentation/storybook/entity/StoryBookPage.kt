@@ -9,6 +9,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
@@ -17,6 +18,7 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.util.TangemPriceChange
+import kotlinx.collections.immutable.ImmutableSet
 
 internal sealed interface StoryBookPage
 
@@ -376,6 +378,61 @@ internal data class TangemTokenIconStory(
     enum class UiStateVariant { Token, Shimmer, Error }
 }
 
+internal data class TangemGlowRingStory(
+    val variant: TangemGlowRing.Variant,
+    val quality: TangemGlowRing.Quality,
+    val background: Background,
+    val isAnimated: Boolean,
+    val onVariantChange: (TangemGlowRing.Variant) -> Unit,
+    val onQualityChange: (TangemGlowRing.Quality) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onAnimatedToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the glow-ring preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgInverse("bg.inverse"),
+    }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemMessageBannerStory(
+    val variant: TangemMessageBanner.Variant,
+    val contentAlign: TangemMessageBanner.ContentAlign,
+    val hasGlowRing: Boolean,
+    val hasDescription: Boolean,
+    val hasSecondaryButton: Boolean,
+    val hasPrimaryButton: Boolean,
+    val hasCloseButton: Boolean,
+    val hasSlotStart: Boolean,
+    val hasSlotEnd: Boolean,
+    val hasExtraContent: Boolean,
+    val isClickable: Boolean,
+    val background: Background,
+    val onVariantChange: (TangemMessageBanner.Variant) -> Unit,
+    val onContentAlignChange: (TangemMessageBanner.ContentAlign) -> Unit,
+    val onGlowRingToggle: () -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onSecondaryButtonToggle: () -> Unit,
+    val onPrimaryButtonToggle: () -> Unit,
+    val onCloseButtonToggle: () -> Unit,
+    val onSlotStartToggle: () -> Unit,
+    val onSlotEndToggle: () -> Unit,
+    val onExtraContentToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the banner preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgInverse("bg.inverse"),
+    }
+}
+
 internal data class TextStyleStory(
     val style: Style,
     val textScale: Float,
@@ -452,57 +509,30 @@ internal data class TangemTokenRowMarketStory(
     val onLongTitleToggle: () -> Unit,
 ) : DsStoryBookPage
 
-internal data class TangemGlowRingStory(
-    val variant: TangemGlowRing.Variant,
-    val quality: TangemGlowRing.Quality,
+internal data class TangemFilterGroupStory(
+    val variant: TangemFilterItem.Variant,
     val background: Background,
-    val isAnimated: Boolean,
-    val onVariantChange: (TangemGlowRing.Variant) -> Unit,
-    val onQualityChange: (TangemGlowRing.Quality) -> Unit,
+    val activeFilterIds: ImmutableSet<String>,
+    val hasCounter: Boolean,
+    val isLoading: Boolean,
+    val isBlurEnabled: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemFilterItem.Variant) -> Unit,
     val onBackgroundChange: (Background) -> Unit,
-    val onAnimatedToggle: () -> Unit,
+    val onFilterClick: (String) -> Unit,
+    val onFilterClear: (String) -> Unit,
+    val onCounterToggle: () -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
 ) : DsStoryBookPage {
 
-    /** Backdrop the glow-ring preview is rendered on top of. */
+    /** Backdrop the filter group preview is rendered on top of. */
     enum class Background(val label: String) {
+        Rainbow("rainbow"),
         BgPrimary("bg.primary"),
         BgSecondary("bg.secondary"),
-        BgInverse("bg.inverse"),
-    }
-}
-
-@Suppress("BooleanPropertyNaming")
-internal data class TangemMessageBannerStory(
-    val variant: TangemMessageBanner.Variant,
-    val contentAlign: TangemMessageBanner.ContentAlign,
-    val hasGlowRing: Boolean,
-    val hasDescription: Boolean,
-    val hasSecondaryButton: Boolean,
-    val hasPrimaryButton: Boolean,
-    val hasCloseButton: Boolean,
-    val hasSlotStart: Boolean,
-    val hasSlotEnd: Boolean,
-    val hasExtraContent: Boolean,
-    val isClickable: Boolean,
-    val background: Background,
-    val onVariantChange: (TangemMessageBanner.Variant) -> Unit,
-    val onContentAlignChange: (TangemMessageBanner.ContentAlign) -> Unit,
-    val onGlowRingToggle: () -> Unit,
-    val onDescriptionToggle: () -> Unit,
-    val onSecondaryButtonToggle: () -> Unit,
-    val onPrimaryButtonToggle: () -> Unit,
-    val onCloseButtonToggle: () -> Unit,
-    val onSlotStartToggle: () -> Unit,
-    val onSlotEndToggle: () -> Unit,
-    val onExtraContentToggle: () -> Unit,
-    val onClickableToggle: () -> Unit,
-    val onBackgroundChange: (Background) -> Unit,
-) : DsStoryBookPage {
-
-    /** Backdrop the banner preview is rendered on top of. */
-    enum class Background(val label: String) {
-        BgPrimary("bg.primary"),
-        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
         BgInverse("bg.inverse"),
     }
 }

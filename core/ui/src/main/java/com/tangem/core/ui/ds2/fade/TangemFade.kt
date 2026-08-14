@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,29 +26,27 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
 
-private const val SOLID_RATIO = 40f / 96f
 private const val HARD_ALPHA = 0.95f
 private const val SOFT_ALPHA = 0.6f
-private val FADE_HEIGHT = 96.dp
+private val HARD_SOLID_HEIGHT = 40.dp
 private val BLUR_RADIUS = 20.dp
 
 /**
  * Design-system fade overlay used at the top or bottom edge of scrollable content.
  *
- * Renders a 96dp-tall gradient (and optional solid block in the [TangemFade.Variant.Hard]
- * variant) tinted with `colors3.bg.primary`, so it blends with the page background and masks
- * content as it scrolls under the edge. Place it inside a [Box] and align with
- * [androidx.compose.ui.Alignment.TopCenter] / [androidx.compose.ui.Alignment.BottomCenter]
- * depending on [position].
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2272-21336)
  *
  * @param position which edge the fade is anchored to — controls the gradient direction.
- * @param variant [TangemFade.Variant.Hard] adds an opaque solid block next to the edge for a
- *   harder cut-off, [TangemFade.Variant.Soft] is gradient-only and gentler.
+ * @param variant [TangemFade.Variant.Hard] keeps a fixed 40dp opaque block next to the edge for
+ *   a harder cut-off while the rest of the height fades out, [TangemFade.Variant.Soft] is a
+ *   gradient-only fade across the whole height, gentler.
  * @param blur when `true`, the content under the fade is blurred via Haze (radius 20dp,
  *   progressive intensity matching [position]).
  * @param backgroundColor base color of the fade gradient — defaults to `colors3.bg.primary` so
  *   the fade blends with the standard page background.
- * @param modifier modifier applied to the fade's root.
+ * @param modifier modifier applied to the fade's root. The fade has no intrinsic height — the
+ *   call site must set it here (e.g. `Modifier.height(…)` or `Modifier.matchParentSize()`),
+ *   otherwise the fade renders with zero height.
  */
 @Composable
 fun TangemFade(
@@ -58,7 +57,6 @@ fun TangemFade(
     backgroundColor: Color = TangemTheme.colors3.bg.primary,
 ) {
     val hazeState = LocalHazeState.current
-    val brush = buildBrush(color = backgroundColor, position = position, variant = variant)
 
     val blurModifier = if (blur) {
         Modifier.hazeEffectTangem(state = hazeState) {
@@ -77,13 +75,30 @@ fun TangemFade(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(FADE_HEIGHT)
             .then(blurModifier)
-            .background(brush),
+            .drawWithCache {
+                val solidRatio = if (size.height > 0f) {
+                    (HARD_SOLID_HEIGHT.toPx() / size.height).coerceAtMost(1f)
+                } else {
+                    1f
+                }
+                val brush = buildBrush(
+                    color = backgroundColor,
+                    position = position,
+                    variant = variant,
+                    solidRatio = solidRatio,
+                )
+                onDrawBehind { drawRect(brush) }
+            },
     )
 }
 
-private fun buildBrush(color: Color, position: TangemFade.Position, variant: TangemFade.Variant): Brush {
+private fun buildBrush(
+    color: Color,
+    position: TangemFade.Position,
+    variant: TangemFade.Variant,
+    solidRatio: Float,
+): Brush {
     val opaque = color.copy(alpha = HARD_ALPHA)
     val soft = color.copy(alpha = SOFT_ALPHA)
     val transparent = Color.Transparent
@@ -93,14 +108,14 @@ private fun buildBrush(color: Color, position: TangemFade.Position, variant: Tan
             TangemFade.Position.Top -> Brush.verticalGradient(
                 colorStops = arrayOf(
                     0f to opaque,
-                    SOLID_RATIO to opaque,
+                    solidRatio to opaque,
                     1f to transparent,
                 ),
             )
             TangemFade.Position.Bottom -> Brush.verticalGradient(
                 colorStops = arrayOf(
                     0f to transparent,
-                    1f - SOLID_RATIO to opaque,
+                    1f - solidRatio to opaque,
                     1f to opaque,
                 ),
             )
@@ -142,7 +157,7 @@ private fun FadePreviewRow(variant: TangemFade.Variant, position: TangemFade.Pos
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = "${variant.name} / ${position.name}",
-            style = TangemTheme.typography.caption2,
+            style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.primary,
         )
         Box(
@@ -154,12 +169,18 @@ private fun FadePreviewRow(variant: TangemFade.Variant, position: TangemFade.Pos
             TangemFade(
                 position = position,
                 variant = variant,
-                modifier = Modifier.align(
-                    when (position) {
-                        TangemFade.Position.Top -> Alignment.TopCenter
-                        TangemFade.Position.Bottom -> Alignment.BottomCenter
-                    },
-                ),
+                modifier = when (variant) {
+                    // The fade is sized by the call site — fill the container or set a height.
+                    TangemFade.Variant.Hard -> Modifier.matchParentSize()
+                    TangemFade.Variant.Soft -> Modifier
+                        .height(96.dp)
+                        .align(
+                            when (position) {
+                                TangemFade.Position.Top -> Alignment.TopCenter
+                                TangemFade.Position.Bottom -> Alignment.BottomCenter
+                            },
+                        )
+                },
             )
         }
     }

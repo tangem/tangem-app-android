@@ -48,6 +48,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(projects.test.core)
     testImplementation(deps.androidx.datastore)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)

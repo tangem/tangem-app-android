@@ -2,7 +2,7 @@ package com.tangem.datasource.local.config.providers
 
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.config.providers.models.ProviderModel
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 
 /**
  * Default blockchain providers storage
