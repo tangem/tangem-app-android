@@ -7,10 +7,10 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.cleaner.PolymarketUserWalletDataCleaner
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
+import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
-import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -63,7 +63,7 @@ internal object PolymarketStorageModule {
                     defaultValue = emptyMap(),
                     serializer = MapSerializer(
                         keySerializer = String.serializer(),
-                        valueSerializer = PredictionAccountStatusValue.serializer(),
+                        valueSerializer = PredictionAccountStatusValueDTO.serializer(),
                     ),
                     json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                 ),
