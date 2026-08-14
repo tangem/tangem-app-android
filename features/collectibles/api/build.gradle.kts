@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.features.gacha.api"
+    namespace = "com.tangem.features.collectibles.api"
 }
 
 dependencies {
