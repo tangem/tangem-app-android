@@ -2,6 +2,7 @@ package com.tangem.tap.domain.sdk.mocks.content
 
 import com.tangem.common.SuccessResponse
 import com.tangem.common.card.*
+import com.tangem.common.encryption.EncryptionMode
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -174,6 +175,7 @@ object TwinsMockContent : MockContent {
             index = 0,
             isImported = false,
             hasBackup = false,
+            status = CardWallet.Status.Empty,
             derivedKeys = emptyMap(),
         ),
     )
@@ -190,6 +192,7 @@ object TwinsMockContent : MockContent {
             index = 0,
             isImported = false,
             hasBackup = false,
+            status = CardWallet.Status.Empty,
             derivedKeys = emptyMap(),
         ),
     )

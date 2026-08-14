@@ -106,6 +106,7 @@ private fun convertExchangeTransaction(value: ExpressSwapConverter.Input): Excha
             cryptoCurrency = value.toCurrency,
         ),
         externalTxUrl = entity.externalTxUrl,
+        externalTxId = entity.externalTxId,
         payinAddress = entity.payinAddress,
         updatedAtMillis = parseIsoMillis(entity.updatedAt),
         refundAssetId = entity.toRefundAssetId(),
