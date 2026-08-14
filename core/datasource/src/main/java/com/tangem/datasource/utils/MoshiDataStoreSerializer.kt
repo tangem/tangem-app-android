@@ -16,6 +16,10 @@ import java.lang.reflect.ParameterizedType
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated(
+    message = "Prefer kotlinx-serialization: annotate the model with @Serializable and use " +
+        "KotlinxDataStoreSerializer (or AppDataStoreFactory.create with a KSerializer).",
+)
 class MoshiDataStoreSerializer<T>(
     override val defaultValue: T,
     private val adapter: JsonAdapter<T>,
