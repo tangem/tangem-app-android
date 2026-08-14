@@ -20,6 +20,14 @@ data class JointAccountCreationSignInput(
     val maxIndexAttempts: Int = DEFAULT_MAX_INDEX_ATTEMPTS,
 ) {
 
+    init {
+        require(firstCandidateIndex >= 0) { "First candidate index cannot be negative: $firstCandidateIndex" }
+        require(maxIndexAttempts > 0) { "Max index attempts must be positive: $maxIndexAttempts" }
+        require(firstCandidateIndex <= Int.MAX_VALUE - maxIndexAttempts) {
+            "Candidate index range overflows: $firstCandidateIndex + $maxIndexAttempts"
+        }
+    }
+
     companion object {
         const val DEFAULT_MAX_INDEX_ATTEMPTS = 20
     }
