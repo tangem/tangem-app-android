@@ -23,6 +23,7 @@ import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoryDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
@@ -33,6 +34,7 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -41,12 +43,22 @@ import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.pagination.BatchAction
+import com.tangem.pagination.BatchingContext
+import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -146,6 +158,77 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         assertThat(result).isEqualTo(PolymarketEventError.Network.left())
     }
+
+    @Test
+    fun `GIVEN pages WHEN batch flow reloaded and scrolled THEN the body cursor drives the next page`() = runTest {
+        // Arrange
+        coEvery { api.getEvents(category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
+            PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = "cursor-1", hasNext = true),
+        )
+        coEvery { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") } returns ApiResponse.Success(
+            PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
+        )
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        val batchFlow = repository.getEventsBatchFlow(
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 5)))
+        advanceUntilIdle()
+        actions.emit(BatchAction.LoadMore())
+        advanceUntilIdle()
+
+        // Assert
+        val events = batchFlow.state.value.data.flatMap { batch -> batch.data }
+        assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
+        coVerify(exactly = 1) { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") }
+        sourceScope.cancel()
+    }
+
+    @Test
+    fun `GIVEN failing first page WHEN batch flow reloaded THEN one silent retry precedes the error state`() =
+        runTest {
+            // Arrange
+            coEvery { api.getEvents(category = null, limit = 20, cursor = null) } returns networkError()
+            val repository = DefaultPolymarketRepository(
+                polymarketApi = api,
+                geoApi = geoApi,
+                relayerApi = relayerApi,
+                clobApi = clobApi,
+                walletErrorResolver = walletErrorResolver,
+                authErrorResolver = authErrorResolver,
+                eventErrorResolver = eventErrorResolver,
+                l2HeaderBuilder = l2HeaderBuilder,
+                // The silent retry waits on a virtual-time dispatcher, so the test skips the 2s delay.
+                dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
+            )
+            val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+            val sourceScope = testSourceScope()
+            val batchFlow = repository.getEventsBatchFlow(
+                context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                batchSize = 20,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(batchFlow.state.value.status)
+                .isInstanceOf(PaginationStatus.InitialLoadingError::class.java)
+            coVerify(exactly = 2) { api.getEvents(category = null, limit = 20, cursor = null) }
+            sourceScope.cancel()
+        }
+
+    /**
+     * A scope for the batch source, driven by the scheduler of the test. Deliberately NOT [TestScope.backgroundScope]:
+     * its tasks carry the background marker, which [advanceUntilIdle] does not run. The job is detached so the
+     * source's never-completing collectors do not keep [runTest] waiting; cancel the scope at the end of the test.
+     */
+    private fun TestScope.testSourceScope(): CoroutineScope = CoroutineScope(coroutineContext + Job())
 
     @Test
     fun `GIVEN the event is gone WHEN getEvent THEN returns left not found`() = runTest {
