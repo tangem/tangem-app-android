@@ -69,7 +69,6 @@ class ApiConfigTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = mockk(),
             ),
-            SurveySparrow(environmentConfig = environmentConfig),
             Auth(),
         )
     }
