@@ -28,9 +28,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.common)
-    implementation(projects.domain.core)
     implementation(projects.domain.models)
-    implementation(projects.domain.appCurrency.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -51,7 +49,6 @@ dependencies {
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization.core)
-    implementation(tangemDeps.card.core)
 
     /** Tests */
     testImplementation(projects.test.core)
