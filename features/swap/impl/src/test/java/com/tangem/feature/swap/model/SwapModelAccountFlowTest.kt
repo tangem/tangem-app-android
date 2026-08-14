@@ -7,8 +7,11 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
@@ -781,6 +784,145 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
      */
     private fun accountFlowUserWallet(): UserWallet.Cold = mockk(relaxed = true) {
         every { walletId } returns userWalletId
+    }
+
+    // Multi-token payment account: the account owns one currency per issued network once the multichain
+    // data is available, and collapses back to a single one when it is not.
+
+    @Test
+    fun `GIVEN withdraw and a multi token account WHEN from filter applied THEN only the withdrawable currency passes`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val withdrawable = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
+            val notWithdrawable = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
+            coEvery { accountUnderlyingCurrencies.getWithdrawable(userWalletId) } returns listOf(withdrawable)
+            val model = createModel(accountFlow = AccountFlow.Withdraw)
+            advanceUntilIdle()
+            val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
+
+            // Act
+            val predicate = model.chooseFromTokenBridge.tokenFilter.value
+
+            // Assert — the endpoint can only move the default currency, so the other network must not be offered.
+            assertThat(predicate(paymentAccountStatus, withdrawable)).isTrue()
+            assertThat(predicate(paymentAccountStatus, notWithdrawable)).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN top up and source matches an account currency WHEN model constructed THEN that currency becomes TO`() =
+        runTest {
+            // Arrange
+            val tronAccountCurrency = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
+            val model = createTopUpModelWithAccountCurrencies(
+                sourceStatus = accountCurrencyStatus(tronCurrencyId, tronNetworkId),
+                accountCurrencies = listOf(
+                    accountCurrencyStatus(polygonCurrencyId, polygonNetworkId),
+                    tronAccountCurrency,
+                ),
+            )
+            advanceUntilIdle()
+
+            // Assert — same currency on both sides, so the operation becomes a plain transfer.
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(tronAccountCurrency)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN top up and source shares a network with an account currency WHEN model constructed THEN TO stays in that network`() =
+        runTest {
+            // Arrange — the wallet's USDT on Tron is not held by the account, but the account has Tron.
+            val tronAccountCurrency = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
+            val model = createTopUpModelWithAccountCurrencies(
+                sourceStatus = accountCurrencyStatus(mockk(relaxed = true), tronNetworkId),
+                accountCurrencies = listOf(
+                    accountCurrencyStatus(polygonCurrencyId, polygonNetworkId),
+                    tronAccountCurrency,
+                ),
+            )
+            advanceUntilIdle()
+
+            // Assert — the swap stays inside the source's network instead of crossing to the default one.
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(tronAccountCurrency)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN top up and source network is not held by the account WHEN model constructed THEN TO keeps the default currency`() =
+        runTest {
+            // Arrange
+            val defaultCurrency = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
+            val model = createTopUpModelWithAccountCurrencies(
+                sourceStatus = accountCurrencyStatus(mockk(relaxed = true), mockk(relaxed = true)),
+                accountCurrencies = listOf(defaultCurrency, accountCurrencyStatus(tronCurrencyId, tronNetworkId)),
+                anchoredToStatus = defaultCurrency,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(defaultCurrency)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN top up and a single currency account WHEN model constructed THEN TO is left untouched`() = runTest {
+        // Arrange — without multichain data the account owns one currency and nothing may re-anchor TO.
+        val defaultCurrency = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
+        val model = createTopUpModelWithAccountCurrencies(
+            sourceStatus = accountCurrencyStatus(tronCurrencyId, tronNetworkId),
+            accountCurrencies = listOf(defaultCurrency),
+            anchoredToStatus = defaultCurrency,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.dataState.toSwapCurrencyStatus?.status).isSameInstanceAs(defaultCurrency)
+        model.onDestroy()
+    }
+
+    private val polygonCurrencyId: CryptoCurrency.ID = mockk(relaxed = true)
+    private val polygonNetworkId: Network.ID = mockk(relaxed = true)
+    private val tronCurrencyId: CryptoCurrency.ID = mockk(relaxed = true)
+    private val tronNetworkId: Network.ID = mockk(relaxed = true)
+
+    private fun accountCurrencyStatus(
+        currencyId: CryptoCurrency.ID,
+        networkId: Network.ID,
+    ): CryptoCurrencyStatus = mockk(relaxed = true) {
+        every { currency } returns mockk(relaxed = true) {
+            every { id } returns currencyId
+            every { network } returns mockk(relaxed = true) { every { id } returns networkId }
+        }
+    }
+
+    private suspend fun createTopUpModelWithAccountCurrencies(
+        sourceStatus: CryptoCurrencyStatus,
+        accountCurrencies: List<CryptoCurrencyStatus>,
+        anchoredToStatus: CryptoCurrencyStatus = accountCurrencies.first(),
+    ): SwapModel {
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val wallet = accountFlowUserWallet()
+        val paymentAccount = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId).account
+        val from = SwapCurrencyStatus(
+            userWallet = wallet,
+            status = sourceStatus,
+            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+        )
+        val to = SwapCurrencyStatus(userWallet = wallet, status = anchoredToStatus, account = paymentAccount)
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                applyAccountTopUpFromPriority = any(),
+            )
+        } returns (from to to)
+        coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns accountCurrencies
+
+        return createModel(accountFlow = AccountFlow.TopUp)
     }
 
     /**
