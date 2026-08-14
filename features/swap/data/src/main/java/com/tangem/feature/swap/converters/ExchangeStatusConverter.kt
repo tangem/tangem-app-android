@@ -1,12 +1,12 @@
 package com.tangem.feature.swap.converters
 
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.express.models.response.ExchangeItemResponse
+import com.tangem.grow.datasource.express.models.response.ExchangeItemResponse
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTime
-import com.tangem.datasource.api.express.models.response.ExchangeStatus as ResponseExchangeStatus
+import com.tangem.grow.datasource.express.models.response.ExchangeStatus as ResponseExchangeStatus
 
 internal class ExchangeStatusConverter(moshi: Moshi) : Converter<ExchangeItemResponse, ExchangeStatusModel> {
 
