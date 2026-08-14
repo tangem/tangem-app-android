@@ -338,6 +338,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onClick = { onClickChangePIN(card.hasPinCode) },
                 iconRes = CoreUiR.drawable.ic_card_pin_24,
                 testTag = TangemPayTestTags.CHANGE_PIN_ROW,
+                isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen,
             ),
         )
     }
