@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -44,12 +45,16 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
             val isFeePaidByToken =
                 feePaidCurrency is FeePaidCurrency.Token && tokenStatus.currency.id != feePaidCurrency.tokenId
 
-            val isFeePaidByGaslessToken =
-                currencyChecksRepository.isNetworkSupportedForGaslessTx(feeStatus.currency.network) &&
-                    feeStatus.currency is CryptoCurrency.Token
-
             val warning = when {
-                isFeePaidByGaslessToken && feeTokenBalance == BigDecimal.ZERO -> {
+                // A Tron token fee currency only ever comes from the gasless path (Tron fees are
+                // normally paid in TRX), so it owns the decision and the generic coin-fee rules below
+                // don't also fire on it.
+                isTronGaslessScenario(feeStatus) -> resolveTronGaslessWarning(
+                    fee = fee,
+                    tokenStatus = tokenStatus,
+                    feeStatus = feeStatus,
+                )
+                isEvmGaslessTokenEmpty(feeStatus, feeTokenBalance) -> {
                     CryptoCurrencyWarning.BalanceNotEnoughForFee(
                         tokenCurrency = tokenStatus.currency,
                         coinCurrency = feeStatus.currency,
@@ -73,6 +78,45 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
                 else -> null
             }
             warning
+        }
+    }
+
+    private fun isTronGaslessScenario(feeStatus: CryptoCurrencyStatus): Boolean {
+        return isTron(feeStatus.currency.network.rawId) && feeStatus.currency is CryptoCurrency.Token
+    }
+
+    // EVM gasless: the fee token pays for its own transfer; a zero balance is the only notification-level
+    // guard (the authoritative check lives in the backend / plan resolver).
+    private fun isEvmGaslessTokenEmpty(feeStatus: CryptoCurrencyStatus, feeTokenBalance: BigDecimal): Boolean {
+        return currencyChecksRepository.isNetworkSupportedForGaslessTx(feeStatus.currency.network) &&
+            feeStatus.currency is CryptoCurrency.Token &&
+            feeTokenBalance == BigDecimal.ZERO
+    }
+
+    /**
+     * Tron gasless: the compensation transfer is paid in the fee token, so its balance must cover it.
+     *
+     * Only a cross-token fee is checked here. When the fee token IS the sent token, the compensation
+     * comes out of the balance being spent, so the amount-subtraction path owns the case — it reduces
+     * the amount by the fee (see IsAmountSubtractAvailableUseCase), and a fee that doesn't fit even on
+     * its own surfaces as TotalExceedsBalance. Warning here too would just duplicate that.
+     *
+     * Balance unknown → no warning (the fee still loads).
+     */
+    private fun resolveTronGaslessWarning(
+        fee: BigDecimal,
+        tokenStatus: CryptoCurrencyStatus,
+        feeStatus: CryptoCurrencyStatus,
+    ): CryptoCurrencyWarning? {
+        if (feeStatus.currency.id == tokenStatus.currency.id) return null
+        val feeTokenBalance = feeStatus.value.amount ?: return null
+        return if (fee > feeTokenBalance) {
+            CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                tokenCurrency = tokenStatus.currency,
+                coinCurrency = feeStatus.currency,
+            )
+        } else {
+            null
         }
     }
 

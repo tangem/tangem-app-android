@@ -25,13 +25,13 @@ object VisaWalletPublicKeyUtility {
     fun findKeyWithoutDerivation(targetAddress: String, card: CardDTO): Either<VisaActivationError, ByteArray> =
         either {
             val wallet = findWalletOnSecp256k1(card).bind()
-
+            val walletPublicKey = wallet.publicKey ?: raise(VisaActivationError.PublicKeyIsEmpty)
             validatePublicKey(
                 targetAddress = targetAddress,
-                publicKey = wallet.publicKey,
+                publicKey = walletPublicKey,
             ).bind()
 
-            wallet.publicKey
+            walletPublicKey
         }
 
     fun generateAddressOnSecp256k1(walletPublicKey: ByteArray): Either<VisaActivationError, Address> = either {

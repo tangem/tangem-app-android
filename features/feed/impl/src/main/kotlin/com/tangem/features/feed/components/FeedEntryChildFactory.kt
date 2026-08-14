@@ -21,6 +21,7 @@ import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.foryou.ForYouComponent
+import com.tangem.features.foryou.TokenSummaryBlockComponent
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
@@ -36,6 +37,7 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val forYouComponentFactory: ForYouComponent.Factory,
     private val tokenSummaryComponentFactory: TokenSummaryComponent.Factory,
+    private val tokenSummaryBlockComponentFactory: TokenSummaryBlockComponent.Factory,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
 ) {
 
@@ -78,8 +80,8 @@ internal class FeedEntryChildFactory @Inject constructor(
         @Serializable
         @Immutable
         data class TokenSummary(
-            val userWalletId: UserWalletId,
             val token: TokenSummaryComponent.Token,
+            val selectedTokenPeriodId: String? = null,
         ) : Child
     }
 
@@ -100,6 +102,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     manageFundsComponentFactory = manageFundsComponentFactory,
                     marketingBannerComponentFactory = marketingBannerComponentFactory,
+                    tokenSummaryBlockComponentFactory = tokenSummaryBlockComponentFactory,
                 )
             }
             is Child.TokenList -> {
@@ -167,7 +170,6 @@ internal class FeedEntryChildFactory @Inject constructor(
                     callbacks = object : ForYouComponent.ForYouModelCallbacks {
                         override fun onTokenClick(userWalletId: UserWalletId, currency: CryptoCurrency) {
                             feedEntryClickIntents.openTokenSummary(
-                                userWalletId = userWalletId,
                                 token = TokenSummaryComponent.Token.Portfolio(currency),
                             )
                         }
@@ -181,8 +183,8 @@ internal class FeedEntryChildFactory @Inject constructor(
             is Child.TokenSummary -> tokenSummaryComponentFactory.create(
                 context = appComponentContext,
                 params = TokenSummaryComponent.Params(
-                    userWalletId = child.userWalletId,
                     token = child.token,
+                    selectedTokenPeriodId = child.selectedTokenPeriodId,
                     callbacks = object : TokenSummaryComponent.TokenSummaryModelCallbacks {
                         override fun onDismiss() = onBackClicked()
                     },

@@ -1,0 +1,108 @@
+package com.tangem.features.tangempay.account
+
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.ui.Modifier
+import com.tangem.common.ui.expressStatus.expressTransactionsItems
+import com.tangem.common.ui.expressStatus.state.*
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.onramp.model.OnrampStatus
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+internal class PreviewEmptyExpressTransactionsComponent : ExpressTransactionsComponent {
+
+    override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(getInitialState())
+
+    override fun LazyListScope.expressTransactionsContent(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    ) {
+        expressTransactionsItems(expressTxs = state, modifier = modifier)
+    }
+
+    private fun getInitialState(): ExpressTransactionsBlockState {
+        val sample = persistentListOf<ExpressTransactionStateUM>(
+            sampleOnrampUM(
+                txId = "preview-onramp-1",
+                title = "Buying USDC",
+                activeStatusText = "Verifying",
+                activeStatus = OnrampStatus.Status.Verifying,
+                timestampAgo = "5m ago",
+                toAmount = "100.00",
+                toSymbol = "USDC",
+                fromAmount = "100.00",
+                fromSymbol = "USD",
+                iconState = ExpressTransactionStateIconUM.None,
+            ),
+        )
+        return ExpressTransactionsBlockState(
+            transactions = sample,
+            transactionsToDisplay = sample,
+            bottomSheetSlot = null,
+        )
+    }
+
+    @Suppress("LongParameterList")
+    private fun sampleOnrampUM(
+        txId: String,
+        title: String,
+        activeStatusText: String,
+        activeStatus: OnrampStatus.Status,
+        timestampAgo: String,
+        toAmount: String,
+        toSymbol: String,
+        fromAmount: String,
+        fromSymbol: String,
+        iconState: ExpressTransactionStateIconUM,
+    ): ExpressTransactionStateUM.OnrampUM {
+        return ExpressTransactionStateUM.OnrampUM(
+            info = ExpressTransactionStateInfoUM(
+                title = TextReference.Str(title),
+                status = ExpressStatusUM(
+                    title = TextReference.Str("Status"),
+                    link = ExpressLinkUM.Empty,
+                    statuses = persistentListOf(
+                        ExpressStatusItemUM(TextReference.Str("Created"), ExpressStatusItemState.Done),
+                        ExpressStatusItemUM(TextReference.Str(activeStatusText), ExpressStatusItemState.Active),
+                        ExpressStatusItemUM(TextReference.Str("Finished"), ExpressStatusItemState.Default),
+                    ),
+                ),
+                notification = null,
+                txId = txId,
+                txExternalId = null,
+                txExternalUrl = null,
+                timestamp = 0L,
+                timestampFormatted = TextReference.Str(timestampAgo),
+                timestampAgoFormatted = TextReference.Str(timestampAgo),
+                activeStatus = TextReference.Str(activeStatusText),
+                onGoToProviderClick = {},
+                onClick = {},
+                onDisposeExpressStatus = {},
+                iconState = iconState,
+                toAmount = TextReference.Str(toAmount),
+                toAmountValue = toAmount.toBigDecimal(),
+                toFiatAmount = null,
+                toAmountSymbol = toSymbol,
+                toCurrencyIcon = CurrencyIconState.Empty(),
+                toAddress = "",
+                toAmountDecimals = 2,
+                fromAmount = TextReference.Str(fromAmount),
+                fromAmountValue = fromAmount.toBigDecimal(),
+                fromFiatAmount = null,
+                fromAmountSymbol = fromSymbol,
+                fromCurrencyIcon = CurrencyIconState.Empty(),
+                fromAddress = "",
+                fromAmountDecimals = 2,
+            ),
+            providerName = "Preview Provider",
+            providerImageUrl = "",
+            providerType = "CEX",
+            activeStatus = activeStatus,
+            fromCurrencyCode = fromSymbol,
+        )
+    }
+}

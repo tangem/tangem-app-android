@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.onramp.countries.DefaultOnrampCountriesStore
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.currencies.DefaultOnrampCurrenciesStore
@@ -26,36 +27,36 @@ internal object OnrampStoreModule {
     @Provides
     @Singleton
     fun provideOnrampPaymentMethodsStore(): OnrampPaymentMethodsStore {
-        return DefaultOnrampPaymentMethodsStore(dataStore = RuntimeDataStore())
+        return DefaultOnrampPaymentMethodsStore(store = RuntimeSharedMapStore())
     }
 
     @Provides
     @Singleton
     fun provideOnrampPairsStore(): OnrampPairsStore {
-        return DefaultOnrampPairsStore(dataStore = RuntimeDataStore())
+        return DefaultOnrampPairsStore(store = RuntimeSharedMapStore())
     }
 
     @Provides
     @Singleton
     fun provideOnrampQuotesStore(): OnrampQuotesStore {
-        return DefaultOnrampQuotesStore(dataStore = RuntimeDataStore())
+        return DefaultOnrampQuotesStore(store = RuntimeSharedMapStore())
     }
 
     @Provides
     @Singleton
     fun provideOnrampCountriesStore(): OnrampCountriesStore {
-        return DefaultOnrampCountriesStore(dataStore = RuntimeDataStore())
+        return DefaultOnrampCountriesStore(store = RuntimeSharedMapStore())
     }
 
     @Provides
     @Singleton
     fun provideOnrampCurrencies(): OnrampCurrenciesStore {
-        return DefaultOnrampCurrenciesStore(dataStore = RuntimeDataStore())
+        return DefaultOnrampCurrenciesStore(store = RuntimeSharedMapStore())
     }
 
     @Provides
     @Singleton
     fun provideOnrampCurrentCountryByIPStore(): OnrampCurrentCountryByIPStore {
-        return DefaultOnrampCurrentCountryByIPStore(dataStore = RuntimeDataStore())
+        return DefaultOnrampCurrentCountryByIPStore(store = RuntimeSharedStore())
     }
 }
