@@ -16,6 +16,13 @@ dependencies {
 
     /** Project - Core */
     implementation(projects.core.configToggles)
+    implementation(projects.core.decompose)
+    implementation(projects.core.ui)
+
+    /** Compose */
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.ui)
 
     /** DI */
     implementation(deps.hilt.android)
