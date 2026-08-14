@@ -155,6 +155,11 @@ private fun LazyListScope.addressItem(
                         onAddressChange(it, EnterAddressSource.PasteButton)
                     }
                 },
+                onClearClick = {
+                    GlobalMultipleClickPreventer.processEvent {
+                        onAddressChange("", EnterAddressSource.InputField)
+                    }
+                },
                 onQrCodeClick = onQrCodeClick,
                 isError = isError,
                 isLoading = isValidating,
