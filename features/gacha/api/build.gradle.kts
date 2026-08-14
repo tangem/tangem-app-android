@@ -7,3 +7,9 @@ plugins {
 android {
     namespace = "com.tangem.features.gacha.api"
 }
+
+dependencies {
+    /** Project - Core */
+    implementation(projects.core.decompose)
+    implementation(projects.core.ui)
+}
