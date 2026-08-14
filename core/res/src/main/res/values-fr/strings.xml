@@ -1231,7 +1231,7 @@
   <string name="promo_campaign_not_active_title">Campagne non active</string>
   <string name="promo_campaign_reactivation_summary_description">Gagnez 0,5% de cashback sur chaque swap de plus de 500 $, sur toute paire sauf stablecoin vers stablecoin. Gain maximum : 50 $ par swap.\n\nComplétez cinq swaps éligibles et débloquez un bonus supplémentaire de 10 $.\n\nLes récompenses sont versées chaque semaine en USDT ou USDC à l\'adresse sélectionnée.</string>
   <string name="promo_campaign_select_cashback_account">Sélectionner le compte pour recevoir le cashback</string>
-  <string name="promo_campaign_select_token">Sélectionner le token</string>
+  <string name="promo_campaign_select_token">Sélectionner le token de cashback</string>
   <string name="promo_campaign_summary_title">S\'inscrire à %1$s</string>
   <string name="promo_campaign_terms_agreement">J\'accepte les %1$s</string>
   <string name="promo_campaign_terms_agreement_android">J\'accepte les</string>
@@ -1745,7 +1745,7 @@
   <string name="tangempay_bank_transfer_show_details">Afficher les détails</string>
   <string name="tangempay_bank_transfer_success_subtitle">Cela peut prendre un moment</string>
   <string name="tangempay_bank_transfer_success_title">Préparation de vos coordonnées bancaires</string>
-  <string name="tangempay_bank_transfer_swift_warning">Dépôt uniquement via ACH ou FedWire. Les virements SWIFT seront retournés.</string>
+  <string name="tangempay_bank_transfer_swift_warning">Les virements SWIFT ne sont pas acceptés et seront retournés</string>
   <string name="tangempay_cancel_kyc">Masquer la vérification de l\'écran</string>
   <string name="tangempay_card_default_name">Carte Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Ajouter des fonds</string>
@@ -2011,7 +2011,7 @@
   <string name="tangempay_tangem_visa_card">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Recevez des USD via ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Recevez des USD via ACH</string>
   <string name="tangempay_topup_bank_transfer_title">Virement bancaire</string>
   <string name="tangempay_topup_receive_body">Envoyez USDC Polygon à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_body_multichain">Envoyez des USDC ou USDT à l\'adresse de votre compte</string>
@@ -2059,6 +2059,11 @@
   <string name="token_details_unable_hide_alert_message">Le jeton %1$s (%2$s) est la principale devise du réseau %3$s et ne peut pas être masqué tant que vous avez d\'autres jetons de ce réseau dans la liste</string>
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
   <string name="token_receive_show_qr_code_title">Afficher le code QR</string>
+  <string name="token_summary_galaxy_score_description">Le \"Galaxy Score\" combine la performance de marché et l\'activité sur les réseaux sociaux en un score unique de 0 à 100 qui reflète la santé globale de l\'actif. Source : LunarCrush.</string>
+  <string name="token_summary_ma_cross_description">Le \"MA Cross\" compare les prix moyens sur 50 et 200 jours pour indiquer si l\'actif se négocie au-dessus ou en dessous de sa tendance long terme. Source : taapi.io.</string>
+  <string name="token_summary_macd_description">Le \"MACD\" compare la dynamique des prix à court terme et à long terme pour indiquer si la dynamique d\'un actif se renforce ou s\'affaiblit. Source : taapi.io.</string>
+  <string name="token_summary_rsi_description">Le \"RSI\" (Relative Strength Index) mesure si un actif a été acheté ou vendu de manière excessive au cours des 14 dernières périodes, signalant un potentiel excès d\'achat ou de vente. Source : taapi.io.</string>
+  <string name="token_summary_sentiment_description">Le score de sentiment évalue le ton des publications sur les réseaux sociaux concernant l\'actif sur une échelle de 1 à 5, où un score plus élevé indique plus de discussions positives. Source : LunarCrush.</string>
   <string name="token_swap_changelly_promotion_message">Échangez ce jeton contre un autre moyennant des frais de service de %1$s du %2$s au %3$s février.</string>
   <string name="token_swap_changelly_promotion_title">Échangez avec Changelly, %s frais</string>
   <string name="token_swap_promotion_button">Échangez maintenant</string>
