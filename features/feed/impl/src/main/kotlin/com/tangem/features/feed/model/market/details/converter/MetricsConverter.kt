@@ -27,107 +27,12 @@ internal class MetricsConverter(
     private val onInfoClick: (InfoBottomSheetContent) -> Unit,
 ) : Converter<TokenMarketInfo.Metrics, MetricsUM> {
 
-    @Suppress("LongMethod")
-    override fun convert(value: TokenMarketInfo.Metrics): MetricsUM {
-        return with(value) {
-            MetricsUM(
-                metrics = persistentListOf(
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_market_capitalization),
-                        value = marketCap.formatAmount() ?: StringsSigns.DASH_SIGN,
-                        onInfoClick = {
-                            onInfoClick(
-                                InfoBottomSheetContent(
-                                    title = resourceReference(
-                                        R.string.markets_token_details_market_capitalization_full,
-                                    ),
-                                    body = resourceReference(
-                                        R.string.markets_token_details_market_capitalization_description,
-                                    ),
-                                ),
-                            )
-                        },
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_market_rating),
-                        value = marketRating?.toString() ?: StringsSigns.DASH_SIGN,
-                        onInfoClick = {
-                            onInfoClick(
-                                InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_market_rating_full),
-                                    body = resourceReference(R.string.markets_token_details_market_rating_description),
-                                ),
-                            )
-                        },
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_trading_volume),
-                        value = volume24h.formatAmount() ?: StringsSigns.DASH_SIGN,
-                        onInfoClick = {
-                            onInfoClick(
-                                InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_trading_volume_full),
-                                    body = resourceReference(
-                                        R.string.markets_token_details_trading_volume_24h_description,
-                                    ),
-                                ),
-                            )
-                        },
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_fully_diluted_valuation),
-                        value = fullyDilutedValuation.formatAmount() ?: StringsSigns.DASH_SIGN,
-                        onInfoClick = {
-                            onInfoClick(
-                                InfoBottomSheetContent(
-                                    title = resourceReference(
-                                        R.string.markets_token_details_fully_diluted_valuation_full,
-                                    ),
-                                    body = resourceReference(
-                                        R.string.markets_token_details_fully_diluted_valuation_description,
-                                    ),
-                                ),
-                            )
-                        },
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_circulating_supply),
-                        value = circulatingSupply.formatAmount(crypto = true) ?: StringsSigns.DASH_SIGN,
-                        onInfoClick = {
-                            onInfoClick(
-                                InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_circulating_supply_full),
-                                    body = resourceReference(
-                                        R.string.markets_token_details_circulating_supply_description,
-                                    ),
-                                ),
-                            )
-                        },
-                    ),
-                    InfoPointUM(
-                        title = resourceReference(R.string.markets_token_details_max_supply),
-                        value = maxSupply.formatMaxSupply() ?: StringsSigns.DASH_SIGN,
-                        onInfoClick = {
-                            onInfoClick(
-                                InfoBottomSheetContent(
-                                    title = resourceReference(R.string.markets_token_details_max_supply_full),
-                                    body = resourceReference(R.string.markets_token_details_total_supply_description),
-                                ),
-                            )
-                        },
-                    ),
-                ),
-                metricsV2 = convertToMetricsV2UM(value),
-            )
-        }
-    }
-
     @Suppress("LongMethod", "NestedScopeFunctions")
-    private fun convertToMetricsV2UM(value: TokenMarketInfo.Metrics): MetricsV2UM {
+    override fun convert(value: TokenMarketInfo.Metrics): MetricsUM {
         val infoPoints = with(value) {
             val liquidity = getLiquidity(value.volume24h, value.marketCap)
             persistentListOf(
-                InfoPointUMV2.MarketCap(
+                MetricItemUM.MarketCap(
                     capitalizationValue = marketCap.formatAmount()?.let(::stringReference),
                     onInfoClick = {
                         onInfoClick(
@@ -142,7 +47,7 @@ internal class MetricsConverter(
                         )
                     },
                 ),
-                InfoPointUMV2.TradingVolume(
+                MetricItemUM.TradingVolume(
                     tradingValue = volume24h.formatAmount()?.let(::stringReference),
                     liquidity = liquidity,
                     trendingVolumeLiquidityType = getTrendingVolumeLiquidityType(liquidity),
@@ -157,7 +62,7 @@ internal class MetricsConverter(
                         )
                     },
                 ),
-                InfoPointUMV2.MarketPosition(
+                MetricItemUM.MarketPosition(
                     position = marketRating?.let {
                         stringReference(it.toString())
                     },
@@ -173,7 +78,7 @@ internal class MetricsConverter(
                     },
                     marketRatingChange24H = getMarketRatingChange(marketRatingChange24h),
                 ),
-                InfoPointUMV2.FullyDilutedValuation(
+                MetricItemUM.FullyDilutedValuation(
                     value = fullyDilutedValuation?.formatAmount()?.let { formatted ->
                         resourceReference(
                             id = R.string.markets_token_details_valuation_value_in_total,
@@ -194,7 +99,7 @@ internal class MetricsConverter(
                         )
                     },
                 ),
-                InfoPointUMV2.CirculatingSupply(
+                MetricItemUM.CirculatingSupply(
                     currentValue = circulatingSupply?.formatAmount(true)?.let(::stringReference),
                     maxValue = when (maxSupply) {
                         null -> null
@@ -225,30 +130,21 @@ internal class MetricsConverter(
             )
         }
 
-        return buildMetricsV2UM(infoPoints)
+        return buildMetricsUM(infoPoints)
     }
 
-    private fun buildMetricsV2UM(infoPoints: ImmutableList<InfoPointUMV2>): MetricsV2UM {
+    private fun buildMetricsUM(infoPoints: ImmutableList<MetricItemUM>): MetricsUM {
         val rows = infoPoints.chunked(size = 2)
             .map { chunk ->
-                MetricsV2UM.Row(
+                MetricsUM.Row(
                     first = chunk.first(),
                     second = chunk.getOrNull(1),
                 )
             }
 
-        return MetricsV2UM(
+        return MetricsUM(
             rows = rows.toImmutableList(),
         )
-    }
-
-    private fun BigDecimal?.formatMaxSupply(): String? {
-        when (this) {
-            null -> return StringsSigns.DASH_SIGN
-            BigDecimal.ZERO -> return StringsSigns.INFINITY_SIGN
-        }
-
-        return this.formatAmount(crypto = true)
     }
 
     private fun BigDecimal?.formatAmount(crypto: Boolean = false): String? {

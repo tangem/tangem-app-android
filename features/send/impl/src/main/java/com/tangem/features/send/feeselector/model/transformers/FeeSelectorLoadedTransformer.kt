@@ -15,7 +15,10 @@ import com.tangem.features.send.feeselector.model.FeeSelectorLogic
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 
 @Suppress("LongParameterList")
 internal class FeeSelectorLoadedTransformer(
@@ -74,7 +77,11 @@ internal class FeeSelectorLoadedTransformer(
                     isTron(cryptoCurrencyStatus.currency.network.rawId),
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 availableFeeCurrencies = getAvailableFeeCurrencies(),
+                notEnoughForFeeCurrencies = getNotEnoughForFeeCurrencies(),
                 transactionFeeExtended = (fees as? FeeSelectorLogic.LoadedFeeResult.Extended)?.fee,
+                // A quote neither makes nor unmakes the user's pick; carry it across the reload.
+                isFeeTokenSelectedByUser = (prevState as? FeeSelectorUM.Content)
+                    ?.feeExtraInfo?.isFeeTokenSelectedByUser == true,
             ),
             feeFiatRateUM = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
                 FeeFiatRateUM(
@@ -95,6 +102,11 @@ internal class FeeSelectorLoadedTransformer(
 
     private fun getAvailableFeeCurrencies(): ImmutableList<CryptoCurrencyStatus>? {
         if (fees !is FeeSelectorLogic.LoadedFeeResult.Extended) return null
-        return fees.availableTokens.toImmutableList()
+        return fees.availableTokens.tokens.toImmutableList()
+    }
+
+    private fun getNotEnoughForFeeCurrencies(): ImmutableSet<CryptoCurrency.ID> {
+        if (fees !is FeeSelectorLogic.LoadedFeeResult.Extended) return persistentSetOf()
+        return fees.availableTokens.notEnoughForFeeIds.toImmutableSet()
     }
 }

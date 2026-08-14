@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
@@ -300,7 +301,7 @@ private fun Segment(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = item.title.resolveReference(),
+            text = item.title.resolveReference().capitalize(),
             style = TangemTheme.typography2.bodySemibold15,
             color = if (selectedIndex.value == index) {
                 TangemTheme.colors2.tabs.textTertiary

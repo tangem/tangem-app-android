@@ -15,7 +15,7 @@ import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -328,7 +328,6 @@ internal class TangemPaySelectPlanModelTest {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
 
         const val ACTIVATION_INDEX = 2
-
         val UPGRADE_TRANSITION = transition(TangemPayTariffPlanTransition.Type.UPGRADE, "PLUS", isBasic = false)
         val DOWNGRADE_TRANSITION = transition(TangemPayTariffPlanTransition.Type.DOWNGRADE, "BASIC", isBasic = true)
         val ACTIVATION_TRANSITION = transition(TangemPayTariffPlanTransition.Type.ACTIVATION, "PLUS", isBasic = false)
