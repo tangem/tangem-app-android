@@ -38,6 +38,7 @@ dependencies {
     // region Core
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     // endregion
 
