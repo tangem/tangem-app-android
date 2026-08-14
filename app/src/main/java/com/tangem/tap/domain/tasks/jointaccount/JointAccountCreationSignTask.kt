@@ -40,6 +40,10 @@ import kotlinx.coroutines.launch
  *
  * The derived key is returned (keyed by the seed wallet public key) so the caller can persist it via
  * `DerivationsRepository.storeDerivedKeys` — the session's in-memory copy dies with the session.
+ *
+ * Run via the generic `TangemSdkManager.runTaskAsync` with `UserWalletIdPreflightReadFilter` of the wallet the
+
+ * not by a specific card id.
  */
 class JointAccountCreationSignTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
