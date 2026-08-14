@@ -46,6 +46,7 @@ import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.SwapInteractor
+import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.IntegratedApprovalData
@@ -105,6 +106,7 @@ internal abstract class SwapModelTestBase {
     protected val appsFlyerStore: AppsFlyerStore = mockk(relaxed = true)
     protected val messageSender: UiMessageSender = mockk(relaxed = true)
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
+    protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
@@ -215,6 +217,7 @@ internal abstract class SwapModelTestBase {
         appsFlyerStore = appsFlyerStore,
         messageSender = messageSender,
         initialCurrenciesResolver = initialCurrenciesResolver,
+        accountUnderlyingCurrencies = accountUnderlyingCurrencies,
         allowPermissionsHandler = allowPermissionsHandler,
         swapFeatureToggles = swapFeatureToggles,
         getSwapUiModeUseCase = getSwapUiModeUseCase,
