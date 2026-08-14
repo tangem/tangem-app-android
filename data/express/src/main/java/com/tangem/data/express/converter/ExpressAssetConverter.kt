@@ -1,6 +1,6 @@
 package com.tangem.data.express.converter
 
-import com.tangem.datasource.api.express.models.response.Asset
+import com.tangem.grow.datasource.express.models.response.Asset
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.utils.converter.Converter
 

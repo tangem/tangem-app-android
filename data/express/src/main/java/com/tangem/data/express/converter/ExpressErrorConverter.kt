@@ -1,10 +1,10 @@
 package com.tangem.data.express.converter
 
 import com.squareup.moshi.JsonAdapter
-import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.utils.converter.Converter
-import com.tangem.datasource.api.express.models.response.ExpressError as ExpressErrorDTO
+import com.tangem.grow.datasource.express.models.response.ExpressError as ExpressErrorDTO
 
 class ExpressErrorConverter(
     private val jsonAdapter: JsonAdapter<ExpressErrorResponse>,

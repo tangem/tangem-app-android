@@ -1,0 +1,107 @@
+package com.tangem.grow.datasource.onramp
+
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.grow.datasource.onramp.models.request.OnrampPairsRequest
+import com.tangem.grow.datasource.onramp.models.response.OnrampDataResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampQuoteResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
+import com.tangem.grow.datasource.onramp.models.response.model.OnrampCountryDTO
+import com.tangem.grow.datasource.onramp.models.response.model.OnrampCurrencyDTO
+import com.tangem.grow.datasource.onramp.models.response.model.OnrampPairDTO
+import com.tangem.grow.datasource.onramp.models.response.model.PaymentMethodDTO
+import retrofit2.http.*
+
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
+interface OnrampApi {
+
+    @GET("currencies")
+    suspend fun getCurrencies(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+    ): ApiResponse<List<OnrampCurrencyDTO>>
+
+    @GET("countries")
+    suspend fun getCountries(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+    ): ApiResponse<List<OnrampCountryDTO>>
+
+    @GET("country-by-ip")
+    suspend fun getCountryByIp(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+    ): ApiResponse<OnrampCountryDTO>
+
+    @GET("payment-methods")
+    suspend fun getPaymentMethods(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+    ): ApiResponse<List<PaymentMethodDTO>>
+
+    @POST("onramp-pairs")
+    suspend fun getPairs(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+        @Body body: OnrampPairsRequest,
+    ): ApiResponse<List<OnrampPairDTO>>
+
+    @GET("onramp-quote")
+    suspend fun getQuote(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+        @Query("fromCurrencyCode") fromCurrencyCode: String,
+        @Query("fromPrecision") fromPrecision: Int,
+        @Query("toContractAddress") toContractAddress: String,
+        @Query("toNetwork") toNetwork: String,
+        @Query("paymentMethod") paymentMethod: String,
+        @Query("countryCode") countryCode: String,
+        @Query("fromAmount") fromAmount: String,
+        @Query("toDecimals") toDecimals: Int,
+        @Query("providerId") providerId: String,
+    ): ApiResponse<OnrampQuoteResponse>
+
+    @GET("onramp-data")
+    suspend fun getData(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+        @Query("fromCurrencyCode") fromCurrencyCode: String,
+        @Query("fromPrecision") fromPrecision: Int,
+        @Query("toContractAddress") toContractAddress: String,
+        @Query("toNetwork") toNetwork: String,
+        @Query("paymentMethod") paymentMethod: String,
+        @Query("countryCode") countryCode: String,
+        @Query("fromAmount") fromAmount: String,
+        @Query("toDecimals") toDecimals: Int,
+        @Query("providerId") providerId: String,
+        @Query("toAddress") toAddress: String,
+        @Query("redirectUrl") redirectUrl: String,
+        @Query("language") language: String?,
+        @Query("theme") theme: String?,
+        @Query("requestId") requestId: String,
+    ): ApiResponse<OnrampDataResponse>
+
+    @GET("onramp-status")
+    suspend fun getStatus(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String?,
+        @Query("txId") txId: String,
+    ): ApiResponse<OnrampItemResponse>
+
+    @GET("history/onramp")
+    suspend fun getHistory(
+        @Header("user-id") userWalletId: String,
+        @Query("payoutAddress") payoutAddress: String,
+        @Query("afterCursor") afterCursor: String?,
+        @Query("limit") limit: Int = 100,
+    ): ApiResponse<OnrampHistoryResponse>
+
+    @GET("history/delta/onramp")
+    suspend fun getHistoryDelta(
+        @Header("user-id") userWalletId: String,
+        @Query("payoutAddress") payoutAddress: String,
+        @Query("beforeCursor") cursor: String?,
+        @Query("limit") limit: Int = 100,
+    ): ApiResponse<OnrampHistoryDeltaResponse>
+}
