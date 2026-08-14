@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -36,15 +37,26 @@ internal class PredictionAccountStatusStore(
 
     private val logger = TangemLogger.withTag(TAG)
 
+    /**
+     * Completed once the persisted statuses have been loaded. Every write waits for it, so no write can be
+     * undone by a snapshot of the disk taken before it — in particular a wallet deleted during startup cannot
+     * be resurrected by the preload, which is the whole reason the deletion cleanup exists.
+     *
+     * Reads deliberately do not wait: [get] must stay immediate.
+     */
+    private val preloaded = CompletableDeferred<Unit>()
+
     init {
         scope.launch {
-            val cached = runSuspendCatching { persistenceDataStore.data.first() }
-                .onFailure { logger.e("Failed to read the cached prediction account statuses", it) }
-                .getOrDefault(emptyMap())
+            try {
+                val cached = runSuspendCatching { persistenceDataStore.data.first() }
+                    .onFailure { logger.e("Failed to read the cached prediction account statuses", it) }
+                    .getOrDefault(emptyMap())
 
-            // Merged, not replaced: a refresh that lands while the disk is being read must not be rolled back,
-            // and a wallet deleted in that window must not come back from the snapshot taken before the deletion
-            runtimeStore.update(default = emptyMap()) { current -> cached + current }
+                runtimeStore.store(cached)
+            } finally {
+                preloaded.complete(Unit)
+            }
         }
     }
 
@@ -60,6 +72,8 @@ internal class PredictionAccountStatusStore(
     }
 
     suspend fun store(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
+        preloaded.await()
+
         val unpriced = value.withoutFiatRate()
 
         coroutineScope {
@@ -74,6 +88,8 @@ internal class PredictionAccountStatusStore(
      * refreshed" must not survive to the next launch, where nothing has been attempted yet.
      */
     suspend fun updateStatusSource(userWalletId: UserWalletId, source: StatusSource) {
+        preloaded.await()
+
         runtimeStore.update(default = emptyMap()) { stored ->
             val value = stored[userWalletId.stringValue] ?: return@update stored
 
@@ -82,6 +98,8 @@ internal class PredictionAccountStatusStore(
     }
 
     suspend fun clear(userWalletId: UserWalletId) {
+        preloaded.await()
+
         coroutineScope {
             launch { runtimeStore.update(default = emptyMap()) { it - userWalletId.stringValue } }
             launch { persistenceDataStore.updateData { it - userWalletId.stringValue } }
