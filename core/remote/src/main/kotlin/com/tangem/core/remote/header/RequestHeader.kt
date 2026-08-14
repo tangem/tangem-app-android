@@ -1,9 +1,6 @@
-package com.tangem.datasource.utils
+package com.tangem.core.remote.header
 
-import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.utils.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
-import com.tangem.utils.Provider
+import com.tangem.core.remote.header.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 import java.util.TimeZone
@@ -11,19 +8,17 @@ import java.util.TimeZone
 /**
  * Presentation of request header
  *
+ * Open (not sealed) so streams can declare auth-coupled headers in their own modules without pulling their
+ * auth providers up here — this module holds only the dependency-free headers.
+ *
  * @param pairs header name and header value pairs
  */
-sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) {
+open class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) {
 
     /** Header list */
     val values: Map<String, ProviderSuspend<String>> = pairs.toMap()
 
     data object CacheControlHeader : RequestHeader("Cache-Control" to ProviderSuspend { "max-age=600" })
-
-    class AuthenticationHeader(authProvider: AuthProvider) : RequestHeader(
-        "card_id" to ProviderSuspend(authProvider::getCardId),
-        "card_public_key" to ProviderSuspend(authProvider::getCardPublicKey),
-    )
 
     class AppVersionPlatformHeaders(
         appInfoProvider: AppInfoProvider,
@@ -44,13 +39,6 @@ sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) 
             displayName.checkHeaderValueOrEmpty()
         },
         "device" to ProviderSuspend { appInfoProvider.device.checkHeaderValueOrEmpty() },
-    )
-
-    /**
-     * Use ONLY for tangemApi (not express or yields)
-     */
-    class TangemApiKeyHeader(authProvider: AuthProvider, apiEnvironment: Provider<ApiEnvironment>) : RequestHeader(
-        "api-key" to authProvider.getApiKey(apiEnvironment),
     )
 
     /**
