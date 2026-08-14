@@ -3,7 +3,6 @@ package com.tangem.domain.pay.model
 data class ShippingAddress(
     val firstName: String,
     val lastName: String,
-    val email: String,
     val region: String,
     val city: String,
     val line1: String,

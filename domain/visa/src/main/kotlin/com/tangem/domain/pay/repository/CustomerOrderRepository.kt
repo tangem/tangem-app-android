@@ -7,6 +7,7 @@ import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.visa.error.VisaApiError
 
 interface CustomerOrderRepository {
@@ -43,6 +44,13 @@ interface CustomerOrderRepository {
         targetTariffPlanId: String? = null,
         transitionType: TangemPayTariffPlanTransition.Type? = null,
         chainId: Int? = null,
+    ): Either<VisaApiError, Order>
+
+    suspend fun createPlasticIssueOrder(
+        userWalletId: UserWalletId,
+        specificationName: String,
+        order: PlasticCardOrder,
+        idempotencyKey: String,
     ): Either<VisaApiError, Order>
 
     suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit>

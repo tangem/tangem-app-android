@@ -10,8 +10,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.res.R
@@ -27,15 +25,20 @@ import org.junit.Test
 @HiltAndroidTest
 class SwapTokenScreenTest : BaseTestCase() {
 
-    @ApiEnv(
-        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
-    )
+    // Express stays on MOCK (the rule's default): pointing it at PROD made the test depend on which
+    // providers the live exchange happened to offer for the pair, which is exactly what made it flaky.
+    // The mocked ETH -> POL (Ethereum) pair carries 1inch alongside the CEX providers, so the ALL/CEX/DEX
+    // filter the case asks for is always there.
     @AllureId("9456")
     @DisplayName("Swap: provider modal shows ALL/CEX/DEX filter and the picked provider appears in the tab")
     @Test
     fun checkProviderTypeFilterTest() {
         val fromTokenSymbol = "ETH"
         val receiveTokenName = "POL (ex-MATIC)"
+        // The wallet holds POL on two networks and only the Ethereum one has a DEX provider (1inch) next to
+        // Picking by name alone lands on the Polygon one about half the time, whose pair is CEX-only, and
+        // then no type filter can ever appear — no amount of reopening the sheet helps.
+        val receiveTokenNetwork = "Ethereum network"
         val inputAmount = "0.1"
         val allFilter = getResourceString(R.string.common_all)
         val cexFilter = "CEX"
@@ -58,7 +61,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 }
             }
             step("Choose receive token '$receiveTokenName'") {
-                chooseReceiveToken(receiveTokenName)
+                chooseReceiveToken(receiveTokenName, receiveTokenNetwork)
             }
             step("Input swap amount '$inputAmount'") {
                 waitForIdle()
@@ -203,7 +206,6 @@ class SwapTokenScreenTest : BaseTestCase() {
 
         setupHooks().run {
 
-            resetWireMockScenarios()
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -457,7 +459,6 @@ class SwapTokenScreenTest : BaseTestCase() {
 
         setupHooks().run {
 
-            resetWireMockScenarios()
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -657,11 +658,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         val salam = "Salam"
         val scenarioState = "CustomTokenAndJesusAdded"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
@@ -783,12 +780,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-                resetWireMockScenarioState(pairsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -868,13 +860,7 @@ class SwapTokenScreenTest : BaseTestCase() {
         val networkName = "Ethereum"
         val currencySymbol = "ETH"
 
-
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-                resetWireMockScenarioState(pairsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
