@@ -302,12 +302,12 @@ private fun previewMenu() = persistentListOf(
     TxHistoryDetailsUM.MenuItemUM(
         icon = Icons.ic_copy_24,
         title = stringReference("Transaction ID"),
-        onClick = {},
+        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
     ),
     TxHistoryDetailsUM.MenuItemUM(
         icon = Icons.ic_globe_24,
         title = stringReference("Explore"),
-        onClick = {},
+        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
     ),
 )
 

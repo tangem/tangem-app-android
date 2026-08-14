@@ -191,7 +191,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val item = TxHistoryDetailsUM.MenuItemUM(
             icon = Icons.ic_arrow_down_20,
             title = resourceReference(R.string.common_share),
-            onClick = {},
+            action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
         )
 
         // Act
