@@ -9,8 +9,8 @@ import com.domain.blockaid.models.transaction.TransactionParams
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.blockaid.converters.GasEstimationResponseConverter
-import com.tangem.datasource.api.common.blockaid.BlockAidApi
-import com.tangem.datasource.api.common.blockaid.models.request.DomainScanRequest
+import com.tangem.store.datasource.blockaid.BlockAidApi
+import com.tangem.store.datasource.blockaid.models.request.DomainScanRequest
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext

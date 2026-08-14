@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.blockaid.models.request
+package com.tangem.store.datasource.blockaid.models.request
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

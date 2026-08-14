@@ -1,14 +1,12 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.store.datasource.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
-
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 
 class BlockAid(
-    private val environmentConfig: EnvironmentConfig,
+    private val storeEnvironmentConfig: StoreEnvironmentConfig,
 ) : ApiConfig() {
 
     override val id: ApiConfig.ID get() = ID
@@ -26,7 +24,7 @@ class BlockAid(
             put(
                 key = "X-API-KEY",
                 value = ProviderSuspend {
-                    requireNotNull(environmentConfig.blockAidApiKey)
+                    requireNotNull(storeEnvironmentConfig.blockAidApiKey)
                 },
             )
             put("accept", ProviderSuspend { "application/json" })
