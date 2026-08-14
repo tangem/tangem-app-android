@@ -3,7 +3,7 @@ package com.tangem.data.polymarket.cleaner
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
-import com.tangem.data.polymarket.store.WalletIdWithPredictionStatus
+import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
@@ -139,7 +139,7 @@ internal class PolymarketUserWalletDataCleanerTest {
 
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
         runtimeStore = RuntimeSharedStore(),
-        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatus>(default = emptyMap()),
+        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
         scope = TestAppCoroutineScope(testScope),
     )
 
