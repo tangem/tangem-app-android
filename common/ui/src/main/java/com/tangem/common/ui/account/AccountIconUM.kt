@@ -14,4 +14,6 @@ sealed class AccountIconUM {
         val icon: Icon = Icon.Safe
         val color: Color = Color.VitalGreen
     }
+
+    data object Prediction : AccountIconUM()
 }
