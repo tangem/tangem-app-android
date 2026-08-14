@@ -681,6 +681,7 @@ internal class TxHistoryInfoMergerTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
+            externalTxId = null,
             payinAddress = payinAddress,
             updatedAtMillis = updatedAtMillis,
             refundAssetId = null,

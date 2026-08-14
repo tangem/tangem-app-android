@@ -6,17 +6,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,12 +35,12 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
-import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
@@ -62,60 +59,54 @@ private const val GLOW_RADIUS_FACTOR = 0.585f
 private const val GLOW_BLUE_ALPHA = 0.20f
 private const val GLOW_WARM_ALPHA = 0.15f
 
-private val TopBarHeight: Dp = 68.dp
-
 @Composable
 internal fun TangemPayCashbackScreen(state: TangemPayCashbackScreenUM, modifier: Modifier = Modifier) {
-    val topPadding = TopBarHeight + WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-
-    Box(modifier = modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSourceTangem()
-                .background(TangemTheme.colors3.bg.primary),
-        ) {
-            if (state is TangemPayCashbackScreenUM.Content && state.cashback.isEmpty) {
-                EmptyStateGlow(modifier = Modifier.fillMaxSize())
-            }
-
-            when (state) {
-                is TangemPayCashbackScreenUM.Loading -> TangemPayCashbackShimmer(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = topPadding),
-                )
-                is TangemPayCashbackScreenUM.Error -> CashbackError(
-                    onReloadClick = state.onReloadClick,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = topPadding)
-                        .navigationBarsPadding(),
-                )
-                is TangemPayCashbackScreenUM.Content -> CashbackContent(
-                    state = state,
-                    topPadding = topPadding,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+    TangemTopBarScaffold(
+        modifier = modifier,
+        topBar = {
+            TangemTopNavigation(
+                title = resourceReference(CoreUiR.string.tangempay_cashback_title),
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                onClose = state.onCloseClick,
+            )
+        },
+    ) { contentPadding ->
+        if (state is TangemPayCashbackScreenUM.Content && state.cashback.isEmpty) {
+            EmptyStateGlow(modifier = Modifier.fillMaxSize())
         }
 
-        TangemTopNavigation(
-            // TODO([REDACTED_TASK_KEY]): move to string resources
-            title = stringReference("Cashback"),
-            contentAlign = TangemTopNavigation.ContentAlign.Center,
-            onClose = state.onCloseClick,
-        )
+        when (state) {
+            is TangemPayCashbackScreenUM.Loading -> TangemPayCashbackShimmer(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
+            )
+            is TangemPayCashbackScreenUM.Error -> CashbackError(
+                onReloadClick = state.onReloadClick,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
+            )
+            is TangemPayCashbackScreenUM.Content -> CashbackContent(
+                state = state,
+                contentPadding = contentPadding,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
 @Composable
-private fun CashbackContent(state: TangemPayCashbackScreenUM.Content, topPadding: Dp, modifier: Modifier = Modifier) {
+private fun CashbackContent(
+    state: TangemPayCashbackScreenUM.Content,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(top = topPadding, bottom = 16.dp)
-            .navigationBarsPadding(),
+            .padding(contentPadding)
+            .padding(bottom = 16.dp),
     ) {
         HeroBlock(state = state.cashback)
         state.cashback.banner?.let { banner ->
@@ -156,16 +147,14 @@ private fun CashbackError(onReloadClick: () -> Unit, modifier: Modifier = Modifi
         ) {
             Icon(
                 painter = painterResource(CoreUiR.drawable.ic_refresh_24),
-                // TODO([REDACTED_TASK_KEY]): move to string resources
-                contentDescription = stringReference("Reload").resolveReference(),
+                contentDescription = resourceReference(CoreUiR.string.common_reload).resolveReference(),
                 tint = TangemTheme.colors3.icon.inverse,
                 modifier = Modifier.size(20.dp),
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            // TODO([REDACTED_TASK_KEY]): move to string resources
-            text = stringReference("Failed to load page.\nTap to reload").resolveReference(),
+            text = resourceReference(CoreUiR.string.tangempay_cashback_error_title).resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
@@ -277,7 +266,7 @@ private class TangemPayCashbackScreenUMProvider : CollectionPreviewParameterProv
             onCloseClick = {},
             cashback = TangemPayCashbackUM(
                 title = stringReference("$22.54 earned in June"),
-                subtitle = stringReference("Will be deposited on July 1–5"),
+                subtitle = stringReference("Will be deposited on July 1 – 5"),
                 isEmpty = false,
                 banner = TangemPayCashbackUM.Banner(
                     text = stringReference("Cashback $22.54 for June will be deposited till July 5"),

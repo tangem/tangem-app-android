@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.feeselector.component.FeeSelectorComponentParams
@@ -67,20 +68,25 @@ internal class FeeTokenSelectorModel @Inject constructor(
     private fun stateFromParent(newParentState: FeeSelectorUM.Content): FeeTokenSelectorUM {
         val parentState = newParentState
         val selectedCurrencyStatus = parentState.feeExtraInfo.feeCryptoCurrencyStatus
-        val selectedTokenUM = convertToken(selectedCurrencyStatus)
+        val notEnoughForFee = parentState.feeExtraInfo.notEnoughForFeeCurrencies
+        val selectedTokenUM = convertToken(selectedCurrencyStatus, notEnoughForFee)
 
         return FeeTokenSelectorUM(
             parent = parentState,
             selectedToken = selectedTokenUM,
             tokens = parentState.feeExtraInfo.availableFeeCurrencies?.map { status ->
-                convertToken(status)
+                convertToken(status, notEnoughForFee)
             }?.toImmutableList() ?: persistentListOf(selectedTokenUM),
         )
     }
 
-    private fun convertToken(status: CryptoCurrencyStatus): FeeTokenItemState {
+    private fun convertToken(
+        status: CryptoCurrencyStatus,
+        notEnoughForFee: Set<CryptoCurrency.ID>,
+    ): FeeTokenItemState {
         return FeeTokenForListConverter(
             appCurrencyProvider = Provider { appCurrency },
+            canPayFee = status.currency.id !in notEnoughForFee,
             onTokenClick = { onTokenSelected(status) },
         ).convert(status)
     }

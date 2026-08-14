@@ -1,7 +1,8 @@
 package com.tangem.data.pay.store
 
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.spend.datasource.config.TangemPay
+
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
@@ -24,7 +25,7 @@ internal class MockAwareTangemPayStorage @Inject constructor(
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
-            .getEnvironmentConfig(ApiConfig.ID.TangemPay)
+            .getEnvironmentConfig(TangemPay.Bff.ID)
             .environment == ApiEnvironment.MOCK
 
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
@@ -35,11 +36,6 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String? {
         if (isMockMode) return MOCK_CUSTOMER_WALLET_ADDRESS
         return real.getCustomerWalletAddress(userWalletId)
-    }
-
-    override suspend fun clearCustomerWalletAddress(userWalletId: UserWalletId) {
-        if (isMockMode) return
-        real.clearCustomerWalletAddress(userWalletId)
     }
 
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) {
@@ -58,11 +54,6 @@ internal class MockAwareTangemPayStorage @Inject constructor(
             )
         }
         return real.getAuthTokens(customerWalletAddress)
-    }
-
-    override suspend fun clearAuthTokens(customerWalletAddress: String) {
-        if (isMockMode) return
-        real.clearAuthTokens(customerWalletAddress)
     }
 
     override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) =
@@ -136,6 +127,9 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean =
         real.isTangemPayDeactivated(userWalletId)
 
-    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) =
+    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String?) =
         real.clearAll(userWalletId, customerWalletAddress)
+
+    override suspend fun clearIsTangemPayDeactivated(userWalletId: UserWalletId) =
+        real.clearIsTangemPayDeactivated(userWalletId)
 }

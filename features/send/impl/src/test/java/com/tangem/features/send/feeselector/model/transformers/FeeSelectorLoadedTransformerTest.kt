@@ -9,6 +9,7 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeExtraInfo
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
@@ -16,6 +17,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelector
 import com.tangem.features.send.feeselector.model.FeeSelectorLogic
 import com.tangem.features.send.loadedStatus
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
@@ -58,12 +60,18 @@ internal class FeeSelectorLoadedTransformerTest {
         shouldDisableCustomFee = true,
     )
 
-    private fun prevContent(selected: FeeItem, feeNonce: FeeNonce = FeeNonce.None) = FeeSelectorUM.Content(
+    private fun prevContent(
+        selected: FeeItem,
+        feeNonce: FeeNonce = FeeNonce.None,
+        isFeeTokenSelectedByUser: Boolean = false,
+    ) = FeeSelectorUM.Content(
         isPrimaryButtonEnabled = true,
         fees = TransactionFee.Single(normal = commonFee),
         feeItems = persistentListOf(selected),
         selectedFeeItem = selected,
-        feeExtraInfo = mockk(),
+        feeExtraInfo = mockk<FeeExtraInfo>(relaxed = true).also {
+            every { it.isFeeTokenSelectedByUser } returns isFeeTokenSelectedByUser
+        },
         feeFiatRateUM = null,
         feeNonce = feeNonce,
     )
@@ -179,8 +187,35 @@ internal class FeeSelectorLoadedTransformerTest {
             assertThat(info.isFeeConvertibleToFiat).isEqualTo(coin.network.hasFiatFeeRate)
             assertThat(result.feeFiatRateUM).isNotNull()
         }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN previous state WHEN transform THEN user pick of the fee token carried over`(
+            model: UserPickModel,
+        ) {
+            // Act
+            val result = transformer(basic(commonFee)).transform(model.prevState) as FeeSelectorUM.Content
+
+            // Assert
+            assertThat(result.feeExtraInfo.isFeeTokenSelectedByUser).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            UserPickModel(prevState = FeeSelectorUM.Loading, expected = false),
+            UserPickModel(
+                prevState = prevContent(FeeItem.Market(commonFee), isFeeTokenSelectedByUser = false),
+                expected = false,
+            ),
+            // A pick survives the quote that follows it — the reload must not hand the token back
+            // to the gasless strategy.
+            UserPickModel(
+                prevState = prevContent(FeeItem.Market(commonFee), isFeeTokenSelectedByUser = true),
+                expected = true,
+            ),
+        )
     }
 
     data class SelectedModel(val prevState: FeeSelectorUM, val expected: Class<out FeeItem>)
     data class NonceTypeModel(val normal: Fee, val expected: Class<out FeeNonce>)
+    data class UserPickModel(val prevState: FeeSelectorUM, val expected: Boolean)
 }

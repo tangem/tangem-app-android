@@ -23,7 +23,7 @@ internal class DefaultNewsDetailsDeepLinkHandler @AssistedInject constructor(
 
     private fun handleDeepLink() {
         scope.launch {
-            val articleId = extractArticleIdFromUri(deeplinkUri)
+            val articleId = NewsDetailsDeepLinkHandler.extractArticleIdFromUri(deeplinkUri)
             if (articleId == null) {
                 TangemLogger.e(
                     """
@@ -38,20 +38,6 @@ internal class DefaultNewsDetailsDeepLinkHandler @AssistedInject constructor(
                 AppRoute.NewsDetails(newsId = articleId),
             )
         }
-    }
-
-    /**
-     * Parsing URI with format https://tangem.com/news/{category}/{id}-{slug} to get id
-     */
-    private fun extractArticleIdFromUri(uri: Uri): Int? {
-        val path = uri.path ?: return null
-        val pathSegments = path.split("/").filter { it.isNotBlank() }
-        if (pathSegments.isEmpty() || pathSegments[0] != "news" || pathSegments.size < 2) {
-            return null
-        }
-        val lastSegment = pathSegments.last()
-        val idPart = lastSegment.substringBefore("-")
-        return idPart.toIntOrNull()
     }
 
     @AssistedFactory

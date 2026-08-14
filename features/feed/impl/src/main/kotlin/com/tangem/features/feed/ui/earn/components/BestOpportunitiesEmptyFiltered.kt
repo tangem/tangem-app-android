@@ -9,45 +9,38 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.ds.button.*
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun BestOpportunitiesEmptyFiltered(onClearFilterClick: () -> Unit, modifier: Modifier = Modifier) {
-    BestOpportunitiesEmptyFilteredV2(onClearFilterClick, modifier)
-}
-
-@Composable
-private fun BestOpportunitiesEmptyFilteredV2(onClearFilterClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x4)
+            .padding(horizontal = 16.dp)
             .background(
-                color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                color = TangemTheme.colors3.bg.secondary,
+                shape = RoundedCornerShape(20.dp),
             )
-            .padding(vertical = TangemTheme.dimens2.x8, horizontal = TangemTheme.dimens2.x3),
+            .padding(vertical = 32.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResourceSafe(R.string.earn_no_results),
-            style = TangemTheme.typography2.subheadlineMedium14,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            style = TangemTheme.typography3.subheading.medium,
+            color = TangemTheme.colors3.text.secondary,
         )
-        SpacerH(TangemTheme.dimens2.x2)
+        SpacerH(8.dp)
         TangemButton(
-            buttonUM = TangemButtonUM(
-                text = resourceReference(R.string.earn_clear_filter),
-                onClick = onClearFilterClick,
-                type = TangemButtonType.Secondary,
-                size = TangemButtonSize.X8,
-                shape = TangemButtonShape.Rounded,
-            ),
+            variant = TangemButton.Variant.Secondary,
+            onClick = onClearFilterClick,
+            text = resourceReference(R.string.earn_clear_filter),
+            size = TangemButton.Size.X8,
         )
     }
 }

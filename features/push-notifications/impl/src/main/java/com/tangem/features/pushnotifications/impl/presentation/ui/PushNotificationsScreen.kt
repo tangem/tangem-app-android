@@ -37,7 +37,6 @@ internal data class PushNotificationsDoubleAskSheetState(
 
 @Immutable
 internal data class PushNotificationsUM(
-    val isPushNotificationSettingsEnabled: Boolean,
     val doubleAskSheet: PushNotificationsDoubleAskSheetState,
 )
 
@@ -55,16 +54,8 @@ internal fun PushNotificationsScreen(
         permission = PUSH_PERMISSION,
     )
 
-    val argumentTwoTitleRes = if (state.isPushNotificationSettingsEnabled) {
-        R.string.user_push_notification_agreement_argument_two_title_v2
-    } else {
-        R.string.user_push_notification_agreement_argument_two_title
-    }
-    val argumentTwoSubtitleRes = if (state.isPushNotificationSettingsEnabled) {
-        R.string.user_push_notification_agreement_argument_two_subtitle_v2
-    } else {
-        R.string.user_push_notification_agreement_argument_two_subtitle
-    }
+    val argumentTwoTitleRes = R.string.user_push_notification_agreement_argument_two_title_v2
+    val argumentTwoSubtitleRes = R.string.user_push_notification_agreement_argument_two_subtitle_v2
 
     Showcase(
         headerIconRes = R.drawable.ic_notification_56,
@@ -137,7 +128,6 @@ private fun PushNotificationsDoubleAskBottomSheet(
 }
 
 private fun previewState(isDoubleAskShown: Boolean) = PushNotificationsUM(
-    isPushNotificationSettingsEnabled = true,
     doubleAskSheet = PushNotificationsDoubleAskSheetState(
         isShown = isDoubleAskShown,
         onEnableClick = {},

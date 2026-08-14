@@ -7,6 +7,8 @@ internal sealed interface ForYouBottomSheetConfig {
 
     data object AddToPortfolio : ForYouBottomSheetConfig
 
+    data object PortfolioSelector : ForYouBottomSheetConfig
+
     data class ManageFunds(
         val rawCurrencyId: CryptoCurrency.RawID,
     ) : ForYouBottomSheetConfig
