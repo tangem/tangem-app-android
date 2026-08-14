@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.wallet
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -30,13 +31,16 @@ import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.ui.components.ShtorkaSheetHeaderHeight
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
+import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -56,7 +60,9 @@ import kotlinx.coroutines.launch
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
+    private val feedFeatureToggles: FeedFeatureToggles,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
+    feedV2ComponentFactory: FeedV2Component.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     virtualAccountMainBlockComponentFactory: VirtualAccountMainBlockComponent.Factory,
     jointAccountMainBlockComponentFactory: JointAccountMainBlockComponent.Factory,
@@ -79,6 +85,12 @@ internal class WalletComponent @AssistedInject constructor(
         feedEntryComponentFactory.create(
             context = child("feedEntryComponent"),
             entryRoute = null,
+        )
+    }
+    private val feedV2Component by lazy {
+        feedV2ComponentFactory.create(
+            context = child("feedV2Component"),
+            params = Unit,
         )
     }
     private val tangemPayMainBlockComponent by lazy {
@@ -307,13 +319,31 @@ internal class WalletComponent @AssistedInject constructor(
             virtualAccountComponent = virtualAccountMainBlockComponent,
             jointAccountComponent = jointAccountMainBlockComponent,
             modifier = modifier,
-            bottomSheetContent = { onExpandSheet ->
-                BottomSheetContent(
+            isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
+            shtorkaHeaderContent = { onExpandSheet ->
+                feedV2Component.Header(
                     bottomSheetState = bottomSheetState,
-                    onHeaderSizeChange = { headerSize = it },
                     onExpandSheet = onExpandSheet,
                     modifier = Modifier,
                 )
+            },
+            bottomSheetContent = { onExpandSheet ->
+                if (feedFeatureToggles.isNewShtorkaEnabled) {
+                    feedV2Component.Content(
+                        bottomSheetState = bottomSheetState,
+                        // The shtorka pins the grabber + search bar over the content
+                        contentPadding = PaddingValues(top = ShtorkaSheetHeaderHeight),
+                        onExpandSheet = onExpandSheet,
+                        modifier = Modifier,
+                    )
+                } else {
+                    BottomSheetContent(
+                        bottomSheetState = bottomSheetState,
+                        onHeaderSizeChange = { headerSize = it },
+                        onExpandSheet = onExpandSheet,
+                        modifier = Modifier,
+                    )
+                }
             },
             bottomSheetHeaderHeightProvider = { headerSize },
             onBottomSheetStateChange = { bottomSheetState.value = it },
