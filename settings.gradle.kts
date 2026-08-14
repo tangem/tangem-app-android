@@ -426,6 +426,9 @@ include(":features:common-features:impl")
 
 include(":features:for-you:api")
 include(":features:for-you:impl")
+
+include(":features:gacha:api")
+include(":features:gacha:impl")
 // endregion Feature modules
 
 // region Domain modules
