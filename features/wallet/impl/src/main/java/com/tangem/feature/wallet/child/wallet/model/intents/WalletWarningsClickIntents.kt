@@ -44,7 +44,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
-import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -123,9 +122,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
-    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
-    private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
-    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
@@ -298,7 +294,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         analyticsEventHandler.send(
                             PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true),
                         )
-                        enableNotificationsIfNeeded()
                     }
                 },
                 onDeny = {
@@ -379,22 +374,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             )
 
             null
-        }
-    }
-
-    private suspend fun enableNotificationsIfNeeded() {
-        // New first-activation owns auto-enable when the feature is on; skip the legacy path.
-        if (pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
-        val alreadyEnabledWallets = notificationsRepository.getWalletAutomaticallyEnabledList().map {
-            UserWalletId(it)
-        }
-        val walletsListWhichShouldBeEnabled = getWalletsListForEnablingUseCase(alreadyEnabledWallets)
-        walletsListWhichShouldBeEnabled.forEach { userWalletId ->
-            setNotificationsEnabledUseCase(userWalletId, true).onRight {
-                notificationsRepository.setNotificationsWasEnabledAutomatically(userWalletId.stringValue)
-            }.onLeft {
-                TangemLogger.e("Error", it)
-            }
         }
     }
 

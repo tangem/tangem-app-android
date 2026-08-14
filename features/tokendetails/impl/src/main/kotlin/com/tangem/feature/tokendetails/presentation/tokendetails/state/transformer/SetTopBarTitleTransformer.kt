@@ -70,9 +70,8 @@ internal class SetTopBarTitleTransformer(
                     resourceReference(CoreResR.string.token_details_toolbar_subtitle_network, wrappedList(networkName))
                 }
             }
-            is CryptoCurrency.Coin -> {
-                resourceReference(CoreResR.string.token_details_toolbar_subtitle_network, wrappedList(networkName))
-            }
+            // A coin is the network's own currency, so naming the network again says nothing.
+            is CryptoCurrency.Coin -> resourceReference(CoreResR.string.common_main_network)
         }
     }
 }

@@ -35,6 +35,7 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
         WcSignUseCaseDelegate(
             analytics = analytics,
             context = context,
+            respondService = respondService,
             finalActionCollector = this,
             middleActionCollector = this,
         )

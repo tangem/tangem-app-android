@@ -4,6 +4,8 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.common.uri.ExternalUrlValidator
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
@@ -68,20 +70,33 @@ internal class DeepLinkFactory @Inject constructor(
     private val yieldDeepLink: YieldDeepLinkHandler.Factory,
     private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
     private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
+    private val urlOpener: UrlOpener,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
-    private var lastDeepLink: Uri? = null
+    private var parkedDeeplink: ParkedDeeplink? = null
     private val deepLinkHandlerJobHolder = JobHolder()
 
+    /**
+     * Handle [deeplinkUri]: park it until the app is ready to route, then dispatch it to the matching handler.
+     *
+     * [source] decides the outcome when no handler matches — see [DeeplinkSource]. It defaults to
+     * [DeeplinkSource.External], the conservative option, which drops an unroutable URI.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun handleDeeplink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
-        lastDeepLink = deeplinkUri
+    fun handleDeeplink(
+        deeplinkUri: Uri,
+        coroutineScope: CoroutineScope,
+        isFromOnNewIntent: Boolean,
+        source: DeeplinkSource = DeeplinkSource.External,
+    ) {
+        parkedDeeplink = ParkedDeeplink(uri = deeplinkUri, source = source)
 
         TangemLogger.i(
             """
                 Received deep link intent
                 |- Received URI: $deeplinkUri
+                |- Source: $source
             """.trimIndent(),
         )
         combine(
@@ -91,14 +106,42 @@ internal class DeepLinkFactory @Inject constructor(
             isRoutePermitted to isCardSdkVisible
         }.transformLatest<Pair<Boolean, Boolean>, Unit> { (isRoutePermitted, isCardSdkVisible) ->
             if (isRoutePermitted && !isCardSdkVisible) {
-                lastDeepLink?.let {
-                    launchDeepLink(it, coroutineScope, isFromOnNewIntent)
+                parkedDeeplink?.let { (uri, source) ->
+                    val isRouted = launchDeepLink(uri, coroutineScope, isFromOnNewIntent)
+
+                    if (!isRouted && source == DeeplinkSource.Push) {
+                        openWebLinkFromPush(uri)
+                    }
                 }
-                lastDeepLink = null
+                parkedDeeplink = null
             }
         }
             .launchIn(coroutineScope)
             .saveIn(deepLinkHandlerJobHolder)
+    }
+
+    /**
+     * A push-supplied URI that matches no in-app route can still be a marketing web page — the original purpose
+     * of the payload's `link` key. Open it only when [ExternalUrlValidator] trusts the host, or when it is an
+     * AppsFlyer OneLink domain: those are app links the app itself captures, and the round-trip through
+     * `ACTION_VIEW` is what lets the AppsFlyer SDK resolve them in
+     * [MainActivity.onNewIntent][com.tangem.tap.MainActivity.onNewIntent].
+     *
+     * The host is matched against the already-parsed [Uri] rather than through
+     * [ExternalUrlValidator.isUriTrusted], which re-parses with `java.net.URI` and reports a malformed string to
+     * Crashlytics — one badly typed campaign URL would otherwise fan out into a report from every device.
+     */
+    private fun openWebLinkFromPush(deeplinkUri: Uri) {
+        val url = deeplinkUri.toString()
+        val host = deeplinkUri.host
+        val isTrustedWebLink = deeplinkUri.scheme == DeepLinkScheme.Https.scheme &&
+            (ExternalUrlValidator.isHostTrusted(host) || host?.lowercase() in APPSFLYER_ONELINK_HOSTS)
+
+        if (isTrustedWebLink) {
+            urlOpener.openUrl(url)
+        } else {
+            TangemLogger.i("Push link is neither routable nor a trusted web link: $deeplinkUri")
+        }
     }
 
     /**
@@ -118,11 +161,15 @@ internal class DeepLinkFactory @Inject constructor(
         }
     }
 
-    private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
-        when (deeplinkUri.scheme) {
+    /** Returns `true` when a handler took the deeplink, `false` when nothing matched it. */
+    private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean): Boolean {
+        return when (deeplinkUri.scheme) {
             DeepLinkScheme.Https.scheme -> handleHttpDeepLinks(deeplinkUri, coroutineScope)
             DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope, isFromOnNewIntent)
-            DeepLinkScheme.WalletConnect.scheme -> walletConnectDeepLink.create(deeplinkUri)
+            DeepLinkScheme.WalletConnect.scheme -> {
+                walletConnectDeepLink.create(deeplinkUri)
+                true
+            }
             else -> {
                 TangemLogger.i(
                     """
@@ -130,31 +177,54 @@ internal class DeepLinkFactory @Inject constructor(
                         |- Received URI: $deeplinkUri
                     """.trimIndent(),
                 )
+                false
             }
         }
     }
 
-    private fun handleHttpDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
-        if (deeplinkUri.host == DeepLinkRoute.PayApp.host) {
-            when {
-                deeplinkUri.path?.startsWith("/pay-app-main") == true -> {
-                    tangemPayMainDeepLink.create(coroutineScope, getQueryParams(deeplinkUri))
-                    return
-                }
-                deeplinkUri.path?.startsWith("/pay-app") == true -> {
-                    onboardVisaDeepLink.create(deeplinkUri)
-                    return
-                }
-                deeplinkUri.path?.startsWith("/news") == true -> {
-                    newsDetailsDeepLink.create(coroutineScope, deeplinkUri)
-                    return
-                }
+    private fun handleHttpDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope): Boolean {
+        if (deeplinkUri.host != DeepLinkRoute.PayApp.host) return false
+
+        val path = deeplinkUri.path.orEmpty()
+
+        return when {
+            path.matchesPathSegment("/pay-app-main") -> {
+                tangemPayMainDeepLink.create(coroutineScope, getQueryParams(deeplinkUri))
+                true
             }
+            path.matchesPathSegment("/pay-app") -> {
+                onboardVisaDeepLink.create(deeplinkUri)
+                true
+            }
+            path.matchesPathSegment("/news") -> {
+                // Article-less paths (`/news`, `/news/{category}`) would silently no-op in the details
+                // handler, and the web fallback can't open them either: the manifest claims `/news*` as a
+                // verified App Link, so ACTION_VIEW would bounce straight back. Show the news list instead.
+                if (NewsDetailsDeepLinkHandler.extractArticleIdFromUri(deeplinkUri) != null) {
+                    newsDetailsDeepLink.create(coroutineScope, deeplinkUri)
+                } else {
+                    newsDeepLink.create(getQueryParams(deeplinkUri))
+                }
+                true
+            }
+            else -> false
         }
     }
+
+    /**
+     * Whole-segment path match: `/news` and `/news/1-slug` match `/news`, `/newsletter` does not.
+     *
+     * A plain `startsWith` would claim `/pay-application` and `/newsletter` as routed, and the handler would then
+     * silently do nothing — suppressing the web fallback and turning the tap into a no-op.
+     */
+    private fun String.matchesPathSegment(segment: String): Boolean = this == segment || startsWith("$segment/")
 
     @Suppress("CyclomaticComplexMethod")
-    private fun handleTangemDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
+    private fun handleTangemDeepLinks(
+        deeplinkUri: Uri,
+        coroutineScope: CoroutineScope,
+        isFromOnNewIntent: Boolean,
+    ): Boolean {
         val queryParams = getQueryParams(deeplinkUri)
         when (deeplinkUri.host) {
             DeepLinkRoute.Onramp.host -> onrampDeepLink.create(coroutineScope, queryParams)
@@ -192,8 +262,11 @@ internal class DeepLinkFactory @Inject constructor(
                         |- With params: $queryParams
                     """.trimIndent(),
                 )
+                return false
             }
         }
+
+        return true
     }
 
     private fun getQueryParams(uri: Uri): Map<String, String> {
@@ -208,5 +281,17 @@ internal class DeepLinkFactory @Inject constructor(
         }
 
         return params
+    }
+
+    /** A deeplink waiting for the app to become routable, and where it came from. */
+    private data class ParkedDeeplink(val uri: Uri, val source: DeeplinkSource)
+
+    private companion object {
+
+        /**
+         * AppsFlyer OneLink domains, mirroring the `autoVerify` App Link filters in the manifest. They are not in
+         * [ExternalUrlValidator]'s trusted hosts because they serve attribution redirects rather than content.
+         */
+        val APPSFLYER_ONELINK_HOSTS = setOf("tangem.onelink.me", "join.tangem.com")
     }
 }

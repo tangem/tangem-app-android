@@ -32,20 +32,22 @@ internal data class DonutSegmentUM(
 )
 
 internal enum class DonutSegmentColor {
-    Brand,
+    Blue,
     Violet,
     Red,
     Green,
+    Grey,
     ;
 
     @ReadOnlyComposable
     @Composable
     fun getColor(): Color {
         return when (this) {
-            Brand -> TangemTheme.colors3.border.brand
-            Violet -> TangemTheme.colors3.border.accent.violet
-            Red -> TangemTheme.colors3.border.accent.red
-            Green -> TangemTheme.colors3.border.accent.green
+            Blue -> TangemTheme.colors3.bg.accent.blue
+            Violet -> TangemTheme.colors3.bg.accent.violet
+            Red -> TangemTheme.colors3.bg.accent.red
+            Green -> TangemTheme.colors3.bg.accent.green
+            Grey -> TangemTheme.colors3.bg.accent.neutral
         }
     }
 }

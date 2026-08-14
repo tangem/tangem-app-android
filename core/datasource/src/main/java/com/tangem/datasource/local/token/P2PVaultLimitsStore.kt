@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.token
 
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import javax.inject.Inject
 import javax.inject.Singleton

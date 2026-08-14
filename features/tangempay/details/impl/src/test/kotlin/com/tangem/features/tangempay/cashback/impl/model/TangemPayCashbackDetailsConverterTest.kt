@@ -1,90 +1,125 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.pay.model.CashbackPromotions
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.util.Locale
 
 internal class TangemPayCashbackDetailsConverterTest {
 
+    private val defaultLocale = Locale.getDefault()
     private val converter = TangemPayCashbackDetailsConverter()
 
-    @Test
-    fun `GIVEN single tier WHEN convert THEN title and one row with rate scope label min and cap`() {
-        // Act
-        val result = converter.convert(
-            listOf(tier(rate = 1, label = "Basic cards", scope = "All purchases", min = "$30", cap = "$100")),
-        )
+    @BeforeEach
+    fun setup() {
+        Locale.setDefault(Locale.US)
+    }
 
-        // Assert
-        assertThat(result.title).isEqualTo(stringReference("Cashback 1%"))
-        assertThat(result.rows).containsExactly(
-            stringReference("1% for All purchases with your Basic cards, min purchase $30, up to $100 per month"),
-        )
+    @AfterEach
+    fun tearDown() {
+        Locale.setDefault(defaultLocale)
     }
 
     @Test
-    fun `GIVEN two tiers WHEN convert THEN up-to title and one row per tier in order`() {
+    fun `GIVEN single tier WHEN convert THEN title and tier eu paid-in and cap rows`() {
         // Act
         val result = converter.convert(
-            listOf(
-                tier(rate = 1, label = "Basic cards", scope = "All purchases", min = "$30", cap = "$100"),
-                tier(rate = 2, label = "Plus cards", scope = "All purchases", min = "$30", cap = "$300"),
-            ),
+            tiers = listOf(tier(rate = 1, label = "Basic", min = "$30")),
+            payoutCurrency = "USDC",
+            monthlyCap = cap("150"),
         )
 
         // Assert
-        assertThat(result.title).isEqualTo(stringReference("Cashback up to 2%"))
+        assertThat(result.title).isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")))
         assertThat(result.rows).containsExactly(
-            stringReference("1% for All purchases with your Basic cards, min purchase $30, up to $100 per month"),
-            stringReference("2% for All purchases with your Plus cards, min purchase $30, up to $300 per month"),
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDC")),
+            resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$150")),
         ).inOrder()
     }
 
     @Test
-    fun `GIVEN tier without min or cap WHEN convert THEN row is rate scope and label only`() {
+    fun `GIVEN two tiers WHEN convert THEN up-to title and one tier row per tier before the fixed rows`() {
         // Act
         val result = converter.convert(
-            listOf(tier(rate = 1, label = "Basic cards", scope = "All purchases", min = null, cap = null)),
+            tiers = listOf(tier(rate = 1, label = "Basic", min = "$30"), tier(rate = 2, label = "Plus", min = "$30")),
+            payoutCurrency = "USDC",
+            monthlyCap = cap("150"),
         )
 
         // Assert
-        assertThat(result.rows).containsExactly(stringReference("1% for All purchases with your Basic cards"))
+        assertThat(result.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")))
+        assertThat(result.rows).containsExactly(
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("2", "Plus", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDC")),
+            resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$150")),
+        ).inOrder()
     }
 
     @Test
-    fun `GIVEN tier with unknown rate WHEN convert THEN plain Cashback title and row without percent prefix`() {
+    fun `GIVEN no payout currency and no cap WHEN convert THEN only tier and eu rows`() {
         // Act
         val result = converter.convert(
-            listOf(tier(rate = null, label = "Gold cards", scope = "All purchases", min = null, cap = null)),
+            tiers = listOf(tier(rate = 1, label = "Basic", min = "$30")),
+            payoutCurrency = null,
+            monthlyCap = null,
         )
 
         // Assert
-        assertThat(result.title).isEqualTo(stringReference("Cashback"))
-        assertThat(result.rows).containsExactly(stringReference("All purchases with your Gold cards"))
+        assertThat(result.rows).containsExactly(
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN unknown rate tier WHEN convert THEN plain Cashback title and empty rate arg`() {
+        // Act
+        val result = converter.convert(
+            tiers = listOf(tier(rate = null, label = "Gold", min = null)),
+            payoutCurrency = "USDC",
+            monthlyCap = cap("150"),
+        )
+
+        // Assert
+        assertThat(result.title).isEqualTo(resourceReference(R.string.tangempay_cashback_title))
+        assertThat(result.rows.first())
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("", "Gold", "")))
     }
 
     @Test
     fun `GIVEN no tiers WHEN convert THEN plain Cashback title and empty rows`() {
         // Act
-        val result = converter.convert(emptyList())
+        val result = converter.convert(tiers = emptyList(), payoutCurrency = "USDC", monthlyCap = cap("150"))
 
         // Assert
-        assertThat(result.title).isEqualTo(stringReference("Cashback"))
+        assertThat(result.title).isEqualTo(resourceReference(R.string.tangempay_cashback_title))
         assertThat(result.rows).isEmpty()
     }
 
     private fun tier(
         rate: Int? = 1,
-        label: String = "Basic cards",
-        scope: String = "All purchases",
+        label: String = "Basic",
         min: String? = null,
-        cap: String? = null,
     ) = CashbackTier(
         tierId = "basic",
         rate = rate,
         label = label,
-        scope = scope,
+        scope = "All purchases",
         minPurchase = min,
-        monthlyCap = cap,
+        monthlyCap = null,
     )
+
+    private fun cap(amount: String, currency: String = "USD") =
+        CashbackPromotions.MonthlyCap(amount = BigDecimal(amount), currency = currency)
 }

@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
@@ -31,6 +33,8 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -97,18 +101,26 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
             state = avatar.deviceIconUM,
             modifier = avatarModifier,
         )
+        is CounterpartyAvatar.PaymentAccount -> PaymentAccountIcon(
+            size = AccountIconSize.Default,
+            modifier = avatarModifier,
+        )
     }
 }
 
 @Composable
 private fun CounterpartyCopyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val hapticManager = LocalHapticManager.current
     TangemButton(
         modifier = modifier,
         variant = TangemButton.Variant.Secondary,
         size = TangemButton.Size.X9,
         iconStart = TangemIconUM.Icon(Icons.ic_copy_20),
         contentDescription = resourceReference(R.string.common_copy).resolveReference(),
-        onClick = onClick,
+        onClick = {
+            hapticManager.perform(TangemHapticEffect.OneTime.Click)
+            onClick()
+        },
     )
 }
 

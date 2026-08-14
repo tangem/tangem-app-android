@@ -68,14 +68,14 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = stringResourceSafe(R.string.common_news),
-                        style = TangemTheme.typography2.headingSemibold20,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography3.heading.small,
+                        color = TangemTheme.colors3.text.primary,
                     )
 
                     SpacerW(4.dp)
 
                     Icon(
-                        modifier = Modifier.size(TangemTheme.dimens2.x6),
+                        modifier = Modifier.size(24.dp),
                         tint = Color(MAGIC_ICON_COLOR),
                         imageVector = ImageVector.vectorResource(R.drawable.ic_magic_28),
                         contentDescription = null,

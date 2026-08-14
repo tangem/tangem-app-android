@@ -21,6 +21,7 @@ import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -65,6 +66,7 @@ internal class WcSolanaMessageSignUseCaseTest {
     @BeforeEach
     fun setup() {
         clearMocks(signUseCase, respondService)
+        every { respondService.isRequestActual(any()) } returns true
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.tangem.features.commonfeatures.impl.userportfolio.state
 
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -16,9 +17,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 
+@Suppress("LongParameterList")
 internal class UserPortfolioStateController @AssistedInject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     @Assisted private val modelScope: CoroutineScope,
@@ -34,12 +37,14 @@ internal class UserPortfolioStateController @AssistedInject constructor(
         flow = requiredDataFlow.distinctUntilChanged(),
         flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
-    ) { (allAvailableData, rawCurrencyId), appCurrency, isBalanceHidden ->
+        flow4 = isAccountsModeEnabledUseCase(),
+    ) { (allAvailableData, rawCurrencyId), appCurrency, isBalanceHidden, isAccountsModeEnabled ->
         UserPortfolioSectionsTransformer(
             availableData = allAvailableData,
             rawCurrencyId = rawCurrencyId,
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
+            isAccountsModeEnabled = isAccountsModeEnabled,
             resolveWalletDeviceIcon = {
                 walletIconUMConverter.convert(getWalletIconUseCase(it))
             },

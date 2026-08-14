@@ -2,23 +2,18 @@ package com.tangem.datasource.local.walletmanager
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
-import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.removeBy
 import kotlinx.coroutines.flow.Flow
 
 internal class DefaultWalletManagersStore(
-    dataStore: StringKeyDataStore<List<WalletManager>>,
-) : WalletManagersStore, StringKeyDataStoreDecorator<UserWalletId, List<WalletManager>>(dataStore) {
-
-    override fun provideStringKey(key: UserWalletId): String {
-        return key.stringValue
-    }
+    private val store: RuntimeSharedMapStore<UserWalletId, List<WalletManager>>,
+) : WalletManagersStore {
 
     override fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>> {
-        return get(key = userWalletId)
+        return store.get(key = userWalletId)
     }
 
     override suspend fun getSyncOrNull(
@@ -26,7 +21,7 @@ internal class DefaultWalletManagersStore(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        val walletManagers = getSyncOrNull(userWalletId)
+        val walletManagers = store.getSyncOrNull(userWalletId)
 
         return walletManagers?.singleOrNull { walletManager ->
             walletManager.wallet.blockchain == blockchain &&
@@ -35,27 +30,23 @@ internal class DefaultWalletManagersStore(
     }
 
     override suspend fun getAllSync(userWalletId: UserWalletId): List<WalletManager> {
-        return getSyncOrNull(userWalletId).orEmpty()
+        return store.getSyncOrNull(userWalletId).orEmpty()
     }
 
     override suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager) {
-        val walletManagers = getSyncOrNull(userWalletId)
-
-        val updatedWalletManagers = walletManagers
-            ?.addOrReplace(walletManager) {
+        store.update(key = userWalletId, default = emptyList()) { walletManagers ->
+            walletManagers.addOrReplace(walletManager) {
                 it.wallet.blockchain == walletManager.wallet.blockchain &&
                     it.wallet.publicKey.derivationPath == walletManager.wallet.publicKey.derivationPath
             }
-            ?: listOf(walletManager)
-
-        store(userWalletId, updatedWalletManagers)
+        }
     }
 
     override suspend fun remove(userWalletId: UserWalletId, predicate: (WalletManager) -> Boolean) {
-        val walletManagers = getSyncOrNull(userWalletId)?.toMutableList() ?: return
-
-        walletManagers.removeBy(predicate)
-
-        store(userWalletId, walletManagers)
+        store.updateIfPresent(key = userWalletId) { walletManagers ->
+            walletManagers.toMutableList().apply { removeBy(predicate) }
+        }
     }
+
+    override suspend fun clear() = store.clear()
 }
