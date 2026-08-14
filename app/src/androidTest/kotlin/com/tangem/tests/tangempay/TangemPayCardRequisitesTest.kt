@@ -15,7 +15,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -72,7 +71,6 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
         }
     }
 
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("9593")
     @DisplayName("Tangem Pay: guide requisites are hidden independently from the card details")
     @Test
