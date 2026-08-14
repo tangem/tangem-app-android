@@ -106,6 +106,32 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
     }
 
     @Test
+    fun `applySwapFee names the fee-paying coin in InsufficientFee, not the swapped token`() = runTest {
+        // Arrange
+        coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
+        coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("0.0001")
+
+        val nativeStatus = buildSwapCurrencyStatus(isCoin = true).status
+        every { nativeStatus.currency.name } returns "Ethereum"
+        every { nativeStatus.currency.symbol } returns "ETH"
+
+        val state = buildQuotesLoadedState(
+            fromAmount = SwapAmount(BigDecimal("1"), 18),
+            isCoin = false,
+            fromBalance = BigDecimal("10"),
+        )
+        val swapFee = buildSwapFee(feeValue = BigDecimal("0.01"), selectedFeeToken = nativeStatus)
+
+        // Act
+        val patched = sut.applySwapFee(state, swapFee, lastReducedBalanceBy)
+
+        // Assert
+        val balanceStatus = patched.preparedSwapConfigState.balanceStatus as SwapBalanceStatus.InsufficientFee
+        assertThat(balanceStatus.feeCurrencyName).isEqualTo("Ethereum")
+        assertThat(balanceStatus.feeCurrencySymbol).isEqualTo("ETH")
+    }
+
+    @Test
     fun `applySwapFee — bridge otherNativeFee — boundary flips balanceStatus to InsufficientFee`() = runTest {
         // From-token is a Token, native fee is small enough alone but combined with otherNativeFee exceeds balance.
         coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin

@@ -2,8 +2,8 @@ package com.tangem.data.transaction
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.datasource.api.gasless.models.GaslessFeeRecipient

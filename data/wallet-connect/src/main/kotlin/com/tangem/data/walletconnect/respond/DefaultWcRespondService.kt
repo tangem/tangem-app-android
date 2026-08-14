@@ -66,6 +66,29 @@ internal class DefaultWcRespondService : WcRespondService {
             )
         }
 
+    override fun isRequestActual(request: WcSdkSessionRequest): Boolean {
+        val requestId = request.request.id
+
+        // SDK read failures are intentionally NOT caught here: they propagate so the sign flow surfaces
+        // a retriable error instead of definitively rejecting a request that may still be valid. Only a
+        // successfully-read state showing no session / no pending request means "not actual".
+        if (WalletKit.getActiveSessionByTopic(request.topic) == null) {
+            TangemLogger.withTag(WC_TAG).i(
+                "Request is not actual, no active session: topic=${request.topic} id=$requestId",
+            )
+            return false
+        }
+
+        val isStillPending = WalletKit.getPendingListOfSessionRequests(request.topic)
+            .any { pending -> pending.request.id == requestId }
+        if (!isStillPending) {
+            TangemLogger.withTag(WC_TAG).i(
+                "Request is not actual, no longer pending: topic=${request.topic} id=$requestId",
+            )
+        }
+        return isStillPending
+    }
+
     override fun rejectRequestNonBlock(request: WcSdkSessionRequest, message: String) {
         TangemLogger.withTag(WC_TAG).i("reject request $request")
         removeCachedRequest(request)

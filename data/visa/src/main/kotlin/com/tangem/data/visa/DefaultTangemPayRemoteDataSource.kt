@@ -2,12 +2,12 @@ package com.tangem.data.visa
 
 import arrow.core.Either
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.pay.TangemPayAuthApi
-import com.tangem.datasource.api.pay.models.request.GenerateNonceByCustomerWalletRequest
-import com.tangem.datasource.api.pay.models.request.GetTokenByCustomerWalletRequest
-import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
+import com.tangem.spend.datasource.pay.TangemPayAuthApi
+import com.tangem.spend.datasource.pay.models.request.GenerateNonceByCustomerWalletRequest
+import com.tangem.spend.datasource.pay.models.request.GetTokenByCustomerWalletRequest
+import com.tangem.spend.datasource.pay.models.response.TangemPayErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
