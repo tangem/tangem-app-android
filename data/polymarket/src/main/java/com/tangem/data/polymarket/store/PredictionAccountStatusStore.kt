@@ -18,9 +18,9 @@ internal typealias WalletIdWithPredictionStatus = Map<String, PredictionAccountS
 /**
  * Store of prediction account statuses, one entry per wallet, with dual storage (runtime + persistence).
  *
- * Holds the value only — the balance and the structure — never the account itself and never the fiat rate: the
- * rate belongs to the app's selected currency, which can change while this cache stays valid, so it is mixed in
- * downstream instead of being frozen here.
+ * Holds the value only, never the account itself. The value it is given carries no fiat rate: the rate belongs
+ * to the app's selected currency, which can change while this cache stays valid, so the fetcher writes an
+ * unpriced balance and the rate is mixed in downstream, on every emission.
  *
  * [get] emits on subscription even when nothing has ever been stored. That is not a convenience: the status is
  * combined with other accounts' statuses, and `combine` withholds every value until all of its sources have
@@ -74,11 +74,9 @@ internal class PredictionAccountStatusStore(
     suspend fun store(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
         preloaded.await()
 
-        val unpriced = value.withoutFiatRate()
-
         coroutineScope {
-            launch { storeInRuntime(userWalletId = userWalletId, value = unpriced) }
-            launch { storeInPersistence(userWalletId = userWalletId, value = unpriced) }
+            launch { storeInRuntime(userWalletId = userWalletId, value = value) }
+            launch { storeInPersistence(userWalletId = userWalletId, value = value) }
         }
     }
 
@@ -116,11 +114,6 @@ internal class PredictionAccountStatusStore(
         persistenceDataStore.updateData { stored ->
             stored + (userWalletId.stringValue to value)
         }
-    }
-
-    /** Enforces the "no rate here" contract on write rather than trusting every caller to honour it. */
-    private fun PredictionAccountStatusValue.withoutFiatRate(): PredictionAccountStatusValue {
-        return if (this is PredictionAccountStatusValue.Active) copy(fiatRate = null) else this
     }
 
     private companion object {
