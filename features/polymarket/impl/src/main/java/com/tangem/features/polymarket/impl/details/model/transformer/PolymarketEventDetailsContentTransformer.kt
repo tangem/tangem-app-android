@@ -86,7 +86,7 @@ internal class PolymarketEventDetailsContentTransformer(
                     .map { transformOutcome(market = market, outcome = it) }
                     .toImmutableList()
             } else {
-                emptyList<PolymarketDetailsOutcomeUM>().toImmutableList()
+                persistentListOf()
             },
         )
     }
@@ -132,7 +132,9 @@ internal class PolymarketEventDetailsContentTransformer(
         raw ?: return null
         val instant = runCatching { Instant.parse(raw) }.getOrNull() ?: return null
         val formatted = DateTimeFormatter
-            .ofPattern(RESOLUTION_DATE_PATTERN, Locale.getDefault())
+            // Deliberately English regardless of the device locale: the whole string is a US-style
+            // timestamp with an "ET" suffix, exactly as polymarket.com states it.
+            .ofPattern(RESOLUTION_DATE_PATTERN, Locale.ENGLISH)
             .withZone(ZoneId.of(EASTERN_TIME_ZONE))
             .format(instant)
         return stringReference("$formatted ET")
