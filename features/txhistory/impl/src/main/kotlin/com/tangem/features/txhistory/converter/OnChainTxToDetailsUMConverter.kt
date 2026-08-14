@@ -45,6 +45,7 @@ private const val AAVE_WEBSITE = "https://aave.com/"
  * (handled by [ExpressTxToDetailsUMConverter]); an on-chain `TxInfo` of type `Swap` (e.g. a DEX swap with no express
  * record) carries no legs, so it falls back to the single amount it does have rather than an empty two-asset card.
  */
+@Suppress("LongParameterList")
 internal class OnChainTxToDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onCopyAddress: (String) -> Unit,
@@ -54,6 +55,7 @@ internal class OnChainTxToDetailsUMConverter(
     private val onOpenValidator: (String) -> Unit,
     /** Resolves a transfer counterparty to one of the user's own accounts/wallets — the same lookup the list uses. */
     private val lookup: TxHistoryLookupContext,
+    private val isBalanceHidden: Boolean,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -73,6 +75,7 @@ internal class OnChainTxToDetailsUMConverter(
         val tx = value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
         return TxHistoryDetailsUM.SingleAsset(
             header = tx.toHeaderUM(),
+            isBalanceHidden = isBalanceHidden,
             amountBlock = tx.toAmountBlockUM(),
             counterparty = tx.toCounterpartyUM(),
             // Validator (staking) / protocol (yield-supply), then the network fee from the tx; rate is not surfaced.
