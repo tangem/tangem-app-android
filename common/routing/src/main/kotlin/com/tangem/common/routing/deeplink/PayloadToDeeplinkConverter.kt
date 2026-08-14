@@ -12,9 +12,22 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.domain.visa.model.TangemPayPushNotificationType
 import com.tangem.utils.converter.Converter
 
+/**
+ * Converts a push payload to a deeplink, in this precedence order:
+ * 1. [DEEPLINK_KEY] — a ready-made deeplink, passed through verbatim.
+ * 2. Tangem Pay flat keys ([CUSTOMER_WALLET_ID_KEY] + a known [TangemPayPushNotificationType]).
+ * 3. Token flat keys ([TYPE_KEY] + [NETWORK_ID_KEY] + [TOKEN_ID_KEY] + [WALLET_ID_KEY]).
+ * 4. [WEBLINK_KEY] — the destination of a marketing / Customer.io push (`link` is also Customer.io's own
+ *    deeplink key). It is deliberately last, so it can never preempt a backend-generated transactional push.
+ *
+ * The result is not validated here — the caller applies [PushDeeplinkPolicy] and decides how to dispatch it.
+ * A value that no handler routes falls back to a browser only for trusted web hosts, which is why an
+ * arbitrary [WEBLINK_KEY] value may be returned from here.
+ */
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
 
     override fun convert(value: Map<String, String>): String? {
@@ -22,7 +35,7 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             value[DEEPLINK_KEY] != null -> value[DEEPLINK_KEY]
             isTangemPayPushNotificationPayload(value) -> buildTangemPayNotificationDeeplink(value)
             isTangemPushNotificationPayload(value) -> buildNotificationDeeplink(value)
-            else -> null
+            else -> value[WEBLINK_KEY]
         }
     }
 

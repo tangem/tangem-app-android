@@ -240,7 +240,8 @@ private fun InfoText(footerText: TextReference?, modifier: Modifier = Modifier) 
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = TangemTheme.dimens.spacing12),
+                .padding(bottom = TangemTheme.dimens.spacing12)
+                .testTag(SendScreenTestTags.FOOTER_TEXT),
         )
     }
 }

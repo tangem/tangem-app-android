@@ -74,6 +74,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     availableForWithdrawal = BigDecimal("7"),
                 ),
                 cryptoCurrency = cryptoCurrency,
+                networks = emptyList(),
                 fiatRate = BigDecimal("1.05"),
                 error = null,
             )

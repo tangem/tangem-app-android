@@ -103,7 +103,7 @@ sealed class AnalyticsParam {
         Portfolio("Portfolio"),
         Staking("Staking"),
         Earn("Earn"),
-        TangemPayHotWalletOnboarding("TangemPayHotWalletOnboarding"),
+        ForYou("For You"),
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -267,6 +267,8 @@ sealed class AnalyticsParam {
     companion object Key {
         const val BLOCKCHAIN = "Blockchain"
         const val TOKEN_PARAM = "Token"
+        const val PERIOD = "Period"
+        const val INFO = "Info"
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
         const val TOKENS_COUNT = "Tokens Count"

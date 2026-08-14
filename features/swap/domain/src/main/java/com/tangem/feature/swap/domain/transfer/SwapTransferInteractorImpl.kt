@@ -109,6 +109,7 @@ class SwapTransferInteractorImpl @Inject constructor(
         val isAmountSubtractAvailable = isAmountSubtractAvailable(
             userWalletId = userWallet.walletId,
             currency = fromTokenInfo.swapCurrencyStatus.currency,
+            feeCurrency = feePaidCurrency,
             fee = fee,
         )
         val fromBalance = fromSwapCurrencyStatus.status.value.amount.orZero()
@@ -273,16 +274,23 @@ class SwapTransferInteractorImpl @Inject constructor(
         val isSendingAmountLoading: Boolean,
     )
 
+    /**
+     * The fee token is the one the fee selector resolved — [loadFeeExtended] lets the user pick it, so it may
+     * differ from the sent token. Passing the sent token as the fee token would make the use case's "the fee
+     * is charged to the very balance being spent" check tautological for every token-denominated fee, and the
+     * sent amount would be reduced by a fee taken from another balance.
+     */
     private suspend fun isAmountSubtractAvailable(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
+        feeCurrency: CryptoCurrency?,
         fee: Fee?,
     ): Boolean {
-        val feeCurrencyId = currency.id
+        val maybeGaslessFee = if (feeCurrency != null && fee != null) feeCurrency.id to fee else null
         return isAmountSubtractAvailableUseCase(
             userWalletId = userWalletId,
             currency = currency,
-            maybeGaslessFee = fee?.let { feeCurrencyId to fee },
+            maybeGaslessFee = maybeGaslessFee,
         ).getOrElse { false }
     }
 
@@ -370,6 +378,8 @@ class SwapTransferInteractorImpl @Inject constructor(
             userWallet = userWallet,
             network = currency.network,
             transactionData = transactionData,
+            // A yield-supply send zeroes the amount inside TransactionData; the fee plan needs the real one.
+            sentAmount = fromTokenAmount,
         ).map { transactionFeeExtended ->
             selectedToken ?: return@map transactionFeeExtended
             val selectedTokenId = selectedToken.currency.id

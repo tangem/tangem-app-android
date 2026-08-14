@@ -1,8 +1,8 @@
 package com.tangem.data.notifications
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.flowOf
 
 class DefaultNotificationsRepositoryTest {
     private val preferencesDataStore: DataStore<Preferences> = mockk()
-    private val appPreferencesStore = AppPreferencesStore(
+    private val appPreferencesStore = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = preferencesDataStore,
