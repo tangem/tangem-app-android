@@ -127,6 +127,7 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.Payment ->
                         account.paymentCryptoCurrencyOrNull()?.let { listOf(account to it) }.orEmpty()
                     is AccountStatus.Virtual -> emptyList()
+                    is AccountStatus.Prediction -> emptyList()
                 }
             }
     }

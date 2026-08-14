@@ -28,8 +28,8 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.common)
-    implementation(projects.domain.core)
     implementation(projects.domain.models)
+    implementation(projects.common)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -43,9 +43,10 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.immutable.collections)
     implementation(deps.lifecycle.compose)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
 
     /** Tests */
     testImplementation(projects.common.test)
