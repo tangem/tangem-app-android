@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.store
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
@@ -42,24 +43,39 @@ internal class PredictionAccountStatusStoreTest {
     }
 
     @Test
-    fun `GIVEN a persisted value WHEN the store is created THEN it is served from the cache`() = runTest {
+    fun `GIVEN a persisted value WHEN the store is created THEN it comes back marked as cached`() = runTest {
         // Arrange
-        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(
-            default = mapOf(WALLET_A.stringValue to ACTIVE),
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(
+            default = mapOf(WALLET_A.stringValue to ACTIVE_DTO),
         )
         val store = createStore(testScope = this, persistenceDataStore = persisted)
 
         // Act
         advanceUntilIdle()
 
-        // Assert
-        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE)
+        // Assert — a restored value has not been refreshed in this session, whatever it claimed when written
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
+    fun `GIVEN a transient state WHEN store THEN it does not reach the disk`() = runTest {
+        // Arrange
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+        store.store(userWalletId = WALLET_A, value = ACTIVE)
+
+        // Act
+        store.store(userWalletId = WALLET_A, value = PredictionAccountStatusValue.Error.Unavailable)
+
+        // Assert — a momentary failure must not be read back next launch as the account's real state
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
+        assertThat(persisted.data.first()[WALLET_A.stringValue]).isEqualTo(ACTIVE_DTO)
     }
 
     @Test
     fun `GIVEN a stored value WHEN clear THEN it is dropped from both stores`() = runTest {
         // Arrange
-        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(default = emptyMap())
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
         val store = createStore(testScope = this, persistenceDataStore = persisted)
         store.store(userWalletId = WALLET_A, value = ACTIVE)
         store.store(userWalletId = WALLET_B, value = ACTIVE)
@@ -70,13 +86,13 @@ internal class PredictionAccountStatusStoreTest {
         // Assert
         assertThat(store.getSyncOrNull(WALLET_A)).isNull()
         assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE)
-        assertThat(persisted.data.first()).containsExactly(WALLET_B.stringValue, ACTIVE)
+        assertThat(persisted.data.first()).containsExactly(WALLET_B.stringValue, ACTIVE_DTO)
     }
 
     @Test
     fun `GIVEN a stored value WHEN updateStatusSource THEN only the source changes`() = runTest {
         // Arrange
-        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(default = emptyMap())
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
         val store = createStore(testScope = this, persistenceDataStore = persisted)
         store.store(userWalletId = WALLET_A, value = ACTIVE)
 
@@ -85,14 +101,14 @@ internal class PredictionAccountStatusStoreTest {
 
         // Assert — "could not be refreshed" is about this session, so it must not survive to the next launch
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
-        assertThat(persisted.data.first()[WALLET_A.stringValue]).isEqualTo(ACTIVE)
+        assertThat(persisted.data.first()[WALLET_A.stringValue]).isEqualTo(ACTIVE_DTO)
     }
 
     @Test
     fun `GIVEN a refresh issued before the cache loads WHEN it lands THEN it survives the preload`() = runTest {
         // Arrange — the persisted snapshot is older than what the refresh is about to write
-        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(
-            default = mapOf(WALLET_A.stringValue to ACTIVE, WALLET_B.stringValue to ACTIVE),
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(
+            default = mapOf(WALLET_A.stringValue to ACTIVE_DTO, WALLET_B.stringValue to ACTIVE_DTO),
         )
         val store = createStore(testScope = this, persistenceDataStore = persisted)
         val refreshed = ACTIVE.copy(balance = BigDecimal("99"))
@@ -103,14 +119,14 @@ internal class PredictionAccountStatusStoreTest {
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(refreshed)
-        assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE)
+        assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE.copy(source = StatusSource.CACHE))
     }
 
     @Test
     fun `GIVEN a wallet cleared before the cache loads WHEN it lands THEN the entry stays gone`() = runTest {
         // Arrange — the deleted wallet is still in the snapshot the init coroutine is about to read
-        val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(
-            default = mapOf(WALLET_A.stringValue to ACTIVE, WALLET_B.stringValue to ACTIVE),
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(
+            default = mapOf(WALLET_A.stringValue to ACTIVE_DTO, WALLET_B.stringValue to ACTIVE_DTO),
         )
         val store = createStore(testScope = this, persistenceDataStore = persisted)
 
@@ -120,8 +136,8 @@ internal class PredictionAccountStatusStoreTest {
 
         // Assert — a snapshot taken before the deletion must not hand the balance to a re-added wallet
         assertThat(store.getSyncOrNull(WALLET_A)).isNull()
-        assertThat(persisted.data.first()).containsExactly(WALLET_B.stringValue, ACTIVE)
-        assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE)
+        assertThat(persisted.data.first()).containsExactly(WALLET_B.stringValue, ACTIVE_DTO)
+        assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE.copy(source = StatusSource.CACHE))
     }
 
     @Test
@@ -138,7 +154,7 @@ internal class PredictionAccountStatusStoreTest {
 
     private fun createStore(
         testScope: TestScope,
-        persistenceDataStore: MockStateDataStore<WalletIdWithPredictionStatus> = MockStateDataStore(emptyMap()),
+        persistenceDataStore: MockStateDataStore<WalletIdWithPredictionStatusDTO> = MockStateDataStore(emptyMap()),
     ) = PredictionAccountStatusStore(
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = persistenceDataStore,
@@ -153,6 +169,11 @@ internal class PredictionAccountStatusStoreTest {
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
             fiatRate = null,
+            isTradingAllowed = true,
+        )
+
+        val ACTIVE_DTO = PredictionAccountStatusValueDTO.Active(
+            balance = BigDecimal("12.5"),
             isTradingAllowed = true,
         )
     }
