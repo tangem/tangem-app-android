@@ -5,6 +5,8 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.CloudBackupJson
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
@@ -23,12 +25,16 @@ import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.decodeFromStream
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
+import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
@@ -47,7 +53,11 @@ internal class DefaultCloudBackupRepository(
     private val store: CloudBackupStore,
     private val cipher: CloudBackupCipher,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) : CloudBackupRepository {
+
+    private val isCloudBackupEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED)
 
     override suspend fun uploadBackup(
         walletId: String,
@@ -64,7 +74,7 @@ internal class DefaultCloudBackupRepository(
                 createdAtMillis = createdAtMillis,
                 password = password,
             )
-        }
+        } ?: return@withContext Either.Left(CloudBackupError.WriteError())
         withAuthRetry { authInteractive ->
             val auth = authHeader(interactive = authInteractive)
             val existingFiles = findBackupFiles(auth)
@@ -181,16 +191,18 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
+    /** `null` when the secret cannot be serialized, i.e. the mnemonic is not a BIP39 phrase */
     private fun encryptBackup(
         secret: CloudBackupSecretData,
         walletId: String,
         walletName: String,
         createdAtMillis: Long,
         password: CharArray,
-    ): String {
-        val payload = CloudBackupSecret(mnemonic = secret.mnemonic, passphrase = secret.passphrase)
-        val payloadBytes = CloudBackupJson.encodeToString(payload)
-            .toByteArray(Charsets.UTF_8)
+    ): String? {
+        val payloadBytes = CloudBackupSecret.encode(
+            mnemonic = secret.mnemonic,
+            isPassphraseRequired = secret.isPassphraseRequired,
+        ) ?: return null
         val createdAtIso = Instant.fromEpochSeconds(TimeUnit.MILLISECONDS.toSeconds(createdAtMillis)).toString()
         val fileData = try {
             cipher.encrypt(
@@ -224,11 +236,18 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
+    /**
+     * The stored flag survives turning the feature off, so it is reported only while the feature is on —
+     * otherwise a wallet backed up earlier would keep counting as backed up with the whole cloud backup UI
+     * hidden, and nothing could clear the flag anymore (deletion is gated by the same toggle).
+     */
     override suspend fun isBackedUp(walletId: String): Boolean {
-        return walletId in store.getBackedUpWalletIds().first()
+        return isCloudBackupEnabled && walletId in store.getBackedUpWalletIds().first()
     }
 
     override fun isBackedUpFlow(walletId: String): Flow<Boolean> {
+        if (!isCloudBackupEnabled) return flowOf(false)
+
         return store.getBackedUpWalletIds().map { walletId in it }
     }
 
@@ -389,16 +408,24 @@ internal fun resolveUniqueBackupName(walletName: String, extension: String, exis
         .first { it !in existingNames }
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 private fun Raise<CloudBackupError>.parseSecret(bytes: ByteArray): CloudBackupSecretData {
+    // decoded from the stream, not from `bytes.toString()`, so the mnemonic is never held by a String
+    // covering the whole payload — only the wipeable CharArray the parser hands over survives
     val raw = try {
         runCatching {
-            CloudBackupJson.decodeFromString<CloudBackupSecret>(bytes.toString(Charsets.UTF_8))
+            CloudBackupJson.decodeFromStream<CloudBackupSecret>(ByteArrayInputStream(bytes))
         }.getOrNull()
     } finally {
         bytes.fill(0)
     }
     val secret = ensureNotNull(raw) { CloudBackupError.InvalidBackupFile }
-    return CloudBackupSecretData(mnemonic = secret.mnemonic, passphrase = secret.passphrase)
+    val isPassphraseRequired = secret.isPassphraseRequired
+    if (isPassphraseRequired == null) {
+        secret.mnemonic.fill(' ')
+        raise(CloudBackupError.InvalidBackupFile)
+    }
+    return CloudBackupSecretData(mnemonic = secret.mnemonic, isPassphraseRequired = isPassphraseRequired)
 }
 
 private fun CloudBackupCryptoError.toDomainError(): CloudBackupError = when (this) {

@@ -8,8 +8,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
@@ -44,20 +42,12 @@ class TangemPayTopUpTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(bitcoinScenario, bitcoinBalanceState)
                 setWireMockScenarioState(expressAssetsScenario, expressAssetsState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             openTangemPay()
             step("Assert initial balance contains '10'") {

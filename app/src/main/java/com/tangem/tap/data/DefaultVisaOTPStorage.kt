@@ -3,8 +3,8 @@ package com.tangem.tap.data
 import android.content.Context
 import com.tangem.common.extensions.toByteArray
 import com.tangem.common.extensions.toInt
-import com.tangem.datasource.local.visa.VisaOTPStorage
-import com.tangem.datasource.local.visa.VisaOtpData
+import com.tangem.spend.datasource.visa.storage.VisaOTPStorage
+import com.tangem.spend.datasource.visa.storage.VisaOtpData
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext

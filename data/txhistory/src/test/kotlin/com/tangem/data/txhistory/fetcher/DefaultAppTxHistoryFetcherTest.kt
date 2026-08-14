@@ -38,7 +38,7 @@ internal class DefaultAppTxHistoryFetcherTest {
         clearMocks(getWalletsUseCase, selectedWalletUseCase, walletFetcherFactory, expressRepository, onrampRepository)
         every { selectedWalletUseCase.selectedFlow() } returns emptyFlow()
         coEvery { expressRepository.getProviders(any(), any()) } returns emptyList()
-        coEvery { onrampRepository.fetchCountries(any()) } returns emptyList()
+        coEvery { onrampRepository.fetchCurrencies(any()) } just Runs
     }
 
     @Test
@@ -149,7 +149,7 @@ internal class DefaultAppTxHistoryFetcherTest {
     }
 
     @Test
-    fun `loads express providers and onramp countries for the first wallet on init`() = runTest {
+    fun `loads express providers and onramp currencies for the first wallet on init`() = runTest {
         // Arrange
         val utils = createUtils()
         val wallet = mockk<UserWallet.Cold>(relaxed = true) {
@@ -166,7 +166,7 @@ internal class DefaultAppTxHistoryFetcherTest {
 
         // Assert
         coVerify(exactly = 1) { expressRepository.getProviders(wallet, emptyList()) }
-        coVerify(exactly = 1) { onrampRepository.fetchCountries(wallet) }
+        coVerify(exactly = 1) { onrampRepository.fetchCurrencies(wallet) }
     }
 
     @Test
@@ -181,7 +181,7 @@ internal class DefaultAppTxHistoryFetcherTest {
 
         // Assert
         coVerify(inverse = true) { expressRepository.getProviders(any(), any()) }
-        coVerify(inverse = true) { onrampRepository.fetchCountries(any()) }
+        coVerify(inverse = true) { onrampRepository.fetchCurrencies(any()) }
     }
 
     @Test

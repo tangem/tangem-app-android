@@ -309,6 +309,7 @@ private fun LazyListScope.cardPageItem(
 private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDetailsUM(
     number = "•••• •••• •••• 1245",
     numberShort = "··1245",
+    cardholderName = "JOHNNY SILVERHAND",
     expiry = "••/••",
     cvv = "•••",
     onCopy = { _, _ -> },
