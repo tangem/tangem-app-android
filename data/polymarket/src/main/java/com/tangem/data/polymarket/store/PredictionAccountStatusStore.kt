@@ -2,6 +2,8 @@ package com.tangem.data.polymarket.store
 
 import androidx.datastore.core.DataStore
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
+import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
@@ -14,13 +16,16 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 internal typealias WalletIdWithPredictionStatus = Map<String, PredictionAccountStatusValue>
+internal typealias WalletIdWithPredictionStatusDTO = Map<String, PredictionAccountStatusValueDTO>
 
 /**
  * Store of prediction account statuses, one entry per wallet, with dual storage (runtime + persistence).
  *
- * Holds the value only, never the account itself. The value it is given carries no fiat rate: the rate belongs
- * to the app's selected currency, which can change while this cache stays valid, so the fetcher writes an
- * unpriced balance and the rate is mixed in downstream, on every emission.
+ * Holds the value only, never the account itself. What reaches the disk is [PredictionAccountStatusValueDTO],
+ * whose shape is pinned independently of the domain type: loading and error states have no representation
+ * there, and a restored value always comes back as [StatusSource.CACHE], because it has not been refreshed in
+ * this session. The fiat rate is neither stored nor restored — it belongs to the app's selected currency, which
+ * the user can change while this cache stays valid, so it is mixed in downstream on every emission.
  *
  * [get] emits on subscription even when nothing has ever been stored. That is not a convenience: the status is
  * combined with other accounts' statuses, and `combine` withholds every value until all of its sources have
@@ -31,7 +36,7 @@ internal typealias WalletIdWithPredictionStatus = Map<String, PredictionAccountS
  */
 internal class PredictionAccountStatusStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithPredictionStatus>,
-    private val persistenceDataStore: DataStore<WalletIdWithPredictionStatus>,
+    private val persistenceDataStore: DataStore<WalletIdWithPredictionStatusDTO>,
     scope: AppCoroutineScope,
 ) {
 
@@ -53,7 +58,9 @@ internal class PredictionAccountStatusStore(
                     .onFailure { logger.e("Failed to read the cached prediction account statuses", it) }
                     .getOrDefault(emptyMap())
 
-                runtimeStore.store(cached)
+                runtimeStore.store(
+                    cached.mapValues { (_, dto) -> PredictionAccountStatusValueDTOConverter.convertBack(dto) },
+                )
             } finally {
                 preloaded.complete(Unit)
             }
@@ -110,9 +117,12 @@ internal class PredictionAccountStatusStore(
         }
     }
 
+    /** A state the DTO cannot represent is one that must not outlive the session, so it leaves the disk copy alone. */
     private suspend fun storeInPersistence(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
+        val dto = PredictionAccountStatusValueDTOConverter.convert(value) ?: return
+
         persistenceDataStore.updateData { stored ->
-            stored + (userWalletId.stringValue to value)
+            stored + (userWalletId.stringValue to dto)
         }
     }
 
