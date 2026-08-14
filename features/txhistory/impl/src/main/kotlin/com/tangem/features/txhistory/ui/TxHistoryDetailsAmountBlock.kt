@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -44,9 +45,15 @@ private val LeadingSize = IconSize + PairRing * 2
  * The failed state ([TxHistoryDetailsUM.AmountBlockUM.isFailed]) strikes the amount through and dims it (primary ->
  * secondary) — matching the status-driven recolor of the shared header. The `+`/`−` sign is resolved upstream by the
  * converter (dropped for failed and yield-supply transactions), so the [amount] text arrives ready to render here.
+ *
+ * [isBalanceHidden] replaces both value lines with the masking stars, leaving the icon and the label untouched.
  */
 @Composable
-internal fun TxHistoryDetailsAmountBlock(amountBlock: TxHistoryDetailsUM.AmountBlockUM, modifier: Modifier = Modifier) {
+internal fun TxHistoryDetailsAmountBlock(
+    amountBlock: TxHistoryDetailsUM.AmountBlockUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -65,7 +72,7 @@ internal fun TxHistoryDetailsAmountBlock(amountBlock: TxHistoryDetailsUM.AmountB
             SpacerH(4.dp)
         }
         Text(
-            text = amountBlock.amount.resolveReference(),
+            text = amountBlock.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
             color = if (amountBlock.isFailed) {
                 TangemTheme.colors3.text.secondary
             } else {
@@ -78,7 +85,7 @@ internal fun TxHistoryDetailsAmountBlock(amountBlock: TxHistoryDetailsUM.AmountB
         amountBlock.fiatAmount?.let { fiatAmount ->
             SpacerH(4.dp)
             Text(
-                text = fiatAmount.resolveReference(),
+                text = fiatAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
                 color = if (amountBlock.isFailed) {
                     TangemTheme.colors3.text.tertiary
                 } else {
@@ -155,10 +162,15 @@ private fun TxHistoryDetailsAmountBlockPreview() {
         Column(
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
-            TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = false))
-            TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = true))
+            TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = false), isBalanceHidden = false)
+            TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = true), isBalanceHidden = false)
             // No fiat — the fiat line is omitted entirely.
-            TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = false, fiatAmount = null))
+            TxHistoryDetailsAmountBlock(
+                amountBlock = previewAmountBlock(isFailed = false, fiatAmount = null),
+                isBalanceHidden = false,
+            )
+            // Hidden balances — both the amount and the fiat line are masked.
+            TxHistoryDetailsAmountBlock(amountBlock = previewAmountBlock(isFailed = false), isBalanceHidden = true)
             // Yield supply — "Supplied" (Aave leads) and "Returned" (asset leads), unsigned amount.
             TxHistoryDetailsAmountBlock(
                 amountBlock = previewAmountBlock(
@@ -171,6 +183,7 @@ private fun TxHistoryDetailsAmountBlockPreview() {
                     label = stringReference("Supplied"),
                     amount = stringReference("1,294.23 USDT"),
                 ),
+                isBalanceHidden = false,
             )
         }
     }
