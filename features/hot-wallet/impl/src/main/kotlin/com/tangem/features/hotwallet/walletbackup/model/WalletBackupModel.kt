@@ -1,5 +1,7 @@
 package com.tangem.features.hotwallet.walletbackup.model
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
@@ -67,6 +69,8 @@ internal class WalletBackupModel @Inject constructor(
 
     private val isScreenOpenedEventSent: AtomicBoolean = AtomicBoolean(false)
     private val isFirstResume: AtomicBoolean = AtomicBoolean(true)
+
+    private var isCloudVerified: Boolean = false
 
     private var cloudBackupInfo: CloudBackupInfo? = null
     private var refreshStatusJob: Job? = null
@@ -179,24 +183,33 @@ internal class WalletBackupModel @Inject constructor(
     private fun refreshCloudBackupStatus(interactive: Boolean = false) {
         refreshStatusJob?.cancel()
         setGoogleDriveStatus(BackupStatus.Loading)
-        refreshStatusJob = modelScope.launch {
-            val repository = cloudBackupRepository.get()
-            val wasBackedUp = repository.isBackedUp(params.userWalletId.stringValue)
-            repository.findBackups(interactive = interactive).fold(
-                ifLeft = { error ->
-                    if (error !is CloudBackupError.AuthRequired) {
-                        TangemLogger.e("Error on finding cloud backups: $error")
-                    }
-                    cloudBackupInfo = null
-                    setGoogleDriveStatus(resolveFailedStatus(error, wasBackedUp))
-                },
-                ifRight = { backups ->
-                    val info = backups.firstOrNull { it.walletId == params.userWalletId.stringValue }
-                    cloudBackupInfo = info
-                    setGoogleDriveStatus(resolveFoundStatus(info, wasBackedUp))
-                },
-            )
-        }
+        refreshStatusJob = modelScope.launch { loadCloudBackup(interactive) }
+    }
+
+    private suspend fun loadCloudBackup(interactive: Boolean): Either<CloudBackupError, CloudBackupInfo?> {
+        val repository = cloudBackupRepository.get()
+        val walletId = params.userWalletId.stringValue
+        val wasBackedUp = repository.isBackedUp(walletId)
+
+        return repository.findBackups(interactive = interactive)
+            .onLeft { error ->
+                if (error !is CloudBackupError.AuthRequired) {
+                    TangemLogger.e("Error on finding cloud backups: $error")
+                }
+                isCloudVerified = false
+                cloudBackupInfo = null
+                setGoogleDriveStatus(resolveFailedStatus(error, wasBackedUp))
+            }
+            .map { backups ->
+                isCloudVerified = true
+                val info = backups.firstOrNull { it.walletId == walletId }
+                cloudBackupInfo = info
+                if (info != null && !wasBackedUp) {
+                    setCloudBackupStateUseCase.get()(walletId, isBackedUp = true)
+                }
+                setGoogleDriveStatus(resolveFoundStatus(info, wasBackedUp))
+                info
+            }
     }
 
     private fun resolveFoundStatus(info: CloudBackupInfo?, wasBackedUp: Boolean): BackupStatus = when {
@@ -272,7 +285,7 @@ internal class WalletBackupModel @Inject constructor(
             BackupStatus.Done -> cloudBackupInfo?.let(::showRemoveBackupSheet)
             BackupStatus.NoBackup,
             BackupStatus.ComingSoon,
-            -> router.push(AppRoute.CreateCloudBackup(params.userWalletId))
+            -> onNoBackupClick()
             BackupStatus.Loading -> Unit
             BackupStatus.NetworkError -> refreshCloudBackupStatus(interactive = false)
             is BackupStatus.ActionRequired -> when (status.reason) {
@@ -280,6 +293,33 @@ internal class WalletBackupModel @Inject constructor(
                 BackupStatus.ActionRequired.Reason.FileNotFound -> showBackupNotFoundSheet()
             }
         }
+    }
+
+    private fun onNoBackupClick() {
+        if (isCloudVerified) {
+            openCreateCloudBackup()
+            return
+        }
+
+        refreshStatusJob?.cancel()
+        setGoogleDriveStatus(BackupStatus.Loading)
+        refreshStatusJob = modelScope.launch {
+            val info = loadCloudBackup(interactive = true).getOrElse { error ->
+                onCloudAccessFailed(error)
+                return@launch
+            }
+            if (info != null) showRemoveBackupSheet(info) else openCreateCloudBackup()
+        }
+    }
+
+    private fun openCreateCloudBackup() {
+        router.push(AppRoute.CreateCloudBackup(params.userWalletId))
+    }
+
+    private fun onCloudAccessFailed(error: CloudBackupError) = when {
+        error == CloudBackupError.AuthCanceled -> Unit
+        isAccessError(error) -> showCantAccessSheet()
+        else -> showCloudErrorDialog(error)
     }
 
     private fun showCantAccessSheet() {
@@ -427,7 +467,7 @@ internal class WalletBackupModel @Inject constructor(
             cloudBackupRepository.get().deleteBackup(fileId).fold(
                 ifLeft = { error ->
                     TangemLogger.e("Error on deleting cloud backup: $error")
-                    showDeleteErrorDialog(error)
+                    showCloudErrorDialog(error)
                 },
                 ifRight = {
                     setCloudBackupStateUseCase.get()(params.userWalletId.stringValue, isBackedUp = false)
@@ -444,7 +484,7 @@ internal class WalletBackupModel @Inject constructor(
         }
     }
 
-    private fun showDeleteErrorDialog(error: CloudBackupError) {
+    private fun showCloudErrorDialog(error: CloudBackupError) {
         val (titleRes, messageRes) = when {
             error == CloudBackupError.NetworkError ->
                 R.string.common_error to R.string.hw_cloud_backup_error_network
