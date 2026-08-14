@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -31,6 +32,7 @@ class EstimateFeeForTokenUseCase(
     private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
     private val isYieldWithdrawEnabled: Boolean,
 ) {
 
@@ -78,18 +80,74 @@ class EstimateFeeForTokenUseCase(
                     val isYieldActive = isYieldWithdrawEnabled &&
                         feeTokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 
-                    tokenFeeCalculator.calculateTokenFee(
+                    val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,
                         tokenForPayFeeStatus = feeTokenCurrencyStatus,
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         initialFee = initialFeeEth,
                         isYieldActive = isYieldActive,
+                        userWallet = userWallet,
                     ).bind()
+
+                    if (isYieldActive) {
+                        attachPlanOrFallBackToNativeFee(
+                            userWallet = userWallet,
+                            feeTokenCurrencyStatus = feeTokenCurrencyStatus,
+                            sendingTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                            tokenFeeExtended = tokenFeeExtended,
+                            amount = amount,
+                            nativeFeeResult = TransactionFeeExtended(
+                                transactionFee = initialTxFee,
+                                feeTokenId = nativeCurrencyStatus.currency.id,
+                            ),
+                        ).copy(nativeFee = initialTxFee)
+                    } else {
+                        tokenFeeExtended.copy(nativeFee = initialTxFee)
+                    }
                 },
                 catch = {
                     raise(GaslessError.DataError(it))
                 },
             )
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private suspend fun Raise<GetFeeError>.attachPlanOrFallBackToNativeFee(
+        userWallet: UserWallet,
+        feeTokenCurrencyStatus: CryptoCurrencyStatus,
+        sendingTokenCurrencyStatus: CryptoCurrencyStatus,
+        tokenFeeExtended: TransactionFeeExtended,
+        amount: BigDecimal,
+        nativeFeeResult: TransactionFeeExtended,
+    ): TransactionFeeExtended {
+        val feeTokenContract = (feeTokenCurrencyStatus.currency as? CryptoCurrency.Token)?.contractAddress
+            ?: raiseIllegalStateError("gasless fee currency must be a token")
+
+        return either {
+            attachGaslessFeePlan(
+                resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+                userWallet = userWallet,
+                tokenStatus = feeTokenCurrencyStatus,
+                tokenFeeExtended = tokenFeeExtended,
+                sendAmountInFeeToken = computeSendAmountInFeeToken(
+                    sendingCurrency = sendingTokenCurrencyStatus.currency,
+                    feeTokenContract = feeTokenContract,
+                    amount = amount,
+                ),
+                isYieldActive = true,
+            )
+        }.getOrElse { error ->
+            when (error) {
+                // Liquid + module balance cannot cover send + fee (e.g. the user swapped MAX), or the yield
+                // balance could not be read. Mirrors the auto path in [EstimateFeeForGaslessTxUseCase]:
+                // return the native fee so the block still renders and the caller can show "not enough funds",
+                // instead of failing the whole fee load and leaving an empty block.
+                GaslessError.NotEnoughFunds,
+                GaslessError.YieldBalanceUnavailable,
+                -> nativeFeeResult
+                else -> raise(error)
+            }
         }
     }
 

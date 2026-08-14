@@ -33,6 +33,10 @@ data class CustomerInfo(
     val cryptoBalance: PaymentAccountStatusValue.CryptoBalance?,
     val availableForWithdrawal: BigDecimal,
     val tariffPlan: TangemPayCustomerTariffPlan?,
+    val networks: List<NetworkInfo> = emptyList(),
+    val country: String? = null,
+    val phoneMask: String? = null,
+    val email: String? = null,
 ) {
 
     /** Transitional single-card accessor — returns the first product instance, or null if none. */
@@ -106,4 +110,40 @@ data class CustomerInfo(
         val isPinSet: Boolean,
         val images: List<TangemPayTariffPlan.Image>,
     )
+
+    /**
+     * Raw multichain network as delivered by `customer/me`.networks[] — the transport used by the data
+     * layer to build the domain [com.tangem.domain.models.account.PaymentNetworkStatus].
+     */
+    data class NetworkInfo(
+        val name: String,
+        val chainId: Long,
+        val isTestnet: Boolean,
+        val status: Status,
+        val depositAddress: String?,
+        val tokens: List<Token>,
+    ) {
+        enum class Status {
+            ENABLED,
+            NOT_ISSUED,
+            DISABLED,
+            ;
+
+            companion object {
+                /** Maps a backend status string; unknown/absent -> [DISABLED] (info-only, never receive). */
+                fun fromWire(raw: String?): Status = when (raw?.uppercase(Locale.US)) {
+                    "ENABLED" -> ENABLED
+                    "NOT_ISSUED" -> NOT_ISSUED
+                    "DISABLED" -> DISABLED
+                    else -> DISABLED
+                }
+            }
+        }
+
+        data class Token(
+            val symbol: String,
+            val contractAddress: String,
+            val availableForWithdrawal: BigDecimal?,
+        )
+    }
 }

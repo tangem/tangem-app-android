@@ -3,12 +3,16 @@ package com.tangem.feature.usedesk.api
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.feedback.models.WalletMetaInfo
 
 interface UsedeskComponent : ComposableContentComponent {
 
     data class Params(
-        /** User wallet id (hex string) sent to Usedesk as the client email to identify the user. */
-        val userWalletId: String? = null,
+        /**
+         * Wallet meta info. Its user wallet id (hex string) is sent to Usedesk as the client email to
+         * identify the user, and it is also used to compose the support email if the chat fails to load.
+         */
+        val walletMetaInfo: WalletMetaInfo,
         /**
          * Source of the chat opening. Drives the analytics source and the Usedesk additional fields,
          * which the component maps internally (e.g. [AnalyticsParam.ScreensSources.Swap] -> `swap`).

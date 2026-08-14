@@ -1,6 +1,6 @@
 package com.tangem.data.pay.util
 
-import com.tangem.datasource.api.pay.models.response.CashbackHistoryResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackHistoryResponse
 import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal

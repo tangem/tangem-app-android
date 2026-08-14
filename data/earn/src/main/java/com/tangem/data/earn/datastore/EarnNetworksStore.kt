@@ -1,6 +1,6 @@
 package com.tangem.data.earn.datastore
 
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.models.earn.EarnNetworks
 import javax.inject.Inject
 import javax.inject.Singleton
