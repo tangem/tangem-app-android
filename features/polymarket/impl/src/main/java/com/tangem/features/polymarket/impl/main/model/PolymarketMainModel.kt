@@ -11,7 +11,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
-import com.tangem.features.polymarket.impl.main.model.converter.PolymarketFeedContentUMConverter
+import com.tangem.features.polymarket.impl.main.model.transformer.PolymarketFeedContentTransformer
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.BatchAction
@@ -58,12 +58,9 @@ internal class PolymarketMainModel @Inject constructor(
             ),
         )
 
-    private val contentConverter = PolymarketFeedContentUMConverter(
-        eventUMConverter = PolymarketEventUMConverter(
-            onEventClick = ::onEventClick,
-            onOutcomeClick = ::onOutcomeClick,
-        ),
-        onReloadClick = ::reload,
+    private val eventUMConverter = PolymarketEventUMConverter(
+        onEventClick = ::onEventClick,
+        onOutcomeClick = ::onOutcomeClick,
     )
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
@@ -146,8 +143,12 @@ internal class PolymarketMainModel @Inject constructor(
     private fun observeEvents() {
         eventsBatchFlow.state
             .onEach { batchState ->
-                val content = contentConverter.convert(batchState)
-                uiState.update { it.copy(content = content) }
+                val transformer = PolymarketFeedContentTransformer(
+                    batchListState = batchState,
+                    eventUMConverter = eventUMConverter,
+                    onReloadClick = ::reload,
+                )
+                uiState.update(transformer::transform)
             }
             .launchIn(modelScope)
     }

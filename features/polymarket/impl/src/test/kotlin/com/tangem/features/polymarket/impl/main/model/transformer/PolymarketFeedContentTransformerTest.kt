@@ -1,17 +1,21 @@
-package com.tangem.features.polymarket.impl.main.model.converter
+package com.tangem.features.polymarket.impl.main.model.transformer
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.ProvideTestModels
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -19,14 +23,9 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class PolymarketFeedContentUMConverterTest {
+internal class PolymarketFeedContentTransformerTest {
 
     private var reloadClicks = 0
-
-    private val converter = PolymarketFeedContentUMConverter(
-        eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }),
-        onReloadClick = { reloadClicks++ },
-    )
 
     // The class is PER_CLASS, so the counter would leak between tests.
     @BeforeEach
@@ -34,18 +33,24 @@ internal class PolymarketFeedContentUMConverterTest {
         reloadClicks = 0
     }
 
+    private fun transform(state: PolymarketEventsBatchListState): PolymarketMainUM = PolymarketFeedContentTransformer(
+        batchListState = state,
+        eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }),
+        onReloadClick = { reloadClicks++ },
+    ).transform(prevState = PREV_STATE)
+
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class InitialLoading {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun convertInitialLoading(model: InitialLoadingModel) {
+        fun transformInitialLoading(model: InitialLoadingModel) {
             // Act
-            val actual = converter.convert(PolymarketEventsBatchListState(data = emptyList(), status = model.status))
+            val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = model.status))
 
             // Assert
-            assertThat(actual).isEqualTo(PolymarketMainUM.ContentUM.Loading)
+            assertThat(actual.content).isEqualTo(PolymarketMainUM.ContentUM.Loading)
         }
 
         private fun provideTestModels(): List<InitialLoadingModel> = listOf(
@@ -60,7 +65,7 @@ internal class PolymarketFeedContentUMConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun convertFooterLoader(model: FooterLoaderModel) {
+        fun transformFooterLoader(model: FooterLoaderModel) {
             // Arrange
             val state = PolymarketEventsBatchListState(
                 data = listOf(Batch(key = 0, data = listOf(createEvent()))),
@@ -68,10 +73,11 @@ internal class PolymarketFeedContentUMConverterTest {
             )
 
             // Act
-            val actual = converter.convert(state)
+            val actual = transform(state)
 
             // Assert
-            assertThat((actual as PolymarketMainUM.ContentUM.Content).isLoadingNextPage).isEqualTo(model.expected)
+            assertThat((actual.content as PolymarketMainUM.ContentUM.Content).isLoadingNextPage)
+                .isEqualTo(model.expected)
         }
 
         private fun provideTestModels(): List<FooterLoaderModel> = listOf(
@@ -87,7 +93,7 @@ internal class PolymarketFeedContentUMConverterTest {
     }
 
     @Test
-    fun `GIVEN loaded pages WHEN convert THEN their events are shown in order`() {
+    fun `GIVEN loaded pages WHEN transform THEN their events are shown in order`() {
         // Arrange
         val state = PolymarketEventsBatchListState(
             data = listOf(
@@ -98,27 +104,37 @@ internal class PolymarketFeedContentUMConverterTest {
         )
 
         // Act
-        val actual = converter.convert(state)
+        val actual = transform(state)
 
         // Assert
-        assertThat((actual as PolymarketMainUM.ContentUM.Content).events.map { it.id })
+        assertThat((actual.content as PolymarketMainUM.ContentUM.Content).events.map { it.id })
             .containsExactly("event-1", "event-2", "event-3")
             .inOrder()
     }
 
     @Test
-    fun `GIVEN the first page failed WHEN convert THEN the reload prompt is shown`() {
+    fun `GIVEN previous state WHEN transform THEN its tabs and access mode are kept`() {
         // Act
-        val actual = converter.convert(initialLoadingErrorState())
+        val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = PaginationStatus.None))
 
         // Assert
-        assertThat(actual).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(actual.categories).isEqualTo(PREV_STATE.categories)
+        assertThat(actual.accessMode).isEqualTo(PREV_STATE.accessMode)
+    }
+
+    @Test
+    fun `GIVEN the first page failed WHEN transform THEN the reload prompt is shown`() {
+        // Act
+        val actual = transform(initialLoadingErrorState())
+
+        // Assert
+        assertThat(actual.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
     }
 
     @Test
     fun `GIVEN the reload prompt WHEN it is clicked THEN the reload is delegated`() {
         // Act
-        (converter.convert(initialLoadingErrorState()) as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        (transform(initialLoadingErrorState()).content as PolymarketMainUM.ContentUM.Error).onReloadClick()
 
         // Assert
         assertThat(reloadClicks).isEqualTo(1)
@@ -177,4 +193,14 @@ internal class PolymarketFeedContentUMConverterTest {
             ),
         ),
     )
+
+    private companion object {
+        val PREV_STATE = PolymarketMainUM(
+            accessMode = PolymarketAccessMode.TRADING,
+            categories = persistentListOf(
+                PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
+            ),
+            content = PolymarketMainUM.ContentUM.Loading,
+        )
+    }
 }
