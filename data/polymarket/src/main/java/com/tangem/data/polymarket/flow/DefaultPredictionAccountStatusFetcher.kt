@@ -49,6 +49,13 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
 
     override suspend fun invoke(params: PredictionAccountStatusFetcher.Params): Either<Throwable, Unit> {
         return Either.catchOn(dispatchers.default) {
+            // Unconditionally: a cached balance needs the rate as much as a freshly read one, and every path that
+            // returns early below leaves that balance in place. Without the quote the producer keeps reporting
+            // loading, which contributes zero, so the collateral would silently read as nothing.
+            singleQuoteStatusFetcher(
+                SingleQuoteStatusFetcher.Params(rawCurrencyId = COLLATERAL_CURRENCY_ID, appCurrencyId = null),
+            )
+
             val value = resolve(userWalletId = params.userWalletId)
 
             if (value == null) {
@@ -98,10 +105,6 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
      * that is not an error — its setup is simply unfinished on this device, which is what the deployed stage says.
      */
     private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusValue? {
-        singleQuoteStatusFetcher(
-            SingleQuoteStatusFetcher.Params(rawCurrencyId = COLLATERAL_CURRENCY_ID, appCurrencyId = null),
-        )
-
         return getPolymarketBalanceInteractor(addresses = addresses).fold(
             ifLeft = { error ->
                 when (error) {
