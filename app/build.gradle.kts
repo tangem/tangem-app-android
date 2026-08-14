@@ -257,8 +257,8 @@ dependencies {
     /** Features */
     implementation(projects.features.addressBook.api)
     implementation(projects.features.addressBook.impl)
-    implementation(projects.features.gacha.api)
-    implementation(projects.features.gacha.impl)
+    implementation(projects.features.collectibles.api)
+    implementation(projects.features.collectibles.impl)
     implementation(projects.features.marketing.api)
     implementation(projects.features.marketing.impl)
     implementation(projects.features.rating.impl)
