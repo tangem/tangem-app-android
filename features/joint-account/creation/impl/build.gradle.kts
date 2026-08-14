@@ -24,12 +24,9 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Features */
-    implementation(projects.features.wallet.api)
+    implementation(projects.features.commonFeatures.api)
 
     /** Domain */
-    implementation(projects.domain.account.status)
-    implementation(projects.domain.appCurrency)
-    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
