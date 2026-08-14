@@ -60,11 +60,23 @@ class JointAccountCreationSignTask @AssistedInject constructor(
             ?: return CompletionResult.Failure(TangemSdkError.WalletNotFound())
 
         val occupiedAddresses = input.occupiedOwnerAddresses.mapTo(hashSetOf(), String::lowercase)
+        // The bound cannot overflow: the input's init block caps firstCandidateIndex + maxIndexAttempts
+        val indexBoundExclusive = input.firstCandidateIndex + input.maxIndexAttempts
         var index = input.firstCandidateIndex
         var derivationPath: DerivationPath
         var extendedPublicKey: ExtendedPublicKey
         var ownerAddress: String
         while (true) {
+            if (index >= indexBoundExclusive) {
+                return CompletionResult.Failure(
+                    TangemSdkError.ExceptionError(
+                        IllegalStateException(
+                            "No free owner derivation index within ${input.maxIndexAttempts} attempts",
+                        ),
+                    ),
+                )
+            }
+
             derivationPath = jointAccountOwnerDerivationPath(index = index)
 
             extendedPublicKey = when (val result = derive(session, seedPublicKey, derivationPath)) {
@@ -76,15 +88,6 @@ class JointAccountCreationSignTask @AssistedInject constructor(
             if (ownerAddress.lowercase() !in occupiedAddresses) break
 
             index++
-            if (index >= input.firstCandidateIndex + input.maxIndexAttempts) {
-                return CompletionResult.Failure(
-                    TangemSdkError.ExceptionError(
-                        IllegalStateException(
-                            "No free owner derivation index within ${input.maxIndexAttempts} attempts",
-                        ),
-                    ),
-                )
-            }
         }
 
         val payload = JointAccountCreationPayload(
