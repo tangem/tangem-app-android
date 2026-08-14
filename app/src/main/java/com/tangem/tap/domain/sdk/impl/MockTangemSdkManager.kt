@@ -18,8 +18,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.jointaccount.model.JointAccountCreationSignInput
-import com.tangem.domain.jointaccount.model.JointAccountCreationSignResult
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -250,17 +248,6 @@ class MockTangemSdkManager(
         hash: String,
         preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, WithdrawalSignatureResult> {
-        error("Not implemented")
-    }
-
-    // endregion
-
-    // region Joint account
-
-    override suspend fun signJointAccountCreation(
-        input: JointAccountCreationSignInput,
-        preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, JointAccountCreationSignResult> {
         error("Not implemented")
     }
 
