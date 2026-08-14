@@ -27,6 +27,8 @@ dependencies {
     implementation(deps.lifecycle.compose)
 
     /* Other */
+    implementation(deps.androidx.appCompat)
+    implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
 
     /* DI */
