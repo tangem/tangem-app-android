@@ -7,12 +7,12 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.features.gacha.impl"
+    namespace = "com.tangem.features.collectibles.impl"
 }
 
 dependencies {
     /** Project - API */
-    implementation(projects.features.gacha.api)
+    implementation(projects.features.collectibles.api)
 
     /** Project - Core */
     implementation(projects.core.configToggles)
