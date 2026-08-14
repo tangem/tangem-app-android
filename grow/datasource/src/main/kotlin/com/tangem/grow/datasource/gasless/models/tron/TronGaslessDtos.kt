@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.gasless.models.tron
+package com.tangem.grow.datasource.gasless.models.tron
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
