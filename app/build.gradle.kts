@@ -351,6 +351,8 @@ dependencies {
     implementation(projects.features.jointAccount.creation.impl)
     implementation(projects.features.jointAccount.common.api)
     implementation(projects.features.jointAccount.common.impl)
+    implementation(projects.features.jointAccount.join.api)
+    implementation(projects.features.jointAccount.join.impl)
     implementation(projects.features.virtualAccounts.onboarding.impl)
     implementation(projects.features.virtualAccounts.onboarding.api)
     implementation(projects.features.virtualAccounts.main.impl)
