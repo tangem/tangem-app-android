@@ -20,8 +20,8 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
-import com.tangem.features.jointaccount.creation.component.JointAccountCreationComponent
-import com.tangem.features.jointaccount.join.component.JointAccountJoinComponent
+import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
+import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
