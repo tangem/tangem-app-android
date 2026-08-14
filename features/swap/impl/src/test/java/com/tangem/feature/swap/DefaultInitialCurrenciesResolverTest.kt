@@ -2,7 +2,7 @@ package com.tangem.feature.swap
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.entity.AccountFlow
+import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
