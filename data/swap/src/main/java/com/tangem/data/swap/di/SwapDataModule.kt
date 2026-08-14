@@ -1,6 +1,7 @@
 package com.tangem.data.swap.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.express.converter.ExpressErrorConverter
@@ -49,6 +50,7 @@ internal object SwapDataModule {
         dataSignatureVerifier: DataSignatureVerifier,
         singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+        featureTogglesManager: FeatureTogglesManager,
         @NetworkMoshi moshi: Moshi,
     ): SwapRepositoryV2 {
         return DefaultSwapRepositoryV2(
@@ -60,6 +62,7 @@ internal object SwapDataModule {
             moshi = moshi,
             singleQuoteStatusSupplier = singleQuoteStatusSupplier,
             singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+            featureTogglesManager = featureTogglesManager,
         )
     }
 

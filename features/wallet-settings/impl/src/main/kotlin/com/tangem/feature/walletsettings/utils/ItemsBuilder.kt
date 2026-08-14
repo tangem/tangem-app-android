@@ -21,6 +21,7 @@ internal class ItemsBuilder @Inject constructor() {
     @Suppress("LongParameterList")
     fun buildItems(
         userWallet: UserWallet,
+        isWalletBackedUp: Boolean,
         cardItem: WalletSettingsItemUM.CardBlock,
         accountsUM: List<WalletSettingsAccountsUM>,
         isLinkMoreCardsAvailable: Boolean,
@@ -44,6 +45,7 @@ internal class ItemsBuilder @Inject constructor() {
         .add(
             buildCardItem(
                 userWallet = userWallet,
+                isWalletBackedUp = isWalletBackedUp,
                 isLinkMoreCardsAvailable = isLinkMoreCardsAvailable,
                 isReferralAvailable = isReferralAvailable,
                 isManageTokensAvailable = isManageTokensAvailable,
@@ -87,6 +89,7 @@ internal class ItemsBuilder @Inject constructor() {
     @Suppress("LongParameterList")
     private fun buildCardItem(
         userWallet: UserWallet,
+        isWalletBackedUp: Boolean,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
@@ -102,7 +105,7 @@ internal class ItemsBuilder @Inject constructor() {
         blocks = buildList {
             val isHotWallet = userWallet is UserWallet.Hot
             if (isHotWallet) {
-                val hasBackup = userWallet.backedUp
+                val hasBackup = isWalletBackedUp
                 val backupBlock = BlockUM(
                     text = resourceReference(R.string.common_backup),
                     iconRes = R.drawable.ic_more_cards_24,

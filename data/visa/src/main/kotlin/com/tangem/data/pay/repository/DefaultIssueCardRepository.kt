@@ -1,6 +1,6 @@
 package com.tangem.data.pay.repository
 
-import com.tangem.datasource.local.visa.TangemPayIssueCardStore
+import com.tangem.spend.datasource.pay.store.TangemPayIssueCardStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
 import com.tangem.utils.coroutines.runSuspendCatching

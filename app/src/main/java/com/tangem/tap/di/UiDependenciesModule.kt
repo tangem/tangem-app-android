@@ -1,6 +1,5 @@
 package com.tangem.tap.di
 
-import androidx.compose.material3.SnackbarHostState
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.DefaultUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -28,7 +27,6 @@ internal object UiDependenciesModule {
         return object : UiDependencies {
             override val vibratorHapticManager = vibratorHapticManager
             override val appThemeModeHolder = appThemeModeHolder
-            override val globalSnackbarHostState: SnackbarHostState = SnackbarHostState()
             override val globalTopSnackbarHostState: TangemTopSnackbarHostState = TangemTopSnackbarHostState()
             override val eventMessageHandler: EventMessageHandler = EventMessageHandler()
         }

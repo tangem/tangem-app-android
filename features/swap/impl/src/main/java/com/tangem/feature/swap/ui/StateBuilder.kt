@@ -75,7 +75,7 @@ internal class StateBuilder(
     private val appRouter: AppRouter,
     private val isChooseTokenPulseEnabled: Boolean,
 ) {
-    private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
+    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     private val amountScreenClickIntents = SwapAmountScreenClickIntents(actions)
 
@@ -1419,6 +1419,7 @@ internal class StateBuilder(
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
             is Account.Virtual -> AccountIconUM.Virtual
+            is Account.Prediction -> AccountIconUM.Prediction
         }
     }
 

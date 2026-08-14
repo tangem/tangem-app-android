@@ -9,6 +9,7 @@ import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_error_28
 import com.tangem.core.ui.res.generated.icons.ic_snowflake_20
 import com.tangem.core.ui.res.generated.icons.ic_sun_20
 
@@ -201,6 +202,37 @@ internal object TangemPayMessagesFactory {
             secondaryButton {
                 text = resourceReference(R.string.common_got_it)
                 onClick { closeBs() }
+            }
+        }
+    }
+
+    fun createOrderFailedMessage(onRetryClick: (() -> Unit)?): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                vector(Icons.ic_error_28) {
+                    type = MessageBottomSheetUM.Vector.Type.Attention
+                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
+                }
+                title = resourceReference(R.string.common_something_went_wrong)
+                body = resourceReference(R.string.common_try_again_later)
+            }
+            if (onRetryClick == null) {
+                primaryButton {
+                    text = resourceReference(R.string.common_close)
+                    onClick { closeBs() }
+                }
+            } else {
+                secondaryButton {
+                    text = resourceReference(R.string.common_close)
+                    onClick { closeBs() }
+                }
+                primaryButton {
+                    text = resourceReference(R.string.common_retry)
+                    onClick {
+                        onRetryClick()
+                        closeBs()
+                    }
+                }
             }
         }
     }

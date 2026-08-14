@@ -2070,7 +2070,7 @@
   <string name="tangempay_bank_transfer_show_details">Details anzeigen</string>
   <string name="tangempay_bank_transfer_success_subtitle">Dies kann etwas Zeit in Anspruch nehmen.</string>
   <string name="tangempay_bank_transfer_success_title">Vorbereitung Ihrer Bankdaten</string>
-  <string name="tangempay_bank_transfer_swift_warning">SWIFT-Überweisungen werden nicht akzeptiert und zurückgesendet</string>
+  <string name="tangempay_bank_transfer_swift_warning">Einzahlungen sind ausschließlich per ACH oder FedWire möglich. SWIFT-Überweisungen werden zurückgebucht.</string>
   <string name="tangempay_bank_transfer_terms_of_use">Nutzungsbedingungen</string>
   <string name="tangempay_cancel_kyc">KYC vom Hauptbildschirm ausblenden</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Bitte wenden Sie sich an den Support.</string>

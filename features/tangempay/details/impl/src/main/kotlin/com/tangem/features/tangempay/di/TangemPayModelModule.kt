@@ -21,6 +21,7 @@ import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetwor
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardDataModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardSuccessModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardTypeModel
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanModel
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanModel
@@ -156,4 +157,9 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayOrderCardDataModel::class)
     fun bindTangemPayOrderCardDataModel(model: TangemPayOrderCardDataModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayOrderCardSuccessModel::class)
+    fun bindTangemPayOrderCardSuccessModel(model: TangemPayOrderCardSuccessModel): Model
 }

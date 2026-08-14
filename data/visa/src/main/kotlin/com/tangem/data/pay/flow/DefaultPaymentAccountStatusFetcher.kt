@@ -435,6 +435,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 lastDigits = cardInfo.lastFourDigits,
                 images = cardInfo.images,
                 state = getCardState(cardId, userWalletId),
+                embossName = cardInfo.embossName,
             )
         }
 
@@ -634,6 +635,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         lastDigits = "",
         images = emptyList(),
         state = TangemPayCardState.Issuing,
+        embossName = null,
     )
 
     private suspend fun VisaApiError.toStatusValueWhenHasTangemPay(

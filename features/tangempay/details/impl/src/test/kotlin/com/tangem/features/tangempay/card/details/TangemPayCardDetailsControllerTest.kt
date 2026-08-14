@@ -177,13 +177,51 @@ internal class TangemPayCardDetailsControllerTest {
 
     @Test
     fun `GIVEN copy cvv WHEN onCopy invoked THEN clipboard set as sensitive and analytics sent`() = runTest {
-        val controller = createController(scope = backgroundScope)
-        runCurrent()
+        val controller = revealedController()
 
         controller.uiState.value.onCopy("1 2 3", CardDataType.CVV)
 
         verify(exactly = 1) { clipboardManager.setText(text = "123", isSensitive = true) }
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CopyCardCVVClicked()) }
+    }
+
+    @Test
+    fun `GIVEN copy cardholder name WHEN onCopy invoked THEN spaces kept and analytics sent`() = runTest {
+        val controller = revealedController()
+
+        controller.uiState.value.onCopy("JOHNNY SILVERHAND", CardDataType.CardholderName)
+
+        verify(exactly = 1) { clipboardManager.setText(text = "JOHNNY SILVERHAND", isSensitive = true) }
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CopyCardholderNameClicked()) }
+    }
+
+    @Test
+    fun `GIVEN details hidden WHEN onCopy invoked THEN nothing copied`() = runTest {
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+
+        controller.uiState.value.onCopy("1 2 3", CardDataType.CVV)
+
+        verify(exactly = 0) { clipboardManager.setText(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN card with emboss name WHEN created THEN cardholder name exposed`() = runTest {
+        val controller = createController(
+            scope = backgroundScope,
+            card = card(embossName = "JOHNNY SILVERHAND"),
+        )
+        runCurrent()
+
+        assertThat(controller.uiState.value.cardholderName).isEqualTo("JOHNNY SILVERHAND")
+    }
+
+    @Test
+    fun `GIVEN card without emboss name WHEN created THEN cardholder name is null`() = runTest {
+        val controller = createController(scope = backgroundScope, card = card(embossName = null))
+        runCurrent()
+
+        assertThat(controller.uiState.value.cardholderName).isNull()
     }
 
     @Test
@@ -197,6 +235,15 @@ internal class TangemPayCardDetailsControllerTest {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { repository.revealCardDetails(any(), any()) }
+    }
+
+    private fun TestScope.revealedController(): TangemPayCardDetailsController {
+        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+        eventListener.send(CardDetailsEvent.Show(cardId))
+        runCurrent()
+        return controller
     }
 
     private fun TestScope.createController(
@@ -227,6 +274,7 @@ internal class TangemPayCardDetailsControllerTest {
         displayName: CardDisplayName? = null,
         frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
         state: TangemPayCardState = TangemPayCardState.Active,
+        embossName: String? = null,
     ): TangemPayCard = TangemPayCard(
         id = id,
         productInstanceId = "product_$id",
@@ -238,6 +286,7 @@ internal class TangemPayCardDetailsControllerTest {
         lastDigits = lastDigits,
         images = emptyList(),
         state = state,
+        embossName = embossName,
     )
 
     private companion object {
