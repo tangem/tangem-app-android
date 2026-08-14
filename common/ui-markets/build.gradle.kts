@@ -63,5 +63,7 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.core)
+    testImplementation(tangemDeps.blockchain)
     // endregion
 }

@@ -28,10 +28,36 @@ internal class OfferConverterTest {
     @Test
     fun `GIVEN plastic type WHEN convert THEN offer is plastic`() {
         // Act
+        val actual = OfferConverter.convert(createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN"))
+
+        // Assert
+        assertThat(actual.type).isEqualTo(Offer.Type.CARD_ISSUE_PLASTIC_RAIN)
+        assertThat(actual.isPlastic).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the wire value the plastic offer is matched on WHEN read THEN it is the one the backend sends`() {
+        // Assert
+        assertThat(Offer.Type.CARD_ISSUE_PLASTIC_RAIN.wireValue).isEqualTo("CARD_ISSUE_PLASTIC_RAIN")
+        assertThat(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN.wireValue).isEqualTo("CARD_ISSUE_VIRTUAL_RAIN")
+    }
+
+    @Test
+    fun `GIVEN the superseded plastic wire value WHEN convert THEN offer is unknown and not plastic`() {
+        // Act
         val actual = OfferConverter.convert(createResponseOffer(type = "TANGEM_PAY_PLASTIC_VISA"))
 
         // Assert
-        assertThat(actual.type).isEqualTo(Offer.Type.TANGEM_PAY_PLASTIC_VISA)
+        assertThat(actual.type).isEqualTo(Offer.Type.UNKNOWN)
+        assertThat(actual.isPlastic).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a lowercase plastic type WHEN convert THEN offer is plastic`() {
+        // Act
+        val actual = OfferConverter.convert(createResponseOffer(type = "card_issue_plastic_rain"))
+
+        // Assert
         assertThat(actual.isPlastic).isTrue()
     }
 
@@ -50,7 +76,7 @@ internal class OfferConverterTest {
         val offers = OfferConverter.convertList(
             listOf(
                 createResponseOffer(type = "CARD_ISSUE_VIRTUAL_RAIN"),
-                createResponseOffer(type = "TANGEM_PAY_PLASTIC_VISA"),
+                createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN"),
             ),
         )
 
@@ -85,16 +111,58 @@ internal class OfferConverterTest {
             ),
         ),
         ConvertModel(
-            name = "plastic type -> Type.TANGEM_PAY_PLASTIC_VISA (spec name stays opaque)",
+            name = "plastic type -> Type.CARD_ISSUE_PLASTIC_RAIN (spec name stays opaque)",
             response = createResponseOffer(
-                type = "TANGEM_PAY_PLASTIC_VISA",
+                type = "CARD_ISSUE_PLASTIC_RAIN",
                 specificationName = "SP_000010",
                 orderType = "CARD_REISSUE",
             ),
             expected = Offer(
-                type = Offer.Type.TANGEM_PAY_PLASTIC_VISA,
+                type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
                 fee = Offer.Fee(amount = BigDecimal("1.00"), currency = Currency.getInstance("USD")),
                 data = Offer.Data(specificationName = "SP_000010", orderType = OrderType.CARD_REISSUE),
+            ),
+        ),
+        ConvertModel(
+            name = "plastic offer carries fee and delivery eta from customer/offers",
+            response = createResponseOffer(
+                type = "CARD_ISSUE_PLASTIC_RAIN",
+                amount = "21.69",
+                specificationName = "SP_000008",
+                orderType = "CARD_ISSUE_PLASTIC_RAIN",
+                deliveryEtaMinDays = 2,
+                deliveryEtaMaxDays = 4,
+            ),
+            expected = Offer(
+                type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
+                fee = Offer.Fee(amount = BigDecimal("21.69"), currency = Currency.getInstance("USD")),
+                data = Offer.Data(
+                    specificationName = "SP_000008",
+                    orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+                    deliveryEta = Offer.DeliveryEta(minBusinessDays = 2, maxBusinessDays = 4),
+                ),
+            ),
+        ),
+        ConvertModel(
+            name = "max eta without min -> eta with a null min",
+            response = createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN", deliveryEtaMaxDays = 4),
+            expected = Offer(
+                type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
+                fee = Offer.Fee(amount = BigDecimal("1.00"), currency = Currency.getInstance("USD")),
+                data = Offer.Data(
+                    specificationName = "SP_000004",
+                    orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+                    deliveryEta = Offer.DeliveryEta(minBusinessDays = null, maxBusinessDays = 4),
+                ),
+            ),
+        ),
+        ConvertModel(
+            name = "min eta without max -> no eta",
+            response = createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN", deliveryEtaMinDays = 2),
+            expected = Offer(
+                type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
+                fee = Offer.Fee(amount = BigDecimal("1.00"), currency = Currency.getInstance("USD")),
+                data = Offer.Data(specificationName = "SP_000004", orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC),
             ),
         ),
         ConvertModel(
@@ -123,10 +191,17 @@ internal class OfferConverterTest {
             currency: String = "USD",
             specificationName: String = "SP_000004",
             orderType: String = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
+            deliveryEtaMinDays: Int? = null,
+            deliveryEtaMaxDays: Int? = null,
         ) = CustomerOffersResponse.Offer(
             type = type,
             fee = CustomerOffersResponse.Fee(amount = BigDecimal(amount), currency = currency),
-            data = CustomerOffersResponse.Data(specificationName = specificationName, orderType = orderType),
+            data = CustomerOffersResponse.Data(
+                specificationName = specificationName,
+                orderType = orderType,
+                deliveryEtaMinDays = deliveryEtaMinDays,
+                deliveryEtaMaxDays = deliveryEtaMaxDays,
+            ),
         )
     }
 }

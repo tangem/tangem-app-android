@@ -149,6 +149,11 @@ sealed class TangemPayAnalyticsEvents(
         event = "Button - Copy Card Number",
     )
 
+    class CopyCardholderNameClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Screen",
+        event = "Button - Copy Cardholder Name",
+    )
+
     class CopyCardExpiryClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Copy Card Expiry",
