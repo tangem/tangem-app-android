@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.walletregistration
 
-import android.util.Base64
 import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
@@ -29,16 +28,13 @@ internal class ColdWalletRegistrationSigner @Inject constructor() {
         val walletPublicKey = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }?.publicKey
             ?: error("No secp256k1 wallet on card ${card.cardId}")
 
-        // The card rejects the base64url nonce *string* as an AttestWalletKey challenge
-        // (InvalidParams). Decode it to its raw bytes and use those as the challenge; the backend
-        // must verify the card/wallet signatures over the same raw challenge bytes.
-        val challenge = Base64.decode(nonceBytes, Base64.URL_SAFE or Base64.NO_WRAP)
-
+        // nonceBytes are already the raw challenge bytes (decoded once in DefaultWalletRegistrar) —
+        // exactly what AttestWalletKeyTask needs as the challenge and what the backend verifies over.
         buildBundle(
-            response = attest(session, walletPublicKey, challenge),
+            response = attest(session, walletPublicKey, nonceBytes),
             walletPublicKey = walletPublicKey,
             cardPublicKey = card.cardPublicKey,
-            nonceBytes = challenge,
+            nonceBytes = nonceBytes,
         )
     }
 

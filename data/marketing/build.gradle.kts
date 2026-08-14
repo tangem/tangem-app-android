@@ -24,7 +24,7 @@ dependencies {
 
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
-    implementation(projects.core.configToggles)
 
     testImplementation(projects.test.core)
+    api(deps.moshi)
 }

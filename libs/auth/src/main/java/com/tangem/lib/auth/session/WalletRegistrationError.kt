@@ -15,6 +15,9 @@ sealed class WalletRegistrationError {
     /** RSA/OAEP decryption of the server-issued wallet nonce failed. */
     data class NonceDecryptionFailed(val cause: Throwable) : WalletRegistrationError()
 
+    /** Base64url-decoding the (decrypted) wallet nonce into its raw signing bytes failed. */
+    data class NonceDecodingFailed(val cause: Throwable) : WalletRegistrationError()
+
     /**
      * Producing the wallet/card signature failed — Card SDK / hot SDK error, or the user cancelled
      * the NFC tap / biometric prompt.

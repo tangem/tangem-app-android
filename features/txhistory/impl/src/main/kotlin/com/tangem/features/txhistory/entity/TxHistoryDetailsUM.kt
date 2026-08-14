@@ -97,8 +97,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * wallet decoration. [isFaded] renders the failed amount (struck through, recolored to tertiary); an in-flight leg is
      * not faded — it carries a `~` estimate sign instead.
      *
-     * [currencyIcon] is `null` when the leg has no icon to show — e.g. the onramp fiat side when its paid-from country
-     * is unknown; the trailing icon slot is then left empty. When the country is known, the fiat leg shows its flag.
+     * [currencyIcon] is `null` when the leg has no icon to show — e.g. the onramp fiat side when its paid fiat currency
+     * is unresolved; the trailing icon slot is then left empty. When resolved, the fiat leg shows its currency icon.
      */
     data class AssetUM(
         val label: TextReference,
@@ -264,13 +264,29 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
     /**
      * One row of the header's overflow context menu: a leading [icon] glyph and a [title] label. [isDestructive]
-     * renders the row in the error color (e.g. a remove action); [onClick] runs the action and is expected to also
-     * dismiss the menu at the call site.
+     * renders the row in the error color (e.g. a remove action); [action] is run on tap and the call site is expected to
+     * also dismiss the menu.
      */
     data class MenuItemUM(
         val icon: ImageVector,
         val title: TextReference,
         val isDestructive: Boolean = false,
-        val onClick: () -> Unit,
-    )
+        val action: Action,
+    ) {
+
+        /** What a [MenuItemUM] does on tap. */
+        @Immutable
+        sealed interface Action {
+
+            /** Runs [onClick] as-is. */
+            data class Direct(val onClick: () -> Unit) : Action
+
+            /**
+             * Shares [text]. Composing the summary is a pure conversion, but turning it into a string needs the
+             * `Resources` only the UI has, so the reference is resolved at composition (as the legacy express share
+             * sheet did) and the resulting string is handed to [onShare].
+             */
+            data class Share(val text: TextReference, val onShare: (String) -> Unit) : Action
+        }
+    }
 }
