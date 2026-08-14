@@ -33,6 +33,10 @@ dependencies {
     api(projects.core.utils)
     // endregion
 
+    // region Store
+    implementation(projects.store.datasource)
+    // endregion
+
     // region Domain
     api(projects.domain.blockaid)
     api(projects.domain.blockaid.models)
