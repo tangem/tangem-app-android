@@ -30,6 +30,7 @@ internal class UpdateInvitePreviewWalletsTransformerTest {
         totalMembers = 5,
         creatorName = "Igor Sinyak",
         wallet = null,
+        confirmation = null,
         onCreatorInfoClick = {},
         onContinueClick = {},
         onCloseClick = {},

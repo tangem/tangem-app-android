@@ -19,10 +19,11 @@ import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.core.remote.config.ApiEnvironmentConfig
+import com.tangem.core.remote.header.RequestHeader
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
 import com.tangem.datasource.utils.AddHeadersInterceptor
-import com.tangem.datasource.utils.RequestHeader
+import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.extensions.*
@@ -76,7 +77,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             apiConfigsManager.getEnvironmentConfig(TangemTech.ID).environment
         }
         val platformHeaders = RequestHeader.AppVersionPlatformHeaders(appInfoProvider)
-        val apiKeyHeader = RequestHeader.TangemApiKeyHeader(authProvider, apiEnvironment)
+        val apiKeyHeader = TangemApiKeyHeader(authProvider, apiEnvironment)
         TangemApiServiceSettings.addInterceptors(
             AddHeadersInterceptor(platformHeaders.values + apiKeyHeader.values),
         )

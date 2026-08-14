@@ -90,7 +90,7 @@ fun PasteButton(
 }
 
 @Composable
-fun CrossIcon(onClick: (String) -> Unit, modifier: Modifier = Modifier) {
+fun CrossIcon(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Icon(
         painter = painterResource(id = R.drawable.ic_close_24),
         tint = TangemTheme.colors.icon.informative,
@@ -100,7 +100,7 @@ fun CrossIcon(onClick: (String) -> Unit, modifier: Modifier = Modifier) {
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(radius = TangemTheme.dimens.radius12),
-                onClick = { onClick("") },
+                onClick = onClick,
             ),
     )
 }

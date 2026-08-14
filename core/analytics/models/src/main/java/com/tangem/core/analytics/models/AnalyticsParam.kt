@@ -104,7 +104,6 @@ sealed class AnalyticsParam {
         Staking("Staking"),
         Earn("Earn"),
         ForYou("For You"),
-        TangemPayHotWalletOnboarding("TangemPayHotWalletOnboarding"),
     }
 
     sealed class TxSentFrom(val value: String) {

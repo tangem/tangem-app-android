@@ -3,8 +3,8 @@ package com.tangem.data.account.store
 import android.content.Context
 import com.google.common.truth.Truth
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.datastore.createAppDataStoreFactory
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.every
@@ -28,7 +28,7 @@ class AccountsResponseStoreFactoryTest {
         context = context,
         moshi = moshi,
         appScope = TestAppCoroutineScope(),
-        dataStoreFactory = AppDataStoreFactory(analyticsExceptionHandler = mockk(relaxed = true)),
+        dataStoreFactory = createAppDataStoreFactory(),
     )
 
     @BeforeEach
