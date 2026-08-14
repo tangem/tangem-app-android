@@ -92,13 +92,6 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(MoonPay.KEY)
-    fun provideMoonPayConfig(): ApiConfig {
-        return MoonPay()
-    }
-
-    @Provides
-    @IntoMap
     @StringKey(GaslessTxService.KEY)
     fun provideGaslessServiceConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
         return GaslessTxService(

@@ -11,8 +11,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -189,7 +191,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val item = TxHistoryDetailsUM.MenuItemUM(
             icon = Icons.ic_arrow_down_20,
             title = resourceReference(R.string.common_share),
-            onClick = {},
+            action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
         )
 
         // Act
@@ -700,6 +702,24 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN incoming Operation with fee WHEN convert THEN network-fee row shown`() {
+        // A contract call is reported incoming whenever it pays out to the user (an EVM token leg's direction is the
+        // transfer's, not the signer's), yet the user signed and paid it — the fee stays. Only plain transfers hide it.
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = false,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val rows = converter.convert(tx).rows
+
+        // Assert
+        assertThat(rows.map { it.label }).containsExactly(resourceReference(R.string.common_network_fee_title))
+    }
+
+    @Test
     fun `GIVEN tx without fee WHEN convert THEN no rows`() {
         // Arrange
         val tx = txInfo(type = TransactionType.Transfer, fee = null)
@@ -798,6 +818,100 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN EVM staking tx whose contract interaction address is a known validator WHEN convert THEN row resolved`() {
+        // Arrange — on EVM the staking call's destination is the validator contract, but the SDK types it as
+        // Contract (only Solana ever emits AddressType.Validator), so a Contract address must still resolve.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("Lido Finance")
+    }
+
+    @Test
+    fun `GIVEN staking tx whose address differs in case from the known validator WHEN convert THEN row resolved`() {
+        // Arrange — an EVM address arrives checksummed or lowercased depending on the history provider, while the
+        // staking API picks its own casing.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract("0xVALIDATOR"),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator(address = "0xvalidator"))).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("Lido Finance")
+    }
+
+    @Test
+    fun `GIVEN Vote tx with blank validator address WHEN convert THEN no validator row`() {
+        // Arrange — the Tron vote parser reports a missing validator as an empty string.
+        val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = ""))
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator(address = ""))).convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN staking tx to a known P2P vault WHEN convert THEN row shows the vault name`() {
+        // Arrange — a P2P pooled-staking deposit targets a vault contract, resolved from the same target map.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VAULT_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(vaults = listOf(vault())).convert(tx).rows
+
+        // Assert
+        val row = rows.single()
+        assertThat(row.value.resolveString()).isEqualTo("P2P Vault")
+        // The vaults API carries no per-vault page, so there is no link to offer.
+        assertThat(row.trailingIconRes).isNull()
+        assertThat(row.onClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN unrecognized contract call to a known vault WHEN convert THEN row shows the vault name`() {
+        // Arrange — a staking call whose 4-byte selector is not registered in contract_methods.json (e.g. the P2P
+        // exit-queue withdrawal) arrives as UnknownOperation, but its address still identifies the vault.
+        val tx = txInfo(
+            type = TransactionType.UnknownOperation,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VAULT_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(vaults = listOf(vault())).convert(tx).rows
+
+        // Assert
+        assertThat(rows.single().value.resolveString()).isEqualTo("P2P Vault")
+    }
+
+    @Test
+    fun `GIVEN plain transfer to a known validator address WHEN convert THEN no validator row`() {
+        // Arrange — a value transfer is never a staking interaction, even when the counterparty is a known target.
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val rows = onChainConverter(validators = listOf(validator())).convert(tx).rows
+
+        // Assert
+        assertThat(rows).isEmpty()
+    }
+
+    @Test
     fun `GIVEN staking tx with address absent from yield WHEN convert THEN no validator row`() {
         // Arrange — the tx carries a validator address, but the current yield does not list it.
         val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = "0xunknown"))
@@ -872,6 +986,98 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             resourceReference(R.string.staking_validator),
             resourceReference(R.string.common_network_fee_title),
         ).inOrder()
+    }
+
+    // endregion
+
+    // region YieldSupply Send (rendered as a plain transfer)
+
+    @Test
+    fun `GIVEN outgoing yield Send WHEN convert THEN up icon, sent title, minus sign, recipient card, no protocol row`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_sent))
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("- ")
+        assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+        assertThat(result.counterparty?.avatar)
+            .isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
+        // The yield "Validator: Aave" protocol row must not appear — only the network-fee row.
+        assertThat(result.rows.map { it.label })
+            .containsExactly(resourceReference(R.string.common_network_fee_title))
+    }
+
+    @Test
+    fun `GIVEN incoming yield Send with fee WHEN convert THEN down icon, received title, from-address card, no fee row`() {
+        // Arrange — a received transfer's fee belongs to the sender, so it is omitted.
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_received))
+        assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.common_from_address))
+        assertThat(result.rows).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN yield Send withdraw WHEN convert THEN withdrawn title, yield lightning icon, no counterparty, no validator row`() {
+        // Arrange — a withdraw stays a yield operation in details: lightning glyph, no counterparty card, no validator row.
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.header.title).isEqualTo(resourceReference(R.string.transaction_history_withdrawn))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_lightning_20))
+        assertThat(result.amountBlock.amount.resolveString()).startsWith("+ ")
+        assertThat(result.amountBlock.label).isNull()
+        assertThat(result.amountBlock.icon).isInstanceOf(TxHistoryDetailsUM.AmountIconUM.Single::class.java)
+        assertThat(result.counterparty).isNull()
+        assertThat(result.rows.map { it.label })
+            .doesNotContain(resourceReference(R.string.staking_validator))
+    }
+
+    @Test
+    fun `GIVEN incoming non-withdraw yield Send to own account WHEN convert THEN no fee row`() {
+        // Arrange — an own transfer is still a receive on the incoming side: the fee row is dropped like on any other.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = ownConverter.convert(tx)
+
+        // Assert
+        assertThat(result.rows).isEmpty()
     }
 
     // endregion

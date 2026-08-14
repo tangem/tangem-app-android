@@ -7,12 +7,13 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 
 internal enum class CardDataType {
-    Number, Expiry, CVV
+    Number, CardholderName, Expiry, CVV
 }
 
 internal data class TangemPayCardDetailsUM(
     val number: String,
     val numberShort: String,
+    val cardholderName: String?,
     val expiry: String,
     val cvv: String,
     val buttonText: TextReference = TextReference.EMPTY,

@@ -6,4 +6,5 @@ plugins {
 
 dependencies {
     api(projects.core.utils)
+    api(deps.kotlin.serialization.core)
 }
