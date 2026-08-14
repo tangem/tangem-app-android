@@ -1,7 +1,7 @@
-package com.tangem.datasource.api.surveysparrow
+package com.tangem.store.datasource.surveysparrow
 
-import com.tangem.datasource.api.surveysparrow.models.CreateSurveySparrowResponseBody
-import com.tangem.datasource.api.surveysparrow.models.SurveySparrowResponsesDto
+import com.tangem.store.datasource.surveysparrow.models.CreateSurveySparrowResponseBody
+import com.tangem.store.datasource.surveysparrow.models.SurveySparrowResponsesDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
