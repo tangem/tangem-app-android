@@ -3,6 +3,8 @@ package com.tangem.feature.walletsettings.model
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -25,6 +27,7 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStateUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.scan.CardDTO
@@ -46,6 +49,8 @@ import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -85,11 +90,18 @@ internal class WalletSettingsModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
-    val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
+
+    val isJointAccountCreationEnabled: Boolean
+        get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
     private val walletCardItemDelegate = walletCardItemDelegateFactory.create(
         dialogNavigation = dialogNavigation,
         onUpgradeHotWalletClick = ::onUpgradeWalletClick,
@@ -133,16 +145,14 @@ internal class WalletSettingsModel @Inject constructor(
                 .distinctUntilChanged()
                 .conflate(),
             flow2 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow3 = accountItemsDelegate.loadAccount(wallet),
-        ) { nftEnabled, cardItem, accountList ->
-            val isWalletBackedUp = when (wallet) {
-                is UserWallet.Hot -> wallet.backedUp
-                is UserWallet.Cold -> true
-            }
+            flow3 = accountItemsDelegate.loadAccount(wallet, onAddAccountClick = ::onAddAccountClick),
+            flow4 = isWalletBackedUpUseCase.flow(wallet),
+        ) { nftEnabled, cardItem, accountList, isWalletBackedUp ->
             state.update { value ->
                 value.copy(
                     items = buildItems(
                         userWallet = wallet,
+                        isWalletBackedUp = isWalletBackedUp,
                         cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
                         accountList = accountList,
@@ -170,6 +180,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun buildItems(
         userWallet: UserWallet,
+        isWalletBackedUp: Boolean,
         cardItem: WalletSettingsItemUM.CardBlock,
         isNFTEnabled: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
@@ -181,6 +192,7 @@ internal class WalletSettingsModel @Inject constructor(
         }
         return itemsBuilder.buildItems(
             userWallet = userWallet,
+            isWalletBackedUp = isWalletBackedUp,
             cardItem = cardItem,
             isReferralAvailable = when (userWallet) {
                 is UserWallet.Cold -> userWallet.cardTypesResolver.isTangemWallet()
@@ -429,6 +441,28 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
+    private fun onAddAccountClick() {
+        if (isJointAccountCreationEnabled) {
+            bottomSheetNavigation.activate(WalletSettingsBSConfig.AddAccountType)
+        } else {
+            openCreateCryptoAccount()
+        }
+    }
+
+    fun onAddCryptoAccountClick() {
+        bottomSheetNavigation.dismiss()
+        openCreateCryptoAccount()
+    }
+
+    fun onAddJointAccountClick() {
+        bottomSheetNavigation.dismiss()
+        router.push(AppRoute.JointAccountCreation(params.userWalletId))
+    }
+
+    private fun openCreateCryptoAccount() {
+        router.push(AppRoute.CreateAccount(params.userWalletId))
+    }
+
     private fun onAccountReorder(fromIndex: Int, toIndex: Int) {
         state.update { prevState ->
             prevState.copy(
@@ -450,93 +484,134 @@ internal class WalletSettingsModel @Inject constructor(
         accountListSortingSaver.save(accountIds = accountIds)
     }
 
-    @Suppress("LongMethod")
     private fun onForgetWalletClick(userWallet: UserWallet) {
-        val message = when (userWallet) {
-            is UserWallet.Cold -> {
-                DialogMessage(
-                    message = resourceReference(
-                        id = R.string.user_wallet_list_delete_prompt,
-                    ),
-                    firstActionBuilder = {
-                        EventMessageAction(
-                            title = resourceReference(R.string.common_forget),
-                            isWarning = true,
-                            onClick = ::forgetWallet,
-                        )
-                    },
-                    secondActionBuilder = { cancelAction() },
-                )
-            }
-            is UserWallet.Hot -> {
-                if (!userWallet.backedUp) {
-                    analyticsEventHandler.send(
-                        event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
-                            source = AnalyticsParam.ScreensSources.WalletSettings.value,
-                            action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Remove,
-                        ),
-                    )
-                }
+        when (userWallet) {
+            is UserWallet.Cold -> messageSender.send(buildColdForgetDialog())
+            is UserWallet.Hot -> modelScope.launch { sendHotForgetSheet(userWallet) }
+        }
+    }
 
-                bottomSheetMessage {
-                    infoBlock {
-                        icon(R.drawable.ic_alert_circle_24) {
-                            type = MessageBottomSheetUM.Icon.Type.Warning
-                            backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
-                        }
-                        title = resourceReference(R.string.hw_remove_wallet_notification_title)
-                        body = if (userWallet.backedUp) {
-                            resourceReference(R.string.hw_remove_wallet_notification_description_has_backup)
-                        } else {
-                            resourceReference(R.string.hw_remove_wallet_notification_description_without_backup)
-                        }
+    private fun buildColdForgetDialog() = DialogMessage(
+        message = resourceReference(
+            id = R.string.user_wallet_list_delete_prompt,
+        ),
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.common_forget),
+                isWarning = true,
+                onClick = ::forgetWallet,
+            )
+        },
+        secondActionBuilder = { cancelAction() },
+    )
+
+    private suspend fun sendHotForgetSheet(userWallet: UserWallet.Hot) {
+        val hasCloudBackup = hotWalletFeatureToggles.isGoogleDriveBackupEnabled &&
+            getCloudBackupStateUseCase(userWallet.walletId.stringValue)
+
+        if (hasCloudBackup) {
+            sendForgetWithCloudBackupSheet(userWallet)
+        } else {
+            sendForgetSeedBackupSheet(userWallet)
+        }
+    }
+
+    private fun sendForgetWithCloudBackupSheet(userWallet: UserWallet.Hot) {
+        messageSender.send(
+            bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.ic_alert_triangle_20) {
+                        type = MessageBottomSheetUM.Icon.Type.Attention
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
-                    if (userWallet.backedUp) {
-                        secondaryButton {
-                            text = resourceReference(R.string.hw_remove_wallet_notification_action_forget)
-                            onClick {
-                                router.push(AppRoute.ForgetWallet(userWallet.walletId))
-                                closeBs()
-                            }
-                        }
-                    } else {
-                        secondaryButton {
-                            text = resourceReference(R.string.hw_remove_wallet_notification_action_forget_anyway)
-                            onClick {
-                                router.push(AppRoute.ForgetWallet(userWallet.walletId))
-                                closeBs()
-                            }
-                        }
-                    }
-                    if (userWallet.backedUp) {
-                        primaryButton {
-                            text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view)
-                            onClick {
-                                unlockWalletIfNeedAndProceed {
-                                    router.push(AppRoute.ViewPhrase(userWallet.walletId))
-                                }
-                                closeBs()
-                            }
-                        }
-                    } else {
-                        primaryButton {
-                            text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_go)
-                            onClick {
-                                router.push(
-                                    AppRoute.CreateWalletBackup(
-                                        userWalletId = userWallet.walletId,
-                                        analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
-                                        analyticsAction = RecoveryPhraseScreenAction.Remove.value,
-                                    ),
-                                )
-                                closeBs()
-                            }
-                        }
+                    title = resourceReference(R.string.hw_remove_wallet_cloud_backup_title)
+                    body = resourceReference(R.string.hw_remove_wallet_cloud_backup_description)
+                }
+                secondaryButton {
+                    text = resourceReference(R.string.hw_remove_wallet_forget_and_delete_backup)
+                    onClick {
+                        router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteCloudBackup = true))
+                        closeBs()
                     }
                 }
-            }
+                primaryButton {
+                    text = resourceReference(R.string.hw_remove_wallet_action_forget_title)
+                    onClick {
+                        router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteCloudBackup = false))
+                        closeBs()
+                    }
+                }
+            },
+        )
+    }
+
+    @Suppress("LongMethod")
+    private fun sendForgetSeedBackupSheet(userWallet: UserWallet.Hot) {
+        if (!userWallet.backedUp) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
+                    source = AnalyticsParam.ScreensSources.WalletSettings.value,
+                    action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Remove,
+                ),
+            )
         }
 
-        messageSender.send(message)
+        messageSender.send(
+            bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.ic_alert_triangle_20) {
+                        type = MessageBottomSheetUM.Icon.Type.Attention
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
+                    }
+                    title = resourceReference(R.string.hw_remove_wallet_notification_title_v2)
+                    body = if (userWallet.backedUp) {
+                        resourceReference(R.string.hw_remove_wallet_notification_description_has_backup_v2)
+                    } else {
+                        resourceReference(R.string.hw_remove_wallet_notification_description_without_backup)
+                    }
+                }
+                if (userWallet.backedUp) {
+                    secondaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_forget)
+                        onClick {
+                            router.push(AppRoute.ForgetWallet(userWallet.walletId))
+                            closeBs()
+                        }
+                    }
+                } else {
+                    secondaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_forget_anyway)
+                        onClick {
+                            router.push(AppRoute.ForgetWallet(userWallet.walletId))
+                            closeBs()
+                        }
+                    }
+                }
+                if (userWallet.backedUp) {
+                    primaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
+                        onClick {
+                            unlockWalletIfNeedAndProceed {
+                                router.push(AppRoute.ViewPhrase(userWallet.walletId))
+                            }
+                            closeBs()
+                        }
+                    }
+                } else {
+                    primaryButton {
+                        text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_go)
+                        onClick {
+                            router.push(
+                                AppRoute.WalletBackup(
+                                    userWalletId = userWallet.walletId,
+                                    isColdWalletOptionShown = false,
+                                ),
+                            )
+                            closeBs()
+                        }
+                    }
+                }
+            },
+        )
     }
 }

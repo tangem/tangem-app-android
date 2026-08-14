@@ -38,6 +38,7 @@ internal sealed interface TangemPayOrderCardDataScreenUM {
         val postalCode: FieldUM,
         val phone: FieldUM,
         val isOrderEnabled: Boolean,
+        val isSubmitting: Boolean,
         val onOrderClick: () -> Unit,
     ) : TangemPayOrderCardDataScreenUM
 

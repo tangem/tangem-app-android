@@ -14,10 +14,10 @@ android {
 dependencies {
 
     /* Project - API */
-    api(projects.features.hotWallet.api)
-    api(projects.features.pushNotificationSettings.api)
+    api(projects.features.jointAccount.main.api)
     api(projects.features.wallet.api)
     api(projects.features.walletSettings.api)
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.pushNotifications.api)
 
     /* Project - Core */
@@ -38,9 +38,9 @@ dependencies {
     api(projects.domain.assetsdiscovery)
     api(projects.domain.balanceHiding)
     api(projects.domain.demo)
+    implementation(projects.domain.cloudBackup)
     api(projects.domain.nft)
     api(projects.domain.notifications)
-    api(projects.domain.settings)
     api(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.card)
@@ -70,6 +70,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
+    implementation(deps.haze)
 
     /** Tangem libraries */
     implementation(tangemDeps.hot.core)
