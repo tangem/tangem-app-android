@@ -16,7 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.KSerializer
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Default [AppDataStoreFactory].
@@ -26,7 +25,6 @@ import javax.inject.Singleton
  * as a non-fatal event enriched with diagnostics (file name, size, corruption kind and a short head sample), so its
  * frequency and the affected file stay observable.
  */
-@Singleton
 internal class DefaultAppDataStoreFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
