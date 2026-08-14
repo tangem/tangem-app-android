@@ -1,14 +1,12 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.store.datasource.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
-
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 
 class SurveySparrow(
-    private val environmentConfig: EnvironmentConfig,
+    private val storeEnvironmentConfig: StoreEnvironmentConfig,
 ) : ApiConfig() {
 
     override val id: ApiConfig.ID get() = ID
@@ -25,7 +23,7 @@ class SurveySparrow(
         headers = buildMap {
             put(
                 key = "Authorization",
-                value = ProviderSuspend { "Bearer ${environmentConfig.surveySparrowToken.orEmpty()}" },
+                value = ProviderSuspend { "Bearer ${storeEnvironmentConfig.surveySparrowToken.orEmpty()}" },
             )
         },
     )
