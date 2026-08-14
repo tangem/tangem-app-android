@@ -5,8 +5,8 @@ import com.tangem.data.express.DefaultExpressRepository
 import com.tangem.data.express.DefaultExpressServiceFetcher
 import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.express.error.DefaultExpressErrorResolver
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
