@@ -7,6 +7,8 @@ import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.swap.SwapRateFormatter
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -32,7 +34,7 @@ import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
-import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Severity
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Style
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
@@ -74,8 +76,7 @@ internal class ExpressTxToDetailsUMConverter(
      */
     private fun convertExpressSwap(swap: ExpressTx.Swap): TxHistoryDetailsUM.TwoAssets {
         val status = exchangeStatusConverter.convert(swap.tx.status)
-        val fromOwner = resolveLegOwner(swap.tx.fromAddress, swap.tx.fromAsset.cryptoCurrency)
-        val toOwner = resolveLegOwner(swap.tx.payoutAddress, swap.tx.toAsset.cryptoCurrency)
+        val (fromOwner, toOwner) = swap.resolveLegOwners()
         val refundToken = refundCurrency.takeIf { swap.tx.status == ExpressExchangeStatus.Refunded }
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
@@ -99,7 +100,11 @@ internal class ExpressTxToDetailsUMConverter(
                 isFaded = status is Status.Failed,
             ),
             statusBanner = refundToken?.let(::refundedInBanner) ?: swap.tx.status.toStatusBannerUM(),
-            rows = swap.toInfoRows(onProviderClick = swap.providerClick(), rateRow = swap.tx.swapRateRow()),
+            rows = swap.toInfoRows(
+                onProviderClick = swap.providerClick(),
+                rateRow = swap.tx.swapRateRow(),
+                showProviderType = true,
+            ),
             providerButton = refundToken?.let(::goToRefundedTokenButton)
                 ?: providerButton(swap.externalTxUrl, swap.tx.status.providerButtonLabel()),
         )
@@ -110,7 +115,7 @@ internal class ExpressTxToDetailsUMConverter(
      * explanation and the underlined "Learn more" link appended to the subtitle.
      */
     private fun refundedInBanner(refundToken: CryptoCurrency) = TxHistoryDetailsUM.StatusBannerUM(
-        severity = Severity.Error,
+        style = Style.Refunded,
         title = resourceReference(
             id = R.string.express_exchange_notification_refunded_in_title,
             formatArgs = wrappedList(refundToken.symbol),
@@ -134,7 +139,7 @@ internal class ExpressTxToDetailsUMConverter(
 
     private fun convertExpressOnramp(onramp: ExpressTx.Onramp): TxHistoryDetailsUM.TwoAssets {
         val status = onrampStatusConverter.convert(onramp.tx.status)
-        val toOwner = resolveLegOwner(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)
+        val toOwner = resolveLeg(onramp.tx.payoutAddress, onramp.tx.toAsset.cryptoCurrency)?.toOwnerUM()
         return TxHistoryDetailsUM.TwoAssets(
             header = TxHistoryDetailsUM.HeaderUM(
                 icon = TxIcon.Vector(Icons.ic_card_20),
@@ -149,12 +154,14 @@ internal class ExpressTxToDetailsUMConverter(
             from = onramp.tx.fromFiat.toFiatAssetUM(
                 // The fiat side was paid from a card, not a portfolio address — no owner to resolve.
                 label = resourceReference(R.string.tx_history_you_paid),
-                isFaded = status is Status.Failed,
+                currencyIcon = onramp.tx.country?.image?.let { flagUrl ->
+                    CurrencyIconState.FiatIcon(url = flagUrl, fallbackResId = R.drawable.ic_currency_24)
+                },
             ),
             to = onramp.tx.toAsset.toAssetUM(
                 label = ownerLabel(toOwner, fallback = R.string.swapping_to_title, owned = R.string.common_to),
                 owner = toOwner,
-                sign = status.incomingSign(),
+                sign = status.onrampIncomingSign(),
                 isFaded = status is Status.Failed,
             ),
             statusBanner = onramp.tx.status.toStatusBannerUM(),
@@ -163,28 +170,80 @@ internal class ExpressTxToDetailsUMConverter(
         )
     }
 
+    /** The owners shown under a swap's two legs; either may be `null` (no owner card → "You send" / "You receive"). */
+    private data class LegOwners(
+        val from: TxHistoryDetailsUM.AssetOwnerUM?,
+        val to: TxHistoryDetailsUM.AssetOwnerUM?,
+    )
+
     /**
-     * Resolves a swap/onramp leg's [address] (on the leg currency's network) to the owner shown under the amount:
-     * the user's own account / wallet, or the external [TxHistoryDetailsUM.AssetOwnerUM.Address] (e.g. a send-and-swap
-     * payout). `null` when there is no address to resolve (e.g. the very-old-version missing `fromAddress`, onramp fiat).
+     * The (from, to) owners shown under the swap legs. A swap settled entirely within one own portfolio names no owner —
+     * both legs read "You send" / "You receive". Otherwise each leg shows its owner via [toOwnerUM], which still drops an
+     * own-wallet leg when the user has a single wallet (nothing to disambiguate).
      */
-    private fun resolveLegOwner(address: String?, legCurrency: CryptoCurrency?): TxHistoryDetailsUM.AssetOwnerUM? {
-        if (address == null) return null
-        return when (val resolved = lookup.resolveOwner(address, legCurrency?.network?.id?.rawId)) {
-            is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
-                name = resolved.account.accountName.toUM().value,
-                iconResId = resolved.account.icon.value.getResId(),
-                backgroundColor = resolved.account.icon.color.getUiColor(),
-            )
-            is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
-                name = stringReference(resolved.walletInfo.name),
-                deviceIconUM = resolved.walletInfo.deviceIconUM,
-            )
-            is ResolvedOwner.External -> TxHistoryDetailsUM.AssetOwnerUM.Address(
-                name = stringReference(resolved.address.toBriefAddressFormat()),
-                rawAddress = resolved.address,
-            )
+    private fun ExpressTx.Swap.resolveLegOwners(): LegOwners {
+        val from = resolveLeg(tx.fromAddress, tx.fromAsset.cryptoCurrency)
+        val to = resolveLeg(tx.payoutAddress, tx.toAsset.cryptoCurrency)
+        return if (isSameOwnPortfolio(from, to)) {
+            LegOwners(from = null, to = null)
+        } else {
+            LegOwners(from = from?.toOwnerUM(), to = to?.toOwnerUM())
         }
+    }
+
+    /**
+     * Resolves a swap/onramp leg's [address] (on the leg currency's network) to its owner: the user's own account /
+     * wallet, or an external counterparty. `null` when there is no address to resolve (e.g. the very-old-version missing
+     * `fromAddress`, onramp fiat).
+     */
+    private fun resolveLeg(address: String?, legCurrency: CryptoCurrency?): ResolvedOwner? {
+        if (address == null) return null
+        return lookup.resolveOwner(address, legCurrency?.network?.id?.rawId)
+    }
+
+    /**
+     * True when both swap legs settle in the same own portfolio — the same account, or (in wallet mode) the same wallet.
+     * Such a swap has no counterparty to name, so its legs read "You send" / "You receive" with no owner card; legs that
+     * differ (cross-account, cross-wallet, or a send-and-swap to an external address) keep their owner.
+     */
+    private fun isSameOwnPortfolio(from: ResolvedOwner?, to: ResolvedOwner?): Boolean = when {
+        from is ResolvedOwner.OwnAccount && to is ResolvedOwner.OwnAccount ->
+            from.account.accountId == to.account.accountId
+        from is ResolvedOwner.OwnPaymentAccount && to is ResolvedOwner.OwnPaymentAccount ->
+            from.account.accountId == to.account.accountId
+        from is ResolvedOwner.OwnWallet && to is ResolvedOwner.OwnWallet ->
+            from.userWalletId == to.userWalletId
+        else -> false
+    }
+
+    /**
+     * The owner card for a leg, or `null` when it names nothing worth disambiguating: an own-wallet leg is dropped when
+     * the user has a single wallet (there is no other wallet to tell it apart from), so it reads "You send" / "You
+     * receive". An own account (accounts mode) and an external address are always shown.
+     */
+    private fun ResolvedOwner.toOwnerUM(): TxHistoryDetailsUM.AssetOwnerUM? = when {
+        this is ResolvedOwner.OwnWallet && lookup.walletInfoById.size <= 1 -> null
+        else -> toAssetOwnerUM()
+    }
+
+    /** Maps a resolved leg owner to the model shown under the amount (own account / own wallet / external address). */
+    private fun ResolvedOwner.toAssetOwnerUM(): TxHistoryDetailsUM.AssetOwnerUM = when (this) {
+        is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
+            name = account.accountName.toUM().value,
+            iconResId = account.icon.value.getResId(),
+            backgroundColor = account.icon.color.getUiColor(),
+        )
+        is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.AssetOwnerUM.PaymentAccount(
+            name = account.accountName.toUM().value,
+        )
+        is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
+            name = stringReference(walletInfo.name),
+            deviceIconUM = walletInfo.deviceIconUM,
+        )
+        is ResolvedOwner.External -> TxHistoryDetailsUM.AssetOwnerUM.Address(
+            name = stringReference(address.toBriefAddressFormat()),
+            rawAddress = address,
+        )
     }
 
     /** Leg caption: the direction-only [fallback] ("You send" / "You receive") without an owner, "From" / "To" with one. */
@@ -233,18 +292,23 @@ internal class ExpressTxToDetailsUMConverter(
 
     /**
      * Builds the fiat ("You paid") leg of an onramp. The paid fiat amount is exact and carries no sign — neither `+`/`−`
-     * nor the `~` estimate — so only the value is shown. Fiat has no `CryptoCurrency`, so it also has no icon.
+     * nor the `~` estimate — so only the value is shown. [currencyIcon] is the paid-from country flag, or `null` when the
+     * onramp carries no country. It never fades: the paid fiat stands as spent even on a failed onramp, where only the
+     * never-received crypto leg is struck.
      */
-    private fun Amount.toFiatAssetUM(label: TextReference, isFaded: Boolean): TxHistoryDetailsUM.AssetUM {
+    private fun Amount.toFiatAssetUM(
+        label: TextReference,
+        currencyIcon: CurrencyIconState?,
+    ): TxHistoryDetailsUM.AssetUM {
         val code = fiatCode
         val formatted = (value ?: BigDecimal.ZERO)
-            .format { fiat(fiatCurrencyCode = code, fiatCurrencySymbol = currencySymbol) }
+            .format { fiat(fiatCurrencyCode = code, fiatCurrencySymbol = currencySymbol, ignoreSymbolPosition = true) }
         return TxHistoryDetailsUM.AssetUM(
             label = label,
             owner = null,
             amount = stringReference(formatted.trim()),
-            currencyIcon = null,
-            isFaded = isFaded,
+            currencyIcon = currencyIcon,
+            isFaded = false,
         )
     }
 }
@@ -254,12 +318,13 @@ internal class ExpressTxToDetailsUMConverter(
 /**
  * Express swap status → the status plaque under the two-asset block.
  *
- * In-flight stages render as [Severity.Info] with the rotating loader; [Verifying][ExpressExchangeStatus.Verifying]
- * (KYC) and the paused terminal as [Severity.Warning]; the failure and refunded terminals as [Severity.Error]; the
- * [Finished][ExpressExchangeStatus.Finished] success as [Severity.Success] (the plaque then auto-collapses — see
+ * In-flight stages render as [Style.Info] with the rotating loader; [Verifying][ExpressExchangeStatus.Verifying]
+ * (KYC) and the paused terminal as [Style.Warning]; the failure terminals as [Style.Error], the refunded terminal as
+ * [Style.Refunded] and the [Expired][ExpressExchangeStatus.Expired] one as the grey [Style.Expired] clock; the
+ * [Finished][ExpressExchangeStatus.Finished] success as [Style.Success] (the plaque then auto-collapses — see
  * `TxHistoryDetailsStatusBanner`). [Unknown][ExpressExchangeStatus.Unknown] carries nothing to show, so it hides the
  * plaque (`null`). The [Refunded][ExpressExchangeStatus.Refunded] mapping here is the fallback for an unresolved
- * refund token — with a resolved one the converter builds the richer "Refunded in {symbol}" plaque instead.
+ * refund token — with a resolved one the converter builds the richer "Refunded in {symbol}" plaque.
  */
 private fun ExpressExchangeStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusBannerUM? = when (this) {
     ExpressExchangeStatus.Preview,
@@ -272,31 +337,41 @@ private fun ExpressExchangeStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusB
     ExpressExchangeStatus.Exchanging -> loadingBanner(R.string.express_exchange_status_exchanging_active)
     ExpressExchangeStatus.Sending -> loadingBanner(R.string.express_exchange_status_sending_active)
     ExpressExchangeStatus.Verifying -> verificationBanner()
-    ExpressExchangeStatus.Refunded -> errorBanner(R.string.express_exchange_status_refunded)
+    ExpressExchangeStatus.Refunded -> refundedBanner(R.string.express_exchange_status_refunded)
     ExpressExchangeStatus.Paused -> warningBanner(R.string.express_exchange_status_paused)
     ExpressExchangeStatus.Failed,
     ExpressExchangeStatus.TxFailed,
     -> failedBanner()
-    ExpressExchangeStatus.Expired -> errorBanner(R.string.express_exchange_status_failed)
+    ExpressExchangeStatus.Expired -> expiredBanner(R.string.tx_history_details_status_expired)
     ExpressExchangeStatus.Finished -> successBanner(R.string.express_exchange_status_exchanged)
     ExpressExchangeStatus.Unknown -> null
 }
 
 /**
- * Express onramp status → the status plaque under the two-asset block. Same severity mapping as the swap variant; the
- * [Finished][ExpressOnrampStatus.Finished] success ("Purchase completed") is the only [Severity.Success] (auto-collapsed).
+ * Express onramp status → the status plaque under the two-asset block, mapped per the onramp status spec:
+ * the in-flight stages collapse to a blue "In progress" loader — [WaitingForPayment][ExpressOnrampStatus.WaitingForPayment]
+ * to "Awaiting funds"; [Verifying][ExpressOnrampStatus.Verifying] (KYC) and [Paused][ExpressOnrampStatus.Paused] are amber;
+ * [RefundInProgress][ExpressOnrampStatus.RefundInProgress] is an amber "Refunding" loader;
+ * [Failed][ExpressOnrampStatus.Failed] is a red [Style.Error] terminal and [Refunded][ExpressOnrampStatus.Refunded] a
+ * red [Style.Refunded] one (with the refund glyph); [Expired][ExpressOnrampStatus.Expired] is a grey [Style.Expired]
+ * clock terminal; and the [Finished][ExpressOnrampStatus.Finished] success is the only [Style.Success] (auto-collapsed).
+ * [Unknown][ExpressOnrampStatus.Unknown] is a terminal client fallback with nothing to show, so it hides the plaque
+ * (`null`) — same as the swap variant — rather than a loader that would spin forever once polling stops.
  */
 private fun ExpressOnrampStatus.toStatusBannerUM(): TxHistoryDetailsUM.StatusBannerUM? = when (this) {
     ExpressOnrampStatus.Created,
-    ExpressOnrampStatus.WaitingForPayment,
-    -> loadingBanner(R.string.express_exchange_status_receiving_active)
-    ExpressOnrampStatus.PaymentProcessing -> loadingBanner(R.string.express_exchange_status_confirming_active)
+    ExpressOnrampStatus.PaymentProcessing,
+    ExpressOnrampStatus.Paid,
+    ExpressOnrampStatus.Sending,
+    -> loadingBanner(R.string.common_in_progress)
+    ExpressOnrampStatus.WaitingForPayment -> loadingBanner(R.string.tx_history_onramp_status_awaiting_funds)
     ExpressOnrampStatus.Verifying -> verificationBanner()
-    ExpressOnrampStatus.Paid -> loadingBanner(R.string.express_exchange_status_buying_active)
-    ExpressOnrampStatus.Sending -> loadingBanner(R.string.express_exchange_status_sending_active)
-    ExpressOnrampStatus.Paused -> warningBanner(R.string.express_exchange_status_paused)
-    ExpressOnrampStatus.Failed -> failedBanner()
-    ExpressOnrampStatus.Expired -> errorBanner(R.string.express_exchange_status_failed)
+    ExpressOnrampStatus.Paused -> warningBanner(R.string.tx_history_onramp_status_paused)
+    ExpressOnrampStatus.RefundInProgress ->
+        loadingBanner(R.string.tx_history_onramp_status_refunding, style = Style.Warning)
+    ExpressOnrampStatus.Failed -> failedBanner(R.string.tx_history_onramp_status_failed)
+    ExpressOnrampStatus.Expired -> expiredBanner(R.string.tx_history_details_status_expired)
+    ExpressOnrampStatus.Refunded -> refundedBanner(R.string.tx_history_onramp_status_refunded)
     ExpressOnrampStatus.Finished -> successBanner(R.string.express_exchange_status_bought)
     ExpressOnrampStatus.Unknown -> null
 }
@@ -323,45 +398,56 @@ private fun ExpressOnrampStatus.providerButtonLabel(): Int? = when (this) {
     ExpressOnrampStatus.Verifying -> R.string.common_go_to_verification
     ExpressOnrampStatus.Failed,
     ExpressOnrampStatus.Expired,
+    ExpressOnrampStatus.Refunded,
     -> R.string.common_go_to_provider
     else -> null
 }
 
-private fun loadingBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Info,
+/** In-progress plaque with the rotating loader; [style] is [Info] (blue) by default, [Warning] for a running refund. */
+private fun loadingBanner(@StringRes title: Int, style: Style = Style.Info) = TxHistoryDetailsUM.StatusBannerUM(
+    style = style,
     title = resourceReference(title),
     isLoading = true,
 )
 
 private fun successBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Success,
+    style = Style.Success,
     title = resourceReference(title),
     isLoading = false,
 )
 
 private fun warningBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Warning,
+    style = Style.Warning,
     title = resourceReference(title),
     isLoading = false,
 )
 
-private fun errorBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Error,
+/** Refunded (red) terminal with the refund-arrow glyph. */
+private fun refundedBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
+    style = Style.Refunded,
+    title = resourceReference(title),
+    isLoading = false,
+)
+
+/** Expired (grey) terminal with the clock glyph. */
+private fun expiredBanner(@StringRes title: Int) = TxHistoryDetailsUM.StatusBannerUM(
+    style = Style.Expired,
     title = resourceReference(title),
     isLoading = false,
 )
 
 /** Failure terminal: red plaque with the shared "visit provider to refund" hint. */
-private fun failedBanner() = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Error,
-    title = resourceReference(R.string.express_exchange_status_failed),
-    subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
-    isLoading = false,
-)
+private fun failedBanner(@StringRes title: Int = R.string.express_exchange_status_failed) =
+    TxHistoryDetailsUM.StatusBannerUM(
+        style = Style.Error,
+        title = resourceReference(title),
+        subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
+        isLoading = false,
+    )
 
 /** KYC verification: amber plaque with the "visit provider for verification" hint. */
 private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
-    severity = Severity.Warning,
+    style = Style.Warning,
     title = resourceReference(R.string.express_exchange_status_verifying),
     subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
     isLoading = false,
@@ -380,16 +466,17 @@ private fun verificationBanner() = TxHistoryDetailsUM.StatusBannerUM(
 private fun ExpressTx.toInfoRows(
     onProviderClick: (() -> Unit)?,
     rateRow: TxHistoryDetailsUM.InfoRowUM?,
+    showProviderType: Boolean = false,
 ): ImmutableList<TxHistoryDetailsUM.InfoRowUM> = buildList {
-    provider?.let { add(it.providerRow(onProviderClick)) }
+    provider?.let { add(it.providerRow(onProviderClick, showType = showProviderType)) }
     rateRow?.let { add(it) }
     addAll(txInfo.toInfoRows())
 }.toImmutableList()
 
-private fun ExpressProvider.providerRow(onClick: (() -> Unit)?): TxHistoryDetailsUM.InfoRowUM =
+private fun ExpressProvider.providerRow(onClick: (() -> Unit)?, showType: Boolean): TxHistoryDetailsUM.InfoRowUM =
     TxHistoryDetailsUM.InfoRowUM(
         label = resourceReference(R.string.express_provider),
-        value = stringReference(name),
+        value = stringReference(if (showType) "$name ${StringsSigns.DOT} ${type.typeName}" else name),
         // The arrow link affordance is shown only when the row opens the provider page.
         trailingIconRes = onClick?.let { R.drawable.ic_arrow_top_right_24 },
         onClick = onClick,
@@ -404,22 +491,24 @@ private fun OnChainTx?.toInfoRows(): ImmutableList<TxHistoryDetailsUM.InfoRowUM>
 // region Rate row
 
 private const val RATE_MAX_DECIMALS = 8
-private const val RATE_IF_ZERO_DECIMALS = 2
 
 /**
- * Effective swap rate row `1 {from} ≈ {x} {to}`, computed on the fly as `x = toAmount / fromAmount` (`toAmount` is
- * already the actual-or-expected payout — the data layer coalesces `actualAmount ?: amount`). Hidden (`null`) when an
- * amount is missing or non-positive — there is then no rate to show and division by zero is avoided.
+ * Effective swap rate row `1 {base} ≈ {x} {quote}`. The base/quote direction and formatting follow the app-wide
+ * [SwapRateFormatter] rules ([REDACTED_TASK_KEY]) so the pair reads the same as on the swap screen. Hidden (`null`) when a leg
+ * has no resolved [CryptoCurrency] (the direction rules need the currency type — no way to pick a canonical base) or
+ * when an amount is missing or non-positive.
  */
 private fun ExchangeTransaction.swapRateRow(): TxHistoryDetailsUM.InfoRowUM? {
+    val fromCurrency = fromAsset.cryptoCurrency ?: return null
+    val toCurrency = toAsset.cryptoCurrency ?: return null
     val fromAmount = fromAsset.amount.takeIfPositive() ?: return null
     val toAmount = toAsset.amount.takeIfPositive() ?: return null
-    val rate = toAmount.divide(fromAmount, rateScale(toAsset.decimals), RoundingMode.HALF_UP)
-    val baseSymbol = fromAsset.displaySymbol
-    val quoteSymbol = toAsset.displaySymbol
-    val value = rateText(
-        base = oneOf(baseSymbol),
-        quote = rate.format { crypto(symbol = quoteSymbol, decimals = toAsset.decimals, ignoreSymbolPosition = true) },
+
+    val value = SwapRateFormatter.formatRate(
+        from = fromCurrency,
+        to = toCurrency,
+        fromAmount = fromAmount,
+        toAmount = toAmount,
     )
     return rateRowUM(value)
 }
@@ -438,7 +527,9 @@ private fun OnrampTransaction.onrampRateRow(): TxHistoryDetailsUM.InfoRowUM? {
     val fiatCode = fromFiat.fiatCode
     val value = rateText(
         base = oneOf(cryptoSymbol),
-        quote = rate.format { fiat(fiatCurrencyCode = fiatCode, fiatCurrencySymbol = fromFiat.currencySymbol) },
+        quote = rate.format {
+            fiat(fiatCurrencyCode = fiatCode, fiatCurrencySymbol = fromFiat.currencySymbol, ignoreSymbolPosition = true)
+        },
     )
     return rateRowUM(value)
 }
@@ -447,10 +538,6 @@ private fun rateRowUM(value: String): TxHistoryDetailsUM.InfoRowUM = TxHistoryDe
     label = resourceReference(R.string.common_rate),
     value = stringReference(value),
 )
-
-/** Division scale: the quote's decimals, capped at [RATE_MAX_DECIMALS]; a zero-decimal quote still shows two. */
-private fun rateScale(quoteDecimals: Int): Int =
-    (if (quoteDecimals == 0) RATE_IF_ZERO_DECIMALS else quoteDecimals).coerceAtMost(RATE_MAX_DECIMALS)
 
 /**
  * Leading `1 {symbol}` of the rate, e.g. `1 POL` — number-first, matching the amount legs (the crypto formatter forces a
@@ -479,6 +566,17 @@ private fun Status.incomingSign(): String = when (this) {
     is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN} "
     is Status.Confirmed -> "${StringsSigns.PLUS} "
     is Status.Failed -> ""
+}
+
+/**
+ * Leading sign of an onramp payout leg: `~` while in flight (the received amount is still an estimate), and nothing
+ * once it has settled or failed — an onramp buy never carries a `+`/`−` sign (unlike a swap's two-way legs).
+ */
+private fun Status.onrampIncomingSign(): String = when (this) {
+    is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN} "
+    is Status.Confirmed,
+    is Status.Failed,
+    -> ""
 }
 
 // endregion

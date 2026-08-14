@@ -318,6 +318,7 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetAvailableFeeTokensUseCase(
         gaslessTransactionRepository: GaslessTransactionRepository,
+        tronGaslessTransactionRepository: TronGaslessTransactionRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
         featureTogglesManager: FeatureTogglesManager,
@@ -325,6 +326,7 @@ internal object TransactionDomainModule {
         return GetAvailableFeeTokensUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
+            tronGaslessTransactionRepository = tronGaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
@@ -364,6 +366,44 @@ internal object TransactionDomainModule {
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsTronGaslessSupportedUseCase(
+        tronGaslessTransactionRepository: TronGaslessTransactionRepository,
+    ): IsTronGaslessSupportedUseCase {
+        return IsTronGaslessSupportedUseCase(
+            repository = tronGaslessTransactionRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetTronGaslessFeeUseCase(
+        tronGaslessTransactionRepository: TronGaslessTransactionRepository,
+    ): GetTronGaslessFeeUseCase {
+        return GetTronGaslessFeeUseCase(
+            tronGaslessTransactionRepository = tronGaslessTransactionRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateAndSendTronGaslessTransactionUseCase(
+        transactionRepository: TransactionRepository,
+        walletManagersFacade: WalletManagersFacade,
+        tronGaslessTransactionRepository: TronGaslessTransactionRepository,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): CreateAndSendTronGaslessTransactionUseCase {
+        return CreateAndSendTronGaslessTransactionUseCase(
+            transactionRepository = transactionRepository,
+            walletManagersFacade = walletManagersFacade,
+            tronGaslessTransactionRepository = tronGaslessTransactionRepository,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
         )
     }
 
@@ -430,6 +470,7 @@ internal object TransactionDomainModule {
         gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
         featureTogglesManager: FeatureTogglesManager,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
@@ -439,6 +480,7 @@ internal object TransactionDomainModule {
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
@@ -454,6 +496,8 @@ internal object TransactionDomainModule {
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        featureTogglesManager: FeatureTogglesManager,
     ): EstimateFeeForGaslessTxUseCase {
         return EstimateFeeForGaslessTxUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -463,6 +507,10 @@ internal object TransactionDomainModule {
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             estimateFeeUseCase = estimateFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
+                toggle = FeatureToggles.AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED,
+            ),
         )
     }
 

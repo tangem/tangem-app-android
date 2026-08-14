@@ -5,11 +5,13 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.visa.model.TangemPayPushNotificationType
+import com.tangem.domain.visa.model.action
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
@@ -61,7 +63,14 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
                 onComplete = {
                     walletDeepLinkActionTrigger.selectWallet(userWalletId)
                     when (pushAction) {
-                        is TangemPayPushAction.CardReady -> navigateToTangemPayDetails(userWalletId)
+                        is TangemPayPushAction.CardReady -> navigateToTangemPayDetails(
+                            walletId = userWalletId,
+                            initialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+                        )
+                        is TangemPayPushAction.TopUp -> navigateToTangemPayDetails(
+                            walletId = userWalletId,
+                            initialRoute = TangemPayDetailsInitialRoute.ADD_FUNDS,
+                        )
                         is TangemPayPushAction.TransactionSpend -> {
                             walletDeepLinkActionTrigger.showTangemPayTransaction(
                                 transaction = pushAction.transaction,
@@ -85,29 +94,32 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
         val type = payload[TYPE_KEY]?.let(TangemPayPushNotificationType::fromValue) ?: return null
         val customerId = payload[CUSTOMER_ID_KEY].orEmpty()
 
-        return when (type) {
-            TangemPayPushNotificationType.CARD_READY -> TangemPayPushAction.CardReady
-            TangemPayPushNotificationType.TRANSACTION_SPEND,
-            TangemPayPushNotificationType.TRANSACTION_SPEND_REFUND,
-            TangemPayPushNotificationType.DECLINED_TOP_UP,
-            -> {
+        return when (type.action()) {
+            TangemPayPushNotificationType.Action.CARD_DETAILS -> TangemPayPushAction.CardReady
+            TangemPayPushNotificationType.Action.SPEND_DETAILS -> {
                 val transaction = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
                 if (transaction != null) TangemPayPushAction.TransactionSpend(transaction, customerId) else null
             }
-            TangemPayPushNotificationType.COLLATERAL_DEPOSIT, TangemPayPushNotificationType.COLLATERAL_WITHDRAW -> {
+            TangemPayPushNotificationType.Action.COLLATERAL_DETAILS -> {
                 val transaction = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
                 if (transaction != null) TangemPayPushAction.CollateralTransaction(transaction, customerId) else null
             }
+            TangemPayPushNotificationType.Action.TOP_UP -> TangemPayPushAction.TopUp
         }
     }
 
-    private fun navigateToTangemPayDetails(walletId: UserWalletId) {
+    private fun navigateToTangemPayDetails(walletId: UserWalletId, initialRoute: TangemPayDetailsInitialRoute) {
         scope.launch {
             paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(walletId))
             val paymentAccountStatus = paymentAccountSupplier.invoke(userWalletId = walletId)
                 .firstOrNull()
                 ?: return@launch
-            appRouter.push(route = AppRoute.TangemPayDetails(status = paymentAccountStatus))
+            appRouter.push(
+                route = AppRoute.TangemPayDetails(
+                    status = paymentAccountStatus,
+                    initialRoute = initialRoute,
+                ),
+            )
         }
     }
 

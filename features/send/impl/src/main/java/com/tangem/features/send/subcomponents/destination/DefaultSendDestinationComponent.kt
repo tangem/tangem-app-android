@@ -17,7 +17,6 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.addressbook.AddressBookContactsBlockComponent
-import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.addressbook.AddressSelectorComponent
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
@@ -37,27 +36,22 @@ import dagger.assisted.AssistedInject
 internal class DefaultSendDestinationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SendDestinationComponentParams.DestinationParams,
-    addressBookFeatureToggles: AddressBookFeatureToggles,
     contactsBlockFactory: AddressBookContactsBlockComponent.Factory,
     addressSelectorFactory: AddressSelectorComponent.Factory,
 ) : SendDestinationComponent, AppComponentContext by appComponentContext {
 
     private val model: SendDestinationModel = getOrCreateModel(params = params)
 
-    private val contactsBlock: AddressBookContactsBlockComponent? by lazy {
-        if (addressBookFeatureToggles.isAddressBookEnabled) {
-            contactsBlockFactory.create(
-                context = child("send_contacts_block"),
-                params = AddressBookContactsBlockComponent.Params(
-                    network = params.cryptoCurrency.network,
-                    queryFlow = model.addressQuery,
-                    onContactClick = model::onContactClick,
-                    onSeeAllClick = model::onSeeAllContactsClick,
-                ),
-            )
-        } else {
-            null
-        }
+    private val contactsBlock: AddressBookContactsBlockComponent by lazy {
+        contactsBlockFactory.create(
+            context = child("send_contacts_block"),
+            params = AddressBookContactsBlockComponent.Params(
+                network = params.cryptoCurrency.network,
+                queryFlow = model.addressQuery,
+                onContactClick = model::onContactClick,
+                onSeeAllClick = model::onSeeAllContactsClick,
+            ),
+        )
     }
 
     private val addressSelectorSlot = childSlot(

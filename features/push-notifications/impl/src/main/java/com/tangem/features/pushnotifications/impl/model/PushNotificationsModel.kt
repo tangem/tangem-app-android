@@ -19,7 +19,6 @@ import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnaly
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.impl.domain.GetPushNotificationsDoubleAskVariantUseCase
 import com.tangem.features.pushnotifications.impl.domain.DoubleAskVariant
-import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +37,6 @@ internal class PushNotificationsModel @Inject constructor(
     private val appRouter: AppRouter,
     private val analyticHandler: AnalyticsEventHandler,
     private val notificationsRepository: NotificationsRepository,
-    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val applyPushNotificationFirstActivation: ApplyPushNotificationFirstActivationUseCase,
     private val markPushNotificationFirstActivationDone: MarkPushNotificationFirstActivationDoneUseCase,
@@ -47,8 +45,6 @@ internal class PushNotificationsModel @Inject constructor(
 
     val params: PushNotificationsParams = paramsContainer.require()
 
-    val isPushNotificationSettingsEnabled: Boolean
-        get() = pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled
     val source = when (params.source) {
         AppRoute.PushNotification.Source.Stories -> AnalyticsParam.ScreensSources.Stories
         AppRoute.PushNotification.Source.Main -> AnalyticsParam.ScreensSources.Main
@@ -126,9 +122,7 @@ internal class PushNotificationsModel @Inject constructor(
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            if (isPushNotificationSettingsEnabled) {
-                applyFirstActivationRule()
-            }
+            applyFirstActivationRule()
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
                 params.nextRoute?.let { appRouter.push(it) }
@@ -143,10 +137,8 @@ internal class PushNotificationsModel @Inject constructor(
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            if (isPushNotificationSettingsEnabled) {
-                // Flag is fixed on DENY too, so a later activation is selective.
-                markFirstActivationDoneForAllWallets()
-            }
+            // Flag is fixed on DENY too, so a later activation is selective.
+            markFirstActivationDoneForAllWallets()
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
                 params.nextRoute?.let { appRouter.push(it) }

@@ -7,7 +7,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.wallet.UserWalletId
@@ -29,7 +32,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import org.joda.time.DateTime
 import org.junit.jupiter.api.AfterEach
@@ -53,6 +58,8 @@ internal class TangemPayCashbackModelTest {
         Locale.setDefault(Locale.US)
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "July 1 – 5"
         clearMocks(cashbackRepository, onboardingRepository)
         coEvery { cashbackRepository.getCashbackSummary(any()) } returns CashbackSummary.Disabled.right()
         coEvery { cashbackRepository.getCashbackPromotions(any()) } returns promotions().right()
@@ -64,6 +71,7 @@ internal class TangemPayCashbackModelTest {
     @AfterEach
     fun tearDown() {
         unmockkStatic(DateFormat::class)
+        unmockkObject(DateTimeFormatters)
         Locale.setDefault(defaultLocale)
     }
 
@@ -74,13 +82,14 @@ internal class TangemPayCashbackModelTest {
 
         // Assert
         assertThat(model.content().infoTiles).isNotNull()
-        assertThat(model.content().infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 1%"))
-        assertThat(model.detailsSheet.value.rows).hasSize(2)
+        assertThat(model.content().infoTiles?.rate?.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")))
+        assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITH_CAP)
         assertThat(model.accrualsSheet.value.docRows).hasSize(2)
     }
 
     @Test
-    fun `GIVEN PLUS plan WHEN model created THEN rate tile shows the Plus tier rate`() {
+    fun `GIVEN PLUS plan WHEN model created THEN rate tile shows up to the max rate`() {
         // Arrange
         coEvery { onboardingRepository.getCustomerInfo(any()) } returns
             customerInfo(tierId = "plus", planName = "Plus").right()
@@ -89,7 +98,8 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.content().infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 2%"))
+        assertThat(model.content().infoTiles?.rate?.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")))
     }
 
     @Test
@@ -115,7 +125,7 @@ internal class TangemPayCashbackModelTest {
 
         // Assert
         assertThat(model.content().infoTiles).isNotNull()
-        assertThat(model.detailsSheet.value.rows).hasSize(2)
+        assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITH_CAP)
     }
 
     @Test
@@ -162,7 +172,7 @@ internal class TangemPayCashbackModelTest {
     }
 
     @Test
-    fun `GIVEN customer info fails WHEN model created THEN rate tile falls back to the first tier`() {
+    fun `GIVEN customer info fails WHEN model created THEN rate title falls back to the base rate`() {
         // Arrange
         coEvery { onboardingRepository.getCustomerInfo(any()) } throws RuntimeException("boom")
 
@@ -170,7 +180,8 @@ internal class TangemPayCashbackModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.content().infoTiles?.rate?.title).isEqualTo(stringReference("Cashback 1%"))
+        assertThat(model.content().infoTiles?.rate?.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")))
     }
 
     @Test
@@ -250,19 +261,20 @@ internal class TangemPayCashbackModelTest {
         cardTiers = listOf(
             CashbackPromotions.CardTier(
                 tier = "basic",
-                label = "Basic cards",
+                label = "Basic",
                 scope = "All purchases",
                 minTransactionAmount = BigDecimal("30"),
                 monthlyCapAmount = BigDecimal("100"),
             ),
             CashbackPromotions.CardTier(
                 tier = "plus",
-                label = "Plus cards",
+                label = "Plus",
                 scope = "All purchases",
                 minTransactionAmount = BigDecimal("30"),
                 monthlyCapAmount = BigDecimal("300"),
             ),
         ),
+        monthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"),
         additionalCashback = additional,
     )
 
@@ -315,5 +327,9 @@ internal class TangemPayCashbackModelTest {
         )
         val customerTariffPlanMock = mockk<TangemPayCustomerTariffPlan> { every { plan } returns currentPlan }
         return mockk { every { tariffPlan } returns customerTariffPlanMock }
+    }
+
+    private companion object {
+        const val DETAILS_ROWS_WITH_CAP = 5
     }
 }

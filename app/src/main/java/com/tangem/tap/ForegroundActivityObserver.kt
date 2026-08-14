@@ -4,14 +4,15 @@ import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlin.reflect.KClass
 
-object ForegroundActivityObserver {
+object ForegroundActivityObserver : ForegroundActivityProvider {
 
     private val activities = HashMap<KClass<out Activity>, AppCompatActivity>()
 
-    val foregroundActivity: AppCompatActivity?
+    override val foregroundActivity: AppCompatActivity?
         get() = activities.entries
             .firstOrNull { entry ->
                 TangemLogger.i("foregroundActivity: ${entry.key} | ${entry.value.isDestroyed}")

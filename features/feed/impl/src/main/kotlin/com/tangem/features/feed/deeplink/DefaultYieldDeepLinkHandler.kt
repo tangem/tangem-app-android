@@ -4,6 +4,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
+import com.tangem.common.routing.utils.pushIfAbsent
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -78,7 +79,7 @@ internal class DefaultYieldDeepLinkHandler @AssistedInject constructor(
                 return@launch
             }
 
-            appRouter.push(
+            appRouter.pushIfAbsent(
                 AppRoute.YieldSupplyEntry(
                     userWalletId = userWallet.walletId,
                     cryptoCurrency = cryptoCurrency,
@@ -89,7 +90,7 @@ internal class DefaultYieldDeepLinkHandler @AssistedInject constructor(
     }
 
     private fun pushFallback(networkId: String?) {
-        appRouter.push(
+        appRouter.pushIfAbsent(
             AppRoute.Earn(
                 preselectedEarnType = PreselectedEarnType.Yield,
                 preselectedNetworkId = networkId,

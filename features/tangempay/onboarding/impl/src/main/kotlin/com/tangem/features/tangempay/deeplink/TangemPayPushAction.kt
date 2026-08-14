@@ -15,4 +15,6 @@ internal sealed class TangemPayPushAction {
         val transaction: TangemPayTxHistoryItem.Collateral,
         val customerId: String,
     ) : TangemPayPushAction()
+
+    data object TopUp : TangemPayPushAction()
 }

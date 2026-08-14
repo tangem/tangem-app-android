@@ -3,22 +3,15 @@ package com.tangem.core.ui.ds2.topnavigation
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -26,9 +19,10 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
+import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -37,6 +31,7 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
@@ -76,19 +71,9 @@ fun TangemTopNavigation(
     endButton: (@Composable () -> Unit)? = null,
     contentColumn: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    // Shared, snappy specs so size and alpha animations stay in sync across all top-nav slots,
-    // mirroring the convention used by TangemButtonInternal.
-    val slotSizeSpec = remember { spring<IntSize>(stiffness = Spring.StiffnessMediumLow) }
-    val slotAlphaSpec = remember { spring<Float>(stiffness = Spring.StiffnessMediumLow) }
-    val slotEnter = remember(slotSizeSpec, slotAlphaSpec) {
-        fadeIn(animationSpec = slotAlphaSpec) + expandHorizontally(animationSpec = slotSizeSpec)
-    }
-    val slotExit = remember(slotSizeSpec, slotAlphaSpec) {
-        fadeOut(animationSpec = slotAlphaSpec) + shrinkHorizontally(animationSpec = slotSizeSpec)
-    }
     val fadeAlpha by animateFloatAsState(
         targetValue = if (fadeEnabled) 1f else 0f,
-        animationSpec = slotAlphaSpec,
+        animationSpec = TangemAnimationSpec.Alpha,
         label = "TangemTopNavigation.fadeAlpha",
     )
 
@@ -112,10 +97,12 @@ fun TangemTopNavigation(
                 Box(modifier = Modifier.layoutId(SlotId.Start)) {
                     AnimatedVisibility(
                         visible = startButton != null,
-                        enter = slotEnter,
-                        exit = slotExit,
+                        enter = TangemTransition.SlotEnterHorizontally,
+                        exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        displayedStart?.invoke()
+                        WithoutMaterialShadowWhileAnimating {
+                            displayedStart?.invoke()
+                        }
                     }
                 }
 
@@ -135,28 +122,15 @@ fun TangemTopNavigation(
                 Box(modifier = Modifier.layoutId(SlotId.Group)) {
                     AnimatedVisibility(
                         visible = endButtonsGroup != null,
-                        enter = slotEnter,
-                        exit = slotExit,
+                        enter = TangemTransition.SlotEnterHorizontally,
+                        exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        displayedGroup?.let { group ->
-                            AnimatedContent(
-                                targetState = isEndButtonsGroupBackgroundShown,
-                                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                label = "TangemTopNavigation.endButtonsGroupBackground",
-                            ) { shown ->
-                                if (shown) {
-                                    TangemSurface(isMaterial = true, shape = CircleShape) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                            content = group,
-                                        )
-                                    }
-                                } else {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        content = group,
-                                    )
-                                }
+                        WithoutMaterialShadowWhileAnimating {
+                            displayedGroup?.let { group ->
+                                EndButtonsGroup(
+                                    isBackgroundShown = isEndButtonsGroupBackgroundShown,
+                                    group = group,
+                                )
                             }
                         }
                     }
@@ -166,10 +140,12 @@ fun TangemTopNavigation(
                 Box(modifier = Modifier.layoutId(SlotId.End)) {
                     AnimatedVisibility(
                         visible = endButton != null,
-                        enter = slotEnter,
-                        exit = slotExit,
+                        enter = TangemTransition.SlotEnterHorizontally,
+                        exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        displayedEnd?.invoke()
+                        WithoutMaterialShadowWhileAnimating {
+                            displayedEnd?.invoke()
+                        }
                     }
                 }
             },
@@ -315,27 +291,56 @@ fun TangemTopNavigation(
     )
 }
 
+/**
+ * The group slot's content: the secondary actions, optionally wrapped in a material pill.
+ *
+ * Only the pill cross-fades — [group] is hosted by both branches, so its row is built once and handed
+ * to whichever one is showing.
+ */
+@Composable
+private fun EndButtonsGroup(isBackgroundShown: Boolean, group: @Composable RowScope.() -> Unit) {
+    val buttons: @Composable () -> Unit = {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), content = group)
+    }
+
+    AnimatedContent(
+        targetState = isBackgroundShown,
+        transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
+        label = "TangemTopNavigation.endButtonsGroupBackground",
+    ) { shown ->
+        WithoutMaterialShadowWhileAnimating {
+            if (shown) {
+                TangemSurface(isMaterial = true, shape = CircleShape) { buttons() }
+            } else {
+                buttons()
+            }
+        }
+    }
+}
+
+/**
+ * Runs [content] with the material drop shadow suppressed while this enter/exit transition animates.
+ *
+ * A running transition draws its content into a graphics layer, which clips drawing to the content's
+ * bounding box. A material surface paints its shadow outside its own bounds, so the clip turns the soft
+ * halo into a hard rectangle for the length of the animation. See [LocalMaterialShadowEnabled].
+ */
+@Composable
+private fun AnimatedVisibilityScope.WithoutMaterialShadowWhileAnimating(content: @Composable () -> Unit) {
+    // AND-ed with the current value so an outer animation keeps the shadow off while an inner one idles.
+    val isShadowEnabled = LocalMaterialShadowEnabled.current && !transition.isRunning
+    CompositionLocalProvider(LocalMaterialShadowEnabled provides isShadowEnabled) {
+        content()
+    }
+}
+
 @Composable
 private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextReference?) {
-    val sizeSpec = remember { spring<IntSize>(stiffness = Spring.StiffnessMediumLow) }
-    val alphaSpec = remember { spring<Float>(stiffness = Spring.StiffnessMediumLow) }
-
-    // Title swaps in place (no size change), so a pure cross-fade reads better than expand/shrink.
-    val titleEnter = remember(alphaSpec) { fadeIn(animationSpec = alphaSpec) }
-    val titleExit = remember(alphaSpec) { fadeOut(animationSpec = alphaSpec) }
-
-    // Subtitle pushes the bar down/up, so animate height instead of width.
-    val subtitleEnter = remember(sizeSpec, alphaSpec) {
-        fadeIn(animationSpec = alphaSpec) + expandVertically(animationSpec = sizeSpec)
-    }
-    val subtitleExit = remember(sizeSpec, alphaSpec) {
-        fadeOut(animationSpec = alphaSpec) + shrinkVertically(animationSpec = sizeSpec)
-    }
-
-    // Title swaps via cross-fade whenever the reference changes (e.g. step-driven flows).
+    // Title swaps in place (no size change), so a pure cross-fade reads better than expand/shrink,
+    // while the subtitle pushes the bar down/up and therefore animates its height.
     AnimatedContent(
         targetState = title,
-        transitionSpec = { titleEnter togetherWith titleExit },
+        transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
         label = "TangemTopNavigation.title",
     ) { current ->
         TangemNavigationText(text = current, role = TangemNavigationText.Role.Title)
@@ -345,8 +350,8 @@ private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextRefere
     val displayedSubtitle = rememberLastNonNull(subtitle)
     AnimatedVisibility(
         visible = subtitle != null,
-        enter = subtitleEnter,
-        exit = subtitleExit,
+        enter = TangemTransition.SlotEnterVertically,
+        exit = TangemTransition.SlotExitVertically,
     ) {
         displayedSubtitle?.let { text ->
             Column {
@@ -390,7 +395,7 @@ private fun Preview() {
             Modifier
                 .fillMaxWidth()
                 .hazeSourceTangem()
-                .background(TangemTheme.colors.background.secondary),
+                .background(TangemTheme.colors3.bg.secondary),
         ) {
             Spacer(Modifier.height(32.dp))
             // Screen-level usage: default insets reserve space for the system status bar.

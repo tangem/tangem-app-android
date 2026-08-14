@@ -5,6 +5,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 @Immutable
@@ -22,7 +23,7 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
     data object SelectFee : WcTransactionRoutes()
 
     @Serializable
-    data class Alert(val alertType: Type) : WcTransactionRoutes() {
+    data class Alert(@Transient val alertType: Type = Type.UnknownDomain) : WcTransactionRoutes() {
         @Serializable
         sealed class Type {
             data class Verified(val appName: String) : Type()

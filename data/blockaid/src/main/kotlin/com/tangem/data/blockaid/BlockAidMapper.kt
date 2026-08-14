@@ -12,6 +12,8 @@ import com.tangem.datasource.api.common.blockaid.models.request.RpcData
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.response.*
 import org.json.JSONArray
+import org.json.JSONObject
+import org.json.JSONTokener
 
 private const val SUCCESS_STATUS = "Success"
 private const val DOMAIN_CHECKED_STATUS = "hit"
@@ -81,12 +83,27 @@ internal object BlockAidMapper {
         )
     }
 
-    private fun parseParams(rawParams: String): List<Map<String, String>> {
-        val jsonArray = JSONArray(rawParams)
-        return (0 until jsonArray.length()).map { index ->
-            val jsonObject = jsonArray.getJSONObject(index)
-            jsonObject.keys().asSequence().associateWith { key -> jsonObject.getString(key) }
-        }
+    /**
+     * Passes the raw JSON-RPC params through unchanged in shape. For `eth_sendTransaction` this is a
+     * single tx object; for `eth_signTypedData_v4` / `personal_sign` / `eth_sign` it is a mixed array
+     * (e.g. `[address, typedData]`). The previous implementation assumed every element was a tx object
+     * and threw for message-signing methods, which made BlockAid always fail to validate them.
+     */
+    private fun parseParams(rawParams: String): List<Any> {
+        val parsed = JSONTokener(rawParams).nextValue()
+        return (parsed as? JSONArray)?.toPlainList().orEmpty()
+    }
+
+    private fun JSONArray.toPlainList(): List<Any> = (0 until length()).map { index -> get(index).toPlainValue() }
+
+    private fun JSONObject.toPlainMap(): Map<String, Any> =
+        keys().asSequence().associateWith { key -> get(key).toPlainValue() }
+
+    private fun Any?.toPlainValue(): Any = when (val value = this) {
+        is JSONObject -> value.toPlainMap()
+        is JSONArray -> value.toPlainList()
+        null, JSONObject.NULL -> ""
+        else -> value // preserve String / Number / Boolean as-is so JSON types are not altered
     }
 
     fun mapToSolanaRequest(from: TransactionData): SolanaTransactionScanRequest {
