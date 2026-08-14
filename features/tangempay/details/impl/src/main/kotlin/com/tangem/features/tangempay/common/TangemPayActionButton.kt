@@ -70,14 +70,14 @@ private fun Preview() {
                 title = stringReference("Action"),
                 iconRes = R.drawable.ic_arrow_down_24,
                 onClick = {},
-                isEnabled = false
+                isEnabled = false,
             )
             TangemPayActionButton(
                 title = stringReference("Action"),
                 iconRes = R.drawable.ic_arrow_down_24,
                 onClick = {},
                 isEnabled = true,
-                isLoading = true
+                isLoading = true,
             )
         }
     }
