@@ -218,6 +218,7 @@ private fun PreviewTangemPayAddToWalletScreen() {
             cardDetailsState = TangemPayCardDetailsUM(
                 number = "",
                 numberShort = "*1245",
+                cardholderName = "JOHNNY SILVERHAND",
                 expiry = "••/••",
                 cvv = "•••",
                 onCopy = { _, _ -> },

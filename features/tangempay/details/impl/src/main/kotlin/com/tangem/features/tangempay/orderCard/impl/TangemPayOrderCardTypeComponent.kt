@@ -30,6 +30,6 @@ internal class TangemPayOrderCardTypeComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val onSelectVirtual: () -> Unit,
-        val onSelectPlastic: () -> Unit,
+        val onSelectPlastic: (deliveryEtaMaxBusinessDays: Int) -> Unit,
     )
 }

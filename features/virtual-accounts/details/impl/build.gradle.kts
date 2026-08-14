@@ -16,14 +16,11 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
-    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
     /** Domain */
     implementation(projects.domain.models)
-    implementation(projects.domain.feedback)
-    implementation(projects.domain.feedback.models)
 
     /** Features */
     implementation(projects.features.virtualAccounts.details.api)
@@ -36,10 +33,15 @@ dependencies {
     implementation(deps.decompose.ext.compose)
 
     /** Other */
-    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.haze)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
 }
