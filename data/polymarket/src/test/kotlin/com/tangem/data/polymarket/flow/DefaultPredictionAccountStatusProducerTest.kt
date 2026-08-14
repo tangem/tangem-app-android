@@ -4,7 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
-import com.tangem.data.polymarket.store.WalletIdWithPredictionStatus
+import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
@@ -153,7 +153,7 @@ internal class DefaultPredictionAccountStatusProducerTest {
 
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
         runtimeStore = RuntimeSharedStore(),
-        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatus>(default = emptyMap()),
+        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
         scope = TestAppCoroutineScope(testScope),
     )
 
