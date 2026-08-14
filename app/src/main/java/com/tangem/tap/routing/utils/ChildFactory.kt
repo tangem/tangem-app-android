@@ -22,7 +22,7 @@ import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.jointaccount.creation.component.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.component.JointAccountJoinComponent
-import com.tangem.features.gacha.api.GachaEntryComponent
+import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
@@ -88,7 +88,7 @@ internal class ChildFactory @Inject constructor(
     private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
     private val appCurrencySelectorComponentFactory: AppCurrencySelectorComponent.Factory,
     private val appSettingsComponentFactory: AppSettingsComponent.Factory,
-    private val gachaEntryComponentFactory: GachaEntryComponent.Factory,
+    private val collectiblesEntryComponentFactory: CollectiblesEntryComponent.Factory,
     private val securityModeComponentFactory: SecurityModeComponent.Factory,
     private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
@@ -425,11 +425,11 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = appSettingsComponentFactory,
                 )
             }
-            is AppRoute.Gacha -> {
+            is AppRoute.Collectibles -> {
                 createComponentChild(
                     context = context,
                     params = Unit,
-                    componentFactory = gachaEntryComponentFactory,
+                    componentFactory = collectiblesEntryComponentFactory,
                 )
             }
             is AppRoute.DetailsSecurity -> {
