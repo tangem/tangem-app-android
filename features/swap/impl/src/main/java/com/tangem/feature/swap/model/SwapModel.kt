@@ -1805,6 +1805,8 @@ internal class SwapModel @Inject constructor(
             ).map { (_, status) -> status }
             // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
             is Account.Virtual -> emptyFlow()
+            // Prediction account isn't a swap source either — the same MVP rule
+            is Account.Prediction -> emptyFlow()
         }.distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
             .onEach { currencyStatus ->
 

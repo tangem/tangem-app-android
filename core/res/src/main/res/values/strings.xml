@@ -1008,6 +1008,10 @@
   <string name="joint_account_invite_members_safety_title">Share invites safely</string>
   <string name="joint_account_invite_members_subtitle">%1$s of %2$s joined, including you</string>
   <string name="joint_account_invite_members_title">Invite members</string>
+  <string name="joint_account_join_subtitle">This is a joint account. Every transaction from this account will require %1$s to sign.</string>
+  <string name="joint_account_join_subtitle_value">%1$s members of %2$s</string>
+  <string name="joint_account_join_title">You’ve been invited to %1$s</string>
+  <string name="joint_account_join_to_account_btn_text">Join to account</string>
   <string name="joint_account_members_signers_subtitle">To approve operations</string>
   <string name="joint_account_members_signers_title">Required to sign</string>
   <string name="joint_account_members_subtitle">Set how many people share the account. Every transaction like send, swap or close waits for %1$s of %2$s to sign. This is locked once.</string>

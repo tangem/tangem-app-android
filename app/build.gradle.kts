@@ -352,6 +352,8 @@ dependencies {
     implementation(projects.features.jointAccount.creation.impl)
     implementation(projects.features.jointAccount.common.api)
     implementation(projects.features.jointAccount.common.impl)
+    implementation(projects.features.jointAccount.join.api)
+    implementation(projects.features.jointAccount.join.impl)
     implementation(projects.features.virtualAccounts.onboarding.impl)
     implementation(projects.features.virtualAccounts.onboarding.api)
     implementation(projects.features.virtualAccounts.main.impl)
@@ -452,6 +454,12 @@ dependencies {
     runtimeOnly(deps.spongecastle.core)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
+    // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown artifacts, so
+    // these unexcluded declarations are the only thing putting that driver in the APK. Reown builds it
+    // inside its own Koin module, so nothing here references it and it looks unused — removing it
+    // crashes the app on start with NoClassDefFoundError for AndroidSqliteDriver.
+    runtimeOnly(deps.reownCore)
+    runtimeOnly(deps.reownWeb3)
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.kotlin)
