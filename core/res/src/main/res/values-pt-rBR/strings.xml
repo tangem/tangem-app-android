@@ -1351,8 +1351,8 @@
   <string name="promo_campaign_not_active_subtitle">Esta campanha não existe ou expirou.</string>
   <string name="promo_campaign_not_active_title">Campanha inativa</string>
   <string name="promo_campaign_reactivation_summary_description">Ganhe 0,5% Cashback em todas as trocas acima de US$ 500, em qualquer par, exceto entre pares estáveis. Pagamento máximo de US$ 50 por troca.\n\nComplete cinco trocas qualificadas e desbloqueie um bônus extra de US$ 10.\n\nAs recompensas são pagas semanalmente em USDT ou USDC no endereço selecionado.</string>
-  <string name="promo_campaign_select_cashback_account">Selecione a conta de cashback</string>
-  <string name="promo_campaign_select_token">Selecionar token</string>
+  <string name="promo_campaign_select_cashback_account">Selecionar token de cashback</string>
+  <string name="promo_campaign_select_token">Selecionar token de cashback</string>
   <string name="promo_campaign_summary_title">Inscreva-se em %1$s</string>
   <string name="promo_campaign_terms_agreement">Concordo com %1$s</string>
   <string name="promo_campaign_terms_agreement_android">Concordo com</string>
@@ -1896,7 +1896,7 @@
   <string name="tangempay_bank_transfer_show_details">Mostrar detalhes</string>
   <string name="tangempay_bank_transfer_success_subtitle">Isso pode levar um pouco de tempo.</string>
   <string name="tangempay_bank_transfer_success_title">Preparando seus dados bancários</string>
-  <string name="tangempay_bank_transfer_swift_warning">Depósito somente via ACH ou FedWire. Transferências SWIFT serão devolvidas.</string>
+  <string name="tangempay_bank_transfer_swift_warning">Transferências SWIFT não são aceitas e serão devolvidas</string>
   <string name="tangempay_cancel_kyc">Ocultar KYC da tela principal</string>
   <string name="tangempay_card_default_name">Cartão Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Adicionar fundos</string>
@@ -2162,7 +2162,7 @@
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Receba USD fiduciário via ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Receba USD fiduciário via ACH</string>
   <string name="tangempay_topup_bank_transfer_title">Transferência bancária</string>
   <string name="tangempay_topup_receive_body">Envie USDC Polygon para o endereço da sua conta</string>
   <string name="tangempay_topup_receive_body_multichain">Envie USDC ou USDT para o endereço da sua conta.</string>
