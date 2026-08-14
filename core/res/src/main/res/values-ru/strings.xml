@@ -971,6 +971,8 @@
   <string name="markets_sort_by_yield_mode_title">Режим доходности</string>
   <string name="markets_staking_banner_description_placeholder">Стейкинг — простой способ получать доход с вашей криптовалюты. %s</string>
   <string name="markets_staking_banner_title">Получайте до %s APY</string>
+  <string name="markets_token_add_all_added_description">Токен есть во всех кошельках и аккаунтах</string>
+  <string name="markets_token_add_all_added_title">Уже добавлен</string>
   <string name="markets_token_add_subtitle">в другой сети или аккаунте</string>
   <string name="markets_token_added">Токен добавлен</string>
   <string name="markets_token_details_about_token_title">О %s</string>
@@ -1349,7 +1351,7 @@
   <string name="promo_campaign_not_active_title">Кампания неактивна</string>
   <string name="promo_campaign_reactivation_summary_description">Получайте 0.5% кешбэка за каждый обмен от $500 в любой паре, кроме стейблкоина на стейблкоин. Максимальная выплата: $50 за обмен.\n\nСовершите пять соответствующих условиям обменов и разблокируйте дополнительный бонус в $10.\n\nНаграды выплачиваются еженедельно в USDT или USDC на выбранный адрес.</string>
   <string name="promo_campaign_select_cashback_account">Выберите счет для кешбэка</string>
-  <string name="promo_campaign_select_token">Выберите токен</string>
+  <string name="promo_campaign_select_token">Выберите кэшбек токен</string>
   <string name="promo_campaign_summary_title">Участвовать в %1$s</string>
   <string name="promo_campaign_terms_agreement">Я принимаю %1$s</string>
   <string name="promo_campaign_terms_link">%1$s Условия</string>
@@ -1894,7 +1896,7 @@
   <string name="tangempay_bank_transfer_show_details">Показать детали</string>
   <string name="tangempay_bank_transfer_success_subtitle">Это может занять некоторое время</string>
   <string name="tangempay_bank_transfer_success_title">Подготовка ваших банковских реквизитов</string>
-  <string name="tangempay_bank_transfer_swift_warning">Пополнение только через ACH или FedWire. Переводы SWIFT будут возвращены.</string>
+  <string name="tangempay_bank_transfer_swift_warning">SWIFT-переводы не принимаются и будут возвращены</string>
   <string name="tangempay_cancel_kyc">Скрыть KYC с главной</string>
   <string name="tangempay_card_default_name">Карта Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
@@ -2162,7 +2164,7 @@
   <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Получайте фиатные USD через ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Получайте фиатные USD через ACH</string>
   <string name="tangempay_topup_bank_transfer_title">Банковский перевод</string>
   <string name="tangempay_topup_receive_body">Отправьте USDC Polygon на адрес вашего аккаунта</string>
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>

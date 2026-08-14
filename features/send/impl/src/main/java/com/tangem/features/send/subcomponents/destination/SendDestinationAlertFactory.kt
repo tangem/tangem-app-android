@@ -26,6 +26,15 @@ internal class SendDestinationAlertFactory @Inject constructor(
         )
     }
 
+    fun showUnrecognizedQrCodeAlert() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.qr_scanner_error_unrecognized_title),
+                message = resourceReference(id = R.string.qr_scanner_error_unrecognized_message),
+            ),
+        )
+    }
+
     fun showRecipientBackupErrorAlert(onContactSupport: () -> Unit) {
         messageSender.send(
             DialogMessage(
