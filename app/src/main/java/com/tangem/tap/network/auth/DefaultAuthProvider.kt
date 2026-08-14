@@ -57,18 +57,6 @@ internal class DefaultAuthProvider(
         }
     }
 
-    override fun getGaslessServiceApiKey(apiEnvironment: Provider<ApiEnvironment>): ProviderSuspend<String> {
-        return ProviderSuspend {
-            when (apiEnvironment.invoke()) {
-                ApiEnvironment.MOCK,
-                ApiEnvironment.DEV,
-                -> environmentConfig.gaslessTxApiKeyDev
-                ApiEnvironment.PROD -> environmentConfig.gaslessTxApiKey
-                else -> error("No gasless tx api config provided for ${apiEnvironment.invoke()}")
-            } ?: error("No gasless tx api config provided")
-        }
-    }
-
     private suspend fun getWallets(): List<UserWallet> {
         return userWalletsListRepository.userWalletsSync()
     }
