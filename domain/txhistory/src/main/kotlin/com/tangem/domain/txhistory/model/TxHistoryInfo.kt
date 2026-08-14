@@ -67,8 +67,11 @@ fun TxInfo.identityKey(): String = "$txHash|$type"
  * Hash of the matched on-chain leg, used to open the row in a block explorer; `null` when there is no
  * blockchain tx to link to — an [ExpressTx] whose on-chain leg has not matched yet. The express `txId`
  * must never stand in here: it is not an on-chain hash and would build a broken explorer URL.
+ *
+ * For an [ExpressTx] the matched leg's own hash wins over [ExpressTx.matchHash]: a leg matched by the
+ * heuristic fallback (the provider never returned `payin_hash` / `payout_hash`) still has a hash to link to.
  */
-inline val TxHistoryInfo.explorerHash: String?
+val TxHistoryInfo.explorerHash: String?
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
         is OnChainTx.TangemPay -> when (val item = txInfo) {
@@ -78,15 +81,19 @@ inline val TxHistoryInfo.explorerHash: String?
             is TangemPayTxHistoryItem.Fee,
             -> null
         }
-        is ExpressTx -> matchHash
+        is ExpressTx -> txInfo?.explorerHash ?: matchHash
     }
 
-/** Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express deal id otherwise. */
-inline val TxHistoryInfo.idToCopy: String
+/**
+ * Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express deal id
+ * otherwise. An [ExpressTx] enriched with its on-chain leg copies the leg's hash — once a blockchain tx backs
+ * the deal, that hash is the id the user can look up anywhere.
+ */
+val TxHistoryInfo.idToCopy: String
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
         is OnChainTx.TangemPay -> explorerHash ?: txId
-        is ExpressTx -> txId
+        is ExpressTx -> txInfo?.idToCopy?.takeIf(String::isNotBlank) ?: txId
     }
 
 /**
