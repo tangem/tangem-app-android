@@ -3,7 +3,7 @@ package com.tangem.data.swap
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
@@ -24,8 +24,6 @@ import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.models.SwapStatus
 import com.tangem.domain.swap.models.SwapTxType
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -45,9 +43,6 @@ internal class DefaultSwapRepositoryV2Test {
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val moshi: Moshi = Moshi.Builder().build()
-    private val featureTogglesManager: FeatureTogglesManager = mockk {
-        every { isFeatureEnabled(any()) } returns false
-    }
 
     private val repository = DefaultSwapRepositoryV2(
         tangemExpressApi = tangemExpressApi,
@@ -57,7 +52,6 @@ internal class DefaultSwapRepositoryV2Test {
         dataSignatureVerifier = dataSignatureVerifier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
-        featureTogglesManager = featureTogglesManager,
         moshi = moshi,
     )
 
@@ -70,9 +64,7 @@ internal class DefaultSwapRepositoryV2Test {
             dataSignatureVerifier,
             singleQuoteStatusSupplier,
             singleQuoteStatusFetcher,
-            featureTogglesManager,
         )
-        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
     }
 
     // region getPairs(SwapCurrencyStatus, SwapCurrencyStatus)
@@ -490,58 +482,8 @@ internal class DefaultSwapRepositoryV2Test {
     // region filterYieldSupplyProvider
 
     @Test
-    fun `getPairs filters out DEX providers when yield supply is active and flag is off`() = runTest {
+    fun `GIVEN yield active WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns false
-        val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
-        val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
-        val primarySwapCurrencyStatus = SwapCurrencyStatus(
-            userWallet = userWallet,
-            status = primaryStatus,
-            account = mockk(),
-        )
-        val secondarySwapCurrencyStatus = SwapCurrencyStatus(
-            userWallet = userWallet,
-            status = secondaryStatus,
-            account = mockk(),
-        )
-
-        val swapPair = SwapPair(
-            from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
-            to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
-            providers = listOf(
-                SwapPairProvider(providerId = PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
-                SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
-            ),
-        )
-
-        coEvery {
-            tangemExpressApi.getPairs(any(), any(), any())
-        } returns ApiResponse.Success(listOf(swapPair))
-
-        coEvery {
-            expressRepository.getProviders(any(), any())
-        } returns listOf(dexProvider, cexProvider)
-
-        // Act
-        val result = repository.getPairs(
-            primarySwapCurrencyStatus = primarySwapCurrencyStatus,
-            secondarySwapCurrencyStatus = secondarySwapCurrencyStatus,
-            filterProviderTypes = emptyList(),
-            swapTxType = SwapTxType.Swap,
-        )
-
-        // Assert — only CEX provider should remain
-        assertThat(result).hasSize(2)
-        val providers = result.first().providers
-        assertThat(providers).hasSize(1)
-        assertThat(providers.first().type).isEqualTo(ExpressProviderType.CEX)
-    }
-
-    @Test
-    fun `GIVEN yield active and flag on WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
-        // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(
@@ -590,7 +532,6 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield active and flag on WHEN getPairs THEN allowlisted DEX kept with CEX`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
@@ -626,7 +567,6 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield active and flag on WHEN getPairs THEN allowlisted DEX_BRIDGE kept with CEX`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
@@ -662,7 +602,6 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield active and flag on WHEN getPairs THEN ONRAMP provider filtered out`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
@@ -699,7 +638,6 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield inactive and flag on WHEN getPairs THEN all providers kept`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatus(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())

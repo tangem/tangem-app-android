@@ -19,6 +19,7 @@ sealed class GetFeeError {
         data object NoSupportedTokensFound : GaslessError()
         data object NotEnoughFunds : GaslessError()
         data object ModuleUpdateUnavailable : GaslessError()
+        data object YieldBalanceUnavailable : GaslessError()
         data class DataError(val cause: Throwable?) : GaslessError()
     }
 

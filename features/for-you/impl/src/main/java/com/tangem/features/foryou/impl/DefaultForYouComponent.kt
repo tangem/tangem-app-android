@@ -1,6 +1,7 @@
 package com.tangem.features.foryou.impl
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +34,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.entity.ForYouBottomSheetConfig
 import com.tangem.features.foryou.impl.model.ForYouModel
@@ -48,6 +50,7 @@ internal class DefaultForYouComponent @AssistedInject constructor(
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : AppComponentContext by context, ForYouComponent {
 
     private val model: ForYouModel = getOrCreateModel(params = params)
@@ -68,7 +71,8 @@ internal class DefaultForYouComponent @AssistedInject constructor(
         handleBackButton = false,
         childFactory = { config, componentContext ->
             when (config) {
-                ForYouBottomSheetConfig.AddToPortfolio -> portfolioSelectorChild(componentContext)
+                ForYouBottomSheetConfig.AddToPortfolio -> addToPortfolioChild(componentContext)
+                ForYouBottomSheetConfig.PortfolioSelector -> portfolioSelectorChild(componentContext)
                 is ForYouBottomSheetConfig.ManageFunds -> manageFundsChild(
                     componentContext = componentContext,
                     launchMode = ManageFundsComponent.LaunchMode.FilteredByRawId(config.rawCurrencyId),
@@ -119,19 +123,30 @@ internal class DefaultForYouComponent @AssistedInject constructor(
             bottomSheetState = bottomSheetState,
             promoBannersBlockComponent = promoBannersBlockComponent,
             contentPadding = contentPadding,
-            modifier = modifier,
+            modifier = modifier.navigationBarsPadding(),
         )
 
         bottomSheet.child?.instance?.BottomSheet()
     }
 
-    private fun portfolioSelectorChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
+    private fun addToPortfolioChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
         addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
                 addToPortfolioManager = checkNotNull(model.addToPortfolioManager) {
                     "addToPortfolioManager must be set before activating AddToPortfolio slot"
                 },
+            ),
+        )
+
+    private fun portfolioSelectorChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
+        portfolioSelectorComponentFactory.create(
+            context = childByContext(componentContext),
+            params = PortfolioSelectorComponent.Params(
+                portfolioFetcher = model.portfolioFetcher,
+                controller = model.portfolioSelectorController,
+                bsCallback = model.portfolioSelectorCallback,
+                settings = PortfolioSelectorComponent.Settings(isMultiChoice = true),
             ),
         )
 

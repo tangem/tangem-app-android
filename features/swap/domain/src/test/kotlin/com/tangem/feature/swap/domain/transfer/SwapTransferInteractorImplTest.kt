@@ -645,6 +645,86 @@ internal class SwapTransferInteractorImplTest {
         }
 
     @Test
+    fun `GIVEN fee paid in another token WHEN updateTransfer THEN subtract availability asked with the fee token`() =
+        runTest {
+            // Arrange — a token-denominated fee charged to a separate balance: the use case must see that
+            // fee token, otherwise the check degenerates into "the fee token is the sent token" and the
+            // sent amount gets reduced by a fee taken from another balance.
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val fromCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            val feeToken = buildDistinctToken()
+            val feePaidCurrencyStatus = buildFeeCurrencyStatus(currency = feeToken, amount = BigDecimal("2.0"))
+            val fee: Fee = mockk(relaxed = true) { every { amount.value } returns BigDecimal("0.1") }
+            val gaslessFees = mutableListOf<Pair<CryptoCurrency.ID, Fee>?>()
+            stubBaseFlows(appCurrency)
+            coEvery {
+                isAmountSubtractAvailableUseCase(any(), any(), captureNullable(gaslessFees))
+            } returns false.right()
+            coEvery { getBalanceNotEnoughForFeeWarningUseCase(any(), any(), any(), any()) } returns null.right()
+            stubGetCurrencyCheckCapturingFeeBalance(mutableListOf())
+
+            // Act
+            sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = "1.5",
+                feePaidCurrencyStatus = feePaidCurrencyStatus,
+                fee = fee,
+            )
+
+            // Assert
+            assertThat(gaslessFees.single()).isEqualTo(feeToken.id to fee)
+        }
+
+    @Test
+    fun `GIVEN fee currency status not loaded WHEN updateTransfer THEN subtract availability asked without a fee`() =
+        runTest {
+            // Arrange — with no fee currency there is nothing to compare the sent token against, so the
+            // decision must fall back to the regular fee-paid-currency rules.
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val fromCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            val fee: Fee = mockk(relaxed = true) { every { amount.value } returns BigDecimal("0.1") }
+            val gaslessFees = mutableListOf<Pair<CryptoCurrency.ID, Fee>?>()
+            stubBaseFlows(appCurrency)
+            coEvery {
+                isAmountSubtractAvailableUseCase(any(), any(), captureNullable(gaslessFees))
+            } returns false.right()
+            stubGetCurrencyCheckCapturingFeeBalance(mutableListOf())
+
+            // Act
+            sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = "1.5",
+                feePaidCurrencyStatus = null,
+                fee = fee,
+            )
+
+            // Assert
+            assertThat(gaslessFees.single()).isNull()
+        }
+
+    @Test
     fun `GIVEN no fee currency status WHEN updateTransfer THEN feeCurrencyBalanceAfterTx is null`() = runTest {
         // Arrange
         val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
@@ -950,6 +1030,7 @@ internal class SwapTransferInteractorImplTest {
                 userWallet = userWallet,
                 network = network,
                 transactionData = transactionData,
+                sentAmount = BigDecimal("2.0"),
             )
         } returns feeExtended.right()
 
@@ -975,6 +1056,7 @@ internal class SwapTransferInteractorImplTest {
                 userWallet = userWallet,
                 network = network,
                 transactionData = transactionData,
+                sentAmount = BigDecimal("2.0"),
             )
         }
     }
@@ -1438,6 +1520,15 @@ internal class SwapTransferInteractorImplTest {
         }
     }
 
+    private fun buildDistinctToken(): CryptoCurrency.Token {
+        val currencyId: CryptoCurrency.ID = mockk()
+        return mockk {
+            every { this@mockk.id } returns currencyId
+            every { this@mockk.network } returns mockk()
+            every { this@mockk.contractAddress } returns USDC_CONTRACT
+        }
+    }
+
     private fun buildCurrencyCheck(
         existentialDeposit: BigDecimal? = null,
         dustValue: BigDecimal? = null,
@@ -1527,6 +1618,7 @@ internal class SwapTransferInteractorImplTest {
         return mockk {
             every { this@mockk.currency } returns currency
             every { this@mockk.userWallet } returns userWallet
+            every { this@mockk.userWalletId } answers { userWallet.walletId }
             every { this@mockk.status } returns status
         }
     }

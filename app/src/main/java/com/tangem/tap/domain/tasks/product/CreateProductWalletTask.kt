@@ -1,32 +1,35 @@
 package com.tangem.tap.domain.tasks.product
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.toMapKey
 import com.tangem.common.map
 import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.card.CardTypesResolver
+import com.tangem.crypto.hdWallet.DerivationNode
+import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
+import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.DerivationsHelper
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingCommand
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
+import com.tangem.operations.masterSecret.CreateMasterSecretCommand
+import com.tangem.operations.read.ReadMasterSecretCommand
 import com.tangem.operations.read.ReadWalletsListCommand
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
-import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.operations.wallet.CreateWalletResponse as SdkCreateWalletResponse
+
+/** BIP-85 root derivation node index: m/83696968' */
+private const val BIP85_ROOT_NODE_INDEX = 83696968L
 
 private data class CreateWalletResponse(
     val cardId: String,
@@ -42,10 +45,10 @@ private data class CreateWalletResponse(
 
 class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
-    private val derivationStyleProvider: DerivationStyleProvider,
     private val mnemonic: Mnemonic? = null,
     private val passphrase: String? = null,
     private val shouldReset: Boolean,
+    private val derivationsHelper: DerivationsHelper,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -72,10 +75,10 @@ class CreateProductWalletTask(
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
             else -> CreateWalletTangemWallet(
+                derivationsHelper = derivationsHelper,
                 mnemonic = mnemonic,
                 passphrase = passphrase,
                 shouldReset = shouldReset,
-                derivationStyleProvider = derivationStyleProvider,
                 cardDTO = cardDto,
             )
         }
@@ -136,10 +139,10 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
  * Uses for multiWallet 1st and 2nd
  */
 private class CreateWalletTangemWallet(
+    private val derivationsHelper: DerivationsHelper,
     private val mnemonic: Mnemonic?,
     private val passphrase: String?,
     private val shouldReset: Boolean,
-    private val derivationStyleProvider: DerivationStyleProvider,
     cardDTO: CardDTO,
 ) : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
@@ -169,12 +172,31 @@ private class CreateWalletTangemWallet(
         CreateWalletsTask(cardConfig.mandatoryCurves, mnemonic, passphrase).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    checkIfAllWalletsCreated(
-                        card = card,
-                        session = session,
-                        createResponse = result.data,
-                        callback = callback,
-                    )
+                    val sdkCard = session.environment.card
+                    if (sdkCard == null) {
+                        callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+                        return@run
+                    }
+                    val updatedCard = CardDTO(sdkCard)
+                    if (card.cardId != updatedCard.cardId) {
+                        callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+                        return@run
+                    }
+                    if (card.firmwareVersion >= FirmwareVersion.v8) {
+                        createMasterSecret(
+                            card = updatedCard,
+                            session = session,
+                            createWalletsResponse = result.data,
+                            callback = callback,
+                        )
+                    } else {
+                        checkIfAllWalletsCreated(
+                            card = updatedCard,
+                            session = session,
+                            createResponse = result.data,
+                            callback = callback,
+                        )
+                    }
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
@@ -222,6 +244,75 @@ private class CreateWalletTangemWallet(
         }
     }
 
+    private fun createMasterSecret(
+        card: CardDTO,
+        session: CardSession,
+        createWalletsResponse: CreateWalletsResponse,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        // when importing a wallet from a mnemonic, the master secret must be deterministic:
+        // the BIP-85 root key (m/83696968') derived from the mnemonic + passphrase
+        val bip85MasterKey = runCatching {
+            mnemonic?.let { mn ->
+                AnyMasterKeyFactory(mnemonic = mn, passphrase = passphrase.orEmpty())
+                    .makeMasterKey(EllipticCurve.Secp256k1)
+                    .derivePrivateKey(node = DerivationNode.Hardened(BIP85_ROOT_NODE_INDEX))
+            }
+        }.getOrElse { error ->
+            callback(CompletionResult.Failure(TangemSdkError.ExceptionError(error)))
+            return
+        }
+        CreateMasterSecretCommand(privateKey = bip85MasterKey).run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    // save the card with derived wallets and a master secret
+                    checkMasterSecret(
+                        card = card,
+                        session = session,
+                        createWalletsResponse = createWalletsResponse,
+                        callback = callback,
+                    )
+                }
+                is CompletionResult.Failure -> {
+                    callback(CompletionResult.Failure(result.error))
+                }
+            }
+        }
+    }
+
+    private fun checkMasterSecret(
+        card: CardDTO,
+        session: CardSession,
+        createWalletsResponse: CreateWalletsResponse,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        ReadMasterSecretCommand().run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    if (result.data.masterSecret == null) {
+                        // Distinct from WalletAlreadyCreated: callers treat that error as
+                        // "card already has a wallet" and offer a factory reset dialog
+                        callback(
+                            CompletionResult.Failure(
+                                TangemSdkError.ExceptionError(
+                                    IllegalStateException("Master secret was not created"),
+                                ),
+                            ),
+                        )
+                        return@run
+                    }
+                    checkIfAllWalletsCreated(
+                        card = card,
+                        session = session,
+                        createResponse = createWalletsResponse,
+                        callback = callback,
+                    )
+                }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+            }
+        }
+    }
+
     private fun resetCard(
         card: CardDTO,
         session: CardSession,
@@ -258,7 +349,7 @@ private class CreateWalletTangemWallet(
                 )
             }
 
-            card.settings.isHDWalletAllowed -> {
+            card.shouldDeriveKeys() -> {
                 deriveKeys(
                     card = card,
                     createWalletResponses = createWalletResponses,
@@ -288,7 +379,7 @@ private class CreateWalletTangemWallet(
                 is CompletionResult.Success -> {
                     primaryCard = result.data
                     when {
-                        card.settings.isHDWalletAllowed -> {
+                        card.shouldDeriveKeys() -> {
                             deriveKeys(
                                 card = card,
                                 createWalletResponses = createWalletResponses,
@@ -317,49 +408,29 @@ private class CreateWalletTangemWallet(
         }
     }
 
+    private fun CardDTO.shouldDeriveKeys(): Boolean {
+        return this.settings.isHDWalletAllowed && this.firmwareVersion < FirmwareVersion.v8
+    }
+
     private fun deriveKeys(
         card: CardDTO,
-        createWalletResponses: List<CreateWalletResponse>,
         session: CardSession,
+        createWalletResponses: List<CreateWalletResponse>,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        val map = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
-        var isBlockchainsForCurvesExist = false
-        createWalletResponses.forEach { response ->
-            val blockchainsForCurve = getBlockchains(response.cardId, card).filter {
-                it.getSupportedCurves().contains(response.wallet.curve)
-            }
-            val derivationPaths = blockchainsForCurve.mapNotNull { blockchain ->
-                isBlockchainsForCurvesExist = true
-                blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())
-            }
-            if (derivationPaths.isNotEmpty()) {
-                map[response.wallet.publicKey.toMapKey()] = derivationPaths
-            }
-        }
+        val derivations = derivationsHelper.getDefaultDerivations(
+            derivationStyleProvider = card.derivationStyleProvider,
+            cardId = card.cardId,
+            isTestCard = card.isTestCard,
+            wallets = createWalletResponses.map { it.wallet },
+        )
         val cardEnv = session.environment.card
         if (cardEnv == null) {
             callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return
         }
-        if (map.isEmpty()) {
-            if (isBlockchainsForCurvesExist) {
-                callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
-            } else {
-                // if there is no blockchains to derive, just return success response with empty derivedKeys
-                callback(
-                    CompletionResult.Success(
-                        CreateProductWalletTaskResponse(
-                            card = cardEnv,
-                            primaryCard = primaryCard,
-                        ),
-                    ),
-                )
-            }
-            return
-        }
 
-        DeriveMultipleWalletPublicKeysTask(map)
+        DeriveMultipleWalletPublicKeysTask(derivations)
             .run(session) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -378,14 +449,4 @@ private class CreateWalletTangemWallet(
                 }
             }
     }
-
-    private fun getBlockchains(cardId: String, card: CardDTO): List<Blockchain> {
-        return when {
-            DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.getDemoBlockchains(cardId).toList()
-            card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
-            else -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-        }
-    }
-
-    private companion object
 }

@@ -1,9 +1,9 @@
 package com.tangem.datasource.api.common.config.managers
 
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiConfigs
-import com.tangem.datasource.api.common.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiConfigs
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
@@ -56,13 +56,13 @@ internal class DevApiConfigsManager(
         val apiConfigs = configs.value
 
         val config = apiConfigs.map { it }.firstOrNull { it.key.id == id }?.key
-            ?: error("Api config with id [$id] not found")
+            ?: error("Api config with id [${id.name}] not found")
 
         val currentEnvironment = apiConfigs[config]
-            ?: error("Current environment of api config with id [$id] not found")
+            ?: error("Current environment of api config with id [${id.name}] not found")
 
         return config.environmentConfigs.firstOrNull { it.environment == currentEnvironment }
-            ?: error("Api config with id [$id] doesn't contain environment [$currentEnvironment]")
+            ?: error("Api config with id [${id.name}] doesn't contain environment [$currentEnvironment]")
     }
 
     override suspend fun changeEnvironment(id: String, environment: ApiEnvironment) {
@@ -76,7 +76,7 @@ internal class DevApiConfigsManager(
     }
 
     override suspend fun changeEnvironment(environment: ApiEnvironment) {
-        val supportedConfigs = apiConfigs
+        val supportedConfigs = apiConfigs.values
             .filter { config ->
                 config.environmentConfigs.any { it.environment == environment }
             }
@@ -124,6 +124,6 @@ internal class DevApiConfigsManager(
     }
 
     private fun getInitialConfigs(): Map<ApiConfig, ApiEnvironment> {
-        return apiConfigs.associateWith(ApiConfig::defaultEnvironment)
+        return apiConfigs.values.associateWith(ApiConfig::defaultEnvironment)
     }
 }

@@ -1,11 +1,11 @@
 package com.tangem.datasource.local.cache
 
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.cache.model.CacheKey
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 
 internal class DefaultCacheKeysStore(
-    dataStore: StringKeyDataStore<CacheKey>,
-) : CacheKeysStore, StringKeyDataStore<CacheKey> by dataStore {
+    store: RuntimeSharedMapStore<String, CacheKey>,
+) : CacheKeysStore, RuntimeSharedMapStore<String, CacheKey> by store {
 
     override suspend fun store(key: CacheKey) {
         store(key.id, key)
