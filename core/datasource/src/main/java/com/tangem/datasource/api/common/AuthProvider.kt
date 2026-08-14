@@ -18,8 +18,6 @@ interface AuthProvider {
 
     fun getApiKey(apiEnvironment: Provider<ApiEnvironment>): ProviderSuspend<String>
 
-    fun getGaslessServiceApiKey(apiEnvironment: Provider<ApiEnvironment>): ProviderSuspend<String>
-
     /**
      * Returns map where keys(cardId) associated with cardPublicKey
      */
