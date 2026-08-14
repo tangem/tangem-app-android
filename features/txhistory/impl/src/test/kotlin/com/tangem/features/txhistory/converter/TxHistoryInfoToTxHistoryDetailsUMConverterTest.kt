@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
@@ -98,11 +99,12 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
     fun `GIVEN all menu callbacks WHEN convert THEN header menu has copy-id, share and explore rows wired`() {
         // Arrange
         var copiedTxId = false
-        var shared = false
+        val sharedTexts = mutableListOf<String>()
         var explored = false
         val converter = dispatcher(
             onCopyTxId = { copiedTxId = true },
-            onShare = { shared = true },
+            shareText = stringReference("deal summary"),
+            onShare = sharedTexts::add,
             onExplore = { explored = true },
         )
 
@@ -118,18 +120,20 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         assertThat(menu[2].icon).isEqualTo(Icons.ic_globe_24)
         assertThat(menu[2].title).isEqualTo(resourceReference(R.string.common_explore))
 
-        menu[0].onClick()
-        menu[1].onClick()
-        menu[2].onClick()
+        menu[0].clickDirect()
+        menu[2].clickDirect()
+        val share = menu[1].action as TxHistoryDetailsUM.MenuItemUM.Action.Share
+        assertThat(share.text).isEqualTo(stringReference("deal summary"))
+        share.onShare("resolved summary")
         assertThat(copiedTxId).isTrue()
-        assertThat(shared).isTrue()
         assertThat(explored).isTrue()
+        assertThat(sharedTexts).containsExactly("resolved summary")
     }
 
     @Test
-    fun `GIVEN no share and explore callbacks WHEN convert THEN header menu drops the share and explore rows`() {
-        // Arrange — onShare/onExplore are null (e.g. an express op with no on-chain leg to share or open yet).
-        val converter = dispatcher(onCopyTxId = {}, onShare = null, onExplore = null)
+    fun `GIVEN no share text and no explore callback WHEN convert THEN header menu drops those rows`() {
+        // Arrange — an on-chain row has no summary to share, and no on-chain leg means nothing to open either.
+        val converter = dispatcher(onCopyTxId = {}, shareText = null, onExplore = null)
 
         // Act
         val menu = converter.convert(onChain(type = TransactionType.Transfer)).header.menu
@@ -142,7 +146,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
     @Test
     fun `GIVEN no menu callbacks WHEN convert THEN header menu is empty`() {
         // Arrange — every menu action is absent (e.g. a blank tx id with no on-chain leg to share or open).
-        val converter = dispatcher(onCopyTxId = null, onShare = null, onExplore = null)
+        val converter = dispatcher(onCopyTxId = null, shareText = null, onExplore = null)
 
         // Act
         val menu = converter.convert(onChain(type = TransactionType.Transfer)).header.menu
@@ -295,7 +299,8 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
 
     private fun dispatcher(
         onCopyTxId: (() -> Unit)? = null,
-        onShare: (() -> Unit)? = null,
+        shareText: TextReference? = null,
+        onShare: (String) -> Unit = {},
         onExplore: (() -> Unit)? = null,
         lookup: TxHistoryLookupContext = lookupOf(),
         isBalanceHidden: Boolean = false,
@@ -305,10 +310,15 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onGoToProvider = openedUrls::add,
         isBalanceHidden = isBalanceHidden,
         onCopyTxId = onCopyTxId,
+        shareText = shareText,
         onShare = onShare,
         onExplore = onExplore,
         lookup = lookup,
     )
+
+    private fun TxHistoryDetailsUM.MenuItemUM.clickDirect() {
+        (action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
+    }
 
     /** Converter with a resolved refund token (bitcoin) and the refund callbacks wired. */
     private fun refundConverter(

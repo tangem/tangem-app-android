@@ -228,16 +228,10 @@ internal class ExpressTxToDetailsUMConverter(
         sign: String,
         isFaded: Boolean,
     ): TxHistoryDetailsUM.AssetUM {
-        val symbol = displaySymbol
-        val formatted = amount.format { crypto(
-            symbol = symbol,
-            decimals = decimals,
-            ignoreSymbolPosition = true,
-        ) }.trim()
         return TxHistoryDetailsUM.AssetUM(
             label = label,
             owner = owner,
-            amount = stringReference((sign + formatted).trim()),
+            amount = stringReference((sign + formatAmount()).trim()),
             currencyIcon = cryptoCurrency?.let(iconStateConverter::convert),
             isFaded = isFaded,
         )
@@ -253,13 +247,10 @@ internal class ExpressTxToDetailsUMConverter(
         label: TextReference,
         currencyIcon: CurrencyIconState?,
     ): TxHistoryDetailsUM.AssetUM {
-        val code = fiatCode
-        val formatted = (value ?: BigDecimal.ZERO)
-            .format { fiat(fiatCurrencyCode = code, fiatCurrencySymbol = currencySymbol, ignoreSymbolPosition = true) }
         return TxHistoryDetailsUM.AssetUM(
             label = label,
             owner = null,
-            amount = stringReference(formatted.trim()),
+            amount = stringReference(formatFiatAmount()),
             currencyIcon = currencyIcon,
             isFaded = false,
         )
