@@ -23,4 +23,5 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     api(projects.core.remote)
+    implementation(projects.core.utils)
 }
