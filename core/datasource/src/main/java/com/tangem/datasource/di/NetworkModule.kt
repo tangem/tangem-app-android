@@ -6,7 +6,6 @@ import com.tangem.datasource.api.common.config.P2PEthPool
 import com.tangem.datasource.api.common.config.TangemTech
 import com.tangem.datasource.api.common.config.News
 import com.tangem.datasource.api.common.config.YieldSupply
-import com.tangem.datasource.api.common.config.BlockAid
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
@@ -15,7 +14,6 @@ import com.tangem.datasource.api.common.config.Auth
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
@@ -200,18 +198,6 @@ internal object NetworkModule {
                     readTimeoutSeconds = TIMEOUT_60_SECONDS,
                 ),
                 shouldSaveLogs = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideBlockAidApi(retrofitApiBuilder: RetrofitApiBuilder): BlockAidApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = BlockAid.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
             ),
         )
     }
