@@ -215,6 +215,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                     isEditingNameEnabled = true,
                     shouldShowCardDetailsButtonOnCard = false,
                 ),
+                cardDetailsEventListener = cardDetailsEventListener,
                 onEditNameClick = { router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName(card)) },
             )
         }
