@@ -58,6 +58,9 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.ds2.shtorka.TangemShtorka
+import com.tangem.core.ui.ds2.shtorka.TangemShtorkaState
+import com.tangem.core.ui.ds2.shtorka.rememberTangemShtorkaState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.*
@@ -68,6 +71,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsHint
 import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsTooltip
+import com.tangem.feature.wallet.presentation.wallet.ui.components.ShtorkaSheetHeader
+import com.tangem.feature.wallet.presentation.wallet.ui.components.ShtorkaSheetHeaderHeight
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletBalance
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletListContent
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletPagerIndicator
@@ -75,6 +80,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.jointaccount.main.JointAccountMainUM
+import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
@@ -102,7 +108,9 @@ internal fun WalletScreen(
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
+    isNewShtorkaEnabled: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
+    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -151,6 +159,8 @@ internal fun WalletScreen(
         virtualAccountComponent = virtualAccountComponent,
         jointAccountComponent = jointAccountComponent,
         behavior = behavior,
+        isNewShtorkaEnabled = isNewShtorkaEnabled,
+        shtorkaHeaderContent = shtorkaHeaderContent,
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
@@ -182,9 +192,11 @@ private fun WalletContent(
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
+    isNewShtorkaEnabled: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
     var walletBalance by remember { mutableStateOf<TextReference?>(TextReference.EMPTY) }
@@ -198,6 +210,8 @@ private fun WalletContent(
     BaseScaffoldWithMarkets(
         modifier = modifier,
         state = state,
+        isNewShtorkaEnabled = isNewShtorkaEnabled,
+        shtorkaHeaderContent = shtorkaHeaderContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
         bottomSheetContent = bottomSheetContent,
@@ -209,7 +223,7 @@ private fun WalletContent(
                 behavior = behavior,
             )
         },
-    ) { paddingValues, bottomSheetState ->
+    ) { paddingValues, sheet ->
         val density = LocalDensity.current
         var marketsHintHeight by remember { mutableStateOf(0.dp) }
         val collapsedBodyOverhang = with(density) { behavior.state.partialHeightLimit.toDp() }
@@ -244,9 +258,7 @@ private fun WalletContent(
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
         ) {
-            val isSheetExpanded by remember {
-                derivedStateOf { bottomSheetState.targetValue == TangemSheetValue.Expanded }
-            }
+            val isSheetExpanded by remember(sheet) { derivedStateOf { sheet.isExpanded } }
             val organizeButtonBounds = remember { mutableStateMapOf<Int, Rect>() }
             CompositionLocalProvider(LocalHazeState provides wallpaperHazeState) {
                 Box(
@@ -412,7 +424,7 @@ private fun WalletContent(
                 isVisible = state.showMarketsOnboarding,
                 availableHeight = maxHeight,
                 sheetTopInset = 12.dp,
-                bottomSheetState = bottomSheetState,
+                sheetTopOffset = remember(sheet) { sheet::topOffset },
                 onCloseClick = state.onDismissMarketsTooltip,
                 obstacleBounds = remember(walletsPagerState, organizeButtonBounds) {
                     { organizeButtonBounds[walletsPagerState.currentPage] }
@@ -422,17 +434,54 @@ private fun WalletContent(
     }
 }
 
+/** Hosts the wallet content under the feed sheet — the legacy bottom sheet or the DS3 shtorka. */
+@Suppress("LongParameterList")
+@Composable
+private fun BaseScaffoldWithMarkets(
+    state: WalletScreenState,
+    isNewShtorkaEnabled: Boolean,
+    bottomSheetHeaderHeightProvider: () -> Dp,
+    onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    modifier: Modifier = Modifier,
+    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    appBarContent: @Composable () -> Unit,
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
+) {
+    if (isNewShtorkaEnabled) {
+        ShtorkaScaffoldWithMarkets(
+            state = state,
+            shtorkaHeaderContent = shtorkaHeaderContent,
+            onBottomSheetStateChange = onBottomSheetStateChange,
+            appBarContent = appBarContent,
+            bottomSheetContent = bottomSheetContent,
+            modifier = modifier,
+            content = content,
+        )
+    } else {
+        LegacySheetScaffoldWithMarkets(
+            state = state,
+            bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
+            onBottomSheetStateChange = onBottomSheetStateChange,
+            appBarContent = appBarContent,
+            bottomSheetContent = bottomSheetContent,
+            modifier = modifier,
+            content = content,
+        )
+    }
+}
+
 @Suppress("LongParameterList", "LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private inline fun BaseScaffoldWithMarkets(
+private inline fun LegacySheetScaffoldWithMarkets(
     state: WalletScreenState,
     bottomSheetHeaderHeightProvider: () -> Dp,
     modifier: Modifier = Modifier,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
     crossinline appBarContent: @Composable () -> Unit,
     crossinline bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    crossinline content: @Composable (PaddingValues, TangemSheetState) -> Unit,
+    crossinline content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
@@ -442,6 +491,7 @@ private inline fun BaseScaffoldWithMarkets(
 
     val bottomSheetState = rememberTangemStandardBottomSheetState()
     val scaffoldState = rememberTangemBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
+    val sheetHandle = remember(bottomSheetState) { LegacyWalletSheetHandle(bottomSheetState) }
 
     val expandedBackground = TangemTheme.colors3.bg.primary
     val collapsedBackground = TangemTheme.colors3.bg.secondary
@@ -488,7 +538,7 @@ private inline fun BaseScaffoldWithMarkets(
                     }
                 },
                 content = { paddingValues ->
-                    content(paddingValues, bottomSheetState)
+                    content(paddingValues, sheetHandle)
                     appBarContent()
 
                     BottomSheetScrim(
@@ -520,6 +570,146 @@ private inline fun BaseScaffoldWithMarkets(
                 state.onDismissMarketsTooltip()
             }
         }
+    }
+}
+
+/** Margin the collapsed shtorka card floats above the bottom inset (`ShtorkaCollapsedInset` in the DS). */
+private val ShtorkaCollapsedInset = 24.dp
+
+/** The collapsed shtorka shows exactly its sheet header — the grabber plus the search bar. */
+private val ShtorkaCollapsedDetent = TangemShtorka.Detent.Height(value = ShtorkaSheetHeaderHeight)
+
+/**
+ * Semi-open detent ("Main + half"): sized to exactly the sheet header + top blocks + tab row,
+ * so there is no free space under the tabs — tab content appears only at [TangemShtorka.Detent.Full].
+ */
+private val ShtorkaSemiOpenDetent = TangemShtorka.Detent.Height(
+    value = ShtorkaSheetHeaderHeight + FeedV2Component.SemiOpenContentHeight,
+)
+
+private val ShtorkaDetents = listOf(ShtorkaCollapsedDetent, ShtorkaSemiOpenDetent, TangemShtorka.Detent.Full)
+
+@Suppress("LongParameterList", "LongMethod")
+@Composable
+private fun ShtorkaScaffoldWithMarkets(
+    state: WalletScreenState,
+    onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    modifier: Modifier = Modifier,
+    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    appBarContent: @Composable () -> Unit,
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
+) {
+    val density = LocalDensity.current
+    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
+
+    val shtorkaState = rememberTangemShtorkaState(
+        detents = ShtorkaDetents,
+        initialDetent = ShtorkaCollapsedDetent,
+    )
+    val sheetHandle = remember(shtorkaState) { ShtorkaWalletSheetHandle(shtorkaState) }
+    val isExpanded = sheetHandle.isExpanded
+
+    val contentPadding = remember(bottomBarHeight) {
+        PaddingValues(bottom = ShtorkaSheetHeaderHeight + ShtorkaCollapsedInset + bottomBarHeight)
+    }
+
+    val expandedBackground = TangemTheme.colors3.bg.primary
+    val collapsedBackground = TangemTheme.colors3.bg.secondary
+    val background by animateColorAsState(
+        targetValue = if (isExpanded) expandedBackground else collapsedBackground,
+        label = "shtorkaBackground",
+    )
+
+    CompositionLocalProvider(
+        LocalMainBottomSheetColor provides remember { mutableStateOf(background) }.apply { value = background },
+    ) {
+        val backgroundColor by LocalMainBottomSheetColor.current
+        var isSearchFieldFocused by remember { mutableStateOf(false) }
+        val isKeyboardVisible by rememberIsKeyboardVisible()
+
+        ShtorkaStateEffects(
+            shtorkaState = shtorkaState,
+            isExpanded = isExpanded,
+            isSearchFieldFocused = isSearchFieldFocused,
+            onBottomSheetStateChange = onBottomSheetStateChange,
+        )
+
+        // collapse the shtorka when back pressed at any raised detent
+        val isRaised = shtorkaState.targetDetent != ShtorkaCollapsedDetent
+        BackHandler(enabled = isRaised && !isKeyboardVisible) {
+            shtorkaState.animateTo(ShtorkaCollapsedDetent)
+        }
+
+        val onExpandSheet = remember(shtorkaState) {
+            { shtorkaState.animateTo(TangemShtorka.Detent.Full) }
+        }
+
+        Box(modifier = modifier.fillMaxSize()) {
+            content(contentPadding, sheetHandle)
+            appBarContent()
+
+            BottomSheetScrim(
+                color = Color.Black.copy(alpha = .40f),
+                visible = isExpanded,
+                onDismissRequest = { shtorkaState.animateTo(ShtorkaCollapsedDetent) },
+            )
+
+            TangemShtorka(
+                state = shtorkaState,
+                color = backgroundColor,
+                modifier = Modifier.onFocusChanged { focusState ->
+                    isSearchFieldFocused = focusState.isFocused
+                },
+                // The header draws its own small drag tip with the search bar centered around it
+                showDragHandle = false,
+                header = {
+                    ShtorkaSheetHeader {
+                        shtorkaHeaderContent(onExpandSheet)
+                    }
+                },
+            ) {
+                // The content offsets itself by ShtorkaSheetHeaderHeight (passed by the caller),
+                // so it starts below the pinned grabber + search bar.
+                bottomSheetContent(onExpandSheet)
+            }
+        }
+
+        LaunchedEffect(state.showMarketsOnboarding, isExpanded) {
+            if (state.showMarketsOnboarding && isExpanded) {
+                state.onDismissMarketsTooltip()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShtorkaStateEffects(
+    shtorkaState: TangemShtorkaState,
+    isExpanded: Boolean,
+    isSearchFieldFocused: Boolean,
+    onBottomSheetStateChange: (BottomSheetState) -> Unit,
+) {
+    // expand the shtorka when the keyboard appears
+    val isKeyboardVisible by rememberIsKeyboardVisible()
+    LaunchedEffect(isKeyboardVisible) {
+        if (isKeyboardVisible && isSearchFieldFocused) {
+            shtorkaState.animateTo(TangemShtorka.Detent.Full)
+        }
+    }
+
+    // hide the keyboard when the shtorka starts collapsing
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(shtorkaState) {
+        snapshotFlow { shtorkaState.targetDetent is TangemShtorka.Detent.Full }
+            .drop(count = 1)
+            .collect { isFullDetent -> if (!isFullDetent) keyboardController?.hide() }
+    }
+
+    LaunchedEffect(isExpanded) {
+        onBottomSheetStateChange(
+            if (isExpanded) BottomSheetState.EXPANDED else BottomSheetState.COLLAPSED,
+        )
     }
 }
 
@@ -729,6 +919,7 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                 ) {
                 }
             },
+            shtorkaHeaderContent = {},
             bottomSheetContent = {
                 Text("Markets Content")
             },
