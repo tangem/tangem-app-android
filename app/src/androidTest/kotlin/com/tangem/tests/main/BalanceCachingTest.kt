@@ -6,7 +6,6 @@ import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.parseNumericBalance
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.extensions.tapBackButton
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -37,9 +36,6 @@ class BalanceCachingTest : BaseTestCase() {
         setupHooks(
             additionalBeforeAppLaunchSection = {
                 setWireMockScenarioState(providersScenario, bitcoinMockOnlyState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarios()
             }
         ).run {
             step("Open 'Main Screen'") {
@@ -81,9 +77,6 @@ class BalanceCachingTest : BaseTestCase() {
         setupHooks(
             additionalBeforeAppLaunchSection = {
                 setWireMockScenarioState(providersScenario, bitcoinMockOnlyState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarios()
             }
         ).run {
             step("Open 'Main Screen'") {
@@ -140,11 +133,7 @@ class BalanceCachingTest : BaseTestCase() {
         var totalBalance = BigDecimal.ZERO
         var stakedAmount = BigDecimal.ZERO
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarios()
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$stakingEthScenario' to state: '$stakingEthState'") {
                 setWireMockScenarioState(stakingEthScenario, stakingEthState)
             }

@@ -35,6 +35,11 @@ buildscript {
 
 // Dependency Analysis (DAGP) global configuration.
 dependencyAnalysis {
+    // Every module declares project dependencies through the type-safe accessors enabled by
+    // TYPESAFE_PROJECT_ACCESSORS (`projects.core.utils`). Without this, advice and `fixDependencies`
+    // emit the `project(":core:utils")` string form, which doesn't match anything in the build files.
+    useTypesafeProjectAccessors(true)
+
     structure {
         // Treat co-versioned artifact splits as a single logical dependency, so the plugin doesn't
         // advise "declare the transitive directly" when you depend on one part and use a sibling.
@@ -104,6 +109,37 @@ dependencyAnalysis {
         bundle("coil") {
             includeGroup("io.coil-kt")
         }
+        // Families where the split artifact arrives from a sibling this repo already declares:
+        // huawei-push brings opendevice, the customer.io SDKs bring their shared core, navigation-compose
+        // brings navigation-common/runtime, and reorderable's debug variant is the same module.
+        bundle("huawei") {
+            primary("com.huawei.hms:push")
+            includeGroup("com.huawei.hms")
+        }
+        bundle("customerio") {
+            includeGroup("io.customer.android")
+        }
+        bundle("androidx-navigation") {
+            primary("androidx.navigation:navigation-compose")
+            includeGroup("androidx.navigation")
+        }
+        bundle("reorderable") {
+            primary("sh.calvin.reorderable:reorderable")
+            includeGroup("sh.calvin.reorderable")
+        }
+        // The instrumentation stack is a single co-versioned family: kaspresso pulls espresso, the
+        // androidx.test runner/rules/monitor/core, uiautomator, kakaocup and the allure adapters.
+        // Declaring kaspresso is the entry point — pinning each transitive separately would mean
+        // hand-syncing eleven versions on every kaspresso bump.
+        bundle("kaspresso") {
+            primary("com.kaspersky.android-components:kaspresso")
+            includeGroup("com.kaspersky.android-components")
+            includeGroup("androidx.test")
+            includeGroup("androidx.test.uiautomator")
+            includeGroup("androidx.test.espresso")
+            includeGroup("io.github.kakaocup")
+            includeGroup("io.qameta.allure")
+        }
         // Room is split into runtime/ktx/common/compiler/paging (+ its androidx.sqlite runtime).
         // Declaring room-runtime covers the siblings.
         bundle("room") {
@@ -114,16 +150,20 @@ dependencyAnalysis {
     }
     issues {
         all {
-            // hilt-android / hilt-core get flagged as `api`: Kotlin `internal` @Inject classes (and
-            // public @Inject impls) compile to public bytecode carrying RUNTIME javax.inject annotations,
-            // so DAGP sees javax.inject in the ABI. The Hilt runtime is never genuinely public API — keep
-            // it `implementation` repo-wide.
-            onIncorrectConfiguration {
-                exclude(
-                    "com.google.dagger:hilt-android",
-                    "com.google.dagger:hilt-core",
-                )
-            }
+            // Default severity is "warn": buildHealth/projectHealth only report advice and never fail
+            // the build (local runs and the nightly CI report). The PR check passes -Pdagp.severity=fail
+            // to turn advice in the analyzed modules into a build failure.
+            onAny { severity(providers.gradleProperty("dagp.severity").getOrElse("warn")) }
+            // `implementation` -> `api` advice is a systematic false positive in this codebase. Kotlin
+            // `internal` compiles to public bytecode, and 210 of 213 `*Model` plus 141 of 145
+            // `Default*Component` classes are `internal`, so DAGP reads their injected constructor
+            // parameters as the module's public ABI. Acting on the advice would promote nearly every
+            // `implementation` in the feature graph to `api` — the opposite of the api/impl split the
+            // modularization exists for — and would make every ABI change cascade to all consumers.
+            // The same root cause previously required a per-module exclusion in 17 projects; one
+            // category-wide rule replaces them. Genuine over-exposure (`api` -> `implementation`) is
+            // rare and is handled by hand instead.
+            onIncorrectConfiguration { severity("ignore") }
             // dagger-compiler is always pulled by hilt-compiler (declared via kapt(deps.hilt.kapt));
             // no need to declare the annotation processor separately.
             // :test:core is the documented single entry point for the unit-test stack — it re-exports
@@ -156,69 +196,149 @@ dependencyAnalysis {
                     "com.squareup.wire:wire-runtime",
                     "jakarta.inject:jakarta.inject-api",
                 )
+                // The lifecycle artifacts reach these modules from androidx.activity/fragment rather
+                // than from a declared androidx.lifecycle member, so the bundle cannot absorb them.
+                // Declaring them is worse than silencing: they resolve to 2.9.4 while the catalog's
+                // androidxLifecycle is 2.5.1, so a direct declaration would quietly upgrade the module.
+                exclude(
+                    "androidx.lifecycle:lifecycle-viewmodel",
+                    "androidx.lifecycle:lifecycle-viewmodel-compose",
+                    "androidx.lifecycle:lifecycle-viewmodel-savedstate",
+                )
+                // datastore-preferences-core arrives through core:datasource rather than through the
+                // datastore-core these modules declare, so the androidx-datastore bundle misses it.
+                exclude("androidx.datastore:datastore-preferences-core")
+                // core:ui exports haze as `api` and puts HazeState in the signatures of public DS
+                // components (TangemPagerIndicator, Fade, TangemModalHost). Every module that renders
+                // one of those ends up referencing haze in bytecode without importing it, so the advice
+                // would reappear for each new screen that uses a bottom sheet.
+                exclude("dev.chrisbanes.haze:haze")
+                // :core:datasource is the data layer's single entry point and deliberately re-exports
+                // these two as `api` (see its build file). Every data module reaches RetrofitFactory and
+                // the local stores through it; declaring them in ~35 modules would duplicate the facade.
+                exclude(":core:local", ":core:remote")
             }
         }
-        // In :libs:auth these are injected only into `internal` classes (DI modules / Default* impls).
-        // DAGP advises `api` because Kotlin `internal` compiles to public bytecode (and Hilt's
-        // generated `_Factory` classes expose the constructor types publicly) — a false positive, not
-        // a real ABI leak. Keep them `implementation`. Scoped to this module so genuine api advice in
-        // other modules still surfaces.
-        project(":libs:auth") {
-            onIncorrectConfiguration {
+        // Everything excluded here is reachable only at runtime, so DAGP cannot see a reference and
+        // reports it unused. Keeping the list explicit means any *new* unused-dependency advice is a
+        // real regression rather than known noise.
+        project(":app") {
+            onUnusedDependencies {
+                // Feature `impl` modules are wired in per build type purely so Hilt picks up their
+                // @Module bindings; dropping them removes the feature from the built app at runtime.
+                exclude(":features:kyc:impl")
+                // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
+                // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
                 exclude(
-                    "com.squareup.moshi:moshi",
-                    ":core:config-toggles",
-                    ":core:datasource",
-                    ":core:utils",
+                    "androidx.camera:camera-lifecycle",
+                    "androidx.camera:camera-view",
+                )
+                // Guava's listenablefuture stub exists solely to resolve the duplicate-class conflict
+                // between guava and the standalone ListenableFuture artifact.
+                exclude("com.google.guava:listenablefuture")
+                // OAID collection is a drop-in runtime add-on for the AppsFlyer SDK; it has no API.
+                exclude("com.appsflyer:oaid")
+                // Moshi adapters are registered reflectively when building the Moshi instance.
+                exclude("com.squareup.moshi:moshi-adapters")
+                // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown
+                // artifacts, so these unexcluded declarations are what supply that driver at runtime.
+                // Nothing here references reown by type — dropping them crashes the app on start.
+                exclude(
+                    "com.reown:android-core",
+                    "com.reown:walletkit",
+                )
+                // agcp brings the AGConnect runtime the huawei flavor reads through
+                // AGConnectOptionsBuilder in HuaweiPushNotificationsTokenProvider.
+                exclude("com.huawei.agconnect:agcp")
+                // The androidx JUnit runner is instrumentation infrastructure, never imported.
+                exclude("androidx.test.ext:junit")
+            }
+            // Declaring junit4 directly breaks resolution: the main runtime classpath pins it to
+            // strictly 4.12, and AGP's consistent resolution then rejects the 4.13.2 the catalog
+            // carries. It arrives transitively through espresso/kaspresso at the pinned version.
+            onUsedTransitiveDependencies {
+                exclude("junit:junit")
+                // Deep transitives of libraries :app already declares — cardview via the legacy
+                // material widgets, coroutines-play-services via the Play libraries. Neither is a
+                // dependency anyone chose, and neither belongs to a family a bundle could group.
+                exclude(
+                    "androidx.cardview:cardview",
+                    "org.jetbrains.kotlinx:kotlinx-coroutines-play-services",
                 )
             }
         }
-        // Same Kotlin-`internal`-compiles-to-public false positive: these are used only inside
-        // `internal` classes / DI modules / method bodies (verified), not in the public ABI.
-        project(":libs:blockchain-sdk") {
-            onIncorrectConfiguration {
+        // Same CameraX runtime split as in :app.
+        project(":features:qr-scanning:impl") {
+            onUnusedDependencies {
                 exclude(
-                    "androidx.datastore:datastore-preferences",
-                    "com.squareup.moshi:moshi",
-                    ":core:analytics",
-                    ":core:utils",
+                    "androidx.camera:camera-lifecycle",
+                    "com.google.guava:listenablefuture",
+                )
+            }
+            // DAGP wants mlkit barcode-scanning demoted to runtimeOnly and the Play-services-backed
+            // artifact declared instead. MLKitBarcodeAnalyzer imports BarcodeScanning directly, and
+            // swapping the provider would move barcode detection from the bundled model to one
+            // delivered by Play Services — which the huawei flavor does not have. Keep it compile-scoped.
+            onRuntimeOnly {
+                exclude("com.google.mlkit:barcode-scanning")
+            }
+            onUsedTransitiveDependencies {
+                // Internals of the bundled ML Kit barcode scanner. play-services-mlkit-barcode-scanning
+                // is the Play-services-backed alternative to the declared bundled artifact — declaring
+                // it is the provider swap refused above, and the other three are its own transitives.
+                exclude(
+                    "com.google.android.gms:play-services-mlkit-barcode-scanning",
+                    "com.google.android.gms:play-services-tasks",
+                    "com.google.mlkit:barcode-scanning-common",
+                    "com.google.mlkit:vision-common",
                 )
             }
         }
-        // config-toggles is used only inside the `internal` DefaultCardSdkFeatureToggles (the public
-        // CardSdkFeatureToggles interface is empty) — internal→public false positive.
-        project(":libs:tangem-sdk-api") {
-            onIncorrectConfiguration {
-                exclude(":core:config-toggles")
+        // detekt-rules compiles against the Detekt API, which exposes kotlin-compiler-embeddable types.
+        // The advised 2.0.21 is Gradle's embedded Kotlin, not the project's — declaring it would put a
+        // second, older Kotlin compiler in the catalog next to kotlin = 2.1.10.
+        project(":plugins:detekt-rules") {
+            onUsedTransitiveDependencies {
+                exclude("org.jetbrains.kotlin:kotlin-compiler-embeddable")
             }
         }
-        // web3j leaks into the ABI only via incidentally-public generated contract wrappers
-        // (ERC20/TangemPaymentAccount/…), not the module's intended public API (VisaContractInfoProvider
-        // / VisaContractInfo) — keep it `implementation` (see PR review), so silence the `api` advice.
+        // :libs:visa uses no Android APIs, but its `packaging { resources { excludes += "/META-INF/*" } }`
+        // resolves the duplicate META-INF entries web3j ships. A JVM module has no packaging block, so
+        // the conflict would move to every consumer.
         project(":libs:visa") {
-            onIncorrectConfiguration {
-                exclude("org.web3j:core")
+            onModuleStructure {
+                severity("ignore")
             }
         }
-        // datasource/utils are used only inside the `internal` DI module + Amplitude impl (the public
-        // ABTestsManager interface doesn't expose them) — internal→public false positive.
-        project(":core:ab-tests") {
-            onIncorrectConfiguration {
-                exclude(":core:datasource", ":core:utils")
+        // :features:hot-wallet:impl is the only path that pulls the cloud-backup modules into the app
+        // graph, and data:cloud-backup contributes CloudBackupDataModule's Hilt bindings. Nothing
+        // references them by type, so DAGP calls them unused — dropping them would remove the bindings.
+        project(":features:hot-wallet:impl") {
+            onUnusedDependencies {
+                exclude(":data:cloud-backup", ":domain:cloud-backup")
             }
         }
-        // datasource is used only inside `internal` DI modules + LocalTogglesStorage (the public
-        // FeatureTogglesManager API doesn't expose it) — internal→public false positive.
-        project(":core:config-toggles") {
-            onIncorrectConfiguration {
-                exclude(":core:datasource")
+        // material is pulled in through XML themes (styles.xml inherits MaterialComponents), which DAGP
+        // cannot see — the same resource-only usage already excluded for :core:ui below.
+        project(":features:staking:impl") {
+            onUnusedDependencies {
+                exclude("com.google.android.material:material")
             }
         }
-        // moshi-polymorphic-adapter is used only in @Provides bodies / as annotation args, never in a
-        // public signature — internal→public false positive, keep it `implementation`.
-        project(":core:datasource") {
-            onIncorrectConfiguration {
-                exclude("dev.onenowy.moshipolymorphicadapter:moshi-polymorphic-adapter")
+        // :test:core deliberately re-exports the unit-test stack as `api` — it is the documented single
+        // entry point for test modules (testImplementation(projects.test.core)). It never uses turbine
+        // itself, so DAGP calls it unused; removing it would break every module relying on the re-export.
+        project(":test:core") {
+            onUnusedDependencies {
+                exclude("app.cash.turbine:turbine")
+            }
+        }
+        // core:ui declares ComposableContentComponent, the supertype every feature Component implements.
+        // It reaches this module through :features:survey:api, so DAGP sees no direct reference and calls
+        // it unused — but kapt needs the supertype on the classpath to generate the Hilt stubs.
+        project(":features:survey:impl") {
+            onUnusedDependencies {
+                exclude(":core:ui")
             }
         }
         // material is consumed only via resources (styles.xml inherits MaterialComponents themes), which
@@ -235,81 +355,6 @@ dependencyAnalysis {
         project(":domain:card") {
             onUnusedDependencies {
                 exclude(":core:error")
-            }
-        }
-        // core:utils is deliberately re-exported as api from the ubiquitous domain:models module so the
-        // many consumers that use TangemLogger / utils through it keep compiling. Demoting it to
-        // implementation would cascade across the whole repo, so silence the incorrect-config advice.
-        project(":domain:models") {
-            onIncorrectConfiguration {
-                exclude(":core:utils")
-            }
-        }
-        // :domain:models is kept as api because domain:markets:models exposes CryptoCurrency.RawID (a
-        // domain:models type) in its public data classes (TokenMarket/RawMarketToken/TokenMarketParams).
-        // DAGP misses this nested-type ABI leak and advises implementation; that advice is a false negative.
-        project(":domain:markets:models") {
-            onIncorrectConfiguration {
-                exclude(":domain:models")
-            }
-        }
-        // :domain:core is kept as api in :domain:legacy and :domain:express because their public APIs
-        // (RampStateManager, ExpressServiceFetcher#getInitializationStatus) return Flow<Lce<...>> where Lce
-        // is a domain:core type. DAGP doesn't trace the generic type argument into the ABI and advises
-        // implementation; that advice is a false negative.
-        project(":domain:legacy") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        project(":domain:express") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        // :domain:core kept as api in :domain:onramp — public use cases (GetOnrampCurrenciesUseCase etc.)
-        // return EitherFlow<...> (a domain:core alias). DAGP doesn't trace the alias/generic into the ABI.
-        project(":domain:onramp") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        // arrow-core kept as api in :domain:onboarding — WasTwinsOnboardingShownUseCase#invoke returns
-        // Flow<Either<...>> (arrow.core.Either in the public ABI). DAGP advises implementation here (false
-        // negative on the generic type argument).
-        project(":domain:onboarding") {
-            onIncorrectConfiguration {
-                exclude("io.arrow-kt:arrow-core")
-            }
-        }
-        // :domain:core kept as api in :domain:wallets — GetUserWalletUseCase#invokeFlow returns
-        // EitherFlow<...> (a domain:core alias). DAGP false-negative on the alias/generic.
-        project(":domain:wallets") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        // :domain:models kept as api in :domain:yield-supply:models — YieldMarketToken (public data
-        // class) exposes SerializedBigDecimal (a domain:models type) in public fields. DAGP misses it.
-        project(":domain:yield-supply:models") {
-            onIncorrectConfiguration {
-                exclude(":domain:models")
-            }
-        }
-        // :common is deliberately re-exported as api from common:ui (a ubiquitous UI dependency) so the
-        // many feature modules that use TangemBlogUrlBuilder / common types through it keep compiling.
-        // Demoting it to implementation would cascade across the feature graph.
-        project(":common:ui") {
-            onIncorrectConfiguration {
-                exclude(":common")
-            }
-        }
-        // libs:crypto is deliberately re-exported as api from the ubiquitous :common module so the many
-        // feature modules that use BlockchainUtils / crypto helpers through it keep compiling. Demoting
-        // it to implementation would cascade across the feature graph.
-        project(":common") {
-            onIncorrectConfiguration {
-                exclude(":libs:crypto")
             }
         }
     }

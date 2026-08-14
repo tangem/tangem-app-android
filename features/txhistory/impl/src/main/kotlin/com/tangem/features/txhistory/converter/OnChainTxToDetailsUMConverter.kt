@@ -15,18 +15,19 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
-import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.core.ui.res.generated.icons.ic_stack_20
 import com.tangem.core.ui.res.generated.icons.ic_success_20
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.mayCarryStakingTarget
 import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.utils.StringsSigns
@@ -48,8 +49,8 @@ internal class OnChainTxToDetailsUMConverter(
     private val currency: CryptoCurrency,
     private val onCopyAddress: (String) -> Unit,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
-    /** Staking validators of the viewed currency keyed by on-chain address; resolves the validator row's name/link. */
-    private val validatorsByAddress: Map<String, Yield.Validator>,
+    /** Known staking targets (validators and vaults) keyed by on-chain address; resolves the validator row's name/link. */
+    private val targetsByAddress: Map<String, StakingTarget>,
     private val onOpenValidator: (String) -> Unit,
     /** Resolves a transfer counterparty to one of the user's own accounts/wallets — the same lookup the list uses. */
     private val lookup: TxHistoryLookupContext,
@@ -57,6 +58,14 @@ internal class OnChainTxToDetailsUMConverter(
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
     private val titleConverter = TxHistoryTitleConverter()
+
+    /**
+     * [targetsByAddress] re-keyed by lowercase address, for the case-insensitive fallback in [resolveTarget]. Built
+     * once per conversion rather than per lookup.
+     */
+    private val targetsByLowercaseAddress: Map<String, StakingTarget> by lazy {
+        targetsByAddress.mapKeys { (address, _) -> address.lowercase() }
+    }
 
     fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset {
         // An unrecognized contract call between the user's own portfolios reads as a Transfer, not a raw operation —
@@ -70,9 +79,7 @@ internal class OnChainTxToDetailsUMConverter(
             rows = buildList {
                 tx.validatorRow()?.let(::add)
                 tx.protocolRow()?.let(::add)
-                // A received plain transfer's fee was paid by the sender, not the user — omit it here. Non-Transfer
-                // ops the user initiated (Approve, staking) keep their fee even when incoming.
-                if (!tx.isReceivedTransfer()) addAll(tx.toInfoRows())
+                if (!tx.hasForeignFee()) addAll(tx.toInfoRows())
             }.toImmutableList(),
         )
     }
@@ -85,7 +92,8 @@ internal class OnChainTxToDetailsUMConverter(
      * never both.
      */
     private fun TxInfo.protocolRow(): TxHistoryDetailsUM.InfoRowUM? {
-        if (type !is TransactionType.YieldSupply) return null
+        // Send is a plain transfer, not a protocol interaction — no "Validator: Aave" row.
+        if (type !is TransactionType.YieldSupply || type is TransactionType.YieldSupply.Send) return null
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.staking_validator),
             value = resourceReference(R.string.yield_module_provider),
@@ -95,40 +103,57 @@ internal class OnChainTxToDetailsUMConverter(
     }
 
     /**
-     * Validator row of a staking tx: its display [name][Yield.Validator.name] and a link to the validator page. Present
-     * only when the tx carries a validator address ([validatorAddress]) that resolves in [validatorsByAddress]; otherwise
-     * `null` (non-staking tx, an address the current yield doesn't list, or a chain that omits the validator address).
-     * The trailing arrow-link and tap are offered only when the validator has a [website][Yield.Validator.website].
+     * Validator row of a staking tx: the target's display [name][StakingTarget.name] and a link to its page. Present
+     * only for a tx that [may carry a target][mayCarryStakingTarget] and one of whose
+     * [candidate addresses][validatorAddressCandidates] resolves in [targetsByAddress]; otherwise `null` — an unknown
+     * address, or a chain that omits the validator address entirely (Solana unstake/withdraw and Tron
+     * freeze/unfreeze/claim carry no validator field in the SDK at all).
+     * The trailing arrow-link and tap are offered only when the target has a [website][StakingTarget.website].
      */
     private fun TxInfo.validatorRow(): TxHistoryDetailsUM.InfoRowUM? {
-        val validator = validatorAddress()?.let(validatorsByAddress::get) ?: return null
-        val website = validator.website?.ifBlank { null }
+        if (!mayCarryStakingTarget()) return null
+        val target = validatorAddressCandidates().firstNotNullOfOrNull(::resolveTarget) ?: return null
+        val website = target.website?.ifBlank { null }
         return TxHistoryDetailsUM.InfoRowUM(
             label = resourceReference(R.string.staking_validator),
-            value = stringReference(validator.name),
+            value = stringReference(target.name),
             trailingIconRes = website?.let { R.drawable.ic_arrow_top_right_24 },
             onClick = website?.let { url -> { onOpenValidator(url) } },
         )
     }
 
     /**
-     * On-chain address of the validator a staking tx interacts with, or `null` for a non-staking tx or a staking tx that
-     * does not surface it. A `Vote` carries it in the type itself; other staking types expose it through the interaction
-     * or destination address typed as `Validator`.
+     * Addresses of a staking tx that may identify the staking target, most specific first. Membership in
+     * [targetsByAddress] is what decides — an address that is a known validator/vault *is* the target — so the
+     * candidates are deliberately not restricted to `Validator`-typed addresses: on EVM chains the staking call's
+     * destination is the validator contract (e.g. a Polygon ValidatorShare, which is exactly the address StakeKit
+     * lists as the validator) but the SDK types it as `Contract`, and only Solana ever emits `AddressType.Validator`.
+     * A `Vote` (Tron) carries the address in the type itself, where the SDK may leave it blank.
      */
-    private fun TxInfo.validatorAddress(): String? = when (val txType = type) {
-        is TransactionType.Staking.Vote -> txType.validatorAddress
-        is TransactionType.Staking -> interactionValidatorAddress() ?: destinationValidatorAddress()
-        else -> null
+    private fun TxInfo.validatorAddressCandidates(): List<String> = buildList {
+        (type as? TransactionType.Staking.Vote)?.let { add(it.validatorAddress) }
+        interactionAddressType?.let { interaction ->
+            when (interaction) {
+                is TxInfo.InteractionAddressType.Validator -> add(interaction.address)
+                is TxInfo.InteractionAddressType.Contract -> add(interaction.address)
+                is TxInfo.InteractionAddressType.User -> add(interaction.address)
+                is TxInfo.InteractionAddressType.Multiple -> addAll(interaction.addresses)
+            }
+        }
+        when (val destination = destinationType) {
+            is TxInfo.DestinationType.Single -> add(destination.addressType.address)
+            is TxInfo.DestinationType.Multiple -> addAll(destination.addressTypes.map { it.address })
+        }
     }
 
-    private fun TxInfo.interactionValidatorAddress(): String? =
-        (interactionAddressType as? TxInfo.InteractionAddressType.Validator)?.address
-
-    private fun TxInfo.destinationValidatorAddress(): String? = when (val destination = destinationType) {
-        is TxInfo.DestinationType.Single -> (destination.addressType as? TxInfo.AddressType.Validator)?.address
-        is TxInfo.DestinationType.Multiple ->
-            destination.addressTypes.filterIsInstance<TxInfo.AddressType.Validator>().firstOrNull()?.address
+    /**
+     * The known staking target at [address], or `null` when it is blank (the Tron vote parser reports a missing
+     * validator as an empty string) or unknown. Falls back to a case-insensitive match because an EVM address reaches
+     * us checksummed or lowercased depending on the history provider, while the staking API picks its own casing.
+     */
+    private fun resolveTarget(address: String): StakingTarget? {
+        if (address.isBlank()) return null
+        return targetsByAddress[address] ?: targetsByLowercaseAddress[address.lowercase()]
     }
 
     private fun TxInfo.toHeaderUM(): TxHistoryDetailsUM.HeaderUM = TxHistoryDetailsUM.HeaderUM(
@@ -145,8 +170,14 @@ internal class OnChainTxToDetailsUMConverter(
         is ResolvedOwner.External, null -> false
     }
 
-    /** A received plain transfer — its on-chain fee belongs to the sender, so the details omit the fee row. */
-    private fun TxInfo.isReceivedTransfer(): Boolean = type is TxInfo.TransactionType.Transfer && !isOutgoing
+    /**
+     * Whether the fee was paid by the counterparty, which drops the fee row: an incoming plain transfer. A non-withdraw
+     * [TxInfo.TransactionType.YieldSupply.Send] is a plain transfer too and follows the same rule.
+     */
+    private fun TxInfo.hasForeignFee(): Boolean = !isOutgoing && (
+        type is TransactionType.Transfer ||
+            (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
+        )
 
     /**
      * The counterparty resolved against the user's portfolios on the viewed currency's network, so the title and the
@@ -210,11 +241,13 @@ internal class OnChainTxToDetailsUMConverter(
      */
     private fun TxInfo.toCounterpartyUM(): TxHistoryDetailsUM.CounterpartyUM? {
         // Contract interactions (yield-supply / staking / approve) talk to a protocol/validator, not a real recipient —
-        // no copyable counterparty card.
-        val isContractInteraction = type is TransactionType.YieldSupply ||
+        // no copyable counterparty card. A NON-withdraw Send is exempt: it is a plain transfer and keeps its recipient
+        // card. A withdraw Send stays a yield operation, so it gets no counterparty card (no "from: Aave" in details).
+        val isPlainSend = (type as? TransactionType.YieldSupply.Send)?.isYieldSupplyWithdraw == false
+        val isProtocolType = type is TransactionType.YieldSupply ||
             type is TransactionType.Staking ||
             type is TransactionType.Approve
-        if (isContractInteraction) return null
+        if (isProtocolType && !isPlainSend) return null
         return when (val owner = resolvedCounterparty()) {
             is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyUM(
                 label = counterpartyLabel(incoming = R.string.common_from_account),
@@ -303,13 +336,20 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
 }
 
 /** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
-private fun TxInfo.headerIcon(): TxIcon = when (type) {
+private fun TxInfo.headerIcon(): TxIcon = when (val type = type) {
     is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
     is TransactionType.Staking.Stake,
     is TransactionType.Staking.Unstake,
     is TransactionType.Staking.Restake,
     -> TxIcon.Vector(Icons.ic_stack_20)
-    is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_chart_line_vertical_20)
+    // A non-withdraw Send is a plain transfer — directional arrow. A withdraw stays a yield operation and keeps the
+    // yield lightning glyph (falls through to the YieldSupply branch below); it only drops the validator/counterparty.
+    is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
+        TxIcon.Vector(Icons.ic_lightning_20)
+    } else {
+        TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
+    }
+    is TransactionType.YieldSupply -> TxIcon.Vector(Icons.ic_lightning_20)
     is TransactionType.Operation -> TxIcon.Vector(Icons.ic_document_20)
     is TransactionType.Swap -> TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20)
     else -> TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)

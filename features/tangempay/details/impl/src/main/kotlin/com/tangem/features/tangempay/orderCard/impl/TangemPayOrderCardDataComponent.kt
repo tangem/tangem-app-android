@@ -9,7 +9,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardDataModel
 import com.tangem.features.tangempay.orderCard.impl.ui.TangemPayOrderCardDataScreen
 
@@ -30,7 +29,7 @@ internal class TangemPayOrderCardDataComponent(
 
     data class Params(
         val userWalletId: UserWalletId,
-        val onOrderSubmitted: (PlasticCardOrder) -> Unit,
+        val onOrderAccepted: (email: String) -> Unit,
         val onClose: () -> Unit,
     )
 }

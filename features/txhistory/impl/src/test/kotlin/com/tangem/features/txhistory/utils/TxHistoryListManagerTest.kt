@@ -220,7 +220,7 @@ internal class TxHistoryListManagerTest {
         override fun getExpressHistory(
             userWalletId: UserWalletId,
             currency: CryptoCurrency,
-            fromCreatedAtMillis: Long,
+            fromOnChainTimestampMillis: Long,
         ) = emptyFlow<List<ExpressTx>>()
 
         override fun getIndexedExpressHistory(
