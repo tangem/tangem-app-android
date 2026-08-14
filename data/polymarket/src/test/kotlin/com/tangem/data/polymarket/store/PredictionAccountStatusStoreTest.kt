@@ -89,7 +89,7 @@ internal class PredictionAccountStatusStoreTest {
     }
 
     @Test
-    fun `GIVEN a refresh lands while the cache loads WHEN it arrives THEN the newer value wins`() = runTest {
+    fun `GIVEN a refresh issued before the cache loads WHEN it lands THEN it survives the preload`() = runTest {
         // Arrange — the persisted snapshot is older than what the refresh is about to write
         val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(
             default = mapOf(WALLET_A.stringValue to ACTIVE, WALLET_B.stringValue to ACTIVE),
@@ -97,7 +97,7 @@ internal class PredictionAccountStatusStoreTest {
         val store = createStore(testScope = this, persistenceDataStore = persisted)
         val refreshed = ACTIVE.copy(balance = BigDecimal("99"))
 
-        // Act — the store call happens before the init coroutine gets to run
+        // Act — issued before the init coroutine has run: the write waits for the preload instead of racing it
         store.store(userWalletId = WALLET_A, value = refreshed)
         advanceUntilIdle()
 
@@ -107,10 +107,10 @@ internal class PredictionAccountStatusStoreTest {
     }
 
     @Test
-    fun `GIVEN a wallet cleared while the cache loads WHEN it arrives THEN the entry stays gone`() = runTest {
+    fun `GIVEN a wallet cleared before the cache loads WHEN it lands THEN the entry stays gone`() = runTest {
         // Arrange — the deleted wallet is still in the snapshot the init coroutine is about to read
         val persisted = MockStateDataStore<WalletIdWithPredictionStatus>(
-            default = mapOf(WALLET_A.stringValue to ACTIVE),
+            default = mapOf(WALLET_A.stringValue to ACTIVE, WALLET_B.stringValue to ACTIVE),
         )
         val store = createStore(testScope = this, persistenceDataStore = persisted)
 
@@ -118,8 +118,10 @@ internal class PredictionAccountStatusStoreTest {
         store.clear(WALLET_A)
         advanceUntilIdle()
 
-        // Assert — otherwise a re-added wallet inherits the balance of the one the user deleted
+        // Assert — a snapshot taken before the deletion must not hand the balance to a re-added wallet
         assertThat(store.getSyncOrNull(WALLET_A)).isNull()
+        assertThat(persisted.data.first()).containsExactly(WALLET_B.stringValue, ACTIVE)
+        assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE)
     }
 
     @Test
