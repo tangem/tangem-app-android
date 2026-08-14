@@ -1,4 +1,4 @@
-package com.tangem.features.jointaccount.main.entity
+package com.tangem.features.jointaccount.main
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountIconUM
