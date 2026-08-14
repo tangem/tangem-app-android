@@ -14,7 +14,9 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.jointaccount.join.confirmation.ui.state.JointAccountJoinConfirmationUM
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
+import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetJoinConfirmationTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.UpdateInvitePreviewInitialStateTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.UpdateInvitePreviewWalletsTransformer
 import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
@@ -134,10 +136,27 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        stateController.update(
+            SetJoinConfirmationTransformer(
+                confirmation = JointAccountJoinConfirmationUM(
+                    onContinueClick = ::onConfirmationContinue,
+                    onCancelClick = ::onConfirmationCancel,
+                ),
+            ),
+        )
+    }
+
+    private fun onConfirmationContinue() {
+        stateController.update(SetJoinConfirmationTransformer(confirmation = null))
+
         val walletId = selectedWallet.value?.walletId ?: return
 
         params.draftHolder.setSelectedWallet(walletId)
         router.push(JointAccountJoinRoute.DisplayName)
+    }
+
+    private fun onConfirmationCancel() {
+        stateController.update(SetJoinConfirmationTransformer(confirmation = null))
     }
 
     /** The close icon does not join: the slot stays free and the invitation is not consumed */
