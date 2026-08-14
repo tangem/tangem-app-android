@@ -5,9 +5,11 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
@@ -17,13 +19,18 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.tangemPayCard
+import com.tangem.features.tangempay.tariffPlan
+import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdrawButton
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -42,6 +49,7 @@ internal class TangemPayDetailsModelTest {
 
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
 
     @ParameterizedTest
     @MethodSource("provideMutedCases")
@@ -133,6 +141,84 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN plan is awaited WHEN screen started THEN plan selection replaces the stack`() = runTest {
+        // GIVEN
+        val awaitingPlanSelection = awaitingPlanSelectionStatus()
+        val model = createModel(testScope = this, statusValue = awaitingPlanSelection)
+        advanceUntilIdle()
+
+        // WHEN
+        model.onStart()
+        advanceUntilIdle()
+
+        // THEN
+        verify(exactly = 1) { router.replaceAll(routes = selectPlanRoutes(awaitingPlanSelection), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN screen is stopped WHEN plan becomes awaited THEN stack is not replaced`() = runTest {
+        // GIVEN
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        model.onStart()
+        advanceUntilIdle()
+        // the plan flow is pushed on top of the details screen
+        model.onStop()
+
+        // WHEN
+        // canceling the Plus transition drops its order before the Basic one is created
+        statusFlow.value = paymentStatus(awaitingPlanSelectionStatus())
+        advanceUntilIdle()
+        // the Basic order is created, the account has a plan again
+        statusFlow.value = paymentStatus(loadedStatus())
+        advanceUntilIdle()
+
+        // THEN
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN plan stayed awaited while stopped WHEN screen started again THEN plan selection replaces the stack`() =
+        runTest {
+            // GIVEN
+            val awaitingPlanSelection = awaitingPlanSelectionStatus()
+            val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+            val model = createModel(testScope = this, statusFlow = statusFlow)
+            model.onStart()
+            advanceUntilIdle()
+            model.onStop()
+            statusFlow.value = paymentStatus(awaitingPlanSelection)
+            advanceUntilIdle()
+
+            // WHEN
+            model.onStart()
+            advanceUntilIdle()
+
+            // THEN
+            verify(exactly = 1) {
+                router.replaceAll(routes = selectPlanRoutes(awaitingPlanSelection), onComplete = any())
+            }
+            model.onDestroy()
+        }
+
+    private fun awaitingPlanSelectionStatus() = PaymentAccountStatusValue.AwaitingPlanSelection(
+        source = StatusSource.ACTUAL,
+        tariffPlan = customerTariffPlan(
+            plan = tariffPlan(tierId = "BASIC", isBasicTier = true, fees = emptyList()),
+            source = TangemPayCustomerTariffPlan.Source.DEFAULT,
+        ),
+    )
+
+    private fun selectPlanRoutes(status: PaymentAccountStatusValue.AwaitingPlanSelection) = arrayOf(
+        TangemPayAccountDetailsInnerRoute.SelectPlan(
+            tariffPlan = status.tariffPlan,
+            source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
+        ),
+    )
+
     private fun SlotNavigation<TangemPayDetailsNavigation>.trackSlot(): List<TangemPayDetailsNavigation?> {
         val tracked = mutableListOf<TangemPayDetailsNavigation?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
@@ -148,49 +234,30 @@ internal class TangemPayDetailsModelTest {
         virtualAccount: VirtualAccountOnramp? = null,
         initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
         statusEmissions: Int = 1,
+        statusFlow: Flow<AccountStatus.Payment>? = null,
     ): TangemPayDetailsModel {
-        val loaded: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
-            every { source } returns statusSource
-            every { error } returns accountError
-            every { customerId } returns "customer-id"
-            every { depositAddress } returns "address"
-            every { this@mockk.virtualAccount } returns virtualAccount
-            every { cards } returns listOf(tangemPayCard())
-            every { balance } returns PaymentAccountStatusValue.Balance(
-                fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                    availableBalance = BigDecimal.ZERO,
-                    currency = "USD",
-                ),
-                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                    id = "id",
-                    chainId = 1L,
-                    depositAddress = "address",
-                    tokenContractAddress = "contract",
-                    balance = BigDecimal.ZERO,
-                ),
+        val initialStatus = paymentStatus(
+            value = statusValue ?: loadedStatus(
+                statusSource = statusSource,
+                accountError = accountError,
                 availableForWithdrawal = availableForWithdrawal,
-            )
-        }
-        val paymentStatus: AccountStatus.Payment = mockk(relaxed = true) {
-            every { value } returns (statusValue ?: loaded)
-            every { account } returns mockk(relaxed = true) {
-                every { userWalletId } returns this@TangemPayDetailsModelTest.userWalletId
-            }
-        }
+                virtualAccount = virtualAccount,
+            ),
+        )
         val params = TangemPayDetailsContainerComponent.Params(
-            initialStatus = paymentStatus,
+            initialStatus = initialStatus,
             initialRoute = initialRoute,
         )
 
-        every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns
-            List(statusEmissions) { paymentStatus }.asFlow()
+        val statuses = statusFlow ?: List(statusEmissions) { initialStatus }.asFlow()
+        every { paymentAccountStatusSupplier.invoke(any<UserWalletId>()) } returns statuses
 
         return TangemPayDetailsModel(
             paramsContainer = MutableParamsContainer(params),
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
-            router = mockk(relaxed = true),
+            router = router,
             urlOpener = mockk(relaxed = true),
             getBalanceHidingSettingsUseCase = mockk(relaxed = true),
             uiMessageSender = mockk(relaxed = true),
@@ -208,6 +275,41 @@ internal class TangemPayDetailsModelTest {
             setCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             tangemPayCurrencyFactory = mockk(relaxed = true),
         )
+    }
+
+    private fun loadedStatus(
+        statusSource: StatusSource = StatusSource.ACTUAL,
+        accountError: PaymentAccountStatusValue.Error? = null,
+        availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
+        virtualAccount: VirtualAccountOnramp? = null,
+    ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
+        every { source } returns statusSource
+        every { error } returns accountError
+        every { customerId } returns "customer-id"
+        every { depositAddress } returns "address"
+        every { this@mockk.virtualAccount } returns virtualAccount
+        every { cards } returns listOf(tangemPayCard())
+        every { balance } returns PaymentAccountStatusValue.Balance(
+            fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                availableBalance = BigDecimal.ZERO,
+                currency = "USD",
+            ),
+            cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+                id = "id",
+                chainId = 1L,
+                depositAddress = "address",
+                tokenContractAddress = "contract",
+                balance = BigDecimal.ZERO,
+            ),
+            availableForWithdrawal = availableForWithdrawal,
+        )
+    }
+
+    private fun paymentStatus(value: PaymentAccountStatusValue): AccountStatus.Payment = mockk(relaxed = true) {
+        every { this@mockk.value } returns value
+        every { account } returns mockk(relaxed = true) {
+            every { userWalletId } returns this@TangemPayDetailsModelTest.userWalletId
+        }
     }
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
