@@ -364,6 +364,8 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun verifyAndSendTransaction() {
         val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
+        // A blank recipient is deliberately not filtered out here: returning early would leave `isSending` on
+        // forever. It is rejected while the transaction is built, so it surfaces as the regular error alert.
         val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
         val fee = feeUMV2?.selectedFeeItem?.fee
