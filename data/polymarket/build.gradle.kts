@@ -38,6 +38,7 @@ dependencies {
     // region Core
     api(projects.core.datasource)
     api(projects.core.utils)
+    implementation(projects.core.pagination)
     implementation(projects.data.common)
     // endregion
 
@@ -52,6 +53,7 @@ dependencies {
     // endregion
 
     // region tests
+    testImplementation(projects.core.pagination)
     testImplementation(projects.test.core)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
