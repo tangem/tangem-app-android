@@ -1,10 +1,9 @@
-package com.tangem.features.jointaccount.main.component
+package com.tangem.features.jointaccount.main
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.factory.ComponentFactory
-import com.tangem.features.jointaccount.main.entity.JointAccountMainUM
 
 @Stable
 interface JointAccountMainBlockComponent {

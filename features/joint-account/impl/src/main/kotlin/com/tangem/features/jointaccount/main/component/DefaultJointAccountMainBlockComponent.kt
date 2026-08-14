@@ -4,7 +4,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.features.jointaccount.main.entity.JointAccountMainUM
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
+import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.features.jointaccount.main.ui.JointAccountMainBlockContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
