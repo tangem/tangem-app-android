@@ -20,6 +20,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     currency: CryptoCurrency,
     onCopyAddress: (String) -> Unit,
     onGoToProvider: (String) -> Unit,
+    isBalanceHidden: Boolean,
     onCopyTxId: (() -> Unit)? = null,
     onShare: (() -> Unit)? = null,
     onExplore: (() -> Unit)? = null,
@@ -43,6 +44,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         menu = menu,
         targetsByAddress = targetsByAddress,
         onOpenValidator = onOpenValidator,
+        isBalanceHidden = isBalanceHidden,
         lookup = lookup,
     )
 
@@ -51,6 +53,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         lookup = lookup,
         menu = menu,
         refundCurrency = refundCurrency,
+        isBalanceHidden = isBalanceHidden,
         onLearnMoreAboutRefundsClick = onLearnMoreAboutRefundsClick,
         onGoToRefundedTokenClick = onGoToRefundedTokenClick,
     )

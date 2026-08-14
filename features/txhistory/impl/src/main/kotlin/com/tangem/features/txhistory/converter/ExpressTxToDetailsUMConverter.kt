@@ -57,6 +57,7 @@ internal class ExpressTxToDetailsUMConverter(
     private val onGoToProvider: (String) -> Unit,
     private val lookup: TxHistoryLookupContext,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
+    private val isBalanceHidden: Boolean,
     private val refundCurrency: CryptoCurrency? = null,
     private val onLearnMoreAboutRefundsClick: () -> Unit = {},
     private val onGoToRefundedTokenClick: (CryptoCurrency) -> Unit = {},
@@ -89,6 +90,7 @@ internal class ExpressTxToDetailsUMConverter(
                 subtitle = headerSubtitle(swap.timestampMillis),
                 menu = menu,
             ),
+            isBalanceHidden = isBalanceHidden,
             from = swap.tx.fromAsset.toAssetUM(
                 label = ownerLabel(fromOwner, fallback = R.string.swapping_from_title_v2, owned = R.string.common_from),
                 owner = fromOwner,
@@ -157,6 +159,7 @@ internal class ExpressTxToDetailsUMConverter(
                 subtitle = headerSubtitle(onramp.timestampMillis),
                 menu = menu,
             ),
+            isBalanceHidden = isBalanceHidden,
             from = onramp.tx.fromFiat.toFiatAssetUM(
                 // The fiat side was paid from a card, not a portfolio address — no owner to resolve.
                 label = resourceReference(R.string.tx_history_you_paid),
