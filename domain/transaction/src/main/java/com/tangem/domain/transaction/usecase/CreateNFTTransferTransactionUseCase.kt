@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.models.network.isBurnAddress
 import com.tangem.domain.models.wallet.UserWalletId
 
 class CreateNFTTransferTransactionUseCase(
@@ -23,6 +24,8 @@ class CreateNFTTransferTransactionUseCase(
         userWalletId: UserWalletId,
         network: Network,
     ) = Either.catch {
+        requireSpendableDestination(destinationAddress)
+
         transactionRepository.createNFTTransferTransaction(
             ownerAddress = ownerAddress,
             nftAsset = nftAsset,
@@ -46,6 +49,8 @@ class CreateNFTTransferTransactionUseCase(
         userWalletId: UserWalletId,
         network: Network,
     ) = Either.catch {
+        requireSpendableDestination(destinationAddress)
+
         transactionRepository.createNFTTransferTransaction(
             ownerAddress = ownerAddress,
             nftAsset = nftAsset,
@@ -55,5 +60,11 @@ class CreateNFTTransferTransactionUseCase(
             userWalletId = userWalletId,
             network = network,
         )
+    }
+
+    /** Same barrier as on the coin/token transfer path, see [CreateTransferTransactionUseCase]. */
+    private fun requireSpendableDestination(destinationAddress: String) {
+        require(destinationAddress.isNotBlank()) { "Transfers with a blank destination are not allowed" }
+        require(!destinationAddress.isBurnAddress()) { "Transfers to a burn address are not allowed" }
     }
 }
