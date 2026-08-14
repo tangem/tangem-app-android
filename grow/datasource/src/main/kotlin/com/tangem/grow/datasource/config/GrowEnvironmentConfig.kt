@@ -4,8 +4,7 @@ package com.tangem.grow.datasource.config
  * Grow-specific slice of the application environment config.
  *
  * Holds only the properties owned by the Grow stream (onramp / staking / yield), so the module does not
- * depend on the full environment config. Complex-typed properties (express, p2p, survey-sparrow rating)
- * are added once their models are relocated out of core:datasource.
+ * depend on the full environment config.
  */
 data class GrowEnvironmentConfig(
     val moonPayApiKey: String,
@@ -17,4 +16,10 @@ data class GrowEnvironmentConfig(
     val yieldModuleApiKeyDev: String?,
     val gaslessTxApiKey: String?,
     val gaslessTxApiKeyDev: String?,
-)
+    val express: ExpressModel?,
+    val devExpress: ExpressModel?,
+) {
+
+    /** Grow-local mirror of the express keys held by the app environment config. */
+    data class ExpressModel(val apiKey: String, val signVerifierPublicKey: String)
+}
