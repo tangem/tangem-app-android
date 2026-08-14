@@ -16,6 +16,9 @@ dependencies {
     implementation(projects.features.polymarket.api)
     api(projects.features.commonFeatures.api)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
