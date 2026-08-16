@@ -25,7 +25,6 @@ dependencies {
 
     // region Tangem dependencies
     implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
     implementation(tangemDeps.hot.core)
     // endregion
 
@@ -73,6 +72,5 @@ dependencies {
     testImplementation(deps.test.turbine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testImplementation(projects.core.analytics)
     // endregion
 }
