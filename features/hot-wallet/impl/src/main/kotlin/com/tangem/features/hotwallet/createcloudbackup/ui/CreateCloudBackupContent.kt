@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -64,10 +65,24 @@ internal fun CreateCloudBackupContent(state: CreateCloudBackupUM, modifier: Modi
         }
 
         when (state) {
+            is CreateCloudBackupUM.Preparing -> PreparingScreen(Modifier.weight(1f))
             is CreateCloudBackupUM.SetPassword -> SetPasswordScreen(state, Modifier.weight(1f))
             is CreateCloudBackupUM.ConfirmPassword -> ConfirmPasswordScreen(state, Modifier.weight(1f))
             is CreateCloudBackupUM.Completed -> CompletedScreen(state, Modifier.weight(1f))
         }
+    }
+}
+
+@Composable
+private fun PreparingScreen(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(20.dp),
+            color = TangemTheme.colors.icon.secondary,
+            strokeWidth = 2.dp,
+        )
     }
 }
 
