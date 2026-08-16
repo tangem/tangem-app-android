@@ -382,7 +382,7 @@
   <string name="tangempay_bank_transfer_show_details">顯示詳情</string>
   <string name="tangempay_bank_transfer_success_subtitle">這可能需要一些時間</string>
   <string name="tangempay_bank_transfer_success_title">正在準備您的銀行資訊</string>
-  <string name="tangempay_bank_transfer_swift_warning">僅支援透過 ACH 或 FedWire 存款。SWIFT 轉帳將被退回。</string>
+  <string name="tangempay_bank_transfer_swift_warning">不接受 SWIFT 轉帳，款項將退回</string>
   <string name="tangempay_cancel_kyc">在主畫面隱藏身份驗證</string>
   <string name="tangempay_card_default_name">Tangem Pay 卡片 1</string>
   <string name="tangempay_card_details_add_funds">添加资金</string>
@@ -647,7 +647,7 @@
   <string name="tangempay_tangem_visa_card">使用 USDC 進行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">透過 ACH/FedWire 接收法定美元</string>
+  <string name="tangempay_topup_bank_transfer_body">透過 ACH 接收法定美元</string>
   <string name="tangempay_topup_bank_transfer_title">銀行轉帳</string>
   <string name="tangempay_topup_receive_body">将 USDC Polygon 发送至您账户地址</string>
   <string name="tangempay_topup_receive_body_multichain">將 USDC 或 USDT 傳送至您帳戶的地址</string>
