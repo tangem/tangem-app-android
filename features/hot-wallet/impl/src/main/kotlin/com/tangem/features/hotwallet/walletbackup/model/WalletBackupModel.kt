@@ -72,12 +72,12 @@ internal class WalletBackupModel @Inject constructor(
     private val isScreenOpenedEventSent: AtomicBoolean = AtomicBoolean(false)
     private val isFirstResume: AtomicBoolean = AtomicBoolean(true)
 
-    private var isCloudVerified: Boolean = false
     private var isManuallyBackedUp: Boolean? = null
     private var isCloudStatusResolved: Boolean = !hotWalletFeatureToggles.isGoogleDriveBackupEnabled
 
     private var cloudBackupInfo: CloudBackupInfo? = null
     private var refreshStatusJob: Job? = null
+    private var cloudSignInJob: Job? = null
 
     val uiState: StateFlow<WalletBackupUM>
         field = MutableStateFlow(
@@ -180,13 +180,31 @@ internal class WalletBackupModel @Inject constructor(
         }
     }
 
-    private fun refreshCloudBackupStatus(interactive: Boolean = false) {
+    private fun refreshCloudBackupStatus() {
+        if (cloudSignInJob?.isActive == true) return
+
         refreshStatusJob?.cancel()
         setGoogleDriveStatus(BackupStatus.Loading)
         refreshStatusJob = modelScope.launch {
-            loadCloudBackup(interactive)
+            loadCloudBackup(interactive = false)
             isCloudStatusResolved = true
             sendScreenOpenedEventIfReady()
+        }
+    }
+
+    private fun startCloudSignIn(onVerified: (CloudBackupInfo?) -> Unit = {}) {
+        if (cloudSignInJob?.isActive == true) return
+
+        refreshStatusJob?.cancel()
+        setGoogleDriveStatus(BackupStatus.Loading)
+        cloudSignInJob = modelScope.launch {
+            cloudBackupRepository.get().signOut()
+
+            val info = loadCloudBackup(interactive = true).getOrElse { error ->
+                onCloudAccessFailed(error)
+                return@launch
+            }
+            onVerified(info)
         }
     }
 
@@ -200,12 +218,10 @@ internal class WalletBackupModel @Inject constructor(
                 if (error !is CloudBackupError.AuthRequired) {
                     TangemLogger.e("Error on finding cloud backups: $error")
                 }
-                isCloudVerified = false
                 cloudBackupInfo = null
                 setGoogleDriveStatus(resolveFailedStatus(error, wasBackedUp))
             }
             .map { backups ->
-                isCloudVerified = true
                 val info = backups.firstOrNull { it.walletId == walletId }
                 cloudBackupInfo = info
                 if (info != null && !wasBackedUp) {
@@ -240,9 +256,9 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun resolveFailedStatus(error: CloudBackupError, wasBackedUp: Boolean): BackupStatus = when {
-        error == CloudBackupError.NetworkError && wasBackedUp -> BackupStatus.NetworkError
-        isAccessError(error) && wasBackedUp -> BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.NoAccess)
-        else -> BackupStatus.NoBackup
+        !wasBackedUp -> BackupStatus.NoBackup
+        error == CloudBackupError.NetworkError -> BackupStatus.NetworkError
+        else -> BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.NoAccess)
     }
 
     private fun isAccessError(error: CloudBackupError): Boolean =
@@ -308,7 +324,7 @@ internal class WalletBackupModel @Inject constructor(
             BackupStatus.ComingSoon,
             -> onNoBackupClick()
             BackupStatus.Loading -> Unit
-            BackupStatus.NetworkError -> refreshCloudBackupStatus(interactive = false)
+            BackupStatus.NetworkError -> refreshCloudBackupStatus()
             is BackupStatus.ActionRequired -> when (status.reason) {
                 BackupStatus.ActionRequired.Reason.NoAccess -> showCantAccessSheet()
                 BackupStatus.ActionRequired.Reason.FileNotFound -> showBackupNotFoundSheet()
@@ -317,18 +333,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun onNoBackupClick() {
-        if (isCloudVerified) {
-            openCreateCloudBackup()
-            return
-        }
-
-        refreshStatusJob?.cancel()
-        setGoogleDriveStatus(BackupStatus.Loading)
-        refreshStatusJob = modelScope.launch {
-            val info = loadCloudBackup(interactive = true).getOrElse { error ->
-                onCloudAccessFailed(error)
-                return@launch
-            }
+        startCloudSignIn { info ->
             if (info != null) showRemoveBackupSheet(info) else openCreateCloudBackup()
         }
     }
@@ -359,9 +364,9 @@ internal class WalletBackupModel @Inject constructor(
                     onClick { closeBs() }
                 }
                 primaryButton {
-                    text = resourceReference(R.string.hw_cloud_backup_no_access_sign_in)
+                    text = resourceReference(R.string.hw_cloud_backup_retry)
                     onClick {
-                        refreshCloudBackupStatus(interactive = true)
+                        startCloudSignIn()
                         closeBs()
                     }
                 }
@@ -385,7 +390,7 @@ internal class WalletBackupModel @Inject constructor(
                     onClick {
                         modelScope.launch {
                             setCloudBackupStateUseCase.get()(params.userWalletId.stringValue, isBackedUp = false)
-                            refreshCloudBackupStatus(interactive = false)
+                            refreshCloudBackupStatus()
                         }
                         closeBs()
                     }
