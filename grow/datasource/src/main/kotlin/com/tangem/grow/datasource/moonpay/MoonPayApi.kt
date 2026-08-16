@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.moonpay
+package com.tangem.grow.datasource.moonpay
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
