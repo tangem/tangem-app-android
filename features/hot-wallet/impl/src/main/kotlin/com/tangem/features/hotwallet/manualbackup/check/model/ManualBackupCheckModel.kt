@@ -8,13 +8,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.check.entity.ManualBackupCheckUM
-import com.tangem.hot.sdk.TangemHotSdk
-import com.tangem.hot.sdk.model.HotAuth
-import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +28,7 @@ internal class ManualBackupCheckModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
-    private val tangemHotSdk: TangemHotSdk,
+    private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<ManualBackupCheckComponent.Params>()
@@ -41,12 +39,13 @@ internal class ManualBackupCheckModel @Inject constructor(
 
     init {
         modelScope.launch {
-            runCatching {
-                val userWallet = getUserWalletUseCase(params.userWalletId)
-                    .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
-                if (userWallet is UserWallet.Hot) {
-                    val unlockHotWallet = UnlockHotWallet(userWallet.hotWalletId, HotAuth.NoAuth)
-                    val seedPhrasePrivateInfo = tangemHotSdk.exportMnemonic(unlockHotWallet)
+            val userWallet = getUserWalletUseCase(params.userWalletId)
+                .getOrElse { null } as? UserWallet.Hot ?: return@launch
+
+            // reuses the contextual unlock obtained by the phrase step, so the user is not prompted twice
+            exportSeedPhraseUseCase.invoke(userWallet.hotWalletId).fold(
+                ifLeft = { TangemLogger.e("Error on exporting the seed phrase for a manual backup check", it) },
+                ifRight = { seedPhrasePrivateInfo ->
                     uiState.update {
                         it.copy(
                             words = seedPhrasePrivateInfo.mnemonic.mnemonicComponents.filterIndexed { index, _ ->
@@ -54,10 +53,8 @@ internal class ManualBackupCheckModel @Inject constructor(
                             }.toImmutableList(),
                         )
                     }
-                }
-            }.onFailure {
-                TangemLogger.e("Error", it)
-            }
+                },
+            )
         }
     }
 
