@@ -13,6 +13,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.popTo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.features.hotwallet.CreateWalletBackupComponent
 import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBackupRoute
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
@@ -30,6 +31,7 @@ internal class CreateWalletBackupModel @Inject constructor(
     private val router: Router,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
 ) : Model() {
 
     val params = paramsContainer.require<CreateWalletBackupComponent.Params>()
@@ -56,6 +58,7 @@ internal class CreateWalletBackupModel @Inject constructor(
     override fun onDestroy() {
         super.onDestroy()
         trackingContextProxy.removeContext()
+        clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
     }
 
     fun onBack() {
