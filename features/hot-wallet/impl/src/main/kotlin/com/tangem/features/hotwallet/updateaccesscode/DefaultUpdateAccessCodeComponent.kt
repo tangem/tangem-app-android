@@ -62,6 +62,8 @@ internal class DefaultUpdateAccessCodeComponent @AssistedInject constructor(
         SetAccessCodeContent(
             onBackClick = model::onChildBack,
             showBackButton = model.isBackButtonVisible(currentRoute),
+            onSkipClick = model::onSkipClick,
+            showSkipButton = model.isSkipButtonVisible(currentRoute),
             stackState = stackState,
         )
     }
