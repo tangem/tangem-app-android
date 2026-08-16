@@ -22,8 +22,12 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
+import arrow.core.left
+import arrow.core.right
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -61,6 +65,7 @@ internal class GetWalletNotificationsFactoryTest {
     private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase = mockk()
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase = mockk()
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
@@ -80,6 +85,7 @@ internal class GetWalletNotificationsFactoryTest {
         observeAssetsDiscoveryUseCase = observeAssetsDiscoveryUseCase,
         getAppUpdateStateUseCase = getAppUpdateStateUseCase,
         isWalletBackedUpUseCase = isWalletBackedUpUseCase,
+        getUserWalletUseCase = getUserWalletUseCase,
     )
 
     @BeforeEach
@@ -94,6 +100,7 @@ internal class GetWalletNotificationsFactoryTest {
             observeAssetsDiscoveryUseCase,
             getAppUpdateStateUseCase,
             isWalletBackedUpUseCase,
+            getUserWalletUseCase,
             singleAccountStatusListSupplier,
             clickIntents,
             coldResolver,
@@ -112,6 +119,8 @@ internal class GetWalletNotificationsFactoryTest {
         every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(AppUpdateState.NoUpdate)
         every { hasSingleWalletSignedHashesUseCase(any(), any()) } returns flowOf(false)
         every { isWalletBackedUpUseCase.flow(any()) } returns flowOf(true)
+        every { getUserWalletUseCase.invokeFlow(any()) } returns
+            flowOf(GetUserWalletError.UserWalletNotFound.left())
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
 
@@ -603,6 +612,43 @@ internal class GetWalletNotificationsFactoryTest {
             expectedShown = false,
         ),
     )
+
+    @Test
+    fun `GIVEN cloud backup only WHEN create THEN finish-activation banner is hidden`() = runTest {
+        // Arrange
+        every { hotWallet.backedUp } returns false
+        every { isWalletBackedUpUseCase.flow(hotWallet) } returns flowOf(true)
+        every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(false)
+
+        // Act
+        val result = factory.create(hotWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.none { it is WalletNotificationUM.FinishWalletActivation }).isTrue()
+    }
+
+    @Test
+    fun `GIVEN access code set after screen creation WHEN create THEN banner uses the fresh wallet`() = runTest {
+        // Arrange
+        val snapshotHotWalletId = mockk<HotWalletId> { every { authType } returns HotWalletId.AuthType.NoPassword }
+        every { hotWallet.hotWalletId } returns snapshotHotWalletId
+        every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(false)
+
+        val freshHotWalletId = mockk<HotWalletId> { every { authType } returns HotWalletId.AuthType.Password }
+        val freshHotWallet = mockk<UserWallet.Hot>(relaxed = true) {
+            every { walletId } returns WALLET_ID
+            every { hotWalletId } returns freshHotWalletId
+            every { backedUp } returns false
+        }
+        every { getUserWalletUseCase.invokeFlow(WALLET_ID) } returns flowOf(freshHotWallet.right())
+        every { isWalletBackedUpUseCase.flow(freshHotWallet) } returns flowOf(true)
+
+        // Act
+        val result = factory.create(hotWallet, clickIntents).first()
+
+        // Assert
+        assertThat(result.none { it is WalletNotificationUM.FinishWalletActivation }).isTrue()
+    }
 
     @Test
     fun `GIVEN cold wallet WHEN create THEN finish-activation banner is hidden`() = runTest {
