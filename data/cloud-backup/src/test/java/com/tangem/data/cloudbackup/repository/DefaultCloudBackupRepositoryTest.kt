@@ -24,6 +24,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,6 +66,9 @@ internal class DefaultCloudBackupRepositoryTest {
     private val fileData = CloudBackupFileData(
         version = 1,
         id = "id",
+        name = "Wallet 1",
+        walletId = "wallet-id-1",
+        createdAt = "2026-01-09T22:13:20Z",
         crypto = CloudBackupFileData.CryptoData(
             cipher = "aes-256-gcm",
             cipherparams = CloudBackupFileData.CipherParams(nonce = "00"),
@@ -162,6 +166,21 @@ internal class DefaultCloudBackupRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(CloudBackupError.InvalidBackupFile.left())
+    }
+
+    @Test
+    fun `GIVEN content without walletId WHEN readBackup THEN InvalidBackupFile AND decrypt is not called`() = runTest {
+        // Arrange
+        val contentWithoutWalletId = CloudBackupJson.encodeToString(fileData)
+            .replace("\"walletId\":\"${fileData.walletId}\",", "")
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns successResponse(contentWithoutWalletId)
+
+        // Act
+        val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
+
+        // Assert
+        assertThat(actual).isEqualTo(CloudBackupError.InvalidBackupFile.left())
+        verify(exactly = 0) { cipher.decrypt(any(), any()) }
     }
 
     @Test
