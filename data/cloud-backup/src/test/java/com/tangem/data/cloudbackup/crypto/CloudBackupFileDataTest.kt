@@ -2,36 +2,19 @@ package com.tangem.data.cloudbackup.crypto
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.cloudbackup.CloudBackupJson
+import com.tangem.test.core.ProvideTestModels
+import kotlinx.serialization.SerializationException
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CloudBackupFileDataTest {
 
     @Test
     fun `GIVEN keystore json WHEN decoded THEN all fields parsed`() {
         // Arrange
-        val json = """
-            {
-                "crypto" : {
-                    "cipher" : "aes-256-gcm",
-                    "cipherparams" : {
-                        "nonce" : "83dbcc02d8ccb40e466191a1"
-                    },
-                    "ciphertext" : "d172bf743a674da9cdad04534d56926ef8358534d458fffccd4e6ad2fbde479c",
-                    "tag" : "0102030405060708090a0b0c0d0e0f10",
-                    "kdf" : "argon2id",
-                    "kdfparams" : {
-                        "version" : 19,
-                        "memory" : 65536,
-                        "iterations" : 3,
-                        "parallelism" : 1,
-                        "dklen" : 32,
-                        "salt" : "ab0c7876052600dd703518d6fc3fe8984592145b591fc8fb5c6d43190334ba19"
-                    }
-                },
-                "id" : "3198bc9c-6672-5ab3-d995-4942343ae5b6",
-                "version" : 1
-            }
-        """.trimIndent()
+        val json = keystoreJson()
 
         // Act
         val actual = CloudBackupJson.decodeFromString<CloudBackupFileData>(json)
@@ -40,6 +23,9 @@ internal class CloudBackupFileDataTest {
         val expected = CloudBackupFileData(
             version = 1,
             id = "3198bc9c-6672-5ab3-d995-4942343ae5b6",
+            name = "Wallet 1",
+            walletId = "wallet-id-1",
+            createdAt = "2026-01-09T22:13:20Z",
             crypto = CloudBackupFileData.CryptoData(
                 cipher = "aes-256-gcm",
                 cipherparams = CloudBackupFileData.CipherParams(nonce = "83dbcc02d8ccb40e466191a1"),
@@ -78,5 +64,65 @@ internal class CloudBackupFileDataTest {
 
         // Assert
         assertThat(actual).isEqualTo(data)
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN json without required field WHEN decoded THEN throws`(model: InvalidJsonModel) {
+        // Act
+        val actual = runCatching { CloudBackupJson.decodeFromString<CloudBackupFileData>(model.json) }
+            .exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(SerializationException::class.java)
+    }
+
+    internal data class InvalidJsonModel(val description: String, val json: String) {
+        override fun toString(): String = description
+    }
+
+    private fun provideTestModels() = listOf(
+        InvalidJsonModel(description = "missing name", json = keystoreJson(excludedField = "name")),
+        InvalidJsonModel(description = "missing walletId", json = keystoreJson(excludedField = "walletId")),
+        InvalidJsonModel(description = "missing createdAt", json = keystoreJson(excludedField = "createdAt")),
+        InvalidJsonModel(description = "missing crypto", json = keystoreJson(excludedField = "crypto")),
+        InvalidJsonModel(description = "null walletId", json = keystoreJson(nulledField = "walletId")),
+        InvalidJsonModel(description = "null createdAt", json = keystoreJson(nulledField = "createdAt")),
+        InvalidJsonModel(description = "empty json", json = "{}"),
+    )
+
+    private fun keystoreJson(excludedField: String? = null, nulledField: String? = null): String {
+        val fields = mapOf(
+            "crypto" to """
+                {
+                    "cipher" : "aes-256-gcm",
+                    "cipherparams" : {
+                        "nonce" : "83dbcc02d8ccb40e466191a1"
+                    },
+                    "ciphertext" : "d172bf743a674da9cdad04534d56926ef8358534d458fffccd4e6ad2fbde479c",
+                    "tag" : "0102030405060708090a0b0c0d0e0f10",
+                    "kdf" : "argon2id",
+                    "kdfparams" : {
+                        "version" : 19,
+                        "memory" : 65536,
+                        "iterations" : 3,
+                        "parallelism" : 1,
+                        "dklen" : 32,
+                        "salt" : "ab0c7876052600dd703518d6fc3fe8984592145b591fc8fb5c6d43190334ba19"
+                    }
+                }
+            """.trimIndent(),
+            "id" to "\"3198bc9c-6672-5ab3-d995-4942343ae5b6\"",
+            "name" to "\"Wallet 1\"",
+            "walletId" to "\"wallet-id-1\"",
+            "createdAt" to "\"2026-01-09T22:13:20Z\"",
+            "version" to "1",
+        )
+
+        val entries = fields
+            .filterKeys { it != excludedField }
+            .map { (key, value) -> """"$key" : ${if (key == nulledField) "null" else value}""" }
+
+        return entries.joinToString(separator = ",\n", prefix = "{\n", postfix = "\n}")
     }
 }
