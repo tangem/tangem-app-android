@@ -1,7 +1,5 @@
 package com.tangem.datasource.di.utils
 
-import com.tangem.datasource.api.common.config.MoonPay
-
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
@@ -227,7 +225,7 @@ internal class RetrofitApiBuilder @Inject constructor(
     }
 
     private fun OkHttpClient.Builder.addLoggers(apiConfigId: ApiConfig.ID, context: Context): OkHttpClient.Builder {
-        if (apiConfigId in excludedApiForLogging) return this
+        if (apiConfigs[apiConfigId.name]?.isLoggable == false) return this
 
         return if (BuildConfig.LOG_ENABLED) {
             addInterceptor(interceptor = ChuckerInterceptor(context))
@@ -235,14 +233,5 @@ internal class RetrofitApiBuilder @Inject constructor(
         } else {
             this
         }
-    }
-
-    @Suppress("UseEmptyCounterpart")
-    private companion object {
-
-        val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
-            // StakeKit.ID,
-            MoonPay.ID,
-        )
     }
 }
