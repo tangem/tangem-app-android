@@ -28,7 +28,14 @@ internal class FeedbackDataBuilder {
     }
 
     fun addUserWalletMetaInfo(walletMetaInfo: WalletMetaInfo) {
-        builder.appendKeyValue("Mobile Wallet is backed up", walletMetaInfo.hotWalletIsBackedUp?.toString())
+        builder.appendKeyValue(
+            "Mobile Wallet is backed up (seed phrase)",
+            walletMetaInfo.hotWalletIsSeedPhraseBackedUp?.toString(),
+        )
+        builder.appendKeyValue(
+            "Mobile Wallet is backed up (cloud)",
+            walletMetaInfo.hotWalletIsCloudBackedUp?.toString(),
+        )
         builder.appendKeyValue("Card ID", walletMetaInfo.cardId)
         builder.appendKeyValue("Firmware version", walletMetaInfo.firmwareVersion)
         builder.appendKeyValue("Linked cards count", walletMetaInfo.cardsCount)
