@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class WalletMetaInfo(
     val userWalletId: UserWalletId?,
-    val hotWalletIsBackedUp: Boolean? = null,
+    val hotWalletIsSeedPhraseBackedUp: Boolean? = null,
+    val hotWalletIsCloudBackedUp: Boolean? = null,
     val cardId: String? = null,
     val firmwareVersion: String? = null,
     val cardsCount: String? = null,

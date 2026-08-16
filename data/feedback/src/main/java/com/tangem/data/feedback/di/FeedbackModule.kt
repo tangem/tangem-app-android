@@ -4,9 +4,9 @@ import com.tangem.core.navigation.email.EmailSender
 import com.tangem.data.feedback.DefaultFeedbackRepository
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStateUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackRepository
-import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -26,7 +26,7 @@ internal object FeedbackModule {
         walletManagersStore: WalletManagersStore,
         emailSender: EmailSender,
         appInfoProvider: AppInfoProvider,
-        isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+        getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
     ): FeedbackRepository {
         return DefaultFeedbackRepository(
             appLogsStore = appLogsStore,
@@ -34,7 +34,7 @@ internal object FeedbackModule {
             emailSender = emailSender,
             appInfoProvider = appInfoProvider,
             userWalletsListRepository = userWalletsListRepository,
-            isWalletBackedUpUseCase = isWalletBackedUpUseCase,
+            getCloudBackupStateUseCase = getCloudBackupStateUseCase,
         )
     }
 }
