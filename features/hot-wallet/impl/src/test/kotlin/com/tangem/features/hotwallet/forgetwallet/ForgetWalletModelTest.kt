@@ -177,6 +177,52 @@ internal class ForgetWalletModelTest {
             coVerify(exactly = 1) { deleteWalletUseCase(walletId) }
         }
 
+    @Test
+    fun `GIVEN last wallet AND deleteCloudBackup WHEN forget confirmed THEN signed out after the backup deletion`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { deleteWalletUseCase(walletId) } returns false.right()
+            coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(walletId = "011")).right()
+            coEvery { deleteCloudBackupWithRetryUseCase(fileId) } returns Unit.right()
+            coEvery { cloudBackupRepository.signOut() } just Runs
+
+            // Act
+            confirmForget(createModel(this, deleteCloudBackup = true))
+
+            // Assert
+            coVerifyOrder {
+                deleteCloudBackupWithRetryUseCase(fileId)
+                cloudBackupRepository.signOut()
+            }
+        }
+
+    @Test
+    fun `GIVEN wallets left WHEN forget confirmed THEN the cloud session is kept`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { deleteWalletUseCase(walletId) } returns true.right()
+
+        // Act
+        confirmForget(createModel(this, deleteCloudBackup = false))
+
+        // Assert
+        coVerify(exactly = 0) { cloudBackupRepository.signOut() }
+    }
+
+    @Test
+    fun `GIVEN last wallet AND toggle off WHEN forget confirmed THEN the cloud session is untouched`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+        coEvery { deleteWalletUseCase(walletId) } returns false.right()
+
+        // Act
+        confirmForget(createModel(this, deleteCloudBackup = true))
+
+        // Assert
+        coVerify(exactly = 0) { cloudBackupRepository.signOut() }
+    }
+
     private fun TestScope.confirmForget(model: ForgetWalletModel) {
         val sentMessages = mutableListOf<UiMessage>()
         every { uiMessageSender.send(capture(sentMessages)) } just Runs
