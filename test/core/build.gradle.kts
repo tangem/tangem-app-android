@@ -11,6 +11,7 @@ dependencies {
     api(deps.kotlin.coroutines)
 
     api(deps.androidx.datastore.core)
+    implementation(deps.kotlin.serialization)
     api(deps.test.coroutine)
     api(deps.test.junit5)
     api(deps.test.mockk)
