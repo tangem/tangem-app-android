@@ -42,7 +42,7 @@ import kotlinx.collections.immutable.toImmutableList
  * Design-system v2 segmented control — a pill-shaped track of mutually exclusive segments sharing one
  * animated selection pill.
  *
- * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?m=dev)
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=7908-343)
  *
  * Behavior notes:
  * - Segments always share the available width equally: by default the control hugs its content and
