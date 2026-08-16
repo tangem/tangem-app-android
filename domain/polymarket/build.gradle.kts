@@ -19,13 +19,10 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.common)
-    api(projects.domain.account.status)
     // endregion
 
     // region SDK
-    implementation(projects.libs.blockchainSdk)
     implementation(projects.core.utils)
-    implementation(projects.domain.account)
     implementation(tangemDeps.blockchain)
     // endregion
 

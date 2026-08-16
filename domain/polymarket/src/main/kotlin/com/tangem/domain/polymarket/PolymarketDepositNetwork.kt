@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.Blockchain
 /**
  * The chain Predictions settles on.
  *
- * Everything the feature needs to name that chain — the backend network id a wallet's currencies are matched
- * against, and the coin that adding the chain to a portfolio means adding — is derived from this one value,
- * so no part of the feature carries a chain literal of its own.
+ * Nothing in onboarding reads it any more: the owner key is derived on a hardened path that belongs to no
+ * network, so a wallet needs nothing in its portfolio to be onboarded. It is the withdraw flow that will name
+ * a chain, and it should derive it from this one value rather than carry a literal of its own.
  */
 val PolymarketDepositBlockchain: Blockchain = Blockchain.Polygon

@@ -12,7 +12,7 @@ import com.tangem.domain.polymarket.model.PolymarketAccessMode
  */
 internal sealed interface PolymarketRoute : Route {
 
-    /** Prerequisites for the gate: a known wallet and the deposit token on it. */
+    /** The prerequisite for the gate: a known wallet. */
     data object Entry : PolymarketRoute
 
     /**
