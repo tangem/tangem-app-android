@@ -1,6 +1,7 @@
 package com.tangem.features.hotwallet.walletbackup.model
 
 import android.text.format.DateFormat
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -36,6 +37,7 @@ import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import dagger.Lazy
 import io.mockk.*
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flowOf
@@ -91,6 +93,7 @@ internal class WalletBackupModelTest {
         every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletNotBackedUp.right())
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
         coEvery { cloudBackupRepository.isBackedUp(any()) } returns false
+        coEvery { cloudBackupRepository.signOut() } just Runs
 
         // DateTimeFormatters delegates to android.text.format.DateFormat, an Android stub unavailable on the JVM
         mockkStatic(DateFormat::class)
@@ -632,11 +635,13 @@ internal class WalletBackupModelTest {
     }
 
     @Test
-    fun `GIVEN cloud already read AND no backup WHEN google drive tapped THEN create flow opened without re-reading`() =
+    fun `GIVEN cloud already read AND no backup WHEN google drive tapped THEN account re-picked before create flow`() =
         runTest {
             // Arrange
             every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
             coEvery { cloudBackupRepository.findBackups(interactive = false) } returns
+                emptyList<CloudBackupInfo>().right()
+            coEvery { cloudBackupRepository.findBackups(interactive = true) } returns
                 emptyList<CloudBackupInfo>().right()
 
             val model = createModel(this)
@@ -647,10 +652,39 @@ internal class WalletBackupModelTest {
             advanceUntilIdle()
 
             // Assert
+            coVerifyOrder {
+                cloudBackupRepository.signOut()
+                cloudBackupRepository.findBackups(interactive = true)
+            }
             verify(exactly = 1) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
-            coVerify(exactly = 0) { cloudBackupRepository.findBackups(interactive = true) }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN sign in awaiting google WHEN screen resumed THEN sign in survives AND create flow opened`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.findBackups(interactive = false) } returns CloudBackupError.AuthRequired.left()
+        val signIn = CompletableDeferred<Either<CloudBackupError, List<CloudBackupInfo>>>()
+        coEvery { cloudBackupRepository.findBackups(interactive = true) } coAnswers { signIn.await() }
+
+        val model = createModel(this)
+        advanceUntilIdle()
+        model.onScreenResumed()
+        model.uiState.value.onGoogleDriveClick()
+        advanceUntilIdle()
+
+        // Act
+        model.onScreenResumed()
+        advanceUntilIdle()
+        signIn.complete(emptyList<CloudBackupInfo>().right())
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
+        coVerify(exactly = 1) { cloudBackupRepository.findBackups(interactive = false) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN cloud unread WHEN sign in cancelled THEN status stays NoBackup AND create flow not opened`() = runTest {
@@ -669,6 +703,47 @@ internal class WalletBackupModelTest {
         // Assert
         assertThat(model.uiState.value.googleDriveStatus).isEqualTo(BackupStatus.NoBackup)
         verify(exactly = 0) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wallet was backed up WHEN sign in ends without access THEN status stays ActionRequired`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+        coEvery { cloudBackupRepository.findBackups(interactive = false) } returns CloudBackupError.AuthRequired.left()
+        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns CloudBackupError.AuthCanceled.left()
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGoogleDriveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.googleDriveStatus)
+            .isEqualTo(BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.NoAccess))
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNonAccessErrors")
+    fun `GIVEN wallet was backed up AND findBackups fails WHEN model created THEN NoAccess required`(
+        error: CloudBackupError,
+    ) = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.isBackedUp("011") } returns true
+        coEvery { cloudBackupRepository.findBackups() } returns error.left()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.googleDriveStatus)
+            .isEqualTo(BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.NoAccess))
         model.onDestroy()
     }
 
@@ -717,6 +792,15 @@ internal class WalletBackupModelTest {
         fun provideAccessErrors() = listOf(
             CloudBackupError.AuthRequired,
             CloudBackupError.AuthPermissionsMissing,
+        )
+
+        @JvmStatic
+        fun provideNonAccessErrors() = listOf(
+            CloudBackupError.AuthCanceled,
+            CloudBackupError.CloudUnavailable,
+            CloudBackupError.BackupNotFound,
+            CloudBackupError.ReadError(),
+            CloudBackupError.Unknown(),
         )
     }
 }
