@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
@@ -49,6 +50,7 @@ internal class WalletActivationModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
 ) : Model() {
 
     val params = paramsContainer.require<WalletActivationComponent.Params>()
@@ -99,6 +101,7 @@ internal class WalletActivationModel @Inject constructor(
     override fun onDestroy() {
         super.onDestroy()
         trackingContextProxy.removeContext()
+        clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
     }
 
     fun onChildBack() {
