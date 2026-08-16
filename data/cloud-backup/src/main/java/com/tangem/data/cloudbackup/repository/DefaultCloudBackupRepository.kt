@@ -23,6 +23,9 @@ import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -125,10 +128,15 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
-    override suspend fun findBackups(interactive: Boolean): Either<CloudBackupError, List<CloudBackupInfo>> {
+    override suspend fun findBackups(
+        interactive: Boolean,
+        validateContent: Boolean,
+    ): Either<CloudBackupError, List<CloudBackupInfo>> {
         return withContext(dispatchers.io) {
             withAuthRetry(interactive = interactive) { authInteractive ->
-                findBackupFiles(authHeader(interactive = authInteractive)).map { file ->
+                val files = findBackupFiles(authHeader(interactive = authInteractive))
+                val supported = if (validateContent) filterSupported(files, cipher, ::downloadContent) else files
+                supported.map { file ->
                     CloudBackupInfo(
                         fileId = file.id,
                         walletName = file.appProperties?.get(KEY_WALLET_NAME) ?: file.name.orEmpty(),
@@ -377,21 +385,19 @@ internal class DefaultCloudBackupRepository(
             else -> errorHandler(null)
         }
     }
-
-    private companion object {
-        const val BACKUPS_FOLDER_NAME = "Tangem"
-        const val BACKUP_FILE_EXTENSION = "backup.json"
-        const val DRIVE_ROOT = "root"
-
-        const val KEY_IS_TANGEM_BACKUP = "tangemBackup"
-        const val KEY_WALLET_ID = "walletId"
-        const val KEY_WALLET_NAME = "walletName"
-        const val KEY_CREATED_AT = "createdAt"
-
-        const val MIME_TYPE_JSON = "application/json"
-        const val MIME_TYPE_FOLDER = "application/vnd.google-apps.folder"
-    }
 }
+
+private const val BACKUPS_FOLDER_NAME = "Tangem"
+private const val BACKUP_FILE_EXTENSION = "backup.json"
+private const val DRIVE_ROOT = "root"
+
+private const val KEY_IS_TANGEM_BACKUP = "tangemBackup"
+private const val KEY_WALLET_ID = "walletId"
+private const val KEY_WALLET_NAME = "walletName"
+private const val KEY_CREATED_AT = "createdAt"
+
+private const val MIME_TYPE_JSON = "application/json"
+private const val MIME_TYPE_FOLDER = "application/vnd.google-apps.folder"
 
 /**
  * Google Drive permits duplicate file names, so we mimic the OS file-manager behaviour and append an
@@ -426,6 +432,28 @@ private fun Raise<CloudBackupError>.parseSecret(bytes: ByteArray): CloudBackupSe
         raise(CloudBackupError.InvalidBackupFile)
     }
     return CloudBackupSecretData(mnemonic = secret.mnemonic, isPassphraseRequired = isPassphraseRequired)
+}
+
+// a transport failure keeps the file (fail-open) — a transient network problem must not hide a valid backup
+private suspend fun filterSupported(
+    files: List<DriveFile>,
+    cipher: CloudBackupCipher,
+    downloadContent: suspend (fileId: String) -> Either<CloudBackupError, String>,
+): List<DriveFile> = coroutineScope {
+    files
+        .map { file -> async { file.takeIf { hasSupportedContent(it.id, cipher, downloadContent) } } }
+        .awaitAll()
+        .filterNotNull()
+}
+
+private suspend fun hasSupportedContent(
+    fileId: String,
+    cipher: CloudBackupCipher,
+    downloadContent: suspend (fileId: String) -> Either<CloudBackupError, String>,
+): Boolean {
+    val content = downloadContent(fileId).getOrElse { return true }
+    val fileData = runCatching { CloudBackupJson.decodeFromString<CloudBackupFileData>(content) }.getOrNull()
+    return fileData != null && cipher.isSupportedFormat(fileData)
 }
 
 private fun CloudBackupCryptoError.toDomainError(): CloudBackupError = when (this) {
