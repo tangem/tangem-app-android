@@ -38,8 +38,14 @@ interface CloudBackupRepository {
     /**
      * Finds all Tangem backup files in the cloud account. With [interactive] `false` (default) never
      * triggers the account picker, failing with [CloudBackupError.AuthRequired] when not authorized.
+     * With [validateContent] `true` additionally downloads every found file and drops the ones whose
+     * content is not a structurally valid backup; a file whose content cannot be downloaded is kept,
+     * so a transient transport failure never hides a valid backup.
      */
-    suspend fun findBackups(interactive: Boolean = false): Either<CloudBackupError, List<CloudBackupInfo>>
+    suspend fun findBackups(
+        interactive: Boolean = false,
+        validateContent: Boolean = false,
+    ): Either<CloudBackupError, List<CloudBackupInfo>>
 
     /**
      * Returns the currently authorized cloud account (email, name). With [interactive] `false` (default)
