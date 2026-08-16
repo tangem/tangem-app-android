@@ -16,9 +16,11 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -86,6 +88,27 @@ internal class TxHistoryInfoMergerTest {
             assertThat(result).hasSize(1)
             assertThat(result.single()).isInstanceOf(OnChainTx.BSDK::class.java)
         }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN hashes differing only in case WHEN merge THEN matched into one enriched row`(model: HashCaseModel) {
+            // Arrange
+            val onChain = listOf(createTxInfo(txHash = model.onChainHash, timestamp = 100))
+            val express = listOf(createSwap(matchHash = model.expressHash, status = ExpressExchangeStatus.Waiting))
+
+            // Act
+            val result = merge(onChain, express)
+
+            // Assert
+            assertThat(result).hasSize(1)
+            assertThat((result.single() as ExpressTx).txInfo).isEqualTo(OnChainTx.BSDK(onChain.single()))
+        }
+
+        private fun provideTestModels() = listOf(
+            HashCaseModel(onChainHash = HASH_LOWERCASE, expressHash = HASH_UPPERCASE),
+            HashCaseModel(onChainHash = HASH_UPPERCASE, expressHash = HASH_LOWERCASE),
+            HashCaseModel(onChainHash = HASH_LOWERCASE, expressHash = HASH_LOWERCASE),
+        )
 
         @Test
         fun `GIVEN rows of different timestamps WHEN merge THEN sorted by timestamp descending`() {
@@ -682,6 +705,8 @@ internal class TxHistoryInfoMergerTest {
         }
     }
 
+    internal data class HashCaseModel(val onChainHash: String, val expressHash: String)
+
     private fun merge(
         onChain: List<TxInfo>,
         express: List<ExpressTx>,
@@ -794,6 +819,9 @@ internal class TxHistoryInfoMergerTest {
 
     private companion object {
         const val DAY_MILLIS = 86_400_000L
+
+        const val HASH_LOWERCASE = "d859cc866dbb94f0f21d1fcd181112f7ba31cdde0f565d55ca74e3b0e5ca3d94"
+        val HASH_UPPERCASE = HASH_LOWERCASE.uppercase()
 
         private val currencyFactory = MockCryptoCurrencyFactory()
 
