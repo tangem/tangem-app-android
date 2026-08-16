@@ -7,6 +7,11 @@ internal sealed interface CreateCloudBackupUM {
 
     val onBackClick: () -> Unit
 
+    /** Google authorization runs before any password input; the screen shows a plain progress */
+    data class Preparing(
+        override val onBackClick: () -> Unit,
+    ) : CreateCloudBackupUM
+
     data class SetPassword(
         override val onBackClick: () -> Unit,
         val password: String,
