@@ -56,7 +56,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalDecomposeApi::class)
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
