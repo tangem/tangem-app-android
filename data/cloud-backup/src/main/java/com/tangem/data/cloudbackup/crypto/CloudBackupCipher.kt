@@ -89,6 +89,40 @@ internal class CloudBackupCipher(
 
     /** Decrypts [data] with [password]; the GCM tag check authenticates the payload */
     fun decrypt(data: CloudBackupFileData, password: CharArray): Either<CloudBackupCryptoError, ByteArray> = either {
+        val decoded = validateFormat(data)
+        val kdfparams = data.crypto.kdfparams
+
+        val key = catchingCrypto("kdf parameters") {
+            deriveArgon2id(
+                password = password,
+                salt = decoded.salt,
+                params = Argon2Params(
+                    memoryKib = kdfparams.memory,
+                    iterations = kdfparams.iterations,
+                    parallelism = kdfparams.parallelism,
+                ),
+                version = kdfparams.version,
+                dklen = kdfparams.dklen,
+            )
+        }
+
+        // GCM verifies the tag while decrypting: a wrong password or a tampered file fails the tag check.
+        // Java's AES-GCM expects the tag appended to the ciphertext, so re-join them.
+        try {
+            aesGcm(mode = Cipher.DECRYPT_MODE, key = key, iv = decoded.nonce, input = decoded.ciphertext + decoded.tag)
+        } catch (e: AEADBadTagException) {
+            raise(CloudBackupCryptoError.WrongPassword)
+        } catch (e: GeneralSecurityException) {
+            raise(CloudBackupCryptoError.InvalidFormat("Decryption failed: ${e.message}"))
+        } finally {
+            key.fill(0)
+        }
+    }
+
+    /** Structural check that [data] is a well-formed supported backup — all [decrypt] validations minus the KDF work */
+    fun isSupportedFormat(data: CloudBackupFileData): Boolean = either { validateFormat(data) }.isRight()
+
+    private fun Raise<CloudBackupCryptoError>.validateFormat(data: CloudBackupFileData): DecodedCryptoParams {
         ensure(data.version == VERSION) {
             CloudBackupCryptoError.InvalidFormat("Unsupported version: ${data.version}")
         }
@@ -115,32 +149,15 @@ internal class CloudBackupCipher(
 
         validateArgon2Params(kdfparams)
 
-        val key = catchingCrypto("kdf parameters") {
-            deriveArgon2id(
-                password = password,
-                salt = salt,
-                params = Argon2Params(
-                    memoryKib = kdfparams.memory,
-                    iterations = kdfparams.iterations,
-                    parallelism = kdfparams.parallelism,
-                ),
-                version = kdfparams.version,
-                dklen = kdfparams.dklen,
-            )
-        }
-
-        // GCM verifies the tag while decrypting: a wrong password or a tampered file fails the tag check.
-        // Java's AES-GCM expects the tag appended to the ciphertext, so re-join them.
-        try {
-            aesGcm(mode = Cipher.DECRYPT_MODE, key = key, iv = nonce, input = ciphertext + tag)
-        } catch (e: AEADBadTagException) {
-            raise(CloudBackupCryptoError.WrongPassword)
-        } catch (e: GeneralSecurityException) {
-            raise(CloudBackupCryptoError.InvalidFormat("Decryption failed: ${e.message}"))
-        } finally {
-            key.fill(0)
-        }
+        return DecodedCryptoParams(salt = salt, nonce = nonce, ciphertext = ciphertext, tag = tag)
     }
+
+    private class DecodedCryptoParams(
+        val salt: ByteArray,
+        val nonce: ByteArray,
+        val ciphertext: ByteArray,
+        val tag: ByteArray,
+    )
 
     // untrusted params — reject out-of-range values before the KDF to avoid OOM / negative-size crashes
     private fun Raise<CloudBackupCryptoError>.validateArgon2Params(params: CloudBackupFileData.KdfParams) {
