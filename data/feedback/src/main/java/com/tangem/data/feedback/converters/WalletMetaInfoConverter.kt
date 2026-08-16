@@ -38,7 +38,7 @@ internal object WalletMetaInfoConverter : Converter<UserWallet, WalletMetaInfo> 
             is UserWallet.Hot -> {
                 WalletMetaInfo(
                     userWalletId = value.walletId,
-                    hotWalletIsBackedUp = value.backedUp,
+                    hotWalletIsSeedPhraseBackedUp = value.backedUp,
                 )
             }
         }
