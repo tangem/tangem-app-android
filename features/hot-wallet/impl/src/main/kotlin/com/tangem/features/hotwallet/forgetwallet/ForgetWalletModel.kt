@@ -83,11 +83,7 @@ internal class ForgetWalletModel @Inject constructor(
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.common_attention),
-                message = if (params.shouldDeleteCloudBackup) {
-                    resourceReference(R.string.hw_remove_wallet_confirmation_with_cloud_backup)
-                } else {
-                    resourceReference(R.string.hw_remove_wallet_confirmation_title)
-                },
+                message = resourceReference(R.string.hw_remove_wallet_confirmation_title),
                 firstActionBuilder = {
                     EventMessageAction(
                         title = resourceReference(R.string.common_forget),
