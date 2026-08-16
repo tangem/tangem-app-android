@@ -2,27 +2,29 @@ package com.tangem.features.hotwallet.createcloudbackup.model
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 
-internal data class CloudBackupErrorSpec(val titleRes: Int, val bodyRes: Int, val isRetryable: Boolean)
+internal data class CloudBackupErrorSpec(val title: TextReference, val body: TextReference, val isRetryable: Boolean)
 
-internal fun cloudBackupErrorSpec(error: CloudBackupError): CloudBackupErrorSpec {
+internal fun cloudBackupErrorSpec(error: CloudBackupError, serviceName: TextReference): CloudBackupErrorSpec {
     val isPermissions = error == CloudBackupError.AuthPermissionsMissing || error == CloudBackupError.AuthRequired
-    val titleRes = if (isPermissions) {
-        R.string.hw_cloud_backup_permissions_title
+    val title = if (isPermissions) {
+        resourceReference(R.string.hw_cloud_backup_permissions_title_v2, wrappedList(serviceName))
     } else {
-        R.string.hw_cloud_backup_error_title
+        resourceReference(R.string.hw_cloud_backup_error_title)
     }
-    val bodyRes = when (error) {
-        CloudBackupError.NetworkError -> R.string.hw_cloud_backup_error_network
+    val body = when (error) {
+        CloudBackupError.NetworkError -> resourceReference(R.string.hw_cloud_backup_error_network)
         CloudBackupError.AuthPermissionsMissing,
         CloudBackupError.AuthRequired,
-        -> R.string.hw_cloud_backup_permissions_description
-        CloudBackupError.CloudUnavailable -> R.string.hw_cloud_backup_error_unavailable
-        else -> R.string.hw_cloud_backup_error_write
+        -> resourceReference(R.string.hw_cloud_backup_permissions_description_v2, wrappedList(serviceName))
+        CloudBackupError.CloudUnavailable -> resourceReference(R.string.hw_cloud_backup_error_unavailable)
+        else -> resourceReference(R.string.hw_cloud_backup_error_write)
     }
     val isRetryable = when (error) {
         CloudBackupError.NetworkError,
@@ -33,7 +35,7 @@ internal fun cloudBackupErrorSpec(error: CloudBackupError): CloudBackupErrorSpec
         -> true
         else -> false
     }
-    return CloudBackupErrorSpec(titleRes = titleRes, bodyRes = bodyRes, isRetryable = isRetryable)
+    return CloudBackupErrorSpec(title = title, body = body, isRetryable = isRetryable)
 }
 
 /** [onClosed] runs only when the sheet is closed without pressing the action button */
@@ -51,8 +53,8 @@ internal fun cloudBackupErrorSheet(
                 type = MessageBottomSheetUM.Icon.Type.Warning
                 backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
             }
-            title = resourceReference(spec.titleRes)
-            body = resourceReference(spec.bodyRes)
+            title = spec.title
+            body = spec.body
         }
         primaryButton {
             val buttonRes = if (spec.isRetryable) R.string.hw_cloud_backup_retry else R.string.common_got_it
