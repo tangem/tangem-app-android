@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.Flow
  */
 interface CloudBackupRepository {
 
+    /** Whether the cloud backup feature is enabled; while disabled the feature must not surface anywhere */
+    val isCloudBackupEnabled: Boolean
+
     /**
      * Encrypts [secret] with [password] and uploads the resulting backup file. If a backup for
      * [walletId] already exists, it is overwritten, so a wallet always has at most one backup file.
