@@ -129,6 +129,7 @@ dependencies {
     implementation(projects.domain.demo.models)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.express)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
@@ -257,6 +258,8 @@ dependencies {
     /** Features */
     implementation(projects.features.addressBook.api)
     implementation(projects.features.addressBook.impl)
+    implementation(projects.features.collectibles.api)
+    implementation(projects.features.collectibles.impl)
     implementation(projects.features.marketing.api)
     implementation(projects.features.marketing.impl)
     implementation(projects.features.rating.impl)
