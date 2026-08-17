@@ -29,6 +29,6 @@ data class OrderRequest(
         @Json(name = "city") val city: String,
         @Json(name = "region") val region: String,
         @Json(name = "postal_code") val postalCode: String,
-        @Json(name = "phone") val phone: String,
+        @Json(name = "phone_number") val phoneNumber: String,
     )
 }
