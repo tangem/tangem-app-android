@@ -60,6 +60,24 @@ internal class PaymentReceiveUMConverterTest {
     }
 
     @Test
+    fun `GIVEN token on a testnet network WHEN convert THEN its icon keeps the brand colors`() {
+        // Arrange
+        // The payment account's networks come from the backend environment, so a testnet one must not grey the
+        // stablecoin icons out — the sheet has to look the same on every environment.
+        val input = PaymentReceiveUMConverter.Input(
+            networkName = "Base",
+            address = "0xADDRESS",
+            currencies = listOf(token(symbol = "USDC", isTestnet = true)),
+        )
+
+        // Act
+        val result = converter.convert(input)
+
+        // Assert
+        assertThat(result.tokens.single().iconState.isGrayscale).isFalse()
+    }
+
+    @Test
     fun `GIVEN multiple tokens WHEN convert THEN warning mentions every token symbol and the network name`() {
         // Arrange
         val input = PaymentReceiveUMConverter.Input(
@@ -135,9 +153,9 @@ internal class PaymentReceiveUMConverterTest {
         }
     }
 
-    private fun token(symbol: String): CryptoCurrency.Token {
+    private fun token(symbol: String, isTestnet: Boolean = false): CryptoCurrency.Token {
         val network: Network = mockk()
-        every { network.isTestnet } returns false
+        every { network.isTestnet } returns isTestnet
         val currency: CryptoCurrency.Token = mockk()
         every { currency.symbol } returns symbol
         every { currency.network } returns network
