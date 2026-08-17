@@ -22,7 +22,6 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
@@ -40,7 +39,6 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: PolymarketComponent.Params,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
-    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : PolymarketComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<PolymarketRoute>()
@@ -142,7 +140,6 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             appComponentContext = factoryContext,
             params = params,
             portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
-            addToPortfolioComponentFactory = addToPortfolioComponentFactory,
         )
         is PolymarketRoute.Onboarding -> PolymarketOnboardingComponent(
             appComponentContext = factoryContext,
