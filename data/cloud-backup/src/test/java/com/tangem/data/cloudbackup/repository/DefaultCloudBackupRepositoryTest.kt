@@ -495,6 +495,26 @@ internal class DefaultCloudBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN non-interactive validation WHEN findBackups THEN token never requested interactively`() = runTest {
+        // Arrange
+        val requestedInteractive = mutableListOf<Boolean>()
+        coEvery { tokenProvider.getAccessToken(capture(requestedInteractive)) } returns "token".right()
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns
+            successResponse(CloudBackupJson.encodeToString(fileData))
+        every { cipher.isSupportedFormat(any()) } returns true
+
+        // Act
+        repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(requestedInteractive).isNotEmpty()
+        assertThat(requestedInteractive).doesNotContain(true)
+    }
+
+    @Test
     fun `GIVEN list throws non-IO exception WHEN findBackups THEN ReadError not Unknown`() = runTest {
         // Arrange
         coEvery { api.listFiles(any(), any(), any()) } throws IllegalStateException("conversion error")
