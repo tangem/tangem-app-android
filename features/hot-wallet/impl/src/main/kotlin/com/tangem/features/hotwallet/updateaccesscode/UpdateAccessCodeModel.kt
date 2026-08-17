@@ -23,6 +23,7 @@ import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,7 +39,8 @@ internal class UpdateAccessCodeModel @Inject constructor(
 
     private val params = paramsContainer.require<UpdateAccessCodeComponent.Params>()
 
-    private var isAccessCodeUpdateStarted = false
+    val isAccessCodeUpdateStarted: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     val stackNavigation = StackNavigation<UpdateAccessCodeRoute>()
     val startRoute: UpdateAccessCodeRoute = UpdateAccessCodeRoute.SetAccessCode(params.userWalletId)
@@ -63,7 +65,12 @@ internal class UpdateAccessCodeModel @Inject constructor(
         is UpdateAccessCodeRoute.SetupFinished -> false
     }
 
-    fun isSkipButtonVisible(route: UpdateAccessCodeRoute): Boolean = params.canSkip &&
+    /**
+     * [isUpdateStarted] comes from the observable [isAccessCodeUpdateStarted] so the button disappears once the
+     * code is being written — otherwise it would stay on screen as a dead control, since skipping is refused then.
+     */
+    fun isSkipButtonVisible(route: UpdateAccessCodeRoute, isUpdateStarted: Boolean): Boolean = params.canSkip &&
+        !isUpdateStarted &&
         when (route) {
             is UpdateAccessCodeRoute.SetAccessCode,
             is UpdateAccessCodeRoute.ConfirmAccessCode,
@@ -73,7 +80,7 @@ internal class UpdateAccessCodeModel @Inject constructor(
 
     fun onSkipClick() {
         // guard the action itself, not just the button: skipping must stay impossible for non-skippable entry points
-        if (!params.canSkip || isAccessCodeUpdateStarted) return
+        if (!params.canSkip || isAccessCodeUpdateStarted.value) return
         showSkipAccessCodeWarningDialog()
     }
 
@@ -83,7 +90,7 @@ internal class UpdateAccessCodeModel @Inject constructor(
     }
 
     override fun onAccessCodeUpdateStarted(userWalletId: UserWalletId) {
-        isAccessCodeUpdateStarted = true
+        isAccessCodeUpdateStarted.value = true
     }
 
     override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
