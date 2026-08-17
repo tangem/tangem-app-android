@@ -42,7 +42,8 @@ private const val SHOW_DETAILS_TIME = 30_000L
  * Owns the UI state of a single TangemPay card-detail block (the flip card with reveal PAN/CVV,
  * freeze badge, display-name editing). Several controllers can be alive at once — e.g. one per card
  * in a swipe pager — so all logic is scoped to [cardId] and reveal/hide is coordinated through the
- * card-scoped [CardDetailsEventListener].
+ * [CardDetailsEventListener] passed by the host: blocks that flip together share one listener, blocks
+ * that must reveal independently get their own via [CardDetailsEventListener.default].
  *
 
  * lifecycle is owned by the host model, which passes a child [scope] and calls [dispose] when the
@@ -55,11 +56,11 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     @Assisted private val card: TangemPayCard,
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val config: Config,
+    @Assisted private val cardDetailsEventListener: CardDetailsEventListener,
     @Assisted private val onEditNameClick: () -> Unit,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
-    private val cardDetailsEventListener: CardDetailsEventListener,
     private val analytics: AnalyticsEventHandler,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
 ) {
@@ -229,6 +230,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
             card: TangemPayCard,
             userWalletId: UserWalletId,
             config: Config,
+            cardDetailsEventListener: CardDetailsEventListener,
             onEditNameClick: () -> Unit,
         ): TangemPayCardDetailsController
     }
