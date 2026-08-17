@@ -1,11 +1,11 @@
-package com.tangem.datasource.api.gasless
+package com.tangem.grow.datasource.gasless
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.datasource.api.gasless.models.GaslessServiceResponse
-import com.tangem.datasource.api.gasless.models.tron.TronEstimateResponse
-import com.tangem.datasource.api.gasless.models.tron.TronTokensResponse
+import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import org.junit.jupiter.api.Test
 
 internal class TronGaslessDtoTest {

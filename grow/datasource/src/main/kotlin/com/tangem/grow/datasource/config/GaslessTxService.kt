@@ -1,13 +1,10 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.grow.datasource.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.core.remote.header.RequestHeader
-
-import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.utils.Provider
+import com.tangem.grow.datasource.BuildConfig
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
@@ -15,7 +12,7 @@ import com.tangem.utils.info.AppInfoProvider
  * Gasless transactions [ApiConfig]
  */
 class GaslessTxService(
-    private val authProvider: AuthProvider,
+    private val growEnvironmentConfig: GrowEnvironmentConfig,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
@@ -66,7 +63,14 @@ class GaslessTxService(
         put(
             key = "Authorization",
             value = ProviderSuspend {
-                "Bearer ${authProvider.getGaslessServiceApiKey(Provider { environment }).invoke()}"
+                val apiKey = when (environment) {
+                    ApiEnvironment.MOCK,
+                    ApiEnvironment.DEV,
+                    -> growEnvironmentConfig.gaslessTxApiKeyDev
+                    ApiEnvironment.PROD -> growEnvironmentConfig.gaslessTxApiKey
+                    else -> error("No gasless tx api config provided for $environment")
+                } ?: error("No gasless tx api config provided")
+                "Bearer $apiKey"
             },
         )
     }

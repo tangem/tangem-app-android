@@ -1,7 +1,7 @@
-package com.tangem.datasource.api.gasless
+package com.tangem.grow.datasource.gasless
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.gasless.models.*
+import com.tangem.grow.datasource.gasless.models.*
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
