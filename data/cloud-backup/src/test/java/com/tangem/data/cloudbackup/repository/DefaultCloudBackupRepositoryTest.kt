@@ -176,6 +176,18 @@ internal class DefaultCloudBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN feature toggle WHEN isCloudBackupEnabled THEN mirrors the toggle`() {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
+
+        // Act & Assert
+        assertThat(repository.isCloudBackupEnabled).isFalse()
+
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
+        assertThat(repository.isCloudBackupEnabled).isTrue()
+    }
+
+    @Test
     fun `GIVEN nothing stored WHEN isBackedUp THEN returns false`() = runTest {
         assertThat(repository.isBackedUp(WALLET_ID)).isFalse()
     }
