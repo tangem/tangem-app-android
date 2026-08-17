@@ -3,7 +3,6 @@ package com.tangem.data.account.producer
 import arrow.core.Option
 import arrow.core.getOrElse
 import arrow.core.none
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -11,8 +10,8 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isTangemPayCompatible
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
-import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -54,24 +53,16 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
             .map { accountList ->
                 val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
                 accountList
-                    .addAccountIf(userWallet.isPaymentAccountSupported()) { Account.Payment(walletId) }
+                    .addAccountIf(userWallet.isTangemPayCompatible) { Account.Payment(walletId) }
                     .addAccountIf(userWallet.isVirtualAccountSupported()) { Account.Virtual(walletId) }
             }
             .flowOn(dispatchers.default)
     }
 
-    private fun UserWallet.isPaymentAccountSupported(): Boolean = when (this) {
-        is UserWallet.Cold -> scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
-        is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
-    }
-
     private fun UserWallet.isVirtualAccountSupported(): Boolean {
         if (!virtualAccountsFeatureToggles.isVirtualAccountsEnabled) return false
 
-        return when (this) {
-            is UserWallet.Cold -> scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
-            is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
-        }
+        return isTangemPayCompatible
     }
 
     private inline fun AccountList.addAccountIf(condition: Boolean, account: () -> Account): AccountList {
