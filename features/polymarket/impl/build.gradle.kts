@@ -25,13 +25,10 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
-    implementation(projects.domain.account.status)
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.polymarket)
     implementation(projects.domain.core)
-    implementation(projects.domain.markets.models)
-    implementation(projects.libs.blockchainSdk)
 
     /** Kotlin */
     implementation(deps.kotlin.immutable.collections)
@@ -57,7 +54,6 @@ dependencies {
     implementation(deps.compose.coil)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
-    implementation(tangemDeps.blockchain)
     kapt(deps.hilt.kapt)
     api(projects.core.utils)
 
