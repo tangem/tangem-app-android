@@ -428,6 +428,105 @@ internal class DefaultCloudBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN file with malformed content WHEN findBackups with validation THEN file is filtered out`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns successResponse("{}")
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN file with supported content WHEN findBackups with validation THEN file is kept`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns
+            successResponse(CloudBackupJson.encodeToString(fileData))
+        every { cipher.isSupportedFormat(any()) } returns true
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()?.single()?.fileId).isEqualTo("f1")
+    }
+
+    @Test
+    fun `GIVEN file with unsupported format WHEN findBackups with validation THEN file is filtered out`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns
+            successResponse(CloudBackupJson.encodeToString(fileData))
+        every { cipher.isSupportedFormat(any()) } returns false
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN content download fails WHEN findBackups with validation THEN file is kept`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns errorResponse(HTTP_INTERNAL_ERROR)
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()?.single()?.fileId).isEqualTo("f1")
+    }
+
+    @Test
+    fun `GIVEN validation disabled WHEN findBackups THEN content is not downloaded`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+
+        // Act
+        val result = repository.findBackups(interactive = false)
+
+        // Assert
+        assertThat(result.getOrNull()?.single()?.fileId).isEqualTo("f1")
+        coVerify(exactly = 0) { api.downloadFileContent(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN non-interactive validation WHEN findBackups THEN token never requested interactively`() = runTest {
+        // Arrange
+        val requestedInteractive = mutableListOf<Boolean>()
+        coEvery { tokenProvider.getAccessToken(capture(requestedInteractive)) } returns "token".right()
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns
+            successResponse(CloudBackupJson.encodeToString(fileData))
+        every { cipher.isSupportedFormat(any()) } returns true
+
+        // Act
+        repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(requestedInteractive).isNotEmpty()
+        assertThat(requestedInteractive).doesNotContain(true)
+    }
+
+    @Test
     fun `GIVEN list throws non-IO exception WHEN findBackups THEN ReadError not Unknown`() = runTest {
         // Arrange
         coEvery { api.listFiles(any(), any(), any()) } throws IllegalStateException("conversion error")
@@ -453,6 +552,13 @@ internal class DefaultCloudBackupRepositoryTest {
         result.onLeft { assertThat(it).isInstanceOf(CloudBackupError.WriteError::class.java) }
     }
 
+    private fun driveFile(id: String): DriveFile = DriveFile(
+        id = id,
+        name = "Wallet.backup.json",
+        createdTime = "2024-01-15T10:30:00Z",
+        appProperties = mapOf("walletId" to "w1"),
+    )
+
     private fun errorResponse(code: Int): Response<ResponseBody> = Response.error(code, "".toResponseBody(null))
 
     private fun successResponse(content: String): Response<ResponseBody> =
@@ -460,6 +566,7 @@ internal class DefaultCloudBackupRepositoryTest {
 
     private companion object {
         const val HTTP_UNAUTHORIZED = 401
+        const val HTTP_INTERNAL_ERROR = 500
         const val WALLET_ID = "wallet-1"
         const val FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"
         const val SECRET_PAYLOAD = """{"mnemonic":"m","passphraseRequired":0}"""
