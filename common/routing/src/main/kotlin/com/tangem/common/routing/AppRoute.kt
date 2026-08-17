@@ -126,6 +126,9 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data object AppSettings : AppRoute(path = "/app_settings")
 
+    @Serializable
+    data object Collectibles : AppRoute(path = "/collectibles")
+
     /**
      * Reset to factory
      *
