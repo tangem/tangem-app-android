@@ -69,11 +69,6 @@ class ApiConfigTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = mockk(),
             ),
-            GaslessTxService(
-                authProvider = appAuthProvider,
-                appInfoProvider = mockk(),
-            ),
-            SurveySparrow(environmentConfig = environmentConfig),
             Auth(),
         )
     }
