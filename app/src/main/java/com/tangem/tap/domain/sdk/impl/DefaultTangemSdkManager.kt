@@ -584,5 +584,6 @@ internal class DefaultTangemSdkManager(
             }
         }
     }
+
     // endregion
 }

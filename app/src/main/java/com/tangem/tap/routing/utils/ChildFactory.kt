@@ -22,6 +22,7 @@ import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
+import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
@@ -87,6 +88,7 @@ internal class ChildFactory @Inject constructor(
     private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
     private val appCurrencySelectorComponentFactory: AppCurrencySelectorComponent.Factory,
     private val appSettingsComponentFactory: AppSettingsComponent.Factory,
+    private val collectiblesEntryComponentFactory: CollectiblesEntryComponent.Factory,
     private val securityModeComponentFactory: SecurityModeComponent.Factory,
     private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
@@ -337,15 +339,9 @@ internal class ChildFactory @Inject constructor(
                             AppRoute.Swap.CurrencyPosition.TO -> SwapComponent.Params.CurrencyPosition.TO
                             AppRoute.Swap.CurrencyPosition.ANY -> SwapComponent.Params.CurrencyPosition.ANY
                         },
-                        tangemPayInput = route.tangemPayInput?.let { tangemPayInput ->
-                            SwapComponent.Params.TangemPayInput(
-                                cryptoAmount = tangemPayInput.cryptoAmount,
-                                fiatAmount = tangemPayInput.fiatAmount,
-                                depositAddress = tangemPayInput.depositAddress,
-                            )
-                        },
                         fromAmount = route.fromAmount,
                         providerId = route.providerId,
+                        accountFlow = route.accountFlow,
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -421,6 +417,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = appSettingsComponentFactory,
+                )
+            }
+            is AppRoute.Collectibles -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = collectiblesEntryComponentFactory,
                 )
             }
             is AppRoute.DetailsSecurity -> {
