@@ -35,6 +35,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
@@ -47,6 +48,7 @@ import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -85,6 +87,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
@@ -101,8 +105,6 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         get() = AccountStatus.Payment(this, PaymentAccountStatusValue.Error.Unavailable)
     private val Account.Virtual.errorVirtualAccountStatus: AccountStatus.Virtual
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
-    private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
-        get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
 
     override val fallback: Option<AccountStatusList> = none()
 
@@ -165,10 +167,11 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         }
 
         combine(
-            accountListFlow,
-            cryptoCurrencyStatusFlow,
-            specialStatusesFlow,
-        ) { accountList, currencyStatusMap, specialStatuses ->
+            flow = accountListFlow,
+            flow2 = cryptoCurrencyStatusFlow,
+            flow3 = specialStatusesFlow,
+            flow4 = predictionStatusFlow(walletId = walletId),
+        ) { accountList, currencyStatusMap, specialStatuses, predictionValue ->
             logger.i(
                 "combine[$walletId] transform:" +
                     "accounts=${accountList.accounts.size}, " +
@@ -180,12 +183,24 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.CryptoPortfolio -> buildCryptoPortfolioStatus(account, currencyStatusMap, accountList)
                     is Account.Payment -> specialStatuses[account.accountId] ?: account.errorPaymentAccountStatus
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
-                    is Account.Prediction ->
-                        specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
+                    is Account.Prediction -> AccountStatus.Prediction(account = account, value = predictionValue)
                 }
             }
             buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
         }.collect { accountStatusList -> channel.send(accountStatusList) }
+    }
+
+    /**
+     * Every flow joined into the screen's `combine` gates the whole screen, so this one is kept answerable in two
+     * ways: it is not subscribed at all while the feature is off, and it starts with [Loading] rather than waiting
+     * for the supplier's first value. The supplier does answer on subscription, but that guarantee lives in another
+     * module, and losing it there must cost one loading row rather than every account of the wallet.
+     */
+    private fun predictionStatusFlow(walletId: UserWalletId): Flow<PredictionAccountStatusValue> {
+        if (!polymarketFeatureToggles.isPolymarketEnabled) return flowOf(PredictionAccountStatusValue.Loading)
+
+        return predictionAccountStatusSupplier.invoke(userWalletId = walletId)
+            .onStart { emit(PredictionAccountStatusValue.Loading) }
     }
 
     private fun buildCryptoPortfolioStatus(
