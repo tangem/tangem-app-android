@@ -27,7 +27,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollection
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
 import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
-import com.tangem.features.jointaccount.main.component.JointAccountMainBlockComponent
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent

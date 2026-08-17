@@ -402,14 +402,8 @@ include(":features:payment:api")
 include(":features:payment:impl")
 
 /* Joint Accounts */
-include(":features:joint-account:main:api")
-include(":features:joint-account:main:impl")
-include(":features:joint-account:creation:api")
-include(":features:joint-account:creation:impl")
-include(":features:joint-account:common:api")
-include(":features:joint-account:common:impl")
-include(":features:joint-account:join:api")
-include(":features:joint-account:join:impl")
+include(":features:joint-account:api")
+include(":features:joint-account:impl")
 
 /* Virtual Accounts */
 include(":features:virtual-accounts:onboarding:api")
