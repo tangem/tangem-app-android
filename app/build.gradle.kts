@@ -434,7 +434,6 @@ dependencies {
     implementation(deps.googlePlay.services)
     implementation(deps.googlePlay.advertising)
     coreLibraryDesugaring(deps.desugar)
-    implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
@@ -479,6 +478,8 @@ dependencies {
     androidTestImplementation(deps.kotlin.datetime)
     androidTestImplementation(deps.okHttp)
     androidTestImplementation(deps.jodatime)
+    // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
+    androidTestImplementation(deps.zxing.qrCore)
     kaptAndroidTest(deps.test.hilt.compiler)
     kaptAndroidTest(deps.hilt.kapt)
 
