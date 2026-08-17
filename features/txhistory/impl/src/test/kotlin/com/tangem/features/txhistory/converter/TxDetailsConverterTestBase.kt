@@ -81,6 +81,7 @@ internal open class TxDetailsConverterTestBase {
         validators: List<Yield.Validator> = emptyList(),
         vaults: List<P2PEthPoolVault> = emptyList(),
         lookup: TxHistoryLookupContext = lookupOf(),
+        isBalanceHidden: Boolean = false,
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
@@ -91,15 +92,18 @@ internal open class TxDetailsConverterTestBase {
         },
         onOpenValidator = openedUrls::add,
         lookup = lookup,
+        isBalanceHidden = isBalanceHidden,
     )
 
     protected fun expressConverter(
         lookup: TxHistoryLookupContext = lookupOf(),
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
+        isBalanceHidden: Boolean = false,
     ) = ExpressTxToDetailsUMConverter(
         onGoToProvider = openedUrls::add,
         lookup = lookup,
         menu = menu,
+        isBalanceHidden = isBalanceHidden,
     )
 
     protected fun txInfo(
