@@ -56,7 +56,6 @@ internal fun PolymarketWelcomeFooter(
     }
 }
 
-
 @Composable
 private fun LegalLine(
     onPolymarketTermsClick: () -> Unit,
