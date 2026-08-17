@@ -40,6 +40,7 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -56,10 +57,16 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.AssetUM
  *
  * @param from Sent ("You sent" / "From …") side.
  * @param to Received ("You receive" / "To …") side.
+ * @param isBalanceHidden Masks both leg amounts with stars, leaving the labels, owners and icons untouched.
  * @param modifier Modifier applied to the block container.
  */
 @Composable
-internal fun TxHistoryDetailsTwoAssetsBlock(from: AssetUM, to: AssetUM, modifier: Modifier = Modifier) {
+internal fun TxHistoryDetailsTwoAssetsBlock(
+    from: AssetUM,
+    to: AssetUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
@@ -69,9 +76,9 @@ internal fun TxHistoryDetailsTwoAssetsBlock(from: AssetUM, to: AssetUM, modifier
             modifier = Modifier.padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            TwoAssetsSideRow(asset = from)
+            TwoAssetsSideRow(asset = from, isBalanceHidden = isBalanceHidden)
             DashedDivider()
-            TwoAssetsSideRow(asset = to)
+            TwoAssetsSideRow(asset = to, isBalanceHidden = isBalanceHidden)
         }
         // Centered exchange arrow. Both rows are equal-height, so the block center sits on the divider; the
         // `bg.tertiary` chip behind the icon masks the dashed line, reproducing the Figma center gap.
@@ -93,7 +100,7 @@ internal fun TxHistoryDetailsTwoAssetsBlock(from: AssetUM, to: AssetUM, modifier
 }
 
 @Composable
-private fun TwoAssetsSideRow(asset: AssetUM, modifier: Modifier = Modifier) {
+private fun TwoAssetsSideRow(asset: AssetUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier,
         contentLead = TangemRowContentLead.Start,
@@ -101,7 +108,7 @@ private fun TwoAssetsSideRow(asset: AssetUM, modifier: Modifier = Modifier) {
         titleSlot = { TwoAssetsSideLabel(label = asset.label, owner = asset.owner) },
         subtitleSlot = {
             Text(
-                text = asset.amount.resolveReference(),
+                text = asset.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
                 style = TangemTheme.typography3.heading.small,
                 color = if (asset.isFaded) {
                     TangemTheme.colors3.text.tertiary
@@ -247,12 +254,20 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
             TxHistoryDetailsTwoAssetsBlock(
                 from = previewAsset(label = "You sent", amount = "- 390 USDT", isFaded = false),
                 to = previewAsset(label = "You receive", amount = "+ 1,800.00 POL", isFaded = false),
+                isBalanceHidden = false,
+            )
+            // Hidden balances — both leg amounts are masked, everything else stays.
+            TxHistoryDetailsTwoAssetsBlock(
+                from = previewAsset(label = "You sent", amount = "- 390 USDT", isFaded = false),
+                to = previewAsset(label = "You receive", amount = "+ 1,800.00 POL", isFaded = false),
+                isBalanceHidden = true,
             )
             // Unsettled swap — the "You receive" side shows the estimated amount with a `~` until the funds arrive
             // (struck through is reserved for the failed state).
             TxHistoryDetailsTwoAssetsBlock(
                 from = previewAsset(label = "You sent", amount = "- 390 USDT", isFaded = false),
                 to = previewAsset(label = "You receive", amount = "~ 1,800.00 POL", isFaded = false),
+                isBalanceHidden = false,
             )
             // Account -> another account (own-to-own transfer between two of the user's accounts).
             TxHistoryDetailsTwoAssetsBlock(
@@ -276,6 +291,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                         backgroundColor = Color(0xFF744FF1),
                     ),
                 ),
+                isBalanceHidden = false,
             )
             // Wallet -> another wallet (own-to-own transfer between two of the user's wallets).
             TxHistoryDetailsTwoAssetsBlock(
@@ -297,6 +313,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                         deviceIconUM = DeviceIconUM.Ring(mainColor = Color(0xFF9F86FF)),
                     ),
                 ),
+                isBalanceHidden = false,
             )
             // Send-and-swap — the payout went to an external (non-user) address.
             TxHistoryDetailsTwoAssetsBlock(
@@ -318,6 +335,7 @@ private fun TxHistoryDetailsTwoAssetsBlockPreview() {
                         rawAddress = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
                     ),
                 ),
+                isBalanceHidden = false,
             )
         }
     }
