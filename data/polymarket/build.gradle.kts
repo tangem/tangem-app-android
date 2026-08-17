@@ -50,6 +50,7 @@ dependencies {
     // region Domain
     api(projects.domain.polymarket)
     api(deps.moshi)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.wallets)
     implementation(projects.domain.common)
     implementation(projects.domain.card)
