@@ -34,6 +34,7 @@ import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -102,6 +103,7 @@ internal class WalletActivationModel @Inject constructor(
         super.onDestroy()
         trackingContextProxy.removeContext()
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
+            .onLeft { TangemLogger.e("Failed to clear the contextual unlock for ${params.userWalletId}", it) }
     }
 
     fun onChildBack() {

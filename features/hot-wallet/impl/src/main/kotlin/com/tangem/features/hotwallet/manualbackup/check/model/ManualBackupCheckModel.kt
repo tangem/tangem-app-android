@@ -39,8 +39,11 @@ internal class ManualBackupCheckModel @Inject constructor(
 
     init {
         modelScope.launch {
-            val userWallet = getUserWalletUseCase(params.userWalletId)
-                .getOrElse { null } as? UserWallet.Hot ?: return@launch
+            val userWallet = getUserWalletUseCase(params.userWalletId).getOrElse { null }
+            if (userWallet !is UserWallet.Hot) {
+                TangemLogger.e("Hot wallet ${params.userWalletId} not found for a manual backup check")
+                return@launch
+            }
 
             // reuses the contextual unlock obtained by the phrase step, so the user is not prompted twice
             exportSeedPhraseUseCase.invoke(userWallet.hotWalletId).fold(
