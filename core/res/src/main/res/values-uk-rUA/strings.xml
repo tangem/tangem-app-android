@@ -1348,7 +1348,7 @@
   <string name="promo_campaign_not_active_title">Кампанія неактивна</string>
   <string name="promo_campaign_reactivation_summary_description">Отримуйте 0.5% кешбеку за кожний обмін від $500 у будь-якій парі, крім стейблкоїна на стейблкоїн. Максимальна виплата: $50 за обмін.\n\nЗдійсніть п\'ять відповідних умовам обмінів та розблокуйте додатковий бонус у $10.\n\nНагороди виплачуються щотижня в USDT або USDC на обрану адресу.</string>
   <string name="promo_campaign_select_cashback_account">Оберіть рахунок для кешбеку</string>
-  <string name="promo_campaign_select_token">Оберіть токен</string>
+  <string name="promo_campaign_select_token">Оберіть токен кешбеку</string>
   <string name="promo_campaign_summary_title">Долучитися до %1$s</string>
   <string name="promo_campaign_terms_agreement">Я приймаю %1$s</string>
   <string name="promo_campaign_terms_link">%1$s Умови</string>
@@ -1893,7 +1893,7 @@
   <string name="tangempay_bank_transfer_show_details">Показати деталі</string>
   <string name="tangempay_bank_transfer_success_subtitle">Це може зайняти певний час</string>
   <string name="tangempay_bank_transfer_success_title">Підготовка ваших банківських реквізитів</string>
-  <string name="tangempay_bank_transfer_swift_warning">Поповнення тільки через ACH або FedWire. Перекази SWIFT повертатимуться.</string>
+  <string name="tangempay_bank_transfer_swift_warning">SWIFT-перекази не приймаються, кошти буде повернено</string>
   <string name="tangempay_cancel_kyc">Приховати KYC з головного екрана</string>
   <string name="tangempay_card_default_name">Картка Tangem Pay 1</string>
   <string name="tangempay_card_details_add_funds">Поповнити рахунок</string>
@@ -2161,7 +2161,7 @@
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Отримуйте фіатні USD через ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_body">Отримуйте фіатні USD через ACH</string>
   <string name="tangempay_topup_bank_transfer_title">Банківський переказ</string>
   <string name="tangempay_topup_receive_body">Надішліть USDC Polygon на адресу вашого акаунту</string>
   <string name="tangempay_topup_receive_body_multichain">Надішліть USDC або USDT на адресу вашого рахунку</string>

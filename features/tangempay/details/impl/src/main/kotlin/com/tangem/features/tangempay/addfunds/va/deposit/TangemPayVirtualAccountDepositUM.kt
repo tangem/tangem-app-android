@@ -22,11 +22,8 @@ internal data class TangemPayVirtualAccountDepositUM(
 
         data class Content(val rows: ImmutableList<FeeRow>) : FeesUM
 
-        data class Error(
-            val isRetryLoading: Boolean,
-            val onRetryClick: () -> Unit,
-            val onContactSupportClick: () -> Unit,
-        ) : FeesUM
+        /** Fees could not be loaded — an inline "tap to reload" banner is shown in place of the fee rows. */
+        data class Error(val onRetryClick: () -> Unit) : FeesUM
     }
 
     @Immutable
