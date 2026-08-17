@@ -27,6 +27,7 @@ import com.tangem.tap.domain.sdk.mocks.content.V3MockContent
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2MockContent
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2PartialDerivationsMockContent
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
+import com.tangem.tap.domain.sdk.mocks.content.Wallet3MockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -322,6 +323,24 @@ class TokenListTest : BaseTestCase() {
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen(mockContent = V3MockContent)
+            }
+            step("Open 'Add & manage' bottom sheet") {
+                onMainScreen { addAndManageButton().assertIsDisplayed() }
+                onMainScreen { addAndManageButton().clickWithAssertion() }
+            }
+            step("Assert 'Organize tokens' button is displayed") {
+                onAddAndManageBottomSheet { organizeTokensButton.assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("10837")
+    @DisplayName("Token list: List displayed for Wallet 3.0 multicurrency card")
+    @Test
+    fun tokenListDisplayedForWallet3CardTest() {
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(mockContent = Wallet3MockContent)
             }
             step("Open 'Add & manage' bottom sheet") {
                 onMainScreen { addAndManageButton().assertIsDisplayed() }
