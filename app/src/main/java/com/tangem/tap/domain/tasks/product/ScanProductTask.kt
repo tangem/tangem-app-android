@@ -145,7 +145,13 @@ internal class ScanProductTask(
 
     override fun preflightReadMode(): PreflightReadMode {
         return if (shouldCheckIsAlreadyActivated) {
-            PreflightReadMode.FullCardReadWithAccessCodeCheck
+            PreflightReadMode.FullCardRead(
+                setOf(
+                    PreflightReadMode.FullCardRead.Option.AccessCodeCheck,
+                    PreflightReadMode.FullCardRead.Option.ReadMasterSecret,
+                    PreflightReadMode.FullCardRead.Option.VerifyBackup,
+                ),
+            )
         } else {
             super.preflightReadMode()
         }
