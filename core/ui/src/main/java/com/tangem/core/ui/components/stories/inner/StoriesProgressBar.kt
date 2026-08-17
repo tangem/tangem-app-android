@@ -7,7 +7,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -17,20 +17,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.SwapStoriesScreenTestTags
 import kotlinx.coroutines.delay
 
 private const val STORIES_ANIMATION_SPEED_ZERO_DURATION = 3000L
 const val STORY_DURATION = 8_000
 
+private val DEFAULT_CONTENT_PADDING = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp)
+private val DEFAULT_HEIGHT = 2.dp
+private const val DEFAULT_INACTIVE_ALPHA = .2f
+
 private suspend fun animationProgress(
     paused: Boolean,
     animatorSpeed: Float,
     stepDuration: Int,
+    holdWhenFinished: Boolean = false,
     progress: Animatable<Float, AnimationVector1D>,
     onStepFinish: () -> Unit,
 ) {
@@ -48,7 +53,8 @@ private suspend fun animationProgress(
                     easing = LinearEasing,
                 ),
             )
-            progress.snapTo(0f)
+
+            if (!holdWhenFinished) progress.snapTo(0f)
         }
         onStepFinish()
     }
@@ -60,6 +66,11 @@ fun StoriesProgressBar(
     currentStep: Int,
     paused: Boolean = false,
     stepDuration: Int = STORY_DURATION,
+    height: Dp = DEFAULT_HEIGHT,
+    segmentWidth: Dp? = null,
+    inactiveAlpha: Float = DEFAULT_INACTIVE_ALPHA,
+    contentPadding: PaddingValues = DEFAULT_CONTENT_PADDING,
+    holdWhenFinished: Boolean = false,
     onStepFinish: () -> Unit = {},
 ) {
     val progress = remember(currentStep) { Animatable(initialValue = 0f) }
@@ -76,6 +87,7 @@ fun StoriesProgressBar(
             paused = paused,
             animatorSpeed = animatorSpeed,
             stepDuration = stepDuration,
+            holdWhenFinished = holdWhenFinished,
             progress = progress,
             onStepFinish = onStepFinish,
         )
@@ -83,25 +95,21 @@ fun StoriesProgressBar(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .padding(
-                start = 16.dp,
-                end = 16.dp,
-                top = 16.dp,
-            ),
+        modifier = Modifier.padding(contentPadding),
     ) {
         for (index in 0..steps) {
+            val sizeModifier = if (segmentWidth == null) Modifier.weight(1f) else Modifier.width(segmentWidth)
             Row(
                 modifier = Modifier
-                    .height(2.dp)
-                    .weight(1f)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(TangemColorPalette.White.copy(alpha = .2f))
+                    .height(height)
+                    .then(sizeModifier)
+                    .clip(CircleShape)
+                    .background(TangemColorPalette.White.copy(alpha = inactiveAlpha))
                     .testTag(SwapStoriesScreenTestTags.PROGRESS_BAR_ITEM),
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(2.dp))
+                        .clip(CircleShape)
                         .background(TangemColorPalette.White)
                         .fillMaxHeight()
                         .let { modifier ->
@@ -113,7 +121,7 @@ fun StoriesProgressBar(
                         },
                 )
             }
-            SpacerW4()
+            if (index != steps) SpacerW4()
         }
     }
 }
@@ -125,8 +133,29 @@ private fun StoriesProgressBarPreview() {
         modifier = Modifier
             .wrapContentSize()
             .background(TangemColorPalette.Black)
-            .padding(vertical = TangemTheme.dimens.spacing16),
+            .padding(vertical = 16.dp),
     ) {
         StoriesProgressBar(steps = 5, currentStep = 3, paused = false)
+    }
+}
+
+@Preview
+@Composable
+private fun StoriesProgressBarPillsPreview() {
+    Box(
+        modifier = Modifier
+            .wrapContentSize()
+            .background(TangemColorPalette.Black)
+            .padding(vertical = 16.dp),
+    ) {
+        StoriesProgressBar(
+            steps = 4,
+            currentStep = 1,
+            paused = true,
+            height = 6.dp,
+            segmentWidth = 32.dp,
+            inactiveAlpha = .1f,
+            contentPadding = PaddingValues(),
+        )
     }
 }
