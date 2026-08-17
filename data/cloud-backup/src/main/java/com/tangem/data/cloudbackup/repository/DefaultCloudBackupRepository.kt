@@ -134,8 +134,12 @@ internal class DefaultCloudBackupRepository(
     ): Either<CloudBackupError, List<CloudBackupInfo>> {
         return withContext(dispatchers.io) {
             withAuthRetry(interactive = interactive) { authInteractive ->
-                val files = findBackupFiles(authHeader(interactive = authInteractive))
-                val supported = if (validateContent) filterSupported(files, cipher, ::downloadContent) else files
+                val auth = authHeader(interactive = authInteractive)
+                val files = findBackupFiles(auth)
+                // reuse the header already resolved with the requested interactivity — validation must not
+                // open its own interactive auth (account picker) during a non-interactive listing
+                val supported =
+                    if (validateContent) filterSupported(files, cipher) { downloadContentWith(auth, it) } else files
                 supported.map { file ->
                     CloudBackupInfo(
                         fileId = file.id,
@@ -186,17 +190,18 @@ internal class DefaultCloudBackupRepository(
 
     private suspend fun downloadContent(fileId: String): Either<CloudBackupError, String> {
         return withAuthRetry { authInteractive ->
-            val body = ensureNotNull(
-                execute(errorHandler = { CloudBackupError.ReadError(it) }) {
-                    api.downloadFileContent(
-                        authorization = authHeader(interactive = authInteractive),
-                        fileId = fileId,
-                    )
-                },
-            ) { CloudBackupError.BackupNotFound }
-            // .string() streams from the network — read it inside the IO error handling too
-            catchingIo(onError = { CloudBackupError.ReadError(it) }) { body.string() }
+            downloadContentWith(authHeader(interactive = authInteractive), fileId).bind()
         }
+    }
+
+    private suspend fun downloadContentWith(auth: String, fileId: String): Either<CloudBackupError, String> = either {
+        val body = ensureNotNull(
+            execute(errorHandler = { CloudBackupError.ReadError(it) }) {
+                api.downloadFileContent(authorization = auth, fileId = fileId)
+            },
+        ) { CloudBackupError.BackupNotFound }
+        // .string() streams from the network — read it inside the IO error handling too
+        catchingIo(onError = { CloudBackupError.ReadError(it) }) { body.string() }
     }
 
     /** `null` when the secret cannot be serialized, i.e. the mnemonic is not a BIP39 phrase */
