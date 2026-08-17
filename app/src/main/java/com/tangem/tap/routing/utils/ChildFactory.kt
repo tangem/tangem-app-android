@@ -22,6 +22,7 @@ import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
+import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
@@ -123,6 +124,7 @@ internal class ChildFactory @Inject constructor(
     private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
+    private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
@@ -677,6 +679,17 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = JointAccountJoinComponent.Params(inviteId = route.inviteId),
                     componentFactory = jointAccountJoinComponentFactory,
+                )
+            }
+            is AppRoute.JointAccountMembers -> {
+                createComponentChild(
+                    context = context,
+                    params = JointAccountMembersComponent.Params(
+                        userWalletId = route.userWalletId,
+                        mode = JointAccountMembersComponent.Mode.Invite,
+                        isCreator = true,
+                    ),
+                    componentFactory = jointAccountMembersComponentFactory,
                 )
             }
             is AppRoute.EditAccount -> {
