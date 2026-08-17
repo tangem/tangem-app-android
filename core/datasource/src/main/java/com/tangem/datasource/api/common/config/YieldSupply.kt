@@ -3,11 +3,12 @@ package com.tangem.datasource.api.common.config
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
+import com.tangem.core.remote.header.RequestHeader
 
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.utils.RequestHeader
+import com.tangem.datasource.utils.AuthenticationHeader
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
@@ -71,7 +72,7 @@ class YieldSupply(
             getApiKey(apiEnvironment)
         })
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
-        putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
+        putAll(from = AuthenticationHeader(authProvider).values)
     }
 
     private fun getApiKey(apiEnvironment: ApiEnvironment): String {
