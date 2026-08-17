@@ -59,7 +59,7 @@ internal class DefaultCashbackRepository @Inject constructor(
     ): Either<VisaApiError, TangemPayTxHistoryItem.Cashback?> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getCashbackDetails(authHeader = authHeader, transactionId = transactionId)
-        }.map { PayTransactionCashbackConverter.convert(it.cashback) }
+        }.map { PayTransactionCashbackConverter.convert(it.result?.cashback) }
     }
 
     override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean {
