@@ -71,7 +71,6 @@ internal object TangemPayCashbackDetailUmConverter {
         ExclusionReason.MERCHANT_COUNTRY_EXCLUDED ->
             resourceReference(R.string.tangem_pay_transaction_details_cashback_region_excluded)
         ExclusionReason.BELOW_MIN -> stringReference("Below minimum")
-        ExclusionReason.CUSTOMER_BLOCKLISTED,
         ExclusionReason.UNKNOWN,
         null,
         -> null
