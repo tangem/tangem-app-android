@@ -15,6 +15,10 @@ dependencies {
     api(deps.kotlin.coroutines)
     // endregion
 
+    // region Core
+    api(projects.core.pagination)
+    // endregion
+
     // region Domain
     api(projects.domain.core)
     api(projects.domain.models)
