@@ -46,8 +46,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.loader.TangemLoader
-import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -376,7 +374,7 @@ internal fun TokenRowMarketPriceContent(
 
 private const val PRICE_BLINK_FADE_DURATION_MILLIS = 500
 
-/** Title line: token name, optional pending-transaction loader, ticker (baseline-aligned), badge. */
+/** Title line: token name, optional pending-transaction dots, ticker (baseline-aligned), badge. */
 @Composable
 internal fun TokenRowTitleContent(
     title: TextReference,
@@ -402,10 +400,7 @@ internal fun TokenRowTitleContent(
                 .alignByBaseline(),
         )
         if (hasPending) {
-            TangemLoader(
-                size = TangemLoaderSize.X16,
-                color = TangemTheme.colors3.icon.tertiary,
-            )
+            TokenRowPendingDots()
         }
         if (ticker != null) {
             Text(
