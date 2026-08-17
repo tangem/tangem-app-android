@@ -1,9 +1,9 @@
 package com.tangem.data.transaction
 
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.gasless.TronGaslessApi
-import com.tangem.datasource.api.gasless.models.tron.TronEstimateRequestBody
-import com.tangem.datasource.api.gasless.models.tron.TronSubmitRequestBody
+import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
+import com.tangem.grow.datasource.gasless.models.tron.TronSubmitRequestBody
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
