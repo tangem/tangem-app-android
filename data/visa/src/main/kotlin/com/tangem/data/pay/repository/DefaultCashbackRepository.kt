@@ -49,7 +49,7 @@ internal class DefaultCashbackRepository @Inject constructor(
         months: Int,
     ): Either<VisaApiError, CashbackHistory> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getCashbackHistory(authHeader = authHeader, months = months)
+            tangemPayApi.getCashbackHistory(authHeader = authHeader, monthsNumber = months)
         }.map(CashbackHistoryConverter::convert)
     }
 
