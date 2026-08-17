@@ -187,7 +187,7 @@ internal class SwapModel @Inject constructor(
     private val params = paramsContainer.require<SwapComponent.Params>()
 
     private val initialCryptoCurrency = params.fromCryptoCurrency
-    private val tangemPayInput = params.tangemPayInput
+    private val accountFlow = params.accountFlow
 
     private var isBalanceHidden = true
 
@@ -468,7 +468,7 @@ internal class SwapModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 initialCryptoCurrency = initialCryptoCurrency,
                 swapCurrencyPosition = params.fromCurrencyPosition,
-                isPaymentAccount = params.tangemPayInput != null,
+                isPaymentAccount = accountFlow != null,
                 initialToCryptoCurrency = params.toCryptoCurrency,
             )
 
