@@ -10,14 +10,12 @@ import com.tangem.datasource.api.common.config.BlockAid
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
-import com.tangem.datasource.api.common.config.SurveySparrow
 import com.tangem.datasource.api.common.config.Auth
 
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
-import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
@@ -212,18 +210,6 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
                 apiConfigId = BlockAid.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideSurveySparrowApi(retrofitApiBuilder: RetrofitApiBuilder): SurveySparrowApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = SurveySparrow.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
