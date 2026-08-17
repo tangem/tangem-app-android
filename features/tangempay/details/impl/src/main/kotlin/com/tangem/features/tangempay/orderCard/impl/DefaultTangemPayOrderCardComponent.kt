@@ -104,7 +104,7 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
             params = TangemPayOrderCardSuccessComponent.Params(
                 deliveryEtaMaxBusinessDays = config.deliveryEtaMaxBusinessDays,
                 email = config.email,
-                onShowCard = { router.pop() },
+                onShowCard = model::onShowOrderedCard,
             ),
         )
     }

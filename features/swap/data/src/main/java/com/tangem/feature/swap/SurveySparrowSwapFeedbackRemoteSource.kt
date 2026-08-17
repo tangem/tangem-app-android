@@ -1,9 +1,9 @@
 package com.tangem.feature.swap
 
 import arrow.core.Either
-import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
-import com.tangem.datasource.api.surveysparrow.models.CreateSurveySparrowResponseBody
-import com.tangem.datasource.api.surveysparrow.models.SurveySparrowAnswerDto
+import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
+import com.tangem.store.datasource.surveysparrow.models.CreateSurveySparrowResponseBody
+import com.tangem.store.datasource.surveysparrow.models.SurveySparrowAnswerDto
 import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
 import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import org.json.JSONObject

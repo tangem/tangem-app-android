@@ -14,6 +14,7 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
+import com.tangem.features.tangempay.card.details.CardDetailsEventListener
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsController
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -34,6 +35,7 @@ internal class TangemPayEditDisplayNameModelTest {
     private val updateCardNameUseCase: UpdateTangemPayCardNameUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val cardDetailsEventListener: CardDetailsEventListener = mockk(relaxed = true)
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory = mockk(relaxed = true)
 
     init {
@@ -52,6 +54,7 @@ internal class TangemPayEditDisplayNameModelTest {
         updateCardNameUseCase = updateCardNameUseCase,
         uiMessageSender = uiMessageSender,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+        cardDetailsEventListener = cardDetailsEventListener,
         cardDetailsControllerFactory = cardDetailsControllerFactory,
     )
 
