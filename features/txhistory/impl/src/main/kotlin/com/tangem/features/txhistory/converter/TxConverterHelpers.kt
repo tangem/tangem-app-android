@@ -144,6 +144,7 @@ private fun TxInfo.feeRow(): TxHistoryDetailsUM.InfoRowUM? {
         value = stringReference(
             value.format { crypto(symbol = fee.currencySymbol, decimals = fee.decimals, ignoreSymbolPosition = true) },
         ),
+        isValueHideable = true,
     )
 }
 

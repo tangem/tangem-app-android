@@ -28,9 +28,17 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /** Shared top bar ("Nav bar"): type icon, status-driven title, date+time. */
     val header: HeaderUM
 
+    /**
+     * App-wide "hide balances" setting. When `true` the card masks its amounts with stars — the single-asset amount and
+     * its fiat line, both exchange legs, and the info rows marked [hideable][InfoRowUM.isValueHideable] (the network
+     * fee). The provider and rate rows are not amounts of the user's funds and stay visible.
+     */
+    val isBalanceHidden: Boolean
+
     /** Single-asset layout: Receive / Send / Transfer */
     data class SingleAsset(
         override val header: HeaderUM,
+        override val isBalanceHidden: Boolean,
         val amountBlock: AmountBlockUM,
         val counterparty: CounterpartyUM?,
         val rows: ImmutableList<InfoRowUM>,
@@ -48,6 +56,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      */
     data class TwoAssets(
         override val header: HeaderUM,
+        override val isBalanceHidden: Boolean,
         val from: AssetUM? = null,
         val to: AssetUM? = null,
         val statusBanner: StatusBannerUM? = null,
@@ -198,12 +207,16 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * provider row); `null` leaves the trailing slot text-only.
      *
      * [onClick] makes the row tappable (e.g. the provider row opens the provider page); `null` makes it non-interactive.
+     *
+     * [isValueHideable] marks the [value] as an amount of the user's own funds (the network fee), so it is masked under
+     * [isBalanceHidden]; a provider name or an exchange rate is not, and stays visible.
      */
     data class InfoRowUM(
         val label: TextReference,
         val value: TextReference,
         @DrawableRes val trailingIconRes: Int? = null,
         val onClick: (() -> Unit)? = null,
+        val isValueHideable: Boolean = false,
     )
 
     /**
