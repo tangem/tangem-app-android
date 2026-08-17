@@ -11,7 +11,6 @@ import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaRespo
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.ExpressTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryExpressTrigger
@@ -27,14 +26,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
-    @Assisted override val address: String,
-    @Assisted private val accountId: AccountId,
+    @Assisted override val walletId: UserWalletId,
     private val utils: TxHistoryFetcherUtils,
     private val expressSyncStateDao: ExpressSyncStateDao,
     private val expressHistoryRepository: DefaultExpressHistoryRepository,
 ) : ExpressTxHistoryFetcher, TxHistoryFetcherUtils by utils {
-
-    private val userWalletId: UserWalletId get() = accountId.userWalletId
 
     private var exchangeInitialPaginationJob: Job? = null
     private var exchangeDeltaPaginationJob: Job? = null
@@ -48,6 +44,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
                 when (trigger) {
                     is TxHistoryFetchTrigger.TokenDetailsOpen,
                     is TxHistoryFetchTrigger.TokenDetailsPTR,
+                    is TxHistoryFetchTrigger.WalletSelected,
                     -> {
                         fetchExchange()
                         fetchOnramp()
@@ -57,7 +54,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         defaultLaunchIn(receiveFlow)
     }
 
-    override suspend fun invoke(params: TxHistoryExpressTrigger) {
+    override fun invoke(params: TxHistoryExpressTrigger) {
         utils.sendTrigger(params)
     }
 
@@ -71,7 +68,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
             val isFirstFetch = expressSyncState() == null
 
             if (isFirstFetch) {
-                flow { emit(expressHistoryRepository.fetchExchangeHistory(address, userWalletId)) }
+                flow { emit(expressHistoryRepository.fetchExchangeHistory(walletId)) }
                     .retryThreeTimes()
                     .firstOrNull() ?: return@launch
             }
@@ -89,7 +86,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         var hasMore = true
         while (hasMore) {
             val pageResult: ExchangeHistoryResponse =
-                flow { emit(expressHistoryRepository.fetchExchangeHistory(address, userWalletId)) }
+                flow { emit(expressHistoryRepository.fetchExchangeHistory(walletId)) }
                     .retryThreeTimes()
                     .firstOrNull() ?: return
             hasMore = pageResult.pagination.hasMore
@@ -100,7 +97,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         var hasMore = true
         while (hasMore) {
             val pageResult: ExchangeHistoryDeltaResponse =
-                flow { emit(expressHistoryRepository.fetchExchangeHistoryDelta(address, userWalletId)) }
+                flow { emit(expressHistoryRepository.fetchExchangeHistoryDelta(walletId)) }
                     .retryThreeTimes()
                     .firstOrNull() ?: return
             hasMore = pageResult.pagination.hasMore
@@ -113,7 +110,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
             val isFirstFetch = onrampSyncState() == null
 
             if (isFirstFetch) {
-                flow { emit(expressHistoryRepository.fetchOnrampHistory(address, userWalletId)) }
+                flow { emit(expressHistoryRepository.fetchOnrampHistory(walletId)) }
                     .retryThreeTimes()
                     .firstOrNull() ?: return@launch
             }
@@ -131,7 +128,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         var hasMore = true
         while (hasMore) {
             val pageResult: OnrampHistoryResponse =
-                flow { emit(expressHistoryRepository.fetchOnrampHistory(address, userWalletId)) }
+                flow { emit(expressHistoryRepository.fetchOnrampHistory(walletId)) }
                     .retryThreeTimes()
                     .firstOrNull() ?: return
             hasMore = pageResult.pagination.hasMore
@@ -142,7 +139,7 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         var hasMore = true
         while (hasMore) {
             val pageResult: OnrampHistoryDeltaResponse =
-                flow { emit(expressHistoryRepository.fetchOnrampHistoryDelta(address, userWalletId)) }
+                flow { emit(expressHistoryRepository.fetchOnrampHistoryDelta(walletId)) }
                     .retryThreeTimes()
                     .firstOrNull() ?: return
             hasMore = pageResult.pagination.hasMore
@@ -150,15 +147,15 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
     }
 
     private suspend fun expressSyncState(): ExpressSyncStateEntity? = expressSyncStateDao
-        .observe(ExpressSyncStateEntity.Type.EXCHANGE.name, address)
+        .observe(ExpressSyncStateEntity.Type.EXCHANGE.name, walletId.stringValue)
         .first()
 
     private suspend fun onrampSyncState(): ExpressSyncStateEntity? = expressSyncStateDao
-        .observe(ExpressSyncStateEntity.Type.ONRAMP.name, address)
+        .observe(ExpressSyncStateEntity.Type.ONRAMP.name, walletId.stringValue)
         .first()
 
     @AssistedFactory
     internal interface Factory {
-        fun create(address: String, accountId: AccountId): DefaultExpressTxHistoryFetcher
+        fun create(walletId: UserWalletId): DefaultExpressTxHistoryFetcher
     }
 }
