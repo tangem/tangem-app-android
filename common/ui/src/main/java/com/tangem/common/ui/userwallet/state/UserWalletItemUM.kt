@@ -2,6 +2,7 @@ package com.tangem.common.ui.userwallet.state
 
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.artwork.ArtworkUM
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
 import javax.annotation.concurrent.Immutable
 
@@ -9,6 +10,7 @@ import javax.annotation.concurrent.Immutable
 data class UserWalletItemUM(
     val id: String,
     val name: TextReference,
+    val titleBadge: TangemBadgeUM? = null,
     val information: Information,
     val balance: Balance,
     val imageState: ImageState = ImageState.Loading,
