@@ -9,7 +9,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -38,7 +37,9 @@ internal class JointAccountsStore(
                 emptyMap()
             }
 
-            runtimeStore.store(value = hydrated)
+            // Merge under the store's mutex, keeping entries that a faster fetch already put in — hydration must
+            // never overwrite fresher data with the persisted copy
+            runtimeStore.update(default = emptyMap()) { stored -> hydrated + stored }
         }
     }
 
@@ -52,11 +53,12 @@ internal class JointAccountsStore(
 
     suspend fun contains(userWalletId: UserWalletId): Boolean = getSyncOrNull(userWalletId) != null
 
+    /** The runtime write must succeed; the persistence copy is best-effort — a disk failure must not fail a fetch. */
     suspend fun store(userWalletId: UserWalletId, accounts: List<JointAccount>) {
-        coroutineScope {
-            launch { storeInRuntime(userWalletId, accounts) }
-            launch { storeInPersistence(userWalletId, accounts) }
-        }
+        storeInRuntime(userWalletId, accounts)
+
+        runSuspendCatching { storeInPersistence(userWalletId, accounts) }
+            .onFailure { error -> logger.e(messageString = "Failed to persist", throwable = error) }
     }
 
     /** Downgrades the freshness of cached data; runtime only — persisted data is always restored as `CACHE`. */
