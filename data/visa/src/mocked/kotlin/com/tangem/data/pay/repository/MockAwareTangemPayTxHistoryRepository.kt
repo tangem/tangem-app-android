@@ -225,7 +225,6 @@ internal class MockAwareTangemPayTxHistoryRepository @Inject constructor(
             currency = value?.let { USD },
             isCapTrimmed = false,
             exclusionReason = null,
-            promotionIds = emptyList(),
         )
     }
 
