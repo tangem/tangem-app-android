@@ -39,12 +39,7 @@ dependencies {
     implementation(projects.domain.models)
     // endregion
 
-    // region Data
-    implementation(projects.data.common)
-    // endregion
-
     // region Tests
-    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     // endregion
 }
