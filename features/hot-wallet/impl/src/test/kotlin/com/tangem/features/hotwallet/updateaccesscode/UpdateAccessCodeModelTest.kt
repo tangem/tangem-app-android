@@ -52,9 +52,9 @@ internal class UpdateAccessCodeModelTest {
         val model = createModel(this, canSkip = false)
 
         // Act & Assert
-        assertThat(model.isSkipButtonVisible(UpdateAccessCodeRoute.SetAccessCode(walletId))).isFalse()
-        assertThat(model.isSkipButtonVisible(UpdateAccessCodeRoute.ConfirmAccessCode(walletId, "1111"))).isFalse()
-        assertThat(model.isSkipButtonVisible(UpdateAccessCodeRoute.SetupFinished)).isFalse()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.SetAccessCode(walletId))).isFalse()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.ConfirmAccessCode(walletId, "1111"))).isFalse()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.SetupFinished)).isFalse()
     }
 
     @Test
@@ -63,9 +63,23 @@ internal class UpdateAccessCodeModelTest {
         val model = createModel(this, canSkip = true)
 
         // Act & Assert
-        assertThat(model.isSkipButtonVisible(UpdateAccessCodeRoute.SetAccessCode(walletId))).isTrue()
-        assertThat(model.isSkipButtonVisible(UpdateAccessCodeRoute.ConfirmAccessCode(walletId, "1111"))).isTrue()
-        assertThat(model.isSkipButtonVisible(UpdateAccessCodeRoute.SetupFinished)).isFalse()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.SetAccessCode(walletId))).isTrue()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.ConfirmAccessCode(walletId, "1111"))).isTrue()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.SetupFinished)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN access code update started WHEN routes resolved THEN skip button is hidden`() = runTest {
+        // Arrange
+        val model = createModel(this, canSkip = true)
+
+        // Act
+        model.onAccessCodeUpdateStarted(walletId)
+
+        // Assert
+        assertThat(model.isAccessCodeUpdateStarted.value).isTrue()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.SetAccessCode(walletId))).isFalse()
+        assertThat(model.isSkipVisible(UpdateAccessCodeRoute.ConfirmAccessCode(walletId, "1111"))).isFalse()
     }
 
     @Test
@@ -129,6 +143,9 @@ internal class UpdateAccessCodeModelTest {
         // Assert
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
+
+    private fun UpdateAccessCodeModel.isSkipVisible(route: UpdateAccessCodeRoute): Boolean =
+        isSkipButtonVisible(route = route, isUpdateStarted = isAccessCodeUpdateStarted.value)
 
     private fun createModel(testScope: TestScope, canSkip: Boolean): UpdateAccessCodeModel {
         every { paramsContainer.require<UpdateAccessCodeComponent.Params>() } returns
