@@ -4,9 +4,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 internal class DefaultCardDetailsEventListener @Inject constructor() : CardDetailsEventListener {
 
     private val _event = MutableSharedFlow<CardDetailsEvent>(
