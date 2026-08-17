@@ -1,9 +1,12 @@
 package com.tangem.google.auth
 
+import android.accounts.Account
+import android.accounts.AccountManager
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.google.android.gms.auth.GoogleAuthUtil
@@ -31,7 +34,8 @@ import kotlin.coroutines.resumeWithException
  *
  * Requests exactly the caller-provided scopes, so a feature grants only what it needs. When the
  * client needs user interaction it returns a resolution `PendingIntent`, which is launched through
- * [GoogleAuthActivityResultBridge]. The access token is never logged.
+ * [GoogleAuthActivityResultBridge]. An interactive authorization first asks which account to use, see
+ * [resolveAccount]. The access token is never logged.
  */
 @Singleton
 internal class GoogleIdentityAuthorizer @Inject constructor(
@@ -42,15 +46,20 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
 
     private val logger = TangemLogger.withTag(TAG)
 
+    @Volatile
+    private var selectedAccount: Account? = null
+
     @Suppress("TooGenericExceptionCaught")
     override suspend fun authorize(
         scopes: List<GoogleAuthScope>,
         interactive: Boolean,
     ): Either<GoogleAuthError, GoogleAuthResult> {
         return try {
-            val request = AuthorizationRequest.builder()
+            val account = resolveAccount(interactive).getOrElse { return it.left() }
+            val requestBuilder = AuthorizationRequest.builder()
                 .setRequestedScopes(scopes.map { Scope(it.value) })
-                .build()
+            if (account != null) requestBuilder.setAccount(account)
+            val request = requestBuilder.build()
 
             val result = Identity.getAuthorizationClient(context)
                 .authorize(request)
@@ -75,9 +84,49 @@ internal class GoogleIdentityAuthorizer @Inject constructor(
     }
 
     override fun clearAuthorization() {
-        // Nothing is cached here: AuthorizationClient is created per call and exposes no revocation,
-        // so forgetting the account means the caller dropping its token (see clearToken)
+        selectedAccount = null
     }
+
+    /**
+     * The account to pin the request to, or `null` to leave the choice to Google Identity.
+     *
+     * `AuthorizationClient` reuses the account of the granted session and offers no way to change it, so
+     * without an explicit pick a user with several accounts is stuck with the one used first. The pick is
+     * held until [clearAuthorization]. Silent authorization shows no UI and so gets no pick; a missing
+     * launcher falls back to the implicit account rather than failing the authorization.
+     */
+    private suspend fun resolveAccount(interactive: Boolean): Either<GoogleAuthError, Account?> {
+        selectedAccount?.let { return it.right() }
+        if (!interactive) return null.right()
+
+        val result = try {
+            activityResultBridge.launchAccountPicker(newChooseGoogleAccountIntent())
+        } catch (e: GoogleAuthLauncherUnavailableException) {
+            logger.e("Google account picker is unavailable")
+            return null.right()
+        }
+
+        if (result.resultCode != Activity.RESULT_OK) return GoogleAuthError.AuthCanceled.left()
+
+        // an OK result without a name means the pick did not happen; authorizing anyway would silently
+        // use whichever account Google Identity picks on its own
+        val name = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
+            ?: return GoogleAuthError.AuthCanceled.left()
+
+        val account = Account(name, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE)
+        selectedAccount = account
+        return account.right()
+    }
+
+    private fun newChooseGoogleAccountIntent(): Intent = AccountManager.newChooseAccountIntent(
+        /* selectedAccount = */ null,
+        /* allowableAccounts = */ null,
+        /* allowableAccountTypes = */ arrayOf(GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE),
+        /* descriptionOverrideText = */ null,
+        /* addAccountAuthTokenType = */ null,
+        /* addAccountRequiredFeatures = */ null,
+        /* addAccountOptions = */ null,
+    )
 
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun clearToken(token: String) {
