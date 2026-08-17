@@ -401,6 +401,7 @@
   <string name="common_in">in</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
+  <string name="common_joint">Joint</string>
   <string name="common_joint_account">Joint account</string>
   <string name="common_later">Later</string>
   <string name="common_learn_more">Learn more</string>
