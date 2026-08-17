@@ -7,9 +7,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
-import com.tangem.domain.polymarket.usecase.HasPolymarketDepositNetworkUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -103,13 +101,5 @@ internal object PolymarketDomainUseCasesModule {
         userWalletsListRepository: UserWalletsListRepository,
     ): GetPolymarketEligibleWalletsUseCase = GetPolymarketEligibleWalletsUseCase(
         userWalletsListRepository = userWalletsListRepository,
-    )
-
-    @Provides
-    @Singleton
-    fun provideHasPolymarketDepositNetworkUseCase(
-        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-    ): HasPolymarketDepositNetworkUseCase = HasPolymarketDepositNetworkUseCase(
-        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
     )
 }
