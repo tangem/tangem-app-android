@@ -40,13 +40,16 @@ interface ExpressHistoryDao {
      * Outgoing swaps: the viewed currency is the swap's `from` side, so the row is looked up by its `from_address`.
      * Join to on-chain by `payin_hash`.
      *
+     * [fromAddresses] holds every address the currency is watched under — the default one plus the dynamic (UTXO)
+     * addresses already used, so a swap paid from a non-base address is still found.
+     *
 
      * loading the whole table; [activeStatuses] keeps in-progress deals visible even outside the window.
      */
     @Query(
         """
         SELECT * FROM express_exchange
-        WHERE from_address = :fromAddress
+        WHERE from_address IN (:fromAddresses)
           AND from_network = :network
           AND from_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -54,7 +57,7 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeOutgoingSwaps(
-        fromAddress: String,
+        fromAddresses: List<String>,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
@@ -63,12 +66,12 @@ interface ExpressHistoryDao {
 
     /**
      * Incoming swaps: the viewed currency is the swap's `to` side, so the row is looked up by its `payout_address`
-     * (where the target assets landed = this currency's address). Join to on-chain by `payout_hash`.
+     * (where the target assets landed = one of this currency's addresses). Join to on-chain by `payout_hash`.
      */
     @Query(
         """
         SELECT * FROM express_exchange
-        WHERE payout_address = :payoutAddress
+        WHERE payout_address IN (:payoutAddresses)
           AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -76,7 +79,7 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeIncomingSwaps(
-        payoutAddress: String,
+        payoutAddresses: List<String>,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
@@ -89,7 +92,7 @@ interface ExpressHistoryDao {
     @Query(
         """
         SELECT * FROM express_onramp
-        WHERE payout_address = :payoutAddress
+        WHERE payout_address IN (:payoutAddresses)
           AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -97,7 +100,7 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeIncomingOnramps(
-        payoutAddress: String,
+        payoutAddresses: List<String>,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
