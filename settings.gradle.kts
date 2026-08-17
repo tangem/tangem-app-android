@@ -420,6 +420,9 @@ include(":features:common-features:impl")
 
 include(":features:for-you:api")
 include(":features:for-you:impl")
+
+include(":features:collectibles:api")
+include(":features:collectibles:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -438,6 +441,7 @@ include(":domain:demo")
 include(":domain:demo:models")
 include(":domain:dynamic-addresses")
 include(":domain:dynamic-addresses:models")
+include(":domain:joint-account")
 include(":domain:settings")
 include(":domain:tokens")
 include(":domain:tokens:models")
