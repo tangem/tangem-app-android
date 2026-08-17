@@ -19,10 +19,10 @@ import androidx.compose.ui.platform.LocalAccessibilityManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
 /**
@@ -47,25 +47,14 @@ import kotlin.coroutines.resume
  */
 @Composable
 fun TangemTopSnackbarHost(hostState: TangemTopSnackbarHostState, modifier: Modifier = Modifier) {
-    val myDepth = remember(hostState) { hostState.registerHost() }
+    val accessibilityManager = LocalAccessibilityManager.current
+    val myDepth = remember(hostState) { hostState.registerHost(accessibilityManager) }
     DisposableEffect(hostState) {
         onDispose { hostState.unregisterHost(myDepth) }
     }
 
-    // Only the deepest host in the composition tree handles the snackbar.
-    val isDeepest = hostState.activeHostDepth == myDepth
-    val currentSnackbar = if (isDeepest) hostState.currentSnackbar else null
-    val accessibilityManager = LocalAccessibilityManager.current
-
-    LaunchedEffect(currentSnackbar) {
-        if (currentSnackbar == null) return@LaunchedEffect
-        val duration = currentSnackbar.duration.toMillis(
-            hasAction = currentSnackbar.action != null,
-            accessibilityManager = accessibilityManager,
-        )
-        delay(duration)
-        currentSnackbar.onDismissRequest()
-    }
+    // Only the host that owns the currently shown snackbar displays it.
+    val currentSnackbar = if (hostState.isSnackbarHost(myDepth)) hostState.currentSnackbar else null
 
     ScaleFromTopWithFade(
         current = currentSnackbar,
@@ -102,26 +91,34 @@ class TangemTopSnackbarHostState {
     private val mutex = Mutex()
 
     var currentSnackbar by mutableStateOf<SnackbarMessage?>(null)
-
-    // Tracks which depth level is the deepest registered host.
-    // Composed as observable state so hosts recompose when a deeper/shallower one is added/removed.
-    var activeHostDepth by mutableIntStateOf(0)
         private set
+
+    // Depth of the host that displays [currentSnackbar]. It is captured once, when the snackbar is shown, so a host
+    // registered later (e.g. a bottom sheet opened on top) does not steal an already displayed snackbar.
+    // Composed as observable state so hosts recompose when the ownership changes.
+    private var snackbarHostDepth by mutableIntStateOf(0)
 
     private var hostDepthCounter = 0
 
-    internal fun registerHost(): Int {
+    private var accessibilityManager: AccessibilityManager? = null
+
+    internal fun registerHost(accessibilityManager: AccessibilityManager?): Int {
+        this.accessibilityManager = accessibilityManager
         hostDepthCounter++
-        activeHostDepth = hostDepthCounter
         return hostDepthCounter
     }
 
     internal fun unregisterHost(depth: Int) {
         if (depth == hostDepthCounter) {
             hostDepthCounter--
-            activeHostDepth = hostDepthCounter
+            // The host that displayed the snackbar is gone, pass the snackbar to the deepest one left.
+            if (snackbarHostDepth > hostDepthCounter) {
+                snackbarHostDepth = hostDepthCounter
+            }
         }
     }
+
+    internal fun isSnackbarHost(depth: Int): Boolean = depth == snackbarHostDepth
 
     suspend fun showSnackbar(
         message: String,
@@ -148,11 +145,24 @@ class TangemTopSnackbarHostState {
     suspend fun showSnackbar(message: SnackbarMessage) {
         mutex.withLock {
             try {
-                suspendCancellableCoroutine { continuation ->
-                    currentSnackbar = message.withDismiss(
-                        onDismiss = { if (continuation.isActive) continuation.resume(Unit) },
-                    )
-                }
+                snackbarHostDepth = hostDepthCounter
+
+                // The timeout is counted here and not in the host, so that changing the displaying host does not
+                // prolong the lifetime of the snackbar.
+                val timeout = message.duration.toMillis(
+                    hasAction = message.action != null,
+                    accessibilityManager = accessibilityManager,
+                )
+                val isTimedOut = withTimeoutOrNull(timeout) {
+                    suspendCancellableCoroutine { continuation ->
+                        currentSnackbar = message.withDismiss(
+                            onDismiss = { if (continuation.isActive) continuation.resume(Unit) },
+                        )
+                    }
+                } == null
+
+                // Dismissal by an action or by a request is reported by the message itself, timeout is not.
+                if (isTimedOut) message.onDismissRequest()
             } finally {
                 currentSnackbar = null
             }
