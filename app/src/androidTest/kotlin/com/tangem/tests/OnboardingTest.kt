@@ -6,6 +6,8 @@ import com.tangem.tap.domain.sdk.mocks.content.ShibaNoBackupMockContent
 import com.tangem.tap.domain.sdk.mocks.content.ShibaNoBackupNoWalletsMockContent
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2NoBackupMockContent
 import com.tangem.tap.domain.sdk.mocks.content.Wallet2NoBackupNoWalletsMockContent
+import com.tangem.tap.domain.sdk.mocks.content.Wallet3NoBackupMockContent
+import com.tangem.tap.domain.sdk.mocks.content.Wallet3NoBackupNoWalletsMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -52,6 +54,28 @@ class OnboardingTest : BaseTestCase() {
     fun wallet2BackupScreenTest() {
         setupHooks().run {
             scanCard(mockContent = Wallet2NoBackupMockContent)
+            checkBackupScreen()
+        }
+    }
+
+    @AllureId("10816")
+    @DisplayName("Onboarding: 'Wallet 3' no wallets backup screen test")
+    @Test
+    fun wallet3NoWalletsBackupScreenTest() {
+        setupHooks().run {
+            scanCard(mockContent = Wallet3NoBackupNoWalletsMockContent)
+            // Wallet 3 shows the same Create-wallet/backup onboarding screens as Wallet 2 — reuse its helpers.
+            checkCreateWalletScreenForWallet2NoWallets()
+            openAndCheckBackupScreenForWallet2NoWallets()
+        }
+    }
+
+    @AllureId("10820")
+    @DisplayName("Onboarding: 'Wallet 3' with wallets backup screen test")
+    @Test
+    fun wallet3BackupScreenTest() {
+        setupHooks().run {
+            scanCard(mockContent = Wallet3NoBackupMockContent)
             checkBackupScreen()
         }
     }
