@@ -30,41 +30,6 @@ internal data class TangemPayOrderCardTypeUM(
     )
 
     enum class FeeState { Default, FreeDelivery, InsufficientFunds }
-
-    companion object {
-        @Suppress("MagicNumber")
-        fun stub(
-            isLoading: Boolean = false,
-            isError: Boolean = false,
-            isPlasticAvailable: Boolean = true,
-            cardImageUrl: String? = null,
-            issueFee: String = "$5",
-            country: String = "Afghanistan",
-            deliveryFee: String = "$10",
-            deliveryEtaMaxBusinessDays: Int = 20,
-            feeState: FeeState = FeeState.Default,
-        ) = TangemPayOrderCardTypeUM(
-            isLoading = isLoading,
-            isError = isError,
-            availableTypes = availableTypesOf(isPlasticAvailable),
-            cardImageUrl = cardImageUrl,
-            virtual = Virtual(issueFee = issueFee),
-            plastic = if (isPlasticAvailable) {
-                Plastic(
-                    country = country,
-                    deliveryFee = deliveryFee,
-                    deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
-                    feeState = feeState,
-                )
-            } else {
-                null
-            },
-            onBackClick = {},
-            onRetry = {},
-            onSelectVirtual = {},
-            onSelectPlastic = {},
-        )
-    }
 }
 
 internal enum class OrderCardType { Virtual, Plastic }
