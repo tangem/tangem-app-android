@@ -21,6 +21,7 @@ import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupComplete
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
 import com.tangem.features.hotwallet.manualbackup.start.ManualBackupStartComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
@@ -59,6 +60,7 @@ internal class CreateWalletBackupModel @Inject constructor(
         super.onDestroy()
         trackingContextProxy.removeContext()
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
+            .onLeft { TangemLogger.e("Failed to clear the contextual unlock for ${params.userWalletId}", it) }
     }
 
     fun onBack() {
