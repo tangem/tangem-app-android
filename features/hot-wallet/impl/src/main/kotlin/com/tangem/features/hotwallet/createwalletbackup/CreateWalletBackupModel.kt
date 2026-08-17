@@ -13,6 +13,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.popTo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.features.hotwallet.CreateWalletBackupComponent
 import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBackupRoute
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
@@ -20,6 +21,7 @@ import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupComplete
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
 import com.tangem.features.hotwallet.manualbackup.start.ManualBackupStartComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
@@ -30,6 +32,7 @@ internal class CreateWalletBackupModel @Inject constructor(
     private val router: Router,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
 ) : Model() {
 
     val params = paramsContainer.require<CreateWalletBackupComponent.Params>()
@@ -56,6 +59,8 @@ internal class CreateWalletBackupModel @Inject constructor(
     override fun onDestroy() {
         super.onDestroy()
         trackingContextProxy.removeContext()
+        clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
+            .onLeft { TangemLogger.e("Failed to clear the contextual unlock for ${params.userWalletId}", it) }
     }
 
     fun onBack() {
