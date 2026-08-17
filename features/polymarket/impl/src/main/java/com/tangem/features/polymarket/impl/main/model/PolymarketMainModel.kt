@@ -24,6 +24,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -150,6 +151,7 @@ internal class PolymarketMainModel @Inject constructor(
                 )
                 uiState.update(transformer::transform)
             }
+            .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
 
