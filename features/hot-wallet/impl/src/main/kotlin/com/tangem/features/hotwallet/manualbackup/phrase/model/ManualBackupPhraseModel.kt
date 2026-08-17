@@ -49,8 +49,11 @@ internal class ManualBackupPhraseModel @Inject constructor(
 
     init {
         modelScope.launch {
-            val userWallet = getUserWalletUseCase(params.userWalletId)
-                .getOrElse { null } as? UserWallet.Hot ?: return@launch
+            val userWallet = getUserWalletUseCase(params.userWalletId).getOrElse { null }
+            if (userWallet !is UserWallet.Hot) {
+                TangemLogger.e("Hot wallet ${params.userWalletId} not found for a manual backup")
+                return@launch
+            }
 
             ensureWalletUnlocked(userWallet.hotWalletId)
                 .flatMap { exportSeedPhraseUseCase.invoke(userWallet.hotWalletId) }
