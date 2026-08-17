@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.txhistory.details
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
@@ -20,6 +21,9 @@ import java.util.Currency
 internal object TangemPayCashbackDetailUmConverter {
 
     private val defaultCurrency: Currency = Currency.getInstance("USD")
+
+    // TODO([REDACTED_JIRA])
+    private const val BELOW_MIN_STUB = "0"
 
     fun convert(
         transaction: TangemPayTxHistoryItem,
@@ -70,7 +74,10 @@ internal object TangemPayCashbackDetailUmConverter {
             resourceReference(R.string.tangem_pay_transaction_details_cashback_cap_reached)
         ExclusionReason.MERCHANT_COUNTRY_EXCLUDED ->
             resourceReference(R.string.tangem_pay_transaction_details_cashback_region_excluded)
-        ExclusionReason.BELOW_MIN -> stringReference("Below minimum")
+        ExclusionReason.BELOW_MIN -> resourceReference(
+            id = R.string.tangem_pay_transaction_details_cashback_below_min,
+            formatArgs = wrappedList(BELOW_MIN_STUB),
+        )
         ExclusionReason.UNKNOWN,
         null,
         -> null

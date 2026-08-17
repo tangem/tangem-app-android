@@ -1,5 +1,8 @@
 package com.tangem.features.hotwallet.createmobilewallet
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -17,7 +20,9 @@ import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.features.hotwallet.CreateMobileWalletComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.createmobilewallet.entity.CreateMobileWalletUM
+import com.tangem.features.hotwallet.createmobilewallet.importoptions.ImportOptionsBottomSheetConfig
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
@@ -46,9 +51,12 @@ internal class CreateMobileWalletModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params: CreateMobileWalletComponent.Params = paramsContainer.require()
+
+    val importOptionsBottomSheetNavigation = SlotNavigation<ImportOptionsBottomSheetConfig>()
 
     internal val uiState: StateFlow<CreateMobileWalletUM>
         field = MutableStateFlow(
@@ -79,7 +87,26 @@ internal class CreateMobileWalletModel @Inject constructor(
     private fun onImportClick() {
         analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet())
         checkHotWalletCreationSupported(notSupported = { return })
-        router.push(AppRoute.AddExistingWallet)
+
+        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            importOptionsBottomSheetNavigation.activate(ImportOptionsBottomSheetConfig)
+        } else {
+            router.push(AppRoute.AddExistingWallet())
+        }
+    }
+
+    fun onImportRecoveryPhrase() {
+        importOptionsBottomSheetNavigation.dismiss()
+        router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+    }
+
+    fun onImportCloudBackupsResolved() {
+        importOptionsBottomSheetNavigation.dismiss()
+        router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
+    }
+
+    fun onImportBottomSheetDismiss() {
+        importOptionsBottomSheetNavigation.dismiss()
     }
 
     private fun onCreateClick() {
