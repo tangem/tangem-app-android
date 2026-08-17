@@ -23,4 +23,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     api(projects.core.remote)
+    api(projects.core.utils)
+
+    testImplementation(projects.test.core)
+    testImplementation(deps.moshi.kotlin)
 }

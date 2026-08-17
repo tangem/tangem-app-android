@@ -92,23 +92,6 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(GaslessTxService.KEY)
-    fun provideGaslessServiceConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
-        return GaslessTxService(
-            authProvider = authProvider,
-            appInfoProvider = appInfoProvider,
-        )
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(SurveySparrow.KEY)
-    fun provideSurveySparrowConfig(environmentConfig: EnvironmentConfig): ApiConfig {
-        return SurveySparrow(environmentConfig)
-    }
-
-    @Provides
-    @IntoMap
     @StringKey(Auth.KEY)
     fun provideAuthConfig(): ApiConfig {
         return Auth()

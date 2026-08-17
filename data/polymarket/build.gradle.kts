@@ -13,6 +13,11 @@ android {
 
 dependencies {
 
+    // region AndroidX
+    // DataStore persistence of the prediction account status (see com.tangem.data.polymarket.store).
+    implementation(deps.androidx.datastore)
+    // endregion
+
     // region Kotlin
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
@@ -38,12 +43,14 @@ dependencies {
     // region Core
     api(projects.core.datasource)
     api(projects.core.utils)
+    implementation(projects.core.pagination)
     implementation(projects.data.common)
     // endregion
 
     // region Domain
     api(projects.domain.polymarket)
     api(deps.moshi)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.wallets)
     implementation(projects.domain.common)
     implementation(projects.domain.card)
@@ -52,6 +59,7 @@ dependencies {
     // endregion
 
     // region tests
+    testImplementation(deps.androidx.datastore.core)
     testImplementation(projects.test.core)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
