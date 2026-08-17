@@ -385,6 +385,8 @@ include(":features:yield-supply:impl")
 
 include(":features:polymarket:api")
 include(":features:polymarket:impl")
+include(":features:polymarket:main:api")
+include(":features:polymarket:main:impl")
 
 include(":features:approval:api")
 include(":features:approval:impl")
