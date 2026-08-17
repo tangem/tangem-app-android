@@ -65,6 +65,7 @@ dependencies {
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.visa)
     // endregion
 
