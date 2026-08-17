@@ -72,7 +72,8 @@ internal class UpdateAccessCodeModel @Inject constructor(
         }
 
     fun onSkipClick() {
-        if (isAccessCodeUpdateStarted) return
+        // guard the action itself, not just the button: skipping must stay impossible for non-skippable entry points
+        if (!params.canSkip || isAccessCodeUpdateStarted) return
         showSkipAccessCodeWarningDialog()
     }
 
