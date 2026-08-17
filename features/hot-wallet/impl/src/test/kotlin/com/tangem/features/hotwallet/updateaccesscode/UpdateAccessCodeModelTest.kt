@@ -105,6 +105,19 @@ internal class UpdateAccessCodeModelTest {
     }
 
     @Test
+    fun `GIVEN canSkip false WHEN skip clicked THEN dialog is not shown`() = runTest {
+        // Arrange
+        val model = createModel(this, canSkip = false)
+
+        // Act
+        model.onSkipClick()
+
+        // Assert
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        coVerify(exactly = 0) { setAccessCodeSkippedUseCase(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN access code update started WHEN skip clicked THEN dialog is not shown`() = runTest {
         // Arrange
         val model = createModel(this, canSkip = true)
