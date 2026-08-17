@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
+import com.tangem.core.ui.components.block.BlockItemColors
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.items.DescriptionItem
@@ -62,7 +64,7 @@ internal fun WalletSettingsScreen(
     modifier: Modifier = Modifier,
     dialog: @Composable () -> Unit,
 ) {
-    val backgroundColor = TangemTheme.colors.background.secondary
+    val backgroundColor = TangemTheme.colors3.bg.primary
 
     Scaffold(
         modifier = modifier,
@@ -106,8 +108,8 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             Text(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
                 text = stringResourceSafe(id = R.string.wallet_settings_title),
-                style = TangemTheme.typography.h1,
-                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography3.heading.medium,
+                color = TangemTheme.colors3.text.primary,
             )
         }
         items(
@@ -178,7 +180,7 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
                 .fillMaxWidth()
                 .background(
                     shape = TangemTheme.shapes.roundedCornersXMedium,
-                    color = TangemTheme.colors.background.primary,
+                    color = TangemTheme.colors3.bg.secondary,
                 ),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
@@ -187,6 +189,7 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
                 BlockItem(
                     modifier = Modifier.fillMaxWidth(),
                     model = block,
+                    colors = walletSettingsBlockItemColors,
                 )
             }
         }
@@ -196,8 +199,8 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
                 Text(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
                     text = description.resolveReference(),
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors3.text.tertiary,
+                    style = TangemTheme.typography3.caption.medium,
                 )
             }
         }
@@ -209,6 +212,7 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
     BlockCard(
         modifier = modifier.fillMaxWidth(),
         enabled = model.isEnabled,
+        colors = walletSettingsBlockCardColors,
         onClick = model.onClick,
     ) {
         Column {
@@ -221,15 +225,15 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = model.title.resolveReference(),
-                        color = TangemTheme.colors.text.tertiary,
-                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors3.text.tertiary,
+                        style = TangemTheme.typography3.caption.medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = model.text.resolveReference(),
-                        color = TangemTheme.colors.text.primary1,
-                        style = TangemTheme.typography.subtitle1,
+                        color = TangemTheme.colors3.text.primary,
+                        style = TangemTheme.typography3.body.medium,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                     )
@@ -251,12 +255,13 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = TangemTheme.dimens.spacing12),
-                        color = TangemTheme.colors.stroke.primary,
+                        color = TangemTheme.colors3.border.secondary,
                     )
 
                     BlockItem(
                         modifier = Modifier.fillMaxWidth(),
                         model = model.additionalBlock,
+                        colors = walletSettingsBlockItemColors,
                     )
                 }
             }
@@ -269,6 +274,7 @@ private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifi
     BlockCard(
         modifier = modifier.fillMaxWidth(),
         enabled = model.isChecked,
+        colors = walletSettingsBlockCardColors,
     ) {
         Row(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
@@ -278,8 +284,8 @@ private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifi
             Text(
                 modifier = Modifier.weight(1f),
                 text = model.title.resolveReference(),
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -313,7 +319,7 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
                     topStart = TangemTheme.dimens.radius16,
                     topEnd = TangemTheme.dimens.radius16,
                 ),
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
             )
             .padding(
                 start = TangemTheme.dimens.spacing12,
@@ -322,8 +328,8 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
                 bottom = TangemTheme.dimens.spacing4,
             ),
         text = model.text.resolveReference(),
-        style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
+        style = TangemTheme.typography3.subheading.medium,
+        color = TangemTheme.colors3.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -353,12 +359,13 @@ private fun LazyItemScope.AccountItem(
         ) {
             UserWalletItem(
                 state = model.state,
+                blockColors = walletSettingsBlockCardColors,
                 modifier = Modifier
                     .longPressDraggableHandle(
                         enabled = accountReorderUM.isDragEnabled,
                         onDragStopped = accountReorderUM.onDragStopped,
                     )
-                    .background(color = TangemTheme.colors.background.primary),
+                    .background(color = TangemTheme.colors3.bg.secondary),
             )
         }
     }
@@ -373,7 +380,7 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
                     bottomStart = TangemTheme.dimens.radius16,
                     bottomEnd = TangemTheme.dimens.radius16,
                 ),
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
             ),
         ) {
             AddAccountRow(model.addAccount)
@@ -387,12 +394,13 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = TangemTheme.dimens.spacing12),
-                        color = TangemTheme.colors.stroke.primary,
+                        color = TangemTheme.colors3.border.secondary,
                     )
 
                     BlockItem(
                         modifier = Modifier.fillMaxWidth(),
                         model = model.archivedAccounts,
+                        colors = walletSettingsBlockItemColors,
                     )
                 }
             }
@@ -402,8 +410,8 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
         Text(
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
             text = model.description.resolveReference(),
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors3.text.tertiary,
+            style = TangemTheme.typography3.caption.medium,
         )
     }
 }
@@ -414,18 +422,19 @@ private fun AddAccountRow(model: WalletSettingsAccountsUM.Footer.AddAccountUM, m
     val backgroundColor: Color
     val textColor: Color
     if (model.isAddAccountEnabled) {
-        iconTint = TangemTheme.colors.icon.accent
-        backgroundColor = TangemTheme.colors.icon.accent.copy(alpha = 0.1f)
-        textColor = TangemTheme.colors.text.accent
+        iconTint = TangemTheme.colors3.icon.brand
+        backgroundColor = TangemTheme.colors3.bg.status.infoSubtle
+        textColor = TangemTheme.colors3.text.brand
     } else {
-        iconTint = TangemTheme.colors.icon.inactive
-        backgroundColor = TangemTheme.colors.field.primary
-        textColor = TangemTheme.colors.text.disabled
+        iconTint = TangemTheme.colors3.icon.tertiary
+        backgroundColor = TangemTheme.colors3.bg.disabled
+        textColor = TangemTheme.colors3.text.tertiary
     }
     Row(
         modifier = modifier
             .clickable(onClick = model.onAddAccountClick)
             .fillMaxWidth()
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
@@ -449,7 +458,7 @@ private fun AddAccountRow(model: WalletSettingsAccountsUM.Footer.AddAccountUM, m
         Text(
             text = model.title.resolveReference(),
             color = textColor,
-            style = TangemTheme.typography.subtitle1,
+            style = TangemTheme.typography3.body.medium,
         )
     }
 }
@@ -471,7 +480,28 @@ private fun DescriptionWithMoreBlock(
     )
 }
 
-private val DESCRIPTION_OFFSET = -8.dp
+private val DESCRIPTION_OFFSET = (-8).dp
+
+private val walletSettingsBlockCardColors: CardColors
+    @Composable
+    @ReadOnlyComposable
+    get() = CardColors(
+        containerColor = TangemTheme.colors3.bg.secondary,
+        contentColor = TangemTheme.colors3.text.primary,
+        disabledContainerColor = TangemTheme.colors3.bg.secondary,
+        disabledContentColor = TangemTheme.colors3.text.primary,
+    )
+
+private val walletSettingsBlockItemColors: BlockItemColors
+    @Composable
+    @ReadOnlyComposable
+    get() = BlockItemColors(
+        cardColors = walletSettingsBlockCardColors,
+        leadingIconColor = TangemTheme.colors3.icon.secondary,
+        textColor = TangemTheme.colors3.text.primary,
+        accentColor = TangemTheme.colors3.text.brand,
+        warningColor = TangemTheme.colors3.text.status.error,
+    )
 
 // region Preview
 @Composable
