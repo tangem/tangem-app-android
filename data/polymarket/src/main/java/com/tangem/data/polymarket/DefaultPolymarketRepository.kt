@@ -13,7 +13,9 @@ import com.tangem.data.polymarket.converter.PolymarketWalletConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
+import com.tangem.data.polymarket.pagination.PolymarketEventsBatchFetcher
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
@@ -28,10 +30,16 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.domain.polymarket.model.PolymarketEventsPage
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
@@ -62,16 +70,37 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
-    override suspend fun getEvents(category: Int?): Either<DataError, List<PolymarketEvent>> =
-        withContext(dispatchers.io) {
-            safeApiCall(
-                call = {
-                    polymarketApi.getEvents(category = category, limit = DEFAULT_LIMIT, cursor = null)
-                        .bind().events.map(PolymarketEventConverter::convert).right()
-                },
-                onError = { DataError.NetworkError.NoInternetConnection.left() },
+    override fun getEventsBatchFlow(
+        context: PolymarketEventsBatchingContext,
+        batchSize: Int,
+    ): PolymarketEventsBatchFlow {
+        return BatchListSource(
+            fetchDispatcher = dispatchers.io,
+            context = context,
+            generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
+            batchFetcher = PolymarketEventsBatchFetcher(
+                batchSize = batchSize,
+                fetchPage = ::fetchEventsPage,
+            ),
+        ).toBatchFlow()
+    }
+
+    /** Throws on failure: the pagination turns the throwable into a fetch error of the batch. */
+    private suspend fun fetchEventsPage(
+        config: PolymarketEventsListConfig,
+        cursor: String?,
+        limit: Int,
+    ): PolymarketEventsPage {
+        val response = polymarketApi.getEvents(category = config.category, limit = limit, cursor = cursor)
+        return when (response) {
+            is ApiResponse.Success -> PolymarketEventsPage(
+                events = response.data.events.map(PolymarketEventConverter::convert),
+                cursor = response.data.cursor,
+                hasNext = response.data.hasNext,
             )
+            is ApiResponse.Error -> throw response.cause
         }
+    }
 
     override suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent> =
         withContext(dispatchers.io) {

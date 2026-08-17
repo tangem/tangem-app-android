@@ -10,11 +10,13 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalHazeState
@@ -105,14 +107,14 @@ private fun UserPortfolioAddFooter(isEnabled: Boolean, isAddedEverywhere: Boolea
             overflow = TextOverflow.Ellipsis,
         )
 
-        SecondaryTangemButton(
+        TangemButton(
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.TAIL)
-                .padding(start = TangemTheme.dimens2.x2),
+                .padding(start = 8.dp),
+            variant = TangemButton.Variant.Secondary,
             onClick = onClick,
             text = resourceReference(R.string.common_add),
-            size = TangemButtonSize.X9,
-            shape = TangemButtonShape.Rounded,
+            size = TangemButton.Size.X9,
             isEnabled = isEnabled,
         )
     }
