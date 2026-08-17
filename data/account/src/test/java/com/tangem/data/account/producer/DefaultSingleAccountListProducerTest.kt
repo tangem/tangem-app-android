@@ -2,6 +2,7 @@ package com.tangem.data.account.producer
 
 import arrow.core.getOrElse
 import com.google.common.truth.Truth
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -10,6 +11,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.getEmittedValues
@@ -46,6 +48,9 @@ class DefaultSingleAccountListProducerTest {
     private val virtualAccountsFeatureToggles = mockk<VirtualAccountFeatureToggles> {
         every { isVirtualAccountsEnabled } returns false
     }
+    private val polymarketFeatureToggles = mockk<PolymarketFeatureToggles> {
+        every { isPolymarketEnabled } returns false
+    }
 
     private val producer = DefaultSingleAccountListProducer(
         params = SingleAccountListProducer.Params(userWalletId = userWalletId),
@@ -53,6 +58,7 @@ class DefaultSingleAccountListProducerTest {
         flowProducerTools = flowProducerTools,
         userWalletsListRepository = userWalletsListRepository,
         virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        polymarketFeatureToggles = polymarketFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -100,6 +106,7 @@ class DefaultSingleAccountListProducerTest {
             flowProducerTools = flowProducerTools,
             userWalletsListRepository = userWalletsListRepository,
             virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            polymarketFeatureToggles = polymarketFeatureToggles,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
@@ -116,6 +123,61 @@ class DefaultSingleAccountListProducerTest {
             .plus(Account.Virtual(userWalletId))
             .getOrElse { error("Unable to add virtual account: $it") }
         Truth.assertThat(actual).containsExactly(expected)
+    }
+
+    @Test
+    fun `GIVEN polymarket enabled WHEN produce THEN account list contains prediction account`() = runTest {
+        // Arrange
+        val producer = createProducer(isPolymarketEnabled = true)
+
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
+
+        // Assert
+        val expected = accountList
+            .withPaymentAccount()
+            .plus(Account.Prediction(userWalletId))
+            .getOrElse { error("Unable to add prediction account: $it") }
+        Truth.assertThat(actual).containsExactly(expected)
+    }
+
+    @Test
+    fun `GIVEN polymarket disabled WHEN produce THEN account list has no prediction account`() = runTest {
+        // Arrange
+        val producer = createProducer(isPolymarketEnabled = false)
+
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
+
+        // Assert
+        Truth.assertThat(actual).containsExactly(accountList.withPaymentAccount())
+    }
+
+    @Test
+    fun `GIVEN single-currency wallet WHEN produce THEN account list has no prediction account`() = runTest {
+        // Arrange
+        val singleCurrencyWallet = MockUserWalletFactory.createSingleWalletWithToken()
+        val producer = createProducer(
+            isPolymarketEnabled = true,
+            walletsRepository = mockk {
+                every { userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(singleCurrencyWallet))
+            },
+        )
+
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
+
+        // Assert
+        Truth.assertThat(actual.single().accounts.filterIsInstance<Account.Prediction>()).isEmpty()
     }
 
     @Test
@@ -177,4 +239,21 @@ class DefaultSingleAccountListProducerTest {
 
     private fun AccountList.withPaymentAccount(): AccountList = plus(Account.Payment(userWalletId))
         .getOrElse { error("Unable to add payment account: $it") }
+
+    private fun createProducer(
+        isPolymarketEnabled: Boolean,
+        walletsRepository: UserWalletsListRepository = userWalletsListRepository,
+    ): DefaultSingleAccountListProducer {
+        return DefaultSingleAccountListProducer(
+            params = SingleAccountListProducer.Params(userWalletId = userWalletId),
+            walletAccountListFlowFactory = walletAccountListFlowFactory,
+            flowProducerTools = flowProducerTools,
+            userWalletsListRepository = walletsRepository,
+            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            polymarketFeatureToggles = mockk {
+                every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
+            },
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
+    }
 }
