@@ -69,6 +69,11 @@ internal class CashbackSummaryConverterTest {
             expected = CashbackSummary.Unknown,
         ),
         ConvertModel(
+            name = "fraud -> Deactivated",
+            response = createResponse(status = "fraud"),
+            expected = CashbackSummary.Deactivated,
+        ),
+        ConvertModel(
             name = "deactivated -> Deactivated",
             response = createResponse(status = "deactivated"),
             expected = CashbackSummary.Deactivated,
