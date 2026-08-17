@@ -25,12 +25,17 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
+    /** Kotlin */
+    implementation(deps.kotlin.immutable.collections)
+
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** Other */
     implementation(deps.androidx.appCompat)
