@@ -14,6 +14,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
@@ -25,6 +26,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.stakingBalanceData
@@ -178,6 +180,10 @@ internal class SingleAccountStatusListProducerContributionsTest {
             virtualAccountStatusSupplier = mockk<VirtualAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(mockk(relaxed = true))
             },
+            predictionAccountStatusSupplier = mockk<PredictionAccountStatusSupplier> {
+                every { this@mockk.invoke(userWalletId = id) } returns flowOf(PredictionAccountStatusValue.Loading)
+            },
+            polymarketFeatureToggles = mockk { every { isPolymarketEnabled } returns true },
             networksRepository = mockk<NetworksRepository> {
                 coEvery { hasCachedStatuses(id) } returns true
             },
