@@ -140,11 +140,17 @@ internal class CloudBackupCipher(
         val nonce = ensureNotNull(data.crypto.cipherparams.nonce.hexToBytesOrNull()) {
             CloudBackupCryptoError.InvalidFormat("Malformed hex: nonce")
         }
+        ensure(nonce.size == GCM_NONCE_SIZE_BYTES) {
+            CloudBackupCryptoError.InvalidFormat("Invalid nonce size: ${nonce.size}")
+        }
         val ciphertext = ensureNotNull(data.crypto.ciphertext.hexToBytesOrNull()) {
             CloudBackupCryptoError.InvalidFormat("Malformed hex: ciphertext")
         }
         val tag = ensureNotNull(data.crypto.tag.hexToBytesOrNull()) {
             CloudBackupCryptoError.InvalidFormat("Malformed hex: tag")
+        }
+        ensure(tag.size == GCM_TAG_SIZE_BYTES) {
+            CloudBackupCryptoError.InvalidFormat("Invalid tag size: ${tag.size}")
         }
 
         validateArgon2Params(kdfparams)
