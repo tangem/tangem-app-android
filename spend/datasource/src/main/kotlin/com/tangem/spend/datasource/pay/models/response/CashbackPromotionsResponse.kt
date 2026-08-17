@@ -5,13 +5,17 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 /**
- * Response from `GET v1/customer/cashback/promotions` — cashback program configuration for the customer.
+ * Response from `GET v1/customer/cashback/promotions`
  */
 @JsonClass(generateAdapter = true)
 data class CashbackPromotionsResponse(
-    @Json(name = "cashback_on_cards") val cashbackOnCards: CashbackOnCards?,
-    @Json(name = "additional_cashback") val additionalCashback: List<AdditionalCashback>?,
+    @Json(name = "result") val result: Result?,
 ) {
+    @JsonClass(generateAdapter = true)
+    data class Result(
+        @Json(name = "cashback_on_cards") val cashbackOnCards: CashbackOnCards?,
+        @Json(name = "additional_cashback") val additionalCashback: List<AdditionalCashback>?,
+    )
 
     @JsonClass(generateAdapter = true)
     data class CashbackOnCards(
