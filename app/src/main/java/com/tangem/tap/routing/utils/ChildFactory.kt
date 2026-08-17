@@ -621,6 +621,7 @@ internal class ChildFactory @Inject constructor(
                         source = route.source,
                         nextScreen = route.nextScreen,
                         shouldShowBackButton = route.shouldShowBackButton,
+                        canSkip = route.canSkip,
                     ),
                     componentFactory = updateAccessCodeComponentFactory,
                 )
