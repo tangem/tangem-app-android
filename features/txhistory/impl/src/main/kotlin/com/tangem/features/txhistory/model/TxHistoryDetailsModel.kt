@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -70,6 +71,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val getStakingTargetsByAddressUseCase: GetStakingTargetsByAddressUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+    private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -126,7 +128,8 @@ internal class TxHistoryDetailsModel @Inject constructor(
         flow2 = ownerLookupProducer(),
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
-    ) { txInfo, lookup, stakingTargets, refundToken ->
+        flow5 = balanceHidingSettings.isBalanceHidden(),
+    ) { txInfo, lookup, stakingTargets, refundToken, isBalanceHidden ->
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops "Transaction ID".
@@ -146,6 +149,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onGoToRefundedTokenClick = params.onOpenTokenDetails,
             lookup = lookup,
             targetsByAddress = stakingTargets,
+            isBalanceHidden = isBalanceHidden,
             onOpenValidator = urlOpener::openUrl,
         ).convert(txInfo)
     }
