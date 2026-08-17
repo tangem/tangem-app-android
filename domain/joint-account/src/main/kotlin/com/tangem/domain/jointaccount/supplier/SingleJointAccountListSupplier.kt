@@ -6,7 +6,7 @@ import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
-abstract class SingleJointAccountListSupplier(
+open class SingleJointAccountListSupplier(
     override val factory: SingleJointAccountListProducer.Factory,
     override val keyCreator: (SingleJointAccountListProducer.Params) -> String,
 ) : FlowCachingSupplier<SingleJointAccountListProducer, SingleJointAccountListProducer.Params, List<JointAccount>>() {
