@@ -19,6 +19,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEn
 import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCurrencyEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -86,34 +87,32 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
         currency: CryptoCurrency,
         fromCreatedAtMillis: Long,
     ): Flow<List<ExpressTx>> = flow {
-        val network = currency.network
-        val rawNetwork = network.rawId
+        val rawNetwork = currency.network.rawId
         val contract = (currency as? CryptoCurrency.Token)?.contractAddress
             ?: ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE
 
         // bound filters the window directly in SQL. Generated in the same UTC/'Z' shape as stored values.
         val fromCreatedAtIso = DateTime(fromCreatedAtMillis, DateTimeZone.UTC)
             .toString(ISODateTimeFormat.dateTimeNoMillis())
-
-        val address = walletManagersFacade.getDefaultAddress(userWalletId, network).orEmpty()
+        val addresses = getAddresses(userWalletId, currency.network)
 
         val flow = combine(
             flow = expressHistoryDao.observeOutgoingSwaps(
-                fromAddress = address,
+                fromAddresses = addresses,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
             ).distinctUntilChanged(),
             flow2 = expressHistoryDao.observeIncomingSwaps(
-                payoutAddress = address,
+                payoutAddresses = addresses,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
             ).distinctUntilChanged(),
             flow3 = expressHistoryDao.observeIncomingOnramps(
-                payoutAddress = address,
+                payoutAddresses = addresses,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
@@ -143,9 +142,9 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
         currency: CryptoCurrency,
         limit: Int,
     ): Flow<ExpressHistoryPage> = flow {
-        val address = walletManagersFacade.getDefaultAddress(userWalletId, currency.network).orEmpty()
+        val addresses = getAddresses(userWalletId, currency.network)
         val pages = historyIndexDao
-            .observePage(addresses = listOf(address), cursor = null, limit = limit)
+            .observePage(addresses = addresses, cursor = null, limit = limit)
             .map { page ->
                 IndexWindow(
                     fromCreatedAtMillis = page.lastOrNull()?.sortTimeMillis ?: NO_LOWER_BOUND,
@@ -159,6 +158,15 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             }
         emitAll(pages)
     }.flowOn(dispatchers.io)
+
+    /**
+     * the default one plus the dynamic (UTXO) addresses already used,
+     */
+    private suspend fun getAddresses(userWalletId: UserWalletId, network: Network): List<String> {
+        val defaultAddress = walletManagersFacade.getDefaultAddress(userWalletId, network)
+        val dynamicAddresses = walletManagersFacade.usedDynamicAddresses(userWalletId, network).orEmpty()
+        return (listOfNotNull(defaultAddress) + dynamicAddresses).distinct()
+    }
 
     private data class IndexWindow(val fromCreatedAtMillis: Long, val hasMore: Boolean)
 
