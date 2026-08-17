@@ -1,5 +1,6 @@
 package com.tangem.data.jointaccount.store
 
+import androidx.datastore.core.DataStore
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
@@ -10,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -105,6 +107,48 @@ internal class JointAccountsStoreTest {
         // Assert
         assertThat(store.get(walletId).first()).isNull()
         assertThat(store.contains(walletId)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN fetch lands before hydration WHEN hydration completes THEN fresh data is not overwritten`() = runTest {
+        // Arrange
+        val staleAccount = createJointAccount(status = JointAccount.Status.PENDING, source = StatusSource.ACTUAL)
+        val persistence = MockStateDataStore<WalletIdWithJointAccountsDM>(default = emptyMap())
+        persistence.updateData { mapOf(walletId.stringValue to listOf(converter.convert(staleAccount))) }
+        val store = createStore(persistence = persistence, scope = TestAppCoroutineScope(testScope = this))
+
+        // Act: the fetch writes before the hydration coroutine gets to run
+        val freshAccount = createJointAccount(status = JointAccount.Status.ACTIVE, source = StatusSource.ACTUAL)
+        store.store(walletId, listOf(freshAccount))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(store.get(walletId).first()).containsExactly(freshAccount)
+    }
+
+    @Test
+    fun `GIVEN persistence write fails WHEN store THEN runtime updated and no exception`() = runTest {
+        // Arrange
+        val failingPersistence = object : DataStore<WalletIdWithJointAccountsDM> {
+            override val data = flowOf(emptyMap<String, List<JointAccountDM>>())
+            override suspend fun updateData(
+                transform: suspend (WalletIdWithJointAccountsDM) -> WalletIdWithJointAccountsDM,
+            ): WalletIdWithJointAccountsDM = error("disk full")
+        }
+        val store = JointAccountsStore(
+            runtimeStore = RuntimeSharedStore(),
+            persistenceDataStore = failingPersistence,
+            converter = converter,
+            scope = TestAppCoroutineScope(testScope = this),
+        )
+        advanceUntilIdle()
+        val account = createJointAccount()
+
+        // Act
+        store.store(walletId, listOf(account))
+
+        // Assert
+        assertThat(store.get(walletId).first()).containsExactly(account)
     }
 
     @Test
