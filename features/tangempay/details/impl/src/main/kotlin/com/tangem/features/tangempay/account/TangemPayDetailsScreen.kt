@@ -318,7 +318,7 @@ private fun PayDetailsTopBar(
             }
             .statusBarsPadding(),
         title = resourceReference(R.string.tangempay_payment_account),
-        subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
+        subtitle = config.subtitle,
         startContent = {
             TangemButton(
                 iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_arrow_back_28),
