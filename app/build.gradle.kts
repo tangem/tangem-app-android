@@ -129,6 +129,7 @@ dependencies {
     implementation(projects.domain.demo.models)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.express)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
