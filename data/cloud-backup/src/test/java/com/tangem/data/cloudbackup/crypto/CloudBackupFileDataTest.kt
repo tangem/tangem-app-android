@@ -86,6 +86,7 @@ internal class CloudBackupFileDataTest {
         InvalidJsonModel(description = "missing walletId", json = keystoreJson(excludedField = "walletId")),
         InvalidJsonModel(description = "missing createdAt", json = keystoreJson(excludedField = "createdAt")),
         InvalidJsonModel(description = "missing crypto", json = keystoreJson(excludedField = "crypto")),
+        InvalidJsonModel(description = "null name", json = keystoreJson(nulledField = "name")),
         InvalidJsonModel(description = "null walletId", json = keystoreJson(nulledField = "walletId")),
         InvalidJsonModel(description = "null createdAt", json = keystoreJson(nulledField = "createdAt")),
         InvalidJsonModel(description = "empty json", json = "{}"),
