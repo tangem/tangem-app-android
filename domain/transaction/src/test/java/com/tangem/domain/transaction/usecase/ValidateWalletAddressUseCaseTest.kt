@@ -130,6 +130,42 @@ internal class ValidateWalletAddressUseCaseTest {
     }
 
     @Test
+    fun `GIVEN zero address WHEN invoke THEN returns InvalidAddress`() = runTest {
+        val address = "0x0000000000000000000000000000000000000000"
+        val senderAddresses = listOf(senderAddress("0xSender"))
+
+        val result = useCase(userWalletId, network, address, senderAddresses)
+
+        assertThat(result.leftOrNull()).isEqualTo(AddressValidation.Error.InvalidAddress)
+    }
+
+    @Test
+    fun `GIVEN dead address WHEN invoke THEN returns InvalidAddress`() = runTest {
+        val address = "0x000000000000000000000000000000000000dEaD"
+        val senderAddresses = listOf(senderAddress("0xSender"))
+
+        val result = useCase(userWalletId, network, address, senderAddresses)
+
+        assertThat(result.leftOrNull()).isEqualTo(AddressValidation.Error.InvalidAddress)
+    }
+
+    @Test
+    fun `GIVEN name resolved to dead address WHEN invoke THEN returns InvalidAddress`() = runTest {
+        val address = "burned.eth"
+        val resolvedAddress = "0x000000000000000000000000000000000000dEaD"
+        val senderAddresses = listOf(senderAddress("0xSender"))
+
+        coEvery { walletManagersFacade.checkSelfSendAvailability(userWalletId, network) } returns false
+        coEvery { repository.validateAddress(userWalletId, network, address) } returns false
+        coEvery { repository.resolveAddress(userWalletId, network, address) } returns
+            ResolveAddressResult.Resolved(resolvedAddress)
+
+        val result = useCase(userWalletId, network, address, senderAddresses)
+
+        assertThat(result.leftOrNull()).isEqualTo(AddressValidation.Error.InvalidAddress)
+    }
+
+    @Test
     fun `GIVEN valid XRP X-address WHEN invoke THEN returns ValidXAddress`() = runTest {
         val xAddress = "X7AcgcsBL4L51nv2theWPZRMcGF37HeMBCFMDcaVEEF8Y3q"
         val decodedAddress = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"
