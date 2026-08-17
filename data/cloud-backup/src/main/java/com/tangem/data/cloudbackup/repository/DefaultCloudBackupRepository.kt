@@ -56,7 +56,7 @@ internal class DefaultCloudBackupRepository(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : CloudBackupRepository {
 
-    private val isCloudBackupEnabled: Boolean
+    override val isCloudBackupEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED)
 
     override suspend fun uploadBackup(
