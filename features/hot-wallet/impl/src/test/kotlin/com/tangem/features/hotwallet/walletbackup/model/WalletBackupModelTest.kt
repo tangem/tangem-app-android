@@ -515,6 +515,92 @@ internal class WalletBackupModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN cloud unread AND backup exists WHEN google drive tapped THEN backup recognized AND flag restored`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.findBackups(interactive = false) } returns
+                CloudBackupError.AuthRequired.left()
+            coEvery { cloudBackupRepository.findBackups(interactive = true) } returns
+                listOf(backup(walletId = "011")).right()
+
+            val model = createModel(this)
+            advanceUntilIdle()
+            assertThat(model.uiState.value.googleDriveStatus).isEqualTo(BackupStatus.NoBackup)
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.googleDriveStatus).isEqualTo(BackupStatus.Done)
+            coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true) }
+            verify(exactly = 0) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN cloud unread AND no backup WHEN google drive tapped THEN create backup flow opened`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.findBackups(interactive = false) } returns CloudBackupError.AuthRequired.left()
+        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns emptyList<CloudBackupInfo>().right()
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGoogleDriveClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
+        coVerify(exactly = 0) { setCloudBackupStateUseCase(any(), isBackedUp = true) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN cloud already read AND no backup WHEN google drive tapped THEN create flow opened without re-reading`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { cloudBackupRepository.findBackups(interactive = false) } returns
+                emptyList<CloudBackupInfo>().right()
+
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onGoogleDriveClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
+            coVerify(exactly = 0) { cloudBackupRepository.findBackups(interactive = true) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN cloud unread WHEN sign in cancelled THEN status stays NoBackup AND create flow not opened`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.findBackups(interactive = false) } returns CloudBackupError.AuthRequired.left()
+        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns CloudBackupError.AuthCanceled.left()
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGoogleDriveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.googleDriveStatus).isEqualTo(BackupStatus.NoBackup)
+        verify(exactly = 0) { router.push(route = AppRoute.CreateCloudBackup(walletId), onComplete = any()) }
+        model.onDestroy()
+    }
+
     private fun backup(fileId: String = "file-1", walletId: String? = "011") = CloudBackupInfo(
         fileId = fileId,
         walletName = "wallet",
