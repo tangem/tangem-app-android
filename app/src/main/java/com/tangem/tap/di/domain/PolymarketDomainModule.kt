@@ -14,7 +14,7 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
-import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
@@ -32,8 +32,10 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetPolymarketEventsUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventsUseCase {
-        return GetPolymarketEventsUseCase(polymarketRepository = polymarketRepository)
+    fun provideGetPolymarketEventsBatchFlowUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): GetPolymarketEventsBatchFlowUseCase {
+        return GetPolymarketEventsBatchFlowUseCase(polymarketRepository = polymarketRepository)
     }
 
     @Provides
