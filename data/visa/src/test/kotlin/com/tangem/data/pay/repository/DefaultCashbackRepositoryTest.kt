@@ -102,10 +102,12 @@ internal class DefaultCashbackRepositoryTest {
     fun `GIVEN details response WHEN getCashbackDetails THEN converter result is returned`() = runTest {
         // Arrange
         val response = CashbackTransactionDetailsResponse(
-            cashback = TransactionCashbackResponse(
-                status = "confirmed",
-                amount = BigDecimal("0.63"),
-                currency = "USD",
+            result = CashbackTransactionDetailsResponse.Result(
+                cashback = TransactionCashbackResponse(
+                    status = "confirmed",
+                    amount = BigDecimal("0.63"),
+                    currency = "USD",
+                ),
             ),
         )
         coEvery { tangemPayApi.getCashbackDetails(any(), any()) } returns ApiResponse.Success(response)
@@ -114,7 +116,7 @@ internal class DefaultCashbackRepositoryTest {
         val actual = createRepository().getCashbackDetails(userWalletId, transactionId = "tx_1")
 
         // Assert
-        assertThat(actual).isEqualTo(PayTransactionCashbackConverter.convert(response.cashback).right())
+        assertThat(actual).isEqualTo(PayTransactionCashbackConverter.convert(response.result?.cashback).right())
     }
 
     @Test
