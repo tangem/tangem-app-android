@@ -119,6 +119,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         isPinSet = true,
         images = emptyList(),
         embossName = "JOHNNY SILVERHAND",
+        cardType = CustomerInfo.CardInfo.CardType.VIRTUAL,
     )
 
     private val basicPlan = TangemPayTariffPlan(
