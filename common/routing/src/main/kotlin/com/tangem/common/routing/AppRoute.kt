@@ -454,6 +454,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: String,
         val nextScreen: AppRoute? = null,
         val shouldShowBackButton: Boolean = true,
+        val canSkip: Boolean = false,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
