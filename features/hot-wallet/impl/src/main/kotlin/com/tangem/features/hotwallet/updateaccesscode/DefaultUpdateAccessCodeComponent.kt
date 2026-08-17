@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.ObserveLifecycleMode
@@ -56,6 +57,7 @@ internal class DefaultUpdateAccessCodeComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val stackState by innerStack.subscribeAsState()
         val currentRoute = stackState.active.configuration
+        val isAccessCodeUpdateStarted by model.isAccessCodeUpdateStarted.collectAsStateWithLifecycle()
 
         BackHandler(onBack = model::onChildBack)
 
@@ -63,7 +65,7 @@ internal class DefaultUpdateAccessCodeComponent @AssistedInject constructor(
             onBackClick = model::onChildBack,
             showBackButton = model.isBackButtonVisible(currentRoute),
             onSkipClick = model::onSkipClick,
-            showSkipButton = model.isSkipButtonVisible(currentRoute),
+            showSkipButton = model.isSkipButtonVisible(currentRoute, isAccessCodeUpdateStarted),
             stackState = stackState,
         )
     }
