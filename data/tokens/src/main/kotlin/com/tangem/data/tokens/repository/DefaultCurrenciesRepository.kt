@@ -120,7 +120,9 @@ internal class DefaultCurrenciesRepository(
             CryptoCurrencyFactory.Token(
                 symbol = foundToken.symbol,
                 name = foundToken.name,
-                contractAddress = contractAddress,
+                // The caller-supplied address may come from a third party and belong to another network,
+                // so the catalog address for the requested network wins over it.
+                contractAddress = network.contractAddress ?: contractAddress,
                 decimals = network.decimalCount?.toInt() ?: error("Decimals not found"),
                 id = foundToken.id,
             )

@@ -487,8 +487,13 @@ internal class SendConfirmModel @Inject constructor(
         if (cryptoCurrency !is CryptoCurrency.Token) return
         val wallets = destinationUM?.wallets ?: return
 
+        // EVM chains share the same address across networks, so matching by address alone can resolve a destination
+        // on a different chain. Adding the token there would store this chain's contract address under that network.
         val receivingUserWallet = wallets
-            .firstOrNull { it.address == confirmData.enteredDestination }
+            .firstOrNull { recipient ->
+                recipient.address == confirmData.enteredDestination &&
+                    recipient.network?.rawId == cryptoCurrency.network.rawId
+            }
             ?: return
 
         val network = receivingUserWallet.network ?: return
