@@ -17,7 +17,7 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Api */
-    api(projects.features.polymarket.main.api)
+    implementation(projects.features.polymarket.main.api)
 
     /** Common */
     implementation(projects.common.ui)
