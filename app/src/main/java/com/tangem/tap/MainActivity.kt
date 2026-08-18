@@ -292,6 +292,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                     bridge.onResult(it)
                 },
             )
+            bridge.registerIntentLauncher(
+                launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                    bridge.onResult(it)
+                },
+            )
         }
     }
 

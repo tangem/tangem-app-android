@@ -45,14 +45,12 @@ internal fun cashback(
     currency: Currency? = Currency.getInstance("USD"),
     isCapTrimmed: Boolean = false,
     exclusionReason: TangemPayTxHistoryItem.Cashback.ExclusionReason? = null,
-    promotionIds: List<String> = emptyList(),
 ): TangemPayTxHistoryItem.Cashback = TangemPayTxHistoryItem.Cashback(
     status = status,
     amount = amount,
     currency = currency,
     isCapTrimmed = isCapTrimmed,
     exclusionReason = exclusionReason,
-    promotionIds = promotionIds,
 )
 
 internal fun paymentTransaction(id: String = "tx_payment_1"): TangemPayTxHistoryItem.Payment =
