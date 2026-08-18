@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.DeleteWalletError
@@ -31,14 +32,17 @@ internal class DeleteWalletUseCaseTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
     private val firstCleaner: UserWalletDataCleaner = mockk()
     private val secondCleaner: UserWalletDataCleaner = mockk()
+    private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsListRepository, firstCleaner, secondCleaner)
+        clearMocks(userWalletsListRepository, firstCleaner, secondCleaner, deleteSavedAccessCodesUseCase)
         coEvery { userWalletsListRepository.delete(any()) } returns Unit.right()
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
         every { userWalletsListRepository.selectedUserWallet } returns MutableStateFlow<UserWallet?>(null)
         coEvery { firstCleaner.clear(any()) } just Runs
         coEvery { secondCleaner.clear(any()) } just Runs
+        coEvery { deleteSavedAccessCodesUseCase(any<Set<String>>()) } returns Unit.right()
     }
 
     @Test
@@ -73,6 +77,7 @@ internal class DeleteWalletUseCaseTest {
         assertThat(result).isEqualTo(DeleteWalletError.UnableToDelete.left())
         coVerify(exactly = 0) { firstCleaner.clear(any()) }
         coVerify(exactly = 0) { secondCleaner.clear(any()) }
+        coVerify(exactly = 0) { deleteSavedAccessCodesUseCase(any<Set<String>>()) }
     }
 
     @Test
@@ -115,14 +120,61 @@ internal class DeleteWalletUseCaseTest {
         coVerify(exactly = 1) { secondCleaner.clear(listOf(WALLET_ID)) }
     }
 
+    @Test
+    fun `GIVEN cold wallet with cards WHEN invoke THEN saved access codes deleted for all wallet cards`() = runTest {
+        // Arrange
+        val coldWallet = wallet.copy(walletId = WALLET_ID, cardsInWallet = setOf("CB01", "CB02"))
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(coldWallet)
+        val useCase = createUseCase()
+
+        // Act
+        useCase(WALLET_ID)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { deleteSavedAccessCodesUseCase(setOf("CB01", "CB02", coldWallet.cardId)) }
+    }
+
+    @Test
+    fun `GIVEN wallet not found WHEN invoke THEN saved access codes deletion is not invoked`() = runTest {
+        // Arrange
+        val useCase = createUseCase()
+
+        // Act
+        useCase(WALLET_ID)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { deleteSavedAccessCodesUseCase(any<Set<String>>()) }
+    }
+
+    @Test
+    fun `GIVEN access codes deletion throws WHEN invoke THEN cleaners still run`() = runTest {
+        // Arrange
+        val coldWallet = wallet.copy(walletId = WALLET_ID, cardsInWallet = setOf("CB01"))
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(coldWallet)
+        coEvery { deleteSavedAccessCodesUseCase(any<Set<String>>()) } throws IllegalStateException("boom")
+        val useCase = createUseCase()
+
+        // Act
+        val result = useCase(WALLET_ID)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(result).isEqualTo(false.right())
+        coVerify(exactly = 1) { firstCleaner.clear(listOf(WALLET_ID)) }
+        coVerify(exactly = 1) { secondCleaner.clear(listOf(WALLET_ID)) }
+    }
+
     private fun TestScope.createUseCase() = DeleteWalletUseCase(
         userWalletsListRepository = userWalletsListRepository,
         userWalletDataCleaners = setOf(firstCleaner, secondCleaner),
+        deleteSavedAccessCodesUseCase = deleteSavedAccessCodesUseCase,
         appCoroutineScope = TestAppCoroutineScope(this),
     )
 
     private companion object {
         val WALLET_ID = UserWalletId("0011")
-        val wallet: UserWallet = MockUserWalletFactory.create()
+        val wallet: UserWallet.Cold = MockUserWalletFactory.create()
     }
 }
