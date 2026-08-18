@@ -219,6 +219,104 @@ sealed interface Account {
             }
         }
     }
+
+    /**
+     * Represents the wallet's own row of a joint (Safe multisig) account
+     *
+     * @property accountId        unique identifier of the account, computed and returned by the backend
+     * @property accountName      name of the account, shared by all participants and fixed at creation
+     * @property icon             icon representing the account, shared and fixed at creation
+     * @property derivationIndex  index of the owner key derivation; an index space independent from
+     * [CryptoPortfolio] accounts
+     * @property cryptoCurrencies tokens associated with the account. They are never spendable through the regular
+     * send/swap flows: a joint account is a Safe contract, not an EOA — see [AccountList.flattenCurrencies]
+     */
+    @Serializable
+    data class Joint private constructor(
+        override val accountId: AccountId,
+        override val accountName: AccountName,
+        val icon: CryptoPortfolioIcon,
+        val derivationIndex: DerivationIndex,
+        val cryptoCurrencies: List<CryptoCurrency>,
+    ) : Account {
+
+        /**
+         * Represents possible errors when creating a joint account
+         */
+        @Serializable
+        sealed interface Error {
+
+            /** Error indicating that the account name is invalid */
+            @Serializable
+            data class AccountNameError(val cause: AccountName.Error) : Error
+
+            /** Error indicating that the derivation index is invalid */
+            @Serializable
+            data class DerivationIndexError(val cause: DerivationIndex.Error) : Error
+        }
+
+        companion object {
+
+            /**
+             * Constructor for creating a [Joint] instance from raw backend values
+             *
+             * @param accountId        unique identifier of the account
+             * @param name             name of the account
+             * @param icon             icon representing the account
+             * @param derivationIndex  index of the owner key derivation
+             * @param cryptoCurrencies tokens associated with the account
+             */
+            operator fun invoke(
+                accountId: AccountId,
+                name: String,
+                icon: CryptoPortfolioIcon,
+                derivationIndex: Int,
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
+            ): Either<Error, Joint> = either {
+                val accountName = AccountName(value = name).getOrElse {
+                    raise(Error.AccountNameError(cause = it))
+                }
+
+                val index = DerivationIndex(value = derivationIndex).getOrElse {
+                    raise(Error.DerivationIndexError(cause = it))
+                }
+
+                invoke(
+                    accountId = accountId,
+                    accountName = accountName,
+                    icon = icon,
+                    derivationIndex = index,
+                    cryptoCurrencies = cryptoCurrencies,
+                )
+            }
+
+            /**
+             * Constructor for creating a [Joint] instance from already validated values
+             *
+             * @param accountId        unique identifier of the account
+             * @param accountName      name of the account
+             * @param icon             icon representing the account
+             * @param derivationIndex  index of the owner key derivation
+             * @param cryptoCurrencies tokens associated with the account
+             */
+            @Suppress("LongParameterList")
+            operator fun invoke(
+                accountId: AccountId,
+                accountName: AccountName,
+                icon: CryptoPortfolioIcon,
+                derivationIndex: DerivationIndex,
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
+            ): Joint {
+                return Joint(
+                    accountId = accountId,
+                    accountName = accountName,
+                    icon = icon,
+                    derivationIndex = derivationIndex,
+                    cryptoCurrencies = cryptoCurrencies,
+                )
+            }
+        }
+    }
 }
 
 val Account.derivationIndex: DerivationIndex?
@@ -227,4 +325,5 @@ val Account.derivationIndex: DerivationIndex?
         is Account.Payment -> null
         is Account.Virtual -> null
         is Account.Prediction -> null
+        is Account.Joint -> derivationIndex
     }
