@@ -15,6 +15,7 @@ import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrationError
@@ -28,6 +29,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -45,6 +47,7 @@ class DefaultDeviceRegistrarTest {
     private val nonceDecryptor: AuthNonceDecryptor = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
+    private val attestationProvider: AttestationProvider = mockk()
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -59,18 +62,20 @@ class DefaultDeviceRegistrarTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor)
+        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
+        coEvery { attestationProvider.getAttestationToken(any()) } returns null
         registrar = DefaultDeviceRegistrar(
             authApi = authApi,
             store = store,
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
@@ -224,6 +229,28 @@ class DefaultDeviceRegistrarTest {
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.PersistenceFailed::class.java)
         // Flag must stay unset so the next launch retries cleanly.
         assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+    }
+
+    @Test
+    fun `register attaches attestation token from provider to the signed payload`() = runTest {
+        stubHappyPath()
+        coEvery { attestationProvider.getAttestationToken("decrypted") } returns "attest-token"
+        val slot = slot<RegisterApiRequest>()
+        coEvery { authApi.registerDevice(capture(slot)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "fresh-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "fresh-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+
+        val result = registrar.register()
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.payload.attestationToken).isEqualTo("attest-token")
+        coVerify { attestationProvider.getAttestationToken("decrypted") }
     }
 
     private fun stubHappyPath() {
