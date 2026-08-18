@@ -20,7 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.ds.TangemPagerIndicator
@@ -41,6 +45,7 @@ import com.tangem.features.tangempay.common.PayContextMenuBlock
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.tangem.core.ui.R as CoreUiR
 
@@ -88,7 +93,16 @@ private fun TangemPayCardPageScreen(
         val contentBottomPadding = TangemTheme.dimens.spacing16 + bottomBarHeight
         val reissueTitle = reissueTitleOrNull(cardState = state.cardState)
 
-        if (reissueTitle != null) {
+        if (state.delivery != null) {
+            CardDeliveryLayout(
+                state = state.delivery,
+                cardSection = cardSection,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(scaffoldPaddings)
+                    .padding(bottom = bottomBarHeight),
+            )
+        } else if (reissueTitle != null) {
             ReissueCardLayout(
                 title = reissueTitle,
                 cardSection = cardSection,
@@ -144,7 +158,9 @@ private fun reissueTitleOrNull(cardState: TangemPayCardState): TextReference? {
             stringReference(". "),
             resourceReference(R.string.tangempay_card_page_closing_banner_description),
         )
-        TangemPayCardState.Active -> null
+        TangemPayCardState.Delivering,
+        TangemPayCardState.Active,
+        -> null
     }
 }
 
@@ -169,6 +185,76 @@ private fun ReissueCardLayout(
         ) {
             TangemPayReissueBlock(title = title)
         }
+    }
+}
+
+@Composable
+private fun CardDeliveryLayout(
+    state: TangemPayCardDeliveryUM,
+    modifier: Modifier = Modifier,
+    cardSection: @Composable () -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+            cardSection()
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.Center,
+        ) {
+            TangemPayReissueBlock(title = deliveryDescription(email = state.email))
+        }
+        CardDeliveryButtons(
+            onContactSupportClick = state.onContactSupportClick,
+            onActivateCardClick = state.onActivateCardClick,
+        )
+    }
+}
+
+@Composable
+private fun deliveryDescription(email: String): TextReference {
+    val emailStyle = SpanStyle(color = TangemTheme.colors3.text.primary)
+    return resourceReference(
+        id = R.string.tangempay_card_details_delivery_description,
+        formatArgs = wrappedList(AnnotatedString(text = email, spanStyle = emailStyle)),
+    )
+}
+
+@Composable
+private fun CardDeliveryButtons(
+    onContactSupportClick: () -> Unit,
+    onActivateCardClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        TangemButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.DELIVERY_CONTACT_SUPPORT_BUTTON),
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(CoreUiR.string.common_contact_support),
+            onClick = onContactSupportClick,
+        )
+        TangemButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.DELIVERY_ACTIVATE_BUTTON),
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.tangempay_card_details_activate),
+            onClick = onActivateCardClick,
+        )
     }
 }
 
@@ -306,9 +392,13 @@ private fun LazyListScope.cardPageItem(
     }
 }
 
-private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDetailsUM(
+private fun previewCardDetailsState(
+    cardState: TangemPayCardState = TangemPayCardState.Active,
+): TangemPayCardDetailsUM = TangemPayCardDetailsUM(
+    cardState = cardState,
     number = "•••• •••• •••• 1245",
     numberShort = "··1245",
+    cardholderName = "JOHNNY SILVERHAND",
     expiry = "••/••",
     cvv = "•••",
     onCopy = { _, _ -> },
@@ -321,6 +411,12 @@ private fun previewCardDetailsState(): TangemPayCardDetailsUM = TangemPayCardDet
     ),
     cardImageUrl = null,
     cardBackgroundImageUrl = null,
+)
+
+private fun previewDeliveryState(email: String) = TangemPayCardDeliveryUM(
+    email = email,
+    onContactSupportClick = {},
+    onActivateCardClick = {},
 )
 
 @Preview
@@ -339,3 +435,34 @@ private fun TangemPayCardPageScreenPreview() {
         )
     }
 }
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemPayCardPageScreenDeliveryPreview(
+    @PreviewParameter(CardDeliveryPreviewProvider::class) delivery: TangemPayCardDeliveryUM,
+) {
+    TangemThemePreviewRedesign {
+        TangemPayCardPageScreen(
+            state = TangemPayCardPageUM.stub(
+                cardState = TangemPayCardState.Delivering,
+                delivery = delivery,
+                addToWalletBlockState = null,
+                settings = persistentListOf(),
+            ),
+            cardSection = {
+                TangemPayCard(
+                    state = previewCardDetailsState(cardState = TangemPayCardState.Delivering),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            },
+        )
+    }
+}
+
+private class CardDeliveryPreviewProvider : CollectionPreviewParameterProvider<TangemPayCardDeliveryUM>(
+    collection = listOf(
+        previewDeliveryState(email = "j.silverhand@gmail.com"),
+        previewDeliveryState(email = "johnny.silverhand.samurai@protonmail.com"),
+    ),
+)

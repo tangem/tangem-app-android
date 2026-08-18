@@ -13,6 +13,7 @@ dependencies {
     api(projects.features.rating.api)
 
     implementation(projects.features.swap.domain)
+    implementation(projects.domain.models)
 
     api(projects.core.decompose)
     api(projects.core.ui)
@@ -30,10 +31,12 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     implementation(deps.hilt.android)
+    implementation(deps.arrow.core)
     kapt(deps.hilt.kapt)
 
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.arrow.core)
 }

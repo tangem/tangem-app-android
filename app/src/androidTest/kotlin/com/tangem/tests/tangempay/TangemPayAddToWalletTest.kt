@@ -6,8 +6,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.extensions.bringAppToForeground
 import com.tangem.common.extensions.collapseAppByHomeButton
 import com.tangem.common.extensions.restartApp
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openTangemPayAddToWalletGuide
@@ -44,10 +42,7 @@ class TangemPayAddToWalletTest : BaseTestCase() {
     @DisplayName("Tangem Pay: 'Add to Google Pay' banner opens the guide with card requisites and instruction")
     @Test
     fun addToWalletBannerOpensGooglePayGuideTest() {
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = { resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -86,10 +81,7 @@ class TangemPayAddToWalletTest : BaseTestCase() {
     fun dismissedAddToWalletBannerStaysHiddenTest() {
         val packageName = getTargetContext().packageName
 
-        setupHooks(
-            additionalBeforeSection = { resetWireMockScenarios() },
-            additionalAfterSection = { resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }

@@ -11,7 +11,7 @@ data class CardDetailsResponse(
         @Json(name = "token") val token: String,
         @Json(name = "expiration_month") val expirationMonth: String,
         @Json(name = "expiration_year") val expirationYear: String,
-        @Json(name = "emboss_name") val embossName: String,
+        @Json(name = "emboss_name") val embossName: String?,
         @Json(name = "card_type") val cardType: String,
         @Json(name = "card_status") val cardStatus: String,
         @Json(name = "card_number_end") val cardNumberEnd: String,

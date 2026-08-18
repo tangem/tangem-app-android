@@ -41,7 +41,7 @@ internal class DefaultPolymarketCredentialsStore(
             val dto = json.decodeFromString(PolymarketApiCredentialsDTO.serializer(), payload)
             PolymarketApiCredentialsConverter.convertBack(dto)
         } catch (e: SerializationException) {
-            TangemLogger.e("Failed to decode Polymarket API credentials; clearing storage")
+            TangemLogger.e("Failed to decode the stored API credentials; clearing them")
             secureStorage.delete(key)
             null
         }

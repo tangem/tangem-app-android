@@ -68,6 +68,10 @@ internal class DefaultChooseTokenBridge @AssistedInject constructor(
         portfolioFullBlockDelegate.selectWalletTab(walletId)
     }
 
+    override fun resetBalanceFilter() {
+        portfolioListBlockDelegate.resetBalanceFilterToDefault()
+    }
+
     override fun onSearchQuery(query: SearchQuery) {
         onSearchQuery.trySend(query)
     }
