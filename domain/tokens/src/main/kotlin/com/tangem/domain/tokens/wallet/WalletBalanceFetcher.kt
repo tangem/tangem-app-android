@@ -197,9 +197,9 @@ class WalletBalanceFetcher internal constructor(
                 message
             }
 
-            // Fetch TangemPay separately — may run long-polling, so it must not block balance error checking.
-            // The special accounts run concurrently with each other too: they share no data, and a wallet can
-            // hold all of them, so chaining them would add up their round-trips on every pull-to-refresh
+            // The special accounts are refreshed after the balance error check and concurrently with each other:
+            // they share no data, a wallet can hold all of them, and TangemPay may long-poll — chained, their
+            // round-trips would add up on every pull-to-refresh
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
                 launch {
                     balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
