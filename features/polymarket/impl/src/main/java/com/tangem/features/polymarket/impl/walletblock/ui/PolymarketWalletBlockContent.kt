@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.main.impl.ui
+package com.tangem.features.polymarket.impl.walletblock.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -26,27 +26,27 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.polymarket.main.api.entity.PolymarketMainUM
-import com.tangem.features.polymarket.main.impl.R
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
+import com.tangem.features.polymarket.impl.R
 import com.tangem.utils.StringsSigns.DASH_SIGN
 
 @Composable
-internal fun PolymarketMainBlockContent(
-    state: PolymarketMainUM,
+internal fun PolymarketWalletBlockContent(
+    state: PolymarketWalletBlockUM,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
-        is PolymarketMainUM.Hidden -> Unit
-        is PolymarketMainUM.Loading -> PredictionAccountLoading(state, modifier)
-        is PolymarketMainUM.Content -> PredictionAccountContent(state, isBalanceHidden, modifier)
-        is PolymarketMainUM.Unavailable -> PredictionAccountUnavailable(state, modifier)
+        is PolymarketWalletBlockUM.Hidden -> Unit
+        is PolymarketWalletBlockUM.Loading -> PredictionAccountLoading(state, modifier)
+        is PolymarketWalletBlockUM.Content -> PredictionAccountContent(state, isBalanceHidden, modifier)
+        is PolymarketWalletBlockUM.Unavailable -> PredictionAccountUnavailable(state, modifier)
     }
 }
 
 @Composable
 private fun PredictionAccountContent(
-    state: PolymarketMainUM.Content,
+    state: PolymarketWalletBlockUM.Content,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -64,7 +64,7 @@ private fun PredictionAccountContent(
 
 /** A dash, not a zero: a zero would claim the account is empty, which is exactly what is unknown here. */
 @Composable
-private fun PredictionAccountUnavailable(state: PolymarketMainUM.Unavailable, modifier: Modifier = Modifier) {
+private fun PredictionAccountUnavailable(state: PolymarketWalletBlockUM.Unavailable, modifier: Modifier = Modifier) {
     AccountRow(
         modifier = modifier.predictionAccountCard(),
         title = title,
@@ -76,7 +76,7 @@ private fun PredictionAccountUnavailable(state: PolymarketMainUM.Unavailable, mo
 }
 
 @Composable
-private fun PredictionAccountLoading(state: PolymarketMainUM.Loading, modifier: Modifier = Modifier) {
+private fun PredictionAccountLoading(state: PolymarketWalletBlockUM.Loading, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier.predictionAccountCard(),
         contentLead = TangemRowContentLead.Start,
@@ -108,11 +108,11 @@ private fun Modifier.predictionAccountCard(): Modifier = this
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PolymarketMainBlockContent_Preview(
-    @PreviewParameter(PolymarketMainPreviewProvider::class) state: PolymarketMainUM,
+private fun PolymarketWalletBlockContent_Preview(
+    @PreviewParameter(PolymarketWalletBlockPreviewProvider::class) state: PolymarketWalletBlockUM,
 ) {
     TangemThemePreviewRedesign {
-        PolymarketMainBlockContent(
+        PolymarketWalletBlockContent(
             state = state,
             isBalanceHidden = false,
             modifier = Modifier
@@ -123,24 +123,24 @@ private fun PolymarketMainBlockContent_Preview(
     }
 }
 
-private class PolymarketMainPreviewProvider : CollectionPreviewParameterProvider<PolymarketMainUM>(
+private class PolymarketWalletBlockPreviewProvider : CollectionPreviewParameterProvider<PolymarketWalletBlockUM>(
     collection = listOf(
-        PolymarketMainUM.Loading(subtitle = stringReference("Prediction markets")),
-        PolymarketMainUM.Content(
+        PolymarketWalletBlockUM.Loading(subtitle = stringReference("Prediction markets")),
+        PolymarketWalletBlockUM.Content(
             subtitle = stringReference("Prediction markets"),
             balance = stringReference("$1,234.00"),
             isBalanceFlickering = false,
             isBalanceFromCache = false,
             onClick = {},
         ),
-        PolymarketMainUM.Content(
+        PolymarketWalletBlockUM.Content(
             subtitle = stringReference("Prediction markets"),
             balance = stringReference("$1,234.00"),
             isBalanceFlickering = true,
             isBalanceFromCache = true,
             onClick = {},
         ),
-        PolymarketMainUM.Unavailable(subtitle = stringReference("Unavailable"), onClick = {}),
+        PolymarketWalletBlockUM.Unavailable(subtitle = stringReference("Unavailable"), onClick = {}),
     ),
 )
 // endregion
