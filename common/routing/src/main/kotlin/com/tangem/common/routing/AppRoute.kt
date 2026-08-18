@@ -126,6 +126,9 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data object AppSettings : AppRoute(path = "/app_settings")
 
+    @Serializable
+    data object Collectibles : AppRoute(path = "/collectibles")
+
     /**
      * Reset to factory
      *
@@ -421,7 +424,13 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/upgrade_wallet/${userWalletId.stringValue}")
 
     @Serializable
-    object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+    data class AddExistingWallet(
+        val mode: Mode = Mode.RecoveryPhrase,
+    ) : AppRoute(path = "/add_existing_wallet") {
+
+        @Serializable
+        enum class Mode { RecoveryPhrase, CloudRestore }
+    }
 
     @Serializable
     data class WalletActivation(
@@ -445,6 +454,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: String,
         val nextScreen: AppRoute? = null,
         val shouldShowBackButton: Boolean = true,
+        val canSkip: Boolean = false,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -481,6 +491,11 @@ sealed class AppRoute(val path: String) : Route {
     data class JointAccountJoin(
         val inviteId: String,
     ) : AppRoute(path = "/joint_account_join/$inviteId")
+
+    @Serializable
+    data class JointAccountMembers(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}")
 
     @Serializable
     data class EditAccount(
