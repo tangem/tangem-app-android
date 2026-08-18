@@ -67,7 +67,6 @@ dependencies {
 
     // region Kotlin
     api(deps.kotlin.coroutines)
-    api(deps.kotlin.datetime)
     api(deps.kotlin.serialization)
     // endregion
 
