@@ -43,13 +43,8 @@ import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
 /**
- * Covers the special accounts — payment, virtual and prediction — that the producer does not build itself but
- * joins from their own suppliers.
- *
- * They are joined with `combine`, which withholds everything until each source has emitted, and that join gates
- * the account statuses of the whole wallet — so a source that goes quiet blanks the screen, not one row. The
- * prediction source is therefore both toggle-gated and seeded before the join, and both of those are pinned here
- * rather than trusted to the supplier's own module.
+ * Covers the special accounts joined from their own suppliers. Their `combine` gates every account of the wallet,
+ * so the prediction source is toggle-gated and seeded, and both are pinned here rather than in its own module.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SingleAccountStatusListProducerSpecialAccountsTest {
@@ -81,7 +76,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
     @Test
     fun `GIVEN prediction status is unavailable WHEN produced THEN the other accounts still arrive`() = runTest {
-        // Arrange — an unreachable prediction account is a value the supplier emits, not a silence
+        // Arrange
         val producer = createProducer(
             predictionStatus = flowOf(PredictionAccountStatusValue.Error.Unavailable),
         )
@@ -97,7 +92,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
     @Test
     fun `GIVEN a wallet without a prediction account WHEN produced THEN no prediction status is built`() = runTest {
-        // Arrange — the account list is what decides whether the account exists; the supplier is asked regardless
+        // Arrange
         val producer = createProducer(
             predictionStatus = flowOf(PredictionAccountStatusValue.NotOnboarded),
             accounts = accountList().let { list ->
@@ -114,7 +109,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
     @Test
     fun `GIVEN the prediction supplier never emits WHEN produced THEN the wallet screen is not stalled`() = runTest {
-        // Arrange — a silent supplier is what the joined combine cannot survive on its own
+        // Arrange
         val producer = createProducer(predictionStatus = emptyFlow())
 
         // Act
@@ -135,8 +130,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         // Act
         val statuses = getEmittedValues(producer.produce()).last().accountStatuses
 
-        // Assert — the supplier builds a producer that reads storage and subscribes a quote, so with the feature
-        // off it must not be touched at all, however the account list is shaped
+        // Assert
         verify(inverse = true) { supplier.invoke(userWalletId = walletId) }
         assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
     }
