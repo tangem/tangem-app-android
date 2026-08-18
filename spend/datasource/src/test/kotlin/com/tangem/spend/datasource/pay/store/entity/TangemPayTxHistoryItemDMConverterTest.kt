@@ -98,7 +98,6 @@ internal class TangemPayTxHistoryItemDMConverterTest {
         currency = Currency.getInstance("USD"),
         isCapTrimmed = true,
         exclusionReason = TangemPayTxHistoryItem.Cashback.ExclusionReason.MCC_EXCLUDED,
-        promotionIds = listOf("promo-1"),
     )
 
     private fun payment() = TangemPayTxHistoryItem.Payment(
