@@ -43,7 +43,7 @@ import com.tangem.core.ui.res.generated.icons.ic_sign_equal_24
  * @param modifier Modifier applied to the row container.
  * @param badge Optional [TangemTokenRow.Badge] after the title (e.g. an `"APY 5.47%"` chip; use a
  * [TangemBadge.Variant.Solid] badge for the filled look). `null` hides it.
- * @param hasPending Shows a small spinner after the title while a transaction is pending.
+ * @param hasPending Shows the animated pending dots after the title while a transaction is pending.
  * @param quote Fiat quote for one token (e.g. `"$1.00"`). `null` hides it.
  * @param priceChange Price change indicator next to the quote. `null` hides it.
  * @param fiatBalance Primary balance at the end (e.g. `"$583.00"`). `null` hides the line.
@@ -195,7 +195,7 @@ object TangemTokenRow {
          * @param icon Token icon state.
          * @param title Token name.
          * @param badge Badge after the title. `null` hides it. See [Badge].
-         * @param hasPending Shows a small spinner after the title while a transaction is pending.
+         * @param hasPending Shows the animated pending dots after the title while a transaction is pending.
          * @param quote Fiat quote for one token. `null` hides it.
          * @param priceChange Price change indicator next to the quote. `null` hides it.
          * @param fiatBalance Primary balance at the end. `null` hides the line.
@@ -654,6 +654,7 @@ private fun TangemTokenRowPreview() {
         TangemTokenRow(
             icon = icon,
             title = stringReference("Bitcoin"),
+            hasPending = true,
             quote = stringReference("$1.00"),
             priceChange = TangemPriceChange.State(
                 value = stringReference("0.4%"),
