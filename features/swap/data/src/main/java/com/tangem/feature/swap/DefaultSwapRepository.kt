@@ -8,14 +8,9 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.grow.datasource.express.TangemExpressApi
-import com.tangem.grow.datasource.express.models.request.ExchangeSentRequestBody
-import com.tangem.grow.datasource.express.models.request.PairsRequestBody
-import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWithTxDetails
-import com.tangem.grow.datasource.express.models.response.SwapPair
-import com.tangem.grow.datasource.express.models.response.SwapPairsWithProviders
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
+import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
@@ -34,6 +29,14 @@ import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.request.ExchangeSentRequestBody
+import com.tangem.grow.datasource.express.models.request.PairsRequestBody
+import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWithTxDetails
+import com.tangem.grow.datasource.express.models.response.SwapPair
+import com.tangem.grow.datasource.express.models.response.SwapPairsWithProviders
+import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -51,6 +54,7 @@ internal class DefaultSwapRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val expressHistoryRepository: ExpressHistoryRepository,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
+    private val swapFeatureToggles: SwapFeatureToggles,
     moshi: Moshi,
 ) : SwapRepository {
 
@@ -201,10 +205,13 @@ internal class DefaultSwapRepository(
                         appPreferencesStore = appPreferencesStore,
                     ),
                 ).getOrThrow()
+
                 QuoteModel(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
                     allowanceContract = response.allowanceContract,
                     txType = response.txType?.toDomain(),
+                    isRestricted = response.isRestricted &&
+                        swapFeatureToggles.isExpressCategoriesGeoBlockingEnabled,
                 ).right()
             } catch (ex: Exception) {
                 getDataError(ex).left()
