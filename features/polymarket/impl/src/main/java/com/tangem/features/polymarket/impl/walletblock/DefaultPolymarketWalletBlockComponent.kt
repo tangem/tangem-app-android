@@ -1,12 +1,12 @@
-package com.tangem.features.polymarket.main.impl.component
+package com.tangem.features.polymarket.impl.walletblock
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.features.polymarket.main.api.PolymarketMainBlockComponent
-import com.tangem.features.polymarket.main.api.entity.PolymarketMainUM
-import com.tangem.features.polymarket.main.impl.ui.PolymarketMainBlockContent
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
+import com.tangem.features.polymarket.impl.walletblock.ui.PolymarketWalletBlockContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -15,23 +15,23 @@ private const val PREDICTION_ACCOUNT_KEY = "polymarket_prediction_account"
 private const val PREDICTION_ACCOUNT_CONTENT_TYPE = "PredictionAccount"
 
 @Suppress("UnusedPrivateProperty")
-internal class DefaultPolymarketMainBlockComponent @AssistedInject constructor(
+internal class DefaultPolymarketWalletBlockComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: Unit,
-) : PolymarketMainBlockComponent, AppComponentContext by context {
+) : PolymarketWalletBlockComponent, AppComponentContext by context {
 
-    override fun LazyListScope.polymarketMainContent(
-        state: PolymarketMainUM,
+    override fun LazyListScope.polymarketWalletBlockContent(
+        state: PolymarketWalletBlockUM,
         isBalanceHidden: Boolean,
         modifier: Modifier,
     ) {
-        if (state is PolymarketMainUM.Hidden) return
+        if (state is PolymarketWalletBlockUM.Hidden) return
 
         item(
             key = PREDICTION_ACCOUNT_KEY,
             contentType = PREDICTION_ACCOUNT_CONTENT_TYPE,
         ) {
-            PolymarketMainBlockContent(
+            PolymarketWalletBlockContent(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
                 modifier = modifier.animateContentSize(),
@@ -40,7 +40,7 @@ internal class DefaultPolymarketMainBlockComponent @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : PolymarketMainBlockComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultPolymarketMainBlockComponent
+    interface Factory : PolymarketWalletBlockComponent.Factory {
+        override fun create(context: AppComponentContext, params: Unit): DefaultPolymarketWalletBlockComponent
     }
 }
