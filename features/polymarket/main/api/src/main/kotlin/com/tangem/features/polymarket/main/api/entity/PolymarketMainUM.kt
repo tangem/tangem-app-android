@@ -3,10 +3,7 @@ package com.tangem.features.polymarket.main.api.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
-/**
- * State of the Prediction account row. Carries only what changes: the title and the icon are the same in every
- * state, and the balance arrives formatted, because formatting needs the app currency the screen already holds.
- */
+/** State of the Prediction account row. The balance arrives formatted: formatting needs the app currency. */
 @Immutable
 sealed class PolymarketMainUM {
 
