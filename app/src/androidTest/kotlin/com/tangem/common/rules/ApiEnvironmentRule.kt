@@ -6,7 +6,7 @@ import com.tangem.datasource.api.common.config.News
 
 import com.tangem.datasource.api.common.config.TangemTech
 
-import com.tangem.datasource.api.common.config.StakeKit
+import com.tangem.grow.datasource.config.StakeKit
 
 import com.tangem.grow.datasource.config.Express
 
