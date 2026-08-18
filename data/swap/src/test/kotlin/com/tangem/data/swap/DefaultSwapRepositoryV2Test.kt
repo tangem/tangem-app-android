@@ -322,7 +322,117 @@ internal class DefaultSwapRepositoryV2Test {
         assertThat(result.fromTokenAmount).isEqualTo(BigDecimal("1.000000000000000000"))
         assertThat(result.allowanceContract).isEqualTo("0xAllowance")
         assertThat(result.quoteId).isEqualTo("quote-123")
+        assertThat(result.isRestricted).isFalse()
     }
+
+    @Test
+    fun `GIVEN restricted response WHEN getSwapQuote THEN quote model carries restricted flag with amounts`() =
+        runTest {
+            // Arrange
+            val quoteResponse = ExchangeQuoteResponse(
+                fromAmount = "1000000000000000000",
+                fromDecimals = 18,
+                toAmount = "100000000",
+                toDecimals = 8,
+                allowanceContract = null,
+                minAmount = BigDecimal.ONE,
+                quoteId = "quote-123",
+                isRestricted = true,
+            )
+
+            coEvery {
+                tangemExpressApi.getExchangeQuote(
+                    fromAmount = any(),
+                    toAmount = any(),
+                    fromNetwork = any(),
+                    fromContractAddress = any(),
+                    fromDecimals = any(),
+                    toNetwork = any(),
+                    toContractAddress = any(),
+                    toDecimals = any(),
+                    providerId = any(),
+                    rateType = any(),
+                    userWalletId = any(),
+                    refCode = any(),
+                )
+            } returns ApiResponse.Success(quoteResponse)
+
+            every {
+                featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+                )
+            } returns true
+
+            // Act
+            val result = repository.getSwapQuote(
+                userWallet = userWallet,
+                fromCryptoCurrency = primaryCoin,
+                toCryptoCurrency = secondaryCoin,
+                amount = BigDecimal.ONE,
+                amountType = SwapAmountType.From,
+                provider = expressProvider,
+                rateType = ExpressRateType.Float,
+            )
+
+            // Assert — the quote still loads with amounts, restriction is a flag, not a failure
+            assertThat(result.isRestricted).isTrue()
+            assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
+        }
+
+    @Test
+    fun `GIVEN geo blocking toggle disabled WHEN getSwapQuote THEN restricted response is not propagated`() =
+        runTest {
+            // Arrange
+            val quoteResponse = ExchangeQuoteResponse(
+                fromAmount = "1000000000000000000",
+                fromDecimals = 18,
+                toAmount = "100000000",
+                toDecimals = 8,
+                allowanceContract = null,
+                minAmount = BigDecimal.ONE,
+                quoteId = "quote-123",
+                isRestricted = true,
+            )
+
+            coEvery {
+                tangemExpressApi.getExchangeQuote(
+                    fromAmount = any(),
+                    toAmount = any(),
+                    fromNetwork = any(),
+                    fromContractAddress = any(),
+                    fromDecimals = any(),
+                    toNetwork = any(),
+                    toContractAddress = any(),
+                    toDecimals = any(),
+                    providerId = any(),
+                    rateType = any(),
+                    userWalletId = any(),
+                    refCode = any(),
+                )
+            } returns ApiResponse.Success(quoteResponse)
+
+            every {
+                featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+                )
+            } returns false
+
+            // Act
+            val result = repository.getSwapQuote(
+                userWallet = userWallet,
+                fromCryptoCurrency = primaryCoin,
+                toCryptoCurrency = secondaryCoin,
+                amount = BigDecimal.ONE,
+                amountType = SwapAmountType.From,
+                provider = expressProvider,
+                rateType = ExpressRateType.Float,
+            )
+
+            // Assert — pre-geo-blocking behaviour: the flag is dropped, the quote is unchanged otherwise
+            assertThat(result.isRestricted).isFalse()
+            assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
+            assertThat(result.quoteId).isEqualTo("quote-123")
+        }
 
     @Test
     fun `getSwapQuote sends fromAmount when amountType is From`() = runTest {
