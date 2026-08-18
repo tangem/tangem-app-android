@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.token.converter
 
-import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO.BalanceTypeDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO.BalanceTypeDTO
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.utils.converter.Converter
 

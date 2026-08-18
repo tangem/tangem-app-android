@@ -1,10 +1,10 @@
 package com.tangem.common.test.data.staking
 
-import com.tangem.datasource.api.stakekit.models.request.Address
-import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
-import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
-import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.grow.datasource.stakekit.models.request.Address
+import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.NetworkTypeDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.TokenDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.models.staking.StakingID
 import java.math.BigDecimal
 
