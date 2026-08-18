@@ -156,12 +156,20 @@ private fun PaymentNetworkRow(item: PaymentNetworkItemUM, modifier: Modifier = M
                 color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.testTag(ChooseNetworkBottomSheetTestTags.NETWORK_TITLE),
             )
-            Text(
-                text = subtitle,
-                style = TangemTheme.typography3.caption.medium,
-                color = if (isError) TangemTheme.colors3.text.status.error else TangemTheme.colors3.text.secondary,
-                modifier = Modifier.testTag(ChooseNetworkBottomSheetTestTags.NETWORK_SUBTITLE),
-            )
+            // A network whose tokens the backend has not listed yet has no label to show — drop the line
+            // instead of leaving an empty one under the network name.
+            if (subtitle.isNotBlank()) {
+                Text(
+                    text = subtitle,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = if (isError) {
+                        TangemTheme.colors3.text.status.error
+                    } else {
+                        TangemTheme.colors3.text.secondary
+                    },
+                    modifier = Modifier.testTag(ChooseNetworkBottomSheetTestTags.NETWORK_SUBTITLE),
+                )
+            }
         }
         when (item.state) {
             PaymentNetworkItemUM.State.Idle -> Unit

@@ -66,6 +66,59 @@ internal class CustomerMeNetworksParsingTest {
     }
 
     @Test
+    fun `GIVEN not issued network WHEN parse THEN it has no deposit address and an empty token list`() {
+        // A NOT_ISSUED network has no contract yet, so the backend reports it without a deposit address and
+        // with an empty token list — the entry itself must still survive.
+        val json = """
+            {
+              "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
+              "product_instances": [], "cards": [],
+              "balance": {
+                "networks": [
+                  { "name": "base", "is_testnet": true, "chain_id": 84532, "status": "ENABLED",
+                    "deposit_address": "0xEED",
+                    "tokens": [ { "token": "USDC", "token_contract_address": "0x036" } ] },
+                  { "name": "ethereum", "is_testnet": true, "chain_id": 11155111, "status": "NOT_ISSUED",
+                    "deposit_address": null, "tokens": [] }
+                ]
+              }
+            }
+        """.trimIndent()
+
+        val networks = adapter.fromJson(json)!!.balance!!.networks!!
+
+        assertThat(networks).hasSize(2)
+        val notIssued = networks[1]
+        assertThat(notIssued.name).isEqualTo("ethereum")
+        assertThat(notIssued.status).isEqualTo("NOT_ISSUED")
+        assertThat(notIssued.chainId).isEqualTo(11155111L)
+        assertThat(notIssued.depositAddress).isNull()
+        assertThat(notIssued.tokens).isEmpty()
+        assertThat(networks[0].tokens[0].availableForWithdrawal).isNull()
+    }
+
+    @Test
+    fun `GIVEN token without contract address WHEN parse THEN contract address is null`() {
+        val json = """
+            {
+              "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
+              "product_instances": [], "cards": [],
+              "balance": {
+                "networks": [
+                  { "name": "base", "is_testnet": true, "chain_id": 84532, "status": "NOT_ISSUED",
+                    "tokens": [ { "token": "USDC" } ] }
+                ]
+              }
+            }
+        """.trimIndent()
+
+        val token = adapter.fromJson(json)!!.balance!!.networks!![0].tokens[0]
+
+        assertThat(token.token).isEqualTo("USDC")
+        assertThat(token.tokenContractAddress).isNull()
+    }
+
+    @Test
     fun `GIVEN balance json without networks WHEN parse THEN networks is null`() {
         val json = """
             { "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
