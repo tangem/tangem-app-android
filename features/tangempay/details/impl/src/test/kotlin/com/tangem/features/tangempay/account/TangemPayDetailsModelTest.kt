@@ -268,6 +268,28 @@ internal class TangemPayDetailsModelTest {
         ),
     )
 
+    @Test
+    fun `GIVEN other networks sheet WHEN dismissed THEN choose network is reopened instead of closing the slot`() =
+        runTest {
+            // Arrange
+            // Both sheets share one slot, so "Other networks" replaces its opener; closing it must not drop the
+            // user out to the account screen.
+            val model = createModel(testScope = this)
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
+
+            // Act
+            model.onSelectDisabled()
+            model.onOtherNetworksDismiss()
+
+            // Assert
+            assertThat(openedSheets.filterNotNull()).containsExactly(
+                TangemPayDetailsNavigation.OtherNetworks,
+                TangemPayDetailsNavigation.ChooseNetwork(walletId = userWalletId),
+            ).inOrder()
+            model.onDestroy()
+        }
+
     private fun SlotNavigation<TangemPayDetailsNavigation>.trackSlot(): List<TangemPayDetailsNavigation?> {
         val tracked = mutableListOf<TangemPayDetailsNavigation?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
