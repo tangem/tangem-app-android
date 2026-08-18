@@ -33,6 +33,7 @@ internal object WalletAdditionalInfoFactory {
         wallet: UserWallet,
         currencyAmount: BigDecimal? = null,
         syncProgress: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle,
+        isHotBackedUp: Boolean? = null,
     ): WalletAdditionalInfo {
         return when (wallet) {
             is UserWallet.Cold -> {
@@ -42,11 +43,14 @@ internal object WalletAdditionalInfoFactory {
                     wallet.resolveSingleCurrencyInfo(currencyAmount)
                 }
             }
-            is UserWallet.Hot -> wallet.resolveAdditionalInfo(syncProgress)
+            is UserWallet.Hot -> wallet.resolveAdditionalInfo(syncProgress, isHotBackedUp ?: wallet.backedUp)
         }
     }
 
-    private fun UserWallet.Hot.resolveAdditionalInfo(syncProgress: AssetsDiscoveryProgressUM): WalletAdditionalInfo {
+    private fun UserWallet.Hot.resolveAdditionalInfo(
+        syncProgress: AssetsDiscoveryProgressUM,
+        isBackedUp: Boolean,
+    ): WalletAdditionalInfo {
         val content = if (syncProgress is AssetsDiscoveryProgressUM.InProgress) {
             WalletAdditionalInfo.Content.SyncProgress(syncProgress.progressPercent)
         } else {
@@ -54,7 +58,7 @@ internal object WalletAdditionalInfoFactory {
                 TextReference.Res(R.string.hw_mobile_wallet) +
                     when {
                         isLocked -> DIVIDER + TextReference.Res(R.string.common_locked)
-                        backedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
+                        isBackedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
                         else -> TextReference.Str("")
                     },
             )
@@ -62,7 +66,7 @@ internal object WalletAdditionalInfoFactory {
         return WalletAdditionalInfo(
             hideable = false,
             content = content,
-            isHotBackedUp = backedUp,
+            isHotBackedUp = isBackedUp,
         )
     }
 

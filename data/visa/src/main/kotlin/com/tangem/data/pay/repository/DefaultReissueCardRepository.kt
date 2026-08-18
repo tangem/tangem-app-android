@@ -7,7 +7,7 @@ import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.ReissueCardRequest
-import com.tangem.datasource.local.visa.TangemPayReissueCardStore
+import com.tangem.spend.datasource.pay.store.TangemPayReissueCardStore
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayOrderInfo

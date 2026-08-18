@@ -32,10 +32,15 @@ internal class TangemPayDetailsStateFactory(
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
     private val isTiersPlusPlanEnabled: Boolean,
+    isMultichainEnabled: Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(
         intents = intents,
         isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
+    )
+
+    private val subtitle = resourceReference(
+        if (isMultichainEnabled) R.string.tangempay_multinetwork else R.string.tangempay_usdc_on_polygon_network,
     )
 
     fun getLoadingState(): TangemPayDetailsUM {
@@ -44,6 +49,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -86,6 +92,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = status.tariffPlan),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -104,12 +111,13 @@ internal class TangemPayDetailsStateFactory(
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
                         .map { cardItem ->
+                            val isAwaitingActivation = cardItem.state == TangemPayCardState.Delivering
                             TangemPayDetailsBalanceBlockState.Card(
-                                lastDigits = cardItem.lastDigits,
-                                imageUrl = cardItem.thumbnailUrl,
+                                lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
+                                imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
                                 onClick = { intents.onCardClick(cardItem.id) },
                                 isEnabled = status.error == null,
-                                isFrozen = cardItem.isFrozen,
+                                isFrozen = cardItem.isFrozen && !isAwaitingActivation,
                                 state = cardItem.state.toUiState(),
                             )
                         }
@@ -126,10 +134,17 @@ internal class TangemPayDetailsStateFactory(
         )
     }
 
-    private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? = when {
-        any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
-        any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
-        else -> null
+    private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? {
+        val deliveringCards = filter { it.state == TangemPayCardState.Delivering }
+        return when {
+            any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
+            any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
+            deliveringCards.size == 1 -> {
+                val cardId = deliveringCards.first().id
+                CardsProgressBannerUM.Delivering(onActivateClick = { intents.onCardClick(cardId) })
+            }
+            else -> null
+        }
     }
 
     fun getDeactivatedState(status: PaymentAccountStatusValue.Deactivated): TangemPayDetailsUM {
@@ -141,6 +156,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getDeactivatedMenuItems(),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -172,6 +188,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
