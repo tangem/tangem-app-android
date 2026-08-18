@@ -12,8 +12,8 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolAccountsListRequest
 import com.tangem.datasource.api.ethpool.models.response.*
-import com.tangem.datasource.api.stakekit.StakeKitApi
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.grow.datasource.stakekit.StakeKitApi
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
