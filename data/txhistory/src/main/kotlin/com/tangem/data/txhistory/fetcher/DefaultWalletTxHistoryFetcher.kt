@@ -10,9 +10,7 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.txhistory.fetcher.AccountTxHistoryFetcher
-import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
-import com.tangem.domain.txhistory.fetcher.WalletTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -24,25 +22,39 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
     private val utils: TxHistoryFetcherUtils,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountTxHistoryFetcher: DefaultAccountTxHistoryFetcher.Factory,
+    expressTxHistoryFetcher: DefaultExpressTxHistoryFetcher.Factory,
 ) : WalletTxHistoryFetcher, TxHistoryFetcherUtils by utils {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val fetchers = ConcurrentHashMap<AccountId, AccountTxHistoryFetcher>()
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val expressFetcher: ExpressTxHistoryFetcher = expressTxHistoryFetcher.create(walletId)
+
     init {
-        defaultLaunchIn(buildFlow())
+        defaultLaunchIn(buildOnlyExpressHistory())
     }
 
-    override suspend fun invoke(params: TxHistoryFetchTrigger) {
+    override fun invoke(params: TxHistoryFetchTrigger) {
         sendTrigger(params)
     }
 
     override fun close() {
         cancelScope()
+        expressFetcher.close()
         fetchers.forEach { (_, fetcher) -> fetcher.close() }
         fetchers.clear()
     }
 
+    private fun buildOnlyExpressHistory(): Flow<Unit> = receiveTrigger()
+        .map { trigger ->
+            when (trigger) {
+                is TxHistoryExpressTrigger -> expressFetcher.invoke(trigger)
+            }
+        }
+
+    // Kept until per-account on-chain history is wired: only the express part of the pipeline is live for now.
+    @Suppress("UnusedPrivateMember")
     private fun buildFlow(): Flow<Unit> = channelFlow {
         val accountListFlow = singleAccountListSupplier(walletId)
             .stateIn(this)
@@ -62,10 +74,7 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
         receiveTrigger()
             .onEach { trigger ->
                 when (trigger) {
-                    is TxHistoryFetchTrigger.TokenDetailsOpen -> accountList()
-                        .findFetcher(trigger.currency)?.invoke(trigger)
-                    is TxHistoryFetchTrigger.TokenDetailsPTR -> accountList()
-                        .findFetcher(trigger.currency)?.invoke(trigger)
+                    is TxHistoryExpressTrigger -> expressFetcher.invoke(trigger)
                 }
             }
             .collect {}
@@ -81,6 +90,7 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
         newIds
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun AccountList.findFetcher(currency: CryptoCurrency): AccountTxHistoryFetcher? = this
         .getAccountCryptoCurrency(currency)
         .getOrNull()
