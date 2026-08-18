@@ -21,7 +21,7 @@ internal interface TxHistoryFetcherUtils {
     val analyticsEventHandler: AnalyticsEventHandler
     val analyticsExceptionHandler: AnalyticsExceptionHandler
 
-    suspend fun sendTrigger(trigger: TxHistoryFetchTrigger)
+    fun sendTrigger(trigger: TxHistoryFetchTrigger)
 
     companion object {
 
@@ -71,7 +71,7 @@ internal class DefaultTxHistoryFetcherUtils @Inject constructor(
     // todo txhistory use lifecycle scope?
     override val fetcherScope: CoroutineScope = appScope + SupervisorJob()
 
-    override suspend fun sendTrigger(trigger: TxHistoryFetchTrigger) {
+    override fun sendTrigger(trigger: TxHistoryFetchTrigger) {
         triggersBuffer.trySend(trigger)
     }
 }

@@ -4,6 +4,8 @@ import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.store.datasource.blockaid.BlockAidApi
+import com.tangem.store.datasource.config.BlockAid
 import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.store.datasource.config.SurveySparrow
 import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
@@ -32,6 +34,25 @@ internal object StoreDatasourceModule {
         return factory.build(
             RetrofitApiSpec(
                 apiConfigId = SurveySparrow.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(BlockAid.KEY)
+    fun provideBlockAidConfig(storeEnvironmentConfig: StoreEnvironmentConfig): ApiConfig {
+        return BlockAid(storeEnvironmentConfig)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlockAidApi(factory: RetrofitFactory): BlockAidApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = BlockAid.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),

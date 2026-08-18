@@ -90,7 +90,6 @@ interface TangemExpressApi {
     @GET("history/exchange")
     suspend fun getHistory(
         @Header("user-id") userWalletId: String,
-        @Query("fromAddress") fromAddress: String,
         @Query("afterCursor") cursor: String?,
         @Query("limit") limit: Int = 100,
     ): ApiResponse<ExchangeHistoryResponse>
@@ -98,7 +97,6 @@ interface TangemExpressApi {
     @GET("history/delta/exchange")
     suspend fun getHistoryDelta(
         @Header("user-id") userWalletId: String,
-        @Query("fromAddress") fromAddress: String,
         @Query("beforeCursor") cursor: String?,
         @Query("limit") limit: Int = 100,
     ): ApiResponse<ExchangeHistoryDeltaResponse>

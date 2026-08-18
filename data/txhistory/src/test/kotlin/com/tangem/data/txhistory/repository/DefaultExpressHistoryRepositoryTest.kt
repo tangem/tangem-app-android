@@ -85,18 +85,18 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createExchangeItem()
         val response = ExchangeHistoryResponse(items = listOf(item), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, syncState(afterCursor = AFTER_CURSOR))
         coEvery {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = AFTER_CURSOR, limit = any())
+            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = AFTER_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
 
         // WHEN
-        val result = repository.fetchExchangeHistory(fromAddress = ADDRESS, userWalletId = USER_WALLET_ID)
+        val result = repository.fetchExchangeHistory(userWalletId = USER_WALLET_ID)
 
         // THEN
         assertThat(result).isEqualTo(response)
         coVerify(exactly = 1) {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = AFTER_CURSOR, limit = DEFAULT_LIMIT)
+            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = AFTER_CURSOR, limit = DEFAULT_LIMIT)
         }
         coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(item.toEntity())) }
     }
@@ -105,31 +105,31 @@ internal class DefaultExpressHistoryRepositoryTest {
     fun `GIVEN no sync state WHEN fetchExchangeHistory THEN passes null cursor`() = runTest {
         // GIVEN
         val response = ExchangeHistoryResponse(items = emptyList(), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS, state = null)
+        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, state = null)
         coEvery {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = null, limit = any())
+            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = null, limit = any())
         } returns ApiResponse.Success(response)
 
         // WHEN
-        repository.fetchExchangeHistory(fromAddress = ADDRESS, userWalletId = USER_WALLET_ID)
+        repository.fetchExchangeHistory(userWalletId = USER_WALLET_ID)
 
         // THEN
         coVerify(exactly = 1) {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = null, limit = DEFAULT_LIMIT)
+            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = null, limit = DEFAULT_LIMIT)
         }
     }
 
     @Test
     fun `GIVEN api error WHEN fetchExchangeHistory THEN throws and does not persist`() = runTest {
         // GIVEN
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, syncState(afterCursor = AFTER_CURSOR))
         val error = httpError()
         coEvery {
-            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = AFTER_CURSOR, limit = any())
+            exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = AFTER_CURSOR, limit = any())
         } returns ApiResponse.Error(error).cast()
 
         // WHEN
-        val thrown = runCatching { repository.fetchExchangeHistory(fromAddress = ADDRESS, userWalletId = USER_WALLET_ID) }.exceptionOrNull()
+        val thrown = runCatching { repository.fetchExchangeHistory(userWalletId = USER_WALLET_ID) }.exceptionOrNull()
 
         // THEN
         assertThat(thrown).isEqualTo(error)
@@ -141,18 +141,18 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createExchangeItem()
         val response = ExchangeHistoryDeltaResponse(items = listOf(item), pagination = paginationDelta())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, ADDRESS, syncState(deltaCursor = DELTA_CURSOR))
+        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, syncState(deltaCursor = DELTA_CURSOR))
         coEvery {
-            exchangeApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = DELTA_CURSOR, limit = any())
+            exchangeApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, cursor = DELTA_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
 
         // WHEN
-        val result = repository.fetchExchangeHistoryDelta(fromAddress = ADDRESS, userWalletId = USER_WALLET_ID)
+        val result = repository.fetchExchangeHistoryDelta(userWalletId = USER_WALLET_ID)
 
         // THEN
         assertThat(result).isEqualTo(response)
         coVerify(exactly = 1) {
-            exchangeApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, fromAddress = ADDRESS, cursor = DELTA_CURSOR, limit = DEFAULT_LIMIT)
+            exchangeApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, cursor = DELTA_CURSOR, limit = DEFAULT_LIMIT)
         }
         coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(item.toEntity())) }
     }
@@ -166,18 +166,18 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createOnrampItem()
         val response = OnrampHistoryResponse(items = listOf(item), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, ADDRESS, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, syncState(afterCursor = AFTER_CURSOR))
         coEvery {
-            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, afterCursor = AFTER_CURSOR, limit = any())
+            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, afterCursor = AFTER_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
 
         // WHEN
-        val result = repository.fetchOnrampHistory(payoutAddress = ADDRESS, userWalletId = USER_WALLET_ID)
+        val result = repository.fetchOnrampHistory(userWalletId = USER_WALLET_ID)
 
         // THEN
         assertThat(result).isEqualTo(response)
         coVerify(exactly = 1) {
-            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, afterCursor = AFTER_CURSOR, limit = DEFAULT_LIMIT)
+            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, afterCursor = AFTER_CURSOR, limit = DEFAULT_LIMIT)
         }
         coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity())) }
     }
@@ -187,18 +187,18 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createOnrampItem()
         val response = OnrampHistoryDeltaResponse(items = listOf(item), pagination = paginationDelta())
-        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, ADDRESS, syncState(deltaCursor = DELTA_CURSOR))
+        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, syncState(deltaCursor = DELTA_CURSOR))
         coEvery {
-            onrampApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, cursor = DELTA_CURSOR, limit = any())
+            onrampApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, cursor = DELTA_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
 
         // WHEN
-        val result = repository.fetchOnrampHistoryDelta(payoutAddress = ADDRESS, userWalletId = USER_WALLET_ID)
+        val result = repository.fetchOnrampHistoryDelta(userWalletId = USER_WALLET_ID)
 
         // THEN
         assertThat(result).isEqualTo(response)
         coVerify(exactly = 1) {
-            onrampApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, cursor = DELTA_CURSOR, limit = DEFAULT_LIMIT)
+            onrampApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, cursor = DELTA_CURSOR, limit = DEFAULT_LIMIT)
         }
         coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(item.toEntity())) }
     }
@@ -206,14 +206,14 @@ internal class DefaultExpressHistoryRepositoryTest {
     @Test
     fun `GIVEN api error WHEN fetchOnrampHistory THEN throws and does not persist`() = runTest {
         // GIVEN
-        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, ADDRESS, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, syncState(afterCursor = AFTER_CURSOR))
         val error = httpError()
         coEvery {
-            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, payoutAddress = ADDRESS, afterCursor = AFTER_CURSOR, limit = any())
+            onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, afterCursor = AFTER_CURSOR, limit = any())
         } returns ApiResponse.Error(error).cast()
 
         // WHEN
-        val thrown = runCatching { repository.fetchOnrampHistory(payoutAddress = ADDRESS, userWalletId = USER_WALLET_ID) }.exceptionOrNull()
+        val thrown = runCatching { repository.fetchOnrampHistory(userWalletId = USER_WALLET_ID) }.exceptionOrNull()
 
         // THEN
         assertThat(thrown).isEqualTo(error)
@@ -290,13 +290,15 @@ internal class DefaultExpressHistoryRepositoryTest {
 
     // endregion
 
-    private fun stubSyncState(type: ExpressSyncStateEntity.Type, address: String, state: ExpressSyncStateEntity?) {
-        coEvery { expressSyncStateDao.observe(type = type.name, address = address) } returns flowOf(state)
+    private fun stubSyncState(type: ExpressSyncStateEntity.Type, state: ExpressSyncStateEntity?) {
+        coEvery {
+            expressSyncStateDao.observe(type = type.name, userWalletId = USER_WALLET_ID_VALUE)
+        } returns flowOf(state)
     }
 
     private fun syncState(afterCursor: String? = null, deltaCursor: String? = null) = ExpressSyncStateEntity(
         type = ExpressSyncStateEntity.Type.EXCHANGE.name,
-        address = ADDRESS,
+        userWalletId = USER_WALLET_ID_VALUE,
         isInitialCompleted = true,
         afterCursor = afterCursor,
         deltaCursor = deltaCursor,
@@ -371,7 +373,6 @@ internal class DefaultExpressHistoryRepositoryTest {
     )
 
     private companion object {
-        const val ADDRESS = "0xowner"
         val USER_WALLET_ID = UserWalletId("0123456789abcdef")
         val USER_WALLET_ID_VALUE = USER_WALLET_ID.stringValue
         const val AFTER_CURSOR = "after-cursor"
