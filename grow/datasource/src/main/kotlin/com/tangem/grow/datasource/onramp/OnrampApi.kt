@@ -92,7 +92,6 @@ interface OnrampApi {
     @GET("history/onramp")
     suspend fun getHistory(
         @Header("user-id") userWalletId: String,
-        @Query("payoutAddress") payoutAddress: String,
         @Query("afterCursor") afterCursor: String?,
         @Query("limit") limit: Int = 100,
     ): ApiResponse<OnrampHistoryResponse>
@@ -100,7 +99,6 @@ interface OnrampApi {
     @GET("history/delta/onramp")
     suspend fun getHistoryDelta(
         @Header("user-id") userWalletId: String,
-        @Query("payoutAddress") payoutAddress: String,
         @Query("beforeCursor") cursor: String?,
         @Query("limit") limit: Int = 100,
     ): ApiResponse<OnrampHistoryDeltaResponse>

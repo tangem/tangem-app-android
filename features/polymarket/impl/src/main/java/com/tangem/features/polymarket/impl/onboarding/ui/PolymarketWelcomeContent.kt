@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.onboarding.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,26 +16,23 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.onboarding.OnboardingBenefitCard
+import com.tangem.common.ui.onboarding.OnboardingFaqItem
+import com.tangem.common.ui.onboarding.OnboardingHeadline
 import com.tangem.core.res.R
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_lightning_24
@@ -87,7 +83,10 @@ internal fun PolymarketWelcomeContent(
                         .fillMaxWidth()
                         .aspectRatio(HERO_FRAME_WIDTH / HERO_CONTENT_TOP),
                 )
-                WelcomeHeadline()
+                OnboardingHeadline(
+                    title = resourceReference(R.string.prediction_onboarding_title),
+                    subtitle = resourceReference(R.string.prediction_onboarding_subtitle),
+                )
                 WelcomeBenefits()
                 WelcomeFaq()
             }
@@ -124,25 +123,6 @@ private fun WelcomeHero(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun WelcomeHeadline(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = stringResourceSafe(R.string.prediction_onboarding_title),
-            style = TangemTheme.typography3.heading.medium,
-            color = TangemTheme.colors3.text.primary,
-        )
-        Text(
-            text = stringResourceSafe(R.string.prediction_onboarding_subtitle),
-            style = TangemTheme.typography3.subheading.medium,
-            color = TangemTheme.colors3.text.secondary,
-        )
-    }
-}
-
-@Composable
 private fun WelcomeBenefits(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.padding(all = 24.dp),
@@ -152,64 +132,34 @@ private fun WelcomeBenefits(modifier: Modifier = Modifier) {
             modifier = Modifier.height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            BenefitCard(
+            OnboardingBenefitCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 icon = Icons.ic_lightning_24,
-                title = stringResourceSafe(R.string.prediction_onboarding_benefit_fund_title),
-                subtitle = stringResourceSafe(R.string.prediction_onboarding_benefit_fund_subtitle),
+                title = resourceReference(R.string.prediction_onboarding_benefit_fund_title),
+                subtitle = resourceReference(R.string.prediction_onboarding_benefit_fund_subtitle),
             )
-            BenefitCard(
+            OnboardingBenefitCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 icon = Icons.ic_shield_checkmark_24,
-                title = stringResourceSafe(R.string.prediction_onboarding_benefit_custody_title),
-                subtitle = stringResourceSafe(R.string.prediction_onboarding_benefit_custody_subtitle),
+                title = resourceReference(R.string.prediction_onboarding_benefit_custody_title),
+                subtitle = resourceReference(R.string.prediction_onboarding_benefit_custody_subtitle),
             )
         }
         Row(
             modifier = Modifier.height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            BenefitCard(
+            OnboardingBenefitCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 icon = Icons.ic_percent_backward_24,
-                title = stringResourceSafe(R.string.prediction_onboarding_benefit_history_title),
-                subtitle = stringResourceSafe(R.string.prediction_onboarding_benefit_history_subtitle),
+                title = resourceReference(R.string.prediction_onboarding_benefit_history_title),
+                subtitle = resourceReference(R.string.prediction_onboarding_benefit_history_subtitle),
             )
-            BenefitCard(
+            OnboardingBenefitCard(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 icon = Icons.ic_wallet_24,
-                title = stringResourceSafe(R.string.prediction_onboarding_benefit_payout_title),
-                subtitle = stringResourceSafe(R.string.prediction_onboarding_benefit_payout_subtitle),
-            )
-        }
-    }
-}
-
-@Composable
-private fun BenefitCard(icon: ImageVector, title: String, subtitle: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .background(color = TangemTheme.colors3.bg.secondary, shape = RoundedCornerShape(24.dp))
-            .padding(start = 16.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
-            .heightIn(min = 100.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Icon(
-            modifier = Modifier.size(24.dp),
-            imageVector = icon,
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.primary,
-        )
-        Column {
-            Text(
-                text = title,
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
-            Text(
-                text = subtitle,
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
+                title = resourceReference(R.string.prediction_onboarding_benefit_payout_title),
+                subtitle = resourceReference(R.string.prediction_onboarding_benefit_payout_subtitle),
             )
         }
     }
@@ -221,53 +171,20 @@ private fun WelcomeFaq(modifier: Modifier = Modifier) {
         modifier = modifier.padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        FaqItem(
+        OnboardingFaqItem(
             hasTopBorder = false,
-            question = stringResourceSafe(R.string.prediction_onboarding_faq_tap_question),
-            answer = stringResourceSafe(R.string.prediction_onboarding_faq_tap_answer),
+            question = resourceReference(R.string.prediction_onboarding_faq_tap_question),
+            answer = resourceReference(R.string.prediction_onboarding_faq_tap_answer),
         )
-        FaqItem(
+        OnboardingFaqItem(
             hasTopBorder = true,
-            question = stringResourceSafe(R.string.prediction_onboarding_faq_risks_question),
-            answer = stringResourceSafe(R.string.prediction_onboarding_faq_risks_answer),
+            question = resourceReference(R.string.prediction_onboarding_faq_risks_question),
+            answer = resourceReference(R.string.prediction_onboarding_faq_risks_answer),
         )
-        FaqItem(
+        OnboardingFaqItem(
             hasTopBorder = true,
-            question = stringResourceSafe(R.string.prediction_onboarding_faq_availability_question),
-            answer = stringResourceSafe(R.string.prediction_onboarding_faq_availability_answer),
+            question = resourceReference(R.string.prediction_onboarding_faq_availability_question),
+            answer = resourceReference(R.string.prediction_onboarding_faq_availability_answer),
         )
-    }
-}
-
-@Composable
-private fun FaqItem(hasTopBorder: Boolean, question: String, answer: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp),
-    ) {
-        if (hasTopBorder) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(TangemTheme.colors3.border.secondary),
-            )
-        }
-        Column(
-            modifier = Modifier.padding(top = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = question,
-                style = TangemTheme.typography3.heading.small,
-                color = TangemTheme.colors3.text.primary,
-            )
-            Text(
-                text = answer,
-                style = TangemTheme.typography3.subheading.medium,
-                color = TangemTheme.colors3.text.secondary,
-            )
-        }
     }
 }
