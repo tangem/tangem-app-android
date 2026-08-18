@@ -32,7 +32,6 @@ import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetwor
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
 import com.tangem.features.tangempay.txhistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.details.TangemPayTxHistoryDetailsComponent
-import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
@@ -41,7 +40,6 @@ internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayDetailsContainerComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
@@ -71,16 +69,6 @@ internal class TangemPayDetailsComponent(
         ),
     )
 
-    private val expressTransactionsComponent by lazy {
-        expressTransactionsComponentFactory.create(
-            context = child("expressTransactionsComponent"),
-            params = ExpressTransactionsComponent.Params(
-                userWalletId = params.initialStatus.userWalletId,
-                currency = model.cryptoCurrency,
-            ),
-        )
-    }
-
     init {
         promoBannersBlockComponent.setVisibleOnScreen(true)
         lifecycle.subscribe(
@@ -104,7 +92,6 @@ internal class TangemPayDetailsComponent(
         TangemPayDetailsScreen(
             state = state,
             txHistoryComponent = txHistoryComponent,
-            expressTransactionsComponent = expressTransactionsComponent,
             promoBannersBlockComponent = promoBannersBlock,
             modifier = modifier,
         )
