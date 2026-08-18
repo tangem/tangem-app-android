@@ -43,4 +43,7 @@ data class OnrampQuoteResponse(
 
     @Json(name = "maxToAmount")
     val maxToAmount: String?,
+
+    @property:Json(name = "isRestricted")
+    val isRestricted: Boolean = false,
 )
