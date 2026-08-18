@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.stringReference
@@ -51,7 +52,7 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
     private val subtitle = stringReference(params.token.symbol)
 
     private val legacyComponent = DefaultMarketsTokenDetailsComponent(
-        appComponentContext = context,
+        appComponentContext = context.child(key = "legacy"),
         analyticsEventHandler = analyticsEventHandler,
         portfolioBlockComponentFactory = portfolioBlockComponentFactory,
         params = DefaultMarketsTokenDetailsComponent.Params(
