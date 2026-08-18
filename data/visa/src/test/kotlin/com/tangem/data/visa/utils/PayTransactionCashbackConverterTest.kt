@@ -36,13 +36,11 @@ internal class PayTransactionCashbackConverterTest {
                 status = "confirmed",
                 amount = BigDecimal("3.00"),
                 isCapTrimmed = true,
-                promotionIds = listOf("promo-1", "promo-2"),
             ),
             expected = cashback(
                 status = Status.CONFIRMED,
                 amount = BigDecimal("3.00"),
                 isCapTrimmed = true,
-                promotionIds = listOf("promo-1", "promo-2"),
             ),
         ),
         ConvertModel(
@@ -54,10 +52,10 @@ internal class PayTransactionCashbackConverterTest {
             dto = dto(status = "awaiting_calculation", amount = null, currency = null),
             expected = cashback(status = Status.AWAITING_CALCULATION, amount = null, currency = null),
         ),
-        // Absent cap_trimmed defaults to false; absent promotion_ids defaults to empty.
+        // Absent cap_trimmed defaults to false.
         ConvertModel(
-            dto = dto(status = "confirmed", isCapTrimmed = null, promotionIds = null),
-            expected = cashback(status = Status.CONFIRMED, isCapTrimmed = false, promotionIds = emptyList()),
+            dto = dto(status = "confirmed", isCapTrimmed = null),
+            expected = cashback(status = Status.CONFIRMED, isCapTrimmed = false),
         ),
         // Unknown status string maps to UNKNOWN rather than throwing.
         ConvertModel(
@@ -71,10 +69,6 @@ internal class PayTransactionCashbackConverterTest {
         ConvertModel(
             dto = dto(status = "excluded", exclusionReason = "monthly_cap_reached"),
             expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.MONTHLY_CAP_REACHED),
-        ),
-        ConvertModel(
-            dto = dto(status = "excluded", exclusionReason = "customer_blocklisted"),
-            expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.CUSTOMER_BLOCKLISTED),
         ),
         ConvertModel(
             dto = dto(status = "excluded", exclusionReason = "merchant_country_excluded"),
@@ -97,14 +91,12 @@ internal class PayTransactionCashbackConverterTest {
         currency: String? = "USD",
         isCapTrimmed: Boolean? = null,
         exclusionReason: String? = null,
-        promotionIds: List<String>? = null,
     ) = TransactionCashbackResponse(
         status = status,
         amount = amount,
         currency = currency,
         isCapTrimmed = isCapTrimmed,
         exclusionReason = exclusionReason,
-        promotionIds = promotionIds,
     )
 
     private fun cashback(
@@ -113,13 +105,11 @@ internal class PayTransactionCashbackConverterTest {
         currency: Currency? = Currency.getInstance("USD"),
         isCapTrimmed: Boolean = false,
         exclusionReason: ExclusionReason? = null,
-        promotionIds: List<String> = emptyList(),
     ) = TangemPayTxHistoryItem.Cashback(
         status = status,
         amount = amount,
         currency = currency,
         isCapTrimmed = isCapTrimmed,
         exclusionReason = exclusionReason,
-        promotionIds = promotionIds,
     )
 }
