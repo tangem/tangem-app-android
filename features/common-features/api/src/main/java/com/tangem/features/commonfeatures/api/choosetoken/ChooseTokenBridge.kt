@@ -26,6 +26,9 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
 
     fun selectWalletTab(walletId: UserWalletId)
 
+    /** Resets the balance filter to its per-feature default. Called when the chooser (re)opens. */
+    fun resetBalanceFilter()
+
     data class Settings(
         val title: TextReference,
         val chooserBlock: ChooserBlock,
@@ -36,6 +39,8 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
          * are shown as selectable tabs. Swap flows keep this `false` — only multi-currency wallets apply there.
          */
         val isShowSingleCurrencyWallets: Boolean = false,
+        /** When `true`, the FROM selector shows the zero-balance filter (default HideZero). Swap FROM only. */
+        val isHideZeroBalanceFilterEnabled: Boolean = false,
     ) {
         companion object {
             val SwapFrom = Settings(

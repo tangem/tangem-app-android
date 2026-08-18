@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -125,6 +126,9 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data object AppSettings : AppRoute(path = "/app_settings")
 
+    @Serializable
+    data object Collectibles : AppRoute(path = "/collectibles")
+
     /**
      * Reset to factory
      *
@@ -231,20 +235,15 @@ sealed class AppRoute(val path: String) : Route {
         val fromCryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
         val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
-        val tangemPayInput: TangemPayInput? = null,
+        val accountFlow: AccountFlow? = null,
         val toCryptoCurrency: CryptoCurrency? = null,
+        val fromAmount: SerializedBigDecimal? = null,
+        val providerId: String? = null,
     ) : AppRoute(
         path = "/swap" +
             "/${fromCryptoCurrency?.id?.value}" +
             "/${userWalletId.stringValue}",
     ) {
-        @Serializable
-        data class TangemPayInput(
-            val cryptoAmount: SerializedBigDecimal,
-            val fiatAmount: SerializedBigDecimal,
-            val depositAddress: String,
-        )
-
         @Serializable
         enum class CurrencyPosition {
             FROM,
@@ -295,6 +294,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletHardwareBackup(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
+
+    @Serializable
+    data class CreateCloudBackup(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/create_cloud_backup/${userWalletId.stringValue}")
 
     @Serializable
     data class Markets(
@@ -420,7 +424,13 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/upgrade_wallet/${userWalletId.stringValue}")
 
     @Serializable
-    object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+    data class AddExistingWallet(
+        val mode: Mode = Mode.RecoveryPhrase,
+    ) : AppRoute(path = "/add_existing_wallet") {
+
+        @Serializable
+        enum class Mode { RecoveryPhrase, CloudRestore }
+    }
 
     @Serializable
     data class WalletActivation(
@@ -444,6 +454,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: String,
         val nextScreen: AppRoute? = null,
         val shouldShowBackButton: Boolean = true,
+        val canSkip: Boolean = false,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -454,6 +465,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class ForgetWallet(
         val userWalletId: UserWalletId,
+        val shouldDeleteCloudBackup: Boolean = false,
     ) : AppRoute(path = "/forget_wallet/${userWalletId.stringValue}")
 
     @Serializable
@@ -469,6 +481,21 @@ sealed class AppRoute(val path: String) : Route {
     data class CreateAccount(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
+
+    @Serializable
+    data class JointAccountCreation(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/joint_account_creation/${userWalletId.stringValue}")
+
+    @Serializable
+    data class JointAccountJoin(
+        val inviteId: String,
+    ) : AppRoute(path = "/joint_account_join/$inviteId")
+
+    @Serializable
+    data class JointAccountMembers(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}")
 
     @Serializable
     data class EditAccount(
@@ -560,8 +587,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Polymarket(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/polymarket/${userWalletId.stringValue}")
+        val userWalletId: UserWalletId? = null,
+    ) : AppRoute(path = "/polymarket")
 
     @Serializable
     data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")

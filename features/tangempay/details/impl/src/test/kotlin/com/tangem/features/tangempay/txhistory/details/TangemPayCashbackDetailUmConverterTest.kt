@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.txhistory.details
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.cashback
 import com.tangem.features.tangempay.details.impl.R
@@ -134,7 +135,10 @@ internal class TangemPayCashbackDetailUmConverterTest {
             cashback = cashback(status = Status.EXCLUDED, amount = ZERO, exclusionReason = Reason.BELOW_MIN),
             expected = CashbackDetailUM.Content(
                 value = resourceReference(R.string.tangem_pay_transaction_details_cashback_none),
-                subvalue = stringReference("Below minimum"),
+                subvalue = resourceReference(
+                    id = R.string.tangem_pay_transaction_details_cashback_below_min,
+                    formatArgs = wrappedList("0"),
+                ),
             ),
         ),
         CashbackRowModel(
