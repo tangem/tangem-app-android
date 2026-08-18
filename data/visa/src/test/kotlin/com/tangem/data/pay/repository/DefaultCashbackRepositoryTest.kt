@@ -4,12 +4,14 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.pay.util.CashbackAccrualDocsConverter
+import com.tangem.data.pay.util.CashbackHistoryConverter
 import com.tangem.data.pay.util.CashbackPromotionsConverter
 import com.tangem.data.visa.utils.PayTransactionCashbackConverter
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.response.CashbackAccrualDocsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackHistoryResponse
 import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
 import com.tangem.spend.datasource.pay.models.response.CashbackTransactionDetailsResponse
 import com.tangem.spend.datasource.pay.models.response.TransactionCashbackResponse
@@ -17,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -100,6 +103,31 @@ internal class DefaultCashbackRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+    }
+
+    @Test
+    fun `GIVEN history response WHEN getCashbackHistory THEN converter result is returned`() = runTest {
+        // Arrange
+        val response = CashbackHistoryResponse(
+            result = CashbackHistoryResponse.Result(
+                items = listOf(
+                    CashbackHistoryResponse.Item(
+                        year = 2026,
+                        month = 6,
+                        confirmedAmount = BigDecimal("22.54"),
+                        currency = "USD",
+                    ),
+                ),
+            ),
+        )
+        coEvery { tangemPayApi.getCashbackHistory(any(), any()) } returns ApiResponse.Success(response)
+
+        // Act
+        val actual = createRepository().getCashbackHistory(userWalletId, monthsNumber = 5)
+
+        // Assert
+        assertThat(actual).isEqualTo(CashbackHistoryConverter.convert(response).right())
+        coVerify(exactly = 1) { tangemPayApi.getCashbackHistory(AUTH_HEADER, 5) }
     }
 
     @Test
