@@ -14,7 +14,7 @@ internal class JointAccountDtoConverter @Inject constructor() {
         cryptoAccountId = dto.cryptoAccountId,
         membersCount = dto.membersCount,
         threshold = dto.threshold,
-        address = dto.address,
+        safeAddress = dto.safeAddress,
         status = JointAccountFieldsConverter.convertStatus(dto.status),
         members = dto.members.map { member ->
             JointAccount.Member(
