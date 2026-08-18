@@ -1,16 +1,16 @@
-package com.tangem.features.polymarket.main.api.entity
+package com.tangem.features.polymarket.api.walletblock
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
 /** State of the Prediction account row. The balance arrives formatted: formatting needs the app currency. */
 @Immutable
-sealed class PolymarketMainUM {
+sealed class PolymarketWalletBlockUM {
 
-    data object Hidden : PolymarketMainUM()
+    data object Hidden : PolymarketWalletBlockUM()
 
     /** Shown with a shimmering balance, so the list does not jump once the balance arrives. */
-    data class Loading(val subtitle: TextReference) : PolymarketMainUM()
+    data class Loading(val subtitle: TextReference) : PolymarketWalletBlockUM()
 
     /**
      * @property isBalanceFlickering a refresh is in flight
@@ -22,8 +22,8 @@ sealed class PolymarketMainUM {
         val isBalanceFlickering: Boolean,
         val isBalanceFromCache: Boolean,
         val onClick: () -> Unit,
-    ) : PolymarketMainUM()
+    ) : PolymarketWalletBlockUM()
 
     /** State unknown. The row stays, so the account does not vanish and reappear. */
-    data class Unavailable(val subtitle: TextReference, val onClick: () -> Unit) : PolymarketMainUM()
+    data class Unavailable(val subtitle: TextReference, val onClick: () -> Unit) : PolymarketWalletBlockUM()
 }

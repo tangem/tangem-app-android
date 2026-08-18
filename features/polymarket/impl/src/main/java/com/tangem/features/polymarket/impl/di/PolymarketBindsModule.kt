@@ -11,11 +11,13 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
 import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.walletblock.DefaultPolymarketWalletBlockComponent
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
@@ -34,6 +36,12 @@ internal interface PolymarketBindsModule {
     @Binds
     @Singleton
     fun providePolymarketComponentFactory(impl: DefaultPolymarketComponent.Factory): PolymarketComponent.Factory
+
+    @Binds
+    @Singleton
+    fun providePolymarketWalletBlockComponentFactory(
+        impl: DefaultPolymarketWalletBlockComponent.Factory,
+    ): PolymarketWalletBlockComponent.Factory
 }
 
 @Module
