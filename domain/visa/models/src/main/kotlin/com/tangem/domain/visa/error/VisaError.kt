@@ -56,11 +56,16 @@ sealed class VisaApiError(
     data object ProductInstanceIsNotActivated : VisaApiError(104110208)
     data object ProductInstanceIsAlreadyActivated : VisaApiError(104110207)
     data object CustomerIsBlocked : VisaApiError(104110210)
+    data object CardIssueActiveOrderExists : VisaApiError(104140114)
+    data object CardIssueOfferNotAvailable : VisaApiError(104140115)
     data object CardIssueInsufficientBalance : VisaApiError(104140116)
+    data object CardIssueInvalidShippingAddress : VisaApiError(104140126)
     data object UnknownWithoutCode : VisaApiError(104110999)
     data class Unknown(override val errorCode: Int) : VisaApiError(errorCode)
 
     fun isUnknown() = this is UnknownWithoutCode || this is Unknown
+
+    fun isRetryable() = this == ServerUnavailable || this == UnknownWithoutCode
 
     data object RefreshTokenExpired : VisaApiError(104004001)
     data object NotFound : VisaApiError(104004002)
@@ -72,6 +77,7 @@ sealed class VisaApiError(
     data object OrderNotFound : VisaApiError(104004008)
 
     companion object {
+
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
             val universalErrorCode = 104_000_000 + backendErrorCode
             return when (universalErrorCode) {
@@ -81,7 +87,10 @@ sealed class VisaApiError(
                 ProductInstanceIsNotActivated.errorCode -> ProductInstanceIsNotActivated
                 ProductInstanceIsAlreadyActivated.errorCode -> ProductInstanceIsAlreadyActivated
                 CustomerIsBlocked.errorCode -> CustomerIsBlocked
+                CardIssueActiveOrderExists.errorCode -> CardIssueActiveOrderExists
+                CardIssueOfferNotAvailable.errorCode -> CardIssueOfferNotAvailable
                 CardIssueInsufficientBalance.errorCode -> CardIssueInsufficientBalance
+                CardIssueInvalidShippingAddress.errorCode -> CardIssueInvalidShippingAddress
                 else -> Unknown(universalErrorCode)
             }
         }

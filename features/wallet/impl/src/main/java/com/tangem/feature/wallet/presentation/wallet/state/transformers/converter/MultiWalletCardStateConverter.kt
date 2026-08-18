@@ -16,6 +16,7 @@ internal class MultiWalletCardStateConverter(
     private val fiatBalance: TotalFiatBalance,
     private val selectedWallet: UserWallet,
     private val appCurrency: AppCurrency,
+    private val isHotBackedUp: Boolean? = null,
 ) : Converter<WalletCardState, WalletCardState> {
 
     override fun convert(value: WalletCardState): WalletCardState {
@@ -50,7 +51,10 @@ internal class MultiWalletCardStateConverter(
         return WalletCardState.Content(
             id = id,
             title = title,
-            additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = selectedWallet),
+            additionalInfo = WalletAdditionalInfoFactory.resolve(
+                wallet = selectedWallet,
+                isHotBackedUp = isHotBackedUp,
+            ),
             imageResId = imageResId,
             dropDownItems = dropDownItems,
             balance = fiatBalance.amount.format {

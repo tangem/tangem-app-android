@@ -1,40 +1,28 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.api.common.config.Express
 import com.tangem.datasource.api.common.config.StakeKit
 import com.tangem.datasource.api.common.config.P2PEthPool
 import com.tangem.datasource.api.common.config.TangemTech
 import com.tangem.datasource.api.common.config.News
 import com.tangem.datasource.api.common.config.YieldSupply
-import com.tangem.datasource.api.common.config.BlockAid
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
-import com.tangem.datasource.api.common.config.MoonPay
-import com.tangem.datasource.api.common.config.GaslessTxService
-import com.tangem.datasource.api.common.config.SurveySparrow
 import com.tangem.datasource.api.common.config.Auth
 
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.addressbook.AddressBookApi
 import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.common.blockaid.BlockAidApi
-import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
-import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.api.moonpay.MoonPayApi
 import com.tangem.datasource.api.news.NewsApi
-import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
-import com.tangem.datasource.api.gasless.GaslessTxServiceApi
-import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
-import com.tangem.datasource.api.gasless.TronGaslessApi
+import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
@@ -87,18 +75,6 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideExpressApi(retrofitApiBuilder: RetrofitApiBuilder): TangemExpressApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = Express.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideStakeKitApi(retrofitApiBuilder: RetrofitApiBuilder): StakeKitApi {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
@@ -129,18 +105,6 @@ internal object NetworkModule {
                     readTimeoutSeconds = TIMEOUT_90_SECONDS,
                     writeTimeoutSeconds = TIMEOUT_90_SECONDS,
                 ),
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideOnrampApi(retrofitApiBuilder: RetrofitApiBuilder): OnrampApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = Express.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
             ),
         )
     }
@@ -183,6 +147,18 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideJointAccountApi(retrofitApiBuilder: RetrofitApiBuilder): JointAccountApi {
+        return retrofitApiBuilder.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideTangemTechMarketsApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechMarketsApi {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
@@ -195,42 +171,6 @@ internal object NetworkModule {
                     readTimeoutSeconds = TIMEOUT_60_SECONDS,
                 ),
                 shouldSaveLogs = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideBlockAidApi(retrofitApiBuilder: RetrofitApiBuilder): BlockAidApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = BlockAid.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideSurveySparrowApi(retrofitApiBuilder: RetrofitApiBuilder): SurveySparrowApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = SurveySparrow.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideMoonPayApi(retrofitApiBuilder: RetrofitApiBuilder): MoonPayApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = MoonPay.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
             ),
         )
     }
@@ -309,60 +249,6 @@ internal object NetworkModule {
                 // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
                 // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
                 shouldUseSessionAuth = true,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGaslessTxServiceApi(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = GaslessTxService.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGaslessTxServiceApiV2(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApiV2 {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = GaslessTxService.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideTronGaslessApi(retrofitApiBuilder: RetrofitApiBuilder): TronGaslessApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = GaslessTxService.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
             ),
         )
     }

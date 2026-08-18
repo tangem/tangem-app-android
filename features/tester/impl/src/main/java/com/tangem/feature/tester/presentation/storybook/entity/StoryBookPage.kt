@@ -13,8 +13,11 @@ import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -537,6 +540,36 @@ internal data class TangemFilterGroupStory(
     }
 }
 
+@Suppress("BooleanPropertyNaming")
+internal data class TangemModalStory(
+    val isShown: Boolean,
+    val isStackedShown: Boolean,
+    val isExpanded: Boolean,
+    val isContentScrollable: Boolean,
+    val isTallContent: Boolean,
+    val presentation: TangemModal.Presentation,
+    val onShownChange: (Boolean) -> Unit,
+    val onStackedShownChange: (Boolean) -> Unit,
+    val onExpandedToggle: () -> Unit,
+    val onContentScrollableToggle: () -> Unit,
+    val onTallContentToggle: () -> Unit,
+    val onPresentationChange: (TangemModal.Presentation) -> Unit,
+) : DsStoryBookPage
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemShtorkaStory(
+    val isMaterial: Boolean,
+    val materialStyle: TangemSurface.MaterialStyle,
+    val isBlurEnabled: Boolean,
+    val showDragHandle: Boolean,
+    val isContentScrollable: Boolean,
+    val onMaterialToggle: () -> Unit,
+    val onMaterialStyleChange: (TangemSurface.MaterialStyle) -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onDragHandleToggle: () -> Unit,
+    val onContentScrollableToggle: () -> Unit,
+) : DsStoryBookPage
+
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,
     val status: TangemBadge.Status,
@@ -554,12 +587,58 @@ internal data class TangemBadgeV2Story(
     val onTextScaleChange: (Float) -> Unit,
 ) : DsStoryBookPage {
 
-    /** Backdrop the badge preview is rendered on top of. */
     enum class Background(val label: String) {
         Rainbow("rainbow"),
         BgPrimary("bg.primary"),
         BgSecondary("bg.secondary"),
         BgBrand("bg.brand"),
         BgInverse("bg.inverse"),
+    }
+}
+
+internal data class TangemSegmentedControlStory(
+    val segmentCount: Int,
+    val selectedId: String,
+    val isLoading: Boolean,
+    val isFillWidth: Boolean,
+    val onSegmentCountChange: (Int) -> Unit,
+    val onSegmentClick: (String) -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onFillWidthToggle: () -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemTabNavigationStory(
+    val variant: TangemTabItem.Variant,
+    val background: Background,
+    val theme: Theme,
+    val selectedTabId: String,
+    val hasCounter: Boolean,
+    val hasIcon: Boolean,
+    val isLoading: Boolean,
+    val isBlurEnabled: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemTabItem.Variant) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onThemeChange: (Theme) -> Unit,
+    val onTabClick: (String) -> Unit,
+    val onCounterToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("primary"),
+        BgSecondary("secondary"),
+        BgBrand("brand"),
+        BgInverse("inverse"),
+    }
+
+    enum class Theme(val label: String) {
+        System("system"),
+        Light("light"),
+        Dark("dark"),
     }
 }

@@ -21,13 +21,12 @@ dependencies {
     implementation(projects.common.routing)
 
     /** Project - Core */
-    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -44,5 +43,8 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
     kapt(deps.hilt.kapt)
 }
