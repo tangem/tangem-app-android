@@ -7,4 +7,5 @@ interface SwapFeatureToggles {
     val isHideZeroBalanceSourceEnabled: Boolean
     val isSwapDeeplinkEnabled: Boolean
     val isAccountSwapFlowEnabled: Boolean
+    val isExpressCategoriesGeoBlockingEnabled: Boolean
 }
