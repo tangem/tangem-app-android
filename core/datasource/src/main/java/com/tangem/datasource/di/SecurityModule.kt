@@ -1,7 +1,7 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.crypto.MockDataSignatureVerifier
 import com.tangem.datasource.crypto.Sha256SignatureVerifier
