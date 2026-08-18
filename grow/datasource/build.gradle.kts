@@ -17,10 +17,15 @@ dependencies {
     api(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     api(deps.retrofit)
+    api(deps.jodatime)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     api(projects.core.remote)
+    api(projects.core.utils)
+
+    testImplementation(projects.test.core)
+    testImplementation(deps.moshi.kotlin)
 }

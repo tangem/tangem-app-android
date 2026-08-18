@@ -73,8 +73,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletPagerIndicator
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
-import com.tangem.features.jointaccount.main.component.JointAccountMainBlockComponent
-import com.tangem.features.jointaccount.main.entity.JointAccountMainUM
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
+import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM

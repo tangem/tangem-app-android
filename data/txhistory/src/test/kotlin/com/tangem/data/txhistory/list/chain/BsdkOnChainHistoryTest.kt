@@ -8,6 +8,7 @@ import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryEnvironment
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -23,6 +24,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.getEmittedValues
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -30,8 +32,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.plus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -46,8 +50,12 @@ import java.math.BigDecimal
 internal class BsdkOnChainHistoryTest {
 
     private val userWalletId = UserWalletId(stringValue = "01")
-    private val currency = mockk<CryptoCurrency>(relaxed = true)
+    private val rawCurrencyId = CryptoCurrency.RawID(value = "ethereum")
+    private val currency = mockk<CryptoCurrency>(relaxed = true) {
+        every { id.rawCurrencyId } returns rawCurrencyId
+    }
     private val repository = mockk<TxHistoryRepositoryV2>()
+    private val currencyUSDQuote = mockk<GetCurrencyUSDQuoteUseCase>()
 
     // region state mapping
 
@@ -111,6 +119,114 @@ internal class BsdkOnChainHistoryTest {
 
     // endregion
 
+    // region dust filter
+
+    @Test
+    fun `GIVEN a USD quote WHEN an incoming tx is worth less than a cent THEN it is hidden`() = runTest {
+        // Arrange
+        val dust = createDust(txHash = "dust") // $0.001
+        val worthShowing = createTxInfo(txHash = "worth-showing", amount = BigDecimal.ONE, isOutgoing = false) // $1000
+
+        // Act
+        val states = collect(
+            batchState = state(txs = listOf(dust, worthShowing), status = PaginationStatus.EndOfPagination),
+            usdQuote = QUOTE,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val items = (states.last() as HistoryState.Content).items
+        assertThat(items).containsExactly(OnChainTx.BSDK(worthShowing))
+    }
+
+    @Test
+    fun `GIVEN a USD quote WHEN an incoming tx is worth exactly a cent THEN it is shown`() = runTest {
+        // Arrange
+        val onTheEdge = createTxInfo(txHash = "on-the-edge", amount = BigDecimal("0.00001"), isOutgoing = false)
+
+        // Act
+        val states = collect(
+            batchState = state(txs = listOf(onTheEdge), status = PaginationStatus.EndOfPagination),
+            usdQuote = QUOTE,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val items = (states.last() as HistoryState.Content).items
+        assertThat(items).containsExactly(OnChainTx.BSDK(onTheEdge))
+    }
+
+    @Test
+    fun `GIVEN a USD quote WHEN an outgoing tx is worth less than a cent THEN it is shown`() = runTest {
+        // Arrange
+        val tiny = createTxInfo(txHash = "tiny-send", amount = BigDecimal("0.000001"), isOutgoing = true)
+
+        // Act
+        val states = collect(
+            batchState = state(txs = listOf(tiny), status = PaginationStatus.EndOfPagination),
+            usdQuote = QUOTE,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val items = (states.last() as HistoryState.Content).items
+        assertThat(items).containsExactly(OnChainTx.BSDK(tiny))
+    }
+
+    @Test
+    fun `GIVEN a USD quote WHEN an approve carries no amount THEN it is shown`() = runTest {
+        // Arrange
+        val approve = createTxInfo(
+            txHash = "approve",
+            amount = BigDecimal.ZERO,
+            isOutgoing = false,
+            type = TxInfo.TransactionType.Approve,
+        )
+
+        // Act
+        val states = collect(
+            batchState = state(txs = listOf(approve), status = PaginationStatus.EndOfPagination),
+            usdQuote = QUOTE,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val items = (states.last() as HistoryState.Content).items
+        assertThat(items).containsExactly(OnChainTx.BSDK(approve))
+    }
+
+    @Test
+    fun `GIVEN no USD quote WHEN incoming txs are worth nothing THEN they are shown`() = runTest {
+        // Arrange
+        val txs = List(3) { createTxInfo(txHash = "hash-$it", amount = BigDecimal.ZERO, isOutgoing = false) }
+
+        // Act
+        val states = collect(state(txs = txs, status = PaginationStatus.EndOfPagination), usdQuote = null)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((states.last() as HistoryState.Content).items).hasSize(3)
+    }
+
+    @Test
+    fun `GIVEN a page long enough to scroll but mostly dust WHEN paginating THEN a LoadMore is dispatched`() = runTest {
+        // Arrange
+        val txs = List(20) { createDust(txHash = "dust-$it") } +
+            List(5) { createTxInfo(txHash = "hash-$it", amount = BigDecimal.ONE) }
+
+        // Act
+        val actions = collectDispatchedActions(
+            batchState = state(txs = txs, status = paginating(empty = false)),
+            usdQuote = QUOTE,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.filterIsInstance<BatchAction.LoadMore<*>>()).isNotEmpty()
+    }
+
+    // endregion
+
     // region auto-load
 
     @Test
@@ -143,9 +259,10 @@ internal class BsdkOnChainHistoryTest {
     private fun TestScope.collect(
         batchState: BatchListState<Int, PaginationWrapper<TxInfo>>,
         express: List<ExpressTx> = emptyList(),
+        usdQuote: BigDecimal? = null,
     ): List<HistoryState> {
         stubRepository(batchState, express)
-        return getEmittedValues(createSut().history())
+        return getEmittedValues(createSut(usdQuote).history())
     }
 
     /**
@@ -157,11 +274,12 @@ internal class BsdkOnChainHistoryTest {
      */
     private fun TestScope.collectDispatchedActions(
         batchState: BatchListState<Int, PaginationWrapper<TxInfo>>,
+        usdQuote: BigDecimal? = null,
     ): List<BatchAction<*, *, *>> {
         val contextSlot = slot<TxHistoryListBatchingContext>()
         stubRepository(batchState, express = emptyList(), contextSlot = contextSlot)
 
-        val historyFlow = createSut().history() // captures the context synchronously
+        val historyFlow = createSut(usdQuote).history() // captures the context synchronously
         val actions = getEmittedValues(contextSlot.captured.actionsFlow)
         advanceUntilIdle() // the source-side collector emits the initial Reload, then parks
         getEmittedValues(historyFlow) // triggers the auto-load check, which may dispatch a LoadMore
@@ -182,26 +300,44 @@ internal class BsdkOnChainHistoryTest {
         every { repository.getExpressHistory(any(), any(), any()) } returns flowOf(express)
     }
 
-    private fun TestScope.createSut() = BsdkOnChainHistory(
-        repository = repository,
-        env = HistoryEnvironment(userWalletId = userWalletId, currency = currency, modelScope = backgroundScope),
-    )
+    /**
+     * The USD quote is loaded on the model scope, so that scope gets an unconfined dispatcher: `advanceUntilIdle()`
+     * leaves background work on a [kotlinx.coroutines.test.StandardTestDispatcher] unrun, which would park the history
+     * flow forever on the quote it awaits.
+     */
+    private fun TestScope.createSut(usdQuote: BigDecimal? = null): BsdkOnChainHistory {
+        coEvery { currencyUSDQuote(rawCurrencyId) } returns usdQuote
+        return BsdkOnChainHistory(
+            repository = repository,
+            currencyUSDQuote = currencyUSDQuote,
+            env = HistoryEnvironment(
+                userWalletId = userWalletId,
+                currency = currency,
+                modelScope = backgroundScope + UnconfinedTestDispatcher(testScheduler),
+            ),
+        )
+    }
 
     private fun state(
         items: Int,
         status: PaginationStatus<PaginationWrapper<TxInfo>>,
         firstTxHash: String? = null,
+        amount: BigDecimal = BigDecimal.ONE,
+    ): BatchListState<Int, PaginationWrapper<TxInfo>> = state(
+        txs = List(items) { index ->
+            val hash = if (index == 0 && firstTxHash != null) firstTxHash else "hash-$index"
+            createTxInfo(txHash = hash, amount = amount)
+        },
+        status = status,
+    )
+
+    private fun state(
+        txs: List<TxInfo>,
+        status: PaginationStatus<PaginationWrapper<TxInfo>>,
     ): BatchListState<Int, PaginationWrapper<TxInfo>> {
-        val wrapper = PaginationWrapper(
-            currentPage = Page.Initial,
-            nextPage = Page.LastPage,
-            items = List(items) { index ->
-                val hash = if (index == 0 && firstTxHash != null) firstTxHash else "hash-$index"
-                createTxInfo(txHash = hash)
-            },
-        )
+        val wrapper = PaginationWrapper(currentPage = Page.Initial, nextPage = Page.LastPage, items = txs)
         return BatchListState(
-            data = if (items == 0) emptyList() else listOf(Batch(key = 0, data = wrapper)),
+            data = if (txs.isEmpty()) emptyList() else listOf(Batch(key = 0, data = wrapper)),
             status = status,
         )
     }
@@ -211,16 +347,25 @@ internal class BsdkOnChainHistoryTest {
         return PaginationStatus.Paginating(BatchFetchResult.Success(data = wrapper, empty = empty, last = false))
     }
 
-    private fun createTxInfo(txHash: String) = TxInfo(
+    /** An incoming transfer worth $0.001 at [QUOTE] — under the cent the filter cuts at. */
+    private fun createDust(txHash: String) =
+        createTxInfo(txHash = txHash, amount = BigDecimal("0.000001"), isOutgoing = false)
+
+    private fun createTxInfo(
+        txHash: String,
+        amount: BigDecimal = BigDecimal.ONE,
+        isOutgoing: Boolean = true,
+        type: TxInfo.TransactionType = TxInfo.TransactionType.Transfer,
+    ) = TxInfo(
         txHash = txHash,
         timestampInMillis = 100,
-        isOutgoing = true,
+        isOutgoing = isOutgoing,
         destinationType = TxInfo.DestinationType.Single(TxInfo.AddressType.User("addr")),
         sourceType = TxInfo.SourceType.Single("addr"),
         interactionAddressType = null,
         status = TxInfo.TransactionStatus.Confirmed,
-        type = TxInfo.TransactionType.Transfer,
-        amount = BigDecimal.ONE,
+        type = type,
+        amount = amount,
     )
 
     private fun createSwap(matchHash: String) = ExpressTx.Swap(
@@ -256,4 +401,8 @@ internal class BsdkOnChainHistoryTest {
         isOutgoing = true,
         txInfo = null,
     )
+
+    private companion object {
+        val QUOTE: BigDecimal = BigDecimal("1000")
+    }
 }

@@ -225,6 +225,43 @@ internal class TangemPayCardDetailsControllerTest {
     }
 
     @Test
+    fun `GIVEN Show already sent WHEN controller created with isolated listener THEN details stay hidden`() =
+        runTest {
+            // GIVEN
+            coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
+            eventListener.send(CardDetailsEvent.Show(cardId))
+
+            // WHEN
+            val controller = createController(
+                scope = backgroundScope,
+                listener = CardDetailsEventListener.default(),
+            )
+            advanceUntilIdle()
+
+            // THEN
+            assertThat(controller.uiState.value.isHidden).isTrue()
+            coVerify(exactly = 0) { repository.revealCardDetails(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN isolated listener WHEN reveal requested THEN blocks on shared listener stay hidden`() = runTest {
+        // GIVEN
+        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
+        val sharedController = createController(scope = backgroundScope)
+        val isolatedListener = CardDetailsEventListener.default()
+        val isolatedController = createController(scope = backgroundScope, listener = isolatedListener)
+        runCurrent()
+
+        // WHEN
+        isolatedListener.send(CardDetailsEvent.Show(cardId))
+        runCurrent()
+
+        // THEN
+        assertThat(isolatedController.uiState.value.isHidden).isFalse()
+        assertThat(sharedController.uiState.value.isHidden).isTrue()
+    }
+
+    @Test
     fun `GIVEN disposed WHEN Show received THEN reveal not triggered`() = runTest {
         coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
         val controller = createController(scope = backgroundScope)
@@ -253,17 +290,18 @@ internal class TangemPayCardDetailsControllerTest {
             isEditingNameEnabled = true,
             shouldShowCardDetailsButtonOnCard = false,
         ),
+        listener: CardDetailsEventListener = eventListener,
         onEditNameClick: () -> Unit = {},
     ): TangemPayCardDetailsController = TangemPayCardDetailsController(
         scope = scope,
         card = card,
         userWalletId = userWalletId,
         config = config,
+        cardDetailsEventListener = listener,
         onEditNameClick = onEditNameClick,
         cardDetailsRepository = repository,
         clipboardManager = clipboardManager,
         uiMessageSender = uiMessageSender,
-        cardDetailsEventListener = eventListener,
         analytics = analytics,
         paymentAccountStatusSupplier = supplier,
     )
