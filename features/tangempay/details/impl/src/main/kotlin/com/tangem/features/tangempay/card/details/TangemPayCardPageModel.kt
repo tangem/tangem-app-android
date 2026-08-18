@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -47,6 +48,7 @@ import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -101,19 +103,22 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val biometricAuthManager: BiometricAuthManager,
     private val settingsManager: SettingsManager,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val onboardingRepository: OnboardingRepository,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
 
-    private val addToWalletBannerJobHolder = JobHolder()
     private val addFundsJobHolder = JobHolder()
-    private val frozenStateJobHolder = JobHolder()
+    private val changeFrozenStateJobHolder = JobHolder()
     private val reloadLimitsJobHolder = JobHolder()
     private val viewPinAuthJobHolder = JobHolder()
-    private var frozenStateJob: Job? = null
+    private val frozenStateJobHolder = JobHolder()
+    private val deliveryEmailJobHolder = JobHolder()
 
     private val currentStatus = MutableStateFlow(params.initialStatus)
     private val userWalletId = currentStatus.value.userWalletId
+
+    private val deliveryEmail = MutableStateFlow(onboardingRepository.getSavedCustomerInfo(userWalletId)?.email)
 
     val selectedCardId: StateFlow<String>
         field = MutableStateFlow(params.cardId)
@@ -124,6 +129,8 @@ internal class TangemPayCardPageModel @Inject constructor(
         field = MutableStateFlow(persistentListOf())
 
     private val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
+
+    private val shouldShowGooglePayBanner = MutableStateFlow(false)
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
@@ -141,7 +148,13 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     init {
         analytics.send(TangemPayAnalyticsEvents.CardManagementScreenOpened())
-        fetchAddToWalletBanner()
+
+        modelScope.launch {
+            shouldShowGooglePayBanner.update {
+                cardDetailsRepository.isAddToWalletDone(userWalletId).getOrNull() == false
+            }
+        }
+
         modelScope.launch { subscribeOnDetailsState() }
 
         paymentAccountStatusSupplier.invoke(userWalletId)
@@ -151,8 +164,10 @@ internal class TangemPayCardPageModel @Inject constructor(
             }
             .launchIn(modelScope)
 
-        combine(currentStatus, selectedCardId) { status, selectedId -> status to selectedId }
-            .onEach { (status, selectedId) -> updateSelectedCardUi(status, selectedId) }
+        combine(currentStatus, selectedCardId, deliveryEmail) { status, selectedId, email ->
+            Triple(status, selectedId, email)
+        }
+            .onEach { (status, selectedId, email) -> updateSelectedCardUi(status, selectedId, email) }
             .launchIn(modelScope)
     }
 
@@ -215,6 +230,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                     isEditingNameEnabled = true,
                     shouldShowCardDetailsButtonOnCard = false,
                 ),
+                cardDetailsEventListener = cardDetailsEventListener,
                 onEditNameClick = { router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName(card)) },
             )
         }
@@ -227,16 +243,19 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    private fun updateSelectedCardUi(state: AccountStatus.Payment, selectedId: String) {
+    private fun updateSelectedCardUi(state: AccountStatus.Payment, selectedId: String, email: String?) {
         val status = state.value
         if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
             val card = status.findCardWithId(selectedId) ?: return
+            updateGooglePayBannerState(card.frozenState)
+            if (card.state == TangemPayCardState.Delivering) loadDeliveryEmail()
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
                     settings = status.buildSettings(card.frozenState),
                     menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                     cardState = card.state,
+                    delivery = buildDeliveryState(cardState = card.state, email = email),
                 )
             }
         } else {
@@ -244,6 +263,23 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
 
         subscribeToCardFrozenState(selectedId)
+    }
+
+    private fun buildDeliveryState(cardState: TangemPayCardState, email: String?): TangemPayCardDeliveryUM? {
+        if (cardState != TangemPayCardState.Delivering) return null
+        return TangemPayCardDeliveryUM(
+            email = email.orEmpty(),
+            onContactSupportClick = ::onContactSupportClicked,
+            onActivateCardClick = {},
+        )
+    }
+
+    private fun loadDeliveryEmail() {
+        if (deliveryEmail.value != null || deliveryEmailJobHolder.isActive) return
+        modelScope.launch {
+            onboardingRepository.getCustomerInfo(userWalletId)
+                .onRight { info -> deliveryEmail.value = info.email.orEmpty() }
+        }.saveIn(deliveryEmailJobHolder)
     }
 
     private fun selectedCard(): TangemPayCard? {
@@ -272,15 +308,29 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun subscribeToCardFrozenState(cardId: String) {
-        frozenStateJob?.cancel()
-        frozenStateJob = cardDetailsRepository.cardFrozenState(cardId)
+        cardDetailsRepository.cardFrozenState(cardId)
             .onEach { cardFrozenState ->
+                updateGooglePayBannerState(cardFrozenState)
                 uiState.update { state ->
                     val settings = currentStatus.value.ifLoadedOrNull { it.buildSettings(cardFrozenState) }
                     state.copy(settings = settings ?: persistentListOf())
                 }
             }
             .launchIn(modelScope)
+            .saveIn(frozenStateJobHolder)
+    }
+
+    private fun updateGooglePayBannerState(cardFrozenState: TangemPayCardFrozenState) {
+        uiState.update { state ->
+            state.copy(
+                addToWalletBlockState = AddToWalletBlockState(
+                    onClick = ::onClickAddToWallet,
+                    onClickClose = ::onClickCloseBanner,
+                ).takeIf {
+                    shouldShowGooglePayBanner.value && cardFrozenState == TangemPayCardFrozenState.Unfrozen
+                },
+            )
+        }
     }
 
     private fun PaymentAccountStatusValue.Loaded.buildSettings(
@@ -316,6 +366,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onClick = { onClickChangePIN(card.hasPinCode) },
                 iconRes = CoreUiR.drawable.ic_card_pin_24,
                 testTag = TangemPayTestTags.CHANGE_PIN_ROW,
+                isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen,
             ),
         )
     }
@@ -451,7 +502,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickFreezeOrUnfreezeCard(isFrozen: Boolean) {
-        if (frozenStateJobHolder.isActive) return
+        if (changeFrozenStateJobHolder.isActive) return
 
         val message = if (isFrozen) {
             TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard)
@@ -534,11 +585,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 userWalletId = data.walletId,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-                tangemPayInput = AppRoute.Swap.TangemPayInput(
-                    cryptoAmount = data.cryptoBalance,
-                    fiatAmount = data.fiatBalance,
-                    depositAddress = data.depositAddress,
-                ),
+                accountFlow = AccountFlow.TopUp,
             ),
         )
     }
@@ -664,7 +711,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_success))
                 uiMessageSender.send(message)
             }
-        }.saveIn(frozenStateJobHolder)
+        }.saveIn(changeFrozenStateJobHolder)
     }
 
     private fun unfreezeCard() {
@@ -681,27 +728,12 @@ internal class TangemPayCardPageModel @Inject constructor(
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_success))
                 uiMessageSender.send(message)
             }
-        }.saveIn(frozenStateJobHolder)
-    }
-
-    private fun fetchAddToWalletBanner() {
-        modelScope.launch {
-            val isDone = cardDetailsRepository.isAddToWalletDone(userWalletId).getOrNull() == true
-            if (!isDone) {
-                uiState.update { state ->
-                    state.copy(
-                        addToWalletBlockState = AddToWalletBlockState(
-                            onClick = ::onClickAddToWallet,
-                            onClickClose = ::onClickCloseBanner,
-                        ),
-                    )
-                }
-            }
-        }.saveIn(addToWalletBannerJobHolder)
+        }.saveIn(changeFrozenStateJobHolder)
     }
 
     private fun onClickAddToWallet() {
         val card = selectedCard() ?: return
+        analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
         router.push(TangemPayCardDetailsInnerRoute.AddToWallet(card))
     }
 
@@ -709,7 +741,8 @@ internal class TangemPayCardPageModel @Inject constructor(
         modelScope.launch {
             cardDetailsRepository.setAddToWalletAsDone(userWalletId)
             uiState.update { it.copy(addToWalletBlockState = null) }
-        }.saveIn(addToWalletBannerJobHolder)
+            shouldShowGooglePayBanner.update { false }
+        }
     }
 
     override fun onClickChangePin() {

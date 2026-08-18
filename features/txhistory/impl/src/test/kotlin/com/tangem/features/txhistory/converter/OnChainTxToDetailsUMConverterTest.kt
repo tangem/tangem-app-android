@@ -191,7 +191,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val item = TxHistoryDetailsUM.MenuItemUM(
             icon = Icons.ic_arrow_down_20,
             title = resourceReference(R.string.common_share),
-            onClick = {},
+            action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
         )
 
         // Act
@@ -665,6 +665,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(rows).hasSize(1)
         assertThat(rows.first().label).isEqualTo(resourceReference(R.string.common_network_fee_title))
         assertThat(rows.first().value.resolveString()).contains("ETH")
+        assertThat(rows.first().isValueHideable).isTrue()
     }
 
     @Test
