@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 /**
  * Persisted representation of an express provider.
  *
- * Mirrors [com.tangem.datasource.api.express.models.response.ExchangeProvider]. Mapped into
+ * Mirrors [com.tangem.grow.datasource.express.models.response.ExchangeProvider]. Mapped into
  * [com.tangem.domain.express.models.ExpressProvider] when read back.
  */
 @Entity(tableName = "express_provider")
