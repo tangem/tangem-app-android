@@ -24,8 +24,17 @@ internal sealed interface PolymarketEventDetailsUM {
      * @property subcategories market-filter tabs under the meta row; empty hides the row
      *  (the BFF does not serve subcategories yet)
      * @property activeMarkets markets open for trading
+     * @property closedMarkets resolved markets, hidden behind the "Closed Markets" chip
+     * @property isClosedMarketsExpanded whether the closed markets are unfolded under the chip
+     * @property description resolution criteria text, `null` when blank
+     * @property isDescriptionExpanded whether the description shows in full or clipped with "Read more"
+     * @property resolutionDate formatted resolution date of the event, `null` when unknown
+     * @property marketOpenedDate formatted opening date of the event, `null` when unknown
      * @property onShareClick share the event link
+     * @property onClosedMarketsClick toggle [isClosedMarketsExpanded]
+     * @property onReadMoreClick expand the description
      */
+    @Suppress("LongParameterList")
     data class Content(
         val title: TextReference,
         val iconUrl: String?,
@@ -33,7 +42,15 @@ internal sealed interface PolymarketEventDetailsUM {
         val change24h: TextReference?,
         val subcategories: ImmutableList<PolymarketSubcategoryTabUM>,
         val activeMarkets: ImmutableList<PolymarketDetailsMarketUM>,
+        val closedMarkets: ImmutableList<PolymarketDetailsMarketUM>,
+        val isClosedMarketsExpanded: Boolean,
+        val description: TextReference?,
+        val isDescriptionExpanded: Boolean,
+        val resolutionDate: TextReference?,
+        val marketOpenedDate: TextReference?,
         val onShareClick: () -> Unit,
+        val onClosedMarketsClick: () -> Unit,
+        val onReadMoreClick: () -> Unit,
     ) : PolymarketEventDetailsUM
 }
 
@@ -60,7 +77,7 @@ internal data class PolymarketSubcategoryTabUM(
  * @property title market label — the group item title for grouped events, the market question otherwise
  * @property volume formatted traded volume of the market, `null` when unknown
  * @property iconUrl optional market icon
- * @property outcomes outcome buttons of a tradable market
+ * @property outcomes outcome buttons; empty for closed markets, which are no longer tradable
  */
 @Immutable
 internal data class PolymarketDetailsMarketUM(
