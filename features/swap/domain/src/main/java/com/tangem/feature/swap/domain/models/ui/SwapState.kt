@@ -41,6 +41,7 @@ sealed interface SwapState {
         val validationResult: Throwable? = null,
         val minAdaValue: BigDecimal?,
         val txType: ExpressTxType? = null,
+        val isRestricted: Boolean = false,
     ) : SwapState
 
     data class Transfer(
