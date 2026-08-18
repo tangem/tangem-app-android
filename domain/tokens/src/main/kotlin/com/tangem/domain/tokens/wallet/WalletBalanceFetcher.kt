@@ -34,7 +34,6 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 
 /**
  * Fetcher of wallet balance by [UserWalletId]
@@ -197,12 +196,10 @@ class WalletBalanceFetcher internal constructor(
                 message
             }
 
-            // Special accounts refresh after the balance check, concurrently: TangemPay may long-poll
+            // Fetch TangemPay separately — may run long-polling, so it must not block balance error checking
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
-                launch {
-                    balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
-                    paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
-                }
+                balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
+                paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
             }
 
             // Prediction fetches its own quote, so unlike TangemPay nothing is pre-fetched here
@@ -210,14 +207,15 @@ class WalletBalanceFetcher internal constructor(
                 fetchingSources.any { it is WalletFetchingSource.Prediction } &&
                 polymarketFeatureToggles.isPolymarketEnabled
             ) {
-                launch { predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId)) }
+                predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId))
             }
 
+            // Fetch Virtual account separately for the same reason as TangemPay
             if (
                 fetchingSources.any { it is WalletFetchingSource.VirtualAccount } &&
                 virtualAccountsFeatureToggles.isVirtualAccountsEnabled
             ) {
-                launch { virtualAccountStatusFetcher.invoke(VirtualAccountStatusFetcher.Params(userWalletId)) }
+                virtualAccountStatusFetcher.invoke(VirtualAccountStatusFetcher.Params(userWalletId))
             }
         }
     }
