@@ -210,7 +210,7 @@ interface TangemPayApi {
     @GET("v1/customer/cashback/history")
     suspend fun getCashbackHistory(
         @Header("Authorization") authHeader: String,
-        @Query("months") months: Int,
+        @Query("months_number") monthsNumber: Int,
     ): ApiResponse<CashbackHistoryResponse>
 
     @GET("v1/customer/cashback/{transaction_id}/details")
