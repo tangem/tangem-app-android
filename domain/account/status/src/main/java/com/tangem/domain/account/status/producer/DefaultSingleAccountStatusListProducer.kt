@@ -191,10 +191,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     /**
-     * Every flow joined into the screen's `combine` gates the whole screen, so this one is kept answerable in two
-     * ways: it is not subscribed at all while the feature is off, and it starts with [Loading] rather than waiting
-     * for the supplier's first value. The supplier does answer on subscription, but that guarantee lives in another
-     * module, and losing it there must cost one loading row rather than every account of the wallet.
+     * Unsubscribed while the feature is off and seeded before the join: this flow gates every account on the
+     * screen, so a supplier that goes quiet must cost one loading row rather than all of them.
      */
     private fun predictionStatusFlow(walletId: UserWalletId): Flow<PredictionAccountStatusValue> {
         if (!polymarketFeatureToggles.isPolymarketEnabled) return flowOf(PredictionAccountStatusValue.Loading)
