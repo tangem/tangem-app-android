@@ -34,6 +34,7 @@ import javax.inject.Inject
 
 private const val CASHBACK_HISTORY_MONTHS = 5
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayCashbackModel @Inject constructor(
