@@ -22,15 +22,20 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandler
 import com.tangem.common.routing.AppRoute
+import androidx.compose.runtime.CompositionLocalProvider
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.haze.ProvideHaze
-import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
+import com.tangem.core.ui.ds2.modal.LocalTangemModalHost
+import com.tangem.core.ui.ds2.modal.TangemModalHost
+import com.tangem.core.ui.ds2.modal.rememberTangemModalHostState
 import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.security.ProvideSecureFlagController
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.transitions.RoutingTransitionAnimationFactory
+import dev.chrisbanes.haze.rememberHazeState
 
 @Suppress("LongParameterList", "ReusedModifierInstance")
 @OptIn(ExperimentalDecomposeApi::class)
@@ -54,57 +59,59 @@ internal fun RootContent(
         uiDependencies = uiDependencies,
     ) {
         ProvideSecureFlagController {
-            val snackbarHostState = LocalSnackbarHostState.current
+            val modalHostState = rememberTangemModalHostState()
+            val modalHazeState = rememberHazeState()
 
-            Box(Modifier.background(LocalRootBackgroundColor.current.value)) {
-                Children(
-                    modifier = modifier,
-                    animation = childrenAnimation(backHandler = backHandler, onBack = onBack),
-                    stack = stack,
-                ) { child ->
-                    when (val instance = child.instance) {
-                        is RoutingComponent.Child.Initial -> Unit
-                        is RoutingComponent.Child.ComposableComponent -> {
-                            ProvideHaze {
-                                instance.component.Content(Modifier.fillMaxSize())
+            CompositionLocalProvider(LocalTangemModalHost provides modalHostState) {
+                Box(Modifier.background(LocalRootBackgroundColor.current.value)) {
+                    Box(Modifier.fillMaxSize().hazeSourceTangem(state = modalHazeState)) {
+                        Children(
+                            modifier = modifier,
+                            animation = childrenAnimation(backHandler = backHandler, onBack = onBack),
+                            stack = stack,
+                        ) { child ->
+                            when (val instance = child.instance) {
+                                is RoutingComponent.Child.Initial -> Unit
+                                is RoutingComponent.Child.ComposableComponent -> {
+                                    ProvideHaze {
+                                        instance.component.Content(Modifier.fillMaxSize())
+                                    }
+                                }
+                                is RoutingComponent.Child.LegacyIntent -> {
+                                    // TODO: Remove and use it's own router: [REDACTED_JIRA]
+                                    LaunchedEffect(instance) {
+                                        startActivity(context, instance.intent, Bundle.EMPTY)
+                                    }
+                                }
+                                RoutingComponent.Child.DummyComponent -> Unit
                             }
                         }
-                        is RoutingComponent.Child.LegacyIntent -> {
-                            // TODO: Remove and use it's own router: [REDACTED_JIRA]
-                            LaunchedEffect(instance) {
-                                startActivity(context, instance.intent, Bundle.EMPTY)
-                            }
-                        }
-                        RoutingComponent.Child.DummyComponent -> Unit
+
+                        wcContent(Modifier.fillMaxSize())
+
+                        promoContent(Modifier.fillMaxSize())
+
+                        hotAccessCodeContent(Modifier.fillMaxSize())
+
+                        startupGateContent(Modifier.fillMaxSize())
+
+                        scanFailsContent(Modifier.fillMaxSize())
                     }
+
+                    TangemModalHost(
+                        state = modalHostState,
+                        hazeState = modalHazeState,
+                        modifier = Modifier.matchParentSize(),
+                    )
+
+                    TangemTopSnackbarHost(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .statusBarsPadding()
+                            .padding(all = 16.dp),
+                        hostState = LocalTopSnackbarHostState.current,
+                    )
                 }
-
-                wcContent(Modifier.fillMaxSize())
-
-                promoContent(Modifier.fillMaxSize())
-
-                hotAccessCodeContent(Modifier.fillMaxSize())
-
-                startupGateContent(Modifier.fillMaxSize())
-
-                scanFailsContent(Modifier.fillMaxSize())
-
-                TangemSnackbarHost(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .imePadding()
-                        .navigationBarsPadding()
-                        .padding(all = 16.dp),
-                    hostState = snackbarHostState,
-                )
-
-                TangemTopSnackbarHost(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .statusBarsPadding()
-                        .padding(all = 16.dp),
-                    hostState = LocalTopSnackbarHostState.current,
-                )
             }
         }
         EventMessageEffect()

@@ -30,7 +30,8 @@ import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
-import com.tangem.features.txhistory.utils.*
+import com.tangem.features.txhistory.utils.TxHistoryListManager
+import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -165,6 +166,7 @@ internal class TxHistoryModel @Inject constructor(
             expressConverter = ExpressTxToTransactionItemUMConverter(
                 currency = params.currency,
                 txHistoryUiActions = this,
+                lookup = lookup,
             ),
             txHistoryUiActions = this,
         )
@@ -208,7 +210,7 @@ internal class TxHistoryModel @Inject constructor(
                 walletId = params.userWalletId,
                 currency = params.currency,
             )
-            modelScope.launch { appTxHistoryFetcher.invoke(trigger) }
+            appTxHistoryFetcher.invoke(trigger)
         }
     }
 
@@ -223,13 +225,13 @@ internal class TxHistoryModel @Inject constructor(
                     .onLeft(::handleErrorState)
                     .onRight { legacy.reload() }
             }
-            if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
-                val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
-                    walletId = params.userWalletId,
-                    currency = params.currency,
-                )
-                modelScope.launch { appTxHistoryFetcher.invoke(trigger) }
-            }
+        }
+        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+            val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
+                walletId = params.userWalletId,
+                currency = params.currency,
+            )
+            appTxHistoryFetcher.invoke(trigger)
         }
     }
 

@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -53,7 +55,6 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
@@ -62,6 +63,8 @@ import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_copy_16
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -74,6 +77,9 @@ private const val CARD_WIDTH_RATIO = 328f
 private const val CARD_HEIGHT_RATIO = 212f
 private val CustomCardBlockColor = Color(0x1F828282)
 private val CardBackgroundColor = Color(0xFF171A27)
+private val CardSeparatorColor = Color(0x1AFFFFFF)
+private val SeparatorThickness = 0.5.dp
+private val DetailsFieldSpacing = 12.dp
 
 @Suppress("MagicNumber")
 @Composable
@@ -102,9 +108,13 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
         back = {
             TangemPayCardDetailsShownBlock(
                 cardNumber = state.number,
+                cardholderName = state.cardholderName,
                 expiry = state.expiry,
                 cvv = state.cvv,
                 onCopyCardNumber = { state.onCopy(state.number, CardDataType.Number) },
+                onCopyCardholderName = {
+                    state.cardholderName?.let { state.onCopy(it, CardDataType.CardholderName) }
+                },
                 onCopyCvv = { state.onCopy(state.cvv, CardDataType.CVV) },
                 onCopyExpiry = { state.onCopy(state.expiry, CardDataType.Expiry) },
                 onHideDetails = state.onClick,
@@ -132,7 +142,9 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 .fillMaxSize()
                 .zIndex(1f),
         ) {
-            CardTopBlock()
+            if (state.cardState != TangemPayCardState.Delivering) {
+                CardTopBlock()
+            }
 
             if (state.isActionsAvailable) {
                 ConstraintLayout(
@@ -205,7 +217,8 @@ private fun TangemPayCardBackground(
     cardImageUrl: String?,
     modifier: Modifier = Modifier,
 ) {
-    val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen
+    val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen &&
+        cardState != TangemPayCardState.Delivering
     val freezeProgress by animateFloatAsState(
         targetValue = if (isFrozen) 1f else 0f,
         animationSpec = tween(
@@ -468,57 +481,70 @@ private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Mo
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 }
 
-@Suppress("MagicNumber", "LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun TangemPayCardDetailsShownBlock(
     cardNumber: String,
+    cardholderName: String?,
     expiry: String,
     cvv: String,
     onCopyCardNumber: () -> Unit,
+    onCopyCardholderName: () -> Unit,
     onCopyExpiry: () -> Unit,
     onCopyCvv: () -> Unit,
     onHideDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        CardDetailsTextContainer(
-            modifier = Modifier
-                .padding(top = 16.dp, bottom = 12.dp, start = 16.dp, end = 16.dp)
-                .fillMaxWidth(),
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(20.dp),
+    ) {
+        CardDetailsField(
+            modifier = Modifier.fillMaxWidth(),
             title = stringResourceSafe(R.string.tangempay_card_details_card_number),
-            text = cardNumber,
+            value = cardNumber,
             onCopy = onCopyCardNumber,
             valueTestTag = TangemPayTestTags.CARD_DETAILS_NUMBER_VALUE,
             copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_NUMBER,
         )
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            CardDetailsTextContainer(
-                modifier = Modifier
-                    .weight(1f)
-                    .wrapContentHeight(),
+        if (cardholderName != null) {
+            CardDetailsFieldSeparator()
+            CardDetailsField(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResourceSafe(R.string.tangempay_card_details_name_on_card),
+                value = cardholderName,
+                onCopy = onCopyCardholderName,
+                valueTestTag = TangemPayTestTags.CARD_DETAILS_CARDHOLDER_NAME_VALUE,
+                copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CARDHOLDER_NAME,
+            )
+        }
+        CardDetailsFieldSeparator()
+        Row(horizontalArrangement = Arrangement.spacedBy(DetailsFieldSpacing)) {
+            CardDetailsField(
                 title = stringResourceSafe(R.string.tangempay_card_details_expiry),
-                text = expiry,
+                value = expiry,
                 onCopy = onCopyExpiry,
+                isCompact = true,
                 valueTestTag = TangemPayTestTags.CARD_DETAILS_EXPIRATION_VALUE,
                 copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_EXPIRATION,
             )
-            CardDetailsTextContainer(
+            Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .wrapContentHeight(),
+                    .height(36.dp)
+                    .width(SeparatorThickness)
+                    .background(CardSeparatorColor),
+            )
+            CardDetailsField(
                 title = stringResourceSafe(R.string.tangempay_card_details_cvc),
-                text = cvv,
+                value = cvv,
                 onCopy = onCopyCvv,
+                isCompact = true,
                 valueTestTag = TangemPayTestTags.CARD_DETAILS_CVC_VALUE,
                 copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CVC,
             )
         }
-        SpacerH(8.dp)
+        SpacerH(10.dp)
         Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
@@ -526,13 +552,11 @@ private fun TangemPayCardDetailsShownBlock(
             CompositionLocalProvider(LocalIsInDarkTheme provides true) {
                 TangemThemeRedesign {
                     TangemButton(
-                        modifier = Modifier
-                            .padding(end = 16.dp, bottom = 8.dp)
-                            .testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
-                        variant = TangemButton.Variant.Material,
+                        modifier = Modifier.testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
+                        variant = TangemButton.Variant.Secondary,
                         size = TangemButton.Size.X8,
+                        text = resourceReference(R.string.common_done),
                         onClick = onHideDetails,
-                        iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_20),
                     )
                 }
             }
@@ -540,52 +564,66 @@ private fun TangemPayCardDetailsShownBlock(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
-private fun CardDetailsTextContainer(
+private fun CardDetailsField(
     title: String,
-    text: String,
+    value: String,
+    valueTestTag: String,
+    copyTestTag: String,
     onCopy: () -> Unit,
     modifier: Modifier = Modifier,
-    valueTestTag: String? = null,
-    copyTestTag: String? = null,
+    isCompact: Boolean = false,
 ) {
-    Row(
+    val interactionSource = remember { MutableInteractionSource() }
+    Column(
         modifier = modifier
-            .background(
-                color = CustomCardBlockColor,
-                shape = RoundedCornerShape(11.dp),
-            )
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .testTag(copyTestTag)
+            .clickable(
+                onClick = onCopy,
+                interactionSource = interactionSource,
+                indication = null,
+            ),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = title,
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-            Text(
-                text = text,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.constantWhite,
-                modifier = if (valueTestTag != null) Modifier.testTag(valueTestTag) else Modifier,
-            )
-        }
-        IconButton(
-            modifier = Modifier
-                .size(TangemTheme.dimens.size32)
-                .then(if (copyTestTag != null) Modifier.testTag(copyTestTag) else Modifier),
-            onClick = onCopy,
+        Text(
+            text = title,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.staticDark.secondary,
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(if (isCompact) 4.dp else DetailsFieldSpacing),
         ) {
+            Text(
+                modifier = Modifier
+                    .then(if (isCompact) Modifier.defaultMinSize(minWidth = 56.dp) else Modifier.weight(1f))
+                    .testTag(valueTestTag),
+                text = value,
+                style = TangemTheme.typography3.subheading.medium,
+                color = TangemTheme.colors3.text.staticDark.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size24),
-                painter = painterResource(id = R.drawable.ic_copy_new_24),
-                tint = TangemTheme.colors.icon.informative,
+                modifier = Modifier.size(16.dp),
+                imageVector = Icons.ic_copy_16,
+                tint = TangemTheme.colors3.icon.staticDark,
                 contentDescription = null,
             )
         }
     }
+}
+
+@Composable
+private fun CardDetailsFieldSeparator(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(vertical = DetailsFieldSpacing)
+            .fillMaxWidth()
+            .height(SeparatorThickness)
+            .background(CardSeparatorColor),
+    )
 }
 
 @Composable
@@ -641,6 +679,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onClick = {},
             number = "1234 5678 9012 3456",
             numberShort = "*3456",
+            cardholderName = "JOHNNY SILVERHAND",
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
@@ -663,6 +702,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onClick = {},
             number = "1234 5678 9012 3456",
             numberShort = "*3456",
+            cardholderName = "JOHNNY SILVERHAND",
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
@@ -685,6 +725,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onClick = {},
             number = "1234 5678 9012 3456",
             numberShort = "*3456",
+            cardholderName = "JOHNNY SILVERHAND",
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
@@ -709,6 +750,27 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             isHidden = false,
             number = "1234 5678 9012 3456",
             numberShort = "*3456",
+            cardholderName = "JOHNNY SILVERHAND",
+            expiry = "12/34",
+            cvv = "123",
+            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+            displayNameState = DisplayNameState.Display(
+                displayName = "Tangem Pay Card",
+                onClick = {},
+                isEditingEnabled = false,
+            ),
+        ),
+        TangemPayCardDetailsUM(
+            isLoading = false,
+            onClick = {},
+            buttonText = resourceReference(R.string.tangempay_card_details_hide_details),
+            onCopy = { _, _ -> },
+            cardImageUrl = null,
+            cardBackgroundImageUrl = null,
+            isHidden = false,
+            number = "1234 5678 9012 3456",
+            numberShort = "*3456",
+            cardholderName = null,
             expiry = "12/34",
             cvv = "123",
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,

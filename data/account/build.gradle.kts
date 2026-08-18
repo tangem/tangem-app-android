@@ -25,7 +25,6 @@ dependencies {
 
     // region Tangem dependencies
     implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
     implementation(tangemDeps.hot.core)
     // endregion
 
@@ -35,7 +34,6 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.configToggles)
     implementation(projects.core.local)
     api(projects.core.datasource)
     api(projects.core.utils)

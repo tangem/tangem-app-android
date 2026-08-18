@@ -68,6 +68,7 @@ internal class SendRecipientWalletListConverter(
                                             )
                                             is Account.Payment -> AccountIconUM.Payment
                                             is Account.Virtual -> AccountIconUM.Virtual
+                                            is Account.Prediction -> AccountIconUM.Prediction
                                         },
                                         prefixText = stringReference(StringsSigns.DOT),
                                     )

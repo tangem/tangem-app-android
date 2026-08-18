@@ -91,13 +91,13 @@ internal class PolymarketTypedDataBuilderTest {
         assertThat(message.getString("deadline")).isEqualTo("1700000600")
 
         val messageCalls = message.getJSONArray("calls")
-        assertThat(messageCalls.length()).isEqualTo(6)
-        val first = messageCalls.getJSONObject(0)
-        assertThat(first.getString("target")).isEqualTo(calls[0].target)
-        assertThat(first.getString("value")).isEqualTo("0")
-        assertThat(first.getString("data")).isEqualTo(calls[0].data)
-        val last = messageCalls.getJSONObject(5)
-        assertThat(last.getString("data")).isEqualTo(calls[5].data)
+        assertThat(messageCalls.length()).isEqualTo(calls.size)
+        calls.forEachIndexed { index, call ->
+            val encoded = messageCalls.getJSONObject(index)
+            assertThat(encoded.getString("target")).isEqualTo(call.target)
+            assertThat(encoded.getString("value")).isEqualTo("0")
+            assertThat(encoded.getString("data")).isEqualTo(call.data)
+        }
     }
 
     // endregion

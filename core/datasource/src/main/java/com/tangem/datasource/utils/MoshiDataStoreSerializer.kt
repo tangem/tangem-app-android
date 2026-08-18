@@ -16,6 +16,10 @@ import java.lang.reflect.ParameterizedType
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated(
+    message = "Prefer kotlinx-serialization: annotate the model with @Serializable and use " +
+        "KotlinxDataStoreSerializer (or AppDataStoreFactory.create with a KSerializer).",
+)
 class MoshiDataStoreSerializer<T>(
     override val defaultValue: T,
     private val adapter: JsonAdapter<T>,
@@ -30,7 +34,7 @@ class MoshiDataStoreSerializer<T>(
      */
     constructor(moshi: Moshi, types: ParameterizedType, defaultValue: T) : this(
         defaultValue = defaultValue,
-        adapter = moshi.adapter<T>(types),
+        adapter = moshi.adapter(types),
     )
 
     override suspend fun readFrom(input: InputStream): T {

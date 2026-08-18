@@ -4,9 +4,9 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
-import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
+import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig

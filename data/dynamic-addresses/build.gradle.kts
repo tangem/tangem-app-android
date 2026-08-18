@@ -28,7 +28,6 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.configToggles)
     api(projects.core.utils)
     implementation(projects.core.datasource)
     // endregion

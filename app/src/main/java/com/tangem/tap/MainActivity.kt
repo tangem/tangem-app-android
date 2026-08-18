@@ -13,6 +13,7 @@ import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -50,8 +51,10 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
+import com.tangem.google.auth.GoogleAuthActivityResultBridge
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
@@ -69,6 +72,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
+import dagger.Lazy
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -160,6 +164,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var passwordRequester: HotWalletPasswordRequester
+
+    @Inject
+    internal lateinit var googleAuthActivityResultBridge: Lazy<GoogleAuthActivityResultBridge>
+
+    @Inject
+    internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -273,6 +283,21 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             passwordRequester = passwordRequester,
             appRouter = appRouter,
         )
+
+        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            // registerForActivityResult unregisters itself on destroy; the bridge is the only holder
+            val bridge = googleAuthActivityResultBridge.get()
+            bridge.registerLauncher(
+                launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                    bridge.onResult(it)
+                },
+            )
+            bridge.registerIntentLauncher(
+                launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                    bridge.onResult(it)
+                },
+            )
+        }
     }
 
     private fun installAppTheme() {
@@ -332,6 +357,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onDestroy() {
         TangemLogger.i("onDestroy")
+        if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            googleAuthActivityResultBridge.get().unregisterLauncher()
+        }
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {

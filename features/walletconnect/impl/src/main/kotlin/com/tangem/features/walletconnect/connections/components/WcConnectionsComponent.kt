@@ -1,9 +1,7 @@
 package com.tangem.features.walletconnect.connections.components
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
@@ -42,9 +40,8 @@ internal class WcConnectionsComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        val snackbarHostState = remember { SnackbarHostState() }
 
-        WcConnectionsContent(modifier = modifier, state = state, snackbarHostState = snackbarHostState)
+        WcConnectionsContent(modifier = modifier, state = state)
 
         EventMessageEffect(messageHandler = messageHandler)
         bottomSheet.child?.instance?.BottomSheet()

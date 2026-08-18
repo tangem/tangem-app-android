@@ -2038,7 +2038,7 @@
   <string name="tangem_pay_terms_fees_limits">Bedingungen, Gebühren &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Bedingungen und Einschränkungen</string>
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Versand ab %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Versand ab</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Monatslimit erreicht</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC ausgeschlossen</string>
   <string name="tangem_pay_transaction_details_cashback_none">Kein Cashback</string>
@@ -2126,10 +2126,10 @@
   <string name="tangempay_card_details_rename_card_invalid_title">Ungültige Zeichen</string>
   <string name="tangempay_card_details_rename_card_placeholder">Kartenname</string>
   <string name="tangempay_card_details_reveal_text">Aufdecken</string>
-  <string name="tangempay_card_details_show_details">Kartendetails</string>
+  <string name="tangempay_card_details_show_details">Details</string>
   <string name="tangempay_card_details_system_downgrade_subtitle">Sollte der Kontostand unter null bleiben, werden Ihre %1$s-Karten am %2$s</string>
   <string name="tangempay_card_details_system_downgrade_title">Laden Sie Ihr Konto in Kürze auf.</string>
-  <string name="tangempay_card_details_title">Kartendetails</string>
+  <string name="tangempay_card_details_title">Details</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Bitte versuche es später noch einmal.</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
   <string name="tangempay_card_details_view_pin_code_description">Komm zurück zur App, falls du es vergisst.</string>
@@ -2281,8 +2281,8 @@
   <string name="tangempay_newonboard_body">Gib Krypto überall aus — ohne Banken, ohne Mittelsmänner, ohne Börsen. Self-Custody trifft auf alltägliches Bezahlen.</string>
   <string name="tangempay_newonboard_bottomleft_body">Online sowie mit Apple Pay bezahlen</string>
   <string name="tangempay_newonboard_bottomleft_title">Weltweit akzeptiert</string>
-  <string name="tangempay_newonboard_bottomright_body">Weltweit nutzbar</string>
-  <string name="tangempay_newonboard_bottomright_title">Nur 1% FX-Gebühr</string>
+  <string name="tangempay_newonboard_bottomright_body">USD → USDC 1:1; 1 $ Gebühr</string>
+  <string name="tangempay_newonboard_bottomright_title">ACH empfangen</string>
   <string name="tangempay_newonboard_title">Hol dir deine Tangem Pay Karte</string>
   <string name="tangempay_newonboard_topleft_body">Zahl, was du siehst</string>
   <string name="tangempay_newonboard_topleft_title">Keine Kaufgebühren, \n1 USDC = 1 USD</string>
@@ -2366,10 +2366,10 @@
   <string name="tangempay_select_plan_confirm_downgrade_title">Ihr %1$s-Tarif und Ihre %2$s-Karten sind gültig bis %3$s</string>
   <string name="tangempay_select_plan_confirm_point_cancel_till">Sie können diesen Übergang bis zum %1$s</string>
   <string name="tangempay_select_plan_confirm_point_cards_closed">Dein %1$s Die Karten werden geschlossen</string>
-  <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s Die monatliche Gebühr wird von Ihrem Konto abgebucht.</string>
+  <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s Die monatliche Gebühr wird von Ihrem Konto abgebucht</string>
   <string name="tangempay_select_plan_confirm_point_move_on_date">Am %1$s werden wir Sie auf den Tarif „ %2$s “ umstellen.</string>
   <string name="tangempay_select_plan_confirm_point_no_fee">Es fällt keine Gebühr an</string>
-  <string name="tangempay_select_plan_confirm_point_virtual_card">In wenigen Minuten erhalten Sie Ihre virtuelle „ %1$s “.</string>
+  <string name="tangempay_select_plan_confirm_point_virtual_card">In wenigen Minuten erhalten Sie Ihre virtuelle %1$s</string>
   <string name="tangempay_select_plan_confirm_switch_title">Sie wechseln zu %1$s</string>
   <string name="tangempay_select_plan_confirm_title">Auswahl bestätigen</string>
   <string name="tangempay_select_plan_confirm_upgrade_title">Wir stellen für Sie eine %1$s aus</string>

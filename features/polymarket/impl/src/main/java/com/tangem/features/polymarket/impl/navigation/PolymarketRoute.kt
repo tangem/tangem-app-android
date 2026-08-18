@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.navigation
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 
 /**
@@ -11,8 +12,14 @@ import com.tangem.domain.polymarket.model.PolymarketAccessMode
  */
 internal sealed interface PolymarketRoute : Route {
 
-    /** Entry gate — resolves region and wallet state, then shows onboarding or hands over to [Main]. */
-    data object Onboarding : PolymarketRoute
+    /** The prerequisite for the gate: a known wallet. */
+    data object Entry : PolymarketRoute
+
+    /**
+     * Entry gate for [userWalletId] — the wallet [Entry] settled, which may differ from the one the feature was
+     * opened with.
+     */
+    data class Onboarding(val userWalletId: UserWalletId) : PolymarketRoute
 
     /**
      * Discovery feed — reached once [Onboarding] resolves the entry decision.
@@ -21,18 +28,28 @@ internal sealed interface PolymarketRoute : Route {
      *  identical in every region and the place-prediction flow is still a stub. It is carried so the
      *  account screen inherits the decision, and so the real place-prediction flow can refuse
      *  [PolymarketAccessMode.READ_ONLY] without re-deriving it.
+     * @property userWalletId the wallet the entry gate resolved, carried on the route rather than taken from
+     *  the feature params because the gate may resolve a *different* wallet than the one the feature was
+     *  opened with — the user can choose among several eligible wallets.
      */
-    data class Main(val accessMode: PolymarketAccessMode) : PolymarketRoute
+    data class Main(
+        val accessMode: PolymarketAccessMode,
+        val userWalletId: UserWalletId,
+    ) : PolymarketRoute
 
     /**
      * Details of a single prediction event.
      *
      * @property eventId event to show
+     * @property userWalletId the wallet this event belongs to, carried on the route rather than taken from
+     *  the feature params for the same reason as [Main.userWalletId] — the entry gate may have resolved a
+     *  different wallet than the one the feature was opened with.
      * @property marketId market preselected by the caller, e.g. by tapping an outcome on the feed card
      * @property assetId outcome preselected by the caller
      */
     data class EventDetails(
         val eventId: String,
+        val userWalletId: UserWalletId,
         val marketId: String? = null,
         val assetId: String? = null,
     ) : PolymarketRoute

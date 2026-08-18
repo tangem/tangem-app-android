@@ -19,6 +19,8 @@ dependencies {
     // region Other libraries
     api(deps.moshi)
     implementation(deps.arrow.core)
+    implementation(deps.androidx.datastore.base)
+    implementation(deps.androidx.datastore.core)
     // endregion
 
     // region DI
@@ -28,6 +30,7 @@ dependencies {
 
     // region Core
     api(projects.core.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     // endregion
 
@@ -42,5 +45,9 @@ dependencies {
     api(projects.domain.txhistory)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
+    // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
     // endregion
 }

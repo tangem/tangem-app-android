@@ -38,7 +38,7 @@ internal class CashbackPromotionsConverterTest {
     @Test
     fun `GIVEN program monthly cap WHEN convert THEN mapped with amount and currency`() {
         // Arrange
-        val response = CashbackPromotionsResponse(
+        val response = envelope(
             cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
                 tiers = null,
                 monthlyCapAmount = BigDecimal("150"),
@@ -58,7 +58,7 @@ internal class CashbackPromotionsConverterTest {
     @Test
     fun `GIVEN no monthly cap amount WHEN convert THEN monthly cap is null`() {
         // Arrange
-        val response = CashbackPromotionsResponse(
+        val response = envelope(
             cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
                 tiers = null,
                 monthlyCapAmount = null,
@@ -77,7 +77,7 @@ internal class CashbackPromotionsConverterTest {
     @Test
     fun `GIVEN additional cashback WHEN convert THEN each promo mapped with its fields`() {
         // Arrange
-        val response = CashbackPromotionsResponse(
+        val response = envelope(
             cashbackOnCards = null,
             additionalCashback = listOf(
                 additional(id = "p1", name = "Groceries", description = "+1%", isPermanent = true, endDate = null),
@@ -116,7 +116,7 @@ internal class CashbackPromotionsConverterTest {
     @Test
     fun `GIVEN additional cashback with null isPermanent WHEN convert THEN it is derived from end date`() {
         // Arrange
-        val response = CashbackPromotionsResponse(
+        val response = envelope(
             cashbackOnCards = null,
             additionalCashback = listOf(
                 additional(isPermanent = null, endDate = null),
@@ -134,7 +134,7 @@ internal class CashbackPromotionsConverterTest {
     @Test
     fun `GIVEN additional cashback with malformed end date WHEN convert THEN end date null and payload kept`() {
         // Arrange
-        val response = CashbackPromotionsResponse(
+        val response = envelope(
             cashbackOnCards = null,
             additionalCashback = listOf(additional(isPermanent = false, endDate = "not-a-date")),
         )
@@ -155,9 +155,19 @@ internal class CashbackPromotionsConverterTest {
     }
 
     @Test
+    fun `GIVEN missing result envelope WHEN convert THEN everything is empty`() {
+        // Act
+        val result = CashbackPromotionsConverter.convert(CashbackPromotionsResponse(result = null))
+
+        // Assert
+        assertThat(result)
+            .isEqualTo(CashbackPromotions(cardTiers = emptyList(), monthlyCap = null, additionalCashback = emptyList()))
+    }
+
+    @Test
     fun `GIVEN null cashbackOnCards WHEN convert THEN no card tiers`() {
         // Arrange
-        val response = CashbackPromotionsResponse(cashbackOnCards = null, additionalCashback = null)
+        val response = envelope(cashbackOnCards = null, additionalCashback = null)
 
         // Act
         val result = CashbackPromotionsConverter.convert(response)
@@ -186,7 +196,17 @@ internal class CashbackPromotionsConverterTest {
         )
     }
 
-    private fun response(vararg tiers: CashbackPromotionsResponse.CardTier) = CashbackPromotionsResponse(
+    private fun envelope(
+        cashbackOnCards: CashbackPromotionsResponse.CashbackOnCards?,
+        additionalCashback: List<CashbackPromotionsResponse.AdditionalCashback>?,
+    ) = CashbackPromotionsResponse(
+        result = CashbackPromotionsResponse.Result(
+            cashbackOnCards = cashbackOnCards,
+            additionalCashback = additionalCashback,
+        ),
+    )
+
+    private fun response(vararg tiers: CashbackPromotionsResponse.CardTier) = envelope(
         cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
             tiers = tiers.toList(),
             monthlyCapAmount = null,

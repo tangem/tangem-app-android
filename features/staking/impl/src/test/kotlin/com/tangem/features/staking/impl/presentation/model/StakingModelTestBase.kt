@@ -5,6 +5,7 @@ import arrow.core.right
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -113,6 +114,7 @@ internal abstract class StakingModelTestBase {
     private val coroutineScope: AppCoroutineScope = mockk()
     protected val innerRouter: InnerStakingRouter = mockk()
     protected val messageSender: UiMessageSender = mockk()
+    protected val featureTogglesManager: FeatureTogglesManager = mockk()
 
     @BeforeEach
     fun setUp() {
@@ -156,6 +158,7 @@ internal abstract class StakingModelTestBase {
         every {
             stakingBalanceUpdater.create(any(), any(), any())
         } returns mockBalanceUpdater
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
     }
 
     @Suppress("LongParameterList")
@@ -205,6 +208,7 @@ internal abstract class StakingModelTestBase {
             innerRouter = innerRouter,
             messageSender = messageSender,
             appRouter = appRouter,
+            featureTogglesManager = featureTogglesManager,
         )
     }
 

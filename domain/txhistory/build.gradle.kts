@@ -17,6 +17,7 @@ dependencies {
     // region Other libraries
     api(deps.arrow.core)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.jodatime)
     // endregion
 
     // region Core modules

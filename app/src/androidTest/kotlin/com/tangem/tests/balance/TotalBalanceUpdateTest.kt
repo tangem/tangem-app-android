@@ -5,7 +5,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.*
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -25,11 +24,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
         val scenarioName = "eth_network_balance"
         val scenarioState = "Empty"
         val updatedBalance = "$763.55"
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -59,11 +54,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
         val scenarioName = "quotes_api"
         val scenarioState = "Ripple"
         val updatedBalance = "$3,320.47"
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }

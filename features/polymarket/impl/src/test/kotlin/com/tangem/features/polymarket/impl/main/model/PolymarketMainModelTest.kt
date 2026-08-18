@@ -5,26 +5,44 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
-import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.pagination.Batch
+import com.tangem.pagination.BatchAction
+import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.BatchListState
+import com.tangem.pagination.BatchUpdateResult
+import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -35,8 +53,14 @@ import org.junit.jupiter.api.Test
 internal class PolymarketMainModelTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val getEventsUseCase: GetPolymarketEventsUseCase = mockk()
     private val getCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
+    private val getEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
+
+    private val batchState = MutableStateFlow(
+        BatchListState<Int, List<PolymarketEvent>>(data = emptyList(), status = PaginationStatus.InitialLoading),
+    )
+    private val contextSlot = slot<PolymarketEventsBatchingContext>()
+    private val dispatchedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig, Nothing>>()
 
     private var model: PolymarketMainModel? = null
 
@@ -44,42 +68,29 @@ internal class PolymarketMainModelTest {
     fun tearDown() {
         model?.onDestroy()
         model = null
+        dispatchedActions.clear()
     }
 
     @Test
-    fun `GIVEN categories and events load WHEN model created THEN content shows tabs and events`() = runTest {
+    fun `GIVEN categories load WHEN model created THEN tabs are built with the first one selected`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
 
         // Act
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
         // Assert
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
-        assertThat(content.categories.map { it.id to it.isSelected })
+        assertThat(model.uiState.value.categories.map { it.id to it.isSelected })
             .containsExactly(1 to true, 2 to false)
             .inOrder()
-        assertThat(content.events.map { it.id }).containsExactly("event-1")
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
+        )
     }
 
     @Test
-    fun `GIVEN params WHEN model created THEN access mode carried into the state`() = runTest {
-        // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
-
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.accessMode).isEqualTo(PolymarketAccessMode.TRADING)
-    }
-
-    @Test
-    fun `GIVEN categories fail WHEN model created THEN error state shown`() = runTest {
+    fun `GIVEN categories fail WHEN model created THEN the feed runs unfiltered without tabs`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
 
@@ -88,17 +99,66 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Error::class.java)
+        assertThat(model.uiState.value.categories).isEmpty()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
+        )
     }
 
     @Test
-    fun `GIVEN events fail WHEN model created THEN error state shown`() = runTest {
+    fun `GIVEN pages loaded WHEN paginating THEN events of every page are shown`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns DataError.NetworkError.NoInternetConnection.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
 
         // Act
+        batchState.value = BatchListState(
+            data = listOf(
+                Batch(key = 0, data = listOf(createEvent(id = "event-1"))),
+                Batch(key = 1, data = listOf(createEvent(id = "event-2"))),
+            ),
+            status = PaginationStatus.Paginating(lastResult = successResult(last = false)),
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        assertThat(content.events.map { it.id }).containsExactly("event-1", "event-2").inOrder()
+        assertThat(content.isLoadingNextPage).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the next page is on its way WHEN paginating THEN the footer loader is shown`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
         val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.NextBatchLoading,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        assertThat(content.isLoadingNextPage).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the first page fails WHEN model created THEN the reload prompt is shown`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        batchState.value = BatchListState(
+            data = emptyList(),
+            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
+        )
         advanceUntilIdle()
 
         // Assert
@@ -106,97 +166,164 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN error WHEN retry clicked THEN feed reloads to content`() = runTest {
+    fun `GIVEN the feed failed WHEN reload tapped THEN the same category is requested again`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = emptyList(),
+            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 1)),
+        )
+    }
+
+    @Test
+    fun `GIVEN categories were lost too WHEN reload tapped THEN they are requested again`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returnsMany listOf(
             DataError.NetworkError.NoInternetConnection.left(),
             categories().right(),
         )
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
         val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = emptyList(),
+            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
+        )
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onRetryClick()
+        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isInstanceOf(PolymarketMainUM.ContentUM.Content::class.java)
+        assertThat(model.uiState.value.categories.map { it.id }).containsExactly(1, 2).inOrder()
     }
 
     @Test
-    fun `GIVEN no events WHEN model created THEN empty state shown`() = runTest {
+    fun `GIVEN tabs WHEN another category tapped THEN the feed reloads for it`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns emptyList<PolymarketEvent>().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        dispatchedActions.clear()
 
         // Act
-        val model = createModel(testScope = this)
+        model.uiState.value.categories.single { it.id == 2 }.onClick()
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.content).isEqualTo(PolymarketMainUM.ContentUM.Empty)
-    }
-
-    @Test
-    fun `GIVEN content WHEN another category clicked THEN feed reloads for that category`() = runTest {
-        // Arrange
-        coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
-        coEvery { getEventsUseCase(category = 2) } returns listOf(createEvent(id = "event-2")).right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).categories.single { it.id == 2 }.onClick()
-        advanceUntilIdle()
-
-        // Assert
-        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
-        assertThat(content.categories.map { it.id to it.isSelected })
+        assertThat(model.uiState.value.categories.map { it.id to it.isSelected })
             .containsExactly(1 to false, 2 to true)
             .inOrder()
-        assertThat(content.events.map { it.id }).containsExactly("event-2")
-        coVerify(exactly = 1) { getEventsUseCase(category = 2) }
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 2)),
+        )
     }
 
     @Test
-    fun `GIVEN content WHEN selected category clicked again THEN feed is not reloaded`() = runTest {
+    fun `GIVEN the selected category WHEN tapped again THEN nothing is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        dispatchedActions.clear()
 
         // Act
-        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).categories.single { it.id == 1 }.onClick()
+        model.uiState.value.categories.single { it.id == 1 }.onClick()
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { getEventsUseCase(category = 1) }
+        assertThat(dispatchedActions).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN more pages ahead WHEN scrolled near the end THEN the next page is requested`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(lastResult = successResult(last = false)),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        model.onLoadMore()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).containsExactly(BatchAction.LoadMore<PolymarketEventsListConfig>())
+    }
+
+    @Test
+    fun `GIVEN the last page WHEN scrolled near the end THEN nothing is requested`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        model.onLoadMore()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).isEmpty()
     }
 
     @Test
     fun `GIVEN content WHEN event card clicked THEN details route pushed`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
         val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
+        )
         advanceUntilIdle()
 
         // Act
         (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).events.single().onClick()
 
         // Assert
-        verify { router.push(PolymarketRoute.EventDetails(eventId = "event-1"), any()) }
+        verify {
+            router.push(
+                PolymarketRoute.EventDetails(eventId = "event-1", userWalletId = userWalletId),
+                any(),
+            )
+        }
     }
 
     @Test
     fun `GIVEN content WHEN outcome clicked THEN details route pushed with preselection`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
         val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
+        )
         advanceUntilIdle()
 
         // Act
@@ -209,7 +336,12 @@ internal class PolymarketMainModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(eventId = "event-1", marketId = "market-1", assetId = "asset-1"),
+                PolymarketRoute.EventDetails(
+                    eventId = "event-1",
+                    userWalletId = userWalletId,
+                    marketId = "market-1",
+                    assetId = "asset-1",
+                ),
                 any(),
             )
         }
@@ -219,7 +351,6 @@ internal class PolymarketMainModelTest {
     fun `WHEN back clicked THEN router pops`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
-        coEvery { getEventsUseCase(category = 1) } returns listOf(createEvent()).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -230,17 +361,39 @@ internal class PolymarketMainModelTest {
         verify { router.pop(any()) }
     }
 
+    private val userWalletId = UserWalletId("011")
+
     private fun createModel(testScope: TestScope): PolymarketMainModel {
+        every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
+            // The model owns the actions flow; collecting it here is what makes the dispatched actions assertable.
+            contextSlot.captured.actionsFlow
+                .onEach { dispatchedActions += it }
+                // Unconfined so an action lands in [dispatchedActions] as soon as the model emits it.
+                .launchIn(
+                    CoroutineScope(
+                        testScope.backgroundScope.coroutineContext +
+                            UnconfinedTestDispatcher(testScope.testScheduler),
+                    ),
+                )
+
+            object : PolymarketEventsBatchFlow {
+                override val state: StateFlow<BatchListState<Int, List<PolymarketEvent>>> = batchState
+                override val updateResults:
+                    SharedFlow<Pair<Nothing, BatchUpdateResult<Int, List<PolymarketEvent>>>> =
+                    MutableSharedFlow()
+            }
+        }
+
         return PolymarketMainModel(
             paramsContainer = MutableParamsContainer(
                 value = PolymarketMainParams(
-                    userWalletId = UserWalletId("011"),
+                    userWalletId = userWalletId,
                     accessMode = PolymarketAccessMode.TRADING,
                 ),
             ),
             router = router,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            getPolymarketEventsUseCase = getEventsUseCase,
+            getPolymarketEventsBatchFlowUseCase = getEventsBatchFlowUseCase,
             getPolymarketCategoriesUseCase = getCategoriesUseCase,
         ).also { model = it }
     }
@@ -255,6 +408,12 @@ internal class PolymarketMainModelTest {
             single = testDispatcher,
         )
     }
+
+    private fun successResult(last: Boolean) = BatchFetchResult.Success(
+        data = listOf(createEvent()),
+        empty = false,
+        last = last,
+    )
 
     private fun categories(): List<PolymarketCategory> = listOf(
         PolymarketCategory(id = 1, label = "Trending", iconUrl = null),

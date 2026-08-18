@@ -1,6 +1,8 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.*
@@ -74,6 +76,20 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
         hasAnyChild(withText(tokenName))
         useUnmergedTree = true
+    }
+
+    /**
+     * Picks a token row by name **and** network.
+     *
+     * A wallet can hold the same token on several networks — POL (ex-MATIC) exists both as an ERC-20 on
+     * Ethereum and natively on Polygon — and [tokenWithName] matches whichever row comes first, so which
+     * one gets tapped depends on list order. The merged row carries the network ("Ethereum network"), so
+     * naming it makes the choice deterministic, and with it the pair, its providers and their quotes.
+     */
+    fun tokenWithNameAndNetwork(tokenName: String, networkName: String): KNode = child {
+        hasText(tokenName, substring = true)
+        hasText(networkName, substring = true)
+        hasClickAction()
     }
 
     fun marketsTokenWithName(title: String): KNode {

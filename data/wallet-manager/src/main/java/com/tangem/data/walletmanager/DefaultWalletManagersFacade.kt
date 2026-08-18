@@ -7,7 +7,6 @@ import arrow.core.right
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.common.DynamicAddressesManager
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
@@ -32,7 +31,7 @@ import com.tangem.data.walletmanager.utils.*
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -88,7 +87,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         extraTokens: Set<CryptoCurrency.Token>,
         xpub: String?,
     ): UpdateWalletManagerResult {
-        val userWallet = getUserWallet(userWalletId)
+        val userWallet = getUserWallet(userWalletId) ?: run {
+            TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
+            return UpdateWalletManagerResult.Unreachable()
+        }
         val blockchain = network.toBlockchain()
         val derivationPath = network.derivationPath.value
 
@@ -174,7 +176,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
     ): UpdateWalletManagerResult {
-        val userWallet = getUserWallet(userWalletId)
+        val userWallet = getUserWallet(userWalletId) ?: run {
+            TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
+            return UpdateWalletManagerResult.Unreachable()
+        }
         val blockchain = network.toBlockchain()
         val derivationPath = network.derivationPath.value
 
@@ -308,7 +313,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
-    private fun getUserWallet(userWalletId: UserWalletId) = userWalletsListRepository.getSyncStrict(userWalletId)
+    private fun getUserWallet(userWalletId: UserWalletId): UserWallet? =
+        userWalletsListRepository.getSyncOrNull(userWalletId)
 
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,
@@ -397,7 +403,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         derivationPath: String?,
     ): WalletManager? {
         getWmInitializationMutex(userWalletId, blockchain, derivationPath).withLock {
-            val userWallet = getUserWallet(userWalletId)
+            val userWallet = getUserWallet(userWalletId) ?: run {
+                TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
+                return null
+            }
 
             var walletManager = walletManagersStore.getSyncOrNull(
                 userWalletId = userWalletId,
@@ -536,6 +545,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 nodes.last().index == 0L
             !isBaseAddress && usedAddress.balance > BigDecimal.ZERO
         }
+    }
+
+    override suspend fun usedDynamicAddresses(userWalletId: UserWalletId, network: Network): List<String>? {
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
+        return dynamicAddressesManager.usedAddresses.map { it.address }
     }
 
     override suspend fun probeHasFundsOnAdditionalAddresses(

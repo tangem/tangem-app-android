@@ -77,21 +77,34 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
             params = TangemPayOrderCardTypeComponent.Params(
                 userWalletId = params.userWalletId,
                 onSelectVirtual = model::onSelectVirtual,
-                onSelectPlastic = { stackNavigation.pushNew(TangemPayOrderCardInnerRoute.Data) },
+                onSelectPlastic = { deliveryEtaMaxBusinessDays ->
+                    stackNavigation.pushNew(
+                        TangemPayOrderCardInnerRoute.Data(deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays),
+                    )
+                },
             ),
         )
-        TangemPayOrderCardInnerRoute.Data -> TangemPayOrderCardDataComponent(
+        is TangemPayOrderCardInnerRoute.Data -> TangemPayOrderCardDataComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayOrderCardDataComponent.Params(
                 userWalletId = params.userWalletId,
-                onOrderSubmitted = { stackNavigation.pushNew(TangemPayOrderCardInnerRoute.Success) },
+                onOrderAccepted = { email ->
+                    stackNavigation.pushNew(
+                        TangemPayOrderCardInnerRoute.Success(
+                            deliveryEtaMaxBusinessDays = config.deliveryEtaMaxBusinessDays,
+                            email = email,
+                        ),
+                    )
+                },
                 onClose = { router.pop() },
             ),
         )
-        TangemPayOrderCardInnerRoute.Success -> TangemPayOrderCardSuccessComponent(
+        is TangemPayOrderCardInnerRoute.Success -> TangemPayOrderCardSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayOrderCardSuccessComponent.Params(
-                onDone = { router.pop() },
+                deliveryEtaMaxBusinessDays = config.deliveryEtaMaxBusinessDays,
+                email = config.email,
+                onShowCard = model::onShowOrderedCard,
             ),
         )
     }
