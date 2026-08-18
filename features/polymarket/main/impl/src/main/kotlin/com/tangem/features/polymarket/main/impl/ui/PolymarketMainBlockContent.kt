@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +20,8 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -83,20 +84,8 @@ private fun PredictionAccountLoading(state: PolymarketMainUM.Loading, modifier: 
         startSlot = {
             AccountIcon(name = title, icon = AccountIconUM.Prediction, size = AccountIconSize.Default)
         },
-        titleSlot = {
-            Text(
-                text = title.resolveReference(),
-                color = TangemTheme.colors3.text.primary,
-                style = TangemTheme.typography3.body.medium,
-            )
-        },
-        subtitleSlot = {
-            Text(
-                text = state.subtitle.resolveReference(),
-                color = TangemTheme.colors3.text.secondary,
-                style = TangemTheme.typography3.caption.medium,
-            )
-        },
+        titleSlot = { TangemRowText(text = title, role = TangemRowTextRole.Title) },
+        subtitleSlot = { TangemRowText(text = state.subtitle, role = TangemRowTextRole.Subtitle) },
         valueSlot = {
             TextShimmer(
                 style = TangemTheme.typography3.body.medium,
