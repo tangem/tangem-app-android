@@ -1,8 +1,8 @@
-package com.tangem.datasource.api.common.blockaid.models.request
+package com.tangem.store.datasource.blockaid.models.request
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.datasource.api.common.blockaid.models.response.TransactionMetadata
+import com.tangem.store.datasource.blockaid.models.response.TransactionMetadata
 
 @JsonClass(generateAdapter = true)
 data class SolanaTransactionScanRequest(
