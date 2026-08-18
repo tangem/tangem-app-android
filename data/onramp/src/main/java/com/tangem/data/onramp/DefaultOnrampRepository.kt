@@ -345,6 +345,8 @@ internal class DefaultOnrampRepository(
                                         paymentMethod = paymentMethod,
                                         provider = provider,
                                         countryCode = response.countryCode,
+                                        isRestricted = response.isRestricted &&
+                                            onrampFeatureToggles.isExpressCategoriesGeoBlockingEnabled,
                                     )
                                 },
                                 onError = { error ->
