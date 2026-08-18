@@ -41,7 +41,6 @@ dependencies {
     api(projects.domain.visa)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.onramp.models)
     implementation(projects.domain.visa.models)
     runtimeOnly(projects.domain.txhistory)
     runtimeOnly(projects.domain.wallets)
