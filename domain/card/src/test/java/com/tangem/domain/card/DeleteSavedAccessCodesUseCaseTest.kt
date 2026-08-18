@@ -66,4 +66,28 @@ internal class DeleteSavedAccessCodesUseCaseTest {
         // Assert
         coVerify(exactly = 1) { tangemSdkManager.deleteSavedUserCodes(setOf(cardId)) }
     }
+
+    @Test
+    fun `passes all given cardsIds to sdk`() = runTest {
+        // Arrange
+        val cardsIds = setOf("AA00000000000004", "AA00000000000005")
+        coEvery { tangemSdkManager.deleteSavedUserCodes(any()) } returns CompletionResult.Success(Unit)
+
+        // Act
+        val actual = useCase(cardsIds = cardsIds)
+
+        // Assert
+        assertEitherRight(actual)
+        coVerify(exactly = 1) { tangemSdkManager.deleteSavedUserCodes(cardsIds) }
+    }
+
+    @Test
+    fun `returns Right Unit without calling sdk when cardsIds is empty`() = runTest {
+        // Act
+        val actual = useCase(cardsIds = emptySet())
+
+        // Assert
+        assertEitherRight(actual)
+        coVerify(exactly = 0) { tangemSdkManager.deleteSavedUserCodes(any()) }
+    }
 }
