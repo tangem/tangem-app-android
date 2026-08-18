@@ -41,6 +41,7 @@ internal class PolymarketMainComponent(
         PolymarketMainScreen(
             state = state,
             onBackClick = model::onBackClick,
+            onLoadMore = model::onLoadMore,
             modifier = modifier,
         )
     }

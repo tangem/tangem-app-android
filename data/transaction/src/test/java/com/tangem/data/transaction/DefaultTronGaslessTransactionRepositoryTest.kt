@@ -2,13 +2,13 @@ package com.tangem.data.transaction
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.gasless.TronGaslessApi
-import com.tangem.datasource.api.gasless.models.GaslessServiceResponse
-import com.tangem.datasource.api.gasless.models.tron.TronEstimateBreakdown
-import com.tangem.datasource.api.gasless.models.tron.TronEstimateResponse
-import com.tangem.datasource.api.gasless.models.tron.TronSubmitResponse
-import com.tangem.datasource.api.gasless.models.tron.TronTokenDto
-import com.tangem.datasource.api.gasless.models.tron.TronTokensResponse
+import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateBreakdown
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronSubmitResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronTokenDto
+import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
