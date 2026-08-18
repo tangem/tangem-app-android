@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
@@ -22,6 +23,7 @@ import com.tangem.features.txhistory.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTime
+import java.math.BigDecimal
 
 // region Status helpers
 
@@ -58,19 +60,33 @@ internal val ExpressTransactionAsset.displaySymbol: String
 internal val Amount.fiatCode: String
     get() = (type as? AmountType.FiatType)?.code ?: currencySymbol
 
+/**
+ * Crypto leg amount without a direction sign, e.g. `0.5 ETH`. Shared by the details card and the share text so the
+ * two never drift apart.
+ */
+internal fun ExpressTransactionAsset.formatAmount(): String =
+    amount.format { crypto(symbol = displaySymbol, decimals = decimals, ignoreSymbolPosition = true) }.trim()
+
+/** Fiat leg amount of an onramp, e.g. `100.00 USD`. Counterpart of [formatAmount] for the paid fiat side. */
+internal fun Amount.formatFiatAmount(): String = (value ?: BigDecimal.ZERO)
+    .format { fiat(fiatCurrencyCode = fiatCode, fiatCurrencySymbol = currencySymbol, ignoreSymbolPosition = true) }
+    .trim()
+
 // endregion
 
 // region Details header helpers
 
 /**
- * Header overflow context menu of the details card, shared by all transaction types. Each row is dropped when its
- * action is absent: "Transaction ID" (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped
- * when [onShare] is `null`) and "Explore" (dropped when [onExplore] is `null`). An empty list leaves the header with
- * no "•••" button. Repeat / Hide are not part of this iteration.
+ * Header overflow context menu of the details card, shared by all transaction types. Each row is dropped when its data
+ * is absent: "Transaction ID" (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped when
+ * [shareText] is `null` — only an express deal can describe itself as text) and "Explore" (dropped when [onExplore] is
+ * `null` — no on-chain hash to link to). An empty list leaves the header with no "•••" button. Repeat / Hide are not
+ * part of this iteration.
  */
 internal fun buildDetailsMenu(
     onCopyTxId: (() -> Unit)?,
-    onShare: (() -> Unit)?,
+    shareText: TextReference?,
+    onShare: (String) -> Unit,
     onExplore: (() -> Unit)?,
 ): ImmutableList<TxHistoryDetailsUM.MenuItemUM> = buildList {
     onCopyTxId?.let { copy ->
@@ -78,16 +94,16 @@ internal fun buildDetailsMenu(
             TxHistoryDetailsUM.MenuItemUM(
                 icon = Icons.ic_copy_24,
                 title = resourceReference(R.string.common_transaction_id),
-                onClick = copy,
+                action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(copy),
             ),
         )
     }
-    onShare?.let { share ->
+    shareText?.let { text ->
         add(
             TxHistoryDetailsUM.MenuItemUM(
                 icon = Icons.ic_share_android_24,
                 title = resourceReference(R.string.common_share),
-                onClick = share,
+                action = TxHistoryDetailsUM.MenuItemUM.Action.Share(text = text, onShare = onShare),
             ),
         )
     }
@@ -96,7 +112,7 @@ internal fun buildDetailsMenu(
             TxHistoryDetailsUM.MenuItemUM(
                 icon = Icons.ic_globe_24,
                 title = resourceReference(R.string.common_explore),
-                onClick = explore,
+                action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(explore),
             ),
         )
     }
@@ -128,6 +144,7 @@ private fun TxInfo.feeRow(): TxHistoryDetailsUM.InfoRowUM? {
         value = stringReference(
             value.format { crypto(symbol = fee.currencySymbol, decimals = fee.decimals, ignoreSymbolPosition = true) },
         ),
+        isValueHideable = true,
     )
 }
 

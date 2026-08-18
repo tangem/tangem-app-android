@@ -1,8 +1,8 @@
 package com.tangem.data.onramp.converters.error
 
 import com.squareup.moshi.JsonAdapter
-import com.tangem.datasource.api.express.models.response.ExpressError
-import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.grow.datasource.express.models.response.ExpressError
+import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.utils.converter.Converter
 

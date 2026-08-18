@@ -76,6 +76,7 @@ internal class StableOrderTest {
             lastDigits = "0000",
             images = emptyList(),
             state = TangemPayCardState.Active,
+            embossName = null,
         )
     }
 }

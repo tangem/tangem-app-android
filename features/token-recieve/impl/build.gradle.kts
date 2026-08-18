@@ -16,8 +16,6 @@ dependencies {
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.navigation)
-    implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
@@ -29,26 +27,25 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.haze)
+    implementation(deps.kotlin.coroutines)
     kapt(deps.hilt.kapt)
 
     /** Common */
     implementation(projects.common.ui)
 
     /** Core modules */
-    implementation(projects.common.routing)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
-    implementation(projects.core.res)
-    implementation(projects.core.configToggles)
 
     /** Domain modules */
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
-    implementation(projects.domain.transaction.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
 

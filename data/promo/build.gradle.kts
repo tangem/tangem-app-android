@@ -29,6 +29,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.promo)
+    api(deps.moshi)
     // endregion
 
     // region Domain models

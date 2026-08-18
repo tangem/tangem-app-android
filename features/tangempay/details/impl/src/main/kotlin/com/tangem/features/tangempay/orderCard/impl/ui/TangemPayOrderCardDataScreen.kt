@@ -8,27 +8,44 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -46,6 +63,11 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardD
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Loading
 
+private val FooterHeight = 72.dp
+
+@Composable
+private fun footerInsets(): WindowInsets = WindowInsets.ime.union(WindowInsets.navigationBars)
+
 @Composable
 internal fun TangemPayOrderCardDataScreen(state: TangemPayOrderCardDataScreenUM, modifier: Modifier = Modifier) {
     TangemTopBarScaffold(
@@ -59,13 +81,22 @@ internal fun TangemPayOrderCardDataScreen(state: TangemPayOrderCardDataScreenUM,
                 onClose = state.onCloseClick,
             )
         },
+        overlay = { _ ->
+            if (state is Form) {
+                OrderDataFooter(state = state, modifier = Modifier.align(Alignment.BottomCenter))
+            }
+        },
     ) { contentPadding ->
         when (state) {
             is Loading -> CenteredContent(contentPadding = contentPadding) { TangemLoader() }
             is Error -> CenteredContent(contentPadding = contentPadding) {
                 UnableToLoadData(onRetryClick = state.onRetry)
             }
-            is Form -> OrderDataForm(state = state, contentPadding = contentPadding)
+            is Form -> OrderDataFields(
+                state = state,
+                contentPadding = contentPadding,
+                onImeDone = LocalFocusManager.current::clearFocus,
+            )
         }
     }
 }
@@ -83,7 +114,7 @@ private fun CenteredContent(contentPadding: PaddingValues, content: @Composable 
 }
 
 @Composable
-private fun OrderDataForm(state: Form, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+private fun OrderDataFooter(state: Form, modifier: Modifier = Modifier) {
     val focusManager = LocalFocusManager.current
     val submit = state.onOrderClick
     val onOrderClick: () -> Unit = remember(focusManager, submit) {
@@ -92,23 +123,24 @@ private fun OrderDataForm(state: Form, contentPadding: PaddingValues, modifier: 
             submit()
         }
     }
-    Column(modifier = modifier.fillMaxSize()) {
-        OrderDataFields(
-            state = state,
-            contentPadding = contentPadding,
-            onImeDone = focusManager::clearFocus,
-            modifier = Modifier.weight(1f),
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(footerInsets()),
+    ) {
+        TangemFade(
+            modifier = Modifier.matchParentSize(),
+            position = TangemFade.Position.Bottom,
         )
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .navigationBarsPadding()
-                .imePadding(),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_order_data_order_button),
             isEnabled = state.isOrderEnabled,
+            isLoading = state.isSubmitting,
             onClick = onOrderClick,
         )
     }
@@ -121,43 +153,71 @@ private fun OrderDataFields(
     onImeDone: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isDisabled = state.isSubmitting
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
+            .windowInsetsPadding(footerInsets())
             .verticalScroll(rememberScrollState())
             .padding(top = contentPadding.calculateTopPadding())
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         SpacerH(4.dp)
-        OrderDataField(label = R.string.tangempay_order_data_name_on_card, field = state.embossName)
+        OrderDataField(R.string.tangempay_order_data_name_on_card, state.embossName, isDisabled)
         SpacerH(4.dp)
         OrderDataDisabledField(label = R.string.tangempay_order_data_country, value = state.country)
         OrderDataDisabledField(label = R.string.tangempay_order_data_email, value = state.email)
-        OrderDataField(label = R.string.tangempay_order_data_first_name, field = state.firstName)
-        OrderDataField(label = R.string.tangempay_order_data_last_name, field = state.lastName)
-        OrderDataField(label = R.string.tangempay_order_data_region, field = state.region)
-        OrderDataField(label = R.string.tangempay_order_data_city, field = state.city)
-        OrderDataField(label = R.string.tangempay_order_data_address_line1, field = state.addressLine1)
-        OrderDataField(label = R.string.tangempay_order_data_address_line2, field = state.addressLine2)
-        OrderDataField(label = R.string.tangempay_order_data_postal_code, field = state.postalCode)
-        OrderDataPhoneField(field = state.phone, mask = state.phoneMask, onImeDone = onImeDone)
-        SpacerH(4.dp)
+        OrderDataField(R.string.tangempay_order_data_first_name, state.firstName, isDisabled)
+        OrderDataField(R.string.tangempay_order_data_last_name, state.lastName, isDisabled)
+        OrderDataField(R.string.tangempay_order_data_region, state.region, isDisabled)
+        OrderDataField(R.string.tangempay_order_data_city, state.city, isDisabled)
+        OrderDataField(R.string.tangempay_order_data_address_line1, state.addressLine1, isDisabled)
+        OrderDataField(R.string.tangempay_order_data_address_line2, state.addressLine2, isDisabled)
+        OrderDataField(R.string.tangempay_order_data_postal_code, state.postalCode, isDisabled)
+        OrderDataPhoneField(
+            field = state.phone,
+            mask = state.phoneMask,
+            isDisabled = isDisabled,
+            onImeDone = onImeDone,
+        )
+        SpacerH(FooterHeight)
     }
 }
 
 @Composable
-private fun OrderDataField(@StringRes label: Int, field: FieldUM, modifier: Modifier = Modifier) {
+private fun OrderDataField(@StringRes label: Int, field: FieldUM, isDisabled: Boolean, modifier: Modifier = Modifier) {
     TextInput(
         label = resourceReference(label),
         value = field.value,
         onValueChange = field.onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        state = field.error.toInputState(),
+        modifier = modifier.fillMaxWidth().revealAboveFooter(),
+        state = field.error.toInputState(isDisabled = isDisabled),
         isRequired = field.isRequired,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
         onFocusChange = field.onFocusChange,
     )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Modifier.revealAboveFooter(): Modifier {
+    val requester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    val footerPx = with(LocalDensity.current) { FooterHeight.toPx() }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    return this
+        .onSizeChanged { size = it }
+        .bringIntoViewRequester(requester)
+        .onFocusEvent { focusState ->
+            if (focusState.isFocused && size != IntSize.Zero) {
+                scope.launch {
+                    requester.bringIntoView(
+                        Rect(left = 0f, top = 0f, right = size.width.toFloat(), bottom = size.height + footerPx),
+                    )
+                }
+            }
+        }
 }
 
 @Composable
@@ -172,7 +232,13 @@ private fun OrderDataDisabledField(@StringRes label: Int, value: String, modifie
 }
 
 @Composable
-private fun OrderDataPhoneField(field: FieldUM, mask: String, onImeDone: () -> Unit, modifier: Modifier = Modifier) {
+private fun OrderDataPhoneField(
+    field: FieldUM,
+    mask: String,
+    isDisabled: Boolean,
+    onImeDone: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val enteredColor = TangemTheme.colors3.text.primary
     val hintColor = TangemTheme.colors3.text.tertiary
     val transformation = remember(mask, enteredColor, hintColor) {
@@ -182,8 +248,8 @@ private fun OrderDataPhoneField(field: FieldUM, mask: String, onImeDone: () -> U
         label = resourceReference(R.string.tangempay_order_data_phone),
         value = field.value,
         onValueChange = field.onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        state = field.error.toInputState(),
+        modifier = modifier.fillMaxWidth().revealAboveFooter(),
+        state = field.error.toInputState(isDisabled = isDisabled),
         isRequired = field.isRequired,
         visualTransformation = transformation,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
@@ -192,10 +258,16 @@ private fun OrderDataPhoneField(field: FieldUM, mask: String, onImeDone: () -> U
     )
 }
 
-private fun OrderFieldError?.toInputState(): TextInputState = when (this) {
-    null -> TextInputState.Default
-    OrderFieldError.Required -> TextInputState.Error(resourceReference(R.string.tangempay_order_data_field_required))
-    OrderFieldError.Invalid -> TextInputState.Error(resourceReference(R.string.tangempay_order_data_field_invalid))
+private fun OrderFieldError?.toInputState(isDisabled: Boolean): TextInputState = if (isDisabled) {
+    TextInputState.Disabled
+} else {
+    when (this) {
+        null -> TextInputState.Default
+        OrderFieldError.Required ->
+            TextInputState.Error(resourceReference(R.string.tangempay_order_data_field_required))
+        OrderFieldError.Invalid ->
+            TextInputState.Error(resourceReference(R.string.tangempay_order_data_field_invalid))
+    }
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800, name = "Light")
@@ -220,6 +292,7 @@ private class OrderDataPreviewProvider : CollectionPreviewParameterProvider<Tang
         previewForm(),
         previewForm(prefilled = true),
         previewForm(prefilled = true, withErrors = true),
+        previewForm(prefilled = true).copy(isSubmitting = true),
         Loading(onBackClick = {}, onCloseClick = {}),
         Error(onBackClick = {}, onCloseClick = {}, onRetry = {}),
     ),
@@ -243,6 +316,7 @@ private fun previewForm(prefilled: Boolean = false, withErrors: Boolean = false)
         postalCode = previewField(if (prefilled) "0000" else "", error),
         phone = previewField(if (prefilled) "4155550123" else "", error),
         isOrderEnabled = prefilled && !withErrors,
+        isSubmitting = false,
         onOrderClick = {},
     )
 }

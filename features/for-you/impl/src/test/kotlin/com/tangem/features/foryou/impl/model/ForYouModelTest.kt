@@ -1149,6 +1149,8 @@ internal class ForYouModelTest {
         )
         every { yieldSupplyStatus } returns null
         every { stakingBalance } returns null
+        // The staking accessor reads contributions before the typed field, so a strict mock must answer it.
+        every { contributions } returns emptyList()
     }
 
     private fun createCoin(

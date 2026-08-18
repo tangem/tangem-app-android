@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.common.ui.account.AccountIconPreviewData
-import com.tangem.common.ui.account.AccountRow
+import com.tangem.common.ui.account.AccountRowLegacy
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
@@ -167,7 +167,7 @@ private fun AccountRow(state: AccountDetailsUM) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        AccountRow(
+        AccountRowLegacy(
             title = state.accountName,
             subtitle = resourceReference(R.string.account_form_name),
             icon = state.accountIcon,

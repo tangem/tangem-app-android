@@ -4,14 +4,13 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.compact
-import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
+import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
@@ -35,7 +34,7 @@ internal class PolymarketEventUMConverter(
             id = value.id,
             title = stringReference(value.title),
             iconUrl = value.iconUrl,
-            volume = value.volume?.let { stringReference(it.formatVolume()) },
+            volume = value.volume?.let { stringReference(it.formatPolymarketVolume()) },
             rows = value.markets
                 .map { convertRow(event = value, market = it) }
                 .toImmutableList(),
@@ -79,14 +78,14 @@ internal class PolymarketEventUMConverter(
     ): PolymarketOutcomeUM {
         return PolymarketOutcomeUM(
             assetId = outcome.assetId,
-            title = stringReference(outcome.title),
+            title = stringReference(outcome.title.truncateOutcomeLabel()),
             onClick = { onOutcomeClick(event.id, market.id, outcome.assetId) },
         )
     }
 
-    /** Polymarket denominates volumes in USD regardless of the currency selected in the app. */
-    private fun BigDecimal.formatVolume(): String = format {
-        fiat(fiatCurrencyCode = USD_CODE, fiatCurrencySymbol = USD_SYMBOL).compact()
+    /** The feed's outcome buttons fit at most [MAX_OUTCOME_LABEL_LENGTH] characters of the label (per design). */
+    private fun String.truncateOutcomeLabel(): String {
+        return if (length > MAX_OUTCOME_LABEL_LENGTH) take(MAX_OUTCOME_LABEL_LENGTH) + ELLIPSIS else this
     }
 
     private fun BigDecimal.formatProbability(): String = format {
@@ -94,7 +93,7 @@ internal class PolymarketEventUMConverter(
     }
 
     private companion object {
-        const val USD_CODE = "USD"
-        const val USD_SYMBOL = "$"
+        const val MAX_OUTCOME_LABEL_LENGTH = 5
+        const val ELLIPSIS = "…"
     }
 }

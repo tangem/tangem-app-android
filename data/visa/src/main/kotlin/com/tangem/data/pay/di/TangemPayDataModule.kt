@@ -1,8 +1,6 @@
 package com.tangem.data.pay.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
-import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
@@ -20,6 +18,7 @@ import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
@@ -176,16 +175,16 @@ internal interface TangemPayDataModule {
             dispatchers: CoroutineDispatcherProvider,
             scope: AppCoroutineScope,
             converter: PaymentAccountStatusValueDMConverter,
+            dataStoreFactory: AppDataStoreFactory,
         ): PaymentAccountStatusesStore {
             return PaymentAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
-                persistenceDataStore = DataStoreFactory.create(
+                persistenceDataStore = dataStoreFactory.create(
                     serializer = MoshiDataStoreSerializer(
                         moshi = moshi,
                         types = mapWithStringKeyTypes<PaymentAccountStatusValueDM>(),
                         defaultValue = emptyMap(),
                     ),
-                    corruptionHandler = ReplaceFileCorruptionHandler { emptyMap() },
                     produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
                     scope = scope,
                 ),
@@ -357,6 +356,21 @@ internal interface TangemPayDataModule {
                 customerOffersRepository = customerOffersRepository,
                 customerOrderRepository = customerOrderRepository,
                 issueCardRepository = issueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideIssuePlasticCardUseCase(
+            customerOffersRepository: CustomerOffersRepository,
+            customerOrderRepository: CustomerOrderRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): IssuePlasticCardUseCase {
+            return IssuePlasticCardUseCase(
+                customerOffersRepository = customerOffersRepository,
+                customerOrderRepository = customerOrderRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
                 appCoroutineScope = appCoroutineScope,
             )

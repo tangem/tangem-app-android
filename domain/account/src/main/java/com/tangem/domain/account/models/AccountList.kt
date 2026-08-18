@@ -104,6 +104,7 @@ data class AccountList private constructor(
                 is Account.CryptoPortfolio -> account.cryptoCurrencies
                 is Account.Payment -> emptyList()
                 is Account.Virtual -> emptyList()
+                is Account.Prediction -> emptyList()
             }
         }
     }
@@ -164,6 +165,12 @@ data class AccountList private constructor(
         }
 
         @Serializable
+        data object ExceedsMaxPredictionAccountsCount : Error {
+            override fun toString(): String =
+                "$tag: The number of prediction accounts must not exceed $MAX_PREDICTION_ACCOUNTS_COUNT"
+        }
+
+        @Serializable
         data object DuplicateAccountIds : Error {
             override fun toString(): String = "$tag: Account list contains duplicate account IDs"
         }
@@ -183,6 +190,7 @@ data class AccountList private constructor(
 
         const val MAX_PAYMENT_ACCOUNTS_COUNT = 1
         const val MAX_VIRTUAL_ACCOUNTS_COUNT = 1
+        const val MAX_PREDICTION_ACCOUNTS_COUNT = 1
         const val MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT = 20
         const val MAX_ARCHIVED_ACCOUNTS_COUNT = 1000
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
@@ -210,6 +218,11 @@ data class AccountList private constructor(
 
             val virtualAccounts = accounts.filterIsInstance<Account.Virtual>()
             ensure(virtualAccounts.size <= MAX_VIRTUAL_ACCOUNTS_COUNT) { Error.ExceedsMaxVirtualAccountsCount }
+
+            val predictionAccounts = accounts.filterIsInstance<Account.Prediction>()
+            ensure(predictionAccounts.size <= MAX_PREDICTION_ACCOUNTS_COUNT) {
+                Error.ExceedsMaxPredictionAccountsCount
+            }
 
             val cryptoAccounts = accounts.filterIsInstance<Account.CryptoPortfolio>()
             ensure(cryptoAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
