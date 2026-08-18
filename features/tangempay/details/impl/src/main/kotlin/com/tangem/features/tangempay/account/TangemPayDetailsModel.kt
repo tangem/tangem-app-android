@@ -42,13 +42,7 @@ import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
-import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
-import com.tangem.features.tangempay.common.TangemPayMessagesFactory
-import com.tangem.features.tangempay.common.balanceOrNull
-import com.tangem.features.tangempay.common.customerId
-import com.tangem.features.tangempay.common.ifLoadedOrNull
-import com.tangem.features.tangempay.common.typeName
-import com.tangem.features.tangempay.common.userWalletId
+import com.tangem.features.tangempay.common.*
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
@@ -267,7 +261,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             ),
         )
     }
-    
+
     private fun fetchCashbackBlock() {
         if (!tangemPayFeatureToggles.isCashbackEnabled || cashbackBlockJobHolder.isActive) return
         modelScope.launch {
