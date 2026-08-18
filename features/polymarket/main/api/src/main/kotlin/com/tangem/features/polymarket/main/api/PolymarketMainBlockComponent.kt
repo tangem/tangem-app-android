@@ -7,11 +7,8 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.features.polymarket.main.api.entity.PolymarketMainUM
 
 /**
- * The Prediction account row of the wallet screen.
- *
- * Renders into the caller's list rather than into a container of its own, because the row sits among the wallet's
- * accounts and shares their shape. The state is passed in: the wallet screen owns it, as it does for the other
- * special accounts.
+ * The Prediction account row of the wallet screen. Renders into the caller's list, since the row sits among the
+ * wallet's accounts; the state is owned by the screen, as for the other special accounts.
  */
 @Stable
 interface PolymarketMainBlockComponent {
