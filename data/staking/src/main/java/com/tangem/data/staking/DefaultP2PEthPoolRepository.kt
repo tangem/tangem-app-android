@@ -8,11 +8,11 @@ import com.tangem.data.staking.converters.ethpool.*
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.ethpool.P2PEthPoolApi
-import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
-import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolTransactionRequest
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolTransactionResponse
+import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
+import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolBroadcastRequest
+import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolTransactionRequest
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolTransactionResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
