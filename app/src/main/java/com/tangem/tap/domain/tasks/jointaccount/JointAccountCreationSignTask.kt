@@ -32,11 +32,14 @@ import kotlinx.coroutines.launch
 
 /**
  * Signs the joint account creation payload in a single NFC session: derives the owner key at
- * `m/44'/60'/888888'/0/{index}`, computes its EVM address, verifies the index is free against
- * [JointAccountCreationSignInput.occupiedOwnerAddresses], builds the payload around the address, and signs its
- * EIP-191 hash over the RFC 8785 canonical form — all without a second tap. `DeriveWalletPublicKeyTask` writes the
- * derived key into the live session environment, so the subsequent [SignHashCommand] resolves the derivation path
- * within the same session.
+ * `m/44'/60'/888888'/0/{index}` for [JointAccountCreationSignInput.derivationIndex], computes its EVM address,
+ * builds the payload around the address, and signs its EIP-191 hash over the RFC 8785 canonical form — all without
+ * a second tap. `DeriveWalletPublicKeyTask` writes the derived key into the live session environment, so the
+ * subsequent [SignHashCommand] resolves the derivation path within the same session.
+ *
+ * The task does not validate the index against the backend: the caller must take it from a freshly synced
+ * `wallet.totalJointAccounts` right before starting the session (see [JointAccountCreationSignInput]). A stale
+ * index is detected by the backend as a 409 on `POST /joint-accounts`.
  *
  * The derived key is returned (keyed by the seed wallet public key) so the caller can persist it via
  * `DerivationsRepository.storeDerivedKeys` — the session's in-memory copy dies with the session.
@@ -63,36 +66,12 @@ class JointAccountCreationSignTask @AssistedInject constructor(
         val seedPublicKey = wallet.publicKey
             ?: return CompletionResult.Failure(TangemSdkError.WalletNotFound())
 
-        val occupiedAddresses = input.occupiedOwnerAddresses.mapTo(hashSetOf(), String::lowercase)
-        // The bound cannot overflow: the input's init block caps firstCandidateIndex + maxIndexAttempts
-        val indexBoundExclusive = input.firstCandidateIndex + input.maxIndexAttempts
-        var index = input.firstCandidateIndex
-        var derivationPath: DerivationPath
-        var extendedPublicKey: ExtendedPublicKey
-        var ownerAddress: String
-        while (true) {
-            if (index >= indexBoundExclusive) {
-                return CompletionResult.Failure(
-                    TangemSdkError.ExceptionError(
-                        IllegalStateException(
-                            "No free owner derivation index within ${input.maxIndexAttempts} attempts",
-                        ),
-                    ),
-                )
-            }
-
-            derivationPath = jointAccountOwnerDerivationPath(index = index)
-
-            extendedPublicKey = when (val result = derive(session, seedPublicKey, derivationPath)) {
-                is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
-                is CompletionResult.Success<ExtendedPublicKey> -> result.data
-            }
-            ownerAddress = generateEvmAddress(extendedPublicKey)
-
-            if (ownerAddress.lowercase() !in occupiedAddresses) break
-
-            index++
+        val derivationPath = jointAccountOwnerDerivationPath(index = input.derivationIndex)
+        val extendedPublicKey = when (val result = derive(session, seedPublicKey, derivationPath)) {
+            is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
+            is CompletionResult.Success<ExtendedPublicKey> -> result.data
         }
+        val ownerAddress = generateEvmAddress(extendedPublicKey)
 
         val payload = JointAccountCreationPayload(
             config = input.config,
@@ -100,7 +79,7 @@ class JointAccountCreationSignTask @AssistedInject constructor(
                 walletId = input.walletId,
                 name = input.creatorName,
                 address = ownerAddress,
-                derivation = index,
+                derivation = input.derivationIndex,
             ),
         )
         val canonicalPayload = CanonicalJson.canonicalize(payload.toCanonicalMap())
@@ -119,7 +98,6 @@ class JointAccountCreationSignTask @AssistedInject constructor(
 
         return CompletionResult.Success(
             data = JointAccountCreationSignResult(
-                ownerIndex = index,
                 ownerAddress = ownerAddress,
                 canonicalPayload = canonicalPayload,
                 signature = toRsvHex(signResponse.signature, hash, extendedPublicKey),
