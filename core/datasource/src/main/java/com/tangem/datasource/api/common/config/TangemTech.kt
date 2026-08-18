@@ -3,10 +3,12 @@ package com.tangem.datasource.api.common.config
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
+import com.tangem.core.remote.header.RequestHeader
 
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.utils.RequestHeader
+import com.tangem.datasource.utils.AuthenticationHeader
+import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.utils.Provider
 import com.tangem.utils.info.AppInfoProvider
 
@@ -65,9 +67,9 @@ class TangemTech(
     )
 
     private fun createHeaders(apiEnvironment: ApiEnvironment) = buildMap {
-        putAll(from = RequestHeader.TangemApiKeyHeader(authProvider, Provider { apiEnvironment }).values)
+        putAll(from = TangemApiKeyHeader(authProvider, Provider { apiEnvironment }).values)
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
-        putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
+        putAll(from = AuthenticationHeader(authProvider).values)
     }
 
     companion object {

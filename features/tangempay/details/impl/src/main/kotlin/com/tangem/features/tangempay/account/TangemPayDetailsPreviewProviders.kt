@@ -11,7 +11,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM
@@ -72,10 +71,6 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 isInactive = false,
             ),
             isBalanceHidden = false,
-            addToWalletBlockState = AddToWalletBlockState(
-                onClick = {},
-                onClickClose = {},
-            ),
             accountDeactivatedNotificationConfig = null,
             errorNotificationConfig = NotificationConfig(
                 title = stringReference("Your account has been closed"),
@@ -113,7 +108,6 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 ),
             ),
             isBalanceHidden = false,
-            addToWalletBlockState = null,
             accountDeactivatedNotificationConfig = null,
             errorNotificationConfig = NotificationConfig(
                 title = TextReference.Str("Error title"),

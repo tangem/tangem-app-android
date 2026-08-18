@@ -1,5 +1,6 @@
 package com.tangem.features.swap
 
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -13,17 +14,11 @@ interface SwapComponent : ComposableContentComponent {
         val fromCryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
         val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
-        val tangemPayInput: TangemPayInput? = null,
+        val accountFlow: AccountFlow? = null,
         val toCryptoCurrency: CryptoCurrency? = null,
         val fromAmount: BigDecimal? = null,
         val providerId: String? = null,
     ) {
-        data class TangemPayInput(
-            val cryptoAmount: BigDecimal,
-            val fiatAmount: BigDecimal,
-            val depositAddress: String,
-        )
-
         /** Preferred position of the pre-selected currency on the swap screen. */
         enum class CurrencyPosition {
             /** Force-place as the FROM (send) currency. */

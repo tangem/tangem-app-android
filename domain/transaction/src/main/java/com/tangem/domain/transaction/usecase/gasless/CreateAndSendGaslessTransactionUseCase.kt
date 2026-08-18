@@ -9,6 +9,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.gasless.EthereumGaslessDataProvider
 import com.tangem.blockchain.blockchains.ethereum.models.EIP7702AuthorizationData
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.formatHex
@@ -31,6 +32,7 @@ import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.models.network.isBurnAddress
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigInteger
 
@@ -96,6 +98,11 @@ class CreateAndSendGaslessTransactionUseCase(
         val gaslessDataProvider = walletManager as? EthereumGaslessDataProvider ?: error(
             "WalletManager for network ${currency.network.id} " +
                 "does not support gasless transactions",
+        )
+
+        validateTransactionRecipients(
+            blockchain = walletManager.wallet.blockchain,
+            transactionData = transactionData,
         )
 
         val gaslessContractNonce = getContractNonce(gaslessDataProvider, transactionData.sourceAddress)
@@ -461,6 +468,39 @@ class CreateAndSendGaslessTransactionUseCase(
             } else {
                 txData.contractAddress ?: error("supports only Token transaction with contract address")
             }
+        }
+
+        /**
+         * Last line of defence before the meta-transaction is signed: the gasless path never reaches
+         * `TransactionSender.send`, so the `TransactionValidator` guarding the regular EVM send never runs for it.
+         * The user signs the payload himself, so neither the gasless service nor the chain can reject it afterwards.
+         */
+        internal fun validateTransactionRecipients(
+            blockchain: Blockchain,
+            transactionData: TransactionData.Uncompiled,
+        ) {
+            val destination = transactionData.destinationAddress
+            require(blockchain.validateAddress(destination) && !destination.isBurnAddress()) {
+                "Invalid destination address for a gasless transaction"
+            }
+
+            val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
+                ?: error("Ethereum call data is required")
+            require(callData.validate(blockchain)) {
+                "Invalid call data for a gasless transaction"
+            }
+            require(callData.recipientOrNull()?.isBurnAddress() != true) {
+                "Burn address recipient in the call data of a gasless transaction"
+            }
+        }
+
+        /**
+         * The recipient encoded inside the call data, when it differs from the transaction's own destination.
+         * Only the yield-supply send needs it: its `to` is the user's yield module.
+         */
+        private fun SmartContractCallData.recipientOrNull(): String? = when (this) {
+            is EthereumYieldSupplySendCallData -> destinationAddress
+            else -> null
         }
     }
 }

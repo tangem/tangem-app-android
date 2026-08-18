@@ -364,6 +364,8 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun verifyAndSendTransaction() {
         val amountValue = amountState?.amountTextField?.cryptoAmount?.value ?: return
+        // A blank recipient is deliberately not filtered out here: returning early would leave `isSending` on
+        // forever. It is rejected while the transaction is built, so it surfaces as the regular error alert.
         val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val memo = destinationUM?.memoTextField?.value
         val fee = feeUMV2?.selectedFeeItem?.fee
@@ -485,8 +487,13 @@ internal class SendConfirmModel @Inject constructor(
         if (cryptoCurrency !is CryptoCurrency.Token) return
         val wallets = destinationUM?.wallets ?: return
 
+        // EVM chains share the same address across networks, so matching by address alone can resolve a destination
+        // on a different chain. Adding the token there would store this chain's contract address under that network.
         val receivingUserWallet = wallets
-            .firstOrNull { it.address == confirmData.enteredDestination }
+            .firstOrNull { recipient ->
+                recipient.address == confirmData.enteredDestination &&
+                    recipient.network?.rawId == cryptoCurrency.network.rawId
+            }
             ?: return
 
         val network = receivingUserWallet.network ?: return
