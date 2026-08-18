@@ -5,7 +5,6 @@ import com.tangem.common.R
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.performTextInputInChunks
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.openMainScreen
@@ -127,11 +126,7 @@ class SearchAndSwapTest : BaseTestCase() {
         val scenarioName = "coins_list_api"
         val scenarioState = "Error"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName, scenarioState)

@@ -24,6 +24,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
@@ -59,6 +60,7 @@ internal class GetWalletNotificationsFactoryTest {
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase = mockk()
     private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase = mockk()
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase = mockk()
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val clickIntents: WalletClickIntents = mockk(relaxed = true)
 
@@ -77,6 +79,7 @@ internal class GetWalletNotificationsFactoryTest {
         hasSingleWalletSignedHashesUseCase = hasSingleWalletSignedHashesUseCase,
         observeAssetsDiscoveryUseCase = observeAssetsDiscoveryUseCase,
         getAppUpdateStateUseCase = getAppUpdateStateUseCase,
+        isWalletBackedUpUseCase = isWalletBackedUpUseCase,
     )
 
     @BeforeEach
@@ -90,6 +93,7 @@ internal class GetWalletNotificationsFactoryTest {
             hasSingleWalletSignedHashesUseCase,
             observeAssetsDiscoveryUseCase,
             getAppUpdateStateUseCase,
+            isWalletBackedUpUseCase,
             singleAccountStatusListSupplier,
             clickIntents,
             coldResolver,
@@ -107,6 +111,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { observeAssetsDiscoveryUseCase(any()) } returns flowOf(AssetsDiscoveryProgress.Idle)
         every { getAppUpdateStateUseCase.getBannerStateFlow() } returns flowOf(AppUpdateState.NoUpdate)
         every { hasSingleWalletSignedHashesUseCase(any(), any()) } returns flowOf(false)
+        every { isWalletBackedUpUseCase.flow(any()) } returns flowOf(true)
         // Balance is loaded and non-zero, so both the outdated-data and add-funds banners stay hidden.
         stubAccountStatusList(balance = LOADED_NON_ZERO)
 
@@ -529,6 +534,7 @@ internal class GetWalletNotificationsFactoryTest {
         val hotWalletId = mockk<HotWalletId> { every { authType } returns model.authType }
         every { hotWallet.hotWalletId } returns hotWalletId
         every { hotWallet.backedUp } returns model.backedUp
+        every { isWalletBackedUpUseCase.flow(hotWallet) } returns flowOf(model.backedUp)
         every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(model.accessCodeSkipped)
         stubAccountStatusList(balance = model.balance)
 

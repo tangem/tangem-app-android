@@ -55,7 +55,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
 
-    private val makeBackupAtFirstAlertBS
+    private val saveSeedPhraseBeforeUpgradeBS
         get() = run {
             analyticsEventHandler.send(
                 WalletSettingsAnalyticEvents.NoticeBackupFirst(
@@ -65,15 +65,15 @@ internal class WalletHardwareBackupModel @Inject constructor(
             )
             bottomSheetMessage {
                 infoBlock {
-                    icon(R.drawable.ic_passcode_lock_32) {
+                    icon(R.drawable.ic_backup_repeat_24) {
                         type = MessageBottomSheetUM.Icon.Type.Accent
                         backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
-                    title = resourceReference(R.string.hw_backup_need_finish_first)
-                    body = resourceReference(R.string.hw_backup_to_upgrade_description)
+                    title = resourceReference(R.string.hw_upgrade_save_seed_title)
+                    body = resourceReference(R.string.hw_upgrade_save_seed_description)
                 }
                 primaryButton {
-                    text = resourceReference(R.string.hw_backup_need_action)
+                    text = resourceReference(R.string.hw_upgrade_save_seed_action)
                     onClick {
                         router.push(
                             AppRoute.CreateWalletBackup(
@@ -134,24 +134,26 @@ internal class WalletHardwareBackupModel @Inject constructor(
             .getOrElse { error("Cannot find user wallet with id: ${params.userWalletId.stringValue}") }
         if (userWallet is UserWallet.Hot) {
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
-            if (!userWallet.backedUp) {
-                messageSender.send(makeBackupAtFirstAlertBS)
-            } else {
-                val hotWalletId = userWallet.hotWalletId
-                when (hotWalletId.authType) {
-                    HotWalletId.AuthType.NoPassword -> {
-                        router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
-                    }
-                    HotWalletId.AuthType.Password,
-                    HotWalletId.AuthType.Biometry,
-                    -> modelScope.launch {
-                        unlockHotWalletContextualUseCase.invoke(hotWalletId)
-                            .onLeft {
-                                TangemLogger.e("Unable to unlock wallet with id ${params.userWalletId}", it)
-                            }
-                            .onRight {
-                                router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
-                            }
+            modelScope.launch {
+                if (!userWallet.backedUp) {
+                    messageSender.send(saveSeedPhraseBeforeUpgradeBS)
+                } else {
+                    val hotWalletId = userWallet.hotWalletId
+                    when (hotWalletId.authType) {
+                        HotWalletId.AuthType.NoPassword -> {
+                            router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
+                        }
+                        HotWalletId.AuthType.Password,
+                        HotWalletId.AuthType.Biometry,
+                        -> {
+                            unlockHotWalletContextualUseCase.invoke(hotWalletId)
+                                .onLeft {
+                                    TangemLogger.e("Unable to unlock wallet with id ${params.userWalletId}", it)
+                                }
+                                .onRight {
+                                    router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
+                                }
+                        }
                     }
                 }
             }

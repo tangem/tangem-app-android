@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.staking.model.stakingSource
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingStep
@@ -26,7 +27,7 @@ internal class SetConfirmationStateCompletedTransformer(
         return if (this is StakingStates.ConfirmationState.Data) {
             copy(
                 isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
-                    sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
+                    sources.networkSource.isActual() && stakingSource.isActual()
                 },
                 innerState = InnerConfirmationStakingState.COMPLETED,
                 footerText = TextReference.EMPTY,

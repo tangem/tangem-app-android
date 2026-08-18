@@ -401,6 +401,7 @@
   <string name="common_in">in</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
+  <string name="common_joint">Joint</string>
   <string name="common_joint_account">Joint account</string>
   <string name="common_later">Later</string>
   <string name="common_learn_more">Learn more</string>
@@ -709,6 +710,9 @@
   <string name="express_legal_one_placeholder">By using swap functionality, you agree with provider’s %s</string>
   <string name="express_legal_two_placeholders">By using swap functionality, you agree with provider’s %1$s and %2$s.</string>
   <string name="express_more_providers_soon">More providers will be available soon</string>
+  <string name="express_onramp_restrictions_amount_error">You can’t buy tokens by region restrictions</string>
+  <string name="express_onramp_restrictions_text">Some of the providers might be unavailable</string>
+  <string name="express_onramp_restrictions_title">Regional purchase restrictions</string>
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_dex_rate">Best DEX Rate</string>
   <string name="express_provider_best_rate">Best rate</string>
@@ -995,6 +999,7 @@
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <string name="joint_account_invite_members_member_info">Member info</string>
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
   <string name="joint_account_invite_members_other_members">Other members</string>
@@ -2047,7 +2052,7 @@
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Terms and fees</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Min trx amount is %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Below min trx amount</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Monthly cap reached</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluded</string>
   <string name="tangem_pay_transaction_details_cashback_none">No cashback</string>
@@ -2198,11 +2203,12 @@
   <string name="tangempay_cashback_total_earned">%1$s earned in total</string>
   <string name="tangempay_cashback_widget_error_description">Tap to reload</string>
   <string name="tangempay_cashback_widget_error_title">Cashback unavailable</string>
+  <string name="tangempay_cashback_widget_refund_description">Reduced due to return of purchases</string>
   <string name="tangempay_cashback_widget_title">%1$s cashback in %2$s</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_changing_plan">Changing your plan</string>
-  <string name="tangempay_choose_network_fast_way">Fast way</string>
-  <string name="tangempay_choose_network_other_ways">Other ways</string>
+  <string name="tangempay_choose_network_fast_way">Fast options</string>
+  <string name="tangempay_choose_network_other_ways">Other options</string>
   <string name="tangempay_choose_network_row_error">Failed to get address, please try again</string>
   <string name="tangempay_choose_network_row_loading">Preparing address…</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
@@ -2279,6 +2285,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Cards limit reached for this plan</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade plan</string>
   <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
+  <string name="tangempay_multinetwork">Multinetwork</string>
   <string name="tangempay_newonboard_Q1_body">Yes – to operate a regulated Visa card, identity verification is mandatory. KYC is handled by Sumsub (compliance partner).</string>
   <string name="tangempay_newonboard_Q1_title">Do I have to share my docs?</string>
   <string name="tangempay_newonboard_Q2_body">No. KYC applies only to the Tangem Pay account. Your Tangem Wallet itself remains a separate, self-custodial, non-KYC environment.</string>
@@ -2290,8 +2297,8 @@
   <string name="tangempay_newonboard_body">Spend crypto anywhere — no banks, no middlemen, no exchanges. The power of self-custody meets everyday payments.</string>
   <string name="tangempay_newonboard_bottomleft_body">Buy online and via Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Accepted worldwide</string>
-  <string name="tangempay_newonboard_bottomright_body">Use anywhere in the world</string>
-  <string name="tangempay_newonboard_bottomright_title">FX fee is just 1%</string>
+  <string name="tangempay_newonboard_bottomright_body">USD to USDC 1:1; flat $1 fee</string>
+  <string name="tangempay_newonboard_bottomright_title">Recieve ACH transfers</string>
   <string name="tangempay_newonboard_title">Get your Tangem Pay Card</string>
   <string name="tangempay_newonboard_topleft_body">Pay what you see</string>
   <string name="tangempay_newonboard_topleft_title">No purchase fees, \n1 USDC = 1 USD</string>
@@ -2316,6 +2323,7 @@
   <string name="tangempay_order_data_country">Country</string>
   <string name="tangempay_order_data_email">Email</string>
   <string name="tangempay_order_data_field_invalid">Invalid text</string>
+  <string name="tangempay_order_data_field_optional">Optional</string>
   <string name="tangempay_order_data_field_required">Required field</string>
   <string name="tangempay_order_data_first_name">First name</string>
   <string name="tangempay_order_data_last_name">Last name</string>
@@ -2332,10 +2340,13 @@
   </plurals>
   <string name="tangempay_order_success_email_note">Within 3 business days you will receive an email from logistic company on %s</string>
   <string name="tangempay_order_success_show_card">Show card</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">Country of residence</string>
   <plurals name="tangempay_order_type_delivery_eta">
     <item quantity="one">Up to %d business day</item>
     <item quantity="other">Up to %d business days</item>
   </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d business days</string>
   <string name="tangempay_order_type_delivery_fee">Delivery fee</string>
   <string name="tangempay_order_type_delivery_time">Delivery time</string>
   <string name="tangempay_order_type_delivery_time_instant">Instant</string>
@@ -2347,6 +2358,7 @@
   <string name="tangempay_order_type_segment_virtual">Virtual</string>
   <string name="tangempay_order_type_select">Select</string>
   <string name="tangempay_order_type_title">Order new card</string>
+  <string name="tangempay_order_type_unavailable">Unavailable</string>
   <string name="tangempay_other_networks_header">Other networks</string>
   <string name="tangempay_other_networks_subtitle">And then swap it to payment account with 1:1 rate and zero fees</string>
   <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
@@ -2491,6 +2503,21 @@
   <string name="transaction_history_rewards_restaked">Rewards restaked</string>
   <string name="transaction_history_rewards_restaking">Rewards restaking</string>
   <string name="transaction_history_staking_reward">Staking reward</string>
+  <string name="transaction_history_status_approve_failed">Approve failed</string>
+  <string name="transaction_history_status_claiming_rewards">Claiming rewards</string>
+  <string name="transaction_history_status_receive_failed">Receive failed</string>
+  <string name="transaction_history_status_restaking_rewards">Restaking rewards</string>
+  <string name="transaction_history_status_rewards_claim_failed">Rewards claim failed</string>
+  <string name="transaction_history_status_rewards_claimed">Rewards claimed</string>
+  <string name="transaction_history_status_rewards_restake_failed">Rewards restake failed</string>
+  <string name="transaction_history_status_send_failed">Send failed</string>
+  <string name="transaction_history_status_stake_failed">Stake failed</string>
+  <string name="transaction_history_status_swap_failed">Swap failed</string>
+  <string name="transaction_history_status_top_up_failed">Top-up failed</string>
+  <string name="transaction_history_status_topping_up">Topping up</string>
+  <string name="transaction_history_status_transfer_failed">Transfer failed</string>
+  <string name="transaction_history_status_transferring">Transferring</string>
+  <string name="transaction_history_status_unstake_failed">Unstake failed</string>
   <string name="transaction_history_to_inline_address">to: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>

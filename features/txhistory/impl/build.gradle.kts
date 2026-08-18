@@ -72,15 +72,16 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Test */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(projects.domain.express.models)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
+    testImplementation(tangemDeps.blockchain)
 }

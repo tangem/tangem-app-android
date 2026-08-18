@@ -204,6 +204,21 @@ sealed interface Account {
             }
         }
     }
+
+    @Serializable
+    data class Prediction private constructor(
+        override val accountId: AccountId,
+    ) : Account {
+        override val accountName: AccountName.Custom = AccountName.Custom("Prediction").getOrElse {
+            error("Can not create account name for Prediction account with userWalletId = ${accountId.userWalletId}")
+        }
+
+        companion object {
+            operator fun invoke(userWalletId: UserWalletId): Prediction {
+                return Prediction(accountId = AccountId.forPredictionAccount(userWalletId = userWalletId))
+            }
+        }
+    }
 }
 
 val Account.derivationIndex: DerivationIndex?
@@ -211,4 +226,5 @@ val Account.derivationIndex: DerivationIndex?
         is Account.CryptoPortfolio -> derivationIndex
         is Account.Payment -> null
         is Account.Virtual -> null
+        is Account.Prediction -> null
     }

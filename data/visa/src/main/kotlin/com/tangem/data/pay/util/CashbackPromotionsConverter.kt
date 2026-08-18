@@ -5,14 +5,14 @@ import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTime
 
-/** Maps [CashbackPromotionsResponse] (BFF) to the domain [CashbackPromotions]. */
 internal object CashbackPromotionsConverter : Converter<CashbackPromotionsResponse, CashbackPromotions> {
 
     override fun convert(value: CashbackPromotionsResponse): CashbackPromotions {
+        val result = value.result
         return CashbackPromotions(
-            cardTiers = value.cashbackOnCards?.tiers.orEmpty().map(::convertTier),
-            monthlyCap = value.cashbackOnCards?.toMonthlyCap(),
-            additionalCashback = value.additionalCashback.orEmpty().map(::convertAdditional),
+            cardTiers = result?.cashbackOnCards?.tiers.orEmpty().map(::convertTier),
+            monthlyCap = result?.cashbackOnCards?.toMonthlyCap(),
+            additionalCashback = result?.additionalCashback.orEmpty().map(::convertAdditional),
         )
     }
 

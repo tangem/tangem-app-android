@@ -47,7 +47,6 @@ dependencies {
     implementation(projects.core.ui)
 
     /* Common */
-    implementation(projects.common.ui)
     implementation(projects.common.uiMarkets)
     implementation(projects.common.uiCharts)
     implementation(projects.common.routing)
