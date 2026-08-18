@@ -5,6 +5,7 @@ import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
@@ -202,11 +203,13 @@ internal object WalletsDomainModule {
     fun providesDeleteWalletUseCase(
         userWalletsListRepository: UserWalletsListRepository,
         userWalletDataCleaners: Set<@JvmSuppressWildcards UserWalletDataCleaner>,
+        deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
         appCoroutineScope: AppCoroutineScope,
     ): DeleteWalletUseCase {
         return DeleteWalletUseCase(
             userWalletsListRepository = userWalletsListRepository,
             userWalletDataCleaners = userWalletDataCleaners,
+            deleteSavedAccessCodesUseCase = deleteSavedAccessCodesUseCase,
             appCoroutineScope = appCoroutineScope,
         )
     }
