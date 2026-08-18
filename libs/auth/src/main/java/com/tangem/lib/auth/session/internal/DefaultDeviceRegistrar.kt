@@ -13,6 +13,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
@@ -32,6 +33,7 @@ internal class DefaultDeviceRegistrar(
     private val deviceKeyManager: DeviceKeyManager,
     private val nonceDecryptor: AuthNonceDecryptor,
     private val signedRequestPayload: SignedRequestPayload,
+    private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -82,7 +84,7 @@ internal class DefaultDeviceRegistrar(
         val payload = RegisterPayload(
             devicePublicKey = devicePublicKeyBase64,
             nonce = nonce,
-            attestationToken = null,
+            attestationToken = attestationProvider.getAttestationToken(nonce),
             metadata = signedRequestPayload.deviceMetadata,
         )
         val signature = try {
