@@ -69,6 +69,11 @@ internal class CashbackSummaryConverterTest {
             expected = CashbackSummary.Unknown,
         ),
         ConvertModel(
+            name = "fraud -> Deactivated",
+            response = createResponse(status = "fraud"),
+            expected = CashbackSummary.Deactivated,
+        ),
+        ConvertModel(
             name = "deactivated -> Deactivated",
             response = createResponse(status = "deactivated"),
             expected = CashbackSummary.Deactivated,
@@ -86,6 +91,11 @@ internal class CashbackSummaryConverterTest {
         ConvertModel(
             name = "unrecognized status -> Unknown",
             response = createResponse(status = "something_new"),
+            expected = CashbackSummary.Unknown,
+        ),
+        ConvertModel(
+            name = "missing result envelope -> Unknown",
+            response = CashbackSummaryResponse(result = null),
             expected = CashbackSummary.Unknown,
         ),
     )
@@ -115,14 +125,16 @@ internal class CashbackSummaryConverterTest {
             payoutCurrency: String? = "USDC",
             payoutNetwork: String? = "Polygon",
         ) = CashbackSummaryResponse(
-            cashbackProgramStatus = status,
-            cashbackDisplayMode = displayMode,
-            period = period,
-            confirmedAmount = confirmedAmount,
-            pendingAmount = pendingAmount,
-            currency = currency,
-            payoutCurrency = payoutCurrency,
-            payoutNetwork = payoutNetwork,
+            result = CashbackSummaryResponse.Result(
+                cashbackProgramStatus = status,
+                cashbackDisplayMode = displayMode,
+                period = period,
+                confirmedAmount = confirmedAmount,
+                pendingAmount = pendingAmount,
+                currency = currency,
+                payoutCurrency = payoutCurrency,
+                payoutNetwork = payoutNetwork,
+            ),
         )
 
         fun expectedCashback(
