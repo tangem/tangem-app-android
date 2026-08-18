@@ -327,23 +327,22 @@ internal class WalletComponent @AssistedInject constructor(
                     modifier = Modifier,
                 )
             },
-            bottomSheetContent = { onExpandSheet ->
-                if (feedFeatureToggles.isNewShtorkaEnabled) {
-                    feedV2Component.Content(
-                        bottomSheetState = bottomSheetState,
-                        // The shtorka pins the grabber + search bar over the content
-                        contentPadding = PaddingValues(top = ShtorkaSheetHeaderHeight),
-                        onExpandSheet = onExpandSheet,
-                        modifier = Modifier,
-                    )
-                } else {
-                    BottomSheetContent(
-                        bottomSheetState = bottomSheetState,
-                        onHeaderSizeChange = { headerSize = it },
-                        onExpandSheet = onExpandSheet,
-                        modifier = Modifier,
-                    )
-                }
+            shtorkaContent = { onExpandSheet ->
+                feedV2Component.Content(
+                    bottomSheetState = bottomSheetState,
+                    // The shtorka pins the grabber + search bar over the content
+                    contentPadding = PaddingValues(top = ShtorkaSheetHeaderHeight),
+                    onExpandSheet = onExpandSheet,
+                    modifier = Modifier,
+                )
+            },
+            legacyBottomSheetContent = { onExpandSheet ->
+                BottomSheetContent(
+                    bottomSheetState = bottomSheetState,
+                    onHeaderSizeChange = { headerSize = it },
+                    onExpandSheet = onExpandSheet,
+                    modifier = Modifier,
+                )
             },
             bottomSheetHeaderHeightProvider = { headerSize },
             onBottomSheetStateChange = { bottomSheetState.value = it },
