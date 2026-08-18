@@ -211,7 +211,7 @@ private const val MAX_BUTTON_FONT_SCALE = 1.3f
 private fun TangemIconUM.resolveTint(colorTokens: ColorTokens, isEnabled: Boolean): TangemIconUM {
     return when (this) {
         is TangemIconUM.Icon -> copy(
-            tint = tint ?: ColorReference2 {
+            tint = ColorReference2 {
                 if (isEnabled) colorTokens.iconTint else colorTokens.disabledIconTint
             },
         )

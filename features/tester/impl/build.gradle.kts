@@ -26,7 +26,6 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
-    implementation(deps.compose.reorderable)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
@@ -62,6 +61,9 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.datastore.core)
+    implementation(deps.kotlin.datetime)
 
     /** Core modules */
     api(projects.core.configToggles)
@@ -88,4 +90,5 @@ dependencies {
     implementation(projects.libs.auth)
     implementation(projects.libs.crypto)
     implementation(projects.libs.tangemSdkApi)
+    implementation(projects.domain.staking)
 }

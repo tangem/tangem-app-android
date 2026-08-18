@@ -10,10 +10,14 @@ android {
 }
 
 dependencies {
+    /** Project - Common */
+    api(projects.common.routing)
+
     /** Project - Core */
     api(projects.core.decompose)
     api(projects.core.ui)
 
     /** Project - Domain */
     api(projects.domain.models)
+    api(deps.kotlin.coroutines)
 }

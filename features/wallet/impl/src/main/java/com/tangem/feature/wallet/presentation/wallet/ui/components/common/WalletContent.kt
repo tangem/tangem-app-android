@@ -27,6 +27,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollection
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
 import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
@@ -40,6 +41,7 @@ internal fun WalletListContent(
     listState: LazyListState,
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
+    jointAccountComponent: JointAccountMainBlockComponent,
     contentPadding: PaddingValues,
     onOrganizeButtonBoundsChange: (Rect?) -> Unit,
     modifier: Modifier = Modifier,
@@ -91,6 +93,7 @@ internal fun WalletListContent(
 
         tokensListItems2(
             walletTokensListUM = currentWallet.tokensListUM,
+            jointAccountComponent = jointAccountComponent,
             modifier = movableItemModifier,
             isBalanceHidden = isBalanceHidden,
         )

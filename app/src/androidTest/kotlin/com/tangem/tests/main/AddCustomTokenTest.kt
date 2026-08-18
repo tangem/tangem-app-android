@@ -4,7 +4,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.COINS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.performTextInputInChunks
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.addCustomTokenWithCustomDerivation
@@ -40,9 +39,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: added token appears on Main")
     @Test
     fun addCustomTokenAppearsOnMainTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -76,9 +73,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: custom derivation path is accepted")
     @Test
     fun addCustomTokenWithCustomDerivationTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -105,9 +100,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: custom derivation indicator is shown on Main")
     @Test
     fun customDerivationIndicatorOnMainTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -134,9 +127,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: derivation field is available for a non-EVM network")
     @Test
     fun derivationAvailableForNonEvmNetworkTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -156,9 +147,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: Solana token on a modern card shows no unsupported warning")
     @Test
     fun solanaTokenModernCardNoWarningTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -187,9 +176,7 @@ class AddCustomTokenTest : BaseTestCase() {
     fun missingCurveNetworkNotOfferedTest() {
         val bitcoinNetwork = "Bitcoin"
 
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -210,9 +197,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: derivation paths match a legacy-batch V1 Wallet card")
     @Test
     fun derivationPathsLegacyBatchWalletTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -232,9 +217,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: derivation paths match a V2 Wallet card")
     @Test
     fun derivationPathsWalletTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -254,9 +237,7 @@ class AddCustomTokenTest : BaseTestCase() {
     @DisplayName("Add custom token: derivation paths match a V3 Wallet 2 card")
     @Test
     fun derivationPathsWallet2Test() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
