@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
  * a file missing any of them is rejected as invalid.
  *
  * @property version   backup file format version, independent of the Ethereum Keystore version
+ * @property id        random per-backup identifier; authenticates [crypto] as its AAD
  * @property walletId  id of the backed up wallet, used to identify and de-duplicate backups
 
  */
