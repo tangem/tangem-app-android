@@ -142,7 +142,9 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 .fillMaxSize()
                 .zIndex(1f),
         ) {
-            CardTopBlock()
+            if (state.cardState != TangemPayCardState.Delivering) {
+                CardTopBlock()
+            }
 
             if (state.isActionsAvailable) {
                 ConstraintLayout(
@@ -215,7 +217,8 @@ private fun TangemPayCardBackground(
     cardImageUrl: String?,
     modifier: Modifier = Modifier,
 ) {
-    val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen
+    val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen &&
+        cardState != TangemPayCardState.Delivering
     val freezeProgress by animateFloatAsState(
         targetValue = if (isFrozen) 1f else 0f,
         animationSpec = tween(
