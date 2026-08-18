@@ -11,6 +11,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
+import com.tangem.data.staking.converters.StakingValidatorEntityConverter
 import com.tangem.data.staking.converters.YieldConverter
 import com.tangem.data.staking.converters.action.ActionStatusConverter
 import com.tangem.data.staking.converters.action.EnterActionResponseConverter
@@ -28,6 +29,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.action.StakingAc
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
+import com.tangem.datasource.local.txhistory.db.dao.StakingValidatorDao
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -46,6 +48,7 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakeKitRepository
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -60,6 +63,8 @@ import kotlinx.coroutines.withContext
 internal class DefaultStakeKitRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
+    private val stakingValidatorDao: StakingValidatorDao,
+    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     moshi: Moshi,
@@ -99,6 +104,13 @@ internal class DefaultStakeKitRepository(
             }
             val shouldRewriteCache = yieldsResponses.all { it is ApiResponse.Success }
             stakingYieldsStore.store(yields, shouldRewriteCache)
+
+            if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+                val validatorEntities = yields
+                    .flatMap { it.validators.orEmpty() }
+                    .mapNotNull(StakingValidatorEntityConverter::convert)
+                stakingValidatorDao.upsert(validatorEntities)
+            }
         }
     }
 
@@ -119,6 +131,12 @@ internal class DefaultStakeKitRepository(
     override suspend fun getYield(yieldId: String): Yield {
         return withContext(dispatchers.io) {
             getEnabledYieldsSync().find { it.id == yieldId } ?: error("Staking is unavailable")
+        }
+    }
+
+    override fun getPersistedValidatorsFlow(): Flow<List<Yield.Validator>> {
+        return stakingValidatorDao.getAllAsFlow().map { entities ->
+            entities.map(YieldConverter::convertFromEntity)
         }
     }
 

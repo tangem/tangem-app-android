@@ -108,16 +108,52 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
-         * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>". Used for express rows
-         * (swap counterparty currency / onramp fiat), e.g. "to: ◎ POL" or "from: 🇸🇪 SEK".
+         * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>", optionally followed by the counterparty
+         * portfolio it settled in ("… in <owner>"). Used for express rows (swap counterparty currency / onramp fiat),
+         * e.g. "to: ◎ POL", "from: 🇸🇪 SEK", or the cross-portfolio "to: ◎ POL in 🟦 Main".
          *
          * @property icon resolved counterparty currency icon, rendered via `CurrencyIcon`. `null` when no icon
          *   is available (e.g. onramp fiat carries no `CryptoCurrency`) — the ticker then renders without a leading icon.
+         * @property owner counterparty portfolio the leg settled in — a different own account (accounts mode) or wallet
+         *   (wallet mode) than the viewed token. `null` when there is nothing to disambiguate: a swap within one
+         *   portfolio, an external address, or a single-wallet own leg — the ticker then renders without the "in …" tail.
          */
         data class Asset(
             val direction: Direction,
             val symbol: String,
             val icon: CurrencyIconState?,
+            val owner: AssetOwner? = null,
+        ) : ContentSubtitle
+
+        /**
+         * The own portfolio a swap leg settled in, shown as the "in <owner>" tail of an [Asset] subtitle. Mirrors the
+         * icon placement of the standalone owner subtitles: [Account] / [PaymentAccount] render the icon before the
+         * name, [Wallet] renders the name before its device icon.
+         */
+        @Immutable
+        sealed interface AssetOwner {
+            data class Account(
+                val name: TextReference,
+                @DrawableRes val iconResId: Int,
+                val iconBackgroundColor: Color,
+            ) : AssetOwner
+
+            data class PaymentAccount(val name: TextReference) : AssetOwner
+
+            data class Wallet(val name: String, val deviceIconUM: DeviceIconUM) : AssetOwner
+        }
+
+        /**
+         * DeFi provider counterparty — renders as "to/from: <provider icon> <name>", e.g. "from: 🟣 Aave".
+         * Unlike [OwnAccount] (a white-tinted monogram in a colored square), [iconResId] is a bundled full-color
+         * provider drawable rendered untinted in a circle.
+         *
+         * @property iconResId full-color provider drawable, e.g. `img_aave_22`
+         */
+        data class Provider(
+            val direction: Direction,
+            val name: TextReference,
+            @DrawableRes val iconResId: Int,
         ) : ContentSubtitle
 
         enum class Direction { TO, FROM }

@@ -37,7 +37,6 @@ dependencies {
     // region Core
     api(projects.core.datasource)
     api(projects.core.utils)
-    implementation(projects.domain.demo)
     // endregion
 
     // region Data
@@ -58,6 +57,7 @@ dependencies {
     // region Libs
     api(projects.libs.tangemSdkApi)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.demo.models)
     // endregion
 
     /** tests */

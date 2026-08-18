@@ -32,6 +32,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -88,6 +89,9 @@ class DefaultWalletRegistrarTest {
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
+        // The registrar base64url-decodes the nonce before handing it to the signer; the signer
+        // fakes ignore the bytes, so any fixed value works here.
+        every { android.util.Base64.decode(any<String>(), any()) } returns ByteArray(size = 16) { 7 }
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
@@ -326,6 +330,35 @@ class DefaultWalletRegistrarTest {
         assertThat(result.isRight()).isTrue()
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
+    }
+
+    @Test
+    fun `register base64url-decodes the nonce and signs over the decoded bytes`() = runTest {
+        stubHappyPath() // decryptNonce("abc") returns "decrypted"
+        coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
+        val decodedNonce = ByteArray(size = 16) { 42 }
+        every {
+            android.util.Base64.decode("decrypted", android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+        } returns decodedNonce
+        val capturedNonceBytes = slot<ByteArray>()
+        val capturingSigner = WalletSigner { nonceBytes ->
+            capturedNonceBytes.captured = nonceBytes
+            WalletSignatureBundle(
+                walletSignature = ByteArray(size = 65) { 1 },
+                walletSignatureSalt = ByteArray(size = 16) { 2 },
+                cardSignature = null,
+                cardSignatureSalt = null,
+                walletStatusByte = null,
+            )
+        }
+
+        val result = registrar.register(WALLET_ID, capturingSigner)
+
+        // The signer must receive the DECODED nonce bytes, not the raw UTF-8 string bytes — this is
+        // the whole point of [REDACTED_TASK_KEY] (regression guard against reverting to nonce.toByteArray()).
+        assertThat(result.isRight()).isTrue()
+        assertThat(capturedNonceBytes.captured).isEqualTo(decodedNonce)
+        verify { android.util.Base64.decode("decrypted", android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP) }
     }
 
     private fun stubHappyPath() {

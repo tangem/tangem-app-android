@@ -2,12 +2,15 @@ package com.tangem.domain.polymarket
 
 import arrow.core.Either
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -22,11 +25,18 @@ interface PolymarketRepository {
     suspend fun getCategories(): Either<DataError, List<PolymarketCategory>>
 
     /**
-     * Fetch the Discovery feed of prediction events (each with its top active markets).
+     * Serve the Discovery feed as a paginated batch flow, page size [batchSize].
      *
-     * @param category optional category id to filter by; `null` for the default (Trending) feed
+     * A page that fails — or, for the very first page, comes back empty — is retried once silently before the
+     * flow reports the failure, so a single hiccup doesn't surface as an error state (see the Discovery contract).
      */
-    suspend fun getEvents(category: Int? = null): Either<DataError, List<PolymarketEvent>>
+    fun getEventsBatchFlow(context: PolymarketEventsBatchingContext, batchSize: Int): PolymarketEventsBatchFlow
+
+    /**
+     * Fetch the details of a single prediction event, carrying all of its markets
+     * (unlike the feed, which carries only the top active ones).
+     */
+    suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent>
 
     /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
@@ -35,18 +45,22 @@ interface PolymarketRepository {
     suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState>
 
     /**
-     * Initiate deposit-wallet deployment (BFF `POST /wallet/deploy`). The client supplies its own
-     * CREATE2-derived [depositWalletAddress] (the BFF re-derives and cross-checks) and the current
-     * [userWalletId]. Gasless, unsigned; the client then polls `GET /wallet`.
+     * Initiate deposit-wallet deployment (BFF `POST /wallet/deploy`). Gasless, unsigned; the client then
+     * polls `GET /wallet`.
+     *
+     * [walletId] is the Tangem wallet id, sent exactly as stored — a correlation key that ties the deposit
+     * wallet to the wallet across Tangem's applications, bound to the owner on first deploy. It is **not** an
+     * input to any derivation: the BFF derives the deposit wallet from [ownerAddress] alone and cross-checks
+     * the [depositWalletAddress] we send against it.
      */
     suspend fun deployWallet(
         ownerAddress: String,
-        userWalletId: UserWalletId,
+        walletId: String,
         depositWalletAddress: String,
     ): Either<PolymarketWalletError, PolymarketWalletStatus>
 
     /**
-     * Relay the fully-signed 6-approval [batch] (BFF `POST /wallet/approvals`). The deposit wallet must
+     * Relay the fully-signed 13-approval [batch] (BFF `POST /wallet/approvals`). The deposit wallet must
      * be deployed first (otherwise the BFF responds 409).
      */
     suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
@@ -87,4 +101,14 @@ interface PolymarketRepository {
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
     ): Either<PolymarketAuthError, Unit>
+
+    /**
+     * Read the CLOB's collateral balance and allowance of the owner's deposit wallet
+     * (`GET clob.polymarket.com/balance-allowance`). Authenticated with the L2 HMAC headers derived from
+     * [credentials]; reports the CLOB's cached view, which [syncBalanceAllowance] refreshes.
+     */
+    suspend fun getBalanceAllowance(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+    ): Either<PolymarketAuthError, PolymarketBalanceAllowance>
 }

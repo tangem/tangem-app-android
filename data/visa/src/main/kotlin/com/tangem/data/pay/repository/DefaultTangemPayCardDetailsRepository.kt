@@ -20,7 +20,7 @@ import com.tangem.spend.datasource.pay.models.request.UpdateCardRequest
 import com.tangem.spend.datasource.pay.models.request.SetPinRequest
 import com.tangem.spend.datasource.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse.Result.Status
-import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
+import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
