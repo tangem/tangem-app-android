@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.isBurnAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.networks.repository.NetworksRepository
@@ -52,14 +53,19 @@ class ResolveQrSendTargetsUseCase(
         val classified = qrScanningEventsRepository.classify(qrCode, allCurrencies)
         val portfolioIndex = PortfolioIndex(currencyLocations, totalPerAccount)
 
-        return resolve(classified, portfolioIndex)
+        return resolve(qrCode, classified, portfolioIndex)
     }
 
-    private suspend fun resolve(classified: ClassifiedQrContent, portfolioIndex: PortfolioIndex): QrSendTarget {
+    private suspend fun resolve(
+        qrCode: String,
+        classified: ClassifiedQrContent,
+        portfolioIndex: PortfolioIndex,
+    ): QrSendTarget {
         return when (classified) {
             is ClassifiedQrContent.WalletConnect -> QrSendTarget.WalletConnect(classified.uri)
             is ClassifiedQrContent.Error -> QrSendTarget.Error(classified)
             is ClassifiedQrContent.PlainAddress -> resolveAddressTarget(
+                qrCode = qrCode,
                 address = classified.address,
                 amount = null,
                 memo = null,
@@ -67,6 +73,7 @@ class ResolveQrSendTargetsUseCase(
                 portfolioIndex = portfolioIndex,
             )
             is ClassifiedQrContent.PaymentUri -> resolveAddressTarget(
+                qrCode = qrCode,
                 address = classified.address,
                 amount = classified.amount,
                 memo = classified.memo,
@@ -74,22 +81,32 @@ class ResolveQrSendTargetsUseCase(
                 portfolioIndex = portfolioIndex,
             )
             is ClassifiedQrContent.PaymentUriWarning -> {
-                val inner = resolve(classified.paymentUri, portfolioIndex)
-                QrSendTarget.Warning(
-                    target = inner,
-                    unsupportedParams = classified.unsupportedParams,
-                )
+                when (val inner = resolve(qrCode, classified.paymentUri, portfolioIndex)) {
+                    // Asking whether to continue with unsupported parameters makes no sense for a QR that is
+                    // rejected anyway — the error would only show up after the user confirms the warning.
+                    is QrSendTarget.Error -> inner
+                    else -> QrSendTarget.Warning(
+                        target = inner,
+                        unsupportedParams = classified.unsupportedParams,
+                    )
+                }
             }
         }
     }
 
+    @Suppress("LongParameterList")
     private suspend fun resolveAddressTarget(
+        qrCode: String,
         address: String,
         amount: BigDecimal?,
         memo: String?,
         matchingCurrencies: List<CryptoCurrency>,
         portfolioIndex: PortfolioIndex,
     ): QrSendTarget {
+        if (address.isBurnAddress()) {
+            return QrSendTarget.Error(ClassifiedQrContent.Error.Unrecognized(raw = qrCode))
+        }
+
         val ownAddressNetworks = findOwnAddressNetworks(address, matchingCurrencies, portfolioIndex)
         val walletGroups = buildWalletGroups(matchingCurrencies, portfolioIndex, ownAddressNetworks)
 

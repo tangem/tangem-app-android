@@ -64,17 +64,11 @@ class ApiConfigTest {
             ),
             StakeKit(stakeKitAuthProvider = mockk()),
             BlockAid(environmentConfig = environmentConfig),
-            MoonPay(),
             P2PEthPool(p2pAuthProvider = mockk()),
             News(
                 authProvider = appAuthProvider,
                 appInfoProvider = mockk(),
             ),
-            GaslessTxService(
-                authProvider = appAuthProvider,
-                appInfoProvider = mockk(),
-            ),
-            SurveySparrow(environmentConfig = environmentConfig),
             Auth(),
         )
     }

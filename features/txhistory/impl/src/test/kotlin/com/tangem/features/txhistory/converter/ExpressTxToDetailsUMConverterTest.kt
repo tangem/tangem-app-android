@@ -363,6 +363,8 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             resourceReference(R.string.common_rate),
             resourceReference(R.string.common_network_fee_title),
         ).inOrder()
+        // Only the fee is an amount of the user's funds — the rate must stay readable under hidden balances.
+        assertThat(result.rows.map { it.isValueHideable }).containsExactly(false, true).inOrder()
     }
 
     @Test
