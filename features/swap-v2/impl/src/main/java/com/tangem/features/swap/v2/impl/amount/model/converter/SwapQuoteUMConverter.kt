@@ -55,6 +55,7 @@ internal class SwapQuoteUMConverter(
                     rate = annotatedReference(rateString),
                     isSingleProvider = false,
                     quoteId = quote.quoteId,
+                    isRestricted = quote.isRestricted,
                 )
             }
         } else {
@@ -70,6 +71,7 @@ internal class SwapQuoteUMConverter(
                 rate = annotatedReference(rateString),
                 isSingleProvider = false,
                 quoteId = quote.quoteId,
+                isRestricted = quote.isRestricted,
             )
         }
     }
