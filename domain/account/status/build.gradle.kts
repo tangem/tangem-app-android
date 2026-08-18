@@ -38,7 +38,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.domain.express.models)
     implementation(projects.domain.polymarket)
-    api(projects.features.polymarket.api) // POLYMARKET_ENABLED
+    implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
 
     implementation(deps.kotlin.serialization)
 
