@@ -512,9 +512,13 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun showCloudErrorDialog(error: CloudBackupError) {
+        if (error == CloudBackupError.AuthCanceled) return
+
         val (titleRes, messageRes) = when {
             error == CloudBackupError.NetworkError ->
                 R.string.common_error to R.string.hw_cloud_backup_error_network
+            error == CloudBackupError.CloudUnavailable ->
+                R.string.common_error to R.string.hw_cloud_backup_error_unavailable
             isAccessError(error) ->
                 R.string.hw_cloud_backup_permissions_title to R.string.hw_cloud_backup_permissions_description
             else ->
