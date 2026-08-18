@@ -9,7 +9,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
-
+/** Placeholder for the Collectibles main screen: the content lands in a separate task. */
 @Composable
 internal fun CollectiblesMainScreen(modifier: Modifier = Modifier) {
     TangemTopBarScaffold(
