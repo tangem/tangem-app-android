@@ -22,6 +22,7 @@ import com.tangem.feature.swap.converters.ErrorsDataConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -44,6 +45,7 @@ internal class SwapDataModule {
         appPreferencesStore: AppPreferencesStore,
         expressHistoryRepository: ExpressHistoryRepository,
         txHistoryFeatureToggles: TxHistoryFeatureToggles,
+        swapFeatureToggles: SwapFeatureToggles,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -54,6 +56,7 @@ internal class SwapDataModule {
             appPreferencesStore = appPreferencesStore,
             expressHistoryRepository = expressHistoryRepository,
             txHistoryFeatureToggles = txHistoryFeatureToggles,
+            swapFeatureToggles = swapFeatureToggles,
         )
     }
 

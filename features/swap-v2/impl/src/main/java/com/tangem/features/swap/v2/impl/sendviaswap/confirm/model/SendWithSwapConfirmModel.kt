@@ -465,7 +465,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             )
             swapNotificationsUpdateTrigger.triggerUpdate(
                 data = SwapNotificationData(
-                    expressError = (confirmData.quote as? SwapQuoteUM.Error)?.expressError,
                     fromCryptoCurrency = confirmData.fromCryptoCurrencyStatus?.currency,
                     destinationAddress = confirmData.enteredDestination.orEmpty(),
                     memo = confirmData.enteredMemo,
@@ -474,7 +473,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     enteredFromAmount = confirmData.enteredFromAmount,
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
-                    provider = confirmData.quote?.provider,
+                    quote = confirmData.quote,
                     amountType = confirmData.amountType,
                     shouldIncludeFeeInBalanceCheck = isFixedRate && isAmountSubtractAvailable,
                     feeValue = confirmData.fee?.amount?.value,
