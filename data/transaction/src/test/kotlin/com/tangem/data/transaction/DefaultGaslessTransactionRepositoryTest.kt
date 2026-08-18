@@ -4,10 +4,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.api.gasless.GaslessTxServiceApi
-import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
-import com.tangem.datasource.api.gasless.models.GaslessFeeRecipient
-import com.tangem.datasource.api.gasless.models.GaslessServiceResponse
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
+import com.tangem.grow.datasource.gasless.models.GaslessFeeRecipient
+import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery

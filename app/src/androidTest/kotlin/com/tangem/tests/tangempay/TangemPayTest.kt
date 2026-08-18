@@ -15,8 +15,6 @@ import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
 import com.tangem.common.utils.assertClipboardTextEquals
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.scenarios.*
@@ -42,14 +40,9 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(pinSetupScenario, pinNotSetState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(pinSetupScenario)
-            },
+            }
         ).run {
             step("Open PIN entry screen") { openTangemPayChangePin() }
             step("Enter PIN '$newPin'") {
@@ -77,14 +70,9 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, initialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-            },
+            }
         ).run {
             openTangemPay()
             step("Assert initial balance contains '10'") {
@@ -112,14 +100,9 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(historyScenario, initialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             openTangemPay()
             step("Assert transaction from '$merchantName' is not displayed") {
@@ -148,12 +131,8 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             openTangemPay()
             step("Click on card button") {
@@ -214,14 +193,9 @@ class TangemPayTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(freezeScenario, startedState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(freezeScenario)
-            },
+            }
         ).run {
             openTangemPay()
             step("Click on card button") {
@@ -251,10 +225,7 @@ class TangemPayTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Click on 'More actions' button") {
@@ -287,11 +258,7 @@ class TangemPayTest : BaseTestCase() {
             additionalBeforeSection = {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(depositAddressScenario, noDepositAddressState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(depositAddressScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Click on 'Add funds' button") {

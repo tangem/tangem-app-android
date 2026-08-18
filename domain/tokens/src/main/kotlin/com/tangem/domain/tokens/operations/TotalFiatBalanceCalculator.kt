@@ -2,12 +2,11 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
 import arrow.core.toNonEmptyListOrNull
-import com.tangem.common.getTotalWithRewardsStakingBalance
+import com.tangem.common.getExtraBalanceOrNull
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.getResultStatusSource
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
@@ -63,8 +62,6 @@ object TotalFiatBalanceCalculator {
         var mutableBalance: TotalFiatBalance = TotalFiatBalance.Loading
 
         for (token in statuses) {
-            val blockchainId = token.currency.network.rawId
-
             when (val status = token.value) {
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
@@ -73,10 +70,10 @@ object TotalFiatBalanceCalculator {
                     mutableBalance = mutableBalance.plusEmptyBalance(status)
                 }
                 is CryptoCurrencyStatus.Loaded -> {
-                    mutableBalance = mutableBalance.plusLoaded(status, blockchainId)
+                    mutableBalance = mutableBalance.plusLoaded(token, status)
                 }
                 is CryptoCurrencyStatus.Custom -> {
-                    mutableBalance = mutableBalance.plusLoaded(status, blockchainId)
+                    mutableBalance = mutableBalance.plusLoaded(token, status)
                 }
                 // Non computable states, should be handled before
                 CryptoCurrencyStatus.Loading,
@@ -102,18 +99,18 @@ object TotalFiatBalanceCalculator {
     }
 
     private fun TotalFiatBalance.plusLoaded(
+        currencyStatus: CryptoCurrencyStatus,
         status: CryptoCurrencyStatus.Loaded,
-        blockchainId: String,
     ): TotalFiatBalance {
-        val fiatStakingBalance = status.getFiatStakingBalance(blockchainId)
+        val fiatExtraBalance = status.fiatRate.times(currencyStatus.getExtraBalanceOrNull().orZero())
 
         return fold(
             ifLoaded = { loaded ->
-                loaded.copy(amount = loaded.amount + status.fiatAmount + fiatStakingBalance)
+                loaded.copy(amount = loaded.amount + status.fiatAmount + fiatExtraBalance)
             },
             ifNot = {
                 TotalFiatBalance.Loaded(
-                    amount = status.fiatAmount + fiatStakingBalance,
+                    amount = status.fiatAmount + fiatExtraBalance,
                     source = status.sources.total, // never mind
                 )
             },
@@ -121,20 +118,20 @@ object TotalFiatBalanceCalculator {
     }
 
     private fun TotalFiatBalance.plusLoaded(
+        currencyStatus: CryptoCurrencyStatus,
         status: CryptoCurrencyStatus.Custom,
-        blockchainId: String,
     ): TotalFiatBalance {
-        val fiatStakingBalance = status.getFiatStakingBalance(blockchainId)
+        val fiatExtraBalance = status.fiatRate?.times(currencyStatus.getExtraBalanceOrNull().orZero()).orZero()
 
         return fold(
             ifLoaded = { loaded ->
                 loaded.copy(
-                    amount = loaded.amount + status.fiatAmount.orZero() + fiatStakingBalance,
+                    amount = loaded.amount + status.fiatAmount.orZero() + fiatExtraBalance,
                 )
             },
             ifNot = {
                 TotalFiatBalance.Loaded(
-                    amount = status.fiatAmount.orZero() + fiatStakingBalance,
+                    amount = status.fiatAmount.orZero() + fiatExtraBalance,
                     source = StatusSource.ACTUAL,
                 )
             },
@@ -150,20 +147,6 @@ object TotalFiatBalanceCalculator {
             },
             ifNot = { this },
         )
-    }
-
-    private fun CryptoCurrencyStatus.Loaded.getFiatStakingBalance(blockchainId: String): BigDecimal {
-        val stakingBalanceData = stakingBalance as? StakingBalance.Data
-        val totalStakingBalance = stakingBalanceData?.getTotalWithRewardsStakingBalance(blockchainId).orZero()
-
-        return fiatRate.times(totalStakingBalance)
-    }
-
-    private fun CryptoCurrencyStatus.Custom.getFiatStakingBalance(blockchainId: String): BigDecimal {
-        val stakingBalanceData = stakingBalance as? StakingBalance.Data
-        val totalStakingBalance = stakingBalanceData?.getTotalWithRewardsStakingBalance(blockchainId).orZero()
-
-        return fiatRate?.times(totalStakingBalance).orZero()
     }
 
     private inline fun TotalFiatBalance.fold(
