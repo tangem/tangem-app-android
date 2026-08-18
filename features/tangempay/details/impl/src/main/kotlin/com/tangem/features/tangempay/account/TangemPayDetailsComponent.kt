@@ -202,7 +202,7 @@ internal class TangemPayDetailsComponent(
             is TangemPayDetailsNavigation.OtherNetworks -> PaymentOtherNetworksComponent(
                 appComponentContext = context,
                 params = PaymentOtherNetworksComponent.Params(
-                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onDismiss = model::onOtherNetworksDismiss,
                 ),
             )
             is TangemPayDetailsNavigation.PaymentReceive -> PaymentReceiveComponent(

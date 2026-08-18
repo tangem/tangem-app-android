@@ -148,6 +148,7 @@ internal class CashbackBlockTransformerTest {
             onBackClick = {},
             onOpenMenu = {},
             items = persistentListOf(),
+            subtitle = TextReference.EMPTY,
         ),
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
