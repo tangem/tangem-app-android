@@ -71,6 +71,8 @@ internal class DefaultAccountTxHistoryFetcher @AssistedInject constructor(
             is Account.Virtual -> Unit
             // Same for the prediction account: its history lives on the prediction side, not in express.
             is Account.Prediction -> Unit
+            // Joint account history is Safe operations served by the backend, not express fetchers.
+            is Account.Joint -> Unit
         }
 
         receiveTrigger().onEach { trigger ->
