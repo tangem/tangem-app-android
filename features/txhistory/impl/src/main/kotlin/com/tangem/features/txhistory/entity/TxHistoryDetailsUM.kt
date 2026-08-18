@@ -28,9 +28,17 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /** Shared top bar ("Nav bar"): type icon, status-driven title, date+time. */
     val header: HeaderUM
 
+    /**
+     * App-wide "hide balances" setting. When `true` the card masks its amounts with stars — the single-asset amount and
+     * its fiat line, both exchange legs, and the info rows marked [hideable][InfoRowUM.isValueHideable] (the network
+     * fee). The provider and rate rows are not amounts of the user's funds and stay visible.
+     */
+    val isBalanceHidden: Boolean
+
     /** Single-asset layout: Receive / Send / Transfer */
     data class SingleAsset(
         override val header: HeaderUM,
+        override val isBalanceHidden: Boolean,
         val amountBlock: AmountBlockUM,
         val counterparty: CounterpartyUM?,
         val rows: ImmutableList<InfoRowUM>,
@@ -48,6 +56,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      */
     data class TwoAssets(
         override val header: HeaderUM,
+        override val isBalanceHidden: Boolean,
         val from: AssetUM? = null,
         val to: AssetUM? = null,
         val statusBanner: StatusBannerUM? = null,
@@ -198,12 +207,16 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * provider row); `null` leaves the trailing slot text-only.
      *
      * [onClick] makes the row tappable (e.g. the provider row opens the provider page); `null` makes it non-interactive.
+     *
+     * [isValueHideable] marks the [value] as an amount of the user's own funds (the network fee), so it is masked under
+     * [isBalanceHidden]; a provider name or an exchange rate is not, and stays visible.
      */
     data class InfoRowUM(
         val label: TextReference,
         val value: TextReference,
         @DrawableRes val trailingIconRes: Int? = null,
         val onClick: (() -> Unit)? = null,
+        val isValueHideable: Boolean = false,
     )
 
     /**
@@ -264,13 +277,29 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
     /**
      * One row of the header's overflow context menu: a leading [icon] glyph and a [title] label. [isDestructive]
-     * renders the row in the error color (e.g. a remove action); [onClick] runs the action and is expected to also
-     * dismiss the menu at the call site.
+     * renders the row in the error color (e.g. a remove action); [action] is run on tap and the call site is expected to
+     * also dismiss the menu.
      */
     data class MenuItemUM(
         val icon: ImageVector,
         val title: TextReference,
         val isDestructive: Boolean = false,
-        val onClick: () -> Unit,
-    )
+        val action: Action,
+    ) {
+
+        /** What a [MenuItemUM] does on tap. */
+        @Immutable
+        sealed interface Action {
+
+            /** Runs [onClick] as-is. */
+            data class Direct(val onClick: () -> Unit) : Action
+
+            /**
+             * Shares [text]. Composing the summary is a pure conversion, but turning it into a string needs the
+             * `Resources` only the UI has, so the reference is resolved at composition (as the legacy express share
+             * sheet did) and the resulting string is handed to [onShare].
+             */
+            data class Share(val text: TextReference, val onShare: (String) -> Unit) : Action
+        }
+    }
 }
