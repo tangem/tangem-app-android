@@ -6,8 +6,9 @@ import com.squareup.moshi.JsonClass
 /**
  * Response of `GET /v1/wallets/{walletId}/joint-accounts`.
  *
- * Archived accounts are included — the full set is required to pick a free derivation index; filtering for
- * display is the client's job. An empty list (not a 404) means the wallet participates in none.
+ * Archived accounts are excluded — they come from `/accounts/archived`, and the free derivation index comes
+ * from `totalJointAccounts` in `GET /accounts`, not from this list. An empty list (not a 404) means the wallet
+ * participates in none.
  */
 @JsonClass(generateAdapter = true)
 data class GetJointAccountsResponse(
