@@ -17,6 +17,7 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -103,6 +104,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
     private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
         get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
+    private val Account.Joint.errorJointAccountStatus: AccountStatus.Joint
+        get() = AccountStatus.Joint(this, JointAccountStatusValue.Error.Unavailable)
 
     override val fallback: Option<AccountStatusList> = none()
 
@@ -182,6 +185,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
                     is Account.Prediction ->
                         specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
+                    // The joint status source arrives with the wallet-screen integration step
+                    is Account.Joint -> account.errorJointAccountStatus
                 }
             }
             buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
@@ -391,6 +396,12 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
+                // TODO([REDACTED_TASK_KEY]): confirm with product — MVP1 default per docs: the joint balance is shared,
+                //  not the user's own capital, so it does not add to the wallet total
+                is AccountStatus.Joint -> TotalFiatBalance.Loaded(
+                    amount = SerializedBigDecimal.ZERO,
+                    source = accountStatus.value.source,
+                )
             }
         }
     }
@@ -418,6 +429,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Payment -> null
                     is Account.Virtual -> null
                     is Account.Prediction -> null
+                    is Account.Joint -> null
                 }
             },
             totalAccounts = accountList.totalAccounts,
