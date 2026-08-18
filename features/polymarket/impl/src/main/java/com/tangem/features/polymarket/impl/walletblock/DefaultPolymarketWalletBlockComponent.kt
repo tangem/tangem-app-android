@@ -3,6 +3,8 @@ package com.tangem.features.polymarket.impl.walletblock
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
@@ -11,7 +13,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-private const val PREDICTION_ACCOUNT_KEY = "polymarket_prediction_account"
+internal const val PREDICTION_ACCOUNT_ROW_ID = "polymarket_prediction_account"
 private const val PREDICTION_ACCOUNT_CONTENT_TYPE = "PredictionAccount"
 
 @Suppress("UnusedPrivateProperty")
@@ -28,13 +30,15 @@ internal class DefaultPolymarketWalletBlockComponent @AssistedInject constructor
         if (state is PolymarketWalletBlockUM.Hidden) return
 
         item(
-            key = PREDICTION_ACCOUNT_KEY,
+            key = PREDICTION_ACCOUNT_ROW_ID,
             contentType = PREDICTION_ACCOUNT_CONTENT_TYPE,
         ) {
             PolymarketWalletBlockContent(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
-                modifier = modifier.animateContentSize(),
+                modifier = modifier
+                    .animateContentSize()
+                    .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM),
             )
         }
     }
