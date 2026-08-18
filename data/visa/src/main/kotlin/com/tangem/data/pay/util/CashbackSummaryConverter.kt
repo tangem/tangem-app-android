@@ -9,19 +9,19 @@ import com.tangem.utils.converter.Converter
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
-/** Maps [CashbackSummaryResponse] (BFF) to the domain [CashbackSummary]. */
 internal object CashbackSummaryConverter : Converter<CashbackSummaryResponse, CashbackSummary> {
 
     override fun convert(value: CashbackSummaryResponse): CashbackSummary {
-        return when (CashbackProgramStatus.fromString(value.cashbackProgramStatus)) {
-            CashbackProgramStatus.ENABLED -> toEnabled(value)
+        val result = value.result ?: return CashbackSummary.Unknown
+        return when (CashbackProgramStatus.fromString(result.cashbackProgramStatus)) {
+            CashbackProgramStatus.ENABLED -> toEnabled(result)
             CashbackProgramStatus.DEACTIVATED -> CashbackSummary.Deactivated
             CashbackProgramStatus.DISABLED -> CashbackSummary.Disabled
             CashbackProgramStatus.UNKNOWN -> CashbackSummary.Unknown
         }
     }
 
-    private fun toEnabled(value: CashbackSummaryResponse): CashbackSummary {
+    private fun toEnabled(value: CashbackSummaryResponse.Result): CashbackSummary {
         val period = value.period ?: return CashbackSummary.Unknown
         val payoutStart = period.payoutStartDate?.let(DateTime::parse) ?: return CashbackSummary.Unknown
         val payoutEnd = period.payoutEndDate?.let(DateTime::parse) ?: return CashbackSummary.Unknown
