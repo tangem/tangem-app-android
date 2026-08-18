@@ -396,8 +396,9 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
-                // TODO([REDACTED_TASK_KEY]): confirm with product — MVP1 default per docs: the joint balance is shared,
-                //  not the user's own capital, so it does not add to the wallet total
+                // The statuses carry
+                // no amount yet — it arrives with the balances step; until then only pre-activation states exist,
+                // and their balance is genuinely zero (the Safe is not deployed)
                 is AccountStatus.Joint -> TotalFiatBalance.Loaded(
                     amount = SerializedBigDecimal.ZERO,
                     source = accountStatus.value.source,
