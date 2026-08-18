@@ -50,15 +50,16 @@ internal class JointAccountConvertersTest {
         DtoModel("pending", "creator", JointAccount.Status.PENDING, JointAccount.Role.CREATOR),
         DtoModel("confirming", "member", JointAccount.Status.CONFIRMING, JointAccount.Role.MEMBER),
         DtoModel("active", "creator", JointAccount.Status.ACTIVE, JointAccount.Role.CREATOR),
+        DtoModel("cancelled", "member", JointAccount.Status.CANCELLED, JointAccount.Role.MEMBER),
         // Values added by the backend later must degrade to UNKNOWN, never fail
-        DtoModel("cancelled", "owner", JointAccount.Status.UNKNOWN, JointAccount.Role.UNKNOWN),
+        DtoModel("frozen", "owner", JointAccount.Status.UNKNOWN, JointAccount.Role.UNKNOWN),
     )
 
     @Test
     fun `GIVEN account WHEN persistence round trip THEN restored equal except source becomes CACHE`() {
         // Arrange
         val original = createJointAccount(
-            address = FIXTURE_ALICE_ADDRESS,
+            safeAddress = FIXTURE_ALICE_ADDRESS,
             status = JointAccount.Status.ACTIVE,
             source = StatusSource.ACTUAL,
         )
