@@ -22,6 +22,7 @@ internal object StoreConfigModule {
             appsAppId = environmentConfig.appsAppId,
             customerIoCdpApiKey = environmentConfig.customerIoCdpApiKey,
             surveySparrowToken = environmentConfig.surveySparrowToken,
+            blockAidApiKey = environmentConfig.blockAidApiKey,
         )
     }
 }
