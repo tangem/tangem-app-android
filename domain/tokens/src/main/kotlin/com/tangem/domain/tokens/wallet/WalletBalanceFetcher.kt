@@ -197,9 +197,7 @@ class WalletBalanceFetcher internal constructor(
                 message
             }
 
-            // The special accounts are refreshed after the balance error check and concurrently with each other:
-            // they share no data, a wallet can hold all of them, and TangemPay may long-poll — chained, their
-            // round-trips would add up on every pull-to-refresh
+            // Concurrently with each other: they share no data, and TangemPay may long-poll
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
                 launch {
                     balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
@@ -207,8 +205,7 @@ class WalletBalanceFetcher internal constructor(
                 }
             }
 
-            // Prediction refreshes its own quote inside the fetcher, so unlike TangemPay there is nothing to
-            // pre-fetch here
+            // Prediction fetches its own quote, so unlike TangemPay nothing is pre-fetched here
             if (
                 fetchingSources.any { it is WalletFetchingSource.Prediction } &&
                 polymarketFeatureToggles.isPolymarketEnabled
