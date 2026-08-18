@@ -33,4 +33,9 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED,
         )
+
+    override val isAccountSwapFlowEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_16356_ACCOUNT_SWAP_FLOW,
+        )
 }
