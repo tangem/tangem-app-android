@@ -34,6 +34,7 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Fetcher of wallet balance by [UserWalletId]
@@ -207,7 +208,7 @@ class WalletBalanceFetcher internal constructor(
                 fetchingSources.any { it is WalletFetchingSource.Prediction } &&
                 polymarketFeatureToggles.isPolymarketEnabled
             ) {
-                predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId))
+                launch { predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId)) }
             }
 
             // Fetch Virtual account separately for the same reason as TangemPay

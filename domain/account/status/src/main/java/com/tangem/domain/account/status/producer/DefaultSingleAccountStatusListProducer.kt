@@ -36,6 +36,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
@@ -105,6 +106,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         get() = AccountStatus.Payment(this, PaymentAccountStatusValue.Error.Unavailable)
     private val Account.Virtual.errorVirtualAccountStatus: AccountStatus.Virtual
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
+    private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
+        get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
 
     override val fallback: Option<AccountStatusList> = none()
 
@@ -159,19 +162,25 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
             paymentAccountStatusSupplier.invoke(userWalletId = walletId),
             virtualAccountStatusSupplier.invoke(userWalletId = walletId),
-        ) { paymentStatus, virtualStatus ->
+            predictionStatusFlow(userWallet = userWallet),
+        ) { paymentStatus, virtualStatus, predictionValue ->
+            val predictionStatus = AccountStatus.Prediction(
+                account = Account.Prediction(userWalletId = walletId),
+                value = predictionValue,
+            )
+
             mapOf(
                 paymentStatus.accountId to paymentStatus,
                 virtualStatus.accountId to virtualStatus,
+                predictionStatus.accountId to predictionStatus,
             )
         }
 
         combine(
-            flow = accountListFlow,
-            flow2 = cryptoCurrencyStatusFlow,
-            flow3 = specialStatusesFlow,
-            flow4 = predictionStatusFlow(walletId = walletId),
-        ) { accountList, currencyStatusMap, specialStatuses, predictionValue ->
+            accountListFlow,
+            cryptoCurrencyStatusFlow,
+            specialStatusesFlow,
+        ) { accountList, currencyStatusMap, specialStatuses ->
             logger.i(
                 "combine[$walletId] transform:" +
                     "accounts=${accountList.accounts.size}, " +
@@ -183,7 +192,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.CryptoPortfolio -> buildCryptoPortfolioStatus(account, currencyStatusMap, accountList)
                     is Account.Payment -> specialStatuses[account.accountId] ?: account.errorPaymentAccountStatus
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
-                    is Account.Prediction -> AccountStatus.Prediction(account = account, value = predictionValue)
+                    is Account.Prediction ->
+                        specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
                 }
             }
             buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
@@ -191,15 +201,15 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     /**
-     * Unsubscribed while the feature is off and seeded before the join: this flow gates every account on the
-     * screen, so a supplier that goes quiet must cost one loading row rather than all of them.
+     * Subscribed only for a wallet that can hold the account, and seeded before the join: this flow gates every
+     * account on the screen, so a supplier that goes quiet must cost one loading row rather than all of them.
      */
-    private fun predictionStatusFlow(walletId: UserWalletId): Flow<PredictionAccountStatusValue> {
-        if (!polymarketFeatureToggles.isPolymarketEnabled) {
+    private fun predictionStatusFlow(userWallet: UserWallet): Flow<PredictionAccountStatusValue> {
+        if (!polymarketFeatureToggles.isPolymarketEnabled || !userWallet.isPredictionAccountSupported) {
             return flowOf(PredictionAccountStatusValue.Error.Unavailable)
         }
 
-        return predictionAccountStatusSupplier.invoke(userWalletId = walletId)
+        return predictionAccountStatusSupplier.invoke(userWalletId = userWallet.walletId)
             .onStart { emit(PredictionAccountStatusValue.Loading) }
     }
 
