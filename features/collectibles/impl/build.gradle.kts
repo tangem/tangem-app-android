@@ -27,6 +27,7 @@ dependencies {
 
     /** Kotlin */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Compose */
     implementation(deps.compose.foundation)
