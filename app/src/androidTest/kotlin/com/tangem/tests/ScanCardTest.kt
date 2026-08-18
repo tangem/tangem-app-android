@@ -2,7 +2,7 @@ package com.tangem.tests
 
 import com.tangem.datasource.api.common.config.TangemTech
 
-import com.tangem.datasource.api.common.config.Express
+import com.tangem.grow.datasource.config.Express
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
@@ -158,6 +158,24 @@ class ScanCardTest : BaseTestCase() {
         val cardType: MockContent = Wallet2MockContent
         val cardName = "Wallet"
         val card = "Wallet 2"
+
+        setupHooks().run {
+            step("Open 'Main Screen' on '$card' card") {
+                openMainScreen(mockContent = cardType)
+            }
+            step("Check 'Main' screen for '$card' card") {
+                checkMultiCurrencyMainScreen(cardName)
+            }
+        }
+    }
+
+    @AllureId("10835")
+    @DisplayName("Scan: 'Wallet 3' card")
+    @Test
+    fun wallet3ScanTest() {
+        val cardType: MockContent = Wallet3MockContent
+        val cardName = "Wallet"
+        val card = "Wallet 3"
 
         setupHooks().run {
             step("Open 'Main Screen' on '$card' card") {

@@ -34,6 +34,10 @@ dependencies {
     api(projects.core.utils)
     // endregion
 
+    // region Grow
+    implementation(projects.grow.datasource)
+    // endregion
+
     // region Common
     api(projects.data.common)
     // endregion
