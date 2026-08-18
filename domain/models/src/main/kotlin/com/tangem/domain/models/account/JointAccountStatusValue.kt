@@ -55,8 +55,8 @@ sealed class JointAccountStatusValue {
 
         /**
          * The account state could not be fetched and no cached data exists. The source stays [StatusSource.ACTUAL]
-         * on purpose, matching [PaymentAccountStatusValue.Error.Unavailable]: a joint account must never downgrade
-         * the wallet-level total balance freshness — its balance never adds to the total anyway.
+         * on purpose, matching [PaymentAccountStatusValue.Error.Unavailable]: a single unavailable account must
+         * never downgrade the wallet-level total balance freshness.
          */
         @Serializable
         data object Unavailable : Error() {
