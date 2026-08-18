@@ -58,7 +58,6 @@ class ApiConfigTest {
                 appInfoProvider = mockk(),
             ),
             StakeKit(stakeKitAuthProvider = mockk()),
-            BlockAid(environmentConfig = environmentConfig),
             P2PEthPool(p2pAuthProvider = mockk()),
             News(
                 authProvider = appAuthProvider,

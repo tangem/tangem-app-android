@@ -50,8 +50,6 @@ import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUpdateListener
-import com.tangem.features.tokendetails.ExpressTransactionsEvent
-import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -77,7 +75,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val expressTransactionsEventListener: ExpressTransactionsEventListener,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
@@ -184,9 +181,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     fun onStop() {
         planSelectionJobHolder.cancel()
-        modelScope.launch {
-            expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
-        }
     }
 
     private fun observeAwaitingPlanSelection() {
@@ -311,7 +305,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
             paymentAccountStatusFetcher.invoke(userWalletId)
-            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
             txHistoryUpdateListener.triggerUpdate()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
