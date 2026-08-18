@@ -1738,6 +1738,8 @@
   <string name="swap_story_third_subtitle_v2">Intercambie entre las principales redes y miles de tokens 0% Comisión por intercambios entre stablecoins</string>
   <string name="swap_story_third_title">Simplemente cómodo</string>
   <string name="swap_story_third_title_v2">90+ Blockchains\n16.000+ Activos</string>
+  <string name="swap_token_selector_empty_filtered_message">No tienes ningún token con saldo en esta billetera. Explora otras billeteras o cambia el filtro.</string>
+  <string name="swap_token_selector_filter_hide_zero_balance">Ocultar saldo 0</string>
   <string name="swap_via_provider">Intercambio a través del proveedor</string>
   <string name="swap_your_assets_title">Sus activos</string>
   <string name="swapping_alert_cex_description">La cantidad incluye:\n• Tarifas del proveedor de servicios\n• Tarifas de red por enviar %s desde el intercambio a la dirección del usuario.</string>
@@ -1808,7 +1810,7 @@
   <string name="tangem_pay_terms_fees_limits">Términos, tarifas y límites</string>
   <string name="tangem_pay_terms_limits">Términos y límites</string>
   <string name="tangem_pay_transaction_declined_notification_text">El banco rechazó esta solicitud de transacción.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Importe mín.: %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Importe mín.</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Límite mensual alcanzado</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluido</string>
   <string name="tangem_pay_transaction_details_cashback_none">Sin cashback</string>
@@ -2033,8 +2035,8 @@
   <string name="tangempay_newonboard_body">Gasta cripto en cualquier lugar — sin bancos, sin intermediarios y sin exchanges. El poder de la autocustodia unido a los pagos del día a día.</string>
   <string name="tangempay_newonboard_bottomleft_body">Compra online y con Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">En todo el mundo</string>
-  <string name="tangempay_newonboard_bottomright_body">Úsala en todo el mundo</string>
-  <string name="tangempay_newonboard_bottomright_title">Solo 1% de FX-fee</string>
+  <string name="tangempay_newonboard_bottomright_body">USD→USDC 1:1; comisión 1 USD</string>
+  <string name="tangempay_newonboard_bottomright_title">Recibe transferencias ACH</string>
   <string name="tangempay_newonboard_title">Consigue tu tarjeta Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Sin comisiones por compra</string>
