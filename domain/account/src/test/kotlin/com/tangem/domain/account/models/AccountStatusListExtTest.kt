@@ -2,6 +2,8 @@ package com.tangem.domain.account.models
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
+import com.tangem.test.mock.MockAccounts
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import io.mockk.every
@@ -51,6 +53,46 @@ internal class AccountStatusListExtTest {
 
         val result = accountList.hasMultiCurrencyAccount()
 
+        assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `GIVEN Joint with multiple currencies WHEN hasMultiCurrencyAccount THEN returns true`() {
+        // Arrange
+        val accountList = createAccountStatusList(
+            accountStatuses = listOf(
+                AccountStatus.Joint(
+                    account = MockAccounts.createJointAccount(
+                        cryptoCurrencies = listOf(mockk(), mockk()),
+                    ),
+                    value = JointAccountStatusValue.Loading,
+                ),
+            ),
+        )
+
+        // Act
+        val result = accountList.hasMultiCurrencyAccount()
+
+        // Assert
+        assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `GIVEN Joint with single currency WHEN hasMultiCurrencyAccount THEN returns false`() {
+        // Arrange
+        val accountList = createAccountStatusList(
+            accountStatuses = listOf(
+                AccountStatus.Joint(
+                    account = MockAccounts.createJointAccount(cryptoCurrencies = listOf(mockk())),
+                    value = JointAccountStatusValue.Loading,
+                ),
+            ),
+        )
+
+        // Act
+        val result = accountList.hasMultiCurrencyAccount()
+
+        // Assert
         assertThat(result).isFalse()
     }
 
