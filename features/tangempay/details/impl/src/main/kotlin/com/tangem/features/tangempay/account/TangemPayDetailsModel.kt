@@ -157,8 +157,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchCashbackBlock()
                         uiState.update { prevState ->
-                            // The status flow re-emits on every balance update, so the asynchronously
-                            // loaded cashback block has to survive the state rebuild.
                             stateFactory.getLoadedState(state)
                                 .copy(cashbackBlockState = prevState.cashbackBlockState)
                         }
@@ -269,11 +267,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             ),
         )
     }
-
-    /**
-     * The status flow re-emits on every balance update; without the in-flight check each emission would
-     * cancel the previous request via [cashbackBlockJobHolder] and the block would never be applied.
-     */
+    
     private fun fetchCashbackBlock() {
         if (!tangemPayFeatureToggles.isCashbackEnabled || cashbackBlockJobHolder.isActive) return
         modelScope.launch {
