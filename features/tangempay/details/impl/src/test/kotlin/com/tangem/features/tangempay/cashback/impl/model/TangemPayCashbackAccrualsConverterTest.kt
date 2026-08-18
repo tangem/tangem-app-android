@@ -47,7 +47,7 @@ internal class TangemPayCashbackAccrualsConverterTest {
     fun `GIVEN a doc row WHEN its onClick invoked THEN the doc url is opened`() {
         // Arrange
         var openedUrl: String? = null
-        val converter = TangemPayCashbackAccrualsConverter(onDocClick = { openedUrl = it })
+        val converter = TangemPayCashbackAccrualsConverter(onDocClick = { openedUrl = it.url })
         val docs = listOf(CashbackDocument(id = "1", title = "Terms", url = "https://terms"))
 
         // Act

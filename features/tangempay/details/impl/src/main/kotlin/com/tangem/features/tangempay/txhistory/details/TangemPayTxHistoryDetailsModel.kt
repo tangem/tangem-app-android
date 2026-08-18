@@ -124,6 +124,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
                 cashbackLoadState.value = TransactionLoadState.Loaded
             }.onLeft {
                 cashbackLoadState.value = TransactionLoadState.Error
+                analytics.send(TangemPayAnalyticsEvents.Cashback.LoadingErrorShowed())
             }
         }
     }
