@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
+import arrow.core.right
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 import com.tangem.common.routing.AppRoute
@@ -11,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.cloudbackup.usecase.DeleteWalletCloudBackupUseCase
 import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
@@ -18,6 +20,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.features.onboarding.v2.impl.R
@@ -27,6 +30,7 @@ import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,6 +57,8 @@ internal class OnboardingMultiWalletModelTest {
     private val artworkUMConverter: ArtworkUMConverter = mockk()
     private val paramsContainer: ParamsContainer = mockk()
     private val titleProvider: TitleProvider = mockk(relaxUnitFun = true)
+    private val deleteWalletCloudBackupUseCase: DeleteWalletCloudBackupUseCase = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
 
     private val card1Id = "card-id-1"
     private val card1PublicKey = byteArrayOf(1, 2, 3)
@@ -81,8 +87,11 @@ internal class OnboardingMultiWalletModelTest {
 
     @BeforeEach
     fun setUp() {
+        clearMocks(deleteWalletCloudBackupUseCase, hotWalletFeatureToggles)
         every { paramsContainer.require<OnboardingMultiWalletComponent.Params>() } returns params
         every { params.mode } returns OnboardingMultiWalletComponent.Mode.Onboarding
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { deleteWalletCloudBackupUseCase(any()) } returns Unit.right()
 
         every { cardDto.cardId } returns card1Id
         every { cardDto.cardPublicKey } returns card1PublicKey
@@ -413,6 +422,56 @@ internal class OnboardingMultiWalletModelTest {
             verify(exactly = 0) { router.popTo(route = any(), onComplete = any()) }
         }
 
+    @Test
+    fun `GIVEN UpgradeHotWallet mode WHEN onboarding finished THEN wallet cloud backup is deleted`() = runTest {
+        // Arrange
+        every { params.mode } returns OnboardingMultiWalletComponent.Mode.UpgradeHotWallet(
+            userWalletId = UserWalletId("011"),
+        )
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.onOnboardingFinished()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { deleteWalletCloudBackupUseCase("011") }
+    }
+
+    @Test
+    fun `GIVEN cloud backup toggle off WHEN onboarding finished THEN nothing is deleted`() = runTest {
+        // Arrange
+        every { params.mode } returns OnboardingMultiWalletComponent.Mode.UpgradeHotWallet(
+            userWalletId = UserWalletId("011"),
+        )
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.onOnboardingFinished()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { deleteWalletCloudBackupUseCase(any()) }
+    }
+
+    @Test
+    fun `GIVEN plain onboarding mode WHEN onboarding finished THEN nothing is deleted`() = runTest {
+        // Arrange
+        every { params.mode } returns OnboardingMultiWalletComponent.Mode.Onboarding
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.onOnboardingFinished()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { deleteWalletCloudBackupUseCase(any()) }
+    }
+
     private fun card2BackupInfo() = MultiWalletChildParams.Backup.BackupCardInfo(
         cardId = "card-id-2",
         cardPublicKey = byteArrayOf(4, 5, 6),
@@ -438,6 +497,9 @@ internal class OnboardingMultiWalletModelTest {
             getCardImageUseCase = getCardImageUseCase,
             uiMessageSender = uiMessageSender,
             artworkUMConverter = artworkUMConverter,
+            appScope = TestAppCoroutineScope(testScope),
+            deleteWalletCloudBackupUseCase = deleteWalletCloudBackupUseCase,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 

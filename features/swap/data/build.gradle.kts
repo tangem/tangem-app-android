@@ -18,9 +18,11 @@ dependencies {
 
     /** Project*/
     api(projects.core.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     api(projects.features.swap.domain)
     implementation(projects.domain.express.models)
+    implementation(projects.store.datasource)
 
     /** Network */
     api(deps.moshi)

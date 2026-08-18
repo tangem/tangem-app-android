@@ -46,6 +46,7 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
@@ -218,6 +219,31 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                 )
             }
         }
+        is CardsProgressBannerUM.Delivering -> {
+            item("deliveringBannerBlock") {
+                SpacerH12()
+                TangemMessageBanner(
+                    title = resourceReference(R.string.tangempay_card_delivery_banner_title),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .testTag(TangemPayTestTags.DELIVERY_BANNER),
+                    showGlowRing = false,
+                    description = resourceReference(R.string.tangempay_card_delivery_banner_description),
+                    secondaryButton = TangemMessageBanner.Button(
+                        text = resourceReference(R.string.tangempay_card_details_activate),
+                        onClick = progressBanner.onActivateClick,
+                    ),
+                    slotStart = {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.icon.primary,
+                        )
+                    },
+                )
+            }
+        }
         null -> {
             if (state.accountDeactivatedNotificationConfig != null) {
                 item("deactivationBannerBlock") {
@@ -292,7 +318,7 @@ private fun PayDetailsTopBar(
             }
             .statusBarsPadding(),
         title = resourceReference(R.string.tangempay_payment_account),
-        subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
+        subtitle = config.subtitle,
         startContent = {
             TangemButton(
                 iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_arrow_back_28),

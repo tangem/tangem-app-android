@@ -14,7 +14,7 @@ android {
 dependencies {
 
     /* Project - API */
-    api(projects.features.jointAccount.main.api)
+    api(projects.features.jointAccount.api)
     api(projects.features.wallet.api)
     api(projects.features.walletSettings.api)
     implementation(projects.features.hotWallet.api)

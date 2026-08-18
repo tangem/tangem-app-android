@@ -59,7 +59,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
-import com.tangem.features.jointaccount.main.component.JointAccountMainBlockComponent
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import kotlinx.collections.immutable.ImmutableList
 
 /**
