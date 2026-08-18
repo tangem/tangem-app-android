@@ -94,12 +94,6 @@ class MoshiModule {
 
     @Provides
     @IntoSet
-    fun provideStakeKitEnumFallbackConfigurer(): NetworkMoshiConfigurer {
-        return NetworkMoshiConfigurer { it.addStakeKitEnumFallbackAdapters() }
-    }
-
-    @Provides
-    @IntoSet
     fun provideCoinIndicatorsEnumFallbackConfigurer(): NetworkMoshiConfigurer {
         return NetworkMoshiConfigurer { it.addCoinIndicatorsEnumFallbackAdapters() }
     }
