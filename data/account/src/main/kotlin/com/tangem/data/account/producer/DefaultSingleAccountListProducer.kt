@@ -76,13 +76,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
         return isPredictionAccountSupported && hasPredictionAccount()
     }
 
-    /**
-     * Whether this wallet was onboarded to Predictions — temporarily always true, so while the feature toggle is
-     * on the account is shown for every wallet that could have one, onboarded or not.
-     *
-     * The real answer comes from the backend keyed by wallet id, cached per wallet so this check stays a lookup:
-     * [REDACTED_JIRA]
-     */
+    /** Temporary — the real answer comes from the backend: [REDACTED_JIRA] */
     @Suppress("FunctionOnlyReturningConstant")
     private fun hasPredictionAccount(): Boolean = true
 

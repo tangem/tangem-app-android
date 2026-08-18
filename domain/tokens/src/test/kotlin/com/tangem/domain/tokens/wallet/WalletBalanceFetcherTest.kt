@@ -93,8 +93,7 @@ internal class WalletBalanceFetcherTest {
             multiNetworkStatusFetcher,
             multiQuoteStatusFetcher,
             multiStakingBalanceFetcher,
-            // the class is PER_CLASS, so a fetcher left out here carries its calls into the next test and any
-            // `inverse = true` assertion about it starts depending on the order JUnit happens to pick
+            // PER_CLASS: a fetcher left out here carries its calls into the next test
             paymentAccountStatusFetcher,
             virtualAccountStatusFetcher,
             predictionAccountStatusFetcher,
@@ -927,7 +926,7 @@ internal class WalletBalanceFetcherTest {
 
     @Test
     fun `GIVEN the prediction fetch fails WHEN fetch THEN the whole wallet fetch still succeeds`() = runTest {
-        // Arrange — the prediction account is one contribution among many; its failure must not fail the wallet
+        // Arrange
         arrangePredictionFetch()
         coEvery { predictionAccountStatusFetcher(params = any()) } returns IllegalStateException("Error").left()
 
@@ -939,10 +938,7 @@ internal class WalletBalanceFetcherTest {
         coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
     }
 
-    /**
-     * A network fetch that succeeds is arranged alongside the prediction one on purpose: without a balance source
-     * the result is `Right` whatever happens, and a test asserting it would pass with the prediction branch deleted.
-     */
+    /** The succeeding network fetch is deliberate: without a balance source the result is `Right` regardless. */
     private fun arrangePredictionFetch() {
         val cardTypesResolver = mockk<CardTypesResolver> {
             every { isMultiwalletAllowed() } returns true
