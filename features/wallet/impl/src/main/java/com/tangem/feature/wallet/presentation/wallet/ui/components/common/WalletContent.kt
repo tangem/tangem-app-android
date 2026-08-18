@@ -25,10 +25,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollections2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
+import com.tangem.feature.wallet.presentation.wallet.ui.components.polymarketWalletBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
 import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import kotlinx.collections.immutable.toPersistentList
@@ -41,6 +43,7 @@ internal fun WalletListContent(
     listState: LazyListState,
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
+    polymarketComponent: PolymarketWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     contentPadding: PaddingValues,
     onOrganizeButtonBoundsChange: (Rect?) -> Unit,
@@ -50,6 +53,7 @@ internal fun WalletListContent(
 ) {
     val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
     val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
+    val accountRowItemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x2)
 
     LazyColumn(
         modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
@@ -96,6 +100,14 @@ internal fun WalletListContent(
             jointAccountComponent = jointAccountComponent,
             modifier = movableItemModifier,
             isBalanceHidden = isBalanceHidden,
+        )
+
+        polymarketWalletBlock(
+            polymarketComponent = polymarketComponent,
+            polymarketUM = currentWallet.polymarketWalletBlockUM,
+            isBalanceHidden = isBalanceHidden,
+            // The spacing the account rows keep between each other, since this row continues that list
+            modifier = accountRowItemModifier,
         )
 
         nftCollections2(state = currentWallet, itemModifier = itemModifier)
