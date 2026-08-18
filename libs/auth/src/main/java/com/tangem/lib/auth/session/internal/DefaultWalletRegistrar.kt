@@ -12,6 +12,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
@@ -34,6 +35,7 @@ internal class DefaultWalletRegistrar(
     private val deviceKeyManager: DeviceKeyManager,
     private val nonceDecryptor: AuthNonceDecryptor,
     private val signedRequestPayload: SignedRequestPayload,
+    private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -141,7 +143,7 @@ internal class DefaultWalletRegistrar(
                 cardSignature = bundle.cardSignature?.toBase64NoWrap(),
                 cardSignatureSalt = bundle.cardSignatureSalt?.toBase64NoWrap(),
                 walletStatus = bundle.walletStatusByte?.let { byteArrayOf(it).toBase64NoWrap() },
-                attestationToken = null,
+                attestationToken = attestationProvider.getAttestationToken(nonce),
                 metadata = signedRequestPayload.deviceMetadata,
             ),
         )
