@@ -1,6 +1,5 @@
 package com.tangem.features.collectibles.impl.stories.ui.state
 
-import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -10,7 +9,6 @@ import com.tangem.core.ui.extensions.TextReference
  * @property subtitle supporting text under the headline.
  * @property continueButtonText label of the main button while this slide is shown.
  */
-@Immutable
 internal data class CollectiblesStorySlideUM(
     val title: TextReference,
     val subtitle: TextReference,
