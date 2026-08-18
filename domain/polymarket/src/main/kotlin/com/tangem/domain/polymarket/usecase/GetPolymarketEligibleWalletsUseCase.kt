@@ -11,9 +11,15 @@ import com.tangem.domain.models.wallet.isMultiCurrency
  * A locked wallet is excluded because onboarding derives its owner address, which a locked wallet cannot
  * provide without an unlock the chooser has no way to ask for.
  *
- * A single-currency wallet is excluded because onboarding requires the deposit chain in the portfolio and
- * such a wallet can never add it. Settling on one strands the user: the add-network sheet opens bound to
- * that wallet alone and every row in it is disabled.
+ * A single-currency wallet is excluded because Note, Twins, Start2Coin and Visa cards have no business in
+ * Predictions — each for reasons of its own, none of them about the deposit chain, which the hardened owner
+ * path does not need in the portfolio.
+ *
+ * The rule is not a test of whether the wallet can derive that path: `isMultiCurrency` admits firmware below
+ * [com.tangem.common.card.FirmwareVersion.HDWalletAvailable], which the derivation requires, so such a card
+ * is offered here and fails after the tap. Closing that would mean filtering on
+ * [com.tangem.domain.models.wallet.isTangemPayCompatible]; it is knowingly not done, because it would hide
+ * the wallet instead of telling its owner why it cannot be used.
  */
 class GetPolymarketEligibleWalletsUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
