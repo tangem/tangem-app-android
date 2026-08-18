@@ -5,7 +5,6 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
-import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.tap.network.auth.*
 import dagger.Module
 import dagger.Provides
@@ -35,11 +34,6 @@ internal class AuthModule {
         return DefaultExpressAuthProvider()
     }
 
-    @Provides
-    @Singleton
-    fun provideStakeKitAuthProvider(environmentConfig: EnvironmentConfig): StakeKitAuthProvider {
-        return DefaultStakeKitAuthProvider(environmentConfig)
-    }
 
     @Provides
     @Singleton
