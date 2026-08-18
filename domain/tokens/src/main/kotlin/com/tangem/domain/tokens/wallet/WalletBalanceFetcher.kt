@@ -197,7 +197,7 @@ class WalletBalanceFetcher internal constructor(
                 message
             }
 
-            // Concurrently with each other: they share no data, and TangemPay may long-poll
+            // Special accounts refresh after the balance check, concurrently: TangemPay may long-poll
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
                 launch {
                     balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
