@@ -8,7 +8,7 @@ import com.tangem.datasource.api.common.config.TangemTech
 
 import com.tangem.datasource.api.common.config.StakeKit
 
-import com.tangem.datasource.api.common.config.Express
+import com.tangem.grow.datasource.config.Express
 
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.annotations.ApiEnv
