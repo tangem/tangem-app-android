@@ -3,33 +3,25 @@ package com.tangem.features.feed.ui.v2
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -37,11 +29,13 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.features.feed.ui.v2.state.FeedV2TabUM
 import com.tangem.features.feed.v2.FeedV2Component
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Shtorka 2.0 feed layout: the whole screen scrolls as one — the top blocks collapse away with the
@@ -71,6 +65,7 @@ internal fun FeedV2Content(
 ) {
     val topBlocksHeightPx = with(LocalDensity.current) { FeedV2Component.TopBlocksHeight.toPx() }
     var topBlocksOffset by rememberSaveable { mutableStateOf(0f) }
+    val topBlocksOffsetPx by remember { derivedStateOf { topBlocksOffset.roundToInt() } }
 
     val topBlocksCollapseConnection = remember(topBlocksHeightPx) {
         object : NestedScrollConnection {
@@ -113,22 +108,25 @@ internal fun FeedV2Content(
                 // the pinned chrome, so the tab row rises as the offset grows
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints)
-                    val height = (placeable.height + topBlocksOffset).coerceAtLeast(0f).roundToInt()
+                    val height = (placeable.height + topBlocksOffsetPx).coerceAtLeast(0)
                     layout(width = placeable.width, height = height) {
-                        placeable.placeRelative(x = 0, y = topBlocksOffset.roundToInt())
+                        placeable.placeRelative(x = 0, y = topBlocksOffsetPx)
                     }
                 },
         ) {
             topBlocks(Modifier.fillMaxWidth())
         }
-        FeedTabRow(
-            tabs = tabs,
-            selectedTabIndex = selectedTabIndex,
-            onTabSelect = { index ->
-                onTabSelect(index)
-                onExpandSheet()
-            },
-            // Fixed height so the semi-open detent (blocks + tab row) matches the layout exactly
+        TangemTabNavigation(
+            tabs = rememberTabItems(
+                tabs = tabs,
+                selectedTabIndex = selectedTabIndex,
+                onTabClick = { index ->
+                    onTabSelect(index)
+                    onExpandSheet()
+                },
+            ),
+            variant = TangemTabItem.Variant.Transparent,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(FeedV2Component.TabRowHeight),
@@ -144,43 +142,23 @@ internal fun FeedV2Content(
 }
 
 @Composable
-private fun FeedTabRow(
+private fun rememberTabItems(
     tabs: ImmutableList<FeedV2TabUM>,
     selectedTabIndex: Int,
-    onTabSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        tabs.forEachIndexed { index, tab ->
-            FeedTab(
-                tab = tab,
-                isSelected = index == selectedTabIndex,
-                onClick = { onTabSelect(index) },
-            )
-        }
-    }
-}
+    onTabClick: (Int) -> Unit,
+): ImmutableList<TangemTabItemUM> {
+    val currentOnTabClick by rememberUpdatedState(onTabClick)
 
-@Composable
-private fun FeedTab(tab: FeedV2TabUM, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .heightIn(min = 36.dp)
-            .clip(CircleShape)
-            .background(color = if (isSelected) TangemTheme.colors3.bg.tertiary else Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = tab.title.resolveReference(),
-            style = TangemTheme.typography3.subheading.medium,
-            color = if (isSelected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
-            maxLines = 1,
-        )
+    return remember(tabs, selectedTabIndex) {
+        tabs
+            .mapIndexed { index, tab ->
+                TangemTabItemUM.Content(
+                    id = tab.id,
+                    label = tab.title,
+                    isSelected = index == selectedTabIndex,
+                    onClick = { currentOnTabClick(index) },
+                )
+            }
+            .toImmutableList()
     }
 }

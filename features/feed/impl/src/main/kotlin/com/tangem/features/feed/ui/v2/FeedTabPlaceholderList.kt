@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -66,7 +67,7 @@ private fun PlaceholderRow(tabId: String, index: Int, onClick: (() -> Unit)?, mo
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(size = 12.dp))
-            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
+            .conditional(onClick != null) { clickable { onClick?.invoke() } }
             .padding(horizontal = 8.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

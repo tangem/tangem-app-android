@@ -28,6 +28,8 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.decompose.value.subscribe
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
@@ -36,14 +38,11 @@ import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
 import com.tangem.features.feed.nav.FeedTabContributor
-import com.tangem.features.feed.search.FeedSearchBarController
 import com.tangem.features.feed.ui.v2.FeedSearchBarHeader
 import com.tangem.features.feed.v2.FeedV2Component
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Provider
 
@@ -53,7 +52,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     @Suppress("UnusedPrivateProperty") @Assisted params: Unit,
     private val screenFactories: Map<Class<*>, @JvmSuppressWildcards Provider<FeedScreenFactory>>,
     private val tabContributors: Set<@JvmSuppressWildcards FeedTabContributor>,
-    private val searchBarController: FeedSearchBarController,
+    private val searchBarController: DefaultFeedSearchBarController,
 ) : FeedV2Component, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<FeedRoute>()
@@ -75,16 +74,12 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 
     init {
         componentScope.launch {
-            searchBarController.state
-                .map { it.isActive }
-                .distinctUntilChanged()
-                .collect(::onSearchBarActiveChange)
+            searchBarController.activationRequests.collect(::onSearchActivationRequest)
         }
-        // unfocus the host's search bar once the search screen fully leaves the stack (e.g. back)
-        stack.subscribe { stackState ->
-            val isSearchInStack = stackState.items.any { it.configuration is FeedRoute.Search }
-            if (!isSearchInStack) searchBarController.onActiveChange(isActive = false)
+        stack.subscribe(lifecycle) { stackState ->
+            searchBarController.setActive(isActive = stackState.active.configuration is FeedRoute.Search)
         }
+        lifecycle.doOnDestroy { searchBarController.setActive(isActive = false) }
     }
 
     @Composable
@@ -166,7 +161,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         }
     }
 
-    private fun onSearchBarActiveChange(isActive: Boolean) {
+    private fun onSearchActivationRequest(isActive: Boolean) {
         val isSearchActive = stack.value.active.configuration is FeedRoute.Search
         when {
             isActive && !isSearchActive -> feedRouter.push(
@@ -193,9 +188,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 private const val SEARCH_BAR_HEADER_KEY = "searchBarHeader"
 
 /**
- * Target of the sheet-header [AnimatedContent]. Equality is by [key] only: [depth] merely picks the
- * transition direction, and [screen] rides along so the exiting frame keeps rendering the header of
- * the screen it belongs to.
+ * Target of the sheet-header [AnimatedContent].
  */
 @Stable
 private class FeedHeaderTarget(
@@ -204,9 +197,11 @@ private class FeedHeaderTarget(
     val screen: FeedScreenComponent?,
 ) {
 
-    override fun equals(other: Any?): Boolean = other is FeedHeaderTarget && other.key == key
+    override fun equals(other: Any?): Boolean {
+        return other is FeedHeaderTarget && other.key == key && other.screen === screen
+    }
 
-    override fun hashCode(): Int = key.hashCode()
+    override fun hashCode(): Int = 31 * key.hashCode() + System.identityHashCode(screen)
 }
 
 /**

@@ -111,7 +111,8 @@ internal fun WalletScreen(
     isNewShtorkaEnabled: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
 ) {
@@ -161,7 +162,8 @@ internal fun WalletScreen(
         behavior = behavior,
         isNewShtorkaEnabled = isNewShtorkaEnabled,
         shtorkaHeaderContent = shtorkaHeaderContent,
-        bottomSheetContent = bottomSheetContent,
+        shtorkaContent = shtorkaContent,
+        legacyBottomSheetContent = legacyBottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
         modifier = modifier,
@@ -197,7 +199,8 @@ private fun WalletContent(
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
     var walletBalance by remember { mutableStateOf<TextReference?>(TextReference.EMPTY) }
     var pullToRefreshConfig by remember {
@@ -214,7 +217,8 @@ private fun WalletContent(
         shtorkaHeaderContent = shtorkaHeaderContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
-        bottomSheetContent = bottomSheetContent,
+        shtorkaContent = shtorkaContent,
+        legacyBottomSheetContent = legacyBottomSheetContent,
         appBarContent = {
             WalletTopBar(
                 topBarConfig = state.topBarConfig,
@@ -445,7 +449,8 @@ private fun BaseScaffoldWithMarkets(
     modifier: Modifier = Modifier,
     shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
-    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
 ) {
     if (isNewShtorkaEnabled) {
@@ -454,7 +459,7 @@ private fun BaseScaffoldWithMarkets(
             shtorkaHeaderContent = shtorkaHeaderContent,
             onBottomSheetStateChange = onBottomSheetStateChange,
             appBarContent = appBarContent,
-            bottomSheetContent = bottomSheetContent,
+            bottomSheetContent = shtorkaContent,
             modifier = modifier,
             content = content,
         )
@@ -464,7 +469,7 @@ private fun BaseScaffoldWithMarkets(
             bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
             onBottomSheetStateChange = onBottomSheetStateChange,
             appBarContent = appBarContent,
-            bottomSheetContent = bottomSheetContent,
+            bottomSheetContent = legacyBottomSheetContent,
             modifier = modifier,
             content = content,
         )
@@ -631,6 +636,7 @@ private fun ShtorkaScaffoldWithMarkets(
         ShtorkaStateEffects(
             shtorkaState = shtorkaState,
             isExpanded = isExpanded,
+            isKeyboardVisible = isKeyboardVisible,
             isSearchFieldFocused = isSearchFieldFocused,
             onBottomSheetStateChange = onBottomSheetStateChange,
         )
@@ -658,8 +664,10 @@ private fun ShtorkaScaffoldWithMarkets(
             TangemShtorka(
                 state = shtorkaState,
                 color = backgroundColor,
+                // hasFocus, not isFocused: the focused node is the search field somewhere below,
+                // this modifier only sees it as a descendant
                 modifier = Modifier.onFocusChanged { focusState ->
-                    isSearchFieldFocused = focusState.isFocused
+                    isSearchFieldFocused = focusState.hasFocus
                 },
                 // The header draws its own small drag tip with the search bar centered around it
                 showDragHandle = false,
@@ -687,12 +695,13 @@ private fun ShtorkaScaffoldWithMarkets(
 private fun ShtorkaStateEffects(
     shtorkaState: TangemShtorkaState,
     isExpanded: Boolean,
+    isKeyboardVisible: Boolean,
     isSearchFieldFocused: Boolean,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
 ) {
-    // expand the shtorka when the keyboard appears
-    val isKeyboardVisible by rememberIsKeyboardVisible()
-    LaunchedEffect(isKeyboardVisible) {
+    // raise the shtorka whenever the search field is being typed into — keyed on the focus too, so
+    // focusing the field while the keyboard is already up (it was raised by another field) counts
+    LaunchedEffect(isKeyboardVisible, isSearchFieldFocused) {
         if (isKeyboardVisible && isSearchFieldFocused) {
             shtorkaState.animateTo(TangemShtorka.Detent.Full)
         }
@@ -920,7 +929,8 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                 }
             },
             shtorkaHeaderContent = {},
-            bottomSheetContent = {
+            shtorkaContent = {},
+            legacyBottomSheetContent = {
                 Text("Markets Content")
             },
             bottomSheetHeaderHeightProvider = { 10.dp },

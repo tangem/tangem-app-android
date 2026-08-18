@@ -8,6 +8,7 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
@@ -34,7 +35,7 @@ internal class FeedForYouComponent @AssistedInject constructor(
 ) : FeedScreenComponent, AppComponentContext by context {
 
     private val legacyComponent = forYouComponentFactory.create(
-        context = context,
+        context = context.child(key = "legacy"),
         params = ForYouComponent.Params(callbacks = routerCallbacks()),
     )
 

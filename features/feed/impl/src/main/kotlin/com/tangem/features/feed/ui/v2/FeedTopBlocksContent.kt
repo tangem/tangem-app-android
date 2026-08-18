@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.v2.FeedV2Component
@@ -48,22 +51,25 @@ private val BlockShape = RoundedCornerShape(size = BlockCornerRadius)
  */
 @Composable
 internal fun FeedTopBlocksContent(onForYouClick: () -> Unit, modifier: Modifier = Modifier) {
-    LazyRow(
-        modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(space = BlockGap),
-    ) {
-        item(key = "shortcuts") {
-            Column(verticalArrangement = Arrangement.spacedBy(space = BlockGap)) {
-                ForYouBlock(onClick = onForYouClick)
-                AddAccountBlock()
+    // the blocks lie on the already-elevated shtorka, where another material shadow reads as grime
+    CompositionLocalProvider(LocalMaterialShadowEnabled provides false) {
+        LazyRow(
+            modifier = modifier,
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(space = BlockGap),
+        ) {
+            item(key = "shortcuts") {
+                Column(verticalArrangement = Arrangement.spacedBy(space = BlockGap)) {
+                    ForYouBlock(onClick = onForYouClick)
+                    AddAccountBlock()
+                }
             }
-        }
-        item(key = "promo_pay") {
-            LargeBlockPlaceholder(title = "Tangem Pay")
-        }
-        item(key = "promo_yield") {
-            LargeBlockPlaceholder(title = "Yield")
+            item(key = "promo_pay") {
+                LargeBlockPlaceholder(title = "Tangem Pay")
+            }
+            item(key = "promo_yield") {
+                LargeBlockPlaceholder(title = "Yield")
+            }
         }
     }
 }
@@ -73,7 +79,7 @@ internal fun FeedTopBlocksContent(onForYouClick: () -> Unit, modifier: Modifier 
 private fun ForYouBlock(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier = modifier.size(width = SmallBlockWidth, height = SmallBlockHeight)) {
         SmallBlock(
-            title = "For you",
+            title = stringResourceSafe(R.string.for_you_title),
             onClick = onClick,
             modifier = Modifier.matchParentSize(),
             icon = { PortfolioDonutIcon() },
@@ -109,7 +115,6 @@ private fun SmallBlock(
     TangemSurface(
         modifier = modifier,
         isMaterial = true,
-        isShadowEnabled = false,
         shape = BlockShape,
         onClick = onClick,
     ) {
@@ -187,7 +192,6 @@ private fun LargeBlockPlaceholder(title: String, modifier: Modifier = Modifier) 
     TangemSurface(
         modifier = modifier.size(width = LargeBlockWidth, height = LargeBlockHeight),
         isMaterial = true,
-        isShadowEnabled = false,
         shape = BlockShape,
         onClick = {},
     ) {
