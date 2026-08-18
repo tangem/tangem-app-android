@@ -127,11 +127,29 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         // Act
         val statuses = getEmittedValues(producer.produce()).last().accountStatuses
 
-        // Assert
+        // Assert — an account list holding a prediction account with the toggle off is only reachable if the
+        // toggle flips between the two producers' lifetimes, so the second assertion pins a defensive path
         verify(inverse = true) { supplier.invoke(userWalletId = walletId) }
         assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
         assertThat(statuses.filterIsInstance<AccountStatus.Prediction>().single().value)
             .isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
+    }
+
+    @Test
+    fun `GIVEN a single-currency wallet WHEN produced THEN the prediction supplier is never subscribed`() = runTest {
+        // Arrange — the wallet cannot hold the account, so its producer must not read storage or subscribe a quote
+        val supplier = predictionSupplier(flowOf(PredictionAccountStatusValue.NotOnboarded))
+        val producer = createProducer(
+            predictionAccountStatusSupplier = supplier,
+            wallet = MockUserWalletFactory.create().copy(isMultiCurrency = false),
+        )
+
+        // Act
+        val statuses = getEmittedValues(producer.produce()).last().accountStatuses
+
+        // Assert
+        verify(inverse = true) { supplier.invoke(userWalletId = walletId) }
+        assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
     }
 
     private fun predictionSupplier(status: Flow<PredictionAccountStatusValue>) =
@@ -145,12 +163,13 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         accounts: AccountList = accountListWithSpecialAccounts(),
         isPolymarketEnabled: Boolean = true,
         predictionAccountStatusSupplier: PredictionAccountStatusSupplier = predictionSupplier(predictionStatus),
+        wallet: UserWallet = userWallet,
     ): DefaultSingleAccountStatusListProducer {
         return DefaultSingleAccountStatusListProducer(
             params = SingleAccountStatusListProducer.Params(userWalletId = walletId),
             flowProducerTools = mockk(),
             userWalletsListRepository = mockk<UserWalletsListRepository> {
-                every { userWallets } returns MutableStateFlow(listOf(userWallet))
+                every { userWallets } returns MutableStateFlow(listOf(wallet))
             },
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
                 every { this@mockk.invoke(walletId) } returns flowOf(accounts)
