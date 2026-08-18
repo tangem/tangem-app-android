@@ -213,6 +213,7 @@ dependencies {
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
+    implementation(projects.data.jointAccount)
     implementation(projects.data.pushNotificationPreferences)
     implementation(projects.data.card)
     implementation(projects.data.common)
