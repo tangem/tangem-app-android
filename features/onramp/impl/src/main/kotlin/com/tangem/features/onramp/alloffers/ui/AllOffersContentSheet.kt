@@ -1,8 +1,11 @@
 package com.tangem.features.onramp.alloffers.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -125,10 +128,14 @@ private fun AllOffersSheetContent(
                                 OffersBasedOnPaymentMethodContent(
                                     offers = method.offers,
                                     linkedMarketingBannerComponent = linkedMarketingBannerComponent,
+                                    notification = state.restrictedNotification,
                                 )
                             }
                         } else {
-                            PaymentMethodsContent(methods = state.methods)
+                            PaymentMethodsContent(
+                                methods = state.methods,
+                                notification = state.restrictedNotification,
+                            )
                         }
                     }
                 }
@@ -163,6 +170,7 @@ private fun PaymentMethodTitle(onCloseClick: () -> Unit) {
 private fun OffersBasedOnPaymentMethodContent(
     offers: ImmutableList<OnrampOfferUM>,
     linkedMarketingBannerComponent: MarketingBannerComponent,
+    notification: NotificationUM?,
 ) {
     Column(
         modifier = Modifier
@@ -170,6 +178,10 @@ private fun OffersBasedOnPaymentMethodContent(
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        if (notification != null) {
+            Notification(config = notification.config)
+            SpacerH(8.dp)
+        }
         offers.fastForEach { offer ->
             key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
                 OfferWithLinkedBanner(offer, linkedMarketingBannerComponent)

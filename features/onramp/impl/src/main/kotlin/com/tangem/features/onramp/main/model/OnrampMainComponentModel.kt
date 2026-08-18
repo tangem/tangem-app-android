@@ -26,6 +26,7 @@ import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.model.isRestricted
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -236,6 +237,11 @@ internal class OnrampMainComponentModel @Inject constructor(
         onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM,
         categoryUM: OnrampOfferCategoryUM,
     ) {
+        if (onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
+            onrampOfferAdvantagesUM == OnrampOfferAdvantagesUM.Restricted
+        ) {
+            return
+        }
         val currentContentState = state.value as? OnrampMainComponentUM.Content ?: return
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.OnBuyClick(
@@ -419,8 +425,12 @@ internal class OnrampMainComponentModel @Inject constructor(
             quotes.all { it is OnrampQuote.AmountError } -> {
                 state.update { amountStateFactory.getSecondaryFieldAmountErrorState(quotes) }
             }
-            quotes.none { it is OnrampQuote.Data } -> {
-                state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
+            quotes.none { it is OnrampQuote.Data && !it.isRestricted } -> {
+                if (quotes.any(OnrampQuote::isRestricted)) {
+                    state.update { amountStateFactory.getSecondaryFieldRestrictedErrorState() }
+                } else {
+                    state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
+                }
             }
             else -> {
                 analyticsEventHandler.sendProviderCalculatedEvent(
