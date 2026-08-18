@@ -229,7 +229,7 @@ sealed interface Account {
      * @property derivationIndex  index of the owner key derivation; an index space independent from
      * [CryptoPortfolio] accounts
      * @property cryptoCurrencies tokens associated with the account. They are never spendable through the regular
-     * send/swap flows: a joint account is a Safe contract, not an EOA — see [AccountList.flattenCurrencies]
+     * send/swap flows: a joint account is a Safe contract, not an EOA — see `AccountList.flattenCurrencies`
      */
     @Serializable
     data class Joint private constructor(
