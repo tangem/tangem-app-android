@@ -20,6 +20,7 @@ data class GetWalletAccountsResponse(
         @Json(name = "sort") val sort: SortType?,
         @Json(name = "totalAccounts") val totalAccounts: Int,
         @Json(name = "totalArchivedAccounts") val totalArchivedAccounts: Int,
+        @Json(name = "totalJointAccounts") val totalJointAccounts: Int? = null,
     )
 }
 
