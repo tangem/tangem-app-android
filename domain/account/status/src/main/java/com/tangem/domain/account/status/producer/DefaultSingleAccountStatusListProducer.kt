@@ -195,7 +195,9 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
      * screen, so a supplier that goes quiet must cost one loading row rather than all of them.
      */
     private fun predictionStatusFlow(walletId: UserWalletId): Flow<PredictionAccountStatusValue> {
-        if (!polymarketFeatureToggles.isPolymarketEnabled) return flowOf(PredictionAccountStatusValue.Loading)
+        if (!polymarketFeatureToggles.isPolymarketEnabled) {
+            return flowOf(PredictionAccountStatusValue.Error.Unavailable)
+        }
 
         return predictionAccountStatusSupplier.invoke(userWalletId = walletId)
             .onStart { emit(PredictionAccountStatusValue.Loading) }
