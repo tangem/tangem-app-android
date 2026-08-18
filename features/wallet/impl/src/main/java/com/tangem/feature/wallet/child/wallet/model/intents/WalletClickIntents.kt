@@ -135,7 +135,7 @@ internal class WalletClickIntents @Inject constructor(
     }
 
     fun onPredictionAccountClick(userWalletId: UserWalletId) {
-        // TODO([REDACTED_TASK_KEY]): add analytics for prediction account entry point
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.MainScreen.ButtonPredictionAccount())
         router.openPolymarket(userWalletId)
     }
 
