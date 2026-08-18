@@ -23,7 +23,7 @@ import com.tangem.grow.datasource.onramp.models.response.OnrampDataJson
 import com.tangem.grow.datasource.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.grow.datasource.onramp.models.response.model.OnrampPairDTO
 import com.tangem.grow.datasource.onramp.models.response.model.PaymentMethodDTO
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
