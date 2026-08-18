@@ -42,10 +42,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
-/**
- * Covers the special accounts joined from their own suppliers. Their `combine` gates every account of the wallet,
- * so the prediction source is toggle-gated and seeded, and both are pinned here rather than in its own module.
- */
+/** Special accounts — payment, virtual, prediction — joined into the producer's `combine` from their suppliers. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
@@ -133,6 +130,8 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         // Assert
         verify(inverse = true) { supplier.invoke(userWalletId = walletId) }
         assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
+        assertThat(statuses.filterIsInstance<AccountStatus.Prediction>().single().value)
+            .isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
     }
 
     private fun predictionSupplier(status: Flow<PredictionAccountStatusValue>) =
