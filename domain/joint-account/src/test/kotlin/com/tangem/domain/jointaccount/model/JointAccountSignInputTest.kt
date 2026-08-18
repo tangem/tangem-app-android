@@ -6,24 +6,32 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class JointAccountCreationSignInputTest {
+internal class JointAccountSignInputTest {
 
     @ParameterizedTest
     @ProvideTestModels
     fun create(model: TestModel) {
         // Act
         val exception = runCatching {
-            JointAccountCreationSignInput(
-                walletId = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
-                creatorName = "Alice",
-                config = JointAccountCreationPayload.Config(
-                    name = "Family",
-                    icon = "Family",
-                    iconColor = "Azure",
-                    membersCount = 3,
-                    threshold = 2,
-                ),
+            JointAccountSignInput(
                 derivationIndex = model.derivationIndex,
+                makePayload = { ownerAddress ->
+                    JointAccountCreationPayload(
+                        config = JointAccountConfig(
+                            name = "Family",
+                            icon = "Family",
+                            iconColor = "Azure",
+                            membersCount = 3,
+                            threshold = 2,
+                        ),
+                        creator = JointAccountParticipant(
+                            walletId = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
+                            name = "Alice",
+                            address = ownerAddress,
+                            derivation = model.derivationIndex,
+                        ),
+                    )
+                },
             )
         }.exceptionOrNull()
 

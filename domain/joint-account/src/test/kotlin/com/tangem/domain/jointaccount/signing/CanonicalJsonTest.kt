@@ -1,7 +1,11 @@
 package com.tangem.domain.jointaccount.signing
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
+import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
+import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -55,17 +59,11 @@ internal class CanonicalJsonTest {
     fun `GIVEN creation payload WHEN canonicalize THEN produces the exact form the backend verifies`() {
         // Arrange
         val payload = JointAccountCreationPayload(
-            config = JointAccountCreationPayload.Config(
-                name = "Family",
-                icon = "Family",
-                iconColor = "Azure",
-                membersCount = 3,
-                threshold = 2,
-            ),
-            creator = JointAccountCreationPayload.Creator(
-                walletId = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
+            config = vectorConfig(),
+            creator = JointAccountParticipant(
+                walletId = VECTOR_WALLET_ID,
                 name = "Alice",
-                address = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
+                address = VECTOR_ADDRESS,
                 derivation = 0,
             ),
         )
@@ -75,10 +73,64 @@ internal class CanonicalJsonTest {
 
         // Assert
         val expected = """{"config":{"icon":"Family","iconColor":"Azure","membersCount":3,"name":"Family",""" +
-            """"threshold":2},"creator":{"address":"0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf","derivation":0,""" +
-            """"name":"Alice","walletId":"4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"}}"""
+            """"threshold":2},"creator":{"address":"$VECTOR_ADDRESS","derivation":0,""" +
+            """"name":"Alice","walletId":"$VECTOR_WALLET_ID"}}"""
         assertThat(actual).isEqualTo(expected)
     }
+
+    @Test
+    fun `GIVEN join payload WHEN canonicalize THEN invite id is inside the signed form`() {
+        // Arrange
+        val payload = JointAccountJoinPayload(
+            inviteId = VECTOR_INVITE_ID,
+            config = vectorConfig(),
+            member = JointAccountParticipant(
+                walletId = VECTOR_WALLET_ID,
+                name = "Bob",
+                address = VECTOR_ADDRESS,
+                derivation = 1,
+            ),
+        )
+
+        // Act
+        val actual = CanonicalJson.canonicalize(payload.toCanonicalMap()).toString(Charsets.UTF_8)
+
+        // Assert
+        val expected = """{"config":{"icon":"Family","iconColor":"Azure","membersCount":3,"name":"Family",""" +
+            """"threshold":2},"inviteId":"$VECTOR_INVITE_ID",""" +
+            """"member":{"address":"$VECTOR_ADDRESS","derivation":1,""" +
+            """"name":"Bob","walletId":"$VECTOR_WALLET_ID"}}"""
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN activation payload WHEN canonicalize THEN safe address is one more config field`() {
+        // Arrange
+        val payload = JointAccountActivationPayload(
+            walletId = VECTOR_WALLET_ID,
+            cryptoAccountId = VECTOR_CRYPTO_ACCOUNT_ID,
+            config = vectorConfig(),
+            safeAddress = VECTOR_ADDRESS,
+        )
+
+        // Act
+        val actual = CanonicalJson.canonicalize(payload.toCanonicalMap()).toString(Charsets.UTF_8)
+
+        // Assert
+        val expected = """{"config":{"icon":"Family","iconColor":"Azure","membersCount":3,"name":"Family",""" +
+            """"safeAddress":"$VECTOR_ADDRESS","threshold":2},""" +
+            """"cryptoAccountId":"$VECTOR_CRYPTO_ACCOUNT_ID",""" +
+            """"walletId":"$VECTOR_WALLET_ID"}"""
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    private fun vectorConfig() = JointAccountConfig(
+        name = "Family",
+        icon = "Family",
+        iconColor = "Azure",
+        membersCount = 3,
+        threshold = 2,
+    )
 
     @Test
     fun `GIVEN floating point value WHEN canonicalize THEN throws instead of guessing the format`() {
@@ -90,4 +142,11 @@ internal class CanonicalJsonTest {
     }
 
     data class TestModel(val input: Map<String, Any?>, val expected: String)
+
+    private companion object {
+        const val VECTOR_WALLET_ID = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"
+        const val VECTOR_CRYPTO_ACCOUNT_ID = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
+        const val VECTOR_INVITE_ID = "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
+        const val VECTOR_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
+    }
 }
