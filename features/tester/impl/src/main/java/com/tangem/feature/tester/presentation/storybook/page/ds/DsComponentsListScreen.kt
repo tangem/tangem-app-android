@@ -27,6 +27,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.ta
 import com.tangem.feature.tester.presentation.storybook.page.ds.modal.tangemModalStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.search.tangemSearchStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.segmentedcontrol.tangemSegmentedControlStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shtorka.tangemShtorkaStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.tangemTabNavigationStoryFactory
@@ -58,6 +59,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
     DsStoryItem(title = "🎛️ TangemFilterGroup", factory = tangemFilterGroupStoryFactory),
     DsStoryItem(title = "📑 TangemTabNavigation", factory = tangemTabNavigationStoryFactory),
+    DsStoryItem(title = "🎚️ TangemSegmentedControl", factory = tangemSegmentedControlStoryFactory),
     DsStoryItem(title = "🔤 Text styles", factory = textStyleStoryFactory),
 )
 
