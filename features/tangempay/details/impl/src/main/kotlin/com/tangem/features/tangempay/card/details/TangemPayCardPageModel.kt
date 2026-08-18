@@ -464,14 +464,15 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onViewPinAuthFailure(failure: BiometricAuthManager.Result.Failure) {
         when (failure.error) {
-            BiometricAuthError.NoDeviceCredential -> {
+            BiometricAuthError.NoBiometricEnrolled,
+            BiometricAuthError.NoDeviceCredential,
+            -> {
                 uiMessageSender.send(
                     message = TangemPayMessagesFactory.createProtectionNotSetMessage(
                         onOpenSettingsClick = settingsManager::openScreenLockSettings,
                     ),
                 )
             }
-            BiometricAuthError.NoBiometricEnrolled,
             BiometricAuthError.HardwareUnavailable,
             BiometricAuthError.NoForegroundActivity,
             BiometricAuthError.Unknown,
