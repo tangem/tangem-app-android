@@ -286,7 +286,6 @@ internal class TangemPayDetailsModelTest {
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = mockk(relaxed = true),
             sendFeedbackEmailUseCase = mockk(relaxed = true),
-            expressTransactionsEventListener = mockk(relaxed = true),
             tangemPayFeatureToggles = mockk(relaxed = true),
             paymentAccountStatusFetcher = mockk(relaxed = true),
             produceTangemPayInitialDataUseCase = mockk(relaxed = true),
