@@ -5,6 +5,19 @@ plugins {
 
 dependencies {
 
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
+    // region Other libraries
+    api(deps.arrow.core)
+    // endregion
+
+    // region Domain
+    api(projects.domain.core)
+    api(projects.domain.models)
+    // endregion
+
     // region Tangem SDK (derivation path and derived public keys types)
     api(tangemDeps.card.core)
     // endregion

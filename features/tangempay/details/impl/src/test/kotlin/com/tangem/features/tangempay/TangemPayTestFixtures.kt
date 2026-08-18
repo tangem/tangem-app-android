@@ -45,14 +45,12 @@ internal fun cashback(
     currency: Currency? = Currency.getInstance("USD"),
     isCapTrimmed: Boolean = false,
     exclusionReason: TangemPayTxHistoryItem.Cashback.ExclusionReason? = null,
-    promotionIds: List<String> = emptyList(),
 ): TangemPayTxHistoryItem.Cashback = TangemPayTxHistoryItem.Cashback(
     status = status,
     amount = amount,
     currency = currency,
     isCapTrimmed = isCapTrimmed,
     exclusionReason = exclusionReason,
-    promotionIds = promotionIds,
 )
 
 internal fun paymentTransaction(id: String = "tx_payment_1"): TangemPayTxHistoryItem.Payment =
@@ -127,6 +125,7 @@ internal fun tangemPayCard(
     frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
     state: TangemPayCardState = TangemPayCardState.Active,
     embossName: String? = null,
+    images: List<TangemPayTariffPlan.Image> = emptyList(),
 ): TangemPayCard = TangemPayCard(
     id = id,
     productInstanceId = "product_1",
@@ -136,7 +135,7 @@ internal fun tangemPayCard(
     limit = null,
     frozenState = frozenState,
     lastDigits = lastDigits,
-    images = emptyList(),
+    images = images,
     state = state,
     embossName = embossName,
 )
