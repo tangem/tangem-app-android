@@ -10,6 +10,7 @@ import com.tangem.datasource.api.auth.models.request.AuthenticationPayload
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
@@ -33,6 +34,7 @@ internal class DefaultSessionTokenRefresher(
     private val deviceKeyManager: DeviceKeyManager,
     private val nonceDecryptor: AuthNonceDecryptor,
     private val signedRequestPayload: SignedRequestPayload,
+    private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val clock: Clock,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -156,7 +158,7 @@ internal class DefaultSessionTokenRefresher(
         val payload = AuthenticationPayload(
             devicePublicKey = devicePublicKeyBase64,
             nonce = nonce,
-            attestationToken = null,
+            attestationToken = attestationProvider.getAttestationToken(nonce),
             metadata = signedRequestPayload.deviceMetadata,
         )
         val signature = try {
