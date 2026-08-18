@@ -110,7 +110,23 @@ data class CustomerInfo(
         val isPinSet: Boolean,
         val images: List<TangemPayTariffPlan.Image>,
         val embossName: String?,
-    )
+        val cardType: CardType,
+    ) {
+        enum class CardType {
+            VIRTUAL,
+            PHYSICAL,
+            UNDEFINED,
+            ;
+
+            companion object {
+                fun fromString(value: String?): CardType = when (value?.uppercase(Locale.US)) {
+                    "VIRTUAL" -> VIRTUAL
+                    "PHYSICAL" -> PHYSICAL
+                    else -> UNDEFINED
+                }
+            }
+        }
+    }
 
     /**
      * Raw multichain network as delivered by `customer/me`.networks[] — the transport used by the data

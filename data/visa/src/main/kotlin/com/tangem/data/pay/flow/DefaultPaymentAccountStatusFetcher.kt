@@ -2,6 +2,7 @@ package com.tangem.data.pay.flow
 
 import arrow.core.Either
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
+import com.tangem.data.pay.util.PlasticCardStateResolver
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.*
@@ -417,6 +418,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             val cardInfo = cardsById[productInstance.cardId] ?: return@mapNotNull null
             val cardId = productInstance.cardId
             val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
+            val cardState = resolveCardState(
+                cardInfo = cardInfo,
+                productInstance = productInstance,
+                cardId = cardId,
+                userWalletId = userWalletId,
+            )
             TangemPayCard(
                 id = cardId,
                 productInstanceId = productInstance.id,
@@ -434,7 +441,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 },
                 lastDigits = cardInfo.lastFourDigits,
                 images = cardInfo.images,
-                state = getCardState(cardId, userWalletId),
+                state = cardState,
                 embossName = cardInfo.embossName,
             )
         }
@@ -567,6 +574,23 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             ?.filterNot { it.state == TangemPayCardState.Issuing }
             ?.map { it.id }
             .orEmpty()
+    }
+
+    private suspend fun resolveCardState(
+        cardInfo: CustomerInfo.CardInfo,
+        productInstance: CustomerInfo.ProductInstance,
+        cardId: String,
+        userWalletId: UserWalletId,
+    ): TangemPayCardState {
+        val isAwaitingActivation = PlasticCardStateResolver.isAwaitingActivation(
+            cardInfo = cardInfo,
+            productInstance = productInstance,
+        )
+        return if (isAwaitingActivation) {
+            TangemPayCardState.Delivering
+        } else {
+            getCardState(cardId = cardId, userWalletId = userWalletId)
+        }
     }
 
     private suspend fun getCardState(cardId: String, userWalletId: UserWalletId): TangemPayCardState {

@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -125,6 +126,9 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data object AppSettings : AppRoute(path = "/app_settings")
 
+    @Serializable
+    data object Collectibles : AppRoute(path = "/collectibles")
+
     /**
      * Reset to factory
      *
@@ -231,7 +235,7 @@ sealed class AppRoute(val path: String) : Route {
         val fromCryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
         val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
-        val tangemPayInput: TangemPayInput? = null,
+        val accountFlow: AccountFlow? = null,
         val toCryptoCurrency: CryptoCurrency? = null,
         val fromAmount: SerializedBigDecimal? = null,
         val providerId: String? = null,
@@ -240,13 +244,6 @@ sealed class AppRoute(val path: String) : Route {
             "/${fromCryptoCurrency?.id?.value}" +
             "/${userWalletId.stringValue}",
     ) {
-        @Serializable
-        data class TangemPayInput(
-            val cryptoAmount: SerializedBigDecimal,
-            val fiatAmount: SerializedBigDecimal,
-            val depositAddress: String,
-        )
-
         @Serializable
         enum class CurrencyPosition {
             FROM,
@@ -427,7 +424,13 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/upgrade_wallet/${userWalletId.stringValue}")
 
     @Serializable
-    object AddExistingWallet : AppRoute(path = "/add_existing_wallet")
+    data class AddExistingWallet(
+        val mode: Mode = Mode.RecoveryPhrase,
+    ) : AppRoute(path = "/add_existing_wallet") {
+
+        @Serializable
+        enum class Mode { RecoveryPhrase, CloudRestore }
+    }
 
     @Serializable
     data class WalletActivation(
@@ -451,6 +454,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: String,
         val nextScreen: AppRoute? = null,
         val shouldShowBackButton: Boolean = true,
+        val canSkip: Boolean = false,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -487,6 +491,11 @@ sealed class AppRoute(val path: String) : Route {
     data class JointAccountJoin(
         val inviteId: String,
     ) : AppRoute(path = "/joint_account_join/$inviteId")
+
+    @Serializable
+    data class JointAccountMembers(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}")
 
     @Serializable
     data class EditAccount(

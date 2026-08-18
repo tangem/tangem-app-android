@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.CommonExtension
+
 plugins {
     alias(deps.plugins.kotlin.android) apply false
     alias(deps.plugins.kotlin.jvm) apply false
@@ -19,7 +21,7 @@ plugins {
 buildscript {
     configurations.classpath {
         resolutionStrategy {
-            // DAGP 3.16.0 -> kotlin-metadata-jvm:2.2.21 -> kotlin-bom:2.2.21, whose platform
+            // DAGP -> kotlin-metadata-jvm:2.2.21 -> kotlin-bom:2.2.21, whose platform
             // constraints upgrade kotlin-daemon-client to 2.2.21 while kotlin-compiler-runner stays
             // at the project Kotlin version. The version skew breaks incremental compilation via the
             // daemon (NoSuchMethodError on IncrementalCompilationOptions.<init>). Pin daemon-client
@@ -32,6 +34,27 @@ buildscript {
         classpath(deps.agconnect.agcp)
     }
 }
+
+// `-Pdependency.analysis.android.ignored.variants` is passed only by the PR check, which trims the build
+// to two build types (see run_code_quality.yml); the nightly run and a local `buildHealth`
+// analyse every variant and pass nothing. Reusing that flag as the marker for "this is the trimmed run"
+// beats inventing a private switch: the compensation it gates cannot outlive the variant trimming that
+// made it necessary, because there is only one thing to forget instead of two.
+// Presence is what counts, not content. A present-but-empty value means the workflow tried to trim and
+// the list did not survive the trip — DAGP would then quietly analyse everything — so it is left to fail
+// in `verifyDagpIgnoredVariantsProperty` rather than papered over here. Both readers use this one value,
+// so they cannot disagree about what "passed" means.
+val dagpIgnoredVariants: String? = providers
+    .gradleProperty("dependency.analysis.android.ignored.variants")
+    .orNull
+
+val isTrimmedVariantRun = dagpIgnoredVariants != null
+
+// Declaration buckets dropped from the analysis in the trimmed run. Single source of truth: consumed
+// by `ignoreSourceSet` below and checked against the module's real source sets by
+// `verifyDagpIgnoredSourceSets`, because DAGP matches these names literally and a stale one is a
+// silent no-op rather than an error.
+val dagpIgnoredSourceSets = listOf("internal", "external", "release", "mocked")
 
 // Dependency Analysis (DAGP) global configuration.
 dependencyAnalysis {
@@ -150,19 +173,47 @@ dependencyAnalysis {
     }
     issues {
         all {
-            // Default severity is "warn": buildHealth/projectHealth only report advice and never fail
-            // the build (local runs and the nightly CI report). The PR check passes -Pdagp.severity=fail
-            // to turn advice in the analyzed modules into a build failure.
+            // Only meaningful in the trimmed run. A dependency declared on `<buildType>Implementation`
+            // for a build type with no analysed variant reads as unused, so those source sets are
+            // dropped from the analysis rather than silenced by coordinate — the artifact stays checked
+            // wherever it is still declared. `mocked` is in the list even though its variant IS analysed
+            // (androidTest and src/mocked hang off it): chucker is the real library in debug and mocked
+            // and a no-op stub elsewhere, so once the stub build types are gone it looks used in every
+            // analysed variant and the plugin advises collapsing the pair into one `implementation`.
+            // Dropping the mocked bucket leaves `debugImplementation(chucker)` as the declaration under
+            // watch. The guard matters because this is a global setting: applied unconditionally it also
+            // blinded the full run, where all five build types are analysed and the twelve declarations
+            // it hides (chucker/chuckerStub in :app and :core:datasource, :features:kyc:impl in :app)
+            // are exactly what the nightly report exists to watch.
+            if (isTrimmedVariantRun) {
+                ignoreSourceSet(*dagpIgnoredSourceSets.toTypedArray())
+            }
+            // Default severity is "warn", which is what local runs get: buildHealth/projectHealth only
+            // report. Both CI workflows pass -Pdagp.severity=fail, so advice fails the build there — the
+            // PR check in the modules it analyses, the nightly across the whole graph.
             onAny { severity(providers.gradleProperty("dagp.severity").getOrElse("warn")) }
-            // `implementation` -> `api` advice is a systematic false positive in this codebase. Kotlin
-            // `internal` compiles to public bytecode, and 210 of 213 `*Model` plus 141 of 145
-            // `Default*Component` classes are `internal`, so DAGP reads their injected constructor
-            // parameters as the module's public ABI. Acting on the advice would promote nearly every
-            // `implementation` in the feature graph to `api` — the opposite of the api/impl split the
-            // modularization exists for — and would make every ABI change cascade to all consumers.
-            // The same root cause previously required a per-module exclusion in 17 projects; one
-            // category-wide rule replaces them. Genuine over-exposure (`api` -> `implementation`) is
-            // rare and is handled by hand instead.
+            // Ignores the whole "wrong configuration" category, not only `implementation` -> `api`. The
+            // plugin's filter is `Advice.isChange()` — declared and used, but on a different configuration
+            // than the usage implies, minus the compileOnly and runtimeOnly targets, which route to
+            // `onCompileOnly` / `onRuntimeOnly` (that is why the material and mlkit exclusions below still
+            // work). Four kinds of advice ride on this one line:
+            //  1. `implementation` -> `api`: raised across the whole feature graph, so acting on it would
+            //     promote nearly every `implementation` there to `api` — the opposite of the api/impl
+            //     split modularization exists for, and every ABI change would cascade to all consumers.
+            //  2. `api` -> `implementation`: raised for domain modules whose public API is generic
+            //     (`Flow<Lce<…>>`, `EitherFlow<…>`); demoting the `api` breaks the consumers compiling
+            //     against those types.
+            //     The exact mechanism behind 1 and 2 was never pinned down — the reason to silence them is
+            //     that both were systematic and unusable, not a theory about how the plugin reads ABIs.
+            //  3. `<buildType>Implementation` -> `implementation`: the variant-collapse advice. Once a
+            //     dependency is used in every analysed variant, DAGP merges the declaration onto the base
+            //     configuration — that is the chucker pair once the stub build types leave the analysis.
+            //  4. `implementation` -> a variant-scoped configuration: the mirror image, e.g. googlePlay
+            //     review, declared plainly in :app but referenced only from app/src/google.
+            // Cases 1 and 2 are what the 17 per-module exclusions this rule replaced were about; 3 and 4
+            // come with the category. Narrowing it back to "only -> api" resurrects all four at once and
+            // fails the PR check. To re-enable one case, exclude the coordinate under this handler rather
+            // than re-scoping the severity.
             onIncorrectConfiguration { severity("ignore") }
             // dagger-compiler is always pulled by hilt-compiler (declared via kapt(deps.hilt.kapt));
             // no need to declare the annotation processor separately.
@@ -375,6 +426,57 @@ val unitTest by tasks.registering {
     description = "Run unit tests for debug/googleDebug variant and all JVM modules"
 }
 
+/**
+ * Fails if a name in [dagpIgnoredSourceSets] is not a real Android source set of this module.
+ *
+ * DAGP resolves `ignoreSourceSet` against `CommonExtension.sourceSets` by exact string, so a typo or a
+ * build type renamed in `BuildType` is not an error there — the entry silently stops matching and the
+ * declarations it was meant to drop come back as unused-dependency advice. Runs only where the list is
+ * actually applied: validating it on an ordinary build would put a new way to fail into every assemble,
+ * test and IDE sync for no gain. Pure-JVM modules have no Android extension and return early.
+ */
+fun Project.verifyDagpIgnoredSourceSets() {
+    if (!isTrimmedVariantRun) return
+    val sourceSets = extensions.findByType(CommonExtension::class.java)?.sourceSets?.names ?: return
+    val unknown = dagpIgnoredSourceSets.filterNot { it in sourceSets }
+    if (unknown.isEmpty()) return
+
+    error(
+        "Dependency analysis ignores source sets that do not exist in $path: ${unknown.joinToString()}. " +
+            "Run `./gradlew $path:sourceSets` for the names this module has. Build types come from " +
+            "BuildType.kt in plugins/configuration; renaming one means updating `dagpIgnoredSourceSets` " +
+            "here and IGNORED_VARIANTS in .github/workflows/run_code_quality.yml together.",
+    )
+}
+
+/**
+ * Fails if the CI-supplied variant list is malformed. No-op locally, where the property is absent.
+ *
+ * `Flags.androidIgnoredVariants()` splits the value on ',' without trimming, so a stray space after a
+ * comma matches nothing and that variant is analysed after all — silently, and in the direction that
+ * produces advice rather than hiding it. Only the shape is checked, never the exact contents: which
+ * variants CI pays to analyse is a cost decision that is allowed to change without touching this file.
+ */
+fun Project.verifyDagpIgnoredVariantsProperty() {
+    val raw = dagpIgnoredVariants ?: return
+    val android = extensions.findByType(CommonExtension::class.java) ?: return
+
+    val buildTypes = android.buildTypes.names.toList()
+    // Library variants are bare build types; only :app is flavored, where they are <flavor><BuildType>.
+    val known = buildTypes + android.productFlavors.names.flatMap { flavor ->
+        buildTypes.map { flavor + it.replaceFirstChar(Char::uppercaseChar) }
+    }
+    val problems = raw.split(",").filterNot { it.isNotBlank() && it == it.trim() && it in known }
+    if (problems.isEmpty()) return
+
+    error(
+        "-Pdependency.analysis.android.ignored.variants has entries that match no variant of $path: " +
+            "${problems.joinToString { "\"$it\"" }}. Known: ${known.sorted().joinToString()}. Blank " +
+            "entries and stray whitespace count — the value is split on ',' and compared literally. " +
+            "It is set by IGNORED_VARIANTS in .github/workflows/run_code_quality.yml.",
+    )
+}
+
 subprojects {
     // Dependency Analysis (DAGP) registers `projectHealth`/`reason` on each module. In 3.x the
     // root application no longer auto-applies to subprojects, so apply it here. Reusing the plugin
@@ -383,8 +485,14 @@ subprojects {
 
     // App module
     plugins.withId("com.android.application") {
+        // Both checks run in `afterEvaluate` because the build types they compare against are created
+        // by the `configuration` convention plugin, after AGP itself is applied.
         afterEvaluate {
             unitTest.configure { dependsOn(tasks.named("testGoogleDebugUnitTest")) }
+            verifyDagpIgnoredSourceSets()
+            // :app is the only flavored module, so it is the only one that can validate the
+            // <flavor><BuildType> spellings the workflow passes.
+            verifyDagpIgnoredVariantsProperty()
         }
     }
 
@@ -392,6 +500,7 @@ subprojects {
     plugins.withId("com.android.library") {
         afterEvaluate {
             unitTest.configure { dependsOn(tasks.named("testDebugUnitTest")) }
+            verifyDagpIgnoredSourceSets()
         }
     }
 

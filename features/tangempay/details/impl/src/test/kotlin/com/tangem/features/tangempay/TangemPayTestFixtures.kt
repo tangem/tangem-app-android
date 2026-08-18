@@ -97,9 +97,10 @@ internal fun customerTariffPlan(
     plan: TangemPayTariffPlan = tariffPlan(),
     nextBillingAt: DateTime? = null,
     pendingPlan: TangemPayTariffPlan? = null,
+    source: TangemPayCustomerTariffPlan.Source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
 ): TangemPayCustomerTariffPlan = TangemPayCustomerTariffPlan(
     status = status,
-    source = TangemPayCustomerTariffPlan.Source.CUSTOMER,
+    source = source,
     plan = plan,
     nextBillingAt = nextBillingAt,
     pendingPlan = pendingPlan,
@@ -126,6 +127,7 @@ internal fun tangemPayCard(
     frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
     state: TangemPayCardState = TangemPayCardState.Active,
     embossName: String? = null,
+    images: List<TangemPayTariffPlan.Image> = emptyList(),
 ): TangemPayCard = TangemPayCard(
     id = id,
     productInstanceId = "product_1",
@@ -135,7 +137,7 @@ internal fun tangemPayCard(
     limit = null,
     frozenState = frozenState,
     lastDigits = lastDigits,
-    images = emptyList(),
+    images = images,
     state = state,
     embossName = embossName,
 )

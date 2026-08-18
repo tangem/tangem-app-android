@@ -18,6 +18,7 @@ import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
+import com.tangem.features.tangempay.card.details.CardDetailsEventListener
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsController
 import com.tangem.features.tangempay.card.view.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.details.impl.R
@@ -36,6 +37,7 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     private val updateCardNameUseCase: UpdateTangemPayCardNameUseCase,
     private val uiMessageSender: UiMessageSender,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    cardDetailsEventListener: CardDetailsEventListener,
     cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
 ) : Model() {
 
@@ -52,6 +54,7 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
             isEditingNameEnabled = false,
             shouldShowCardDetailsButtonOnCard = false,
         ),
+        cardDetailsEventListener = cardDetailsEventListener,
         onEditNameClick = {},
     )
 

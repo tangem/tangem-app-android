@@ -63,6 +63,7 @@ dependencies {
 
     // region Common
     implementation(projects.common)
+    implementation(projects.domain.staking.models)
     // endregion
 
     // region Libs

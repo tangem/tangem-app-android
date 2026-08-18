@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -32,6 +33,7 @@ import com.tangem.domain.txhistory.model.idToCopy
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
+import com.tangem.features.txhistory.converter.ExpressTxToShareTextConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
@@ -69,11 +71,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val getStakingTargetsByAddressUseCase: GetStakingTargetsByAddressUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+    private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: TxHistoryDetailsComponent.Params = paramsContainer.require()
+
+    private val shareTextConverter = ExpressTxToShareTextConverter()
 
     /**
      * Known staking targets (StakeKit validators and P2P vaults) keyed by on-chain address, used to resolve the target
@@ -123,23 +128,28 @@ internal class TxHistoryDetailsModel @Inject constructor(
         flow2 = ownerLookupProducer(),
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
-    ) { txInfo, lookup, stakingTargets, refundToken ->
-        // No explorer hash (e.g. an express op with no on-chain leg yet, or a blank on-chain hash) → the "Share" and
-        // "Explore" rows are dropped; a blank id drops the "Transaction ID" row.
+        flow5 = balanceHidingSettings.isBalanceHidden(),
+    ) { txInfo, lookup, stakingTargets, refundToken, isBalanceHidden ->
+        // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
+        // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
+        // on-chain row has no "Share"; a blank id drops "Transaction ID".
         val explorerHash = txInfo.explorerHash?.ifBlank { null }
         val idToCopy = txInfo.idToCopy.ifBlank { null }
+        val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
         TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = params.currency,
             onCopyAddress = ::onCopyAddress,
             onGoToProvider = urlOpener::openUrl,
             onCopyTxId = idToCopy?.let { id -> { onCopyTxId(id) } },
-            onShare = explorerHash?.let { hash -> { share(hash) } },
+            shareText = shareText,
+            onShare = shareManager::shareText,
             onExplore = explorerHash?.let { hash -> { explore(hash) } },
             refundCurrency = refundToken,
             onLearnMoreAboutRefundsClick = ::onLearnMoreAboutRefunds,
             onGoToRefundedTokenClick = params.onOpenTokenDetails,
             lookup = lookup,
             targetsByAddress = stakingTargets,
+            isBalanceHidden = isBalanceHidden,
             onOpenValidator = urlOpener::openUrl,
         ).convert(txInfo)
     }
@@ -212,14 +222,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         getExplorerTransactionUrlUseCase(txHash = txHash, currency = params.currency).fold(
             ifLeft = { TangemLogger.e(it.toString()) },
             ifRight = { urlOpener.openUrl(url = it) },
-        )
-    }
-
-    /** Shares the transaction's explorer URL — wired into the header menu's "Share" row. */
-    private fun share(txHash: String) {
-        getExplorerTransactionUrlUseCase(txHash = txHash, currency = params.currency).fold(
-            ifLeft = { TangemLogger.e(it.toString()) },
-            ifRight = { shareManager.shareText(text = it) },
         )
     }
 

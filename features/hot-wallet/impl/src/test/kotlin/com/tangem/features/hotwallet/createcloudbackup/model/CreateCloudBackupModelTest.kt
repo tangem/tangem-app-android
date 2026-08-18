@@ -4,6 +4,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessage
@@ -360,6 +362,34 @@ internal class CreateCloudBackupModelTest {
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
         verify(exactly = 0) { router.pop() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN wallet without access code WHEN finish clicked THEN skippable access code flow opened`() = runTest {
+        // Arrange
+        every { hotWalletId.authType } returns HotWalletId.AuthType.NoPassword
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        val model = createModel(this)
+        advanceUntilIdle()
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as CreateCloudBackupUM.Completed).onFinishClick()
+
+        // Assert
+        verify(exactly = 1) {
+            router.replaceCurrent(
+                AppRoute.UpdateAccessCode(
+                    userWalletId = walletId,
+                    source = AnalyticsParam.ScreensSources.WalletSettings.value,
+                    canSkip = true,
+                ),
+                onComplete = any(),
+            )
+        }
+        verify(exactly = 0) { router.pop(onComplete = any()) }
         model.onDestroy()
     }
 

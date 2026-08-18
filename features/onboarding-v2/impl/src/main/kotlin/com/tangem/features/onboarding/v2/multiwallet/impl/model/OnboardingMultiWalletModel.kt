@@ -9,10 +9,12 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.cloudbackup.usecase.DeleteWalletCloudBackupUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -22,7 +24,9 @@ import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -42,6 +46,9 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     private val getCardImageUseCase: GetCardImageUseCase,
     private val uiMessageSender: UiMessageSender,
     private val artworkUMConverter: ArtworkUMConverter,
+    private val appScope: AppCoroutineScope,
+    private val deleteWalletCloudBackupUseCase: DeleteWalletCloudBackupUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val _uiState = MutableStateFlow(OnboardingMultiWalletUM())
@@ -85,6 +92,16 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 },
             ),
         )
+    }
+
+    fun onOnboardingFinished() {
+        val mode = params.mode as? OnboardingMultiWalletComponent.Mode.UpgradeHotWallet ?: return
+        if (!hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return
+
+        appScope.launch {
+            deleteWalletCloudBackupUseCase(mode.userWalletId.stringValue)
+                .onLeft { TangemLogger.e("Unable to delete the cloud backup after upgrade: $it") }
+        }
     }
 
     private fun subscribeToBackups() {

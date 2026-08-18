@@ -169,6 +169,24 @@ class ScanCardTest : BaseTestCase() {
         }
     }
 
+    @AllureId("10835")
+    @DisplayName("Scan: 'Wallet 3' card")
+    @Test
+    fun wallet3ScanTest() {
+        val cardType: MockContent = Wallet3MockContent
+        val cardName = "Wallet"
+        val card = "Wallet 3"
+
+        setupHooks().run {
+            step("Open 'Main Screen' on '$card' card") {
+                openMainScreen(mockContent = cardType)
+            }
+            step("Check 'Main' screen for '$card' card") {
+                checkMultiCurrencyMainScreen(cardName)
+            }
+        }
+    }
+
     @AllureId("871")
     @DisplayName("Scan: Card with 4.12 firmware")
     @Test

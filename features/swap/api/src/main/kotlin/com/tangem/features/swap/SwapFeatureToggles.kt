@@ -6,4 +6,5 @@ interface SwapFeatureToggles {
     val isChooseTokenPulseEnabled: Boolean
     val isHideZeroBalanceSourceEnabled: Boolean
     val isSwapDeeplinkEnabled: Boolean
+    val isAccountSwapFlowEnabled: Boolean
 }

@@ -125,7 +125,6 @@ internal class TangemPayCardPageScreenComponent(
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onShowDetails = model::onShowVirtualAccountRequisites,
                     onShowBankingDetailsError = model::showVaBankingDetailsError,
-                    onContactSupport = model::onContactSupportClicked,
                     onOrderCreated = model::onVirtualAccountOrderCreated,
                 ),
             )
