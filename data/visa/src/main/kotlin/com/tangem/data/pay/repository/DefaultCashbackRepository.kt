@@ -46,10 +46,10 @@ internal class DefaultCashbackRepository @Inject constructor(
 
     override suspend fun getCashbackHistory(
         userWalletId: UserWalletId,
-        months: Int,
+        monthsNumber: Int,
     ): Either<VisaApiError, CashbackHistory> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getCashbackHistory(authHeader = authHeader, monthsNumber = months)
+            tangemPayApi.getCashbackHistory(authHeader = authHeader, monthsNumber = monthsNumber)
         }.map(CashbackHistoryConverter::convert)
     }
 
