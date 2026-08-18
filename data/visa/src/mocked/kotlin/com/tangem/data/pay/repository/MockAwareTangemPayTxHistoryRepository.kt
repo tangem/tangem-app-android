@@ -5,7 +5,7 @@ import com.tangem.spend.datasource.config.TangemPay
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
