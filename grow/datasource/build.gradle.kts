@@ -23,6 +23,8 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
+    implementation(tangemDeps.card.core)
+
     api(projects.core.remote)
     api(projects.core.utils)
 
