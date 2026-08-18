@@ -54,14 +54,14 @@ internal fun mergeTxHistoryInfos(
 ): List<TxHistoryInfo> {
     val currencyAssetId: ExpressAsset.ID = ExpressAsset.ID(currency)
     val isUtxoNetwork: Boolean = currency.network.toBlockchain().isUTXO
-    val onChainByHash: Map<String, List<TxInfo>> = onChain.groupBy { it.txHash }
+    val onChainByHash: Map<String, List<TxInfo>> = onChain.groupBy { it.txHash.asHashKey() }
     val claimedKeys = mutableSetOf<String>()
     val result = mutableListOf<TxHistoryInfo>()
 
     // Phase 1 — deterministic hash match takes priority (payin_hash / payout_hash via ExpressTx.matchHash).
     val unmatched = mutableListOf<ExpressTx>()
     express.forEach { op ->
-        val byHash = op.matchHash?.let(onChainByHash::get)?.expressLeg()
+        val byHash = op.matchHash?.asHashKey()?.let(onChainByHash::get)?.expressLeg()
         if (byHash != null) {
             result += op.withMatchedOnChain(OnChainTx.BSDK(byHash))
             claimedKeys += byHash.identityKey()
@@ -109,22 +109,22 @@ internal fun mergeTxHistoryInfos(
  * hash, and that it lines up with the express payin/payout hash) when TangemPay is integrated for real.
  */
 internal fun mergeTangemPay(onChain: List<OnChainTx.TangemPay>, express: List<ExpressTx>): List<TxHistoryInfo> {
-    val onChainByHash = onChain.mapNotNull { tx -> tx.explorerHash?.let { it to tx } }.toMap()
+    val onChainByHash = onChain.mapNotNull { tx -> tx.explorerHash?.let { it.asHashKey() to tx } }.toMap()
     val matchedHashes = mutableSetOf<String>()
     val result = mutableListOf<TxHistoryInfo>()
 
     express.forEach { op ->
-        val matched = op.matchHash?.let(onChainByHash::get)
+        val matched = op.matchHash?.asHashKey()?.let(onChainByHash::get)
         if (matched != null) {
             result += op.withMatchedOnChain(matched)
-            matched.explorerHash?.let(matchedHashes::add)
+            matched.explorerHash?.let { matchedHashes += it.asHashKey() }
         } else {
             result += op
         }
     }
 
     onChain.forEach { tx ->
-        if (tx.explorerHash !in matchedHashes) {
+        if (tx.explorerHash?.asHashKey() !in matchedHashes) {
             result += tx
         }
     }
@@ -297,6 +297,17 @@ private fun ExchangeTransaction.isSentFromUser(onChainTx: TxInfo): Boolean {
  * distinct addresses won't collide case-insensitively in practice.
  */
 private fun String.matchesAddress(other: String): Boolean = equals(other, ignoreCase = true)
+
+/**
+ * Join key of an on-chain hash, tolerant of case: express returns `payin_hash`/`payout_hash` in whatever casing the
+ * provider used (upper-case hex is common), while the blockchain SDK yields the same hash lower-case — compared
+ * verbatim they never line up and the legs surface as two rows. Distinct hashes won't collide case-insensitively
+ * in practice.
+ *
+ * Lookup only — the original casing is kept on the row itself, since [TxHistoryInfo.explorerHash] feeds explorer
+ * URLs that may be case-sensitive.
+ */
+private fun String.asHashKey(): String = lowercase()
 
 private fun TxInfo.sourceAddresses(): List<String> = when (val source = sourceType) {
     is TxInfo.SourceType.Single -> listOf(source.address)

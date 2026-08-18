@@ -1,6 +1,6 @@
 package com.tangem.tests.actionButtons
 
-import com.tangem.datasource.api.common.config.MoonPay
+import com.tangem.grow.datasource.config.MoonPay
 
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase

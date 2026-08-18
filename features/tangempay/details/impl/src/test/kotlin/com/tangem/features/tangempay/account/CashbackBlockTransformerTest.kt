@@ -158,7 +158,6 @@ internal class CashbackBlockTransformerTest {
             isNegative = false,
             isInactive = false,
         ),
-        addToWalletBlockState = null,
         isBalanceHidden = false,
         errorNotificationConfig = null,
         accountDeactivatedNotificationConfig = null,
