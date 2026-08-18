@@ -73,6 +73,11 @@ internal class CashbackHistoryConverterTest {
             response = createResponse(items = null),
             expected = CashbackHistory(currency = "USD", months = emptyList()),
         ),
+        ConvertModel(
+            name = "missing result envelope -> empty history",
+            response = CashbackHistoryResponse(result = null),
+            expected = CashbackHistory(currency = "", months = emptyList()),
+        ),
     )
 
     internal data class ConvertModel(
@@ -91,8 +96,7 @@ internal class CashbackHistoryConverterTest {
                 createItem(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
             ),
         ) = CashbackHistoryResponse(
-            currency = currency,
-            items = items,
+            result = CashbackHistoryResponse.Result(currency = currency, items = items),
         )
 
         fun createItem(year: Int, month: Int, confirmedAmount: BigDecimal?) = CashbackHistoryResponse.Item(
