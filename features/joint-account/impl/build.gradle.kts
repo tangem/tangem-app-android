@@ -29,7 +29,12 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.common)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
+
+    /** SDK */
+    implementation(projects.libs.blockchainSdk)
+    implementation(tangemDeps.blockchain)
 
     /** Compose */
     implementation(deps.compose.foundation)
