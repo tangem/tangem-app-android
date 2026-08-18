@@ -596,6 +596,17 @@ internal data class TangemBadgeV2Story(
     }
 }
 
+internal data class TangemSegmentedControlStory(
+    val segmentCount: Int,
+    val selectedId: String,
+    val isLoading: Boolean,
+    val isFillWidth: Boolean,
+    val onSegmentCountChange: (Int) -> Unit,
+    val onSegmentClick: (String) -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onFillWidthToggle: () -> Unit,
+) : DsStoryBookPage
+
 internal data class TangemTabNavigationStory(
     val variant: TangemTabItem.Variant,
     val background: Background,
