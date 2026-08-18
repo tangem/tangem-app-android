@@ -15,8 +15,10 @@ internal class TangemPayCashbackDateFormatter {
 
     fun formatNumericDate(date: DateTime): String = DateTimeFormatters.formatDate(date, DateTimeFormatters.dateDDMMYYYY)
 
-    fun formatWindow(start: DateTime, end: DateTime): String =
-        DateTimeFormatters.formatDateRange(start, end, MONTH_DAY_SKELETON)
+    fun formatWindow(start: DateTime?, end: DateTime?): String? {
+        if (start == null || end == null) return null
+        return DateTimeFormatters.formatDateRange(start, end, MONTH_DAY_SKELETON)
+    }
 
     private companion object {
         const val MONTH_DAY_SKELETON = "MMMMd"
