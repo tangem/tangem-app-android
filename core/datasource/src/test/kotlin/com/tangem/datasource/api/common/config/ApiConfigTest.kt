@@ -48,11 +48,6 @@ class ApiConfigTest {
 
     private fun createApiConfigs(): List<ApiConfig> {
         return listOf(
-            Express(
-                environmentConfig = environmentConfig,
-                expressAuthProvider = mockk(),
-                appInfoProvider = mockk(),
-            ),
             YieldSupply(
                 environmentConfig = environmentConfig,
                 authProvider = appAuthProvider,
@@ -63,7 +58,6 @@ class ApiConfigTest {
                 appInfoProvider = mockk(),
             ),
             StakeKit(stakeKitAuthProvider = mockk()),
-            BlockAid(environmentConfig = environmentConfig),
             P2PEthPool(p2pAuthProvider = mockk()),
             News(
                 authProvider = appAuthProvider,

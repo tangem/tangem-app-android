@@ -2,10 +2,10 @@ package com.tangem.data.blockaid
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.datasource.api.common.blockaid.models.request.BlockAidScanOptions
-import com.tangem.datasource.api.common.blockaid.models.request.Data
-import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionBulkScanRequest
-import com.tangem.datasource.api.common.blockaid.models.response.TransactionMetadata
+import com.tangem.store.datasource.blockaid.models.request.BlockAidScanOptions
+import com.tangem.store.datasource.blockaid.models.request.Data
+import com.tangem.store.datasource.blockaid.models.request.EvmTransactionBulkScanRequest
+import com.tangem.store.datasource.blockaid.models.response.TransactionMetadata
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.common.TransactionData as SDKTransactionData
 
