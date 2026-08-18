@@ -1,6 +1,6 @@
 package com.tangem.data.swap.converter
 
-import com.tangem.datasource.api.express.models.request.LeastTokenInfo
+import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.TokenInfo
 import com.tangem.utils.converter.Converter
