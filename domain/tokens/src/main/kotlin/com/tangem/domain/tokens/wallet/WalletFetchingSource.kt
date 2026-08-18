@@ -28,8 +28,7 @@ sealed class WalletFetchingSource {
     /**
      * Prediction account fetching source.
      * Handled separately from standard balance sources via
-     * [com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher], which refreshes the collateral quote
-     * itself, so no quote has to be fetched for it here.
+     * [com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher].
      */
     data object Prediction : WalletFetchingSource()
 
