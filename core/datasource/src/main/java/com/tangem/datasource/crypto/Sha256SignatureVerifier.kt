@@ -1,9 +1,8 @@
 package com.tangem.datasource.crypto
 
-import com.tangem.datasource.api.common.config.Express
-
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.crypto.CryptoUtils
+import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -23,10 +22,16 @@ internal class Sha256SignatureVerifier(
     }
 
     private fun getPubKey(): String? {
-        val expressConfig = apiConfigsManager.getEnvironmentConfig(Express.ID)
+        // The Express config now lives in grow:datasource, which core:datasource must not depend on;
+        // look it up by its stable id (mirrors grow's Express.KEY).
+        val expressConfig = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID(EXPRESS_CONFIG_ID))
         return when (expressConfig.environment) {
             ApiEnvironment.PROD -> environmentConfig.express?.signVerifierPublicKey
             else -> environmentConfig.devExpress?.signVerifierPublicKey
         }
+    }
+
+    private companion object {
+        const val EXPRESS_CONFIG_ID = "Express"
     }
 }
