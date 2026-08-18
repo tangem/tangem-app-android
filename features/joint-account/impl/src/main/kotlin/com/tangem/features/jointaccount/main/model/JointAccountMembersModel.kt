@@ -1,19 +1,28 @@
 package com.tangem.features.jointaccount.main.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
+import com.tangem.core.ui.R as CoreUiR
 
 // TODO([REDACTED_TASK_KEY]): visible texts are hardcoded English literals while the screen runs on stubbed
 //  state. Replace with resource references once the invite-members strings land in Lokalise.
@@ -23,9 +32,13 @@ internal class JointAccountMembersModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val clipboardManager: ClipboardManager,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
+
+    val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
 
     val uiState: StateFlow<JointAccountMembersUM>
         field = MutableStateFlow(createStubState())
@@ -34,15 +47,22 @@ internal class JointAccountMembersModel @Inject constructor(
         val isInviteMode = params.mode == JointAccountMembersComponent.Mode.Invite
         val canInvite = isInviteMode && params.isCreator
 
+        val creatorAvatar = JointAccountMembersUM.MemberAvatarUM(
+            monogram = "I",
+            color = CryptoPortfolioIcon.Color.Azure,
+        )
         val creator = JointAccountMembersUM.MemberUM.Joined(
             id = "creator",
-            avatar = JointAccountMembersUM.MemberAvatarUM(
-                monogram = "I",
-                color = CryptoPortfolioIcon.Color.Azure,
-            ),
+            avatar = creatorAvatar,
             name = stringReference("Ivan Zolo"),
             role = stringReference("You • Creator"),
-            onInfoClick = ::onMemberInfoClick,
+            onInfoClick = {
+                onMemberInfoClick(
+                    avatar = creatorAvatar,
+                    name = stringReference("Ivan Zolo"),
+                    address = STUB_MEMBER_ADDRESS,
+                )
+            },
         )
 
         val freeSlots = List(size = FREE_SLOTS_COUNT) { index ->
@@ -77,8 +97,20 @@ internal class JointAccountMembersModel @Inject constructor(
         // TODO([REDACTED_TASK_KEY]): open the "Sharing safely" info sheet
     }
 
-    private fun onMemberInfoClick() {
-        // TODO([REDACTED_TASK_KEY]): open the member card modal with the full owner address
+    private fun onMemberInfoClick(avatar: JointAccountMembersUM.MemberAvatarUM, name: TextReference, address: String) {
+        bottomSheetNavigation.activate(
+            MemberCardConfig(avatar = avatar, name = name, address = address),
+        )
+    }
+
+    fun onCopyAddressClick(address: String) {
+        clipboardManager.setText(text = address, isSensitive = false)
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(CoreUiR.string.wallet_notification_address_copied),
+                startIconId = CoreUiR.drawable.ic_check_24,
+            ),
+        )
     }
 
     private fun onInviteClick() {
@@ -96,5 +128,6 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private companion object {
         const val FREE_SLOTS_COUNT = 4
+        const val STUB_MEMBER_ADDRESS = "0xBef7B368aac4e6752A9cE0xBef7B36A9cE"
     }
 }
