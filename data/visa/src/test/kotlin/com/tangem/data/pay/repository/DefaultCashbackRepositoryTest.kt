@@ -47,7 +47,9 @@ internal class DefaultCashbackRepositoryTest {
     @Test
     fun `GIVEN promotions response WHEN getCashbackPromotions THEN converter result is returned`() = runTest {
         // Arrange
-        val response = CashbackPromotionsResponse(cashbackOnCards = null, additionalCashback = null)
+        val response = CashbackPromotionsResponse(
+            result = CashbackPromotionsResponse.Result(cashbackOnCards = null, additionalCashback = null),
+        )
         coEvery { tangemPayApi.getCashbackPromotions(any()) } returns ApiResponse.Success(response)
 
         // Act
@@ -74,7 +76,9 @@ internal class DefaultCashbackRepositoryTest {
     fun `GIVEN docs response WHEN getCashbackAccrualDocs THEN converter result is returned`() = runTest {
         // Arrange
         val response = CashbackAccrualDocsResponse(
-            docs = listOf(CashbackAccrualDocsResponse.Doc(id = "1", title = "Terms", url = "https://a")),
+            result = CashbackAccrualDocsResponse.Result(
+                docs = listOf(CashbackAccrualDocsResponse.Doc(id = "1", title = "Terms", url = "https://a")),
+            ),
         )
         coEvery { tangemPayApi.getCashbackAccrualDocs(any()) } returns ApiResponse.Success(response)
 
