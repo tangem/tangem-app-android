@@ -50,6 +50,7 @@ import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
+import com.tangem.tap.domain.tasks.product.RegisterColdWalletRunnable
 import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
@@ -62,6 +63,7 @@ import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.Lazy
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -165,7 +167,6 @@ internal class DefaultTangemSdkManager(
                     shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                     cardRepository = cardRepository,
-                    walletRegistrationLauncher = walletRegistrationLauncher.get(),
                 ),
                 cardId = cardId,
                 initialMessage = message,
@@ -295,6 +296,7 @@ internal class DefaultTangemSdkManager(
             ),
             cardId = cardId,
             initialMessage = Message(resources.getStringSafe(R.string.card_settings_reset_card_to_factory)),
+            registerColdWallet = false, // reset wipes the card — nothing to register
         )
     }
 
@@ -307,6 +309,7 @@ internal class DefaultTangemSdkManager(
                     cardNumber.toString(),
                 ),
             ),
+            registerColdWallet = false, // reset wipes the card — nothing to register
         )
     }
 
@@ -374,6 +377,24 @@ internal class DefaultTangemSdkManager(
         initialMessage: Message?,
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
+    ): CompletionResult<T> = coroutineScope {
+        startSessionAsync(
+            runnable = withColdWalletRegistration(runnable),
+            preflightReadFilter = preflightReadFilter,
+            cardId = cardId,
+            initialMessage = initialMessage,
+            accessCode = accessCode,
+            iconScanRes = iconScanRes,
+        )
+    }
+
+    private suspend fun <T> startSessionAsync(
+        runnable: CardSessionRunnable<T>,
+        preflightReadFilter: PreflightReadFilter?,
+        cardId: String?,
+        initialMessage: Message?,
+        accessCode: String? = null,
+        @DrawableRes iconScanRes: Int? = null,
     ): CompletionResult<T> = withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { continuation ->
             tangemSdk.startSessionWithRunnable(
@@ -394,15 +415,42 @@ internal class DefaultTangemSdkManager(
         cardId: String? = null,
         initialMessage: Message? = null,
         preflightReadFilter: PreflightReadFilter? = null,
+        registerColdWallet: Boolean = true,
     ): CompletionResult<T> {
-        val result = runTaskAsync(
-            runnable = runnable,
-            cardId = cardId,
-            initialMessage = initialMessage,
-            preflightReadFilter = preflightReadFilter,
-        )
+        val result = if (registerColdWallet) {
+            coroutineScope {
+                startSessionAsync(
+                    runnable = withColdWalletRegistration(runnable),
+                    preflightReadFilter = preflightReadFilter,
+                    cardId = cardId,
+                    initialMessage = initialMessage,
+                )
+            }
+        } else {
+            startSessionAsync(
+                runnable = runnable,
+                preflightReadFilter = preflightReadFilter,
+                cardId = cardId,
+                initialMessage = initialMessage,
+            )
+        }
         return withContext(Dispatchers.Main) { result }
     }
+
+    /**
+     * Wraps [runnable] so that, on success, the card is bound to the device via cold wallet
+     * registration on the same NFC tap — applied to every card operation except reset and Visa
+     * (they pass `registerColdWallet = false`). Twin / Visa / walletless cards are skipped inside
+     * [WalletRegistrationLauncher]. Uses the enclosing session [CoroutineScope] receiver so the
+     * launched in-session registration is cancelled with the caller and can't outlive the tap.
+     */
+    private fun <T> CoroutineScope.withColdWalletRegistration(
+        runnable: CardSessionRunnable<T>,
+    ): CardSessionRunnable<T> = RegisterColdWalletRunnable(
+        inner = runnable,
+        launcher = walletRegistrationLauncher.get(),
+        sessionScope = this,
+    )
 
     @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
@@ -501,6 +549,7 @@ internal class DefaultTangemSdkManager(
                 ),
                 cardId = activationInput.cardId,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
         }
     }
@@ -519,6 +568,7 @@ internal class DefaultTangemSdkManager(
             ),
             cardId = visaDataForApprove.customerWalletCardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            registerColdWallet = false, // Visa — not a cold wallet registration target
         )
     }
 
@@ -531,6 +581,7 @@ internal class DefaultTangemSdkManager(
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
 
             return@coroutineScope when (result) {
@@ -549,6 +600,7 @@ internal class DefaultTangemSdkManager(
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
 
             return@coroutineScope when (result) {
@@ -568,6 +620,7 @@ internal class DefaultTangemSdkManager(
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
 
             return@coroutineScope when (result) {
