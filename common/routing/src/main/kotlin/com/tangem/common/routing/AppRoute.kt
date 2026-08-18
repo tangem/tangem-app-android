@@ -454,6 +454,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: String,
         val nextScreen: AppRoute? = null,
         val shouldShowBackButton: Boolean = true,
+        val canSkip: Boolean = false,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -490,6 +491,11 @@ sealed class AppRoute(val path: String) : Route {
     data class JointAccountJoin(
         val inviteId: String,
     ) : AppRoute(path = "/joint_account_join/$inviteId")
+
+    @Serializable
+    data class JointAccountMembers(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}")
 
     @Serializable
     data class EditAccount(
