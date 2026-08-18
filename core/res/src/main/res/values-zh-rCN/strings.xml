@@ -1277,7 +1277,7 @@
   <string name="promo_campaign_not_active_title">活动未启动</string>
   <string name="promo_campaign_reactivation_summary_description">每次兑换金额超过 500 美元，即可获得 0.5% 的返现，适用于除稳定币与稳定币之间的兑换以外的所有交易对。每次兑换的最高返现金额为 50 美元。\n\n完成五笔符合条件的兑换，即可解锁额外 10 美元的奖励。\n\n奖励每周以 USDT 或 USDC 形式支付至您选择的地址。</string>
   <string name="promo_campaign_select_cashback_account">选择返现账户</string>
-  <string name="promo_campaign_select_token">选择代币</string>
+  <string name="promo_campaign_select_token">选择返现代币</string>
   <string name="promo_campaign_summary_title">报名参加 %1$s</string>
   <string name="promo_campaign_terms_agreement">我同意 %1$s</string>
   <string name="promo_campaign_terms_agreement_android">我同意</string>
@@ -1812,7 +1812,7 @@
   <string name="tangempay_bank_transfer_show_details">显示详情</string>
   <string name="tangempay_bank_transfer_success_subtitle">这可能需要一些时间</string>
   <string name="tangempay_bank_transfer_success_title">正在准备您的银行信息</string>
-  <string name="tangempay_bank_transfer_swift_warning">仅支持通过 ACH 或 FedWire 存款。SWIFT 转账将被退回。</string>
+  <string name="tangempay_bank_transfer_swift_warning">不接受 SWIFT 转账，款项将退回</string>
   <string name="tangempay_cancel_kyc">从主屏幕隐藏 KYC 页面</string>
   <string name="tangempay_card_default_name">Tangem 支付卡 1</string>
   <string name="tangempay_card_details_add_funds">增加资金</string>
@@ -2077,7 +2077,7 @@
   <string name="tangempay_tangem_visa_card">使用 USDC 进行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">通过 ACH/FedWire 接收法定美元</string>
+  <string name="tangempay_topup_bank_transfer_body">通过 ACH 接收法定美元</string>
   <string name="tangempay_topup_bank_transfer_title">银行转账</string>
   <string name="tangempay_topup_receive_body">將 USDC Polygon 發送至您帳戶地址</string>
   <string name="tangempay_topup_receive_body_multichain">将 USDC 或 USDT 发送至您账户的地址</string>
@@ -2132,6 +2132,11 @@
   <string name="token_details_unable_hide_alert_title">无法隐藏 %s</string>
   <string name="token_market_metrics_no_data">不适用</string>
   <string name="token_receive_show_qr_code_title">显示二维码</string>
+  <string name="token_summary_galaxy_score_description">Galaxy Score 将市场表现与社交媒体活跃度结合起来，生成一个0到100分的综合评分，反映资产的整体健康状况。来源：LunarCrush。</string>
+  <string name="token_summary_ma_cross_description">MA Cross 通过对比 50 日均价和 200 日均价，来显示该资产的交易价格是高于还是低于其长期趋势。来源：taapi.io。</string>
+  <string name="token_summary_macd_description">MACD通过比较短期和长期的价格动能，来显示某项资产的动能是正在增强还是减弱。来源：taapi.io。</string>
+  <string name="token_summary_rsi_description">RSI（相对强弱指数）用于衡量某资产在过去14个周期内是否被过度买入或卖出，从而提示潜在的超买或超卖状况。来源：taapi.io。</string>
+  <string name="token_summary_sentiment_description">情绪评分以1到5的评分标准衡量社交媒体上关于该资产的帖子基调，分数越高意味着讨论越积极。来源：LunarCrush。</string>
   <string name="token_swap_changelly_promotion_message">从 2 月 %2$s-%3$s，兑换另一个代币的服务费为 %1$s 。</string>
   <string name="token_swap_changelly_promotion_title">用Changelly 兑换， %s 费用</string>
   <string name="token_swap_promotion_button">立即兑换</string>

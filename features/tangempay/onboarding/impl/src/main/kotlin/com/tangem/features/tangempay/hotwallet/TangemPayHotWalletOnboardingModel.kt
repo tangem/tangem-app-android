@@ -2,7 +2,6 @@ package com.tangem.features.tangempay.hotwallet
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -11,7 +10,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
-import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.onboarding.api.R
 import com.tangem.hot.sdk.model.HotAuth
@@ -71,19 +69,8 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
 
                 TangemLogger.i("[TangemPay][HWO]Hot wallet created")
                 router.replaceAll(
-                    AppRoute.CreateWalletBackup(
-                        userWalletId = userWallet.walletId,
-                        analyticsSource = AnalyticsParam.ScreensSources.TangemPayHotWalletOnboarding.value,
-                        analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup.value,
-                        shouldShowBackButton = false,
-                        nextScreen = AppRoute.UpdateAccessCode(
-                            userWalletId = userWallet.walletId,
-                            source = AnalyticsParam.ScreensSources.TangemPayHotWalletOnboarding.value,
-                            shouldShowBackButton = false,
-                            nextScreen = AppRoute.TangemPayOnboarding(
-                                mode = AppRoute.TangemPayOnboarding.Mode.FirstSetup(userWallet.walletId),
-                            ),
-                        ),
+                    AppRoute.TangemPayOnboarding(
+                        mode = AppRoute.TangemPayOnboarding.Mode.FirstSetup(userWallet.walletId),
                     ),
                 )
             }.onFailure {
