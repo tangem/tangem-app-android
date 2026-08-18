@@ -485,8 +485,6 @@ dependencies {
     androidTestImplementation(deps.jodatime)
     // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
     androidTestImplementation(deps.zxing.qrCore)
-    // The generated Hilt test component references the @Singleton FeedSearchBarController binding.
-    androidTestImplementation(projects.features.feed.search.api)
     kaptAndroidTest(deps.test.hilt.compiler)
     kaptAndroidTest(deps.hilt.kapt)
 
