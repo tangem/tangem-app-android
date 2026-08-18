@@ -35,6 +35,8 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
@@ -47,6 +49,7 @@ import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -85,6 +88,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
@@ -157,10 +162,17 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
             paymentAccountStatusSupplier.invoke(userWalletId = walletId),
             virtualAccountStatusSupplier.invoke(userWalletId = walletId),
-        ) { paymentStatus, virtualStatus ->
+            predictionStatusFlow(userWallet = userWallet),
+        ) { paymentStatus, virtualStatus, predictionValue ->
+            val predictionStatus = AccountStatus.Prediction(
+                account = Account.Prediction(userWalletId = walletId),
+                value = predictionValue,
+            )
+
             mapOf(
                 paymentStatus.accountId to paymentStatus,
                 virtualStatus.accountId to virtualStatus,
+                predictionStatus.accountId to predictionStatus,
             )
         }
 
@@ -186,6 +198,19 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             }
             buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
         }.collect { accountStatusList -> channel.send(accountStatusList) }
+    }
+
+    /**
+     * Subscribed only for a wallet that can hold the account, and seeded before the join: this flow gates every
+     * account on the screen, so a supplier that goes quiet must cost one loading row rather than all of them.
+     */
+    private fun predictionStatusFlow(userWallet: UserWallet): Flow<PredictionAccountStatusValue> {
+        if (!polymarketFeatureToggles.isPolymarketEnabled || !userWallet.isPredictionAccountSupported) {
+            return flowOf(PredictionAccountStatusValue.Error.Unavailable)
+        }
+
+        return predictionAccountStatusSupplier.invoke(userWalletId = userWallet.walletId)
+            .onStart { emit(PredictionAccountStatusValue.Loading) }
     }
 
     private fun buildCryptoPortfolioStatus(
