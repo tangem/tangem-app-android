@@ -65,9 +65,8 @@ import dev.chrisbanes.haze.HazeTint
  * @param enabled Forwarded to the click handler.
 
  * @param shadowRadius Blur size of the material drop shadow, expressed as a Figma `box-shadow`
- *   blur. Ignored when [isMaterial] is `false`.
- * @param isShadowEnabled Whether the material drop shadow is drawn. `false` renders the material
- *   without a shadow (e.g. blocks laid on an already-elevated container).
+ *   blur. Ignored when [isMaterial] is `false`. Provide [LocalMaterialShadowEnabled] as `false` to
+ *   suppress the shadow entirely (e.g. for blocks laid on an already-elevated container).
  * @param content Content rendered inside the clipped surface.
  */
 @Suppress("UnsafeCallOnNullableType", "LongParameterList")
@@ -84,7 +83,6 @@ fun TangemSurface(
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
     shadowRadius: Dp = 40.dp,
-    isShadowEnabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
@@ -92,7 +90,7 @@ fun TangemSurface(
     val surface: @Composable () -> Unit = {
         Box(
             modifier = modifier
-                .conditionalCompose(isMaterial && isShadowEnabled) { materialShadow(shape, shadowRadius) }
+                .conditionalCompose(isMaterial) { materialShadow(shape, shadowRadius) }
                 .conditionalCompose(border != null) { border(border!!, shape) }
                 .conditionalCompose(isMaterial) { materialBorder(shape = shape, style = materialStyle) }
                 .clip(shape)
