@@ -34,7 +34,6 @@ internal class AuthModule {
         return DefaultExpressAuthProvider()
     }
 
-
     @Provides
     @Singleton
     fun provideP2PEthPoolAuthProvider(environmentConfig: EnvironmentConfig): P2PEthPoolAuthProvider {
