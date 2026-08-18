@@ -109,8 +109,10 @@ internal class CanonicalJsonTest {
         val payload = JointAccountActivationPayload(
             walletId = VECTOR_WALLET_ID,
             cryptoAccountId = VECTOR_CRYPTO_ACCOUNT_ID,
-            config = vectorConfig(),
-            safeAddress = VECTOR_ADDRESS,
+            config = JointAccountActivationPayload.ConfirmedConfig(
+                base = vectorConfig(),
+                safeAddress = VECTOR_ADDRESS,
+            ),
         )
 
         // Act
