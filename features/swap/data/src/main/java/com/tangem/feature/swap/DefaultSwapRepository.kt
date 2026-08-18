@@ -10,7 +10,6 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
@@ -36,7 +35,6 @@ import com.tangem.grow.datasource.express.models.request.PairsRequestBody
 import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWithTxDetails
 import com.tangem.grow.datasource.express.models.response.SwapPair
 import com.tangem.grow.datasource.express.models.response.SwapPairsWithProviders
-import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async

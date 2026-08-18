@@ -224,6 +224,64 @@ internal class StateBuilderSwapButtonTest {
         }
     }
 
+    @Nested
+    @DisplayName("Region-restricted quote")
+    inner class `Region restricted` {
+
+        /**
+         * [StateBuilder.getSwapButtonEnabled] blocks on any [SwapNotificationUM.Error], so region
+         * restriction disables the button emergently rather than by an explicit check. Both cases pass
+         * a non-null `swapFee` so the `isSwapTxReady` gate can't be what flips the assertion.
+         */
+        @Test
+        @DisplayName("should disable swap button when the quote is region-restricted")
+        fun `GIVEN restricted quote WHEN createQuotesLoadedState THEN swap button disabled`() {
+            val state = buildQuotesLoadedStateFor(
+                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                hasOutgoingTransaction = false,
+                permissionState = PermissionDataState.Empty,
+                isRestricted = true,
+            )
+
+            val result = sut.createQuotesLoadedState(
+                uiStateHolder = buildInputtableHolder(),
+                quoteModel = state,
+                feeCryptoCurrencyStatus = null,
+                swapProvider = buildProvider(ExchangeProviderType.CEX),
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
+                swapFee = buildSwapFee(),
+                feeError = null,
+                isHighNetworkFee = false,
+            )
+
+            assertThat(result.swapButton.isEnabled).isFalse()
+        }
+
+        @Test
+        @DisplayName("should keep swap button enabled when the quote is not region-restricted")
+        fun `GIVEN purchasable quote WHEN createQuotesLoadedState THEN swap button enabled`() {
+            val state = buildQuotesLoadedStateFor(
+                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                hasOutgoingTransaction = false,
+                permissionState = PermissionDataState.Empty,
+                isRestricted = false,
+            )
+
+            val result = sut.createQuotesLoadedState(
+                uiStateHolder = buildInputtableHolder(),
+                quoteModel = state,
+                feeCryptoCurrencyStatus = null,
+                swapProvider = buildProvider(ExchangeProviderType.CEX),
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
+                swapFee = buildSwapFee(),
+                feeError = null,
+                isHighNetworkFee = false,
+            )
+
+            assertThat(result.swapButton.isEnabled).isTrue()
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -253,11 +311,14 @@ internal class StateBuilderSwapButtonTest {
      *   [SwapNotificationUM.Error.TransactionInProgressWarning] — a blocking Error notification.
      * @param permissionState when [PermissionDataState.PermissionRequired], adds a
      *   [SwapNotificationUM.Info.PermissionNeeded] — also in the blocking list.
+     * @param isRestricted when true, [SwapNotificationsFactory] adds a
+     *   [SwapNotificationUM.Error.RegionalRestriction] — another blocking Error notification.
      */
     private fun buildQuotesLoadedStateFor(
         account: Account,
         hasOutgoingTransaction: Boolean,
         permissionState: PermissionDataState,
+        isRestricted: Boolean = false,
     ): SwapState.QuotesLoadedState {
         val networkRawId = Blockchain.Ethereum.toNetworkId()
 
@@ -321,6 +382,7 @@ internal class StateBuilderSwapButtonTest {
             validationResult = null,
             minAdaValue = null,
             swapProvider = buildProvider(ExchangeProviderType.CEX),
+            isRestricted = isRestricted,
         )
     }
 
