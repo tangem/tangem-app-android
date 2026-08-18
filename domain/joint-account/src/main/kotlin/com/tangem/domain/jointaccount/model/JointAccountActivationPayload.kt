@@ -8,20 +8,32 @@ import com.tangem.domain.jointaccount.signing.JointAccountSignablePayload
  *
  * @property walletId        64 hex chars, must equal the `walletId` of the request path
  * @property cryptoAccountId names the account — the caller's own row in `accounts`, 64 upper-case hex chars
- * @property config          the configuration as the account holds it
- * @property safeAddress     the address the composition resolved to, recomputed by the app (Safe CREATE2)
- * before signing; goes into the canonical form as one more `config` field, per the contract's confirmed config
+ * @property config          the configuration as the account holds it, plus the address it resolved to
  */
 data class JointAccountActivationPayload(
     val walletId: String,
     val cryptoAccountId: String,
-    val config: JointAccountConfig,
-    val safeAddress: String,
+    val config: ConfirmedConfig,
 ) : JointAccountSignablePayload {
+
+    /**
+     * [JointAccountConfig] plus [safeAddress] — the contract's confirmed config: one field more than the config
+     * of joining, because the Safe address does not exist until the last slot is taken.
+     *
+     * @property safeAddress the address the composition resolved to, recomputed by the app (Safe CREATE2)
+     * before signing
+     */
+    data class ConfirmedConfig(
+        val base: JointAccountConfig,
+        val safeAddress: String,
+    ) {
+
+        internal fun toCanonicalMap(): Map<String, Any> = base.toCanonicalMap() + ("safeAddress" to safeAddress)
+    }
 
     override fun toCanonicalMap(): Map<String, Any> = mapOf(
         "walletId" to walletId,
         "cryptoAccountId" to cryptoAccountId,
-        "config" to config.toCanonicalMap() + ("safeAddress" to safeAddress),
+        "config" to config.toCanonicalMap(),
     )
 }
