@@ -8,7 +8,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.converter.VisaActivationStatusConverterWithState
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.spend.datasource.pay.models.request.SetPinCodeRequest
