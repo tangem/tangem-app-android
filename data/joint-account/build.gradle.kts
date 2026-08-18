@@ -39,6 +39,14 @@ dependencies {
     implementation(projects.domain.models)
     // endregion
 
+    // region Tangem SDKs
+    implementation(tangemDeps.blockchain)
+    // endregion
+
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
     // region Tests
     testImplementation(projects.test.core)
     // endregion
