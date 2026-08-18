@@ -2,27 +2,36 @@ package com.tangem.data.jointaccount.di
 
 import android.content.Context
 import androidx.datastore.dataStoreFile
+import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.jointaccount.cleaner.JointAccountUserWalletDataCleaner
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
 import com.tangem.data.jointaccount.fetcher.DefaultSingleJointAccountListFetcher
 import com.tangem.data.jointaccount.producer.DefaultSingleJointAccountListProducer
+import com.tangem.data.jointaccount.store.DefaultJointAccountInvitesStore
 import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
+import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
 @Module
@@ -65,6 +74,31 @@ internal interface JointAccountDataModule {
                 converter = converter,
                 scope = scope,
             )
+        }
+
+        @Provides
+        @Singleton
+        fun provideJointAccountInvitesStore(
+            @ApplicationContext context: Context,
+            dispatchers: CoroutineDispatcherProvider,
+        ): JointAccountInvitesStore {
+            val secureStorage: SecureStorage = AndroidSecureStorageV2(
+                appContext = context,
+                useStrongBox = false,
+                name = "joint_account_invites_storage",
+            )
+
+            return DefaultJointAccountInvitesStore(
+                secureStorage = secureStorage,
+                json = Json { ignoreUnknownKeys = true },
+                dispatchers = dispatchers,
+            )
+        }
+
+        @Provides
+        @IntoSet
+        fun provideJointAccountUserWalletDataCleaner(impl: JointAccountUserWalletDataCleaner): UserWalletDataCleaner {
+            return impl
         }
 
         @Provides
