@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -32,7 +33,6 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -40,7 +40,6 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.addfunds.AddFundsListener
-import com.tangem.features.tangempay.card.gpay.DetailsAddToWalletBannerTransformer
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
@@ -72,12 +71,11 @@ import javax.inject.Inject
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val urlOpener: UrlOpener,
-    private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val uiMessageSender: UiMessageSender,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
@@ -128,8 +126,8 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
 
     private val refreshStateJobHolder = JobHolder()
-    private val addToWalletBannerJobHolder = JobHolder()
     private val cashbackBlockJobHolder = JobHolder()
+    private val planSelectionJobHolder = JobHolder()
     private val cashbackDateFormatter = TangemPayCashbackDateFormatter()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
@@ -153,7 +151,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                         handleInitialRoute()
                     }
                     is PaymentAccountStatusValue.Loaded -> {
-                        fetchAddToWalletBanner()
                         fetchCashbackBlock()
                         uiState.update { stateFactory.getLoadedState(state) }
                         handleInitialRoute()
@@ -161,12 +158,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
                         stateFactory.getInactiveState(state)
                     }
-                    is PaymentAccountStatusValue.AwaitingPlanSelection -> router.replaceAll(
-                        TangemPayAccountDetailsInnerRoute.SelectPlan(
-                            tariffPlan = state.tariffPlan,
-                            source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-                        ),
-                    )
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
             }
@@ -186,11 +177,28 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     fun onStart() {
+        observeAwaitingPlanSelection()
         onRefreshSwipe(refreshState = ShowRefreshState(false))
     }
 
     fun onStop() {
-        // release branch 6.2 code uses onStop callback
+        planSelectionJobHolder.cancel()
+    }
+
+    private fun observeAwaitingPlanSelection() {
+        currentStatus
+            .map { it.value }
+            .filterIsInstance<PaymentAccountStatusValue.AwaitingPlanSelection>()
+            .onEach { status ->
+                router.replaceAll(
+                    TangemPayAccountDetailsInnerRoute.SelectPlan(
+                        tariffPlan = status.tariffPlan,
+                        source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
+                    ),
+                )
+            }
+            .launchIn(modelScope)
+            .saveIn(planSelectionJobHolder)
     }
 
     override fun onClickAddFunds() {
@@ -245,31 +253,9 @@ internal class TangemPayDetailsModel @Inject constructor(
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-                tangemPayInput = AppRoute.Swap.TangemPayInput(
-                    cryptoAmount = balance.availableForWithdrawal,
-                    fiatAmount = balance.availableForWithdrawal,
-                    depositAddress = balance.cryptoBalance.depositAddress,
-                ),
+                accountFlow = AccountFlow.Withdraw,
             ),
         )
-    }
-
-    private fun fetchAddToWalletBanner() {
-        modelScope.launch {
-            val isDone = try {
-                cardDetailsRepository.isAddToWalletDone(userWalletId).getOrNull() == true
-            } catch (e: Exception) {
-                TangemLogger.e("Error", e)
-                return@launch
-            }
-            uiState.update(
-                transformer = DetailsAddToWalletBannerTransformer(
-                    onClickBanner = ::onClickAddToWalletBlock,
-                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
-                    isDone = isDone,
-                ),
-            )
-        }.saveIn(addToWalletBannerJobHolder)
     }
 
     private fun fetchCashbackBlock() {
@@ -325,29 +311,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(refreshStateJobHolder)
     }
 
-    private fun onClickAddToWalletBlock() {
-        analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
-        val card = currentStatus.value.ifLoadedOrNull { it.cards.firstOrNull() } ?: return
-        router.push(TangemPayAccountDetailsInnerRoute.AddToWallet(card))
-    }
-
-    private fun onClickCloseAddToWalletBlock() {
-        modelScope.launch {
-            try {
-                cardDetailsRepository.setAddToWalletAsDone(userWalletId)
-            } catch (e: Exception) {
-                TangemLogger.e("Error", e)
-            }
-            uiState.update(
-                transformer = DetailsAddToWalletBannerTransformer(
-                    onClickBanner = ::onClickAddToWalletBlock,
-                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
-                    isDone = true,
-                ),
-            )
-        }.saveIn(addToWalletBannerJobHolder)
-    }
-
     private fun onOpenMenu() {
         analytics.send(TangemPayAnalyticsEvents.CardSettingsClicked())
     }
@@ -361,11 +324,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 userWalletId = data.walletId,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
-                tangemPayInput = AppRoute.Swap.TangemPayInput(
-                    cryptoAmount = data.cryptoBalance,
-                    fiatAmount = data.fiatBalance,
-                    depositAddress = data.depositAddress,
-                ),
+                accountFlow = AccountFlow.TopUp,
             ),
         )
     }
