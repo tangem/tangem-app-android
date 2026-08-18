@@ -66,5 +66,6 @@ dependencies {
     // region Tests
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(deps.kotlin.datetime)
     // endregion
 }
