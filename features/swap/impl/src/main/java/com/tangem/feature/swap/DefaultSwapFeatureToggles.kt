@@ -38,4 +38,9 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_16356_ACCOUNT_SWAP_FLOW,
         )
+
+    override val isExpressCategoriesGeoBlockingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+        )
 }
