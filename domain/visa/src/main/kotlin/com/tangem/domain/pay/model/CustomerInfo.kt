@@ -157,9 +157,14 @@ data class CustomerInfo(
             }
         }
 
+        /**
+         * @property contractAddress the token's contract on this network, or `null` when the backend does not
+         * report one yet (possible while the network's contract is not issued). Such a token cannot be turned
+         * into a [com.tangem.domain.models.currency.CryptoCurrency], but its network still gets a row.
+         */
         data class Token(
             val symbol: String,
-            val contractAddress: String,
+            val contractAddress: String?,
             val availableForWithdrawal: BigDecimal?,
         )
     }
