@@ -7,6 +7,7 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator
 import org.bouncycastle.crypto.params.Argon2Parameters
+import java.nio.ByteBuffer
 import java.nio.CharBuffer
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
@@ -46,6 +47,7 @@ internal class CloudBackupCipher(
     ): CloudBackupFileData {
         val salt = randomBytes(SALT_SIZE_BYTES)
         val nonce = randomBytes(GCM_NONCE_SIZE_BYTES)
+        val id = randomUuid().toString()
 
         val key = deriveArgon2id(
             password = password,
@@ -56,7 +58,13 @@ internal class CloudBackupCipher(
         )
         // AES-GCM appends the authentication tag to the ciphertext; the spec stores it separately
         val sealed = try {
-            aesGcm(mode = Cipher.ENCRYPT_MODE, key = key, iv = nonce, input = secret)
+            aesGcm(
+                mode = Cipher.ENCRYPT_MODE,
+                key = key,
+                iv = nonce,
+                input = secret,
+                aad = aad(version = VERSION, id = id),
+            )
         } finally {
             key.fill(0)
         }
@@ -65,7 +73,7 @@ internal class CloudBackupCipher(
 
         return CloudBackupFileData(
             version = VERSION,
-            id = UUID.randomUUID().toString(),
+            id = id,
             name = metadata.name,
             walletId = metadata.walletId,
             createdAt = metadata.createdAt,
@@ -89,6 +97,46 @@ internal class CloudBackupCipher(
 
     /** Decrypts [data] with [password]; the GCM tag check authenticates the payload */
     fun decrypt(data: CloudBackupFileData, password: CharArray): Either<CloudBackupCryptoError, ByteArray> = either {
+        val decoded = validateFormat(data)
+        val kdfparams = data.crypto.kdfparams
+
+        val key = catchingCrypto("kdf parameters") {
+            deriveArgon2id(
+                password = password,
+                salt = decoded.salt,
+                params = Argon2Params(
+                    memoryKib = kdfparams.memory,
+                    iterations = kdfparams.iterations,
+                    parallelism = kdfparams.parallelism,
+                ),
+                version = kdfparams.version,
+                dklen = kdfparams.dklen,
+            )
+        }
+
+        // GCM verifies the tag while decrypting: a wrong password or a tampered file fails the tag check.
+        // Java's AES-GCM expects the tag appended to the ciphertext, so re-join them.
+        try {
+            aesGcm(
+                mode = Cipher.DECRYPT_MODE,
+                key = key,
+                iv = decoded.nonce,
+                input = decoded.ciphertext + decoded.tag,
+                aad = aad(version = data.version, id = data.id),
+            )
+        } catch (e: AEADBadTagException) {
+            raise(CloudBackupCryptoError.WrongPassword)
+        } catch (e: GeneralSecurityException) {
+            raise(CloudBackupCryptoError.InvalidFormat("Decryption failed: ${e.message}"))
+        } finally {
+            key.fill(0)
+        }
+    }
+
+    /** Structural check that [data] is a well-formed supported backup — all [decrypt] validations minus the KDF work */
+    fun isSupportedFormat(data: CloudBackupFileData): Boolean = either { validateFormat(data) }.isRight()
+
+    private fun Raise<CloudBackupCryptoError>.validateFormat(data: CloudBackupFileData): DecodedCryptoParams {
         ensure(data.version == VERSION) {
             CloudBackupCryptoError.InvalidFormat("Unsupported version: ${data.version}")
         }
@@ -106,41 +154,30 @@ internal class CloudBackupCipher(
         val nonce = ensureNotNull(data.crypto.cipherparams.nonce.hexToBytesOrNull()) {
             CloudBackupCryptoError.InvalidFormat("Malformed hex: nonce")
         }
+        ensure(nonce.size == GCM_NONCE_SIZE_BYTES) {
+            CloudBackupCryptoError.InvalidFormat("Invalid nonce size: ${nonce.size}")
+        }
         val ciphertext = ensureNotNull(data.crypto.ciphertext.hexToBytesOrNull()) {
             CloudBackupCryptoError.InvalidFormat("Malformed hex: ciphertext")
         }
         val tag = ensureNotNull(data.crypto.tag.hexToBytesOrNull()) {
             CloudBackupCryptoError.InvalidFormat("Malformed hex: tag")
         }
+        ensure(tag.size == GCM_TAG_SIZE_BYTES) {
+            CloudBackupCryptoError.InvalidFormat("Invalid tag size: ${tag.size}")
+        }
 
         validateArgon2Params(kdfparams)
 
-        val key = catchingCrypto("kdf parameters") {
-            deriveArgon2id(
-                password = password,
-                salt = salt,
-                params = Argon2Params(
-                    memoryKib = kdfparams.memory,
-                    iterations = kdfparams.iterations,
-                    parallelism = kdfparams.parallelism,
-                ),
-                version = kdfparams.version,
-                dklen = kdfparams.dklen,
-            )
-        }
-
-        // GCM verifies the tag while decrypting: a wrong password or a tampered file fails the tag check.
-        // Java's AES-GCM expects the tag appended to the ciphertext, so re-join them.
-        try {
-            aesGcm(mode = Cipher.DECRYPT_MODE, key = key, iv = nonce, input = ciphertext + tag)
-        } catch (e: AEADBadTagException) {
-            raise(CloudBackupCryptoError.WrongPassword)
-        } catch (e: GeneralSecurityException) {
-            raise(CloudBackupCryptoError.InvalidFormat("Decryption failed: ${e.message}"))
-        } finally {
-            key.fill(0)
-        }
+        return DecodedCryptoParams(salt = salt, nonce = nonce, ciphertext = ciphertext, tag = tag)
     }
+
+    private class DecodedCryptoParams(
+        val salt: ByteArray,
+        val nonce: ByteArray,
+        val ciphertext: ByteArray,
+        val tag: ByteArray,
+    )
 
     // untrusted params — reject out-of-range values before the KDF to avoid OOM / negative-size crashes
     private fun Raise<CloudBackupCryptoError>.validateArgon2Params(params: CloudBackupFileData.KdfParams) {
@@ -178,6 +215,23 @@ internal class CloudBackupCipher(
 
     private fun randomBytes(size: Int): ByteArray = ByteArray(size).also(random::nextBytes)
 
+    /** Drawn from [random] rather than `UUID.randomUUID()` so the format vector stays reproducible */
+    private fun randomUuid(): UUID {
+        val bytes = randomBytes(UUID_SIZE_BYTES)
+        bytes[UUID_VERSION_BYTE] = (bytes[UUID_VERSION_BYTE].toInt() and UUID_VERSION_MASK or UUID_VERSION_4).toByte()
+        bytes[UUID_VARIANT_BYTE] = (bytes[UUID_VARIANT_BYTE].toInt() and UUID_VARIANT_MASK or UUID_VARIANT_IETF)
+            .toByte()
+
+        val buffer = ByteBuffer.wrap(bytes)
+        return UUID(buffer.long, buffer.long)
+    }
+
+    /**
+     * Binds the ciphertext to the header it ships with, so a payload taken from another backup fails the
+     * tag check. Not stored: both platforms rebuild it from the plaintext header.
+     */
+    private fun aad(version: Int, id: String): ByteArray = "$version$AAD_SEPARATOR$id".toByteArray(Charsets.UTF_8)
+
     private fun deriveArgon2id(
         password: CharArray,
         salt: ByteArray,
@@ -203,9 +257,10 @@ internal class CloudBackupCipher(
         return out
     }
 
-    private fun aesGcm(mode: Int, key: ByteArray, iv: ByteArray, input: ByteArray): ByteArray {
+    private fun aesGcm(mode: Int, key: ByteArray, iv: ByteArray, input: ByteArray, aad: ByteArray): ByteArray {
         val cipher = Cipher.getInstance(AES_GCM_TRANSFORMATION)
         cipher.init(mode, SecretKeySpec(key, KEY_ALGORITHM_AES), GCMParameterSpec(GCM_TAG_SIZE_BITS, iv))
+        cipher.updateAAD(aad)
         return cipher.doFinal(input)
     }
 
@@ -285,6 +340,14 @@ internal class CloudBackupCipher(
         private const val KEY_ALGORITHM_AES = "AES"
         private const val AES_GCM_TRANSFORMATION = "AES/GCM/NoPadding"
         private const val BYTE_MASK = 0xFF
+        private const val AAD_SEPARATOR = "."
+        private const val UUID_SIZE_BYTES = 16
+        private const val UUID_VERSION_BYTE = 6
+        private const val UUID_VARIANT_BYTE = 8
+        private const val UUID_VERSION_MASK = 0x0F
+        private const val UUID_VERSION_4 = 0x40
+        private const val UUID_VARIANT_MASK = 0x3F
+        private const val UUID_VARIANT_IETF = 0x80
 
         private const val MIN_DKLEN = 16
         private const val MAX_DKLEN = 64
