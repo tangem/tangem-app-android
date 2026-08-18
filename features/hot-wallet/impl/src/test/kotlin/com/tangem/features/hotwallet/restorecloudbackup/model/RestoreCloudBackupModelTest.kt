@@ -314,6 +314,29 @@ internal class RestoreCloudBackupModelTest {
     }
 
     @Test
+    fun `GIVEN no network WHEN restore clicked THEN dialog explains the connection AND stays on EnterPassword`() =
+        runTest {
+            // Arrange
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.NetworkError.left()
+
+            val model = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            val dialog = slot<DialogMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(dialog)) }
+            assertThat(dialog.captured.message)
+                .isEqualTo(resourceReference(R.string.hw_cloud_backup_error_network))
+            assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN malformed backup WHEN restore clicked THEN error dialog shown AND stays on EnterPassword`() = runTest {
         // Arrange
         coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.InvalidBackupFile.left()
