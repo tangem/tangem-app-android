@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.core.pagination)
     implementation(projects.core.res)
     implementation(projects.core.ui)
+    implementation(projects.common.ui)
     implementation(projects.core.utils)
 
     /** Domain */
