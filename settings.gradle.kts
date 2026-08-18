@@ -247,6 +247,14 @@ include(":libs:tangem-sdk-api")
 include(":spend:datasource")
 // endregion Spend modules
 
+// region Store modules
+include(":store:datasource")
+// endregion Store modules
+
+// region Grow modules
+include(":grow:datasource")
+// endregion Grow modules
+
 // region Feature modules
 include(":features:address-book:api")
 include(":features:address-book:impl")
@@ -393,6 +401,10 @@ include(":features:marketing:impl")
 include(":features:payment:api")
 include(":features:payment:impl")
 
+/* Joint Accounts */
+include(":features:joint-account:api")
+include(":features:joint-account:impl")
+
 /* Virtual Accounts */
 include(":features:virtual-accounts:onboarding:api")
 include(":features:virtual-accounts:onboarding:impl")
@@ -408,6 +420,9 @@ include(":features:common-features:impl")
 
 include(":features:for-you:api")
 include(":features:for-you:impl")
+
+include(":features:collectibles:api")
+include(":features:collectibles:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -426,6 +441,7 @@ include(":domain:demo")
 include(":domain:demo:models")
 include(":domain:dynamic-addresses")
 include(":domain:dynamic-addresses:models")
+include(":domain:joint-account")
 include(":domain:settings")
 include(":domain:tokens")
 include(":domain:tokens:models")
@@ -546,4 +562,5 @@ include(":data:promo")
 include(":data:news")
 include(":data:earn")
 include(":data:search")
+include(":data:joint-account")
 // endregion Data modules

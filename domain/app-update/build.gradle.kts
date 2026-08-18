@@ -7,7 +7,6 @@ dependencies {
     implementation(projects.core.utils)
 
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
 
     // region Test
     testImplementation(deps.test.junit5)
@@ -16,4 +15,5 @@ dependencies {
     testImplementation(deps.test.coroutine)
     testRuntimeOnly(deps.test.junit5.engine)
     // endregion
+    api(deps.kotlin.coroutines)
 }

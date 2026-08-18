@@ -5,16 +5,17 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 /**
- * Response from `GET /v1/customer/cashback/history`.
- *
- * Confirmed cashback grouped by calendar month, ordered oldest to newest. Drives the monthly
- * earnings histogram on the Cashback screen.
+ * Response from `GET /v1/customer/cashback/history`
  */
 @JsonClass(generateAdapter = true)
 data class CashbackHistoryResponse(
-    @Json(name = "currency") val currency: String?,
-    @Json(name = "items") val items: List<Item>?,
+    @Json(name = "result") val result: Result?,
 ) {
+    @JsonClass(generateAdapter = true)
+    data class Result(
+        @Json(name = "currency") val currency: String?,
+        @Json(name = "items") val items: List<Item>?,
+    )
 
     @JsonClass(generateAdapter = true)
     data class Item(

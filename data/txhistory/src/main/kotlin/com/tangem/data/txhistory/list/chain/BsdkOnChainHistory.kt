@@ -5,12 +5,12 @@ package com.tangem.data.txhistory.list.chain
 import com.tangem.data.txhistory.list.chain.BsdkOnChainHistory.Companion.AUTO_LOAD_MORE_TARGET_COUNT
 import com.tangem.data.txhistory.list.mergeTxHistoryInfos
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryEnvironment
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.TxHistoryListBatchingContext
 import com.tangem.domain.txhistory.model.TxHistoryListConfig
-import com.tangem.domain.txhistory.model.identityKey
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.pagination.BatchAction
@@ -21,14 +21,17 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import java.math.BigDecimal
 
 private typealias HistoryTxBatchAction = BatchAction<Int, TxHistoryListConfig, Nothing>
 
 /** On-chain backbone backed by the blockchain SDK history, with the express overlay windowed to the loaded page. */
 internal class BsdkOnChainHistory @AssistedInject constructor(
     private val repository: TxHistoryRepositoryV2,
+    private val currencyUSDQuote: GetCurrencyUSDQuoteUseCase,
     @Assisted private val env: HistoryEnvironment,
 ) : OnChainHistory {
     private val userWalletId get() = env.userWalletId
@@ -50,10 +53,43 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
             ),
             batchSize = BATCH_SIZE,
         )
+        val usdQuoteLoad = env.modelScope
+            .async { env.currency.id.rawCurrencyId?.let { currencyUSDQuote.invoke(it) } }
 
         return batchFlow.state
+            .map { batchState -> dropDust(batchState, usdQuote = usdQuoteLoad.await()) }
             .onEach { batchState -> autoLoadMoreUntilScrollable(batchState) }
             .flatMapLatest { batchState -> buildState(batchState) }
+    }
+
+    /**
+     * Hides dust — incoming transactions worth less than [DUST_THRESHOLD_USD] — from the loaded backbone.
+     *
+     * always kept.
+     */
+    private fun dropDust(
+        batchState: BatchListState<Int, PaginationWrapper<TxInfo>>,
+        usdQuote: BigDecimal?,
+    ): BatchListState<Int, PaginationWrapper<TxInfo>> {
+        if (usdQuote == null) return batchState
+
+        return batchState.copy(
+            data = batchState.data.map { batch ->
+                val items = batch.data.items.filterNot { isDust(it, usdQuote) }
+                batch.copy(data = batch.data.copy(items = items))
+            },
+        )
+    }
+
+    /**
+     * Dust is what the user never asked for and gains nothing from: a negligible credit landing on their address —
+     * spam, an exchange remainder, a rounding leftover. What they sent themselves is always their own business, and an
+     * approve carries no value at all (its worth is the allowance it grants, not its amount), so neither is ever dust.
+     */
+    private fun isDust(txInfo: TxInfo, usdQuote: BigDecimal): Boolean = when {
+        txInfo.isOutgoing -> false
+        txInfo.type == TxInfo.TransactionType.Approve -> false
+        else -> txInfo.amount * usdQuote < DUST_THRESHOLD_USD
     }
 
     /**
@@ -75,12 +111,10 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
         val mergedFlow: Flow<List<TxHistoryInfo>> = repository.getExpressHistory(
             userWalletId = userWalletId,
             currency = currency,
-            fromCreatedAtMillis = oldestLoadedTimestamp(batchState),
+            fromOnChainTimestampMillis = oldestLoadedTimestamp(batchState),
         ).map { express ->
-            val onChain = batchState.data.asSequence()
-                .flatMap { it.data.items.asSequence() }
-                .distinctBy(TxInfo::identityKey)
-                .toList()
+            val onChain = batchState.data
+                .flatMap { it.data.items }
             mergeTxHistoryInfos(onChain = onChain, express = express, currency = currency)
         }
 
@@ -129,6 +163,9 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
 
         /** Number of loaded items considered enough to make the list scrollable. */
         const val AUTO_LOAD_MORE_TARGET_COUNT = 20
+
+        /** Fiat equivalent below which an incoming transaction is dust and is not worth a row in the history. */
+        val DUST_THRESHOLD_USD: BigDecimal = BigDecimal("0.01")
     }
 
     @AssistedFactory

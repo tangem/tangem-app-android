@@ -19,6 +19,7 @@ import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakingSource
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
@@ -175,7 +176,7 @@ internal class AddStakingNotificationsTransformer(
     }.toImmutableList()
 
     private fun areSourcesActual(cryptoCurrencyStatus: CryptoCurrencyStatus) = with(cryptoCurrencyStatus.value) {
-        sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
+        sources.networkSource.isActual() && stakingSource.isActual()
     }
 
     private fun isPrimaryButtonEnabled(notifications: ImmutableList<NotificationUM>, isActualSources: Boolean) =

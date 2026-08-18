@@ -2,9 +2,6 @@ package com.tangem.tests.send.amountScreen
 
 import android.view.KeyEvent
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setClipboardText
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -31,10 +28,6 @@ class SendAmountScreenTest : BaseTestCase() {
 
         setupHooks(
             // openSendScreen sets both scenarios; without a reset they stay set for the next test.
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
         ).run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName)
@@ -117,10 +110,6 @@ class SendAmountScreenTest : BaseTestCase() {
 
         setupHooks(
             // openSendScreen sets both scenarios; without a reset they stay set for the next test.
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
         ).run {
             step("Open 'Send' screen") {
                 openSendScreen(tokenName)

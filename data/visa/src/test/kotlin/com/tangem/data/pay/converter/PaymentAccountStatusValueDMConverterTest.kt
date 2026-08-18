@@ -5,13 +5,18 @@ import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -228,4 +233,78 @@ internal class PaymentAccountStatusValueDMConverterTest {
             assertThat(result).isEqualTo(PaymentAccountStatusValue.NotCreated)
         }
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CardStateRoundTrip {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: CardStateModel) {
+            // GIVEN
+            val domain = loadedWithCard(state = model.state, frozenState = model.frozenState)
+
+            // WHEN
+            val restored = converter.convertBack(userWalletId, converter.convert(domain))
+
+            // THEN
+            val card = (restored as PaymentAccountStatusValue.Loaded).cards.single()
+            assertThat(card.state).isEqualTo(model.state)
+            assertThat(card.frozenState).isEqualTo(model.frozenState)
+            assertThat(card.embossName).isEqualTo("JOHNNY SILVERHAND")
+            assertThat(card.lastDigits).isEqualTo("8890")
+        }
+
+        private fun provideTestModels() = TangemPayCardState.entries.map { state ->
+            CardStateModel(state = state, frozenState = TangemPayCardFrozenState.Unfrozen)
+        } + CardStateModel(
+            state = TangemPayCardState.Delivering,
+            frozenState = TangemPayCardFrozenState.Frozen,
+        )
+    }
+
+    internal data class CardStateModel(
+        val state: TangemPayCardState,
+        val frozenState: TangemPayCardFrozenState,
+    ) {
+        override fun toString(): String = "$state / $frozenState"
+    }
+
+    private fun loadedWithCard(
+        state: TangemPayCardState,
+        frozenState: TangemPayCardFrozenState,
+    ) = PaymentAccountStatusValue.Loaded(
+        source = StatusSource.ACTUAL,
+        customerId = "cust_1",
+        depositAddress = "0xDEPOSIT",
+        balance = PaymentAccountStatusValue.Balance(
+            fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                availableBalance = BigDecimal("10"),
+                currency = "USD",
+            ),
+            cryptoBalance = cryptoBalance(),
+            availableForWithdrawal = BigDecimal("10"),
+        ),
+        cryptoCurrency = cryptoCurrency,
+        cards = listOf(
+            TangemPayCard(
+                id = "card_1",
+                productInstanceId = "pi_1",
+                cardStatus = TangemPayCard.Status.INACTIVE,
+                hasPinCode = false,
+                displayName = null,
+                limit = null,
+                frozenState = frozenState,
+                lastDigits = "8890",
+                images = emptyList(),
+                state = state,
+                embossName = "JOHNNY SILVERHAND",
+            ),
+        ),
+        fiatRate = null,
+        error = null,
+        virtualAccount = null,
+        tariffPlan = null,
+        networks = emptyList(),
+    )
 }

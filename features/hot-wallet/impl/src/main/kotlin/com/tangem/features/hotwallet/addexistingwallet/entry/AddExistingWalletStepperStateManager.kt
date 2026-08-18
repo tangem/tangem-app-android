@@ -9,6 +9,8 @@ internal class AddExistingWalletStepperStateManager {
 
     fun getStepperState(route: AddExistingWalletRoute): HotWalletStepperComponent.StepperUM? {
         return when (route) {
+            is AddExistingWalletRoute.RestoreCloudBackup -> null
+
             is AddExistingWalletRoute.Import -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_IMPORT,
                 steps = STEPS_COUNT,
