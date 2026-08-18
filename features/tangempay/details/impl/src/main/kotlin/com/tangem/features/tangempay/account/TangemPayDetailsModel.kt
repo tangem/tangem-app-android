@@ -42,13 +42,7 @@ import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
-import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
-import com.tangem.features.tangempay.common.TangemPayMessagesFactory
-import com.tangem.features.tangempay.common.balanceOrNull
-import com.tangem.features.tangempay.common.customerId
-import com.tangem.features.tangempay.common.ifLoadedOrNull
-import com.tangem.features.tangempay.common.typeName
-import com.tangem.features.tangempay.common.userWalletId
+import com.tangem.features.tangempay.common.*
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
@@ -56,8 +50,6 @@ import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUpdateListener
-import com.tangem.features.tokendetails.ExpressTransactionsEvent
-import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -83,7 +75,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val expressTransactionsEventListener: ExpressTransactionsEventListener,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
@@ -114,6 +105,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         onOpenMenu = ::onOpenMenu,
         intents = this,
         isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
+        isMultichainEnabled = tangemPayFeatureToggles.isAccountMultichainEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -155,7 +147,10 @@ internal class TangemPayDetailsModel @Inject constructor(
                     }
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchCashbackBlock()
-                        uiState.update { stateFactory.getLoadedState(state) }
+                        uiState.update { prevState ->
+                            stateFactory.getLoadedState(state)
+                                .copy(cashbackBlockState = prevState.cashbackBlockState)
+                        }
                         handleInitialRoute()
                     }
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
@@ -186,9 +181,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     fun onStop() {
         planSelectionJobHolder.cancel()
-        modelScope.launch {
-            expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
-        }
     }
 
     private fun observeAwaitingPlanSelection() {
@@ -265,7 +257,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun fetchCashbackBlock() {
-        if (!tangemPayFeatureToggles.isCashbackEnabled) return
+        if (!tangemPayFeatureToggles.isCashbackEnabled || cashbackBlockJobHolder.isActive) return
         modelScope.launch {
             getCashbackSummaryUseCase(userWalletId).onRight { summary ->
                 val isDismissed = getCashbackDeactivationDismissedUseCase(userWalletId)
@@ -309,10 +301,10 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onRefreshSwipe(refreshState: ShowRefreshState) {
+        fetchCashbackBlock()
         modelScope.launch {
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
             paymentAccountStatusFetcher.invoke(userWalletId)
-            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
             txHistoryUpdateListener.triggerUpdate()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
@@ -444,6 +436,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onSelectDisabled() {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(TangemPayDetailsNavigation.OtherNetworks)
+    }
+
+    /**
+     * Both sheets share the single bottom-sheet slot, so opening "Other networks" replaced the
+     * "Choose network" sheet it was opened from instead of stacking on top of it. Closing it therefore has to
+     * bring that sheet back explicitly — otherwise the user is dropped all the way out to the account screen.
+     */
+    fun onOtherNetworksDismiss() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(TangemPayDetailsNavigation.ChooseNetwork(walletId = userWalletId))
     }
 
     override fun onDismiss() {

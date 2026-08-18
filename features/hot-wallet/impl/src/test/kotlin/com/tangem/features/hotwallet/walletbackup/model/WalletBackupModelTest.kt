@@ -135,7 +135,7 @@ internal class WalletBackupModelTest {
             assertThat(state.googleDriveOption?.text)
                 .isEqualTo(resourceReference(R.string.common_coming_soon))
             assertThat(state.isGoogleDriveEnabled).isTrue()
-            coVerify(exactly = 0) { cloudBackupRepository.findBackups(any()) }
+            coVerify(exactly = 0) { cloudBackupRepository.findBackups(any(), any()) }
             model.onDestroy()
         }
 

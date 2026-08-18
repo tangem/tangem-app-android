@@ -1,6 +1,9 @@
 package com.tangem.features.polymarket.impl.details.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +17,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
@@ -26,6 +31,7 @@ import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMar
 import kotlinx.collections.immutable.ImmutableList
 
 private val CardShape = RoundedCornerShape(16.dp)
+private val ChipShape = RoundedCornerShape(50.dp)
 
 /** One card per market, in the order the backend serves them. */
 internal fun LazyListScope.marketCards(markets: ImmutableList<PolymarketDetailsMarketUM>) {
@@ -111,5 +117,28 @@ private fun MarketCard(state: PolymarketDetailsMarketUM, modifier: Modifier = Mo
                 }
             }
         }
+    }
+}
+
+/** Opens and closes the fold that holds the event's resolved markets. */
+@Composable
+internal fun ClosedMarketsChip(count: Int, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            modifier = Modifier
+                .clip(ChipShape)
+                .background(TangemTheme.colors3.bg.secondary)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            text = "${stringResourceSafe(R.string.prediction_details_closed_markets)} ($count)",
+            color = TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography3.body.medium,
+            maxLines = 1,
+        )
     }
 }

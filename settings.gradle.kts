@@ -562,4 +562,5 @@ include(":data:promo")
 include(":data:news")
 include(":data:earn")
 include(":data:search")
+include(":data:joint-account")
 // endregion Data modules
