@@ -199,6 +199,7 @@ internal class PaymentChooseNetworkModelTest {
     private fun currency(symbol: String): CryptoCurrency.Token {
         val token: CryptoCurrency.Token = mockk()
         every { token.symbol } returns symbol
+        every { token.id } returns mockk { every { rawCurrencyId } returns CryptoCurrency.RawID(symbol) }
         return token
     }
 
