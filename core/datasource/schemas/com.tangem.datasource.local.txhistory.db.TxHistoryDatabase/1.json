@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c65ea7f408fee83351d3888d2130313c",
+    "identityHash": "40f074e5d829203d47be73c16d5f6d6b",
     "entities": [
       {
         "tableName": "express_provider",
@@ -426,7 +426,7 @@
       },
       {
         "tableName": "express_sync_state",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`type` TEXT NOT NULL, `address` TEXT NOT NULL, `is_initial_completed` INTEGER NOT NULL, `after_cursor` TEXT, `delta_cursor` TEXT, PRIMARY KEY(`type`, `address`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`type` TEXT NOT NULL, `user_wallet_id` TEXT NOT NULL, `is_initial_completed` INTEGER NOT NULL, `after_cursor` TEXT, `delta_cursor` TEXT, PRIMARY KEY(`type`, `user_wallet_id`))",
         "fields": [
           {
             "fieldPath": "type",
@@ -435,8 +435,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "address",
-            "columnName": "address",
+            "fieldPath": "userWalletId",
+            "columnName": "user_wallet_id",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -461,7 +461,7 @@
           "autoGenerate": false,
           "columnNames": [
             "type",
-            "address"
+            "user_wallet_id"
           ]
         }
       },
@@ -663,7 +663,7 @@
             "affinity": "REAL"
           },
           {
-            "fieldPath": "preferred",
+            "fieldPath": "isPreferred",
             "columnName": "preferred",
             "affinity": "INTEGER"
           }
@@ -772,7 +772,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c65ea7f408fee83351d3888d2130313c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '40f074e5d829203d47be73c16d5f6d6b')"
     ]
   }
 }
