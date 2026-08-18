@@ -401,6 +401,7 @@
   <string name="common_in">in</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
+  <string name="common_joint">Joint</string>
   <string name="common_joint_account">Joint account</string>
   <string name="common_later">Later</string>
   <string name="common_learn_more">Learn more</string>
@@ -995,6 +996,7 @@
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <string name="joint_account_invite_members_member_info">Member info</string>
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
   <string name="joint_account_invite_members_other_members">Other members</string>
@@ -2279,6 +2281,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Cards limit reached for this plan</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade plan</string>
   <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
+  <string name="tangempay_multinetwork">Multinetwork</string>
   <string name="tangempay_newonboard_Q1_body">Yes – to operate a regulated Visa card, identity verification is mandatory. KYC is handled by Sumsub (compliance partner).</string>
   <string name="tangempay_newonboard_Q1_title">Do I have to share my docs?</string>
   <string name="tangempay_newonboard_Q2_body">No. KYC applies only to the Tangem Pay account. Your Tangem Wallet itself remains a separate, self-custodial, non-KYC environment.</string>

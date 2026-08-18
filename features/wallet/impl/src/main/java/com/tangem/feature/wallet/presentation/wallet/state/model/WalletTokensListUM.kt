@@ -5,7 +5,7 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.row.TangemRowUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.features.jointaccount.main.entity.JointAccountMainUM
+import com.tangem.features.jointaccount.main.JointAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
