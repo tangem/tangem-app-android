@@ -25,7 +25,7 @@ internal object PlasticIssueOrderRequestConverter {
                 city = order.shippingAddress.city,
                 region = order.shippingAddress.region,
                 postalCode = order.shippingAddress.postalCode,
-                phone = order.shippingAddress.phone,
+                phoneNumber = order.shippingAddress.phone,
             ),
         ),
         idempotencyKey = idempotencyKey,
