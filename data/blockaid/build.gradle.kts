@@ -29,8 +29,11 @@ dependencies {
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
     api(projects.core.utils)
+    // endregion
+
+    // region Store
+    implementation(projects.store.datasource)
     // endregion
 
     // region Domain
