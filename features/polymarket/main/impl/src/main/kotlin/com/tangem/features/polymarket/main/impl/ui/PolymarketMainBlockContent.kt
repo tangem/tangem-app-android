@@ -61,10 +61,7 @@ private fun PredictionAccountContent(
     )
 }
 
-/**
- * Keeps the row tappable: the account exists and its screen opens, only its state is unknown, so the balance is a
- * dash rather than a zero — a zero would read as "you have nothing here", which is exactly what is not known.
- */
+/** A dash, not a zero: a zero would claim the account is empty, which is exactly what is unknown here. */
 @Composable
 private fun PredictionAccountUnavailable(state: PolymarketMainUM.Unavailable, modifier: Modifier = Modifier) {
     AccountRow(
