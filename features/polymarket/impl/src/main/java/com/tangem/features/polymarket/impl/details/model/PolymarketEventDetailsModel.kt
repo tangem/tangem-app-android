@@ -24,7 +24,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-/** Model of the event-details sheet: loads the event with all of its markets. */
+/**
+ * Model of the event-details screen: loads the event with all of its markets and drives the
+ * closed-markets / description folds.
+ */
 @ModelScoped
 internal class PolymarketEventDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -46,6 +49,10 @@ internal class PolymarketEventDetailsModel @Inject constructor(
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
 
+    private var event: PolymarketEvent? = null
+    private var isClosedMarketsExpanded = false
+    private var isDescriptionExpanded = false
+
     private val loadJob = JobHolder()
 
     init {
@@ -62,7 +69,10 @@ internal class PolymarketEventDetailsModel @Inject constructor(
             val newState = withContext(dispatchers.default) {
                 getPolymarketEventUseCase(eventId = params.eventId).fold(
                     ifLeft = { PolymarketEventDetailsUM.Error(onRetryClick = ::load) },
-                    ifRight = { loaded -> contentTransformer(event = loaded).transform(prevState = uiState.value) },
+                    ifRight = { loaded ->
+                        event = loaded
+                        contentTransformer(event = loaded).transform(prevState = uiState.value)
+                    },
                 )
             }
             uiState.value = newState
@@ -72,8 +82,12 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     private fun contentTransformer(event: PolymarketEvent): PolymarketEventDetailsContentTransformer {
         return PolymarketEventDetailsContentTransformer(
             event = event,
+            isClosedMarketsExpanded = isClosedMarketsExpanded,
+            isDescriptionExpanded = isDescriptionExpanded,
             onShareClick = ::onShareClick,
             onOutcomeClick = ::onOutcomeClick,
+            onClosedMarketsClick = ::onClosedMarketsClick,
+            onReadMoreClick = ::onReadMoreClick,
         )
     }
 
@@ -86,5 +100,20 @@ internal class PolymarketEventDetailsModel @Inject constructor(
         sheetRequests.tryEmit(
             PlacePredictionConfig(eventId = params.eventId, marketId = marketId, side = assetId),
         )
+    }
+
+    private fun onClosedMarketsClick() {
+        isClosedMarketsExpanded = !isClosedMarketsExpanded
+        refreshContent()
+    }
+
+    private fun onReadMoreClick() {
+        isDescriptionExpanded = true
+        refreshContent()
+    }
+
+    private fun refreshContent() {
+        val loaded = event ?: return
+        uiState.value = contentTransformer(event = loaded).transform(prevState = uiState.value)
     }
 }
