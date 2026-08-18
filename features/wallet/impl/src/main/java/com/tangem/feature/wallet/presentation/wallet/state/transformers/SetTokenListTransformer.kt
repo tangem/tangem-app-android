@@ -13,6 +13,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import com.tangem.utils.logging.TangemLogger
@@ -43,6 +44,10 @@ internal class SetTokenListTransformer(
         VirtualAccountMainBlockConverter()
     }
 
+    private val polymarketConverter by lazy {
+        PolymarketWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
+    }
+
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
             is WalletState.MultiCurrency.Content -> {
@@ -51,6 +56,7 @@ internal class SetTokenListTransformer(
                     tokensListState = prevState.tokensListState.toLoadedState(),
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
                     virtualAccountMainUM = prevState.virtualAccountMainUM.toLoadedVirtualState(),
+                    polymarketWalletBlockUM = predictionBlockState(),
                     buttons = prevState.enableButtons(),
                 )
             }
@@ -76,6 +82,7 @@ internal class SetTokenListTransformer(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
                     virtualAccountMainUM = walletUM.virtualAccountMainUM.toLoadedVirtualState(),
+                    polymarketWalletBlockUM = predictionBlockState(),
                     tokensListUM = tokensListUM,
                     areActionsAvailable = areActionsAvailable,
                     buttons = createWalletActionButtons(
@@ -158,6 +165,17 @@ internal class SetTokenListTransformer(
         } ?: return this
 
         return virtualAccountConverter.convert(virtualAccountStatus)
+    }
+
+    private fun predictionBlockState(): PolymarketWalletBlockUM {
+        val predictionAccountStatus = when (params) {
+            is TokenConverterParams.Account -> params.accountList.accountStatuses
+                .filterIsInstance<AccountStatus.Prediction>()
+                .firstOrNull()
+            is TokenConverterParams.Wallet -> return PolymarketWalletBlockUM.Hidden
+        } ?: return PolymarketWalletBlockUM.Hidden
+
+        return polymarketConverter.convert(predictionAccountStatus)
     }
 
     private fun toLoadedState(): WalletTokensListUM {
