@@ -24,6 +24,7 @@ dependencies {
     api(projects.core.configToggles)
     api(projects.core.datasource)
     api(projects.core.decompose)
+    implementation(projects.spend.datasource)
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
@@ -38,6 +39,7 @@ dependencies {
     /** Domain */
     api(projects.domain.account)
     api(projects.domain.card)
+    implementation(projects.domain.cloudBackup)
     api(projects.domain.common)
     api(projects.domain.feedback)
     api(projects.domain.models)
@@ -92,6 +94,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Test */
+    testImplementation(projects.test.core)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.coroutine)

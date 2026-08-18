@@ -6,10 +6,9 @@ import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusRespons
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import javax.inject.Inject
 
 /** Maps between the BFF wallet DTOs and the domain wallet models. */
-internal class PolymarketWalletConverter @Inject constructor() {
+internal object PolymarketWalletConverter {
 
     fun toState(response: PolymarketWalletStatusResponse): PolymarketWalletState = PolymarketWalletState(
         depositWalletAddress = response.depositWalletAddress,

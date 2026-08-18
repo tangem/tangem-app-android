@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -63,10 +62,6 @@ internal fun ChooseManagedTokenContent(state: ChooseManagedTokenUM, modifier: Mo
             )
         },
     )
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
 }
 
 @Composable

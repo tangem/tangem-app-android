@@ -4,6 +4,8 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
+import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
@@ -11,10 +13,10 @@ import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
-import com.tangem.domain.polymarket.usecase.GetPolymarketEventsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
 import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
@@ -30,8 +32,16 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetPolymarketEventsUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventsUseCase {
-        return GetPolymarketEventsUseCase(polymarketRepository = polymarketRepository)
+    fun provideGetPolymarketEventsBatchFlowUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): GetPolymarketEventsBatchFlowUseCase {
+        return GetPolymarketEventsBatchFlowUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketEventUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventUseCase {
+        return GetPolymarketEventUseCase(polymarketRepository = polymarketRepository)
     }
 
     @Provides
@@ -82,7 +92,9 @@ internal object PolymarketDomainModule {
     @Provides
     @Singleton
     fun provideDeployDepositWalletUseCase(polymarketRepository: PolymarketRepository): DeployDepositWalletUseCase =
-        DeployDepositWalletUseCase(polymarketRepository = polymarketRepository)
+        DeployDepositWalletUseCase(
+            polymarketRepository = polymarketRepository,
+        )
 
     @Provides
     @Singleton
@@ -114,8 +126,18 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetPolymarketBalanceInteractor(
+        polymarketRepository: PolymarketRepository,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): GetPolymarketBalanceInteractor = GetPolymarketBalanceInteractor(
+        polymarketRepository = polymarketRepository,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
     @Suppress("LongParameterList")
-    fun provideRunPolymarketOnboardingUseCase(
+    fun provideRunPolymarketOnboardingInteractor(
         deriveAddresses: DerivePolymarketAddressesUseCase,
         getWalletStatus: GetPolymarketWalletStatusUseCase,
         getRelayerNonce: GetPolymarketRelayerNonceUseCase,
@@ -125,7 +147,7 @@ internal object PolymarketDomainModule {
         deriveApiCredentials: DeriveApiCredentialsUseCase,
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
-    ): RunPolymarketOnboardingUseCase = RunPolymarketOnboardingUseCase(
+    ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
         getRelayerNonce = getRelayerNonce,

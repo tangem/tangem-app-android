@@ -6,6 +6,7 @@ import com.tangem.data.feedback.converters.BlockchainInfoConverter
 import com.tangem.data.feedback.converters.WalletMetaInfoConverter
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
@@ -36,14 +37,26 @@ internal class DefaultFeedbackRepository(
     private val walletManagersStore: WalletManagersStore,
     private val emailSender: EmailSender,
     private val appInfoProvider: AppInfoProvider,
+    private val cloudBackupRepository: CloudBackupRepository,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
 
     override suspend fun getUserWalletMetaInfo(userWalletId: UserWalletId): WalletMetaInfo {
         val userWallet = getUserWalletById(userWalletId)
-        return userWallet?.let {
-            WalletMetaInfoConverter.convert(it)
+        return userWallet?.let { wallet ->
+            val metaInfo = WalletMetaInfoConverter.convert(wallet)
+            if (wallet is UserWallet.Hot) {
+                // while the feature is disabled the cloud line must not leak into the support email
+                val isCloudBackedUp = if (cloudBackupRepository.isCloudBackupEnabled) {
+                    cloudBackupRepository.isBackedUp(wallet.walletId.stringValue)
+                } else {
+                    null
+                }
+                metaInfo.copy(isHotWalletCloudBackedUp = isCloudBackedUp)
+            } else {
+                metaInfo
+            }
         } ?: WalletMetaInfo(userWalletId)
     }
 

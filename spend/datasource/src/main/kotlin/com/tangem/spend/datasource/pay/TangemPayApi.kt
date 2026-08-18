@@ -114,12 +114,6 @@ interface TangemPayApi {
     @GET("v1/customer/offers")
     suspend fun getCustomerOffers(@Header("Authorization") authHeader: String): ApiResponse<CustomerOffersResponse>
 
-    @GET("v1/customer/card-delivery/quote")
-    suspend fun getCardDeliveryQuote(
-        @Header("Authorization") authHeader: String,
-        @Query("context") context: String,
-    ): ApiResponse<CardDeliveryQuoteResponse>
-
     @GET("v1/customer/balance")
     suspend fun getCardBalance(@Header("Authorization") authHeader: String): ApiResponse<CardBalanceResponse>
 
@@ -216,7 +210,7 @@ interface TangemPayApi {
     @GET("v1/customer/cashback/history")
     suspend fun getCashbackHistory(
         @Header("Authorization") authHeader: String,
-        @Query("months") months: Int,
+        @Query("months_number") monthsNumber: Int,
     ): ApiResponse<CashbackHistoryResponse>
 
     @GET("v1/customer/cashback/{transaction_id}/details")

@@ -5,8 +5,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.extensions.assertSnackbarWithText
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openTangemPayCardPage
@@ -17,7 +15,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -35,12 +32,8 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             openTangemPayCardPage()
             step("Reveal card details from the card page") { revealCardDetailsFromCardPage() }
@@ -78,19 +71,14 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
         }
     }
 
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("9593")
     @DisplayName("Tangem Pay: guide requisites are hidden independently from the card details")
     @Test
     fun guideRequisitesHiddenIndependentlyFromCardDetailsTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             openTangemPayCardPage()
             step("Reveal card details from the card page") { revealCardDetailsFromCardPage() }
@@ -133,14 +121,12 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 System.setProperty(revealErrorKey, "1")
             },
             additionalAfterSection = {
                 System.clearProperty(revealErrorKey)
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
+            }
         ).run {
             openTangemPayCardPage()
             step("Click on 'Show details' row") {

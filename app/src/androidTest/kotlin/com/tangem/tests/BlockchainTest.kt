@@ -2,12 +2,9 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.CARDANO_ADDRESS
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.ui.R
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openMainScreen
@@ -43,12 +40,7 @@ class BlockchainTest : BaseTestCase() {
         val invalidAmountMessage =
             getResourceString(R.string.send_notification_invalid_minimum_amount_text, minAmount, minAmount)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
             }
@@ -111,13 +103,7 @@ class BlockchainTest : BaseTestCase() {
         val rippleAccountLinesStartedState = "Started"
         val rippleAccountLinesErrorState = "AccountNotFound"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-                resetWireMockScenarioState(rippleAccountInfoScenarioName)
-                resetWireMockScenarioState(rippleAccountLinesScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }

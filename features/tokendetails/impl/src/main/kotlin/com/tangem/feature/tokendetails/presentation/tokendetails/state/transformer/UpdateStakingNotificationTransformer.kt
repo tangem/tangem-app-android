@@ -17,6 +17,7 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.optionOrNull
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.features.tokendetails.impl.R
@@ -72,7 +73,7 @@ internal class UpdateStakingNotificationTransformer(
 
     private fun buildRegionUnavailableOrNull(): EarnBlockUM? {
         val status = cryptoCurrencyStatus
-        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingBalance = status.value.stakingBalanceData
         val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
         val hasStake = !stakingCryptoAmount.isNullOrZero() || stakingBalance.hasPendingBalances()
         if (!hasStake) return null
@@ -100,7 +101,7 @@ internal class UpdateStakingNotificationTransformer(
         isBalanceHidden: Boolean,
     ): EarnBlockUM? {
         val status = cryptoCurrencyStatus
-        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingBalance = status.value.stakingBalanceData
         val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
 
         return when {
@@ -130,7 +131,7 @@ internal class UpdateStakingNotificationTransformer(
 
     private fun buildActiveBlockOrNull(isBalanceHidden: Boolean): EarnBlockUM? {
         val status = cryptoCurrencyStatus
-        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingBalance = status.value.stakingBalanceData
         val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
         return when {
             !stakingCryptoAmount.isNullOrZero() -> buildActiveBlock(
@@ -249,7 +250,7 @@ internal class UpdateStakingNotificationTransformer(
     ): EarnBlockUM.SubtitleUM? {
         val blockchainId = status.currency.network.rawId
         val isCoin = status.currency.id.isCoin
-        val stakingBalance = status.value.stakingBalance
+        val stakingBalance = status.value.stakingBalanceData
 
         val rewardBlockType = when {
             stakingBalance is StakingBalance.Data.P2PEthPool -> {

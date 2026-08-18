@@ -30,6 +30,7 @@ internal class SetTokenListTransformer(
     private val isAccountsModeEnabled: Boolean,
     private val isMultipleCardsEnabled: Boolean,
     private val isPolymarketEnabled: Boolean,
+    private val isHotBackedUp: Boolean? = null,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -111,6 +112,7 @@ internal class SetTokenListTransformer(
             fiatBalance = fiatBalance,
             selectedWallet = userWallet,
             appCurrency = appCurrency,
+            isHotBackedUp = isHotBackedUp,
         ).convert(value = this)
     }
 

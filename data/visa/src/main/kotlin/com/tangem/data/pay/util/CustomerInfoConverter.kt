@@ -48,9 +48,9 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
             tariffPlan = value.customerTariffPlan?.toDomain(),
             networks = value.balance?.networks.orEmpty().map { it.toDomain() },
-            country = value.kyc?.country,
-            phoneMask = value.kyc?.phoneMask,
-            email = value.kyc?.email,
+            country = value.profile?.country,
+            phoneMask = value.profile?.phoneMask,
+            email = value.profile?.email,
         )
     }
 
@@ -95,6 +95,8 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             lastFourDigits = cardNumberEnd,
             isPinSet = isPinSet == true,
             images = images.orEmpty().mapNotNull(::convertCardImage),
+            embossName = embossName?.trim()?.ifEmpty { null },
+            cardType = CardInfo.CardType.fromString(cardType),
         )
     }
 
