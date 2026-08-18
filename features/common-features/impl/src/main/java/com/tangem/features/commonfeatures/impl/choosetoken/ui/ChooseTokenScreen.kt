@@ -84,7 +84,10 @@ import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.core.ui.utils.sharedBoundsSafely
+import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
+import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilterUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
+import com.tangem.features.commonfeatures.api.choosetoken.model.EmptyReason
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.api.choosetoken.model.WalletListUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.WalletTabUM
@@ -185,7 +188,7 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
                 )
             }
 
-            assetsTitle()
+            assetsTitle(balanceFilterUM = state.portfolioBlock?.balanceFilterUM)
 
             if (state.portfolioBlock != null) {
                 walletListItem(state.portfolioBlock.walletList)
@@ -196,6 +199,7 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
                         tokensListItems(
                             tokensListData = state.portfolioBlock.tokensListData,
                             isBalanceHidden = state.portfolioBlock.isBalanceHidden,
+                            balanceFilterUM = state.portfolioBlock.balanceFilterUM,
                         )
 
                         when (val block = state.chooserBlock) {
@@ -260,12 +264,9 @@ private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapM
     }
 }
 
-private fun LazyListScope.assetsTitle() {
+private fun LazyListScope.assetsTitle(balanceFilterUM: BalanceFilterUM?) {
     item(key = "assets_title") {
-        Text(
-            text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
-            style = TangemTheme.typography2.headingSemibold20,
-            color = TangemTheme.colors2.text.neutral.primary,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -273,7 +274,19 @@ private fun LazyListScope.assetsTitle() {
                     start = TangemTheme.dimens.spacing16,
                     end = TangemTheme.dimens.spacing16,
                 ),
-        )
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
+                style = TangemTheme.typography2.headingSemibold20,
+                color = TangemTheme.colors2.text.neutral.primary,
+                modifier = Modifier.weight(1f),
+            )
+            if (balanceFilterUM != null) {
+                BalanceFilterDropdown(um = balanceFilterUM)
+            }
+        }
     }
 }
 
@@ -370,7 +383,12 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
     }
 }
 
-private fun LazyListScope.tokensListItems(tokensListData: TokenListUMData, isBalanceHidden: Boolean) {
+@Suppress("CanBeNonNullable")
+private fun LazyListScope.tokensListItems(
+    tokensListData: TokenListUMData,
+    isBalanceHidden: Boolean,
+    balanceFilterUM: BalanceFilterUM?,
+) {
     when (tokensListData) {
         is TokenListUMData.AccountList -> {
             tokensListData.tokensList.forEachIndexed { index, item ->
@@ -387,7 +405,16 @@ private fun LazyListScope.tokensListItems(tokensListData: TokenListUMData, isBal
                 isBalanceHidden = isBalanceHidden,
             )
         }
-        TokenListUMData.EmptyList -> Unit
+        is TokenListUMData.EmptyList -> {
+            if (tokensListData.reason == EmptyReason.FilteredOut && balanceFilterUM != null) {
+                item(key = "balance_filtered_out_empty") {
+                    SwapSourceFilteredOutEmpty(
+                        onSeeAllClick = { balanceFilterUM.onOptionSelected(BalanceFilter.All) },
+                        modifier = Modifier.padding(all = 16.dp),
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -996,7 +1023,7 @@ private class ChooseTokenScreenPreviewProvider : PreviewParameterProvider<Choose
                 walletList = WalletListUM(wallets),
                 isBalanceHidden = false,
                 isSearching = false,
-                tokensListData = TokenListUMData.EmptyList,
+                tokensListData = TokenListUMData.EmptyList(),
             ),
             chooserBlock = null,
         ),

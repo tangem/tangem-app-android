@@ -11,13 +11,13 @@ android {
 dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
+    api(deps.kotlin.coroutines)
     implementation(projects.domain.common)
-    implementation(projects.domain.markets.models)
-    implementation(projects.domain.wallets)
-    implementation(projects.domain.appCurrency)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
 
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(deps.arrow.core)
+    testImplementation(deps.kotlin.coroutines)
 }

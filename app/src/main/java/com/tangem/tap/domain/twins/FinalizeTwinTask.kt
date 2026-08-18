@@ -23,7 +23,7 @@ class FinalizeTwinTask(
             when (result) {
                 is CompletionResult.Success ->
                     PreflightReadTask(
-                        readMode = PreflightReadMode.FullCardRead,
+                        readMode = PreflightReadMode.FullCardRead(),
                         secureStorage = session.environment.secureStorage,
                     ).run(session) { readResult ->
                         when (readResult) {

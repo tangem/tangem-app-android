@@ -15,7 +15,13 @@ internal object OfferConverter : Converter<CustomerOffersResponse.Offer, Offer> 
             data = Offer.Data(
                 specificationName = value.data.specificationName,
                 orderType = OrderType.fromString(value.data.orderType),
+                deliveryEta = value.data.toDeliveryEta(),
             ),
         )
+    }
+
+    private fun CustomerOffersResponse.Data.toDeliveryEta(): Offer.DeliveryEta? {
+        val maxDays = deliveryEtaMaxDays ?: return null
+        return Offer.DeliveryEta(minBusinessDays = deliveryEtaMinDays, maxBusinessDays = maxDays)
     }
 }
