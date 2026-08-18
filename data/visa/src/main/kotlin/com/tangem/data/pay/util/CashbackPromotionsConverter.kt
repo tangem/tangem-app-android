@@ -8,10 +8,11 @@ import org.joda.time.DateTime
 internal object CashbackPromotionsConverter : Converter<CashbackPromotionsResponse, CashbackPromotions> {
 
     override fun convert(value: CashbackPromotionsResponse): CashbackPromotions {
+        val result = value.result
         return CashbackPromotions(
-            cardTiers = value.result?.cashbackOnCards?.tiers.orEmpty().map(::convertTier),
-            monthlyCap = value.result?.cashbackOnCards?.toMonthlyCap(),
-            additionalCashback = value.result?.additionalCashback.orEmpty().map(::convertAdditional),
+            cardTiers = result?.cashbackOnCards?.tiers.orEmpty().map(::convertTier),
+            monthlyCap = result?.cashbackOnCards?.toMonthlyCap(),
+            additionalCashback = result?.additionalCashback.orEmpty().map(::convertAdditional),
         )
     }
 
