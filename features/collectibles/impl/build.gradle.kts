@@ -14,16 +14,28 @@ dependencies {
     /** Project - API */
     implementation(projects.features.collectibles.api)
 
+    /** Project - Common */
+    implementation(projects.common.ui)
+
     /** Project - Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+
+    /** Kotlin */
+    implementation(deps.kotlin.immutable.collections)
 
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
+    implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
 
     /** Other */
     implementation(deps.androidx.appCompat)
