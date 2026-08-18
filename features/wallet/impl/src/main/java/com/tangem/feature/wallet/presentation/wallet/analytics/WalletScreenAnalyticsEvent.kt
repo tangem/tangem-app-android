@@ -107,6 +107,8 @@ sealed class WalletScreenAnalyticsEvent {
 
         class ButtonAddFundsPromo : MainScreen(event = "Button - Add Funds Promo")
 
+        class ButtonPredictionAccount : MainScreen(event = "Button - Prediction Account")
+
         class NotePromo : MainScreen(event = "Notice - Note Promo")
 
         class NotePromoButton : MainScreen(event = "Note Promo Button")
