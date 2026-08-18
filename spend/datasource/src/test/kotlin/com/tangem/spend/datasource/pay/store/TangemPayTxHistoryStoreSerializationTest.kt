@@ -143,7 +143,6 @@ internal class TangemPayTxHistoryStoreSerializationTest {
             currency = Currency.getInstance("USD"),
             isCapTrimmed = true,
             exclusionReason = TangemPayTxHistoryItemDM.Cashback.ExclusionReason.MCC_EXCLUDED,
-            promotionIds = listOf("promo-1"),
         ),
     )
 

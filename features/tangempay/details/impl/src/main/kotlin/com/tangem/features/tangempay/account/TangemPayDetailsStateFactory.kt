@@ -32,10 +32,15 @@ internal class TangemPayDetailsStateFactory(
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
     private val isTiersPlusPlanEnabled: Boolean,
+    isMultichainEnabled: Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(
         intents = intents,
         isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
+    )
+
+    private val subtitle = resourceReference(
+        if (isMultichainEnabled) R.string.tangempay_multinetwork else R.string.tangempay_usdc_on_polygon_network,
     )
 
     fun getLoadingState(): TangemPayDetailsUM {
@@ -44,6 +49,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -86,6 +92,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = status.tariffPlan),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -149,6 +156,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getDeactivatedMenuItems(),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -180,6 +188,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,

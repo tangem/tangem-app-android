@@ -236,8 +236,10 @@ internal class ChooseTokenListItemConverter(
             currency.filterByQuery() && config.tokenFilter(account, currency) && currency.passesBalanceFilter()
         }
 
-    private fun CryptoCurrencyStatus.passesBalanceFilter(): Boolean =
-        config.balanceFilter == BalanceFilter.All || value.amount?.isZero() != true
+    private fun CryptoCurrencyStatus.passesBalanceFilter(): Boolean = config.balanceFilter == BalanceFilter.All ||
+        // NoAccount is an availability state (account not created), not a real zero balance — keep it visible.
+        value is CryptoCurrencyStatus.NoAccount ||
+        value.amount?.isZero() != true
 
     private fun filterTokenList(tokenList: TokenList, account: AccountStatus.CryptoPortfolio): TokenList {
         val filtered = when (tokenList) {

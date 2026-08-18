@@ -4,15 +4,14 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
-import com.tangem.datasource.api.express.models.response.ExchangeHistoryDeltaResponse
-import com.tangem.datasource.api.express.models.response.ExchangeHistoryResponse
-import com.tangem.datasource.api.express.models.response.ExpressPagination
-import com.tangem.datasource.api.express.models.response.ExpressPaginationDelta
-import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse
-import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
+import com.tangem.grow.datasource.express.models.response.ExchangeHistoryDeltaResponse
+import com.tangem.grow.datasource.express.models.response.ExchangeHistoryResponse
+import com.tangem.grow.datasource.express.models.response.ExpressPagination
+import com.tangem.grow.datasource.express.models.response.ExpressPaginationDelta
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.test.mock.MockAccounts
@@ -40,14 +39,14 @@ internal class DefaultExpressTxHistoryFetcherTest {
     }
 
     @Test
-    fun `exposes the address it was created with`() = runTest {
+    fun `exposes the wallet it was created with`() = runTest {
         val fetcher = createFetcher(createUtils())
 
-        assertThat(fetcher.address).isEqualTo(ADDRESS)
+        assertThat(fetcher.walletId).isEqualTo(WALLET_ID)
     }
 
     @Test
-    fun `on first trigger fetches initial exchange and onramp history for the address`() = runTest {
+    fun `on first trigger fetches initial exchange and onramp history for the wallet`() = runTest {
         stubAllSuccess(hasMore = false)
         val fetcher = createFetcher(createUtils())
 
@@ -56,27 +55,27 @@ internal class DefaultExpressTxHistoryFetcherTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(atLeast = 1) { expressHistoryRepository.fetchExchangeHistory(ADDRESS, any()) }
-        coVerify(atLeast = 1) { expressHistoryRepository.fetchOnrampHistory(ADDRESS, any()) }
-        coVerify(exactly = 1) { expressHistoryRepository.fetchExchangeHistoryDelta(ADDRESS, any()) }
-        coVerify(exactly = 1) { expressHistoryRepository.fetchOnrampHistoryDelta(ADDRESS, any()) }
+        coVerify(atLeast = 1) { expressHistoryRepository.fetchExchangeHistory(WALLET_ID, any()) }
+        coVerify(atLeast = 1) { expressHistoryRepository.fetchOnrampHistory(WALLET_ID, any()) }
+        coVerify(exactly = 1) { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) }
+        coVerify(exactly = 1) { expressHistoryRepository.fetchOnrampHistoryDelta(WALLET_ID, any()) }
     }
 
     @Test
     fun `continues exchange initial pagination while hasMore is true`() = runTest {
-        every { expressSyncStateDao.observe(any(), ADDRESS) } returns flowOf(null)
+        every { expressSyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
         // 1st call: initial fetch in fetchExchange (pagination ignored)
         // 2nd call: pagination loop, hasMore = true -> continue
         // 3rd call: pagination loop, hasMore = false -> stop
-        coEvery { expressHistoryRepository.fetchExchangeHistory(ADDRESS, any()) } returnsMany listOf(
+        coEvery { expressHistoryRepository.fetchExchangeHistory(WALLET_ID, any()) } returnsMany listOf(
             exchangeResponse(hasMore = true),
             exchangeResponse(hasMore = true),
             exchangeResponse(hasMore = false),
         )
-        coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(ADDRESS, any()) } returns
+        coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) } returns
             exchangeDeltaResponse(hasMore = false)
-        coEvery { expressHistoryRepository.fetchOnrampHistory(ADDRESS, any()) } returns onrampResponse(hasMore = false)
-        coEvery { expressHistoryRepository.fetchOnrampHistoryDelta(ADDRESS, any()) } returns
+        coEvery { expressHistoryRepository.fetchOnrampHistory(WALLET_ID, any()) } returns onrampResponse(hasMore = false)
+        coEvery { expressHistoryRepository.fetchOnrampHistoryDelta(WALLET_ID, any()) } returns
             onrampDeltaResponse(hasMore = false)
         val fetcher = createFetcher(createUtils())
 
@@ -85,15 +84,15 @@ internal class DefaultExpressTxHistoryFetcherTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 3) { expressHistoryRepository.fetchExchangeHistory(ADDRESS, any()) }
+        coVerify(exactly = 3) { expressHistoryRepository.fetchExchangeHistory(WALLET_ID, any()) }
     }
 
     @Test
     fun `skips initial pagination when it is already completed`() = runTest {
-        every { expressSyncStateDao.observe(any(), ADDRESS) } returns flowOf(completedSyncState())
-        coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(ADDRESS, any()) } returns
+        every { expressSyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(completedSyncState())
+        coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) } returns
             exchangeDeltaResponse(hasMore = false)
-        coEvery { expressHistoryRepository.fetchOnrampHistoryDelta(ADDRESS, any()) } returns
+        coEvery { expressHistoryRepository.fetchOnrampHistoryDelta(WALLET_ID, any()) } returns
             onrampDeltaResponse(hasMore = false)
         val fetcher = createFetcher(createUtils())
 
@@ -104,8 +103,24 @@ internal class DefaultExpressTxHistoryFetcherTest {
         // Assert: no initial history fetch, only the delta pagination runs
         coVerify(exactly = 0) { expressHistoryRepository.fetchExchangeHistory(any(), any()) }
         coVerify(exactly = 0) { expressHistoryRepository.fetchOnrampHistory(any(), any()) }
-        coVerify(exactly = 1) { expressHistoryRepository.fetchExchangeHistoryDelta(ADDRESS, any()) }
-        coVerify(exactly = 1) { expressHistoryRepository.fetchOnrampHistoryDelta(ADDRESS, any()) }
+        coVerify(exactly = 1) { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) }
+        coVerify(exactly = 1) { expressHistoryRepository.fetchOnrampHistoryDelta(WALLET_ID, any()) }
+    }
+
+    @Test
+    fun `on wallet selected trigger fetches exchange and onramp history`() = runTest {
+        stubAllSuccess(hasMore = false)
+        val fetcher = createFetcher(createUtils())
+
+        // Act
+        fetcher.invoke(TxHistoryFetchTrigger.WalletSelected(walletId = WALLET_ID))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(atLeast = 1) { expressHistoryRepository.fetchExchangeHistory(WALLET_ID, any()) }
+        coVerify(atLeast = 1) { expressHistoryRepository.fetchOnrampHistory(WALLET_ID, any()) }
+        coVerify(exactly = 1) { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) }
+        coVerify(exactly = 1) { expressHistoryRepository.fetchOnrampHistoryDelta(WALLET_ID, any()) }
     }
 
     @Test
@@ -121,12 +136,12 @@ internal class DefaultExpressTxHistoryFetcherTest {
     }
 
     private fun stubAllSuccess(hasMore: Boolean) {
-        every { expressSyncStateDao.observe(any(), ADDRESS) } returns flowOf(null)
-        coEvery { expressHistoryRepository.fetchExchangeHistory(ADDRESS, any()) } returns exchangeResponse(hasMore)
-        coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(ADDRESS, any()) } returns
+        every { expressSyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
+        coEvery { expressHistoryRepository.fetchExchangeHistory(WALLET_ID, any()) } returns exchangeResponse(hasMore)
+        coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) } returns
             exchangeDeltaResponse(hasMore)
-        coEvery { expressHistoryRepository.fetchOnrampHistory(ADDRESS, any()) } returns onrampResponse(hasMore)
-        coEvery { expressHistoryRepository.fetchOnrampHistoryDelta(ADDRESS, any()) } returns onrampDeltaResponse(hasMore)
+        coEvery { expressHistoryRepository.fetchOnrampHistory(WALLET_ID, any()) } returns onrampResponse(hasMore)
+        coEvery { expressHistoryRepository.fetchOnrampHistoryDelta(WALLET_ID, any()) } returns onrampDeltaResponse(hasMore)
     }
 
     private fun TestScope.createUtils(): DefaultTxHistoryFetcherUtils = DefaultTxHistoryFetcherUtils(
@@ -136,8 +151,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
     )
 
     private fun createFetcher(utils: DefaultTxHistoryFetcherUtils) = DefaultExpressTxHistoryFetcher(
-        address = ADDRESS,
-        accountId = ACCOUNT_ID,
+        walletId = WALLET_ID,
         utils = utils,
         expressSyncStateDao = expressSyncStateDao,
         expressHistoryRepository = expressHistoryRepository,
@@ -162,7 +176,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     private fun completedSyncState() = ExpressSyncStateEntity(
         type = ExpressSyncStateEntity.Type.EXCHANGE.name,
-        address = ADDRESS,
+        userWalletId = WALLET_ID.stringValue,
         isInitialCompleted = true,
         afterCursor = null,
         deltaCursor = null,
@@ -170,7 +184,5 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     private companion object {
         val WALLET_ID = MockAccounts.userWalletId
-        val ACCOUNT_ID = AccountId.forMainCryptoPortfolio(WALLET_ID)
-        const val ADDRESS = "0xEthAddress"
     }
 }
