@@ -10,13 +10,13 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
+import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
-import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
-import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -45,24 +45,24 @@ import org.junit.jupiter.params.ParameterizedTest
 
 internal class PolymarketOnboardingModelTest {
 
-    private val resolvePolymarketEntryUseCase: ResolvePolymarketEntryUseCase = mockk()
-    private val runOnboardingUseCase: RunPolymarketOnboardingUseCase = mockk()
+    private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor = mockk()
+    private val runOnboardingUseCase: RunPolymarketOnboardingInteractor = mockk()
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("011")
-    private val params = PolymarketComponent.Params(userWalletId = userWalletId)
+    private val params = PolymarketOnboardingParams(userWalletId = userWalletId)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(resolvePolymarketEntryUseCase, runOnboardingUseCase, router, urlOpener)
+        clearMocks(resolvePolymarketEntryInteractor, runOnboardingUseCase, router, urlOpener)
     }
 
     @Test
     fun `GIVEN resolution fails WHEN model created THEN the error overlay is raised AND nothing is navigated`() =
         runTest {
             // Arrange
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns PolymarketOnboardingError.Network.left()
+            gateFails(PolymarketOnboardingError.Network)
 
             // Act
             val model = createModel(testScope = this)
@@ -80,8 +80,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN entry is Trade WHEN model created THEN the feed is opened in trading mode`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING).right()
+        gateResolves(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
 
         // Act
         val model = createModel(testScope = this)
@@ -90,7 +89,9 @@ internal class PolymarketOnboardingModelTest {
         // Assert
         verify(exactly = 1) {
             router.replaceAll(
-                routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING)),
+                routes = arrayOf(
+                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+                ),
                 onComplete = any(),
             )
         }
@@ -100,8 +101,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN entry is ReadOnly WHEN model created THEN the feed is opened in read-only mode`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY).right()
+        gateResolves(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY))
 
         // Act
         val model = createModel(testScope = this)
@@ -110,7 +110,9 @@ internal class PolymarketOnboardingModelTest {
         // Assert
         verify(exactly = 1) {
             router.replaceAll(
-                routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.READ_ONLY)),
+                routes = arrayOf(
+                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.READ_ONLY, userWalletId = userWalletId),
+                ),
                 onComplete = any(),
             )
         }
@@ -120,8 +122,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN entry is Onboard WHEN model created THEN no overlay is shown AND nothing is navigated`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        gateResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED))
 
         // Act
         val model = createModel(testScope = this)
@@ -139,7 +140,7 @@ internal class PolymarketOnboardingModelTest {
     fun `GIVEN entry is RegionBlocked WHEN model created THEN the sheet overlay is raised AND nothing is navigated`() =
         runTest {
             // Arrange
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns PolymarketEntry.RegionBlocked.right()
+            gateResolves(PolymarketEntry.RegionBlocked)
 
             // Act
             val model = createModel(testScope = this)
@@ -157,7 +158,7 @@ internal class PolymarketOnboardingModelTest {
     fun `GIVEN the sheet overlay is raised WHEN it is dismissed THEN the feed is opened in read-only mode`() =
         runTest {
             // Arrange
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns PolymarketEntry.RegionBlocked.right()
+            gateResolves(PolymarketEntry.RegionBlocked)
             val model = createModel(testScope = this)
             advanceUntilIdle()
             val overlay = model.uiState.value.overlay as PolymarketOnboardingUM.Overlay.RegionRestrictions
@@ -169,7 +170,12 @@ internal class PolymarketOnboardingModelTest {
             // Assert
             verify(exactly = 1) {
                 router.replaceAll(
-                    routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.READ_ONLY)),
+                    routes = arrayOf(
+                        PolymarketRoute.Main(
+                            accessMode = PolymarketAccessMode.READ_ONLY,
+                            userWalletId = userWalletId,
+                        ),
+                    ),
                     onComplete = any(),
                 )
             }
@@ -179,7 +185,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN the error overlay is raised WHEN retry is tapped THEN the entry is resolved again`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returnsMany listOf(
+        coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } returnsMany listOf(
             PolymarketOnboardingError.Network.left(),
             PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING).right(),
         )
@@ -191,10 +197,12 @@ internal class PolymarketOnboardingModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 2) { resolvePolymarketEntryUseCase(userWalletId) }
+        coVerify(exactly = 2) { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) }
         verify(exactly = 1) {
             router.replaceAll(
-                routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING)),
+                routes = arrayOf(
+                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+                ),
                 onComplete = any(),
             )
         }
@@ -206,7 +214,7 @@ internal class PolymarketOnboardingModelTest {
         runTest {
             // Arrange
             var attempt = 0
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } coAnswers {
+            coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } coAnswers {
                 when (++attempt) {
                     1 -> PolymarketOnboardingError.Network.left()
                     2 -> {
@@ -231,18 +239,138 @@ internal class PolymarketOnboardingModelTest {
             assertThat(model.uiState.value.overlay).isNull()
             verify(exactly = 1) {
                 router.replaceAll(
-                    routes = arrayOf(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING)),
+                    routes = arrayOf(
+                        PolymarketRoute.Main(
+                            accessMode = PolymarketAccessMode.TRADING,
+                            userWalletId = userWalletId,
+                        ),
+                    ),
                     onComplete = any(),
                 )
             }
             model.onDestroy()
         }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GateAsksForNothing {
+
+        @Test
+        fun `GIVEN the key is not derived here WHEN the gate opens THEN nothing is derived AND the button is idle`() =
+            runTest {
+                // Arrange
+                gateResolves(PolymarketEntry.Undetermined)
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert
+                val state = model.uiState.value
+                assertThat(state.isStarting).isFalse()
+                assertThat(state.overlay).isNull()
+                assertThat(state.startButtonText)
+                    .isEqualTo(resourceReference(R.string.prediction_onboarding_start_button))
+                coVerify(exactly = 0) { resolvePolymarketEntryInteractor(userWalletId) }
+                verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an undetermined entry WHEN start is pressed THEN the wallet turns out onboarded AND opens feed`() =
+            runTest {
+                // Arrange
+                gateResolves(PolymarketEntry.Undetermined)
+                startResolves(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.onStartClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) {
+                    router.replaceAll(
+                        routes = arrayOf(
+                            PolymarketRoute.Main(
+                                accessMode = PolymarketAccessMode.TRADING,
+                                userWalletId = userWalletId,
+                            ),
+                        ),
+                        onComplete = any(),
+                    )
+                }
+                verify(exactly = 0) { runOnboardingUseCase(userWalletId) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an undetermined entry WHEN start resolves to onboarding owed THEN the run is launched`() = runTest {
+            // Arrange
+            gateResolves(PolymarketEntry.Undetermined)
+            startResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED))
+            every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Deriving)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onStartClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { runOnboardingUseCase(userWalletId) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN start is pressed WHEN the card tap is cancelled THEN the button returns to idle AND no overlay`() =
+            runTest {
+                // Arrange
+                gateResolves(PolymarketEntry.Undetermined)
+                coEvery { resolvePolymarketEntryInteractor(userWalletId) } returns
+                    PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled).left()
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.onStartClick()
+                advanceUntilIdle()
+
+                // Assert
+                val state = model.uiState.value
+                assertThat(state.isStarting).isFalse()
+                assertThat(state.overlay).isNull()
+                verify(exactly = 0) { runOnboardingUseCase(userWalletId) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an undetermined entry WHEN start finds the region blocked THEN the sheet overlay is raised`() =
+            runTest {
+                // Arrange
+                gateResolves(PolymarketEntry.Undetermined)
+                startResolves(PolymarketEntry.RegionBlocked)
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.uiState.value.onStartClick()
+                advanceUntilIdle()
+
+                // Assert
+                val state = model.uiState.value
+                assertThat(state.overlay).isInstanceOf(PolymarketOnboardingUM.Overlay.RegionRestrictions::class.java)
+                assertThat(state.isStarting).isFalse()
+                verify(exactly = 0) { runOnboardingUseCase(userWalletId) }
+                model.onDestroy()
+            }
+    }
+
     @Test
     fun `GIVEN entry owes onboarding WHEN start clicked THEN run is launched`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        owesOnboarding()
         every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Deriving)
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -259,8 +387,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN no account yet WHEN the entry resolves THEN the button invites the user to start`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        gateResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED))
 
         // Act
         val model = createModel(testScope = this)
@@ -303,8 +430,7 @@ internal class PolymarketOnboardingModelTest {
         @ProvideTestModels
         fun progressMapping(model: ProgressModel) = runTest {
             // Arrange
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-                PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+            owesOnboarding()
             every { runOnboardingUseCase(userWalletId) } returns flowOf(model.progress)
             val subject = createModel(testScope = this)
             advanceUntilIdle()
@@ -337,8 +463,7 @@ internal class PolymarketOnboardingModelTest {
         @ProvideTestModels
         fun resumeLabel(model: ResumeLabelModel) = runTest {
             // Arrange
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-                PolymarketEntry.Onboard(status = model.status).right()
+            gateResolves(PolymarketEntry.Onboard(status = model.status))
 
             // Act
             val subject = createModel(testScope = this)
@@ -354,8 +479,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN run reports ready WHEN collected THEN opens the feed in trading mode`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        owesOnboarding()
         every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -366,7 +490,9 @@ internal class PolymarketOnboardingModelTest {
 
         // Assert
         verify(exactly = 1) {
-            router.replaceAll(PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING))
+            router.replaceAll(
+                PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+            )
         }
         model.onDestroy()
     }
@@ -374,8 +500,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN the run failed WHEN start is pressed again THEN a new run is started`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        owesOnboarding()
         every { runOnboardingUseCase(userWalletId) } returns flowOf(
             PolymarketOnboardingProgress.Failed(
                 error = PolymarketOnboardingError.Network,
@@ -399,8 +524,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN start is tapped WHEN the run has not emitted yet THEN the button already spins`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        owesOnboarding()
         every { runOnboardingUseCase(userWalletId) } returns emptyFlow()
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -411,14 +535,14 @@ internal class PolymarketOnboardingModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.isStarting).isTrue()
+        advanceUntilIdle()
         model.onDestroy()
     }
 
     @Test
     fun `GIVEN a run is in flight WHEN start is tapped again THEN the second tap is ignored`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        owesOnboarding()
         every { runOnboardingUseCase(userWalletId) } returns flow {
             emit(PolymarketOnboardingProgress.Deriving)
             awaitCancellation()
@@ -442,8 +566,7 @@ internal class PolymarketOnboardingModelTest {
     fun `GIVEN the welcome screen WHEN the Polymarket terms are tapped THEN the terms page is opened`() =
         runTest {
             // Arrange
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-                PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+            gateResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED))
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -458,8 +581,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN the welcome screen WHEN the Tangem terms are tapped THEN the terms page is opened`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        gateResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -474,8 +596,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN the gate is open WHEN close is tapped THEN the gate is popped`() = runTest {
         // Arrange
-        coEvery { resolvePolymarketEntryUseCase(userWalletId) } returns
-            PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
+        gateResolves(PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED))
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -491,7 +612,7 @@ internal class PolymarketOnboardingModelTest {
     fun `GIVEN the entry is still resolving WHEN the gate opens THEN the button already spins AND no overlay is shown`() =
         runTest {
             // Arrange
-            coEvery { resolvePolymarketEntryUseCase(userWalletId) } coAnswers {
+            coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } coAnswers {
                 delay(RESOLUTION_DELAY_MILLIS)
                 PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
             }
@@ -515,12 +636,32 @@ internal class PolymarketOnboardingModelTest {
 
     internal data class ResumeLabelModel(val status: PolymarketWalletStatus)
 
+    /** Stubs what the gate sees when it opens — the resolution that is not allowed to prompt the user. */
+    private fun gateResolves(entry: PolymarketEntry) {
+        coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } returns entry.right()
+    }
+
+    private fun gateFails(error: PolymarketOnboardingError) {
+        coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } returns error.left()
+    }
+
+    /** Stubs what pressing the action button sees — the full resolution, which may derive. */
+    private fun startResolves(entry: PolymarketEntry) {
+        coEvery { resolvePolymarketEntryInteractor(userWalletId) } returns entry.right()
+    }
+
+    private fun owesOnboarding() {
+        val entry = PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED)
+        gateResolves(entry)
+        startResolves(entry)
+    }
+
     private fun createModel(testScope: TestScope): PolymarketOnboardingModel = PolymarketOnboardingModel(
         paramsContainer = MutableParamsContainer(params),
         router = router,
         urlOpener = urlOpener,
-        resolvePolymarketEntryUseCase = resolvePolymarketEntryUseCase,
-        runPolymarketOnboardingUseCase = runOnboardingUseCase,
+        resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
+        runPolymarketOnboardingInteractor = runOnboardingUseCase,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
     )
 

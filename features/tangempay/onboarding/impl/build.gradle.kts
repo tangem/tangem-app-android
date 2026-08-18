@@ -30,7 +30,6 @@ dependencies {
     implementation(projects.features.tangempay.details.api)
 
     /** Domain */
-    api(projects.domain.appsflyer)
     api(projects.domain.hotWallet)
     api(projects.domain.visa)
     api(projects.domain.visa.models)
