@@ -12,6 +12,6 @@ data class CashbackTransactionDetailsResponse(
 ) {
     @JsonClass(generateAdapter = true)
     data class Result(
-        @Json(name = "cashback") val cashback: TransactionCashbackResponse? = null,
+        @Json(name = "cashback") val cashback: TransactionCashbackResponse?,
     )
 }

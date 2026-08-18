@@ -206,7 +206,6 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 currency = value?.let { USD },
                 isCapTrimmed = isCapTrimmed,
                 exclusionReason = exclusionReason,
-                promotionIds = emptyList(),
             )
         }
     }
