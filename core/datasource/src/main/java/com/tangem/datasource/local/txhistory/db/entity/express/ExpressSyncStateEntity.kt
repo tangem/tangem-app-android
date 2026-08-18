@@ -12,15 +12,15 @@ import androidx.room.Entity
  */
 @Entity(
     tableName = "express_sync_state",
-    primaryKeys = ["type", "address"],
+    primaryKeys = ["type", "user_wallet_id"],
 )
 data class ExpressSyncStateEntity(
 
     @ColumnInfo(name = "type")
     val type: String,
 
-    @ColumnInfo(name = "address")
-    val address: String,
+    @ColumnInfo(name = "user_wallet_id")
+    val userWalletId: String,
 
     @ColumnInfo(name = "is_initial_completed")
     val isInitialCompleted: Boolean,
