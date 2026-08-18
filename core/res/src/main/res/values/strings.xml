@@ -2281,6 +2281,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Cards limit reached for this plan</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade plan</string>
   <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
+  <string name="tangempay_multinetwork">Multinetwork</string>
   <string name="tangempay_newonboard_Q1_body">Yes – to operate a regulated Visa card, identity verification is mandatory. KYC is handled by Sumsub (compliance partner).</string>
   <string name="tangempay_newonboard_Q1_title">Do I have to share my docs?</string>
   <string name="tangempay_newonboard_Q2_body">No. KYC applies only to the Tangem Pay account. Your Tangem Wallet itself remains a separate, self-custodial, non-KYC environment.</string>
