@@ -29,6 +29,7 @@ import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataCompon
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Error
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
+import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -93,7 +94,7 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         assertThat(model.state.value).isInstanceOf(Form::class.java)
-        assertThat(model.form.country).isEqualTo(COUNTRY)
+        assertThat(model.form.country).isEqualTo(CountryNames.getDisplayName(COUNTRY))
         assertThat(model.form.email).isEqualTo(EMAIL)
         assertThat(model.form.phoneMask).isEqualTo(PHONE_MASK)
     }
@@ -426,7 +427,7 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         assertThat(model.state.value).isInstanceOf(Form::class.java)
-        assertThat(model.form.country).isEqualTo(COUNTRY)
+        assertThat(model.form.country).isEqualTo(CountryNames.getDisplayName(COUNTRY))
     }
 
     @Test
