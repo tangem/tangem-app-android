@@ -7,11 +7,13 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.cleaner.PolymarketUserWalletDataCleaner
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
+import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,6 +24,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import javax.inject.Singleton
@@ -71,6 +74,25 @@ internal object PolymarketStorageModule {
                 scope = scope,
             ),
             scope = scope,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketOnboardedStore(
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): PolymarketOnboardedStore {
+        return DefaultPolymarketOnboardedStore(
+            dataStore = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptySet(),
+                    serializer = SetSerializer(String.serializer()),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "polymarket_onboarded_wallets") },
+                scope = scope,
+            ),
         )
     }
 
