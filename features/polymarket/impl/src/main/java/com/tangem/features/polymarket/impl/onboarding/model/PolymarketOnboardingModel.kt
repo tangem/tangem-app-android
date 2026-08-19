@@ -10,7 +10,6 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
@@ -87,7 +86,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun onRegionRestrictionsDismiss() {
-        openFeed(accessMode = PolymarketAccessMode.READ_ONLY)
+        openFeed()
     }
 
     private fun resolveEntry(walletId: UserWalletId) {
@@ -117,7 +116,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 startButtonText = startButtonText(status = entry.status),
             )
             PolymarketEntry.Undetermined -> uiState.value = welcome(isStarting = false)
-            is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
+            is PolymarketEntry.Onboarded -> openFeed()
             PolymarketEntry.RegionBlocked -> showRegionRestrictions()
         }
     }
@@ -140,7 +139,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 is PolymarketEntry.Onboard,
                 PolymarketEntry.Undetermined,
                 -> runOnboarding()
-                is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
+                is PolymarketEntry.Onboarded -> openFeed()
                 PolymarketEntry.RegionBlocked -> showRegionRestrictions()
             }
         }.saveIn(onboardingJob)
@@ -166,7 +165,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
             -> uiState.value = uiState.value.copy(isStarting = true)
-            PolymarketOnboardingProgress.Ready -> openFeed(accessMode = PolymarketAccessMode.TRADING)
+            PolymarketOnboardingProgress.Ready -> openFeed()
             is PolymarketOnboardingProgress.Failed -> uiState.value = uiState.value.copy(isStarting = false)
         }
     }
@@ -189,8 +188,8 @@ internal class PolymarketOnboardingModel @Inject constructor(
         else -> resourceReference(R.string.common_continue)
     }
 
-    private fun openFeed(accessMode: PolymarketAccessMode) {
-        router.replaceAll(PolymarketRoute.Main(accessMode = accessMode, userWalletId = userWalletId))
+    private fun openFeed() {
+        router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId))
     }
 
     private companion object {
