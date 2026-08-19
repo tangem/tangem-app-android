@@ -8,6 +8,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -25,15 +26,17 @@ internal class PolymarketUserWalletDataCleanerTest {
 
     private val credentialsStore: PolymarketCredentialsStore = mockk(relaxUnitFun = true)
     private val statusStore: PredictionAccountStatusStore = mockk(relaxUnitFun = true)
+    private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
 
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
         predictionAccountStatusStore = statusStore,
+        onboardedStore = onboardedStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(credentialsStore, statusStore)
+        clearMocks(credentialsStore, statusStore, onboardedStore)
     }
 
     @Test
@@ -46,6 +49,8 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
         coVerify(exactly = 1) { statusStore.clear(WALLET_A) }
         coVerify(exactly = 1) { statusStore.clear(WALLET_B) }
+        coVerify(exactly = 1) { onboardedStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { onboardedStore.clear(WALLET_B) }
     }
 
     @Test
@@ -115,6 +120,7 @@ internal class PolymarketUserWalletDataCleanerTest {
         PolymarketUserWalletDataCleaner(
             credentialsStore = store,
             predictionAccountStatusStore = statusStore,
+            onboardedStore = onboardedStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -131,6 +137,7 @@ internal class PolymarketUserWalletDataCleanerTest {
         PolymarketUserWalletDataCleaner(
             credentialsStore = credentialsStore,
             predictionAccountStatusStore = store,
+            onboardedStore = onboardedStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
