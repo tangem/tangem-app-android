@@ -2,7 +2,7 @@ package com.tangem.features.polymarket.impl.details
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -12,11 +12,8 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
 import com.tangem.features.polymarket.impl.details.ui.PolymarketEventDetailsScreen
@@ -26,7 +23,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 /**
- * Event details, presented as a full-height modal bottom sheet over the Discovery feed (per design).
+ * Event details screen, pushed onto the feature stack over the Discovery feed.
+ *
+
+ * factory — its model is resolved from the model map by [getOrCreateModel].
  *
  * Hosts a nested `childSlot` for the Place-prediction bottom sheet, activated by the model's sheet
  * requests (an outcome tap on a market card).
@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.onEach
 internal class PolymarketEventDetailsComponent(
     appComponentContext: AppComponentContext,
     params: Params,
-) : ComposableBottomSheetComponent, AppComponentContext by appComponentContext {
+) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: PolymarketEventDetailsModel = getOrCreateModel(params = params)
 
@@ -59,32 +59,15 @@ internal class PolymarketEventDetailsComponent(
             .launchIn(componentScope)
     }
 
-    override fun dismiss() {
-        model.onCloseClick()
-    }
-
     @Composable
-    override fun BottomSheet() {
+    override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val slotState by placePredictionSlot.subscribeAsState()
 
-        val config = remember(this) {
-            TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = ::dismiss,
-                content = TangemBottomSheetConfigContent.Empty,
-            )
-        }
-
-        TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
-            config = config,
-            containerColor = TangemTheme.colors3.bg.primary,
-            content = {
-                PolymarketEventDetailsScreen(
-                    state = state,
-                    onCloseClick = model::onCloseClick,
-                )
-            },
+        PolymarketEventDetailsScreen(
+            state = state,
+            onBackClick = model::onBackClick,
+            modifier = modifier,
         )
 
         slotState.child?.instance?.BottomSheet()
