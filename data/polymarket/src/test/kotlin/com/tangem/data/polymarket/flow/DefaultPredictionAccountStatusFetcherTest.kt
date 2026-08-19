@@ -176,10 +176,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
     }
 
-    /**
-     * A fresh install with the backend down has nothing to fall back on. Leaving the entry absent reads as
-     * [PredictionAccountStatusValue.Loading] downstream, so the row would shimmer for a balance that is not coming.
-     */
     @Test
     fun `GIVEN nothing cached WHEN the wallet status fails THEN the failure is recorded`() = runTest {
         // Arrange

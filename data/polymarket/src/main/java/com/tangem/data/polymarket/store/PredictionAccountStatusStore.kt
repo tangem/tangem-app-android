@@ -88,13 +88,9 @@ internal class PredictionAccountStatusStore(
     }
 
     /**
-     * Records that a refresh failed. Runtime only, and in one atomic update: a refresh that failed must not
-     * overwrite the value a concurrent successful one has just written, and a failure must not survive to the next
-     * launch, where nothing has been attempted yet.
-     *
-     * A cached value keeps its balance and is flagged [StatusSource.ONLY_CACHE]. With nothing cached there is no
-     * balance to keep, so the failure itself is recorded: leaving the entry absent would keep the account reporting
-     * [PredictionAccountStatusValue.Loading] forever, and the row would shimmer for a balance that is not coming.
+     * Records that a refresh failed. Runtime only and atomic, so it neither survives to the next launch nor
+     * overwrites a value a concurrent success has just written. With nothing cached the failure itself is stored:
+     * an absent entry reads as [PredictionAccountStatusValue.Loading] and the row shimmers for nothing.
      */
     suspend fun markUnrefreshed(userWalletId: UserWalletId) {
         preloaded.await()
