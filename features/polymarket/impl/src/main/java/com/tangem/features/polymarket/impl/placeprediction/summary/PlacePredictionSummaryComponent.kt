@@ -1,20 +1,40 @@
 package com.tangem.features.polymarket.impl.placeprediction.summary
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.res.TangemTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
 
 internal class PlacePredictionSummaryComponent(
     appComponentContext: AppComponentContext,
+    private val model: PlacePredictionModel,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     @Composable
     override fun Content(modifier: Modifier) {
-        Box(modifier = modifier) {
-            Text(text = "Summary")
+        val state by model.uiState.collectAsStateWithLifecycle()
+
+        Column(
+            modifier = modifier.background(TangemTheme.colors3.bg.tertiary),
+            verticalArrangement = Arrangement.spacedBy(space = 4.dp),
+        ) {
+            Text(text = "Pay: ${state.amountValue} ${state.payment.tokenSymbol}")
+            Text(text = "Slippage: ${state.slippage.percent}%")
+            Text(text = "Quote: ${state.quote}")
+            Text(text = "Submit: ${state.submit}")
+            Button(onClick = model::onPlaceClick, enabled = state.isPrimaryButtonEnabled) {
+                Text(text = "Place predict")
+            }
         }
     }
 }
