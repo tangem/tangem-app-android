@@ -1,18 +1,18 @@
 package com.tangem.tap.di
 
 import com.tangem.lib.auth.attestation.AttestationProvider
-import com.tangem.lib.auth.attestation.NoAttestationProvider
+import com.tangem.tap.attestation.GooglePlayIntegrityAttestationProvider
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object GoogleAttestationModule {
+internal interface GoogleAttestationModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideAttestationProvider(): AttestationProvider = NoAttestationProvider
+    fun bindAttestationProvider(impl: GooglePlayIntegrityAttestationProvider): AttestationProvider
 }
