@@ -1420,6 +1420,7 @@ internal class StateBuilder(
             is Account.Payment -> AccountIconUM.Payment
             is Account.Virtual -> AccountIconUM.Virtual
             is Account.Prediction -> AccountIconUM.Prediction
+            is Account.Joint -> CryptoPortfolioIconConverter.convert(icon)
         }
     }
 
