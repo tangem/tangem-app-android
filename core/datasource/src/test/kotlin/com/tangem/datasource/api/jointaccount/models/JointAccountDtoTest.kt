@@ -23,7 +23,7 @@ internal class JointAccountDtoTest {
                   "cryptoAccountId": "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
                   "membersCount": 3,
                   "threshold": 2,
-                  "address": null,
+                  "safeAddress": null,
                   "status": "pending",
                   "members": [
                     { "name": "Alice", "address": "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf", "role": "creator" },
@@ -44,7 +44,7 @@ internal class JointAccountDtoTest {
                     cryptoAccountId = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
                     membersCount = 3,
                     threshold = 2,
-                    address = null,
+                    safeAddress = null,
                     status = "pending",
                     members = listOf(
                         JointAccountDto.Member(
@@ -74,7 +74,7 @@ internal class JointAccountDtoTest {
               "cryptoAccountId": "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
               "membersCount": 3,
               "threshold": 2,
-              "address": null,
+              "safeAddress": null,
               "status": "pending",
               "members": [
                 { "name": "Alice", "address": "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf", "role": "creator" }
@@ -105,8 +105,8 @@ internal class JointAccountDtoTest {
               "cryptoAccountId": "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
               "membersCount": 3,
               "threshold": 2,
-              "address": "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
-              "status": "cancelled",
+              "safeAddress": "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
+              "status": "frozen",
               "members": [
                 { "name": "Alice", "address": "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf", "role": "owner" }
               ]
@@ -117,7 +117,7 @@ internal class JointAccountDtoTest {
         val actual = moshi.adapter(JointAccountDto::class.java).fromJson(json)
 
         // Assert
-        assertThat(actual?.status).isEqualTo("cancelled")
+        assertThat(actual?.status).isEqualTo("frozen")
         assertThat(actual?.members?.single()?.role).isEqualTo("owner")
     }
 
