@@ -109,6 +109,14 @@ internal class PlacePredictionModel @Inject constructor(
         restartQuoteLoop(withDebounce = false)
     }
 
+    override fun onSlippageClick() {
+        showComingLater(part = "Choosing the slippage")
+    }
+
+    override fun onAddFundsClick() {
+        showComingLater(part = "Adding funds")
+    }
+
     override fun onQuoteRetryClick() {
         restartQuoteLoop(withDebounce = false)
     }
@@ -125,6 +133,15 @@ internal class PlacePredictionModel @Inject constructor(
                 title = stringReference(value = "Not implemented"),
                 message = stringReference(value = "Signing and placing the order arrive in the next part."),
                 onDismissRequest = { uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle)) },
+            ),
+        )
+    }
+
+    private fun showComingLater(part: String) {
+        messageSender.send(
+            DialogMessage(
+                title = stringReference(value = "Not implemented"),
+                message = stringReference(value = "$part arrives in a later part of this flow."),
             ),
         )
     }
