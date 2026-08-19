@@ -78,7 +78,7 @@ internal class PolymarketOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN entry is Trade WHEN model created THEN the feed is opened in trading mode`() = runTest {
+    fun `GIVEN entry is Onboarded WHEN model created THEN the feed is opened`() = runTest {
         // Arrange
         gateResolves(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
 
@@ -90,28 +90,7 @@ internal class PolymarketOnboardingModelTest {
         verify(exactly = 1) {
             router.replaceAll(
                 routes = arrayOf(
-                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
-                ),
-                onComplete = any(),
-            )
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN entry is ReadOnly WHEN model created THEN the feed is opened in read-only mode`() = runTest {
-        // Arrange
-        gateResolves(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY))
-
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) {
-            router.replaceAll(
-                routes = arrayOf(
-                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.READ_ONLY, userWalletId = userWalletId),
+                    PolymarketRoute.Main(userWalletId = userWalletId),
                 ),
                 onComplete = any(),
             )
@@ -171,10 +150,7 @@ internal class PolymarketOnboardingModelTest {
             verify(exactly = 1) {
                 router.replaceAll(
                     routes = arrayOf(
-                        PolymarketRoute.Main(
-                            accessMode = PolymarketAccessMode.READ_ONLY,
-                            userWalletId = userWalletId,
-                        ),
+                        PolymarketRoute.Main(userWalletId = userWalletId),
                     ),
                     onComplete = any(),
                 )
@@ -201,7 +177,7 @@ internal class PolymarketOnboardingModelTest {
         verify(exactly = 1) {
             router.replaceAll(
                 routes = arrayOf(
-                    PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+                    PolymarketRoute.Main(userWalletId = userWalletId),
                 ),
                 onComplete = any(),
             )
@@ -240,10 +216,7 @@ internal class PolymarketOnboardingModelTest {
             verify(exactly = 1) {
                 router.replaceAll(
                     routes = arrayOf(
-                        PolymarketRoute.Main(
-                            accessMode = PolymarketAccessMode.TRADING,
-                            userWalletId = userWalletId,
-                        ),
+                        PolymarketRoute.Main(userWalletId = userWalletId),
                     ),
                     onComplete = any(),
                 )
@@ -293,10 +266,7 @@ internal class PolymarketOnboardingModelTest {
                 verify(exactly = 1) {
                     router.replaceAll(
                         routes = arrayOf(
-                            PolymarketRoute.Main(
-                                accessMode = PolymarketAccessMode.TRADING,
-                                userWalletId = userWalletId,
-                            ),
+                            PolymarketRoute.Main(userWalletId = userWalletId),
                         ),
                         onComplete = any(),
                     )
@@ -491,7 +461,7 @@ internal class PolymarketOnboardingModelTest {
         // Assert
         verify(exactly = 1) {
             router.replaceAll(
-                PolymarketRoute.Main(accessMode = PolymarketAccessMode.TRADING, userWalletId = userWalletId),
+                PolymarketRoute.Main(userWalletId = userWalletId),
             )
         }
         model.onDestroy()

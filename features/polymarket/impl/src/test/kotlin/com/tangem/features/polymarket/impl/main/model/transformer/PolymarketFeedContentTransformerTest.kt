@@ -139,7 +139,6 @@ internal class PolymarketFeedContentTransformerTest {
 
         // Assert
         assertThat(actual.categories).isEqualTo(PREV_STATE.categories)
-        assertThat(actual.accessMode).isEqualTo(PREV_STATE.accessMode)
     }
 
     @Test
@@ -216,7 +215,6 @@ internal class PolymarketFeedContentTransformerTest {
 
     private companion object {
         val PREV_STATE = PolymarketMainUM(
-            accessMode = PolymarketAccessMode.TRADING,
             categories = persistentListOf(
                 PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
             ),
