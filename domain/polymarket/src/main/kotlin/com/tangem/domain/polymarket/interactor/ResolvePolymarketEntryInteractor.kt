@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.interactor
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -23,18 +24,21 @@ import com.tangem.utils.logging.TangemLogger
  * stored locally, so a reinstall, a new device or a wallet onboarded elsewhere leaves the status ready with
  * nothing to sign with. Such a user still owes onboarding, which restores the credentials without deploying.
  *
- * [invoke] may open a card session to derive the owner address; [withoutPrompting] stops short of that instead
- * of paying for a session the user never asked for.
+ * A wallet the backend has already confirmed resolves from local state alone. [invoke] may open a card session
+ * to derive the owner address; [withoutPrompting] stops short of that instead of paying for a session the user
+ * never asked for.
  */
 class ResolvePolymarketEntryInteractor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
     private val getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
+    private val polymarketOnboardedStore: PolymarketOnboardedStore,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
-            entryFor(addresses = deriveAddresses(userWalletId).bind()).bind()
+            confirmedEntry(userWalletId)
+                ?: entryFor(addresses = deriveAddresses(userWalletId).bind()).bind()
         }
 
     /**
@@ -43,6 +47,8 @@ class ResolvePolymarketEntryInteractor(
      */
     suspend fun withoutPrompting(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
+            confirmedEntry(userWalletId)?.let { return@either it }
+
             val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
             if (addresses == null) {
                 TangemLogger.i("Resolve: no addresses available without prompting, entry=Undetermined")
@@ -52,9 +58,24 @@ class ResolvePolymarketEntryInteractor(
             entryFor(addresses = addresses).bind()
         }
 
+    /**
+     * The entry of a wallet already confirmed ready, or `null` when it is not confirmed or has nothing to sign
+     * with — either way the backend has to be asked.
+     */
+    private suspend fun confirmedEntry(userWalletId: UserWalletId): PolymarketEntry? {
+        if (!polymarketOnboardedStore.isOnboarded(userWalletId)) return null
+        if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return null
+
+        TangemLogger.i("Resolve: $userWalletId is confirmed onboarded")
+
+        return PolymarketEntry.Onboarded
+    }
+
     private suspend fun entryFor(addresses: PolymarketAddresses): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
             val state = readWalletStatus(addresses).bind()
+
+            recordConfirmation(userWalletId = addresses.userWalletId, status = state.status)
 
             val hasCredentials = getPolymarketApiCredentialsUseCase(addresses.userWalletId) != null
             TangemLogger.i("Resolve: credentials found=$hasCredentials")
@@ -63,6 +84,18 @@ class ResolvePolymarketEntryInteractor(
             TangemLogger.i("Resolve: entry=$entry")
             entry
         }
+
+    /**
+     * Kept symmetric on purpose: a wallet the backend stops calling ready must lose the record, or the gate
+     * would never ask again and the user could not re-run onboarding after the backend changed its mind.
+     */
+    private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
+        if (status == PolymarketWalletStatus.READY_TO_TRADE) {
+            polymarketOnboardedStore.markOnboarded(userWalletId)
+        } else {
+            polymarketOnboardedStore.clear(userWalletId)
+        }
+    }
 
     private suspend fun deriveAddresses(
         userWalletId: UserWalletId,
