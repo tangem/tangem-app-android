@@ -38,11 +38,42 @@ internal class TangemPayDetailsStateFactoryTest {
         onOpenMenu = {},
         intents = intents,
         isTiersPlusPlanEnabled = true,
+        isMultichainEnabled = true,
     )
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(intents)
+    }
+
+    @Test
+    fun `GIVEN multichain enabled WHEN building any state THEN top bar subtitle is Multinetwork`() {
+        // Arrange
+        val status = loadedStatus(statusSource = StatusSource.ACTUAL, statusError = null)
+        val expected = resourceReference(R.string.tangempay_multinetwork)
+
+        // Act & Assert
+        assertThat(factory.getLoadingState().topBarConfig.subtitle).isEqualTo(expected)
+        assertThat(factory.getLoadedState(status).topBarConfig.subtitle).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN multichain disabled WHEN building any state THEN top bar subtitle names the single network`() {
+        // Arrange
+        val singleNetworkFactory = TangemPayDetailsStateFactory(
+            onBack = {},
+            onOpenMenu = {},
+            intents = intents,
+            isTiersPlusPlanEnabled = true,
+            isMultichainEnabled = false,
+        )
+        val expected = resourceReference(R.string.tangempay_usdc_on_polygon_network)
+
+        // Act
+        val subtitle = singleNetworkFactory.getLoadingState().topBarConfig.subtitle
+
+        // Assert
+        assertThat(subtitle).isEqualTo(expected)
     }
 
     @ParameterizedTest

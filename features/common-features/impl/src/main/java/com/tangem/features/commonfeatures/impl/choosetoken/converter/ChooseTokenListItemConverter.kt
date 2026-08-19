@@ -128,6 +128,8 @@ internal class ChooseTokenListItemConverter(
                         account.paymentCryptoCurrencyOrNull()?.let { listOf(account to it) }.orEmpty()
                     is AccountStatus.Virtual -> emptyList()
                     is AccountStatus.Prediction -> emptyList()
+                    // Joint currencies belong to the Safe contract, never to a spendable EOA
+                    is AccountStatus.Joint -> emptyList()
                 }
             }
     }
@@ -150,6 +152,7 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
                     is AccountStatus.Virtual -> null
                     is AccountStatus.Prediction -> null
+                    is AccountStatus.Joint -> null
                 }
             }
             .filter { portfolio -> portfolio.tokens.isNotEmpty() }

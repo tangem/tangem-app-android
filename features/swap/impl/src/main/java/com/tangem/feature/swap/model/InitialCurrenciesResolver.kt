@@ -155,6 +155,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 is AccountStatus.Virtual -> emptyList()
                 // Prediction account isn't a swap source either — the same MVP rule
                 is AccountStatus.Prediction -> emptyList()
+                // Joint currencies live on the Safe contract and never swap through the participant's EOA
+                is AccountStatus.Joint -> emptyList()
             }
             val availabilityStates = rampStateManager.availableForSwap(
                 userWalletId,

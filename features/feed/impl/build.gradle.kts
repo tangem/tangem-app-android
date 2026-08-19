@@ -20,6 +20,7 @@ dependencies {
     /* Project - API */
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
+    api(projects.features.feed.search.api)
     api(projects.features.forYou.api)
     api(projects.features.promoBanners.api)
     api(projects.features.marketing.api)
@@ -84,6 +85,7 @@ dependencies {
 
     /* Core */
     api(projects.core.analytics)
+    api(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
