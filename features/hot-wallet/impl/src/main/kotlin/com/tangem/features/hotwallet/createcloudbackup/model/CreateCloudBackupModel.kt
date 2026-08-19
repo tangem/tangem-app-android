@@ -235,6 +235,8 @@ internal class CreateCloudBackupModel @Inject constructor(
                 AppRoute.UpdateAccessCode(
                     userWalletId = params.userWalletId,
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
+                    // the wallet is already backed up to the cloud, so the access code must be skippable
+                    canSkip = true,
                 ),
             )
         } else {

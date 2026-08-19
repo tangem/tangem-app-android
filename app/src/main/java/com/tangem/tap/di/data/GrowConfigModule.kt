@@ -1,6 +1,7 @@
 package com.tangem.tap.di.data
 
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import dagger.Module
 import dagger.Provides
@@ -25,6 +26,15 @@ internal object GrowConfigModule {
             yieldModuleApiKeyDev = environmentConfig.yieldModuleApiKeyDev,
             gaslessTxApiKey = environmentConfig.gaslessTxApiKey,
             gaslessTxApiKeyDev = environmentConfig.gaslessTxApiKeyDev,
+            express = environmentConfig.express?.toGrowExpressModel(),
+            devExpress = environmentConfig.devExpress?.toGrowExpressModel(),
+        )
+    }
+
+    private fun ExpressModel.toGrowExpressModel(): GrowEnvironmentConfig.ExpressModel {
+        return GrowEnvironmentConfig.ExpressModel(
+            apiKey = apiKey,
+            signVerifierPublicKey = signVerifierPublicKey,
         )
     }
 }

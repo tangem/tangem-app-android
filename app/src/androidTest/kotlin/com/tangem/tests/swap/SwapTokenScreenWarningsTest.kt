@@ -1,6 +1,6 @@
 package com.tangem.tests.swap
 
-import com.tangem.datasource.api.common.config.Express
+import com.tangem.grow.datasource.config.Express
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.R

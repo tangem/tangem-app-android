@@ -15,8 +15,9 @@ interface GoogleAuthorizer {
      * Requests authorization for the given OAuth [scopes] and returns an access token.
      *
      * @param scopes OAuth scopes to request (e.g. Drive `drive.file`).
-     * @param interactive when `true`, shows the account picker / consent screen if the platform needs
-     * it; when `false`, resolves only from an already-granted session and yields
+     * @param interactive when `true`, asks which account to use (unless one was already picked since the
+     * last [clearAuthorization]) and shows the consent screen if the platform needs it; when `false`,
+     * resolves only from an already-granted session, shows no UI and yields
      * [GoogleAuthError.AuthRequired] when interaction would be required.
      * @return the granted [GoogleAuthResult], or a [GoogleAuthError] describing the failure.
      */
@@ -26,9 +27,10 @@ interface GoogleAuthorizer {
     ): Either<GoogleAuthError, GoogleAuthResult>
 
     /**
-     * Forgets whatever authorization state the implementation itself holds, so the next [authorize]
-     * starts from scratch. The Google Identity `AuthorizationClient` exposes no way to revoke a granted
-     * authorization, so dropping the access token is up to the caller — see [clearToken].
+     * Forgets whatever authorization state the implementation itself holds — including the picked
+     * account, so the next interactive [authorize] asks for it again and the user can switch accounts.
+     * The Google Identity `AuthorizationClient` exposes no way to revoke a granted authorization, so
+     * dropping the access token is up to the caller — see [clearToken].
      */
     fun clearAuthorization()
 

@@ -1,7 +1,7 @@
 package com.tangem.data.express.converter
 
-import com.tangem.datasource.api.express.models.response.ExchangeProvider
-import com.tangem.datasource.api.express.models.response.ExchangeProviderType
+import com.tangem.grow.datasource.express.models.response.ExchangeProvider
+import com.tangem.grow.datasource.express.models.response.ExchangeProviderType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.utils.converter.Converter

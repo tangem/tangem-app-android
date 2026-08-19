@@ -47,6 +47,7 @@ dependencies {
     // region Core modules
     api(projects.core.analytics)
     api(projects.core.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     // endregion
