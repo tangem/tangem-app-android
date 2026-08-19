@@ -451,4 +451,85 @@ sealed class TangemPayAnalyticsEvents(
             event = "Stay On Plus Popup Clicked",
         )
     }
+
+    object Cashback {
+
+        private const val CATEGORY = "Visa Cashback"
+
+        class BannerShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Banner Showed",
+        )
+
+        class DeactivationBannerShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Deactivation Banner Showed",
+        )
+
+        class BannerClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Banner Clicked",
+        )
+
+        class DeactivationBannerGotItClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Deactivation Banner Got It Clicked",
+        )
+
+        class DetailsScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Details Screen Opened",
+        )
+
+        class ConditionsTileClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Conditions Tile Clicked",
+        )
+
+        class AccrualsTileClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Accruals Tile Clicked",
+        )
+
+        class UpcomingAccrualBannerShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Upcoming Accrual Banner Showed",
+        )
+
+        class NegativeBannerShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Negative Banner Showed",
+        )
+
+        class LoadingErrorShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Loading Error Showed",
+        )
+
+        data class TermsDocClicked(val title: String) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Terms Doc Clicked",
+            params = mapOf("title" to title),
+        )
+
+        class ButtonInSettingsShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Button In Settings Showed",
+        )
+
+        class ButtonInSettingsClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Button In Settings Clicked",
+        )
+
+        class BannerErrorStateShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Banner Error State Showed",
+        )
+
+        class ButtonErrorStateShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Cashback Button Error State Showed",
+        )
+    }
 }

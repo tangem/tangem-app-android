@@ -4,8 +4,6 @@ import com.tangem.core.remote.config.ApiConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
-import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -17,20 +15,6 @@ import dagger.multibindings.StringKey
 @Module
 @InstallIn(SingletonComponent::class)
 internal object ApiConfigsModule {
-
-    @Provides
-    @IntoMap
-    @StringKey(StakeKit.KEY)
-    fun provideStakeKitConfig(stakeKitAuthProvider: StakeKitAuthProvider): ApiConfig {
-        return StakeKit(stakeKitAuthProvider)
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(P2PEthPool.KEY)
-    fun provideP2PEthPoolConfig(p2pAuthProvider: P2PEthPoolAuthProvider): ApiConfig {
-        return P2PEthPool(p2pAuthProvider)
-    }
 
     @Provides
     @IntoMap

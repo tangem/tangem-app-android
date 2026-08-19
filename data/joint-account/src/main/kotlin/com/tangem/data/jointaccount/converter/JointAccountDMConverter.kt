@@ -17,7 +17,7 @@ internal class JointAccountDMConverter @Inject constructor() {
         cryptoAccountId = account.cryptoAccountId,
         membersCount = account.membersCount,
         threshold = account.threshold,
-        address = account.address,
+        safeAddress = account.safeAddress,
         status = account.status.toRawString(),
         members = account.members.map { member ->
             JointAccountDM.MemberDM(
@@ -32,7 +32,7 @@ internal class JointAccountDMConverter @Inject constructor() {
         cryptoAccountId = dm.cryptoAccountId,
         membersCount = dm.membersCount,
         threshold = dm.threshold,
-        address = dm.address,
+        safeAddress = dm.safeAddress,
         status = JointAccountFieldsConverter.convertStatus(dm.status),
         members = dm.members.map { member ->
             JointAccount.Member(
@@ -48,6 +48,7 @@ internal class JointAccountDMConverter @Inject constructor() {
         JointAccount.Status.PENDING -> "pending"
         JointAccount.Status.CONFIRMING -> "confirming"
         JointAccount.Status.ACTIVE -> "active"
+        JointAccount.Status.CANCELLED -> "cancelled"
         JointAccount.Status.UNKNOWN -> "unknown"
     }
 
