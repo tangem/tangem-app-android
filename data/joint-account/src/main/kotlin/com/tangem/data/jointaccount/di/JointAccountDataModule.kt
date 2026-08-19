@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.jointaccount.DefaultJointAccountSupportedNetworksRepository
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
 import com.tangem.data.jointaccount.fetcher.DefaultSingleJointAccountListFetcher
 import com.tangem.data.jointaccount.producer.DefaultSingleJointAccountListProducer
@@ -11,6 +12,7 @@ import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -38,6 +40,12 @@ internal interface JointAccountDataModule {
     @Binds
     @Singleton
     fun bindSingleJointAccountListFetcher(fetcher: DefaultSingleJointAccountListFetcher): SingleJointAccountListFetcher
+
+    @Binds
+    @Singleton
+    fun bindJointAccountSupportedNetworksRepository(
+        repository: DefaultJointAccountSupportedNetworksRepository,
+    ): JointAccountSupportedNetworksRepository
 
     companion object {
 
