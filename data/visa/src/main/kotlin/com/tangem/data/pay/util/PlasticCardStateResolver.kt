@@ -1,6 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 
@@ -14,7 +15,7 @@ internal object PlasticCardStateResolver {
     )
 
     fun isAwaitingActivation(cardInfo: CardInfo, productInstance: ProductInstance): Boolean {
-        return cardInfo.cardType == CardInfo.CardType.PHYSICAL &&
+        return cardInfo.cardType == TangemPayCardType.PHYSICAL &&
             cardInfo.cardStatus == TangemPayCard.Status.INACTIVE &&
             productInstance.status !in TERMINAL_STATUSES
     }

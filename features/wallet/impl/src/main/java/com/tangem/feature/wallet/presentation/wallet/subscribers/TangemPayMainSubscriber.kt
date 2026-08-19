@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.RestoreActiveIssueOrdersUseCase
+import com.tangem.domain.pay.usecase.RestoreActiveCardOrdersUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 internal class TangemPayMainSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
-    private val restoreActiveIssueOrdersUseCase: RestoreActiveIssueOrdersUseCase,
+    private val restoreActiveCardOrdersUseCase: RestoreActiveCardOrdersUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val analytics: WalletTangemPayAnalyticsEventSender,
 ) : WalletSubscriber() {
@@ -26,7 +26,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
             tangemPayWithdrawRepository.pollWithdrawOrdersIfNeeds(userWallet)
         }
         coroutineScope.launch {
-            restoreActiveIssueOrdersUseCase(userWallet.walletId)
+            restoreActiveCardOrdersUseCase(userWallet.walletId)
         }
         subscribeToStatus(coroutineScope)
         return emptyFlow<Any>()
