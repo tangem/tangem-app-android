@@ -30,14 +30,15 @@ internal class TangemPayCashbackUmConverter(
         val month = dateFormatter.formatMonth(value.period.year, value.period.month)
         val monthIn = arrayItemReference(R.array.common_month_in, value.period.month - 1)
         val payoutWindow = dateFormatter.formatWindow(value.period.payoutStart, value.period.payoutEnd)
-        val payoutEnd = dateFormatter.formatMonthDay(value.period.payoutEnd)
-        val banner = if (value.confirmedAmount.signum() < 0) {
-            TangemPayCashbackUM.Banner(
+        val payoutEnd = value.period.payoutEnd?.let(dateFormatter::formatMonthDay)
+        val banner = when {
+            value.confirmedAmount.signum() < 0 -> TangemPayCashbackUM.Banner(
                 text = resourceReference(R.string.tangempay_cashback_refund_banner),
                 type = TangemPayCashbackUM.Banner.Type.Error,
             )
-        } else {
-            TangemPayCashbackUM.Banner(
+            // The deposit promise cannot be worded without a payout date, so the banner is dropped instead
+            payoutEnd == null -> null
+            else -> TangemPayCashbackUM.Banner(
                 text = resourceReference(
                     id = R.string.tangempay_cashback_deposit_banner,
                     formatArgs = wrappedList(earned, month, payoutEnd),
@@ -47,7 +48,9 @@ internal class TangemPayCashbackUmConverter(
         }
         return TangemPayCashbackUM(
             title = resourceReference(R.string.tangempay_cashback_earned_title, wrappedList(earned, monthIn)),
-            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(payoutWindow)),
+            subtitle = payoutWindow?.let {
+                resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(it))
+            },
             isEmpty = false,
             banner = banner,
         )
