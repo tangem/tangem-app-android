@@ -9,6 +9,10 @@ internal interface PlacePredictionIntents {
 
     fun onSlippageSelected(percent: BigDecimal)
 
+    fun onSlippageClick()
+
+    fun onAddFundsClick()
+
     fun onQuoteRetryClick()
 
     fun onNextClick()
