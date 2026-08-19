@@ -738,6 +738,8 @@
   <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
   <string name="express_swap_not_supported_text">This token is not supported. Please choose a different token to swap.</string>
   <string name="express_swap_not_supported_title">%s is not supported</string>
+  <string name="express_swap_restrictions_text">Swap provider is restricted</string>
+  <string name="express_swap_restrictions_title">Regional swap restrictions</string>
   <string name="express_swap_with">Swap with</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
@@ -882,7 +884,9 @@
   <string name="hw_cloud_backup_password_rule_v2">Use %d or more characters with uppercase, lowercase, number, and symbols.</string>
   <string name="hw_cloud_backup_passwords_dont_match">Password doesn\'t match</string>
   <string name="hw_cloud_backup_permissions_description">Some permissions are missing. Allow full access so we can save your wallet backup to Google Drive.</string>
+  <string name="hw_cloud_backup_permissions_description_v2">Some permissions are missing. Allow full access so we can save your wallet backup to %1$s.</string>
   <string name="hw_cloud_backup_permissions_title">Complete Google Drive access</string>
+  <string name="hw_cloud_backup_permissions_title_v2">Complete %1$s access</string>
   <string name="hw_cloud_backup_remove_title" formatted="false">%s %s backup</string>
   <string name="hw_cloud_backup_removed">Backup removed</string>
   <string name="hw_cloud_backup_restore_choose_backup_title">Choose a backup</string>
@@ -997,6 +1001,9 @@
   <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
   <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
+  <string name="joint_account_activation_account_button_title">Activate account</string>
+  <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval.</string>
+  <string name="joint_account_activation_title">You\'re activating a shared account</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
@@ -2091,6 +2098,10 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">You have exceeded your attempts for activation</string>
   <string name="tangempay_card_activation_description">Enter last 4 digits of your card number</string>
   <string name="tangempay_card_activation_error">Invalid last digits. Try again</string>
+  <string name="tangempay_card_activation_error_already_active">This card is already active.</string>
+  <string name="tangempay_card_activation_error_in_progress">Activation is already in progress. Please wait.</string>
+  <string name="tangempay_card_activation_error_not_physical">This isn\'t a physical card.</string>
+  <string name="tangempay_card_activation_error_not_ready">This card isn\'t ready to activate yet. Try again after you receive it.</string>
   <string name="tangempay_card_activation_in_progress">Activating your card</string>
   <string name="tangempay_card_default_name">Tangem Pay Card 1</string>
   <string name="tangempay_card_delivery_banner_description">Activate it when arrived</string>
@@ -2316,6 +2327,10 @@
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
+  <string name="tangempay_order_card_error_active_order">A card order is already in progress.</string>
+  <string name="tangempay_order_card_error_insufficient_balance">Not enough money for delivery. Add funds and try again.</string>
+  <string name="tangempay_order_card_error_invalid_address">Check the delivery address and try again.</string>
+  <string name="tangempay_order_card_error_offer_unavailable">This card is no longer available.</string>
   <string name="tangempay_order_data_address_line1">Address line 1</string>
   <string name="tangempay_order_data_address_line2">Address line 2</string>
   <string name="tangempay_order_data_city">City</string>

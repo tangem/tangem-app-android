@@ -27,6 +27,7 @@ dependencies {
 
     /** Kotlin */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -40,9 +41,13 @@ dependencies {
     /** Other */
     implementation(deps.androidx.appCompat)
     implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }
