@@ -1,4 +1,4 @@
-package com.tangem.datasource.crypto
+package com.tangem.grow.datasource.crypto
 
 interface DataSignatureVerifier {
 
