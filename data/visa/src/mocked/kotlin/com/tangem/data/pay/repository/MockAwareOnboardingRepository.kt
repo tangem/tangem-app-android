@@ -6,7 +6,7 @@ import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
