@@ -253,6 +253,27 @@ class DefaultDeviceRegistrarTest {
         coVerify { attestationProvider.getAttestationToken("decrypted") }
     }
 
+    @Test
+    fun `register proceeds with null token when attestation provider throws`() = runTest {
+        stubHappyPath()
+        coEvery { attestationProvider.getAttestationToken(any()) } throws IllegalStateException("Play Integrity down")
+        val slot = slot<RegisterApiRequest>()
+        coEvery { authApi.registerDevice(capture(slot)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "fresh-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "fresh-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+
+        val result = registrar.register()
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.payload.attestationToken).isNull()
+    }
+
     private fun stubHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
