@@ -50,9 +50,10 @@ internal class GooglePlayIntegrityAttestationProvider @Inject constructor(
             TangemLogger.i("Play Integrity unavailable — Google Play services missing")
             return@withContext null
         }
-        val cloudProjectNumber = FirebaseApp.getInstance().options.gcmSenderId?.toLongOrNull()
+        val cloudProjectNumber = runCatching { FirebaseApp.getInstance().options.gcmSenderId?.toLongOrNull() }
+            .getOrNull()
             ?: run {
-                TangemLogger.e("Play Integrity: cloud project number unavailable")
+                TangemLogger.e("Play Integrity: cloud project number unavailable — returning null token")
                 return@withContext null
             }
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
