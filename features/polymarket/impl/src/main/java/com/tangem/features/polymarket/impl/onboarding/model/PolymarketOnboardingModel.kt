@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEntry
+import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
@@ -85,8 +86,8 @@ internal class PolymarketOnboardingModel @Inject constructor(
         router.pop()
     }
 
-    private fun onRegionRestrictionsDismiss() {
-        openFeed()
+    private fun dismissRegionRestrictions() {
+        uiState.value = uiState.value.copy(overlay = null)
     }
 
     private fun resolveEntry(walletId: UserWalletId) {
@@ -116,8 +117,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 startButtonText = startButtonText(status = entry.status),
             )
             PolymarketEntry.Undetermined -> uiState.value = welcome(isStarting = false)
-            is PolymarketEntry.Onboarded -> openFeed()
-            PolymarketEntry.RegionBlocked -> showRegionRestrictions()
+            PolymarketEntry.Onboarded -> openFeed()
         }
     }
 
@@ -139,8 +139,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 is PolymarketEntry.Onboard,
                 PolymarketEntry.Undetermined,
                 -> runOnboarding()
-                is PolymarketEntry.Onboarded -> openFeed()
-                PolymarketEntry.RegionBlocked -> showRegionRestrictions()
+                PolymarketEntry.Onboarded -> openFeed()
             }
         }.saveIn(onboardingJob)
     }
@@ -148,7 +147,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private fun showRegionRestrictions() {
         uiState.value = welcome(
             isStarting = false,
-            overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(onDismiss = ::onRegionRestrictionsDismiss),
+            overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(onDismiss = ::dismissRegionRestrictions),
         )
     }
 
@@ -166,7 +165,12 @@ internal class PolymarketOnboardingModel @Inject constructor(
             is PolymarketOnboardingProgress.Working,
             -> uiState.value = uiState.value.copy(isStarting = true)
             PolymarketOnboardingProgress.Ready -> openFeed()
-            is PolymarketOnboardingProgress.Failed -> uiState.value = uiState.value.copy(isStarting = false)
+            is PolymarketOnboardingProgress.Failed ->
+                if (progress.error == PolymarketOnboardingError.RegionBlocked) {
+                    showRegionRestrictions()
+                } else {
+                    uiState.value = uiState.value.copy(isStarting = false)
+                }
         }
     }
 
