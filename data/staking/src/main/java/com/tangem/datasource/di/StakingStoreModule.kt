@@ -5,8 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.token.DefaultP2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.DefaultStakingActionsStore
