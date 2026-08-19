@@ -103,21 +103,29 @@ internal class TangemPayCashbackModel @Inject constructor(
                 return@launch
             }
 
-            val history = if (summary is CashbackSummary.Enabled) loadHistory() else null
+            val cashbackHistory = if (summary is CashbackSummary.Enabled) loadHistory() else null
             val plan = planDeferred.await()
             val tiers = promotions?.let(tiersConverter::convert).orEmpty()
-            val payoutCurrency = (summary as? CashbackSummary.Enabled)?.cashback?.payoutCurrency
-                ?: TangemPayCurrencyFactory.TOKEN_NAME
+            val cashback = (summary as? CashbackSummary.Enabled)?.cashback
+            val payoutCurrency = cashback?.currency ?: TangemPayCurrencyFactory.TOKEN_NAME
 
             val cashback = cashbackConverter.convert((summary as? CashbackSummary.Enabled)?.cashback)
 
             uiState.value = TangemPayCashbackScreenUM.Content(
                 onCloseClick = router::pop,
-                cashback = cashback,
+                cashback = cashbackConverter.convert(cashback),
                 infoTiles = promotions?.let {
                     infoTilesConverter.convert(tiers = tiers, currentPlan = plan)
                 },
-                histogram = history?.takeIf { it.months.isNotEmpty() }?.let(histogramConverter::convert),
+                histogram = cashbackHistory
+                    ?.takeIf { it.months.isNotEmpty() }
+                    ?.let { history ->
+                        histogramConverter.convert(
+                            history = history,
+                            totalEarnedAmount = cashback?.totalEarnedAmount,
+                            totalCurrency = cashback?.currency,
+                        )
+                    },
                 additionalCashback = promotions
                     ?.let { additionalCashbackConverter.convert(it.additionalCashback) }
                     ?.takeIf { it.items.isNotEmpty() },

@@ -10,7 +10,7 @@ import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
 import com.tangem.grow.datasource.express.models.request.PairsRequestBody
 import com.tangem.grow.datasource.express.models.response.*
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.*
