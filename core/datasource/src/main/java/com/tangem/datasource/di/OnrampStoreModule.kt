@@ -8,8 +8,6 @@ import com.tangem.datasource.local.onramp.currencies.DefaultOnrampCurrenciesStor
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.DefaultOnrampPairsStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
-import com.tangem.datasource.local.onramp.paymentmethods.DefaultOnrampPaymentMethodsStore
-import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.DefaultOnrampQuotesStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.onramp.country.DefaultOnrampCurrentCountryByIPStore
@@ -23,12 +21,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object OnrampStoreModule {
-
-    @Provides
-    @Singleton
-    fun provideOnrampPaymentMethodsStore(): OnrampPaymentMethodsStore {
-        return DefaultOnrampPaymentMethodsStore(store = RuntimeSharedMapStore())
-    }
 
     @Provides
     @Singleton
