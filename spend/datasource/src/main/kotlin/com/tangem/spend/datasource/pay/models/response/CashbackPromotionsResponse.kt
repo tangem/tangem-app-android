@@ -11,6 +11,7 @@ import java.math.BigDecimal
 data class CashbackPromotionsResponse(
     @Json(name = "result") val result: Result?,
 ) {
+
     @JsonClass(generateAdapter = true)
     data class Result(
         @Json(name = "cashback_on_cards") val cashbackOnCards: CashbackOnCards?,
@@ -19,27 +20,31 @@ data class CashbackPromotionsResponse(
 
     @JsonClass(generateAdapter = true)
     data class CashbackOnCards(
-        @Json(name = "tiers") val tiers: List<CardTier>?,
-        @Json(name = "monthly_cap_amount") val monthlyCapAmount: BigDecimal?,
-        @Json(name = "monthly_cap_currency") val monthlyCapCurrency: String?,
+        @Json(name = "cards") val cards: List<Card>?,
+        @Json(name = "account_monthly_cap_amount") val accountMonthlyCapAmount: BigDecimal?,
+        @Json(name = "account_monthly_cap_currency") val accountMonthlyCapCurrency: String?,
     )
 
     @JsonClass(generateAdapter = true)
-    data class CardTier(
-        @Json(name = "tier") val tier: String?,
-        @Json(name = "label") val label: String?,
-        @Json(name = "scope") val scope: String?,
+    data class Card(
+        @Json(name = "card_type") val cardType: String,
+        @Json(name = "title") val title: String?,
+        @Json(name = "card_cashback_rate") val cardCashbackRate: BigDecimal,
         @Json(name = "min_transaction_amount") val minTransactionAmount: BigDecimal?,
-        @Json(name = "tier_monthly_cap_amount") val tierMonthlyCapAmount: BigDecimal?,
-        @Json(name = "promotion_id") val promotionId: String?,
+        @Json(name = "promotion_id") val promotionId: String,
     )
 
     @JsonClass(generateAdapter = true)
     data class AdditionalCashback(
-        @Json(name = "id") val id: String?,
-        @Json(name = "name") val name: String?,
+        @Json(name = "id") val id: String,
+        @Json(name = "card_type") val cardType: String?,
+        @Json(name = "name") val name: String,
         @Json(name = "description") val description: String?,
-        @Json(name = "is_permanent") val isPermanent: Boolean?,
         @Json(name = "end_date") val endDate: String?,
+        @Json(name = "promo_cap_amount") val promoCapAmount: BigDecimal?,
+        @Json(name = "promo_cap_period") val promoCapPeriod: String?,
+        @Json(name = "cap_currency") val capCurrency: String?,
+        @Json(name = "min_transaction_amount") val minTransactionAmount: BigDecimal?,
+        @Json(name = "priority") val priority: Int,
     )
 }

@@ -8,17 +8,15 @@ import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal class TangemPayCashbackTiersConverter : Converter<CashbackPromotions, List<CashbackTier>> {
+internal class TangemPayCashbackCardsConverter : Converter<CashbackPromotions, List<CashbackCard>> {
 
-    override fun convert(value: CashbackPromotions): List<CashbackTier> {
-        return value.cardTiers.map { tier ->
-            CashbackTier(
-                tierId = tier.tier,
-                rate = CashbackRates.forTier(tier.tier),
-                label = tier.label,
-                scope = tier.scope,
-                minPurchase = tier.minTransactionAmount?.formatUsd(),
-                monthlyCap = tier.monthlyCapAmount?.formatUsd(),
+    override fun convert(value: CashbackPromotions): List<CashbackCard> {
+        return value.cards.map { card ->
+            CashbackCard(
+                cardType = card.cardType,
+                title = card.title,
+                rate = card.cashbackRate,
+                minPurchase = card.minTransactionAmount?.formatUsd(),
             )
         }
     }
