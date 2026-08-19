@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.main.model.transformer
 
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
@@ -43,7 +44,11 @@ internal class PolymarketFeedContentTransformer(
     }
 
     private fun toContent(isLoadingNextPage: Boolean): PolymarketMainUM.ContentUM.Content {
-        val events = batchListState.data.flatMap { batch -> batch.data }
+        // The BFF pages with a keyset cursor over a shifting order, so an event that moved between two
+        // page requests arrives twice; the copies would collide as LazyColumn keys and crash the feed.
+        val events = batchListState.data
+            .flatMap { batch -> batch.data }
+            .distinctBy(PolymarketEvent::id)
         return PolymarketMainUM.ContentUM.Content(
             events = eventUMConverter.convertList(events).toImmutableList(),
             isLoadingNextPage = isLoadingNextPage,

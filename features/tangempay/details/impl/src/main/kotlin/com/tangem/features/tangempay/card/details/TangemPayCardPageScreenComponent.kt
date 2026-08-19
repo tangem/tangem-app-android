@@ -168,7 +168,7 @@ internal class TangemPayCardPageScreenComponent(
             is TangemPayCardNavigation.OtherNetworks -> PaymentOtherNetworksComponent(
                 appComponentContext = context,
                 params = PaymentOtherNetworksComponent.Params(
-                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onDismiss = model::onOtherNetworksDismiss,
                 ),
             )
             is TangemPayCardNavigation.PaymentReceive -> PaymentReceiveComponent(

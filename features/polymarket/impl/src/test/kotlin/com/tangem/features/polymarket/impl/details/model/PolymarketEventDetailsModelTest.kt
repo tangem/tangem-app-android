@@ -126,6 +126,34 @@ internal class PolymarketEventDetailsModelTest {
         )
     }
 
+    @Test
+    fun `GIVEN content WHEN closed markets clicked THEN section toggles`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as PolymarketEventDetailsUM.Content).onClosedMarketsClick()
+
+        // Assert
+        assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).isClosedMarketsExpanded).isTrue()
+    }
+
+    @Test
+    fun `GIVEN content WHEN read more clicked THEN description expands`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as PolymarketEventDetailsUM.Content).onReadMoreClick()
+
+        // Assert
+        assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).isDescriptionExpanded).isTrue()
+    }
+
     private fun createModel(testScope: TestScope): PolymarketEventDetailsModel {
         return PolymarketEventDetailsModel(
             paramsContainer = MutableParamsContainer(

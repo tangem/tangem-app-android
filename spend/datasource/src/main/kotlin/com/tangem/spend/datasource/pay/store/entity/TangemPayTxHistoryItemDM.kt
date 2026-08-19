@@ -108,7 +108,6 @@ internal sealed class TangemPayTxHistoryItemDM {
         @SerialName("currency") val currency: SerializedCurrency? = null,
         @SerialName("cap_trimmed") val isCapTrimmed: Boolean = false,
         @SerialName("exclusion_reason") val exclusionReason: ExclusionReason? = null,
-        @SerialName("promotion_ids") val promotionIds: List<String> = emptyList(),
     ) {
         @Serializable
         enum class Status {
@@ -135,9 +134,6 @@ internal sealed class TangemPayTxHistoryItemDM {
 
             @SerialName("monthly_cap_reached")
             MONTHLY_CAP_REACHED,
-
-            @SerialName("customer_blocklisted")
-            CUSTOMER_BLOCKLISTED,
 
             @SerialName("merchant_country_excluded")
             MERCHANT_COUNTRY_EXCLUDED,

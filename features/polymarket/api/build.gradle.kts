@@ -17,4 +17,7 @@ dependencies {
     api(projects.domain.models)
 
     /** Compose */
+    api(deps.compose.foundation)
+    api(deps.compose.ui)
+    implementation(deps.compose.runtime)
 }

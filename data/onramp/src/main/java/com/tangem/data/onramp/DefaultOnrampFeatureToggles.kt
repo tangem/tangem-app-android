@@ -12,4 +12,9 @@ internal class DefaultOnrampFeatureToggles(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_16359_ONRAMP_THEMED_PAYMENT_METHOD_IMAGES,
         )
+
+    override val isExpressCategoriesGeoBlockingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+        )
 }

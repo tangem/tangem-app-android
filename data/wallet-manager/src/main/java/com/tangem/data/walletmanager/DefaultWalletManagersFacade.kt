@@ -7,7 +7,6 @@ import arrow.core.right
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.common.DynamicAddressesManager
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
@@ -546,6 +545,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 nodes.last().index == 0L
             !isBaseAddress && usedAddress.balance > BigDecimal.ZERO
         }
+    }
+
+    override suspend fun usedDynamicAddresses(userWalletId: UserWalletId, network: Network): List<String>? {
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
+        return dynamicAddressesManager.usedAddresses.map { it.address }
     }
 
     override suspend fun probeHasFundsOnAdditionalAddresses(

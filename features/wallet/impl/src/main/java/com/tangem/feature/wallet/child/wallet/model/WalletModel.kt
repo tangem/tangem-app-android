@@ -40,6 +40,8 @@ import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ResolveQrSendTargetsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.wallets.usecase.*
@@ -87,6 +89,7 @@ internal class WalletModel @Inject constructor(
     private val walletsUpdateActionResolver: WalletsUpdateActionResolver,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
@@ -369,6 +372,8 @@ internal class WalletModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
                     trackingContextProxy.setContext(selectedWallet)
+                    val historyFetch = TxHistoryFetchTrigger.WalletSelected(selectedWallet.walletId)
+                    appTxHistoryFetcher.invoke(historyFetch)
 
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)

@@ -17,6 +17,7 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -35,6 +36,8 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
@@ -47,6 +50,7 @@ import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -85,6 +89,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
@@ -103,6 +109,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
     private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
         get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
+    private val Account.Joint.errorJointAccountStatus: AccountStatus.Joint
+        get() = AccountStatus.Joint(this, JointAccountStatusValue.Error.Unavailable)
 
     override val fallback: Option<AccountStatusList> = none()
 
@@ -157,10 +165,17 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
             paymentAccountStatusSupplier.invoke(userWalletId = walletId),
             virtualAccountStatusSupplier.invoke(userWalletId = walletId),
-        ) { paymentStatus, virtualStatus ->
+            predictionStatusFlow(userWallet = userWallet),
+        ) { paymentStatus, virtualStatus, predictionValue ->
+            val predictionStatus = AccountStatus.Prediction(
+                account = Account.Prediction(userWalletId = walletId),
+                value = predictionValue,
+            )
+
             mapOf(
                 paymentStatus.accountId to paymentStatus,
                 virtualStatus.accountId to virtualStatus,
+                predictionStatus.accountId to predictionStatus,
             )
         }
 
@@ -182,10 +197,25 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
                     is Account.Prediction ->
                         specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
+                    // The joint status source arrives with the wallet-screen integration step
+                    is Account.Joint -> account.errorJointAccountStatus
                 }
             }
             buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
         }.collect { accountStatusList -> channel.send(accountStatusList) }
+    }
+
+    /**
+     * Subscribed only for a wallet that can hold the account, and seeded before the join: this flow gates every
+     * account on the screen, so a supplier that goes quiet must cost one loading row rather than all of them.
+     */
+    private fun predictionStatusFlow(userWallet: UserWallet): Flow<PredictionAccountStatusValue> {
+        if (!polymarketFeatureToggles.isPolymarketEnabled || !userWallet.isPredictionAccountSupported) {
+            return flowOf(PredictionAccountStatusValue.Error.Unavailable)
+        }
+
+        return predictionAccountStatusSupplier.invoke(userWalletId = userWallet.walletId)
+            .onStart { emit(PredictionAccountStatusValue.Loading) }
     }
 
     private fun buildCryptoPortfolioStatus(
@@ -391,6 +421,13 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
+                // The statuses carry
+                // no amount yet — it arrives with the balances step; until then only pre-activation states exist,
+                // and their balance is genuinely zero (the Safe is not deployed)
+                is AccountStatus.Joint -> TotalFiatBalance.Loaded(
+                    amount = SerializedBigDecimal.ZERO,
+                    source = accountStatus.value.source,
+                )
             }
         }
     }
@@ -418,6 +455,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Payment -> null
                     is Account.Virtual -> null
                     is Account.Prediction -> null
+                    is Account.Joint -> null
                 }
             },
             totalAccounts = accountList.totalAccounts,

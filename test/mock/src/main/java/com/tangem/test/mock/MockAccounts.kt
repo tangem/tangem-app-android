@@ -42,6 +42,24 @@ object MockAccounts {
         }
     }
 
+    fun createJointAccount(
+        derivationIndex: Int = 0,
+        name: String = "Joint #$derivationIndex",
+        icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+        cryptoCurrencies: List<CryptoCurrency> = emptyList(),
+        userWalletId: UserWalletId = this.userWalletId,
+    ): Account.Joint {
+        val backendId = derivationIndex.toString(radix = 16).padStart(length = 64, padChar = '0')
+
+        return Account.Joint(
+            accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = backendId).getOrNull()!!,
+            accountName = AccountName(name).getOrNull()!!,
+            icon = icon,
+            derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!,
+            cryptoCurrencies = cryptoCurrencies,
+        )
+    }
+
     fun createAccount(
         derivationIndex: Int,
         name: String = "Account #$derivationIndex",

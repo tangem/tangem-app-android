@@ -391,6 +391,8 @@ include(":features:approval:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+include(":features:feed:search:api")
+include(":features:feed:search:impl")
 
 include(":features:promo-banners:api")
 include(":features:promo-banners:impl")

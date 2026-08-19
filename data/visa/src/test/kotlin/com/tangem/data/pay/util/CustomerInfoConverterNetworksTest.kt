@@ -71,4 +71,58 @@ internal class CustomerInfoConverterNetworksTest {
         assertThat(networks[1].depositAddress).isNull()
         assertThat(networks[1].tokens[0].availableForWithdrawal).isNull()
     }
+
+    @Test
+    fun `GIVEN not issued network shaped like the backend sends it WHEN convert THEN it survives with no tokens`() {
+        // Arrange
+        // Real `customer/me` shape for a network whose contract is not issued: chain id present, no deposit
+        // address, and an empty token list.
+        val wire = listOf(
+            BalanceResponse.NetworkResponse(
+                name = "ethereum",
+                status = "NOT_ISSUED",
+                isTestnet = true,
+                chainId = 11155111L,
+                depositAddress = null,
+                tokens = emptyList(),
+            ),
+        )
+
+        // Act
+        val networks = CustomerInfoConverter.convert(result(balance = balance(networks = wire))).networks
+
+        // Assert
+        assertThat(networks).containsExactly(
+            CustomerInfo.NetworkInfo(
+                name = "ethereum",
+                chainId = 11155111L,
+                isTestnet = true,
+                status = CustomerInfo.NetworkInfo.Status.NOT_ISSUED,
+                depositAddress = null,
+                tokens = emptyList(),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN token without contract address WHEN convert THEN contract address stays null`() {
+        // Arrange
+        val wire = listOf(
+            BalanceResponse.NetworkResponse(
+                name = "base",
+                isTestnet = true,
+                chainId = 84532L,
+                status = "NOT_ISSUED",
+                tokens = listOf(BalanceResponse.NetworkTokenResponse(token = "USDC")),
+            ),
+        )
+
+        // Act
+        val networks = CustomerInfoConverter.convert(result(balance = balance(networks = wire))).networks
+
+        // Assert
+        assertThat(networks[0].tokens).containsExactly(
+            CustomerInfo.NetworkInfo.Token(symbol = "USDC", contractAddress = null, availableForWithdrawal = null),
+        )
+    }
 }

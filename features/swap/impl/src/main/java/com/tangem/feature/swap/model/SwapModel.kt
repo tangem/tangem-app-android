@@ -1807,6 +1807,8 @@ internal class SwapModel @Inject constructor(
             is Account.Virtual -> emptyFlow()
             // Prediction account isn't a swap source either — the same MVP rule
             is Account.Prediction -> emptyFlow()
+            // A joint account isn't a swap source either — spending from a Safe is a future co-signed operation
+            is Account.Joint -> emptyFlow()
         }.distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
             .onEach { currencyStatus ->
 

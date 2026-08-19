@@ -18,7 +18,7 @@ import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.grow.datasource.onramp.OnrampApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
 import com.tangem.datasource.local.config.environment.EnvironmentConfig

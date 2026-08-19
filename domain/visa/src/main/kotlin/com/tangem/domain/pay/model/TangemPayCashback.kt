@@ -5,17 +5,20 @@ import java.math.BigDecimal
 
 data class TangemPayCashback(
     val confirmedAmount: BigDecimal,
-    val pendingAmount: BigDecimal,
+    val totalEarnedAmount: BigDecimal?,
     val currency: String,
-    val payoutCurrency: String,
-    val payoutNetwork: String,
     val period: Period,
+    val previousPayout: PreviousPayout?,
 ) {
     data class Period(
         val year: Int,
-        /** 1-based calendar month (6 = June). */
         val month: Int,
-        val payoutStart: DateTime,
-        val payoutEnd: DateTime,
+        val payoutStart: DateTime?,
+        val payoutEnd: DateTime?,
+    )
+
+    data class PreviousPayout(
+        val endDate: DateTime,
+        val amount: BigDecimal,
     )
 }

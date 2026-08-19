@@ -23,9 +23,7 @@ internal class JointAccountCreationSignInputTest {
                     membersCount = 3,
                     threshold = 2,
                 ),
-                firstCandidateIndex = model.firstCandidateIndex,
-                occupiedOwnerAddresses = emptySet(),
-                maxIndexAttempts = model.maxIndexAttempts,
+                derivationIndex = model.derivationIndex,
             )
         }.exceptionOrNull()
 
@@ -38,15 +36,12 @@ internal class JointAccountCreationSignInputTest {
     }
 
     private fun provideTestModels() = listOf(
-        TestModel(firstCandidateIndex = 0, maxIndexAttempts = 20, isValid = true),
-        TestModel(firstCandidateIndex = 19, maxIndexAttempts = 1, isValid = true),
-        TestModel(firstCandidateIndex = -1, maxIndexAttempts = 20, isValid = false),
-        TestModel(firstCandidateIndex = 0, maxIndexAttempts = 0, isValid = false),
-        TestModel(firstCandidateIndex = 0, maxIndexAttempts = -5, isValid = false),
-        // The candidate range must not overflow Int
-        TestModel(firstCandidateIndex = Int.MAX_VALUE - 5, maxIndexAttempts = 20, isValid = false),
-        TestModel(firstCandidateIndex = Int.MAX_VALUE - 20, maxIndexAttempts = 20, isValid = true),
+        TestModel(derivationIndex = 0, isValid = true),
+        TestModel(derivationIndex = 19, isValid = true),
+        TestModel(derivationIndex = Int.MAX_VALUE, isValid = true),
+        TestModel(derivationIndex = -1, isValid = false),
+        TestModel(derivationIndex = Int.MIN_VALUE, isValid = false),
     )
 
-    data class TestModel(val firstCandidateIndex: Int, val maxIndexAttempts: Int, val isValid: Boolean)
+    data class TestModel(val derivationIndex: Int, val isValid: Boolean)
 }
