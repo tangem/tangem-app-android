@@ -1,10 +1,6 @@
 package com.tangem.features.tangempay.common
 
 import com.tangem.domain.models.account.*
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal val AccountStatus.Payment.userWalletId: UserWalletId
@@ -73,3 +69,17 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
 
 internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
     get() = availableForWithdrawal.signum() > 0
+
+/**
+ * Every top-up way (receive, swap, bank transfer) settles on a deposit address, so without one the
+ * Add funds entry points must stay disabled.
+ *
+ * @param isMultichainEnabled [com.tangem.features.tangempay.TangemPayFeatureToggles.isAccountMultichainEnabled]
+ */
+internal fun PaymentAccountStatusValue.Loaded.canAddFunds(isMultichainEnabled: Boolean): Boolean {
+    return if (isMultichainEnabled) {
+        networks.any { it is PaymentNetworkStatus.Available }
+    } else {
+        !depositAddress.isNullOrEmpty()
+    }
+}

@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.Locale
 import javax.inject.Inject
@@ -91,25 +92,33 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         network: Network,
         blockchain: Blockchain,
         fiatRate: BigDecimal?,
-    ): PaymentNetworkStatus {
+    ): PaymentNetworkStatus? {
         val tokensWithCurrency = tokens.mapNotNull { token ->
             val currency = createToken(network, blockchain, token) ?: return@mapNotNull null
             token to currency
         }
         val currencies = tokensWithCurrency.map { (_, currency) -> currency }
         return when (status) {
-            CustomerInfo.NetworkInfo.Status.ENABLED -> PaymentNetworkStatus.Available(
-                network = network,
-                depositAddress = depositAddress.orEmpty(),
-                cryptoCurrencyStatuses = tokensWithCurrency.map { (token, currency) ->
-                    buildStatus(
-                        currency = currency,
-                        amount = token.availableForWithdrawal.orZero(),
-                        fiatRate = fiatRate,
-                        depositAddress = depositAddress.orEmpty(),
-                    )
-                },
-            )
+            // The backend may report a network ENABLED before its deposit address is provisioned.
+            CustomerInfo.NetworkInfo.Status.ENABLED -> {
+                val address = depositAddress
+                if (address.isNullOrEmpty()) {
+                    TangemLogger.e("Payment network ${network.rawId} is enabled without a deposit address")
+                    return null
+                }
+                PaymentNetworkStatus.Available(
+                    network = network,
+                    depositAddress = address,
+                    cryptoCurrencyStatuses = tokensWithCurrency.map { (token, currency) ->
+                        buildStatus(
+                            currency = currency,
+                            amount = token.availableForWithdrawal.orZero(),
+                            fiatRate = fiatRate,
+                            depositAddress = address,
+                        )
+                    },
+                )
+            }
             CustomerInfo.NetworkInfo.Status.NOT_ISSUED -> PaymentNetworkStatus.NotIssued(
                 network = network,
                 cryptoCurrencies = currencies,
