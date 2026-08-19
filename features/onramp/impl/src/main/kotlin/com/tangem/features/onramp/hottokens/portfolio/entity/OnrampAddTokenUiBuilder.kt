@@ -53,6 +53,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
                     is AccountStatus.Payment -> AccountIconUM.Payment
                     is AccountStatus.Virtual -> AccountIconUM.Virtual
                     is AccountStatus.Prediction -> AccountIconUM.Prediction
+                    is AccountStatus.Joint -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
                 }
             }
         }
