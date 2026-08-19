@@ -94,7 +94,11 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = contentPadding.calculateBottomPadding()),
+                .padding(
+                    // The snackbar rises above the activation footer instead of covering its CTA
+                    bottom = contentPadding.calculateBottomPadding() +
+                        if (activation != null) ACTIVATION_FOOTER_HEIGHT else 0.dp,
+                ),
         ) { data ->
             Snackbar(
                 snackbarData = data,
@@ -104,6 +108,9 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
         }
     }
 }
+
+/** The "Activate account" button (48dp) plus its vertical paddings (12dp + 12dp). */
+private val ACTIVATION_FOOTER_HEIGHT = 72.dp
 
 @Composable
 private fun ActivateAccountFooter(onActivateClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -172,7 +179,8 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
             // The activation footer overlays the list bottom — reserve its height so the last row scrolls above it
-            bottom = contentPadding.calculateBottomPadding() + if (state.activation != null) 88.dp else 16.dp,
+            bottom = contentPadding.calculateBottomPadding() +
+                if (state.activation != null) ACTIVATION_FOOTER_HEIGHT + 16.dp else 16.dp,
         ),
     ) {
         item(key = "header") { MembersHeader(title = state.title, progress = state.progress) }
