@@ -9,14 +9,12 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.repository.CashbackRepository
-import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackAccrualsUM
@@ -43,7 +41,6 @@ internal class TangemPayCashbackModel @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val cashbackRepository: CashbackRepository,
-    private val onboardingRepository: OnboardingRepository,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -54,7 +51,7 @@ internal class TangemPayCashbackModel @Inject constructor(
 
     private val cashbackConverter = TangemPayCashbackUmConverter()
     private val histogramConverter = TangemPayCashbackHistogramConverter()
-    private val tiersConverter = TangemPayCashbackTiersConverter()
+    private val cardsConverter = TangemPayCashbackCardsConverter()
     private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter()
     private val infoTilesConverter = TangemPayCashbackInfoTilesConverter(
         onRateClick = ::onConditionsTileClick,
@@ -65,7 +62,7 @@ internal class TangemPayCashbackModel @Inject constructor(
 
     val detailsSheet: StateFlow<TangemPayCashbackDetailsUM>
         field = MutableStateFlow(
-            detailsConverter.convert(tiers = emptyList(), payoutCurrency = null, monthlyCap = null),
+            detailsConverter.convert(cards = emptyList(), currency = null, accountMonthlyCap = null),
         )
 
     val accrualsSheet: StateFlow<TangemPayCashbackAccrualsUM>
@@ -90,7 +87,6 @@ internal class TangemPayCashbackModel @Inject constructor(
             val summaryDeferred = async { loadSummary() }
             val promotionsDeferred = async { loadPromotions() }
             val docsDeferred = async { loadDocs() }
-            val planDeferred = async { loadPlan() }
 
             val summary = summaryDeferred.await()
             val promotions = promotionsDeferred.await()
@@ -104,8 +100,7 @@ internal class TangemPayCashbackModel @Inject constructor(
             }
 
             val cashbackHistory = if (summary is CashbackSummary.Enabled) loadHistory() else null
-            val plan = planDeferred.await()
-            val tiers = promotions?.let(tiersConverter::convert).orEmpty()
+            val cards = promotions?.let(cardsConverter::convert).orEmpty()
             val cashback = (summary as? CashbackSummary.Enabled)?.cashback
             val payoutCurrency = cashback?.currency ?: TangemPayCurrencyFactory.TOKEN_NAME
             val cashbackUM = cashbackConverter.convert(cashback)
@@ -113,9 +108,7 @@ internal class TangemPayCashbackModel @Inject constructor(
             uiState.value = TangemPayCashbackScreenUM.Content(
                 onCloseClick = router::pop,
                 cashback = cashbackUM,
-                infoTiles = promotions?.let {
-                    infoTilesConverter.convert(tiers = tiers, currentPlan = plan)
-                },
+                infoTiles = promotions?.let { infoTilesConverter.convert(cards) },
                 histogram = cashbackHistory
                     ?.takeIf { it.months.isNotEmpty() }
                     ?.let { history ->
@@ -130,9 +123,9 @@ internal class TangemPayCashbackModel @Inject constructor(
                     ?.takeIf { it.items.isNotEmpty() },
             )
             detailsSheet.value = detailsConverter.convert(
-                tiers = tiers,
-                payoutCurrency = payoutCurrency,
-                monthlyCap = promotions?.monthlyCap,
+                cards = cards,
+                currency = payoutCurrency,
+                accountMonthlyCap = promotions?.accountMonthlyCap,
             )
             accrualsSheet.value = accrualsConverter.convert(docsDeferred.await())
 
@@ -177,10 +170,4 @@ internal class TangemPayCashbackModel @Inject constructor(
     private suspend fun loadDocs(): List<CashbackDocument> =
         runSuspendCatching { cashbackRepository.getCashbackAccrualDocs(userWalletId).getOrNull() }
             .getOrNull().orEmpty()
-
-    private suspend fun loadPlan(): TangemPayTariffPlan? {
-        return runSuspendCatching {
-            onboardingRepository.getCustomerInfo(userWalletId).getOrNull()
-        }.getOrNull()?.tariffPlan?.plan
-    }
 }
