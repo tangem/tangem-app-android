@@ -18,8 +18,12 @@ data class GrowEnvironmentConfig(
     val gaslessTxApiKeyDev: String?,
     val express: ExpressModel?,
     val devExpress: ExpressModel?,
+    val p2pApiKey: P2PKeys?,
 ) {
 
     /** Grow-local mirror of the express keys held by the app environment config. */
     data class ExpressModel(val apiKey: String, val signVerifierPublicKey: String)
+
+    /** Grow-local mirror of the P2P api keys held by the app environment config. */
+    data class P2PKeys(val mainnet: String, val hoodi: String)
 }

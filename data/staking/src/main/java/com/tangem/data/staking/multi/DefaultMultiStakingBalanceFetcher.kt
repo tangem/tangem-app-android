@@ -8,8 +8,8 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
-import com.tangem.datasource.api.ethpool.P2PEthPoolApi
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
+import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
