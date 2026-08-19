@@ -108,12 +108,11 @@ internal class TangemPayCashbackModel @Inject constructor(
             val tiers = promotions?.let(tiersConverter::convert).orEmpty()
             val cashback = (summary as? CashbackSummary.Enabled)?.cashback
             val payoutCurrency = cashback?.currency ?: TangemPayCurrencyFactory.TOKEN_NAME
-
-            val cashback = cashbackConverter.convert((summary as? CashbackSummary.Enabled)?.cashback)
+            val cashbackUM = cashbackConverter.convert(cashback)
 
             uiState.value = TangemPayCashbackScreenUM.Content(
                 onCloseClick = router::pop,
-                cashback = cashbackConverter.convert(cashback),
+                cashback = cashbackUM,
                 infoTiles = promotions?.let {
                     infoTilesConverter.convert(tiers = tiers, currentPlan = plan)
                 },
@@ -137,7 +136,7 @@ internal class TangemPayCashbackModel @Inject constructor(
             )
             accrualsSheet.value = accrualsConverter.convert(docsDeferred.await())
 
-            sendBannerAnalytics(cashback.banner)
+            sendBannerAnalytics(cashbackUM.banner)
         }
     }
 
