@@ -44,6 +44,10 @@ class ActivatePlasticCardUseCase(
         )
 
         paymentAccountStatusFetcher.invoke(userWalletId)
+        paymentAccountStatusFetcher.markCardActivating(
+            userWalletId = userWalletId,
+            productInstanceId = activationOrder.productInstanceId,
+        )
 
         appCoroutineScope.launch {
             startTangemPayOrderPollingUseCase(
