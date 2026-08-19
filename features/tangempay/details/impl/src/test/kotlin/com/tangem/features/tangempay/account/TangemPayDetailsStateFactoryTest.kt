@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
@@ -33,12 +34,24 @@ internal class TangemPayDetailsStateFactoryTest {
 
     private val activeUnfrozenCard = tangemPayCard()
 
+    private val availableNetwork: PaymentNetworkStatus.Available = mockk(relaxed = true)
+
+    private val notIssuedNetwork: PaymentNetworkStatus.NotIssued = mockk(relaxed = true)
+
     private val factory = TangemPayDetailsStateFactory(
         onBack = {},
         onOpenMenu = {},
         intents = intents,
         isTiersPlusPlanEnabled = true,
         isMultichainEnabled = true,
+    )
+
+    private val singleNetworkFactory = TangemPayDetailsStateFactory(
+        onBack = {},
+        onOpenMenu = {},
+        intents = intents,
+        isTiersPlusPlanEnabled = true,
+        isMultichainEnabled = false,
     )
 
     @BeforeEach
@@ -60,13 +73,6 @@ internal class TangemPayDetailsStateFactoryTest {
     @Test
     fun `GIVEN multichain disabled WHEN building any state THEN top bar subtitle names the single network`() {
         // Arrange
-        val singleNetworkFactory = TangemPayDetailsStateFactory(
-            onBack = {},
-            onOpenMenu = {},
-            intents = intents,
-            isTiersPlusPlanEnabled = true,
-            isMultichainEnabled = false,
-        )
         val expected = resourceReference(R.string.tangempay_usdc_on_polygon_network)
 
         // Act
@@ -146,6 +152,26 @@ internal class TangemPayDetailsStateFactoryTest {
         // Assert
         assertThat(state.addFundsButton.isEnabled).isTrue()
         assertThat(state.withdrawButton.isEnabled).isEqualTo(case.expectedWithdrawEnabled)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideAddFundsCases")
+    fun `GIVEN deposit destination WHEN getLoadedState THEN add funds gated by it`(case: AddFundsCase) {
+        // Arrange
+        val status = loadedStatus(
+            statusDepositAddress = case.depositAddress,
+            statusNetworks = case.networks.map { isAvailable ->
+                if (isAvailable) availableNetwork else notIssuedNetwork
+            },
+        )
+        val stateFactory = if (case.isMultichainEnabled) factory else singleNetworkFactory
+
+        // Act
+        val state = stateFactory.getLoadedState(status)
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isEqualTo(case.expectedAddFundsEnabled)
+        assertThat(state.withdrawButton.isEnabled).isTrue()
     }
 
     @Test
@@ -298,12 +324,16 @@ internal class TangemPayDetailsStateFactoryTest {
         statusCards: List<TangemPayCard> = listOf(activeUnfrozenCard),
         availableForWithdrawal: BigDecimal = BigDecimal.TEN,
         statusTariffPlan: TangemPayTariffPlanState? = null,
+        statusDepositAddress: String? = "address",
+        statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork),
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards
         every { balance } returns balance(availableForWithdrawal)
         every { tariffPlan } returns statusTariffPlan
+        every { depositAddress } returns statusDepositAddress
+        every { networks } returns statusNetworks
     }
 
     private fun deactivatedStatus(availableForWithdrawal: BigDecimal): PaymentAccountStatusValue.Deactivated =
@@ -339,7 +369,70 @@ internal class TangemPayDetailsStateFactoryTest {
         val expectedWithdrawEnabled: Boolean,
     )
 
+    internal data class AddFundsCase(
+        val name: String,
+        val isMultichainEnabled: Boolean,
+        val depositAddress: String?,
+        val networks: List<Boolean>,
+        val expectedAddFundsEnabled: Boolean,
+    ) {
+        override fun toString(): String = name
+    }
+
     private companion object {
+        @JvmStatic
+        fun provideAddFundsCases() = listOf(
+            AddFundsCase(
+                name = "multichain with an issued network -> enabled",
+                isMultichainEnabled = true,
+                depositAddress = "address",
+                networks = listOf(false, true),
+                expectedAddFundsEnabled = true,
+            ),
+            AddFundsCase(
+                name = "multichain without an issued network -> disabled",
+                isMultichainEnabled = true,
+                depositAddress = "address",
+                networks = listOf(false),
+                expectedAddFundsEnabled = false,
+            ),
+            AddFundsCase(
+                name = "multichain without networks -> disabled",
+                isMultichainEnabled = true,
+                depositAddress = "address",
+                networks = emptyList(),
+                expectedAddFundsEnabled = false,
+            ),
+            AddFundsCase(
+                name = "multichain with an issued network and no legacy address -> enabled",
+                isMultichainEnabled = true,
+                depositAddress = null,
+                networks = listOf(true),
+                expectedAddFundsEnabled = true,
+            ),
+            AddFundsCase(
+                name = "single network with a deposit address -> enabled",
+                isMultichainEnabled = false,
+                depositAddress = "address",
+                networks = emptyList(),
+                expectedAddFundsEnabled = true,
+            ),
+            AddFundsCase(
+                name = "single network without a deposit address -> disabled",
+                isMultichainEnabled = false,
+                depositAddress = null,
+                networks = listOf(true),
+                expectedAddFundsEnabled = false,
+            ),
+            AddFundsCase(
+                name = "single network with a blank deposit address -> disabled",
+                isMultichainEnabled = false,
+                depositAddress = "",
+                networks = listOf(true),
+                expectedAddFundsEnabled = false,
+            ),
+        )
+
         @JvmStatic
         fun provideBalanceCases() = listOf(
             BalanceCase(availableForWithdrawal = BigDecimal.ZERO, expectedWithdrawEnabled = false),
