@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
+import androidx.annotation.StringRes
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -7,16 +8,23 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.Order
+import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Error
@@ -57,6 +65,7 @@ internal class TangemPayOrderCardDataModelTest {
     private var submitted: PlasticCardOrder? = null
     private val submittedKeys = mutableListOf<String>()
     private var acceptedEmail: String? = null
+    private var acceptedProductInstanceId: String? = null
     private var isClosed: Boolean = false
     private var model: TangemPayOrderCardDataModel? = null
 
@@ -67,7 +76,7 @@ internal class TangemPayOrderCardDataModelTest {
         coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
             submitted = secondArg()
             submittedKeys += thirdArg<String>()
-            Unit.right()
+            createdOrder().right()
         }
     }
 
@@ -258,7 +267,7 @@ internal class TangemPayOrderCardDataModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.form.city.error).isEqualTo(OrderFieldError.Invalid)
+        assertThat(model.form.city.error).isEqualTo(OrderFieldError.NonLatin)
         assertThat(submitted).isNull()
     }
 
@@ -340,7 +349,7 @@ internal class TangemPayOrderCardDataModelTest {
         model.form.embossName.onFocusChange(false)
 
         // Assert
-        assertThat(model.form.embossName.error).isEqualTo(OrderFieldError.Invalid)
+        assertThat(model.form.embossName.error).isEqualTo(OrderFieldError.NonLatin)
         assertThat(model.form.isOrderEnabled).isFalse()
     }
 
@@ -456,13 +465,14 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         assertThat(acceptedEmail).isEqualTo(EMAIL)
+        assertThat(acceptedProductInstanceId).isEqualTo(ORDERED_PRODUCT_INSTANCE_ID)
         assertThat(model.form.isSubmitting).isFalse()
     }
 
     @Test
     fun `GIVEN order rejected WHEN order clicked THEN error shown and stays on the form`() = runTest {
         // Arrange
-        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns VisaApiError.CardIssueInsufficientBalance.left()
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns VisaApiError.Unspecified.left()
         val model = createLoadedModel()
         model.fillValidForm()
 
@@ -482,7 +492,7 @@ internal class TangemPayOrderCardDataModelTest {
         // Arrange
         coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
             delay(SLOW_LOAD_MS)
-            Unit.right()
+            createdOrder().right()
         }
         val model = createLoadedModel()
         model.fillValidForm()
@@ -502,7 +512,7 @@ internal class TangemPayOrderCardDataModelTest {
     @Test
     fun `GIVEN order rejected WHEN retried THEN a second order is created and success is reached`() = runTest {
         // Arrange
-        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns VisaApiError.CardIssueInsufficientBalance.left()
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns VisaApiError.Unspecified.left()
         val model = createLoadedModel()
         model.fillValidForm()
         model.form.onOrderClick()
@@ -510,7 +520,7 @@ internal class TangemPayOrderCardDataModelTest {
         assertThat(acceptedEmail).isNull()
 
         // Act
-        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns Unit.right()
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns createdOrder().right()
         model.form.onOrderClick()
         advanceUntilIdle()
 
@@ -562,9 +572,7 @@ internal class TangemPayOrderCardDataModelTest {
     @Test
     fun `GIVEN a non-retryable rejection WHEN order clicked THEN the sheet offers no retry`() = runTest {
         // Arrange
-        coEvery {
-            issuePlasticCard(userWalletId, any(), any())
-        } returns VisaApiError.CardIssueInsufficientBalance.left()
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns VisaApiError.Unspecified.left()
         val model = createLoadedModel()
         model.fillValidForm()
 
@@ -575,6 +583,52 @@ internal class TangemPayOrderCardDataModelTest {
         // Assert
         assertThat(lastMessageButtons()).hasSize(1)
     }
+
+    @ParameterizedTest
+    @MethodSource("rejectionCases")
+    fun `GIVEN a rejection with a known reason WHEN order clicked THEN that reason is shown`(
+        testModel: RejectionModel,
+    ) = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns testModel.error.left()
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(lastMessageTitle()).isEqualTo(resourceReference(testModel.title))
+        assertThat(lastMessageButtons()).hasSize(testModel.buttonCount)
+        assertThat(model.form.isSubmitting).isFalse()
+    }
+
+    @ParameterizedTest
+    @MethodSource("rejectionCases")
+    fun `GIVEN a rejection sheet WHEN closed THEN the flow is left only when the form cannot fix it`(
+        testModel: RejectionModel,
+    ) = runTest {
+        // Arrange
+        coEvery { issuePlasticCard(userWalletId, any(), any()) } returns testModel.error.left()
+        val model = createLoadedModel()
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        closeLastMessage()
+
+        // Assert
+        assertThat(isClosed).isEqualTo(testModel.closesFlow)
+    }
+
+    internal data class RejectionModel(
+        val error: VisaApiError,
+        @StringRes val title: Int,
+        val buttonCount: Int = 1,
+        val closesFlow: Boolean = true,
+    )
 
     internal data class LoadErrorModel(
         val country: String? = COUNTRY,
@@ -591,6 +645,21 @@ internal class TangemPayOrderCardDataModelTest {
         verify { uiMessageSender.send(capture(slot)) }
         return (slot.captured as BottomSheetMessage).messageBottomSheetUM.elements
             .filterIsInstance<MessageBottomSheetUM.Button>()
+    }
+
+    private fun lastMessageTitle(): TextReference? {
+        val slot = slot<EventMessage>()
+        verify { uiMessageSender.send(capture(slot)) }
+        return (slot.captured as BottomSheetMessage).messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.InfoBlock>()
+            .firstNotNullOfOrNull { it.title }
+    }
+
+    private fun closeLastMessage() {
+        val slot = slot<EventMessage>()
+        verify { uiMessageSender.send(capture(slot)) }
+        val sheet = (slot.captured as BottomSheetMessage).messageBottomSheetUM
+        sheet.elements.filterIsInstance<MessageBottomSheetUM.Button>().first().onClick?.invoke(sheet.closeScope)
     }
 
     private fun retryLastMessage() {
@@ -622,6 +691,22 @@ internal class TangemPayOrderCardDataModelTest {
         form.phone.onValueChange(phoneDigits)
     }
 
+    private fun createdOrder(productInstanceId: String = ORDERED_PRODUCT_INSTANCE_ID) = Order(
+        id = "plastic-issue-order",
+        customerId = "customer",
+        type = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+        status = OrderStatus.NEW,
+        step = OrderStep.UNKNOWN,
+        stepChangeCode = null,
+        productInstanceId = productInstanceId,
+        paymentAccountId = null,
+        cardId = null,
+        toTariffPlanId = null,
+        withdrawTxHash = null,
+        createdAt = null,
+        updatedAt = null,
+    )
+
     private fun TestScope.createLoadedModel(): TangemPayOrderCardDataModel =
         createModel(testScope = this).also { advanceUntilIdle() }
 
@@ -629,7 +714,10 @@ internal class TangemPayOrderCardDataModelTest {
         paramsContainer = MutableParamsContainer(
             TangemPayOrderCardDataComponent.Params(
                 userWalletId = userWalletId,
-                onOrderAccepted = { acceptedEmail = it },
+                onOrderAccepted = { email, productInstanceId ->
+                    acceptedEmail = email
+                    acceptedProductInstanceId = productInstanceId
+                },
                 onClose = { isClosed = true },
             ),
         ),
@@ -672,6 +760,8 @@ internal class TangemPayOrderCardDataModelTest {
 
     companion object {
 
+        private const val ORDERED_PRODUCT_INSTANCE_ID = "pi-ordered"
+
         @JvmStatic
         fun masklessCases() = listOf(null, "", "(###) ###-####", "+1 (XXX) XXX")
 
@@ -680,6 +770,27 @@ internal class TangemPayOrderCardDataModelTest {
             LoadErrorModel(requestFails = true),
             LoadErrorModel(email = null),
             LoadErrorModel(country = null, phoneMask = null),
+        )
+
+        @JvmStatic
+        fun rejectionCases() = listOf(
+            RejectionModel(
+                error = VisaApiError.CardIssueInvalidShippingAddress,
+                title = R.string.tangempay_order_card_error_invalid_address,
+                closesFlow = false,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardIssueInsufficientBalance,
+                title = R.string.tangempay_order_card_error_insufficient_balance,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardIssueActiveOrderExists,
+                title = R.string.tangempay_order_card_error_active_order,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardIssueOfferNotAvailable,
+                title = R.string.tangempay_order_card_error_offer_unavailable,
+            ),
         )
     }
 }

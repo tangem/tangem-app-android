@@ -267,6 +267,8 @@ private fun OrderFieldError?.toInputState(isDisabled: Boolean): TextInputState =
             TextInputState.Error(resourceReference(R.string.tangempay_order_data_field_required))
         OrderFieldError.Invalid ->
             TextInputState.Error(resourceReference(R.string.tangempay_order_data_field_invalid))
+        OrderFieldError.NonLatin ->
+            TextInputState.Error(resourceReference(R.string.tangempay_order_data_field_latin_only))
     }
 }
 
@@ -299,7 +301,7 @@ private class OrderDataPreviewProvider : CollectionPreviewParameterProvider<Tang
 )
 
 private fun previewForm(prefilled: Boolean = false, withErrors: Boolean = false): Form {
-    val error = OrderFieldError.Invalid.takeIf { withErrors }
+    val error = OrderFieldError.NonLatin.takeIf { withErrors }
     return Form(
         onBackClick = {},
         onCloseClick = {},
@@ -314,7 +316,7 @@ private fun previewForm(prefilled: Boolean = false, withErrors: Boolean = false)
         addressLine1 = previewField(if (prefilled) "Crescent st. 24" else "", error),
         addressLine2 = previewField(if (prefilled) "Apt. 56" else "", null, isRequired = false),
         postalCode = previewField(if (prefilled) "0000" else "", error),
-        phone = previewField(if (prefilled) "4155550123" else "", error),
+        phone = previewField(if (prefilled) "4155550123" else "", OrderFieldError.Invalid.takeIf { withErrors }),
         isOrderEnabled = prefilled && !withErrors,
         isSubmitting = false,
         onOrderClick = {},
