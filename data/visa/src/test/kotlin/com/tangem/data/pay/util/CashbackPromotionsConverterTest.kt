@@ -1,8 +1,8 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
 import com.tangem.domain.pay.model.CashbackPromotions
+import com.tangem.spend.datasource.pay.models.response.CashbackPromotionsResponse
 import org.joda.time.DateTime
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -10,9 +10,9 @@ import java.math.BigDecimal
 internal class CashbackPromotionsConverterTest {
 
     @Test
-    fun `GIVEN tiers WHEN convert THEN each tier mapped with its fields`() {
+    fun `GIVEN cards WHEN convert THEN each card mapped with its fields`() {
         // Arrange
-        val response = response(tier(min = BigDecimal("30"), cap = BigDecimal("100")))
+        val response = response(card(min = BigDecimal("30")))
 
         // Act
         val result = CashbackPromotionsConverter.convert(response)
@@ -20,29 +20,29 @@ internal class CashbackPromotionsConverterTest {
         // Assert
         assertThat(result).isEqualTo(
             CashbackPromotions(
-                cardTiers = listOf(
-                    CashbackPromotions.CardTier(
-                        tier = "basic",
-                        label = "Basic",
-                        scope = "All purchases",
+                cards = listOf(
+                    CashbackPromotions.CardPromotion(
+                        cardType = "prestige",
+                        title = "Prestige Card",
+                        cashbackRate = BigDecimal("1.0"),
                         minTransactionAmount = BigDecimal("30"),
-                        monthlyCapAmount = BigDecimal("100"),
+                        promotionId = "3f2a1c60-8d4b-4e7a-9c21-5b6d0e8f42aa",
                     ),
                 ),
-                monthlyCap = null,
+                accountMonthlyCap = null,
                 additionalCashback = emptyList(),
             ),
         )
     }
 
     @Test
-    fun `GIVEN program monthly cap WHEN convert THEN mapped with amount and currency`() {
+    fun `GIVEN account monthly cap WHEN convert THEN mapped with amount and currency`() {
         // Arrange
         val response = envelope(
             cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
-                tiers = null,
-                monthlyCapAmount = BigDecimal("150"),
-                monthlyCapCurrency = "USD",
+                cards = null,
+                accountMonthlyCapAmount = BigDecimal("300"),
+                accountMonthlyCapCurrency = "USD",
             ),
             additionalCashback = null,
         )
@@ -51,18 +51,18 @@ internal class CashbackPromotionsConverterTest {
         val result = CashbackPromotionsConverter.convert(response)
 
         // Assert
-        assertThat(result.monthlyCap)
-            .isEqualTo(CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"))
+        assertThat(result.accountMonthlyCap)
+            .isEqualTo(CashbackPromotions.MonthlyCap(amount = BigDecimal("300"), currency = "USD"))
     }
 
     @Test
-    fun `GIVEN no monthly cap amount WHEN convert THEN monthly cap is null`() {
+    fun `GIVEN no account monthly cap amount WHEN convert THEN monthly cap is null`() {
         // Arrange
         val response = envelope(
             cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
-                tiers = null,
-                monthlyCapAmount = null,
-                monthlyCapCurrency = "USD",
+                cards = null,
+                accountMonthlyCapAmount = null,
+                accountMonthlyCapCurrency = "USD",
             ),
             additionalCashback = null,
         )
@@ -71,7 +71,7 @@ internal class CashbackPromotionsConverterTest {
         val result = CashbackPromotionsConverter.convert(response)
 
         // Assert
-        assertThat(result.monthlyCap).isNull()
+        assertThat(result.accountMonthlyCap).isNull()
     }
 
     @Test
@@ -80,13 +80,18 @@ internal class CashbackPromotionsConverterTest {
         val response = envelope(
             cashbackOnCards = null,
             additionalCashback = listOf(
-                additional(id = "p1", name = "Groceries", description = "+1%", isPermanent = true, endDate = null),
+                additional(id = "p1", name = "Groceries", description = "+1%", endDate = null, priority = 99),
                 additional(
                     id = "p2",
                     name = "Cashback",
                     description = "+2%",
-                    isPermanent = false,
                     endDate = "2026-09-26",
+                    priority = 50,
+                    cardType = "plus",
+                    promoCapAmount = BigDecimal("10"),
+                    promoCapPeriod = "monthly",
+                    capCurrency = "USD",
+                    minTransactionAmount = BigDecimal("30"),
                 ),
             ),
         )
@@ -98,29 +103,39 @@ internal class CashbackPromotionsConverterTest {
         assertThat(result.additionalCashback).containsExactly(
             CashbackPromotions.AdditionalCashback(
                 id = "p1",
+                cardType = null,
                 name = "Groceries",
                 description = "+1%",
-                isPermanent = true,
                 endDate = null,
+                promoCap = null,
+                minTransactionAmount = null,
+                priority = 99,
             ),
             CashbackPromotions.AdditionalCashback(
                 id = "p2",
+                cardType = "plus",
                 name = "Cashback",
                 description = "+2%",
-                isPermanent = false,
                 endDate = DateTime.parse("2026-09-26"),
+                promoCap = CashbackPromotions.PromoCap(
+                    amount = BigDecimal("10"),
+                    period = CashbackPromotions.PromoCap.Period.MONTHLY,
+                    currency = "USD",
+                ),
+                minTransactionAmount = BigDecimal("30"),
+                priority = 50,
             ),
         ).inOrder()
     }
 
     @Test
-    fun `GIVEN additional cashback with null isPermanent WHEN convert THEN it is derived from end date`() {
+    fun `GIVEN promo cap with unrecognized period WHEN convert THEN period is UNKNOWN`() {
         // Arrange
         val response = envelope(
             cashbackOnCards = null,
             additionalCashback = listOf(
-                additional(isPermanent = null, endDate = null),
-                additional(isPermanent = null, endDate = "2026-09-26"),
+                additional(promoCapAmount = BigDecimal("10"), promoCapPeriod = "weekly"),
+                additional(promoCapAmount = BigDecimal("10"), promoCapPeriod = null),
             ),
         )
 
@@ -128,7 +143,26 @@ internal class CashbackPromotionsConverterTest {
         val result = CashbackPromotionsConverter.convert(response)
 
         // Assert
-        assertThat(result.additionalCashback.map { it.isPermanent }).containsExactly(true, false).inOrder()
+        assertThat(result.additionalCashback.map { it.promoCap?.period })
+            .containsExactly(
+                CashbackPromotions.PromoCap.Period.UNKNOWN,
+                CashbackPromotions.PromoCap.Period.UNKNOWN,
+            ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN additional cashback with blank description WHEN convert THEN description is null`() {
+        // Arrange
+        val response = envelope(
+            cashbackOnCards = null,
+            additionalCashback = listOf(additional(description = " ")),
+        )
+
+        // Act
+        val result = CashbackPromotionsConverter.convert(response)
+
+        // Assert
+        assertThat(result.additionalCashback.single().description).isNull()
     }
 
     @Test
@@ -136,7 +170,7 @@ internal class CashbackPromotionsConverterTest {
         // Arrange
         val response = envelope(
             cashbackOnCards = null,
-            additionalCashback = listOf(additional(isPermanent = false, endDate = "not-a-date")),
+            additionalCashback = listOf(additional(endDate = "not-a-date")),
         )
 
         // Act
@@ -146,10 +180,13 @@ internal class CashbackPromotionsConverterTest {
         assertThat(result.additionalCashback).containsExactly(
             CashbackPromotions.AdditionalCashback(
                 id = "id",
+                cardType = null,
                 name = "name",
                 description = "description",
-                isPermanent = false,
                 endDate = null,
+                promoCap = null,
+                minTransactionAmount = null,
+                priority = 0,
             ),
         )
     }
@@ -161,11 +198,13 @@ internal class CashbackPromotionsConverterTest {
 
         // Assert
         assertThat(result)
-            .isEqualTo(CashbackPromotions(cardTiers = emptyList(), monthlyCap = null, additionalCashback = emptyList()))
+            .isEqualTo(
+                CashbackPromotions(cards = emptyList(), accountMonthlyCap = null, additionalCashback = emptyList()),
+            )
     }
 
     @Test
-    fun `GIVEN null cashbackOnCards WHEN convert THEN no card tiers`() {
+    fun `GIVEN null cashbackOnCards WHEN convert THEN no cards`() {
         // Arrange
         val response = envelope(cashbackOnCards = null, additionalCashback = null)
 
@@ -173,27 +212,7 @@ internal class CashbackPromotionsConverterTest {
         val result = CashbackPromotionsConverter.convert(response)
 
         // Assert
-        assertThat(result.cardTiers).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN tier with null strings WHEN convert THEN strings default to empty and amounts stay null`() {
-        // Arrange
-        val response = response(tier(tier = null, label = null, scope = null))
-
-        // Act
-        val result = CashbackPromotionsConverter.convert(response)
-
-        // Assert
-        assertThat(result.cardTiers).containsExactly(
-            CashbackPromotions.CardTier(
-                tier = "",
-                label = "",
-                scope = "",
-                minTransactionAmount = null,
-                monthlyCapAmount = null,
-            ),
-        )
+        assertThat(result.cards).isEmpty()
     }
 
     private fun envelope(
@@ -206,41 +225,51 @@ internal class CashbackPromotionsConverterTest {
         ),
     )
 
-    private fun response(vararg tiers: CashbackPromotionsResponse.CardTier) = envelope(
+    private fun response(vararg cards: CashbackPromotionsResponse.Card) = envelope(
         cashbackOnCards = CashbackPromotionsResponse.CashbackOnCards(
-            tiers = tiers.toList(),
-            monthlyCapAmount = null,
-            monthlyCapCurrency = null,
+            cards = cards.toList(),
+            accountMonthlyCapAmount = null,
+            accountMonthlyCapCurrency = null,
         ),
         additionalCashback = null,
     )
 
-    private fun tier(
-        tier: String? = "basic",
-        label: String? = "Basic",
-        scope: String? = "All purchases",
+    private fun card(
+        cardType: String = "prestige",
+        title: String? = "Prestige Card",
+        rate: BigDecimal = BigDecimal("1.0"),
         min: BigDecimal? = null,
-        cap: BigDecimal? = null,
-    ) = CashbackPromotionsResponse.CardTier(
-        tier = tier,
-        label = label,
-        scope = scope,
+        promotionId: String = "3f2a1c60-8d4b-4e7a-9c21-5b6d0e8f42aa",
+    ) = CashbackPromotionsResponse.Card(
+        cardType = cardType,
+        title = title,
+        cardCashbackRate = rate,
         minTransactionAmount = min,
-        tierMonthlyCapAmount = cap,
-        promotionId = null,
+        promotionId = promotionId,
     )
 
+    @Suppress("LongParameterList")
     private fun additional(
-        id: String? = "id",
-        name: String? = "name",
+        id: String = "id",
+        name: String = "name",
         description: String? = "description",
-        isPermanent: Boolean? = false,
         endDate: String? = null,
+        cardType: String? = null,
+        promoCapAmount: BigDecimal? = null,
+        promoCapPeriod: String? = null,
+        capCurrency: String? = null,
+        minTransactionAmount: BigDecimal? = null,
+        priority: Int = 0,
     ) = CashbackPromotionsResponse.AdditionalCashback(
         id = id,
+        cardType = cardType,
         name = name,
         description = description,
-        isPermanent = isPermanent,
         endDate = endDate,
+        promoCapAmount = promoCapAmount,
+        promoCapPeriod = promoCapPeriod,
+        capCurrency = capCurrency,
+        minTransactionAmount = minTransactionAmount,
+        priority = priority,
     )
 }
