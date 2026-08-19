@@ -171,7 +171,7 @@ internal class TangemPayDetailsStateFactory(
                 isNegative = fiatBalance.availableBalance.signum() < 0,
                 isInactive = false,
                 actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = true,
+                    isAddFundsEnabled = status.canAddFunds(isMultichainEnabled),
                     isWithdrawEnabled = hasWithdrawableBalance,
                 ),
                 cardsBlockState = null,
