@@ -1,6 +1,6 @@
 package com.tangem.data.staking.converters.ethpool
 
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolVaultDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultDTO
 import com.tangem.datasource.local.txhistory.db.entity.staking.P2PEthPoolVaultEntity
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.utils.converter.Converter

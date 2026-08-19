@@ -11,9 +11,10 @@ import com.squareup.moshi.JsonClass
  * icon, color, ordering and tokens
  * @property membersCount    slots including the creator, fixed at creation
  * @property threshold       signatures required to execute an operation, fixed at creation
- * @property address         the Safe address, one and the same in every supported EVM network; `null` while `pending`
- * @property status          `pending` → `confirming` → `active`, forward only. Kept as a raw string: mapping to a
- * domain type (including a value the backend adds later) is the data layer's job, a parse must never fail on it
+ * @property safeAddress     the Safe address, one and the same in every supported EVM network; `null` while `pending`
+ * @property status          `pending` → `confirming` → `active`, forward only, plus the reserved `cancelled`.
+ * Kept as a raw string: mapping to a domain type (including a value the backend adds later) is the data layer's
+ * job, a parse must never fail on it
  * @property members         taken slots only, ordered by join time, the creator first; free slots are
  * `membersCount - members.size`
  * @property invites         one per free slot; present **only** in the `POST` create response — this is the only
@@ -24,7 +25,7 @@ data class JointAccountDto(
     @Json(name = "cryptoAccountId") val cryptoAccountId: String,
     @Json(name = "membersCount") val membersCount: Int,
     @Json(name = "threshold") val threshold: Int,
-    @Json(name = "address") val address: String?,
+    @Json(name = "safeAddress") val safeAddress: String?,
     @Json(name = "status") val status: String,
     @Json(name = "members") val members: List<Member>,
     @Json(name = "invites") val invites: List<Invite>? = null,
