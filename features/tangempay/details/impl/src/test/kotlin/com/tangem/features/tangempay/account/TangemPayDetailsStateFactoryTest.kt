@@ -293,7 +293,7 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN exactly one delivering card WHEN banner activate clicked THEN opens that card`() {
+    fun `GIVEN exactly one delivering card WHEN banner activate clicked THEN opens activation for that card`() {
         // Arrange
         val status = loadedStatus(
             statusCards = listOf(
@@ -307,7 +307,8 @@ internal class TangemPayDetailsStateFactoryTest {
         (banner as CardsProgressBannerUM.Delivering).onActivateClick()
 
         // Assert
-        verify(exactly = 1) { intents.onCardClick("plastic") }
+        verify(exactly = 1) { intents.onActivateCardClick("plastic") }
+        verify(exactly = 0) { intents.onCardClick(any()) }
     }
 
     @ParameterizedTest
