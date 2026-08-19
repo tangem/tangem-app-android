@@ -5,10 +5,10 @@ import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.default
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receiveTriggerInstance
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
-import com.tangem.datasource.api.express.models.response.ExchangeHistoryDeltaResponse
-import com.tangem.datasource.api.express.models.response.ExchangeHistoryResponse
-import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse
-import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
+import com.tangem.grow.datasource.express.models.response.ExchangeHistoryDeltaResponse
+import com.tangem.grow.datasource.express.models.response.ExchangeHistoryResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.models.account.AccountId
