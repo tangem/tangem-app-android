@@ -133,6 +133,7 @@ dependencies {
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
     api(projects.features.jointAccount.api)
+    api(projects.features.polymarket.api)
     api(projects.features.promoBanners.api)
     api(projects.features.pushNotifications.api)
     api(projects.features.send.api)
@@ -156,5 +157,6 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(projects.common.test)
+    testImplementation(projects.features.polymarket.api)
     testImplementation(projects.test.core)
 }
