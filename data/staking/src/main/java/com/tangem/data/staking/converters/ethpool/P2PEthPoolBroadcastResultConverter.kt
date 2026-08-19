@@ -1,6 +1,6 @@
 package com.tangem.data.staking.converters.ethpool
 
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolBroadcastResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolBroadcastResponse
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
 import com.tangem.utils.converter.Converter
 
