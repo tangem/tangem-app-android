@@ -11,9 +11,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,6 +41,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -59,8 +57,8 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: Modifier = Modifier) {
-    val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val topSnackbarHostState = LocalTopSnackbarHostState.current
 
     val archivedToastText = stringResourceSafe(CoreUiR.string.account_archive_success_message)
 
@@ -72,7 +70,7 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
                 canArchive = state.canArchive,
                 onArchiveClick = {
                     state.onArchiveClick()
-                    coroutineScope.launch { snackbarHostState.showSnackbar(archivedToastText) }
+                    coroutineScope.launch { topSnackbarHostState.showSnackbar(archivedToastText) }
                 },
                 onCloseClick = state.onCloseClick,
             )
@@ -87,23 +85,6 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = contentPadding.calculateBottomPadding()),
-            )
-        }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(
-                    // The snackbar rises above the activation footer instead of covering its CTA
-                    bottom = contentPadding.calculateBottomPadding() +
-                        if (activation != null) ACTIVATION_FOOTER_HEIGHT else 0.dp,
-                ),
-        ) { data ->
-            Snackbar(
-                snackbarData = data,
-                containerColor = TangemTheme.colors3.bg.inverse,
-                contentColor = TangemTheme.colors3.text.inverse.primary,
             )
         }
     }
