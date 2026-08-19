@@ -531,6 +531,12 @@ internal class TangemPayDetailsModel @Inject constructor(
         router.push(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = cardId))
     }
 
+    override fun onActivateCardClick(cardId: String) {
+        router.push(
+            TangemPayAccountDetailsInnerRoute.CardDetails(cardId = cardId, shouldOpenActivation = true),
+        )
+    }
+
     override fun onAddCardClick(tariffState: TangemPayTariffPlanState?) {
         analytics.send(TangemPayAnalyticsEvents.AddExtraCardClicked())
         modelScope.launch {

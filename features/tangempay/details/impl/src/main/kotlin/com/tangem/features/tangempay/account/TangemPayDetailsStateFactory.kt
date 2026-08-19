@@ -15,6 +15,7 @@ import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.isAwaitingActivation
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.models.pay.thumbnailUrl
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
@@ -113,7 +114,7 @@ internal class TangemPayDetailsStateFactory(
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = status.cards
                         .map { cardItem ->
-                            val isAwaitingActivation = cardItem.state == TangemPayCardState.Delivering
+                            val isAwaitingActivation = cardItem.state.isAwaitingActivation
                             TangemPayDetailsBalanceBlockState.Card(
                                 lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
                                 imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
@@ -141,9 +142,10 @@ internal class TangemPayDetailsStateFactory(
         return when {
             any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
             any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
+            any { it.state == TangemPayCardState.Activating } -> CardsProgressBannerUM.Activating
             deliveringCards.size == 1 -> {
                 val cardId = deliveringCards.first().id
-                CardsProgressBannerUM.Delivering(onActivateClick = { intents.onCardClick(cardId) })
+                CardsProgressBannerUM.Delivering(onActivateClick = { intents.onActivateCardClick(cardId) })
             }
             else -> null
         }
