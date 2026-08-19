@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.*
 import java.io.File
-import java.io.IOException
 
 /**
  * Migration of a specified key with name changing.
@@ -31,9 +30,7 @@ internal class SharedPreferencesKeyMigration(
 
         sharedPrefsEditor.remove(legacyKeyName)
 
-        if (!sharedPrefsEditor.commit()) {
-            throw IOException("Unable to delete migrated keys from SharedPreferences.")
-        }
+        if (!sharedPrefsEditor.commit()) return
 
         if (legacyPrefs.all.isEmpty()) {
             deleteSharedPreferences(context = context, name = legacyPrefsName)
