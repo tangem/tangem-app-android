@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.CustomerInfo
@@ -52,10 +53,10 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
             TangemPayOrderCardTypeUM(
                 isLoading = true,
                 isError = false,
-                availableTypes = availableTypesOf(isPlasticAvailable = false),
+                availableTypes = availableTypesOf(isPlasticEnabled = featureToggles.isPlasticCardOrderEnabled),
                 cardImageUrl = null,
                 virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = ""),
-                plastic = null,
+                plastic = TangemPayOrderCardTypeUM.Plastic.Unavailable(country = ""),
                 onBackClick = ::onBackClick,
                 onRetry = ::loadData,
                 onSelectVirtual = params.onSelectVirtual,
@@ -73,8 +74,8 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
     }
 
     private fun onSelectPlastic() {
-        val plastic = state.value.plastic ?: return
-        params.onSelectPlastic(plastic.deliveryEtaMaxBusinessDays)
+        val plastic = state.value.plastic as? TangemPayOrderCardTypeUM.Plastic.Available ?: return
+        params.onSelectPlastic(plastic.deliveryEta.maxBusinessDays)
     }
 
     private fun observeCardImage() {
@@ -98,14 +99,14 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 return@launch
             }
 
-            val plasticOffer = if (featureToggles.isPlasticCardOrderEnabled) offers.plasticOffer() else null
-            val plasticContent = if (plasticOffer != null) {
+            val plasticContent = if (featureToggles.isPlasticCardOrderEnabled) {
                 val customerInfo = onboardingRepository.getCustomerInfo(params.userWalletId).getOrNull()
                 if (customerInfo == null) {
                     state.update { it.copy(isLoading = false, isError = true) }
                     return@launch
                 }
-                plasticOffer.toPlasticContent(customerInfo)
+                offers.plasticOffer()?.toPlasticContent(customerInfo)
+                    ?: TangemPayOrderCardTypeUM.Plastic.Unavailable(country = customerInfo.country.orEmpty())
             } else {
                 null
             }
@@ -116,33 +117,36 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 current.copy(
                     isLoading = false,
                     isError = false,
-                    availableTypes = availableTypesOf(isPlasticAvailable = plasticContent != null),
                     virtual = TangemPayOrderCardTypeUM.Virtual(
                         issueFee = virtualOffer?.fee?.let { fee -> fee.amount.formatFiat(fee.currency) }.orEmpty(),
                     ),
-                    plastic = plasticContent,
+                    plastic = plasticContent ?: current.plastic,
                 )
             }
         }.saveIn(loadDataJobHolder)
     }
 
-    private fun Offer.toPlasticContent(customerInfo: CustomerInfo): TangemPayOrderCardTypeUM.Plastic? {
+    private fun Offer.toPlasticContent(customerInfo: CustomerInfo): TangemPayOrderCardTypeUM.Plastic.Available? {
         val deliveryEta = data.deliveryEta ?: return null
         val availableBalance = customerInfo.fiatBalance?.availableBalance.orZero()
+        val isFeeZero = fee.amount.signum() == 0
         val feeState = when {
-            fee.amount.signum() == 0 -> TangemPayOrderCardTypeUM.FeeState.FreeDelivery
+            isFeeZero -> TangemPayOrderCardTypeUM.FeeState.FreeDelivery
             availableBalance < fee.amount -> TangemPayOrderCardTypeUM.FeeState.InsufficientFunds
             else -> TangemPayOrderCardTypeUM.FeeState.Default
         }
-        return TangemPayOrderCardTypeUM.Plastic(
+        return TangemPayOrderCardTypeUM.Plastic.Available(
             country = customerInfo.country.orEmpty(),
-            deliveryFee = fee.amount.formatFiat(fee.currency),
-            deliveryEtaMaxBusinessDays = deliveryEta.maxBusinessDays,
+            deliveryFee = fee.amount.formatFiat(fee.currency).takeUnless { isFeeZero },
+            deliveryEta = TangemPayOrderCardTypeUM.DeliveryEta(
+                minBusinessDays = deliveryEta.minBusinessDays,
+                maxBusinessDays = deliveryEta.maxBusinessDays,
+            ),
             feeState = feeState,
         )
     }
 
     private fun BigDecimal.formatFiat(currency: Currency): String = format {
-        fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
+        fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol).optionalDecimals()
     }
 }
