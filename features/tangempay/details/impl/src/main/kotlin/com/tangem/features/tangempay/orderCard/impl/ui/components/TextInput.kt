@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -79,7 +80,7 @@ internal fun TextInput(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     state: TextInputState = TextInputState.Default,
-    isRequired: Boolean = false,
+    isOptional: Boolean = false,
     placeholder: TextReference? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -89,13 +90,7 @@ internal fun TextInput(
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
     val isDisabled = state is TextInputState.Disabled
-    val requiredMarkColor = TangemTheme.colors3.text.status.error
-    val labelText = buildAnnotatedString {
-        append(label.resolveReference())
-        if (isRequired) {
-            withStyle(SpanStyle(color = requiredMarkColor)) { append('*') }
-        }
-    }
+    val labelText = inputLabel(label = label, isOptional = isOptional)
     val errorText = (state as? TextInputState.Error)?.text?.resolveReference()
 
     Column(modifier = modifier) {
@@ -153,6 +148,19 @@ internal fun TextInput(
                 color = TangemTheme.colors3.text.status.error,
             )
         }
+    }
+}
+
+@Composable
+private fun inputLabel(label: TextReference, isOptional: Boolean): AnnotatedString {
+    val text = label.resolveReference()
+    if (!isOptional) return AnnotatedString(text)
+
+    val optionalMark = stringResourceSafe(R.string.tangempay_order_data_field_optional)
+    val optionalMarkColor = TangemTheme.colors3.text.tertiary
+    return buildAnnotatedString {
+        append(text)
+        withStyle(SpanStyle(color = optionalMarkColor)) { append(" · $optionalMark") }
     }
 }
 
@@ -244,11 +252,11 @@ private fun TextInputPreview() {
                 placeholder = stringReference("Placeholder"),
             )
             TextInput(
-                label = stringReference("Label"),
-                value = "Value",
+                label = stringReference("Address line 2"),
+                value = "Apt. 56",
                 onValueChange = {},
                 modifier = Modifier.fillMaxWidth(),
-                isRequired = true,
+                isOptional = true,
             )
             TextInput(
                 label = stringReference("Country"),
