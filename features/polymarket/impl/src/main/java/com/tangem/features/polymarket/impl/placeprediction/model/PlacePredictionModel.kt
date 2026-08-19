@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
@@ -14,6 +15,7 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
+import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -58,6 +60,7 @@ internal const val QUOTE_POLL_INTERVAL_MILLIS = 10_000L
 internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
+    private val urlOpener: UrlOpener,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
@@ -144,6 +147,14 @@ internal class PlacePredictionModel @Inject constructor(
                 message = stringReference(value = "$part arrives in a later part of this flow."),
             ),
         )
+    }
+
+    override fun onPolymarketTermsClick() {
+        urlOpener.openUrl(PolymarketLegalUrls.polymarketTerms)
+    }
+
+    override fun onTangemTermsClick() {
+        urlOpener.openUrl(PolymarketLegalUrls.TANGEM_TERMS)
     }
 
     override fun onBackClick() {

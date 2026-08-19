@@ -18,7 +18,7 @@ import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
+import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -55,9 +55,9 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val userWalletId: UserWalletId = paramsContainer.require<PolymarketOnboardingParams>().userWalletId
 
     private val onPolymarketTermsClick: () -> Unit = {
-        urlOpener.openUrl(PolymarketUrlBuilder.build(page = PolymarketUrlBuilder.Page.Terms))
+        urlOpener.openUrl(PolymarketLegalUrls.polymarketTerms)
     }
-    private val onTangemTermsClick: () -> Unit = { urlOpener.openUrl(TANGEM_TERMS_URL) }
+    private val onTangemTermsClick: () -> Unit = { urlOpener.openUrl(PolymarketLegalUrls.TANGEM_TERMS) }
 
     val uiState: StateFlow<PolymarketOnboardingUM>
         field = MutableStateFlow<PolymarketOnboardingUM>(PolymarketOnboardingUM.Resolving)
@@ -194,9 +194,5 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun openFeed() {
         router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId))
-    }
-
-    private companion object {
-        const val TANGEM_TERMS_URL = "https://tangem.com/tangem_tos.html"
     }
 }
