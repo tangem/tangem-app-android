@@ -4,6 +4,8 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketSearchResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
@@ -101,4 +103,11 @@ interface PolymarketApi {
     suspend fun submitApprovals(
         @Body request: PolymarketWalletApprovalsRequest,
     ): ApiResponse<PolymarketWalletOperationResponse>
+
+    /**
+     * Preview the execution of a fill-and-kill order against the live order book. Read-only: nothing is
+     * placed, and the quote is only valid for as long as the book stands still, so callers re-request it.
+     */
+    @POST("api/predictions/v1/orders/quote")
+    suspend fun getOrderQuote(@Body request: PolymarketOrderQuoteRequest): ApiResponse<PolymarketOrderQuoteResponse>
 }
