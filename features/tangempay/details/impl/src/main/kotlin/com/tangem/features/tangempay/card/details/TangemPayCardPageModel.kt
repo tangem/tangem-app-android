@@ -63,6 +63,7 @@ import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.common.ifLoadedOrNull
+import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
@@ -561,10 +562,8 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onClickReceive(data: TangemPayTopUpData) {
         bottomSheetNavigation.dismiss()
-        val loaded = currentStatus.value.ifLoadedOrNull { it }
-        val shouldChooseNetwork = loaded != null &&
-            shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, loaded.networks)
-        if (shouldChooseNetwork) {
+        val networks = currentStatus.value.networksOrNull().orEmpty()
+        if (shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, networks)) {
             bottomSheetNavigation.activate(TangemPayCardNavigation.ChooseNetwork(walletId = data.walletId))
         } else {
             val config = TokenReceiveConfig(
