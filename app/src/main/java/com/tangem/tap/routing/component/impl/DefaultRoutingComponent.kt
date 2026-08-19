@@ -32,6 +32,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
@@ -99,6 +100,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -386,6 +388,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 walletsCount = userWallets.size,
                 isImported = selectedWallet.isImported(),
                 isBackedUp = isWalletBackedUpUseCase(selectedWallet),
+                completedBackups = getCompletedBackupsUseCase(selectedWallet),
             ),
         )
     }
