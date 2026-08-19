@@ -17,7 +17,7 @@ import com.tangem.grow.datasource.express.models.response.SwapPair
 import com.tangem.grow.datasource.express.models.response.SwapPairsWithProviders
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.grow.datasource.express.models.response.TxDetails
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys

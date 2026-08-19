@@ -9,7 +9,7 @@ import com.tangem.domain.models.StatusSource
  * `Account.CryptoPortfolio`-style rows, which carry the personal name, icon, color and tokens
  * @property membersCount    slots including the creator, fixed at creation
  * @property threshold       signatures required to execute an operation, fixed at creation
- * @property address         the Safe address, one and the same in every supported EVM network; `null` while pending
+ * @property safeAddress     the Safe address, one and the same in every supported EVM network; `null` while pending
  * @property status          account lifecycle state, forward only
  * @property members         taken slots, ordered by join time, the creator first. The app finds itself in the list
  * by comparing [Member.address] against the address derived from the card (lowercased), never by trusting the
@@ -21,17 +21,21 @@ data class JointAccount(
     val cryptoAccountId: String,
     val membersCount: Int,
     val threshold: Int,
-    val address: String?,
+    val safeAddress: String?,
     val status: Status,
     val members: List<Member>,
     val source: StatusSource,
 ) {
 
-    /** [UNKNOWN] is a backend value this build does not know — displayed conservatively, never sent back. */
+    /**
+     * [CANCELLED] is reserved by the contract — nothing sets it on this stage.
+     * [UNKNOWN] is a backend value this build does not know — displayed conservatively, never sent back.
+     */
     enum class Status {
         PENDING,
         CONFIRMING,
         ACTIVE,
+        CANCELLED,
         UNKNOWN,
     }
 
