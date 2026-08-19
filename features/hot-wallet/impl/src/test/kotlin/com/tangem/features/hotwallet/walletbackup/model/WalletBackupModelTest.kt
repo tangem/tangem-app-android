@@ -112,7 +112,12 @@ internal class WalletBackupModelTest {
 
             verify { trackingContextProxy.addHotWalletContext() }
             verify {
-                analyticsEventHandler.send(WalletSettingsAnalyticEvents.BackupScreenOpened(isBackedUp = false))
+                analyticsEventHandler.send(
+                    WalletSettingsAnalyticEvents.BackupScreenOpened(
+                        isBackedUp = false,
+                        cloudBackupState = null,
+                    ),
+                )
             }
             val state = model.uiState.value
             Assertions.assertEquals(false, state.isBackedUp)
