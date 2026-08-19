@@ -21,6 +21,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
@@ -46,6 +47,9 @@ internal class JointAccountMembersModel @Inject constructor(
     private fun createStubState(): JointAccountMembersUM {
         val isInviteMode = params.mode == JointAccountMembersComponent.Mode.Invite
         val canInvite = isInviteMode && params.isCreator
+        // TODO([REDACTED_TASK_KEY]): the real gate is stricter than inviting — every slot is filled and the account
+        //  is `confirming`; both arrive with domain integration
+        val canActivate = isInviteMode && params.isCreator
 
         val creatorAvatar = JointAccountMembersUM.MemberAvatarUM(
             monogram = "I",
@@ -88,9 +92,41 @@ internal class JointAccountMembersModel @Inject constructor(
             members = (listOf(creator) + freeSlots).toImmutableList(),
             otherMembersLabel = if (freeSlots.isNotEmpty()) stringReference("Other members") else null,
             canArchive = isInviteMode,
+            activation = if (canActivate) {
+                JointAccountMembersUM.ActivationUM(
+                    onActivateClick = ::onActivateClick,
+                    confirmation = null,
+                )
+            } else {
+                null
+            },
             onArchiveClick = ::onArchiveClick,
             onCloseClick = ::onCloseClick,
         )
+    }
+
+    private fun onActivateClick() {
+        updateActivationConfirmation(
+            confirmation = JointAccountMembersUM.ActivationUM.ConfirmationUM(
+                onConfirmClick = ::onConfirmActivationClick,
+                onCancelClick = ::onCancelActivationClick,
+            ),
+        )
+    }
+
+    private fun onConfirmActivationClick() {
+        // TODO([REDACTED_TASK_KEY]): run the activation orchestrator (one-tap payload signing) once it lands
+        updateActivationConfirmation(confirmation = null)
+    }
+
+    private fun onCancelActivationClick() {
+        updateActivationConfirmation(confirmation = null)
+    }
+
+    private fun updateActivationConfirmation(confirmation: JointAccountMembersUM.ActivationUM.ConfirmationUM?) {
+        uiState.update { state ->
+            state.copy(activation = state.activation?.copy(confirmation = confirmation))
+        }
     }
 
     private fun onShareSafelyClick() {

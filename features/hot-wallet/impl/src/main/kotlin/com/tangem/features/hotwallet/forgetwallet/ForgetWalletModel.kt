@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.forgetwallet
 import arrow.core.getOrElse
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,9 +14,11 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
+import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.DeleteCloudBackupWithRetryUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.ForgetWalletComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -36,6 +39,7 @@ internal class ForgetWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appScope: AppCoroutineScope,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val uiMessageSender: UiMessageSender,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
@@ -57,6 +61,10 @@ internal class ForgetWalletModel @Inject constructor(
                 isForgetButtonEnabled = false,
             ),
         )
+
+    init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ForgetWalletScreen())
+    }
 
     private fun onCheckboxClick() {
         uiState.update { currentState ->
@@ -109,6 +117,8 @@ internal class ForgetWalletModel @Inject constructor(
                     return@launch
                 }
 
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletForgotten())
+
             if (params.shouldDeleteCloudBackup) {
                 deleteCloudBackup()
             }
@@ -128,7 +138,12 @@ internal class ForgetWalletModel @Inject constructor(
         val walletId = params.userWalletId.stringValue
         appScope.launch {
             cloudBackupRepository.findBackups().fold(
-                ifLeft = { TangemLogger.e("Unable to find cloud backups on forget: $it") },
+                ifLeft = { error ->
+                    TangemLogger.e("Unable to find cloud backups on forget: $error")
+                    analyticsEventHandler.send(
+                        WalletSettingsAnalyticEvents.CloudBackupDeletionError(errorMessage = error.analyticsMessage()),
+                    )
+                },
                 ifRight = { backups ->
                     val info = backups.firstOrNull { it.walletId == walletId }
                     if (info == null) {
@@ -137,8 +152,18 @@ internal class ForgetWalletModel @Inject constructor(
                     }
 
                     deleteCloudBackupWithRetryUseCase(info.fileId).fold(
-                        ifLeft = { TangemLogger.e("Unable to delete cloud backup on forget: $it") },
-                        ifRight = { setCloudBackupStateUseCase(walletId, isBackedUp = false) },
+                        ifLeft = { error ->
+                            TangemLogger.e("Unable to delete cloud backup on forget: $error")
+                            analyticsEventHandler.send(
+                                WalletSettingsAnalyticEvents.CloudBackupDeletionError(
+                                    errorMessage = error.analyticsMessage(),
+                                ),
+                            )
+                        },
+                        ifRight = {
+                            analyticsEventHandler.send(WalletSettingsAnalyticEvents.CloudBackupDeleted())
+                            setCloudBackupStateUseCase(walletId, isBackedUp = false)
+                        },
                     )
                 },
             )
