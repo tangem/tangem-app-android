@@ -79,6 +79,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
         onCopy = { _, _ -> },
         shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
         cardState = card.state,
+        cardType = card.cardType,
         cardImageUrl = card.mainImageUrl,
         cardBackgroundImageUrl = card.backgroundImageUrl,
     )

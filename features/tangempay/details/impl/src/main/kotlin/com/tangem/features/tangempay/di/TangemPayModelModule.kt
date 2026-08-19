@@ -6,6 +6,7 @@ import com.tangem.features.tangempay.account.TangemPayDetailsModel
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsModel
 import com.tangem.features.tangempay.addfunds.va.bank.TangemPayVaBankingDetailsErrorModel
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositModel
+import com.tangem.features.tangempay.card.activation.TangemPayCardActivationModel
 import com.tangem.features.tangempay.card.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.card.details.TangemPayCardPageModel
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletModel
@@ -57,6 +58,11 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayChangePinModel::class)
     fun bindTangemPayChangePinModel(model: TangemPayChangePinModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCardActivationModel::class)
+    fun bindTangemPayCardActivationModel(model: TangemPayCardActivationModel): Model
 
     @Binds
     @IntoMap
