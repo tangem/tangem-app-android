@@ -73,11 +73,13 @@ private fun AdditionalCashbackCard(item: TangemPayAdditionalCashbackUM.Item, mod
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
-            Text(
-                text = item.description.resolveReference(),
-                style = TangemTheme.typography3.subheading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
+            item.description?.let { description ->
+                Text(
+                    text = description.resolveReference(),
+                    style = TangemTheme.typography3.subheading.medium,
+                    color = TangemTheme.colors3.text.primary,
+                )
+            }
         }
     }
 }
@@ -135,7 +137,7 @@ private class TangemPayAdditionalCashbackPreviewProvider :
                     TangemPayAdditionalCashbackUM.Item(
                         id = "3",
                         name = stringReference("Cashback increase"),
-                        description = stringReference("+2% cashback for groceries stores. Max \$10/month"),
+                        description = null,
                         badge = TangemPayAdditionalCashbackUM.Badge.Until(stringReference("Until 09.26.2026")),
                     ),
                 ),
