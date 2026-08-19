@@ -21,7 +21,7 @@ import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.common.utils.resetWireMockScenarios
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
