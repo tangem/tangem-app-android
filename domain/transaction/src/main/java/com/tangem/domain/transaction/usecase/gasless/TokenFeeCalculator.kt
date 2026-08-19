@@ -138,7 +138,13 @@ internal class TokenFeeCalculator(
             } else {
                 BigInteger.ZERO
             }
-            val maxTokenFeeGas = initialFee.gasLimit + feeTransferGasLimit + baseGas + withdrawGas
+
+            // Safety margin over the raw estimation
+            val mainTransactionGasLimit = initialFee.gasLimit
+                .increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
+            val withdrawGasLimit = withdrawGas.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
+
+            val maxTokenFeeGas = mainTransactionGasLimit + feeTransferGasLimit + baseGas + withdrawGasLimit
 
             val maxFeePerGas = when (initialFee) {
                 is Fee.Ethereum.EIP1559 -> initialFee.maxFeePerGas
@@ -192,8 +198,8 @@ internal class TokenFeeCalculator(
                 // Per-call gas limits for the v2 gasless meta-tx (bound into the EIP-712 hash).
                 // Main = the user's transaction execution gas; withdraw = the appended yield-withdraw
                 // sub-call gas, present only on the yield path where a batch is built.
-                mainTransactionGasLimit = initialFee.gasLimit,
-                withdrawGasLimit = withdrawGas.takeIf { isYieldActive },
+                mainTransactionGasLimit = mainTransactionGasLimit,
+                withdrawGasLimit = withdrawGasLimit.takeIf { isYieldActive },
             )
         }
     }
@@ -308,6 +314,9 @@ internal class TokenFeeCalculator(
         const val GAS_PRICE_MULTIPLIER = 1.5
         const val PERCENT_TO_INCREASE_TOKEN_PRICE = 1
         const val PERCENT_TO_INCREASE_TRANSFER_GASLIMIT = 10
+
+        /** Safety margin for the signed per-call gas limits. */
+        const val PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT = 40
 
         /**
          * Fallback gas for the batch yield-withdraw operation (withdraw + possible module upgrade), used when

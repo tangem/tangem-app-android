@@ -222,8 +222,8 @@ class TokenFeeCalculatorTest {
             assertNotNull(feeExtended)
             assertEquals(tokenStatus.currency.id, feeExtended.feeTokenId)
             assertTrue(feeExtended.transactionFee is TransactionFee.Single)
-            // main-tx per-call gas = initialFee.gasLimit; no withdraw on the non-yield path
-            assertEquals(BigInteger("100000"), feeExtended.mainTransactionGasLimit)
+            // main-tx per-call gas = initialFee.gasLimit * 1.40; no withdraw on the non-yield path
+            assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
             assertNull(feeExtended.withdrawGasLimit)
         }
     }
@@ -373,7 +373,7 @@ class TokenFeeCalculatorTest {
         // Expected
 
         val expectedAmount = Amount(
-            value = BigDecimal("28.050000000000000000000000000000000000"),
+            value = BigDecimal("34.050000000000000000000000000000000000"),
             token = Token(
                 name = "USDC",
                 symbol = "USDC",
@@ -381,7 +381,8 @@ class TokenFeeCalculatorTest {
                 decimals = 6,
             )
         )
-        val expectedGasLimit = "187000".toBigInteger()
+        // 100_000 * 1.40 + 66_000 + 21_000
+        val expectedGasLimit = "227000".toBigInteger()
         val expectedCoinPriceInToken = BigInteger("2020000000") // 2000 * 1.01 * 10^6
         val expectedFeeTransferLimit = "66000".toBigInteger()
         val expectedBaseGas = "21000".toBigInteger()
@@ -433,11 +434,11 @@ class TokenFeeCalculatorTest {
      * deterministic fallback [WITHDRAW_GAS_LIMIT] is used.
      *
      * Expected gasLimit breakdown (matching companion constants):
-     *   initialFee.gasLimit  = 100_000
+     *   initialFee.gasLimit  = 100_000 * 1.40 = 140_000
      *   feeTransferGasLimit  = 60_000 * 1.10 = 66_000
      *   baseGas              = 21_000
-     *   WITHDRAW_GAS_LIMIT   = 150_000
-     *   total                = 337_000
+     *   WITHDRAW_GAS_LIMIT   = 150_000 * 1.40 = 210_000
+     *   total                = 437_000
      */
     @Test
     fun `calculateTokenFee with active yield but no wallet falls back to WITHDRAW_GAS_LIMIT`() = runTest {
@@ -473,13 +474,13 @@ class TokenFeeCalculatorTest {
         assertTrue(result.isRight(), "Expected success on yield path with small plain balance")
         result.onRight { feeExtended ->
             val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
-            // gasLimit = 100_000 + 66_000 + 21_000 + 150_000 = 337_000
-            assertEquals(BigInteger("337000"), fee.gasLimit, "gasLimit must include WITHDRAW_GAS_LIMIT (150000)")
+            // gasLimit = 140_000 + 66_000 + 21_000 + 210_000 = 437_000
+            assertEquals(BigInteger("437000"), fee.gasLimit, "gasLimit must include WITHDRAW_GAS_LIMIT (150000)")
             // feeTransferGasLimit stored in the fee object = 66_000
             assertEquals(BigInteger("66000"), fee.feeTransferGasLimit, "feeTransferGasLimit = 60000 * 1.10")
-            // v2 per-call gas limits: main = initialFee.gasLimit, withdraw = WITHDRAW_GAS_LIMIT
-            assertEquals(BigInteger("100000"), feeExtended.mainTransactionGasLimit)
-            assertEquals(BigInteger("150000"), feeExtended.withdrawGasLimit)
+            // v2 per-call gas limits, both padded by 40%: main = 100_000 * 1.40, withdraw = 150_000 * 1.40
+            assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
+            assertEquals(BigInteger("210000"), feeExtended.withdrawGasLimit)
         }
     }
 
@@ -489,11 +490,11 @@ class TokenFeeCalculatorTest {
      * calculateTokenFee must use the deterministic FALLBACK_FEE_TRANSFER_GAS_LIMIT (100_000) instead of raising.
      *
      * Expected breakdown:
-     *   initialFee.gasLimit     = 100_000
+     *   initialFee.gasLimit     = 100_000 * 1.40 = 140_000
      *   feeTransferGasLimit     = 100_000 * 1.10 = 110_000   (FALLBACK_FEE_TRANSFER_GAS_LIMIT * 1.10)
      *   baseGas                 = 21_000
-     *   WITHDRAW_GAS_LIMIT      = 150_000
-     *   total gasLimit          = 381_000
+     *   WITHDRAW_GAS_LIMIT      = 150_000 * 1.40 = 210_000
+     *   total gasLimit          = 481_000
      */
     @Test
     fun `calculateTokenFee with active yield uses fallback gas when transfer estimation reverts with insufficient funds`() =
@@ -541,9 +542,9 @@ class TokenFeeCalculatorTest {
                     fee.feeTransferGasLimit,
                     "feeTransferGasLimit must use fallback (100000 * 1.10 = 110000)",
                 )
-                // gasLimit = 100_000 + 110_000 + 21_000 + 150_000 = 381_000
+                // gasLimit = 140_000 + 110_000 + 21_000 + 210_000 = 481_000
                 assertEquals(
-                    BigInteger("381000"),
+                    BigInteger("481000"),
                     fee.gasLimit,
                     "gasLimit must include WITHDRAW_GAS_LIMIT (150000)",
                 )
@@ -597,8 +598,8 @@ class TokenFeeCalculatorTest {
                     fee.feeTransferGasLimit,
                     "feeTransferGasLimit must use fallback (100000 * 1.10 = 110000)",
                 )
-                // gasLimit = 100_000 + 110_000 + 21_000 + 150_000 = 381_000
-                assertEquals(BigInteger("381000"), fee.gasLimit)
+                // gasLimit = 140_000 + 110_000 + 21_000 + 210_000 = 481_000
+                assertEquals(BigInteger("481000"), fee.gasLimit)
             }
         }
 
@@ -719,11 +720,11 @@ class TokenFeeCalculatorTest {
      * BOTH the maxTokenFee cap and the signed per-call withdraw gas limit — not the hardcoded fallback.
      *
      * Expected gasLimit breakdown:
-     *   initialFee.gasLimit  = 100_000
+     *   initialFee.gasLimit  = 100_000 * 1.40 = 140_000
      *   feeTransferGasLimit  = 60_000 * 1.10 = 66_000
      *   baseGas              = 21_000
-     *   estimated withdraw   = 200_000
-     *   total                = 387_000
+     *   estimated withdraw   = 200_000 * 1.40 = 280_000
+     *   total                = 507_000
      */
     @Test
     fun `calculateTokenFee with active yield and wallet estimates withdraw gas on-chain`() = runTest {
@@ -772,11 +773,11 @@ class TokenFeeCalculatorTest {
         assertTrue(result.isRight(), "Expected success on yield path with on-chain withdraw estimation")
         result.onRight { feeExtended ->
             val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
-            // gasLimit = 100_000 + 66_000 + 21_000 + 200_000 = 387_000
-            assertEquals(BigInteger("387000"), fee.gasLimit, "gasLimit must include the estimated withdraw gas")
-            // v2 per-call gas limits: main = initialFee.gasLimit, withdraw = estimated 200_000
-            assertEquals(BigInteger("100000"), feeExtended.mainTransactionGasLimit)
-            assertEquals(BigInteger("200000"), feeExtended.withdrawGasLimit)
+            // gasLimit = 140_000 + 66_000 + 21_000 + 280_000 = 507_000
+            assertEquals(BigInteger("507000"), fee.gasLimit, "gasLimit must include the estimated withdraw gas")
+            // v2 per-call gas limits, both padded by 40%: main = 100_000 * 1.40, withdraw = 200_000 * 1.40
+            assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
+            assertEquals(BigInteger("280000"), feeExtended.withdrawGasLimit)
         }
         coVerify { gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any()) }
         coVerify { mockWalletManager.getGasLimit(any(), "0xModule", any()) }
@@ -821,10 +822,10 @@ class TokenFeeCalculatorTest {
         // Then
         assertTrue(result.isRight())
         result.onRight { feeExtended ->
-            // gasLimit = 100_000 + 66_000 + 21_000 + 150_000 (fallback) = 337_000
+            // gasLimit = 140_000 + 66_000 + 21_000 + 210_000 (fallback * 1.40) = 437_000
             val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
-            assertEquals(BigInteger("337000"), fee.gasLimit)
-            assertEquals(BigInteger("150000"), feeExtended.withdrawGasLimit)
+            assertEquals(BigInteger("437000"), fee.gasLimit)
+            assertEquals(BigInteger("210000"), feeExtended.withdrawGasLimit)
         }
         // withdraw estimation must NOT be attempted without a module address
         coVerify(exactly = 0) { gaslessYieldRepository.createPartialWithdrawCallData(any(), any(), any()) }
