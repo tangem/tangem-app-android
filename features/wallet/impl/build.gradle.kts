@@ -134,7 +134,6 @@ dependencies {
     api(projects.features.feed.api)
     api(projects.features.jointAccount.api)
     api(projects.features.promoBanners.api)
-    api(projects.features.polymarket.api)
     api(projects.features.pushNotifications.api)
     api(projects.features.send.api)
     api(projects.features.tangempay.details.api)
