@@ -113,6 +113,26 @@ internal class PolymarketFeedContentTransformerTest {
     }
 
     @Test
+    fun `GIVEN the same event on two pages WHEN transform THEN it is shown once`() {
+        // Arrange
+        val state = PolymarketEventsBatchListState(
+            data = listOf(
+                Batch(key = 0, data = listOf(createEvent(id = "event-1"), createEvent(id = "event-2"))),
+                Batch(key = 1, data = listOf(createEvent(id = "event-2"), createEvent(id = "event-3"))),
+            ),
+            status = PaginationStatus.EndOfPagination,
+        )
+
+        // Act
+        val actual = transform(state)
+
+        // Assert
+        assertThat((actual.content as PolymarketMainUM.ContentUM.Content).events.map { it.id })
+            .containsExactly("event-1", "event-2", "event-3")
+            .inOrder()
+    }
+
+    @Test
     fun `GIVEN previous state WHEN transform THEN its tabs and access mode are kept`() {
         // Act
         val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = PaginationStatus.None))

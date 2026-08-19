@@ -4,11 +4,10 @@ import com.tangem.spend.datasource.pay.models.response.CashbackAccrualDocsRespon
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.utils.converter.Converter
 
-/** Maps [CashbackAccrualDocsResponse] (BFF) to domain [CashbackDocument]s, dropping malformed entries. */
 internal object CashbackAccrualDocsConverter : Converter<CashbackAccrualDocsResponse, List<CashbackDocument>> {
 
     override fun convert(value: CashbackAccrualDocsResponse): List<CashbackDocument> {
-        return value.docs.orEmpty().mapNotNull(::convertDoc)
+        return value.result?.docs.orEmpty().mapNotNull(::convertDoc)
     }
 
     private fun convertDoc(doc: CashbackAccrualDocsResponse.Doc): CashbackDocument? {
