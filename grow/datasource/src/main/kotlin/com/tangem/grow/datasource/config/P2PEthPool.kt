@@ -1,19 +1,17 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.grow.datasource.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
-
-import com.tangem.datasource.BuildConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
-import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
+import com.tangem.grow.datasource.BuildConfig
 import com.tangem.utils.ProviderSuspend
 
 /**
  * P2P.org Ethereum Pooled Staking API configuration
  */
 class P2PEthPool(
-    private val p2pAuthProvider: P2PEthPoolAuthProvider,
+    private val growEnvironmentConfig: GrowEnvironmentConfig,
 ) : ApiConfig() {
 
     override val id: ApiConfig.ID get() = ID
@@ -58,7 +56,14 @@ class P2PEthPool(
     }
 
     private fun createHeaders() = buildMap {
-        put(key = "Authorization", value = ProviderSuspend { "Bearer ${p2pAuthProvider.getApiKey()}" })
+        put(
+            key = "Authorization",
+            value = ProviderSuspend {
+                val keys = growEnvironmentConfig.p2pApiKey ?: error("No P2P api keys provided")
+                val apiKey = if (P2PEthPoolStakingConfig.USE_TESTNET) keys.hoodi else keys.mainnet
+                "Bearer $apiKey"
+            },
+        )
         put(key = "accept", value = ProviderSuspend { "application/json" })
         put(key = "Content-Type", value = ProviderSuspend { "application/json" })
     }
