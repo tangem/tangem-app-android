@@ -11,6 +11,7 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
+    implementation(deps.spongecastle.core)
     // endregion
 
     // region Domain
@@ -24,6 +25,5 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
-    testImplementation(deps.spongecastle.core)
     // endregion
 }
