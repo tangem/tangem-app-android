@@ -29,7 +29,6 @@ internal class SetTokenListTransformer(
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
     private val isMultipleCardsEnabled: Boolean,
-    private val isPolymarketEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -179,7 +178,6 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
-            isPolymarketEnabled = isPolymarketEnabled,
         ).convert(value = params.accountList)
     }
 }

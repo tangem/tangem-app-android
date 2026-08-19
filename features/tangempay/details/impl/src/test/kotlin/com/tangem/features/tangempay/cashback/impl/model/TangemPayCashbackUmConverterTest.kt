@@ -117,6 +117,49 @@ internal class TangemPayCashbackUmConverterTest {
         assertThat(actual).isEqualTo(expected)
     }
 
+    @Test
+    fun `GIVEN no payout window WHEN convert THEN no subtitle and no banner`() {
+        // Arrange
+        val cashback = createCashback(payoutStart = null, payoutEnd = null)
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        val expected = TangemPayCashbackUM(
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("$22.54", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
+            subtitle = null,
+            isEmpty = false,
+            banner = null,
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN no payout window AND negative amount WHEN convert THEN refund banner is kept`() {
+        // Arrange
+        val cashback = createCashback(
+            confirmedAmount = BigDecimal("-22.54"),
+            payoutStart = null,
+            payoutEnd = null,
+        )
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        assertThat(actual.subtitle).isNull()
+        assertThat(actual.banner).isEqualTo(
+            TangemPayCashbackUM.Banner(
+                text = resourceReference(R.string.tangempay_cashback_refund_banner),
+                type = TangemPayCashbackUM.Banner.Type.Error,
+            ),
+        )
+    }
+
     private fun emptyStateCashback(): List<TangemPayCashback?> = listOf(
         null,
         createCashback(confirmedAmount = BigDecimal.ZERO),
@@ -127,20 +170,19 @@ internal class TangemPayCashbackUmConverterTest {
         currency: String = "USD",
         year: Int = 2026,
         month: Int = 6,
-        payoutStart: DateTime = DateTime.parse("2026-07-01"),
-        payoutEnd: DateTime = DateTime.parse("2026-07-05"),
+        payoutStart: DateTime? = DateTime.parse("2026-07-01"),
+        payoutEnd: DateTime? = DateTime.parse("2026-07-05"),
     ): TangemPayCashback = TangemPayCashback(
         confirmedAmount = confirmedAmount,
-        pendingAmount = BigDecimal.ZERO,
+        totalEarnedAmount = BigDecimal("132.15"),
         currency = currency,
-        payoutCurrency = "USDC",
-        payoutNetwork = "Polygon",
         period = TangemPayCashback.Period(
             year = year,
             month = month,
             payoutStart = payoutStart,
             payoutEnd = payoutEnd,
         ),
+        previousPayout = null,
     )
 
     private companion object {

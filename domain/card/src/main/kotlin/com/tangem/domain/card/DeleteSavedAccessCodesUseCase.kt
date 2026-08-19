@@ -23,10 +23,18 @@ class DeleteSavedAccessCodesUseCase(
      * @param cardId identifier of the card whose saved codes must be removed
      * @return [Unit] on success; a Card SDK error (as [Throwable]) if removal failed
      */
-    suspend operator fun invoke(cardId: String): Either<Throwable, Unit> = either {
-        tangemSdkManager.deleteSavedUserCodes(cardsIds = setOf(cardId))
+    suspend operator fun invoke(cardId: String): Either<Throwable, Unit> = invoke(cardsIds = setOf(cardId))
+
+    /**
+     * @param cardsIds identifiers of the cards whose saved codes must be removed
+     * @return [Unit] on success; a Card SDK error (as [Throwable]) if removal failed
+     */
+    suspend operator fun invoke(cardsIds: Set<String>): Either<Throwable, Unit> = either {
+        if (cardsIds.isEmpty()) return@either
+
+        tangemSdkManager.deleteSavedUserCodes(cardsIds = cardsIds)
             .doOnFailure { error ->
-                TangemLogger.e("Failed to delete saved access codes for card with id: $cardId", error)
+                TangemLogger.e("Failed to delete saved access codes for cards with ids: $cardsIds", error)
                 raise(error)
             }
     }
