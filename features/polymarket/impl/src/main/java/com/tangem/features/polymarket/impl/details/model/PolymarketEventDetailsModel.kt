@@ -6,19 +6,17 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.details.model.transformer.PolymarketEventDetailsContentTransformer
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
-import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionConfig
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,13 +39,6 @@ internal class PolymarketEventDetailsModel @Inject constructor(
 
     val uiState: StateFlow<PolymarketEventDetailsUM>
         field = MutableStateFlow<PolymarketEventDetailsUM>(PolymarketEventDetailsUM.Loading)
-
-    /** Requests to open the Place-prediction sheet; the component activates its child slot on each one. */
-    val sheetRequests: SharedFlow<PlacePredictionConfig>
-        field = MutableSharedFlow<PlacePredictionConfig>(
-            extraBufferCapacity = 1,
-            onBufferOverflow = BufferOverflow.DROP_OLDEST,
-        )
 
     private var event: PolymarketEvent? = null
     private var isClosedMarketsExpanded = false
@@ -97,8 +88,14 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     }
 
     private fun onOutcomeClick(marketId: String, assetId: String) {
-        sheetRequests.tryEmit(
-            PlacePredictionConfig(eventId = params.eventId, marketId = marketId, side = assetId),
+        router.push(
+            PolymarketRoute.PlacePrediction(
+                userWalletId = params.userWalletId,
+                eventId = params.eventId,
+                marketId = marketId,
+                assetId = assetId,
+                side = PredictionOrderSide.BUY,
+            ),
         )
     }
 
