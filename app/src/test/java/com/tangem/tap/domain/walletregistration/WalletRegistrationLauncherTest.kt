@@ -2,6 +2,8 @@ package com.tangem.tap.domain.walletregistration
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.card.Card
+import com.tangem.common.core.CardSession
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.hot.sdk.model.HotWalletId
@@ -89,6 +91,16 @@ internal class WalletRegistrationLauncherTest {
         )
 
         coVerify(exactly = 1) { walletRegistrar.register(any(), any()) }
+    }
+
+    @Test
+    fun `registerColdInSession from Card is a no-op when backend auth is disabled`() = runTest {
+        // The toggle is checked before the card is mapped, so no cold signing/prepare is attempted.
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns false
+
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>())
+
+        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any()) }
     }
 
     private fun hotWallet(
