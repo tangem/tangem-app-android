@@ -16,6 +16,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
+import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
@@ -42,6 +43,14 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideGetPolymarketEventUseCase(polymarketRepository: PolymarketRepository): GetPolymarketEventUseCase {
         return GetPolymarketEventUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchPolymarketEventsUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): SearchPolymarketEventsUseCase {
+        return SearchPolymarketEventsUseCase(polymarketRepository = polymarketRepository)
     }
 
     @Provides

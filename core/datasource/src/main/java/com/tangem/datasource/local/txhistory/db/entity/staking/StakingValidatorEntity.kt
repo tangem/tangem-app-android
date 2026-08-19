@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 /**
  * Persisted representation of a single StakeKit validator.
  *
- * Mirrors [com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO].
+ * Mirrors [com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.ValidatorDTO].
  */
 @Entity(tableName = "staking_validator")
 data class StakingValidatorEntity(

@@ -1,6 +1,6 @@
 package com.tangem.data.staking.converters.action
 
-import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.utils.converter.TwoWayConverter
 
