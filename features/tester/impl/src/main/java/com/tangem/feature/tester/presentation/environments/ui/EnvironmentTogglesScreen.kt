@@ -1,6 +1,7 @@
 package com.tangem.feature.tester.presentation.environments.ui
 
 import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.grow.datasource.config.Express
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
@@ -174,8 +175,8 @@ private fun PreviewFeatureTogglesScreen() {
                 title = R.string.environment_toggles,
                 apiInfoList = persistentSetOf(
                     EnvironmentTogglesScreenUM.ApiInfoUM(
-                        name = EXPRESS_CONFIG_ID,
-                        select = select[EXPRESS_CONFIG_ID] ?: ApiEnvironment.DEV.name,
+                        name = Express.ID.name,
+                        select = select[Express.ID.name] ?: ApiEnvironment.DEV.name,
                         url = "https://api.express.tangem.com",
                         environments = persistentSetOf(
                             ApiEnvironment.DEV.name,
@@ -206,6 +207,3 @@ private fun PreviewFeatureTogglesScreen() {
         )
     }
 }
-
-// The Express config moved to grow:datasource; this UI only needs its stable id string.
-private const val EXPRESS_CONFIG_ID = "Express"

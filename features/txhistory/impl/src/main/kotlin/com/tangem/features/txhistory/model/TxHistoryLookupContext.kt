@@ -55,6 +55,7 @@ internal fun buildOwnAccountAddressMapAllNetworks(
                 }
                 is AccountStatus.Virtual -> Unit
                 is AccountStatus.Prediction -> Unit
+                is AccountStatus.Joint -> Unit
             }
         }
     }
