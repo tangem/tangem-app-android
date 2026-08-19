@@ -20,6 +20,7 @@ import com.tangem.features.tangempay.common.cardMainImageUrl
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
+import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -106,7 +107,9 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                     return@launch
                 }
                 offers.plasticOffer()?.toPlasticContent(customerInfo)
-                    ?: TangemPayOrderCardTypeUM.Plastic.Unavailable(country = customerInfo.country.orEmpty())
+                    ?: TangemPayOrderCardTypeUM.Plastic.Unavailable(
+                        country = CountryNames.getDisplayName(customerInfo.country),
+                    )
             } else {
                 null
             }
@@ -136,7 +139,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
             else -> TangemPayOrderCardTypeUM.FeeState.Default
         }
         return TangemPayOrderCardTypeUM.Plastic.Available(
-            country = customerInfo.country.orEmpty(),
+            country = CountryNames.getDisplayName(customerInfo.country),
             deliveryFee = fee.amount.formatFiat(fee.currency).takeUnless { isFeeZero },
             deliveryEta = TangemPayOrderCardTypeUM.DeliveryEta(
                 minBusinessDays = deliveryEta.minBusinessDays,
