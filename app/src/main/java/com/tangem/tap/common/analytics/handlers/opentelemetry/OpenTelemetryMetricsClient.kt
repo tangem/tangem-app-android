@@ -148,8 +148,12 @@ class OpenTelemetryMetricsClient private constructor(
         ) {
             // the storage touches the disk on creation, so the whole setup runs off the main thread
             scope.launch(dispatchers.io) {
-                instance = OpenTelemetryMetricsClient(application, apiKey, scope, dispatchers)
-                    .apply { start(application) }
+                instance = OpenTelemetryMetricsClient(
+                    application = application,
+                    apiKey = apiKey,
+                    scope = scope,
+                    dispatchers = dispatchers,
+                ).apply { start(application) }
             }
         }
     }
