@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.markets.models.response
+package com.tangem.store.datasource.markets.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
