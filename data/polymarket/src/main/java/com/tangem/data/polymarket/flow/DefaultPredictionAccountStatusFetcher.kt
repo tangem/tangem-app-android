@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -63,7 +64,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             } else {
                 statusStore.store(userWalletId = params.userWalletId, value = value)
             }
-        }.onLeft {
+        }.onLeft { error ->
+            logger.e("Failed to refresh the prediction account of ${params.userWalletId}", error)
             markUnrefreshed(userWalletId = params.userWalletId)
         }
     }
@@ -80,7 +82,10 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
         val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = userWalletId)
             ?: return PredictionAccountStatusValue.NotOnboarded
 
-        val state = getPolymarketWalletStatusUseCase(addresses = addresses).getOrNull() ?: return null
+        val state = getPolymarketWalletStatusUseCase(addresses = addresses)
+            .onLeft { logger.e("Prediction wallet status is unavailable for $userWalletId: $it") }
+            .getOrNull()
+            ?: return null
 
         return when (state.status) {
             PolymarketWalletStatus.NOT_CREATED -> PredictionAccountStatusValue.NotOnboarded
@@ -112,7 +117,10 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                         PredictionAccountStatusValue.Onboarding.Stage.DEPLOYED,
                     )
                     // Throttled, offline or rejected: the balance is unknown, not zero
-                    else -> null
+                    else -> {
+                        logger.e("Prediction collateral is unavailable: $error")
+                        null
+                    }
                 }
             },
             ifRight = { balanceAllowance ->
@@ -131,7 +139,13 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
      * before anything can be sent, so guessing "blocked" here would only hide a balance the user does own.
      */
     private suspend fun isTradingAllowed(): Boolean {
-        return checkPolymarketGeoblockUseCase().fold(ifLeft = { true }, ifRight = { isBlocked -> !isBlocked })
+        return checkPolymarketGeoblockUseCase().fold(
+            ifLeft = { error ->
+                logger.e("Prediction region check failed, trading is left allowed: $error")
+                true
+            },
+            ifRight = { isBlocked -> !isBlocked },
+        )
     }
 
     private fun onboarding(stage: PredictionAccountStatusValue.Onboarding.Stage) =
@@ -139,8 +153,11 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
 
     /** Guarded: the likeliest reason to be here is that the store itself failed, and this asks it to write again. */
     private suspend fun markUnrefreshed(userWalletId: UserWalletId) {
-        runSuspendCatching {
-            statusStore.updateStatusSource(userWalletId = userWalletId, source = StatusSource.ONLY_CACHE)
-        }
+        runSuspendCatching { statusStore.markUnrefreshed(userWalletId = userWalletId) }
+            .onFailure { logger.e("Failed to mark the prediction account of $userWalletId as un-refreshed", it) }
+    }
+
+    private companion object {
+        val logger = TangemLogger.withTag("PredictionAccountStatusFetcher")
     }
 }
