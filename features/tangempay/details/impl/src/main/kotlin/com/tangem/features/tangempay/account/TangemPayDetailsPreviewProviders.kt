@@ -23,6 +23,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 onBackClick = {},
                 onOpenMenu = {},
                 items = persistentListOf(),
+                subtitle = resourceReference(R.string.tangempay_multinetwork),
             ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
@@ -87,6 +88,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 onBackClick = {},
                 onOpenMenu = {},
                 items = persistentListOf(),
+                subtitle = resourceReference(R.string.tangempay_multinetwork),
             ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(

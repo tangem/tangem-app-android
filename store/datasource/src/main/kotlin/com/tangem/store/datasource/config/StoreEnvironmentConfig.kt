@@ -13,4 +13,5 @@ data class StoreEnvironmentConfig(
     val appsAppId: String,
     val customerIoCdpApiKey: String?,
     val surveySparrowToken: String?,
+    val blockAidApiKey: String?,
 )
