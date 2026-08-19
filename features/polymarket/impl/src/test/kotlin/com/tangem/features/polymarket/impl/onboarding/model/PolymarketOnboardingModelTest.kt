@@ -9,7 +9,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -80,7 +79,7 @@ internal class PolymarketOnboardingModelTest {
     @Test
     fun `GIVEN entry is Onboarded WHEN model created THEN the feed is opened`() = runTest {
         // Arrange
-        gateResolves(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
+        gateResolves(PolymarketEntry.Onboarded)
 
         // Act
         val model = createModel(testScope = this)
@@ -116,54 +115,11 @@ internal class PolymarketOnboardingModelTest {
     }
 
     @Test
-    fun `GIVEN entry is RegionBlocked WHEN model created THEN the sheet overlay is raised AND nothing is navigated`() =
-        runTest {
-            // Arrange
-            gateResolves(PolymarketEntry.RegionBlocked)
-
-            // Act
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Assert
-            val state = model.uiState.value
-            assertThat(state.overlay).isInstanceOf(PolymarketOnboardingUM.Overlay.RegionRestrictions::class.java)
-            assertThat(state.isStarting).isFalse()
-            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN the sheet overlay is raised WHEN it is dismissed THEN the feed is opened in read-only mode`() =
-        runTest {
-            // Arrange
-            gateResolves(PolymarketEntry.RegionBlocked)
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-            val overlay = model.uiState.value.overlay as PolymarketOnboardingUM.Overlay.RegionRestrictions
-
-            // Act
-            overlay.onDismiss()
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) {
-                router.replaceAll(
-                    routes = arrayOf(
-                        PolymarketRoute.Main(userWalletId = userWalletId),
-                    ),
-                    onComplete = any(),
-                )
-            }
-            model.onDestroy()
-        }
-
-    @Test
     fun `GIVEN the error overlay is raised WHEN retry is tapped THEN the entry is resolved again`() = runTest {
         // Arrange
         coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } returnsMany listOf(
             PolymarketOnboardingError.Network.left(),
-            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING).right(),
+            PolymarketEntry.Onboarded.right(),
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -197,7 +153,7 @@ internal class PolymarketOnboardingModelTest {
                         runCatching { delay(SUPERSEDED_ATTEMPT_DELAY_MILLIS) }
                         PolymarketOnboardingError.Network.left()
                     }
-                    else -> PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING).right()
+                    else -> PolymarketEntry.Onboarded.right()
                 }
             }
             val model = createModel(testScope = this)
@@ -254,7 +210,7 @@ internal class PolymarketOnboardingModelTest {
             runTest {
                 // Arrange
                 gateResolves(PolymarketEntry.Undetermined)
-                startResolves(PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING))
+                startResolves(PolymarketEntry.Onboarded)
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
 
@@ -316,25 +272,53 @@ internal class PolymarketOnboardingModelTest {
             }
 
         @Test
-        fun `GIVEN an undetermined entry WHEN start finds the region blocked THEN the sheet overlay is raised`() =
-            runTest {
-                // Arrange
-                gateResolves(PolymarketEntry.Undetermined)
-                startResolves(PolymarketEntry.RegionBlocked)
-                val model = createModel(testScope = this)
-                advanceUntilIdle()
+        fun `GIVEN the run refuses the region WHEN start is pressed THEN the sheet overlay is raised`() = runTest {
+            // Arrange
+            owesOnboarding()
+            every { runOnboardingUseCase(userWalletId) } returns flowOf(
+                PolymarketOnboardingProgress.Failed(
+                    error = PolymarketOnboardingError.RegionBlocked,
+                    isRetryable = false,
+                ),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
 
-                // Act
-                model.uiState.value.onStartClick()
-                advanceUntilIdle()
+            // Act
+            model.uiState.value.onStartClick()
+            advanceUntilIdle()
 
-                // Assert
-                val state = model.uiState.value
-                assertThat(state.overlay).isInstanceOf(PolymarketOnboardingUM.Overlay.RegionRestrictions::class.java)
-                assertThat(state.isStarting).isFalse()
-                verify(exactly = 0) { runOnboardingUseCase(userWalletId) }
-                model.onDestroy()
-            }
+            // Assert
+            val state = model.uiState.value
+            assertThat(state.overlay).isInstanceOf(PolymarketOnboardingUM.Overlay.RegionRestrictions::class.java)
+            assertThat(state.isStarting).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the region overlay is raised WHEN dismissed THEN it closes AND nothing is navigated`() = runTest {
+            // Arrange
+            owesOnboarding()
+            every { runOnboardingUseCase(userWalletId) } returns flowOf(
+                PolymarketOnboardingProgress.Failed(
+                    error = PolymarketOnboardingError.RegionBlocked,
+                    isRetryable = false,
+                ),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.uiState.value.onStartClick()
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value.overlay as PolymarketOnboardingUM.Overlay.RegionRestrictions).onDismiss()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.overlay).isNull()
+            verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+            model.onDestroy()
+        }
     }
 
     @Test
