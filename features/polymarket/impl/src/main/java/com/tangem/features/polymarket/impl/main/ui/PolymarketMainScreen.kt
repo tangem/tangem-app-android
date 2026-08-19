@@ -7,54 +7,48 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.fade.TangemFade
-import com.tangem.core.ui.ds2.loader.TangemLoader
-import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
+import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
+import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
+import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
+import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
+import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
@@ -68,9 +62,6 @@ private const val TAB_BAND_INDEX = 1
 private const val KEY_HEADER = "header"
 private const val KEY_TAB_BAND = "tab_band"
 private const val KEY_STATUS = "status"
-
-/** How many items before the end of the feed the next page starts loading. */
-private const val LOAD_MORE_THRESHOLD = 5
 
 /** Fixed height of the category tab band: 40dp pills + 8dp vertical padding. */
 private val TabBandHeight = 56.dp
@@ -86,6 +77,7 @@ private val TabRimBrush = Brush.verticalGradient(
 internal fun PolymarketMainScreen(
     state: PolymarketMainUM,
     onBackClick: () -> Unit,
+    onSearchClick: () -> Unit,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -103,8 +95,45 @@ internal fun PolymarketMainScreen(
         derivedStateOf { hasCategories && listState.isTabBandPinned() }
     }
 
-    LoadMoreEffect(listState = listState, onLoadMore = onLoadMore)
+    PolymarketLoadMoreEffect(listState = listState, onLoadMore = onLoadMore)
 
+    // The feature lives inside a modal — a separate window whose LocalHazeState belongs to the root
+    // window, where haze cannot sample from here. A local provider keeps the source and the glass of
+    // this screen in one window.
+    ProvideHaze {
+        Box(modifier = modifier.fillMaxSize()) {
+            PolymarketMainScaffold(
+                state = state,
+                listState = listState,
+                tabRowState = tabRowState,
+                isTabBandPinned = isTabBandPinned,
+                onBackClick = onBackClick,
+            )
+
+            // A sibling of the whole scaffold: the scaffold marks its content as the haze source, and
+            // glass inside its own source has nothing to sample.
+            PolymarketSearchBar(
+                placeholder = stringReference("Search"),
+                onClick = onSearchClick,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+    }
+}
+
+@Composable
+@Suppress("LongParameterList")
+private fun PolymarketMainScaffold(
+    state: PolymarketMainUM,
+    listState: LazyListState,
+    tabRowState: LazyListState,
+    isTabBandPinned: Boolean,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     TangemTopBarScaffold(
         modifier = modifier,
         topBar = {
@@ -170,7 +199,8 @@ private fun FeedList(
         state = listState,
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding() + 16.dp,
+            // The feed scrolls under the floating search bar; the clearance keeps the last card visible.
+            bottom = contentPadding.calculateBottomPadding() + PolymarketSearchBarClearance,
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -199,10 +229,13 @@ private fun FeedList(
 private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM) {
     when (content) {
         is PolymarketMainUM.ContentUM.Loading -> item(key = KEY_STATUS) {
-            LoadingState()
+            PolymarketLoadingState()
         }
         is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
-            EventsErrorState(onReloadClick = content.onReloadClick)
+            PolymarketReloadPrompt(
+                text = resourceReference(R.string.prediction_main_events_load_error),
+                onReloadClick = content.onReloadClick,
+            )
         }
         is PolymarketMainUM.ContentUM.Content -> {
             items(
@@ -219,30 +252,10 @@ private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM) {
 
             if (content.isLoadingNextPage) {
                 item(key = KEY_STATUS) {
-                    NextPageLoader()
+                    PolymarketNextPageLoader()
                 }
             }
         }
-    }
-}
-
-/**
- * Asks for the next page once the feed is scrolled within [LOAD_MORE_THRESHOLD] items of its end. The model
- * decides whether there is anything left to load, so this only has to fire on approach.
- */
-@Composable
-private fun LoadMoreEffect(listState: LazyListState, onLoadMore: () -> Unit) {
-    val currentOnLoadMore by rememberUpdatedState(onLoadMore)
-    val shouldLoadMore by remember(listState) {
-        derivedStateOf {
-            val totalItems = listState.layoutInfo.totalItemsCount
-            val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-            lastVisibleIndex != null && totalItems > 0 && lastVisibleIndex >= totalItems - LOAD_MORE_THRESHOLD
-        }
-    }
-
-    LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) currentOnLoadMore()
     }
 }
 
@@ -324,74 +337,6 @@ private fun CategoryTab(tab: PolymarketCategoryTabUM) {
     }
 }
 
-@Composable
-private fun LoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 160.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        TangemLoader(
-            color = TangemTheme.colors3.icon.primary,
-            size = TangemLoaderSize.X32,
-        )
-    }
-}
-
-@Composable
-private fun NextPageLoader(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        TangemLoader(
-            color = TangemTheme.colors3.icon.primary,
-            size = TangemLoaderSize.X24,
-        )
-    }
-}
-
-/**
- * The events could not be served. One and the same prompt covers a failed request and a category that came
- * back empty — from the user's side both mean "there is nothing here, try again".
- */
-@Composable
-private fun EventsErrorState(onReloadClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(role = Role.Button, onClick = onReloadClick)
-            .padding(vertical = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.inverse),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = rememberVectorPainter(Icons.ic_arrow_refresh_20),
-                contentDescription = null,
-                tint = TangemTheme.colors3.icon.inverse,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = stringResourceSafe(R.string.prediction_main_events_load_error),
-            color = TangemTheme.colors3.text.secondary,
-            style = TangemTheme.typography3.subheading.medium,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
 @Preview(name = "Content Light", showBackground = true, widthDp = 360)
 @Preview(
     name = "Content Dark",
@@ -411,6 +356,7 @@ private fun PolymarketMainScreenContentPreview() {
                 ),
             ),
             onBackClick = {},
+            onSearchClick = {},
             onLoadMore = {},
         )
     }
@@ -427,7 +373,10 @@ private fun PolymarketMainScreenContentPreview() {
 private fun PolymarketMainScreenErrorPreview() {
     TangemThemePreviewRedesign {
         Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            EventsErrorState(onReloadClick = {})
+            PolymarketReloadPrompt(
+                text = resourceReference(R.string.prediction_main_events_load_error),
+                onReloadClick = {},
+            )
         }
     }
 }
