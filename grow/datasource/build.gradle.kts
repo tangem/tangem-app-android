@@ -28,6 +28,7 @@ dependencies {
     api(projects.core.remote)
     api(projects.core.utils)
     api(projects.domain.models)
+    implementation(projects.domain.staking.models)
 
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)

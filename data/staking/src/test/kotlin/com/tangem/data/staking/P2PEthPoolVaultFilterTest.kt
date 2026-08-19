@@ -2,11 +2,11 @@ package com.tangem.data.staking
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.ethpool.P2PEthPoolApi
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolNetworkDTO
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolVaultDTO
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolVaultsResponse
+import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolNetworkDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
