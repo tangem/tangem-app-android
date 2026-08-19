@@ -50,6 +50,7 @@ internal class ActivatePlasticCardUseCaseTest {
     fun resetMocks() {
         clearMocks(orderRepository, startTangemPayOrderPollingUseCase, paymentAccountStatusFetcher)
         coEvery { paymentAccountStatusFetcher.invoke(any<UserWalletId>()) } returns Unit.right()
+        coEvery { paymentAccountStatusFetcher.markCardActivating(any(), any()) } returns Unit
     }
 
     @Test
@@ -74,6 +75,9 @@ internal class ActivatePlasticCardUseCaseTest {
         // Assert
         assertThat(result).isEqualTo(Unit.right())
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+        coVerify(exactly = 1) {
+            paymentAccountStatusFetcher.markCardActivating(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+        }
         coVerify(exactly = 1) {
             startTangemPayOrderPollingUseCase(
                 order = TangemPayOrderInfo.fromOrder(created),
