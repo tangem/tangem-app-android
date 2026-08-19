@@ -4,6 +4,13 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteFeesResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
@@ -696,6 +703,90 @@ internal class DefaultPolymarketRepositoryTest {
         return JavaBase64.getUrlEncoder().encodeToString(mac.doFinal(message.toByteArray(Charsets.UTF_8)))
     }
 
+    @Test
+    fun `GIVEN a priced quote WHEN getOrderQuote THEN the figures arrive as the exchange stated them`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns ApiResponse.Success(quoteResponse())
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        val quote = result.getOrNull()!!
+        assertThat(quote.status).isEqualTo(PredictionQuoteStatus.FULL)
+        assertThat(quote.shares).isEqualTo(BigDecimal("40.81632"))
+        assertThat(quote.notional).isEqualTo(BigDecimal("2.00"))
+        assertThat(quote.total).isEqualTo(BigDecimal("2.05000"))
+        assertThat(quote.worstCasePrice).isEqualTo(BigDecimal("0.049"))
+        assertThat(quote.isLive).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an unreadable amount WHEN getOrderQuote THEN it fails instead of escaping as an exception`() =
+        runTest {
+            // Arrange — safeApiCall recovers a raise, not a throw, so an unparsable figure would otherwise
+            coEvery { api.getOrderQuote(request = any()) } returns
+                ApiResponse.Success(quoteResponse(shares = "not-a-number"))
+
+            // Act
+            val result = repository.getOrderQuote(request = quoteRequest())
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PredictionOrderQuoteError.Unknown::class.java)
+        }
+
+    @Test
+    fun `GIVEN a quote request WHEN getOrderQuote THEN the market and the outcome are sent as asked`() = runTest {
+        // Arrange
+        val body = slot<PolymarketOrderQuoteRequest>()
+        coEvery { api.getOrderQuote(request = capture(body)) } returns ApiResponse.Success(quoteResponse())
+
+        // Act
+        repository.getOrderQuote(request = quoteRequest())
+
+        // Assert — a swapped market and outcome would quote the opposite bet instead of failing
+        assertThat(body.captured.marketId).isEqualTo("2944989")
+        assertThat(body.captured.assetId).isEqualTo("1116047")
+    }
+
+    @Test
+    fun `GIVEN a refusal from the endpoint WHEN getOrderQuote THEN the status survives for the poller`() = runTest {
+        // Arrange — a deterministic 400 repeats on every tick, unlike a transient 5xx
+        coEvery { api.getOrderQuote(request = any()) } returns httpError(Code.BAD_REQUEST, body = "bad amount")
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull())
+            .isEqualTo(PredictionOrderQuoteError.Unknown(httpCode = 400, detail = "bad amount"))
+    }
+
+    @Test
+    fun `GIVEN an unclassifiable failure WHEN getOrderQuote THEN its cause is carried`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns
+            (ApiResponse.Error(ApiResponseError.UnknownException(IllegalStateException("boom"))) as ApiResponse<PolymarketOrderQuoteResponse>)
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Unknown(httpCode = null, detail = "boom"))
+    }
+
+    @Test
+    fun `GIVEN no connection WHEN getOrderQuote THEN the failure keeps its kind`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns networkError()
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Network)
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> httpError(code: Code, body: String?): ApiResponse<T> =
         ApiResponse.Error(
@@ -712,6 +803,36 @@ internal class DefaultPolymarketRepositoryTest {
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
+        fun quoteRequest() = PredictionOrderQuoteRequest(
+            marketId = "2944989",
+            assetId = "1116047",
+            side = PredictionOrderSide.BUY,
+            amount = BigDecimal("2"),
+            slippagePercent = BigDecimal("3"),
+        )
+
+        fun quoteResponse(
+            shares: String = "40.81632",
+            status: String = "FULL",
+            notional: String = "2.00",
+            worstCasePrice: String = "0.049",
+            total: String = "2.05000",
+        ) = PolymarketOrderQuoteResponse(
+            status = status,
+            side = "BUY",
+            shares = shares,
+            notional = notional,
+            expectedExecutionAmount = "41.66666",
+            averagePrice = "0.048",
+            worstCasePrice = worstCasePrice,
+            fees = PolymarketOrderQuoteFeesResponse(market = "0.00000", builder = "0.05000", total = "0.05000"),
+            total = total,
+            builderCode = "0xbuilder",
+            minOrderSize = "5",
+            tickSize = "0.001",
+            isLive = false,
+        )
+
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
             apiKey = "k",
             secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",

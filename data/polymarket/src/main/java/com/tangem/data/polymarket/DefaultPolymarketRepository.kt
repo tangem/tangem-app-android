@@ -10,12 +10,14 @@ import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
 import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
+import com.tangem.data.polymarket.converter.PredictionOrderQuoteConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.pagination.PolymarketEventsBatchFetcher
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
@@ -41,11 +43,15 @@ import com.tangem.domain.polymarket.model.PolymarketSearchConfig
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import javax.inject.Inject
@@ -153,6 +159,25 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 onError = { eventErrorResolver.resolve(it).left() },
             )
         }
+
+    override suspend fun getOrderQuote(
+        request: PredictionOrderQuoteRequest,
+    ): Either<PredictionOrderQuoteError, PredictionOrderQuote> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val response = polymarketApi.getOrderQuote(
+                    request = PredictionOrderQuoteConverter.toRequestBody(request = request),
+                ).bind()
+
+                Either.catch { PredictionOrderQuoteConverter.convert(value = response) }
+                    .mapLeft { error ->
+                        TangemLogger.e("Unreadable order quote", error)
+                        PredictionOrderQuoteError.Unknown(httpCode = null, detail = error.message)
+                    }
+            },
+            onError = { it.toQuoteError().left() },
+        )
+    }
 
     override suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState> =
         withContext(dispatchers.io) {
@@ -309,6 +334,21 @@ internal class DefaultPolymarketRepository @Inject constructor(
             )
         }
         .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
+
+    /**
+     * A quote is re-requested on a timer, so the caller mostly needs to know whether waiting for the next tick
+     * can help. Only the transport failures promise that; an HTTP refusal carries its status so a deterministic
+     * one — a rejected request body, say — can be told apart from a server that is merely unwell.
+     */
+    private fun ApiResponseError.toQuoteError(): PredictionOrderQuoteError = when (this) {
+        is ApiResponseError.NetworkException,
+        is ApiResponseError.TimeoutException,
+        -> PredictionOrderQuoteError.Network
+        is ApiResponseError.HttpException ->
+            PredictionOrderQuoteError.Unknown(httpCode = code.numericCode, detail = errorBody)
+        is ApiResponseError.UnknownException ->
+            PredictionOrderQuoteError.Unknown(httpCode = null, detail = cause.message ?: message)
+    }
 
     private companion object {
 
