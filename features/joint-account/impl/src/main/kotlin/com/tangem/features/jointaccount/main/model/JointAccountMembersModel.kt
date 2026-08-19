@@ -47,6 +47,9 @@ internal class JointAccountMembersModel @Inject constructor(
     private fun createStubState(): JointAccountMembersUM {
         val isInviteMode = params.mode == JointAccountMembersComponent.Mode.Invite
         val canInvite = isInviteMode && params.isCreator
+        // TODO([REDACTED_TASK_KEY]): the real gate is stricter than inviting — every slot is filled and the account
+        //  is `confirming`; both arrive with domain integration
+        val canActivate = isInviteMode && params.isCreator
 
         val creatorAvatar = JointAccountMembersUM.MemberAvatarUM(
             monogram = "I",
@@ -89,9 +92,7 @@ internal class JointAccountMembersModel @Inject constructor(
             members = (listOf(creator) + freeSlots).toImmutableList(),
             otherMembersLabel = if (freeSlots.isNotEmpty()) stringReference("Other members") else null,
             canArchive = isInviteMode,
-            // TODO([REDACTED_TASK_KEY]): on the stubbed state the action is gated by the creator flag only; the real
-            //  gate — every slot is filled and the account is `confirming` — arrives with domain integration
-            activation = if (canInvite) {
+            activation = if (canActivate) {
                 JointAccountMembersUM.ActivationUM(
                     onActivateClick = ::onActivateClick,
                     confirmation = null,
