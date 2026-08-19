@@ -84,58 +84,75 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 confirmedAmount = BigDecimal("22.54"),
                 totalEarnedAmount = BigDecimal("132.15"),
                 currency = "USD",
-                previousPayout = TangemPayCashback.PreviousPayout(
-                    endDate = DateTime.parse("2026-06-05"),
-                    amount = BigDecimal("18.00"),
-                ),
                 period = TangemPayCashback.Period(
                     year = 2026,
                     month = 6,
                     payoutStart = DateTime.parse("2026-07-02"),
                     payoutEnd = DateTime.parse("2026-07-05"),
                 ),
+                previousPayout = TangemPayCashback.PreviousPayout(
+                    endDate = DateTime.parse("2026-06-05"),
+                    amount = BigDecimal("18.00"),
+                ),
             ),
         )
 
         val MOCK_PROMOTIONS = CashbackPromotions(
-            cardTiers = listOf(
-                CashbackPromotions.CardTier(
-                    tier = "basic",
-                    label = "Basic",
-                    scope = "All purchases",
+            cards = listOf(
+                CashbackPromotions.CardPromotion(
+                    cardType = "basic",
+                    title = "Basic Card",
+                    cashbackRate = BigDecimal("1.0"),
                     minTransactionAmount = BigDecimal("30"),
-                    monthlyCapAmount = BigDecimal("100"),
+                    promotionId = "2553142c-19b2-4843-b39d-7882e0b8a6e7",
                 ),
-                CashbackPromotions.CardTier(
-                    tier = "plus",
-                    label = "Plus",
-                    scope = "All purchases",
+                CashbackPromotions.CardPromotion(
+                    cardType = "plus",
+                    title = "Plus Card",
+                    cashbackRate = BigDecimal("2.0"),
                     minTransactionAmount = BigDecimal("30"),
-                    monthlyCapAmount = BigDecimal("300"),
+                    promotionId = "997d42ca-892c-4918-92ef-f852d1feb2c4",
                 ),
             ),
-            monthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"),
+            accountMonthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("300"), currency = "USD"),
             additionalCashback = listOf(
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-permanent",
+                    cardType = null,
                     name = "Groceries increase",
                     description = "+1% cashback for groceries stores",
-                    isPermanent = true,
                     endDate = null,
+                    promoCap = null,
+                    minTransactionAmount = null,
+                    priority = 99,
                 ),
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-groceries-2026",
+                    cardType = "plus",
                     name = "Groceries increase",
                     description = "+1% cashback for groceries stores. Max \$10/month",
-                    isPermanent = false,
                     endDate = DateTime.parse("2026-09-26"),
+                    promoCap = CashbackPromotions.PromoCap(
+                        amount = BigDecimal("10"),
+                        period = CashbackPromotions.PromoCap.Period.MONTHLY,
+                        currency = "USD",
+                    ),
+                    minTransactionAmount = BigDecimal("30"),
+                    priority = 98,
                 ),
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-cashback-2026",
+                    cardType = "basic",
                     name = "Cashback increase",
-                    description = "+2% cashback for groceries stores. Max \$10/month",
-                    isPermanent = false,
+                    description = null,
                     endDate = DateTime.parse("2026-09-26"),
+                    promoCap = CashbackPromotions.PromoCap(
+                        amount = BigDecimal("20"),
+                        period = CashbackPromotions.PromoCap.Period.MONTHLY,
+                        currency = "USD",
+                    ),
+                    minTransactionAmount = null,
+                    priority = 50,
                 ),
             ),
         )
