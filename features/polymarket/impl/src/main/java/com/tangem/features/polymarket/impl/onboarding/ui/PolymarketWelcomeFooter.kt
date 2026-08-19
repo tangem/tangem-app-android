@@ -30,7 +30,7 @@ import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboard
  */
 @Composable
 internal fun PolymarketWelcomeFooter(
-    state: PolymarketOnboardingUM,
+    state: PolymarketOnboardingUM.Welcome,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
