@@ -223,12 +223,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openAddFunds() {
-        val loaded = currentStatus.value.ifLoadedOrNull { it }
-        if (loaded == null || !loaded.canAddFunds(tangemPayFeatureToggles.isAccountMultichainEnabled)) {
+        val status = currentStatus.value
+        val balance = status.balanceOrNull()
+        if (balance == null || !status.value.canAddFunds(tangemPayFeatureToggles.isAccountMultichainEnabled)) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
             return
         }
-        val balance = loaded.balance
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.AddFunds(
                 walletId = userWalletId,
@@ -236,7 +236,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 cryptoBalance = balance.availableForWithdrawal,
                 depositAddress = balance.cryptoBalance.depositAddress,
                 cryptoCurrency = cryptoCurrency,
-                virtualAccountOnramp = loaded.virtualAccount,
+                virtualAccountOnramp = status.ifLoadedOrNull { it.virtualAccount },
             ),
         )
     }
@@ -437,10 +437,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickReceive(data: TangemPayTopUpData) {
         analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
-        val loaded = currentStatus.value.ifLoadedOrNull { it }
-        val shouldChooseNetwork = loaded != null &&
-            shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, loaded.networks)
-        if (shouldChooseNetwork) {
+        val networks = currentStatus.value.networksOrNull().orEmpty()
+        if (shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, networks)) {
             bottomSheetNavigation.activate(TangemPayDetailsNavigation.ChooseNetwork(walletId = data.walletId))
         } else {
             val config = TokenReceiveConfig(
