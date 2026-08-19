@@ -7,10 +7,10 @@ import arrow.core.right
 import com.tangem.data.addressbook.store.AddressBookBlobStore
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.ETagsStore
-import com.tangem.datasource.api.addressbook.AddressBookApi
-import com.tangem.datasource.api.addressbook.models.SyncAddressBooksRequest
-import com.tangem.datasource.api.addressbook.models.SyncAddressBooksResponse
-import com.tangem.datasource.api.addressbook.models.UpdateAddressBookRequest
+import com.tangem.store.datasource.addressbook.AddressBookApi
+import com.tangem.store.datasource.addressbook.models.SyncAddressBooksRequest
+import com.tangem.store.datasource.addressbook.models.SyncAddressBooksResponse
+import com.tangem.store.datasource.addressbook.models.UpdateAddressBookRequest
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.addressbook.crypto.AddressBookCipher
