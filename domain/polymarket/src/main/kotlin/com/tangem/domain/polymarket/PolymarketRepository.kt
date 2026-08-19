@@ -12,6 +12,8 @@ import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
@@ -31,6 +33,15 @@ interface PolymarketRepository {
      * flow reports the failure, so a single hiccup doesn't surface as an error state (see the Discovery contract).
      */
     fun getEventsBatchFlow(context: PolymarketEventsBatchingContext, batchSize: Int): PolymarketEventsBatchFlow
+
+    /**
+     * Serve full-text search over discoverable events as a paginated batch flow, page size [batchSize].
+     *
+     * Unlike the feed, an empty first page is a valid result — "nothing found" is an answer, not a failure —
+     * and a failed page is not retried silently: a search-as-you-type user is better served by a fast error
+     * (or the next keystroke) than by a hidden retry.
+     */
+    fun searchEventsBatchFlow(context: PolymarketSearchBatchingContext, batchSize: Int): PolymarketSearchBatchFlow
 
     /**
      * Fetch the details of a single prediction event, carrying all of its markets
