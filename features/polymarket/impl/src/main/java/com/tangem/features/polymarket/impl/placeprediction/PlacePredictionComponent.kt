@@ -13,11 +13,13 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.placeprediction.amount.PlacePredictionAmountComponent
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
 import com.tangem.features.polymarket.impl.placeprediction.status.PlacePredictionStatusComponent
 import com.tangem.features.polymarket.impl.placeprediction.summary.PlacePredictionSummaryComponent
 
@@ -38,6 +40,12 @@ internal class PlacePredictionComponent(
         stackNavigation = stackNavigation,
         popCallback = { onChildBack() },
     )
+
+    /**
+
+     * resolving its own would get a second, empty flow state rather than this one.
+     */
+    private val model: PlacePredictionModel = getOrCreateModel(params = params, router = innerRouter)
 
     private val childStack = childStack(
         key = "placePredictionStack",
@@ -70,9 +78,9 @@ internal class PlacePredictionComponent(
         configuration: PlacePredictionRoute,
         factoryContext: AppComponentContext,
     ): ComposableContentComponent = when (configuration) {
-        is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(factoryContext, params)
-        is PlacePredictionRoute.Summary -> PlacePredictionSummaryComponent(factoryContext)
-        is PlacePredictionRoute.Status -> PlacePredictionStatusComponent(factoryContext)
+        is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(factoryContext, model)
+        is PlacePredictionRoute.Summary -> PlacePredictionSummaryComponent(factoryContext, model)
+        is PlacePredictionRoute.Status -> PlacePredictionStatusComponent(factoryContext, model)
     }
 
     private fun onChildBack() {
