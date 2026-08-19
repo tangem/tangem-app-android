@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
@@ -52,6 +53,7 @@ internal class TangemPayCashbackModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val cashbackRepository: CashbackRepository = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun setup() {
@@ -250,6 +252,7 @@ internal class TangemPayCashbackModelTest {
         urlOpener = urlOpener,
         cashbackRepository = cashbackRepository,
         onboardingRepository = onboardingRepository,
+        analytics = analytics,
     )
 
     private fun TangemPayCashbackModel.content(): TangemPayCashbackScreenUM.Content =
