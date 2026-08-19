@@ -333,6 +333,9 @@ include(":features:rating:impl")
 include(":features:stories:api")
 include(":features:stories:impl")
 
+include(":features:stories-v2:api")
+include(":features:stories-v2:impl")
+
 include(":features:survey:api")
 include(":features:survey:impl")
 
