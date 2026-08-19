@@ -15,6 +15,7 @@ import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.WalletRegistrationError
@@ -49,6 +50,7 @@ class DefaultWalletRegistrarTest {
     private val nonceDecryptor: AuthNonceDecryptor = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
+    private val attestationProvider: AttestationProvider = mockk()
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -83,7 +85,7 @@ class DefaultWalletRegistrarTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor)
+        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
@@ -92,12 +94,14 @@ class DefaultWalletRegistrarTest {
         // The registrar base64url-decodes the nonce before handing it to the signer; the signer
         // fakes ignore the bytes, so any fixed value works here.
         every { android.util.Base64.decode(any<String>(), any()) } returns ByteArray(size = 16) { 7 }
+        coEvery { attestationProvider.getAttestationToken(any()) } returns null
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
@@ -127,6 +131,20 @@ class DefaultWalletRegistrarTest {
         assertThat(request.cardSignatureSalt).isNull()
         assertThat(request.walletStatus).isNull()
         assertThat(request.attestationToken).isNull()
+    }
+
+    @Test
+    fun `register attaches attestation token from provider to the wallet request`() = runTest {
+        stubHappyPath() // decryptNonce("abc") returns "decrypted"
+        coEvery { attestationProvider.getAttestationToken("decrypted") } returns "attest-token"
+        val slot = slot<WalletRegistrationRequest>()
+        coEvery { authApi.registerWallet(capture(slot)) } returns tokenSuccess()
+
+        val result = registrar.register(WALLET_ID, mobileSigner)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.attestationToken).isEqualTo("attest-token")
+        coVerify { attestationProvider.getAttestationToken("decrypted") }
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.lib.auth.AuthFeatureToggles
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.devicekey.internal.DefaultDeviceKeyManager
 import com.tangem.lib.auth.devicekey.internal.DisabledDeviceKeyManager
@@ -153,6 +154,7 @@ internal object AuthModule {
         deviceKeyManager: DeviceKeyManager,
         nonceDecryptor: AuthNonceDecryptor,
         signedRequestPayload: SignedRequestPayload,
+        attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
         dispatchers: CoroutineDispatcherProvider,
     ): SessionTokenRefresher {
@@ -164,6 +166,7 @@ internal object AuthModule {
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             clock = Clock.System,
             dispatchers = dispatchers,
@@ -180,6 +183,7 @@ internal object AuthModule {
         deviceKeyManager: DeviceKeyManager,
         nonceDecryptor: AuthNonceDecryptor,
         signedRequestPayload: SignedRequestPayload,
+        attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
@@ -192,6 +196,7 @@ internal object AuthModule {
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
@@ -208,6 +213,7 @@ internal object AuthModule {
         deviceKeyManager: DeviceKeyManager,
         nonceDecryptor: AuthNonceDecryptor,
         signedRequestPayload: SignedRequestPayload,
+        attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
@@ -220,6 +226,7 @@ internal object AuthModule {
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
