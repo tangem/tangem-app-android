@@ -153,9 +153,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
 
     /** Guarded: the likeliest reason to be here is that the store itself failed, and this asks it to write again. */
     private suspend fun markUnrefreshed(userWalletId: UserWalletId) {
-        runSuspendCatching {
-            statusStore.updateStatusSource(userWalletId = userWalletId, source = StatusSource.ONLY_CACHE)
-        }.onFailure { logger.e("Failed to mark the prediction account of $userWalletId as un-refreshed", it) }
+        runSuspendCatching { statusStore.markUnrefreshed(userWalletId = userWalletId) }
+            .onFailure { logger.e("Failed to mark the prediction account of $userWalletId as un-refreshed", it) }
     }
 
     private companion object {
