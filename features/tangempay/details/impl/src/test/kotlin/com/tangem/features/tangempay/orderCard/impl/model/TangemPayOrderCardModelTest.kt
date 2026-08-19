@@ -93,37 +93,60 @@ internal class TangemPayOrderCardModelTest {
     }
 
     @Test
-    fun `GIVEN a delivering card WHEN onShowOrderedCard THEN opens the card page on it`() = runTest {
-        // Arrange
-        givenCards(card(id = "virtual", state = TangemPayCardState.Active), card(id = "plastic", state = TangemPayCardState.Delivering))
+    fun `GIVEN the ordered product instance WHEN onShowOrderedCard THEN opens the card page on that card`() =
+        runTest {
+            // Arrange
+            givenCards(
+                card(id = "virtual", state = TangemPayCardState.Active),
+                card(id = "plastic", state = TangemPayCardState.Delivering),
+            )
 
-        // Act
-        val model = createModel(testScope = this)
-        model.onShowOrderedCard()
-        advanceUntilIdle()
+            // Act
+            val model = createModel(testScope = this)
+            model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
+            advanceUntilIdle()
 
-        // Assert
-        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
-        verify(exactly = 1) {
-            router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = "plastic"))
+            // Assert
+            coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
+            verify(exactly = 1) {
+                router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = "plastic"))
+            }
+            verify(exactly = 0) { router.pop() }
         }
-        verify(exactly = 0) { router.pop() }
-    }
 
     @Test
-    fun `GIVEN no delivering card yet WHEN onShowOrderedCard THEN falls back to the first card`() = runTest {
+    fun `GIVEN the order carries no product instance WHEN onShowOrderedCard THEN opens the delivering card`() =
+        runTest {
+            // Arrange
+            givenCards(
+                card(id = "virtual", state = TangemPayCardState.Active),
+                card(id = "plastic", state = TangemPayCardState.Delivering),
+            )
+
+            // Act
+            val model = createModel(testScope = this)
+            model.onShowOrderedCard(orderedProductInstanceId = null)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = "plastic"))
+            }
+        }
+
+    @Test
+    fun `GIVEN the ordered card is not provisioned yet WHEN onShowOrderedCard THEN closes the flow`() = runTest {
         // Arrange
         givenCards(card(id = "virtual", state = TangemPayCardState.Active))
 
         // Act
         val model = createModel(testScope = this)
-        model.onShowOrderedCard()
+        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) {
-            router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = "virtual"))
-        }
+        verify(exactly = 1) { router.pop() }
+        verify(exactly = 0) { router.replaceCurrent(any()) }
     }
 
     @Test
@@ -133,7 +156,7 @@ internal class TangemPayOrderCardModelTest {
 
         // Act
         val model = createModel(testScope = this)
-        model.onShowOrderedCard()
+        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
         advanceUntilIdle()
 
         // Assert
@@ -148,8 +171,8 @@ internal class TangemPayOrderCardModelTest {
 
         // Act
         val model = createModel(testScope = this)
-        model.onShowOrderedCard()
-        model.onShowOrderedCard()
+        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
+        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
         advanceUntilIdle()
 
         // Assert
@@ -166,9 +189,14 @@ internal class TangemPayOrderCardModelTest {
         every { paymentAccountStatusSupplier(WALLET_ID) } returns flowOf(loadedStatus)
     }
 
-    private fun card(id: String, state: TangemPayCardState): TangemPayCard = mockk(relaxed = true) {
+    private fun card(
+        id: String,
+        state: TangemPayCardState,
+        productInstanceId: String = "pi-$id",
+    ): TangemPayCard = mockk(relaxed = true) {
         every { this@mockk.id } returns id
         every { this@mockk.state } returns state
+        every { this@mockk.productInstanceId } returns productInstanceId
     }
 
     private fun createModel(testScope: TestScope) = TangemPayOrderCardModel(
