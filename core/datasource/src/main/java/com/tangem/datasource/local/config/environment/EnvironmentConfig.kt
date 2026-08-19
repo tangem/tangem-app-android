@@ -38,4 +38,5 @@ data class EnvironmentConfig(
     @Transient
     val surveySparrowSwapRating: SurveySparrowSwapRatingConfig? = null,
     val authServiceKey: String? = null,
+    val otlpApiKey: String? = null,
 )
