@@ -2,22 +2,17 @@ package com.tangem.features.polymarket.impl.main.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import kotlinx.collections.immutable.ImmutableList
 
 /**
  * State of the Discovery feed screen.
  *
- * @property accessMode what the user may do here. Nothing on this screen reads it yet — the feed looks the
- *  same in every region. It is carried so the account screen, which renders the region-restrictions banner,
- *  inherits it without re-deriving the decision.
  * @property categories category tabs, shown above [content] and kept visible while the events of the selected
  *  category reload or fail. Empty when the backend could not serve them — the feed then runs unfiltered.
- * @property content the events area, which changes independently of [accessMode] and [categories]
+ * @property content the events area, which changes independently of [categories]
  */
 @Immutable
 internal data class PolymarketMainUM(
-    val accessMode: PolymarketAccessMode,
     val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
 ) {

@@ -53,7 +53,6 @@ internal class PolymarketMainModel @Inject constructor(
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
             PolymarketMainUM(
-                accessMode = params.accessMode,
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
             ),
