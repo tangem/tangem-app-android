@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 
@@ -14,6 +15,7 @@ internal class TangemPayCardDetailsBlockStateFactory(
     private val displayName: CardDisplayName?,
     private val isEditingNameEnabled: Boolean,
     private val cardState: TangemPayCardState,
+    private val cardType: TangemPayCardType,
     private val cardImageUrl: String?,
     private val cardBackgroundImageUrl: String?,
     private val onEditNameClick: () -> Unit,
@@ -45,6 +47,7 @@ internal class TangemPayCardDetailsBlockStateFactory(
             },
             shouldShowCardDetailsButtonOnCard = shouldShowCardDetailsButtonOnCard,
             cardState = cardState,
+            cardType = cardType,
             cardImageUrl = cardImageUrl,
             cardBackgroundImageUrl = cardBackgroundImageUrl,
         )
