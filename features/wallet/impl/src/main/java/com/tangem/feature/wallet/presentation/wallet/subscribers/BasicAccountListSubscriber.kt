@@ -42,7 +42,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         expandedAccounts: Set<AccountId>,
         isAccountMode: Boolean,
         isMultipleCardsEnabled: Boolean,
-        isPolymarketEnabled: Boolean = false,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
@@ -59,7 +58,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = isAccountMode,
                 isMultipleCardsEnabled = isMultipleCardsEnabled,
-                isPolymarketEnabled = isPolymarketEnabled,
                 isHotBackedUp = isHotBackedUp,
             ),
         )
