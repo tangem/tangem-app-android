@@ -27,6 +27,7 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
             derivationIndex = account.derivationIndex.value,
             icon = account.icon.value.name,
             iconColor = account.icon.color.name,
+            type = SaveWalletAccountsResponse.TYPE_CRYPTO,
         )
     }
 }
