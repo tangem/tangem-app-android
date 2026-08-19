@@ -13,6 +13,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketEntry
+import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
@@ -54,7 +55,7 @@ internal class PolymarketOnboardingComponentTest {
         // Arrange
         coEvery {
             resolvePolymarketEntryInteractor.withoutPrompting(userWalletId)
-        } returns PolymarketEntry.RegionBlocked.right()
+        } returns PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
         val paramsContainerSlot = slot<ParamsContainer>()
         val appComponentContext = createAppComponentContext(paramsContainerSlot = paramsContainerSlot)
 
