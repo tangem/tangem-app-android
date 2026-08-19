@@ -52,4 +52,4 @@ internal sealed interface TangemPayOrderCardDataScreenUM {
     )
 }
 
-internal enum class OrderFieldError { Required, Invalid }
+internal enum class OrderFieldError { Required, Invalid, NonLatin }
