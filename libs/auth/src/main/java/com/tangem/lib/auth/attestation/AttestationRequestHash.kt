@@ -20,7 +20,7 @@ import java.security.MessageDigest
 object AttestationRequestHash {
 
     fun create(devicePublicKey: ByteArray, nonce: String): String {
-        val nonceBytes = Base64.decode(nonce, Base64.URL_SAFE or Base64.NO_WRAP)
+        val nonceBytes = Base64.decode(nonce, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
         val digest = MessageDigest.getInstance("SHA-256").digest(devicePublicKey + nonceBytes)
         return Base64.encodeToString(digest, Base64.NO_WRAP)
     }
