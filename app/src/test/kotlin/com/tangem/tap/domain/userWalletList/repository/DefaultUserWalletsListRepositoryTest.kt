@@ -19,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.api.TangemSdkManager
@@ -54,6 +55,7 @@ internal class DefaultUserWalletsListRepositoryTest {
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val userWalletSelectedHandler: UserWalletSelectedHandler = mockk(relaxed = true)
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk(relaxed = true)
+    private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase = mockk(relaxed = true)
 
     private val walletA = MockUserWalletFactory.create().copy(walletId = UserWalletId("0011"), name = "Wallet A")
     private val walletB = MockUserWalletFactory.create().copy(walletId = UserWalletId("0022"), name = "Wallet B")
@@ -92,6 +94,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             userWalletSelectedHandler = Lazy { userWalletSelectedHandler },
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
+            getCompletedBackupsUseCase = getCompletedBackupsUseCase,
         )
     }
 
