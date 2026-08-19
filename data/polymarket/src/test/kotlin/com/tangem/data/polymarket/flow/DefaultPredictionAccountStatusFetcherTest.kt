@@ -176,6 +176,20 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
     }
 
+    @Test
+    fun `GIVEN nothing cached WHEN the wallet status fails THEN the failure is recorded`() = runTest {
+        // Arrange
+        val store = createStore(testScope = this)
+        coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+        coEvery { getWalletStatus.invoke(ADDRESSES) } returns PolymarketOnboardingError.Unknown.left()
+
+        // Act
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
+    }
+
     internal data class StatusTestModel(
         val status: PolymarketWalletStatus,
         val expected: PredictionAccountStatusValue,
