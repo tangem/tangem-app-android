@@ -223,6 +223,7 @@ internal class ActivateCampaignsModel @Inject constructor(
                     is Account.Payment,
                     is Account.Virtual,
                     is Account.Prediction,
+                    is Account.Joint,
                     -> null
                 }
             } else {

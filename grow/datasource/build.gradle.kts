@@ -23,8 +23,12 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
+    implementation(tangemDeps.card.core)
+
     api(projects.core.remote)
     api(projects.core.utils)
+    api(projects.domain.models)
+    implementation(projects.domain.staking.models)
 
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)

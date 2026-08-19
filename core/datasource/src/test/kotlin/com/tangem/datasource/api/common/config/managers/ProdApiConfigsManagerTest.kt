@@ -16,9 +16,6 @@ import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
-import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
-import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
@@ -40,8 +37,6 @@ import java.util.TimeZone
 internal class ProdApiConfigsManagerTest {
 
     private val environmentConfig = createMockEnvironmentConfig()
-    private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
-    private val p2pEthPoolAuthProvider = mockk<P2PEthPoolAuthProvider>()
     private val appAuthProvider = mockk<AuthProvider>()
     private val appInfoProvider = mockk<AppInfoProvider>()
     private val tangemApiKeyProvider = mockk<ProviderSuspend<String>>()
@@ -51,14 +46,11 @@ internal class ProdApiConfigsManagerTest {
     @BeforeEach
     fun setup() {
         clearMocks(
-            stakeKitAuthProvider,
             appAuthProvider,
             appInfoProvider,
         )
 
         every { appInfoProvider.appVersion } returns VERSION_NAME
-        every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
-        every { p2pEthPoolAuthProvider.getApiKey() } returns P2P_API_KEY
         every { appAuthProvider.getApiKey(any()) } returns tangemApiKeyProvider
         coEvery { tangemApiKeyProvider.invoke() } returns TANGEM_API_KEY
         coEvery { appAuthProvider.getCardId() } returns APP_CARD_ID
@@ -95,8 +87,6 @@ internal class ProdApiConfigsManagerTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = appInfoProvider,
             ),
-            StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
-            P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
             News(
                 authProvider = appAuthProvider,
                 appInfoProvider = appInfoProvider,
@@ -114,8 +104,6 @@ internal class ProdApiConfigsManagerTest {
     private fun provideTestModels() = listOf(
         createYieldSupplyModel(),
         createTangemTechModel(),
-        createStakeKitModel(),
-        createP2PModel(),
         createNewsModel(),
         createAuthModel(),
         createPolymarketWebModel(),
@@ -224,41 +212,6 @@ internal class ProdApiConfigsManagerTest {
         )
     }
 
-    private fun createStakeKitModel(): TestModel {
-        return TestModel(
-            id = StakeKit.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.stakek.it/v1/",
-                headers = mapOf(
-                    "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
-                    "accept" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createP2PModel(): TestModel {
-        val (environment, baseUrl) = if (P2PEthPoolStakingConfig.USE_TESTNET) {
-            ApiEnvironment.DEV to "https://api-test.p2p.org/"
-        } else {
-            ApiEnvironment.PROD to "https://api.p2p.org/"
-        }
-
-        return TestModel(
-            id = P2PEthPool.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = baseUrl,
-                headers = mapOf(
-                    "Authorization" to ProviderSuspend { "Bearer $P2P_API_KEY" },
-                    "accept" to ProviderSuspend { "application/json" },
-                    "Content-Type" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
     private fun createNewsModel(): TestModel {
         val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE,
@@ -309,7 +262,6 @@ internal class ProdApiConfigsManagerTest {
         const val VERSION_NAME = "debug"
         const val DEVICE_SCALE = 3f
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
-        const val P2P_API_KEY = "p2p_api_key"
         const val APP_CARD_ID = "app_card_id"
         const val APP_CARD_PUBLIC_KEY = "Bearer app_public_key"
 

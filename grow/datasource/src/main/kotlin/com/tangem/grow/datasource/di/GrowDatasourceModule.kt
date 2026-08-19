@@ -5,10 +5,14 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.grow.datasource.config.Express
 import com.tangem.grow.datasource.config.GaslessTxService
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import com.tangem.grow.datasource.config.MoonPay
+import com.tangem.grow.datasource.config.P2PEthPool
+import com.tangem.grow.datasource.config.StakeKit
+import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
@@ -16,12 +20,15 @@ import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.grow.datasource.onramp.OnrampApi
+import com.tangem.grow.datasource.stakekit.StakeKitApi
+import com.tangem.grow.datasource.stakekit.addStakeKitEnumFallbackAdapters
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
 import javax.inject.Singleton
 
@@ -30,6 +37,7 @@ import javax.inject.Singleton
 internal object GrowDatasourceModule {
 
     private const val TIMEOUT_60_SECONDS = 60L
+    private const val TIMEOUT_90_SECONDS = 90L
 
     @Provides
     @IntoMap
@@ -125,4 +133,60 @@ internal object GrowDatasourceModule {
         shouldApplyTimeoutAnnotations = false,
         shouldUseSessionAuth = false,
     )
+
+    @Provides
+    @IntoMap
+    @StringKey(StakeKit.KEY)
+    fun provideStakeKitConfig(growEnvironmentConfig: GrowEnvironmentConfig): ApiConfig {
+        return StakeKit(growEnvironmentConfig)
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakeKitApi(factory: RetrofitFactory): StakeKitApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = StakeKit.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+                ),
+            ),
+        )
+    }
+
+    @Provides
+    @IntoSet
+    fun provideStakeKitEnumFallbackConfigurer(): NetworkMoshiConfigurer {
+        return NetworkMoshiConfigurer { it.addStakeKitEnumFallbackAdapters() }
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(P2PEthPool.KEY)
+    fun provideP2PEthPoolConfig(growEnvironmentConfig: GrowEnvironmentConfig): ApiConfig {
+        return P2PEthPool(growEnvironmentConfig)
+    }
+
+    @Provides
+    @Singleton
+    fun provideP2PEthPoolApi(factory: RetrofitFactory): P2PEthPoolApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = P2PEthPool.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                timeouts = Timeouts(
+                    callTimeoutSeconds = TIMEOUT_90_SECONDS,
+                    connectTimeoutSeconds = TIMEOUT_90_SECONDS,
+                    readTimeoutSeconds = TIMEOUT_90_SECONDS,
+                    writeTimeoutSeconds = TIMEOUT_90_SECONDS,
+                ),
+            ),
+        )
+    }
 }
