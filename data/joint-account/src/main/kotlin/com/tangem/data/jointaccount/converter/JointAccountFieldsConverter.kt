@@ -12,6 +12,7 @@ internal object JointAccountFieldsConverter {
         "pending" -> JointAccount.Status.PENDING
         "confirming" -> JointAccount.Status.CONFIRMING
         "active" -> JointAccount.Status.ACTIVE
+        "cancelled" -> JointAccount.Status.CANCELLED
         else -> JointAccount.Status.UNKNOWN
     }
 
