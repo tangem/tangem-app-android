@@ -1,7 +1,7 @@
 package com.tangem.data.staking
 
-import com.tangem.datasource.api.stakekit.StakeKitApi
-import com.tangem.datasource.api.stakekit.models.request.SubmitTransactionHashRequestBody
+import com.tangem.grow.datasource.stakekit.StakeKitApi
+import com.tangem.grow.datasource.stakekit.models.request.SubmitTransactionHashRequestBody
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
