@@ -5,7 +5,7 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.staking.StakingBalance

@@ -19,4 +19,5 @@ dependencies {
     api(deps.test.truth)
     api(deps.test.turbine)
     api(deps.moshi)
+    api(deps.kotlin.serialization)
 }

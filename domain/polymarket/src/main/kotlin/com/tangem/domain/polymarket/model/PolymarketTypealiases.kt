@@ -9,3 +9,7 @@ typealias PolymarketEventsBatchingContext = BatchingContext<Int, PolymarketEvent
 typealias PolymarketEventsBatchFlow = BatchFlow<Int, List<PolymarketEvent>, Nothing>
 
 typealias PolymarketEventsBatchListState = BatchListState<Int, List<PolymarketEvent>>
+
+typealias PolymarketSearchBatchingContext = BatchingContext<Int, PolymarketSearchConfig, Nothing>
+
+typealias PolymarketSearchBatchFlow = BatchFlow<Int, List<PolymarketEvent>, Nothing>
