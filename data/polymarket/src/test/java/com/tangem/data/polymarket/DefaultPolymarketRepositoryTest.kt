@@ -24,6 +24,7 @@ import com.tangem.datasource.api.polymarket.models.PolymarketCategoryDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketSearchResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
@@ -35,6 +36,7 @@ import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.domain.polymarket.model.PolymarketSearchConfig
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -222,6 +224,82 @@ internal class DefaultPolymarketRepositoryTest {
             coVerify(exactly = 2) { api.getEvents(category = null, limit = 20, cursor = null) }
             sourceScope.cancel()
         }
+
+    @Test
+    fun `GIVEN result pages WHEN search flow reloaded and scrolled THEN pages are requested by number`() = runTest {
+        // Arrange
+        coEvery { api.searchEvents(query = "uzb", limit = 20, page = 1) } returns ApiResponse.Success(
+            PolymarketSearchResponse(events = listOf(EVENT_DTO), page = 1, total = 2, hasNext = true),
+        )
+        coEvery { api.searchEvents(query = "uzb", limit = 20, page = 2) } returns ApiResponse.Success(
+            PolymarketSearchResponse(events = listOf(EVENT_DTO), page = 2, total = 2, hasNext = false),
+        )
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        val batchFlow = repository.searchEventsBatchFlow(
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketSearchConfig(query = "uzb")))
+        advanceUntilIdle()
+        actions.emit(BatchAction.LoadMore())
+        advanceUntilIdle()
+
+        // Assert
+        val events = batchFlow.state.value.data.flatMap { batch -> batch.data }
+        assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
+        coVerify(exactly = 1) { api.searchEvents(query = "uzb", limit = 20, page = 2) }
+        sourceScope.cancel()
+    }
+
+    @Test
+    fun `GIVEN nothing found WHEN search flow reloaded THEN an empty last page is served without an error`() =
+        runTest {
+            // Arrange
+            coEvery { api.searchEvents(query = "nothing", limit = 20, page = 1) } returns ApiResponse.Success(
+                PolymarketSearchResponse(events = emptyList(), page = 1, total = 0, hasNext = false),
+            )
+            val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
+            val sourceScope = testSourceScope()
+            val batchFlow = repository.searchEventsBatchFlow(
+                context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                batchSize = 20,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = PolymarketSearchConfig(query = "nothing")))
+            advanceUntilIdle()
+
+            // Assert
+            val state = batchFlow.state.value
+            assertThat(state.status).isInstanceOf(PaginationStatus.EndOfPagination::class.java)
+            assertThat(state.data.flatMap { batch -> batch.data }).isEmpty()
+            sourceScope.cancel()
+        }
+
+    @Test
+    fun `GIVEN failing search WHEN search flow reloaded THEN the error is served without a retry`() = runTest {
+        // Arrange
+        coEvery { api.searchEvents(query = "boom", limit = 20, page = 1) } returns networkError()
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        val batchFlow = repository.searchEventsBatchFlow(
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketSearchConfig(query = "boom")))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(batchFlow.state.value.status)
+            .isInstanceOf(PaginationStatus.InitialLoadingError::class.java)
+        coVerify(exactly = 1) { api.searchEvents(query = "boom", limit = 20, page = 1) }
+        sourceScope.cancel()
+    }
 
     /**
      * A scope for the batch source, driven by the scheduler of the test. Deliberately NOT [TestScope.backgroundScope]:

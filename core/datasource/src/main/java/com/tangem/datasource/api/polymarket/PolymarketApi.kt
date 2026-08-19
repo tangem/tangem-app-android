@@ -4,6 +4,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketSearchResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
@@ -42,6 +43,21 @@ interface PolymarketApi {
         @Query("limit") limit: Int,
         @Query("cursor") cursor: String?,
     ): ApiResponse<PolymarketEventsResponse>
+
+    /**
+     * Full-text search over discoverable prediction events. Pages with a 1-based [page] number,
+     * unlike the cursor-driven feed.
+     *
+     * @param query search text, required by the BFF
+     * @param limit page size (BFF default 20)
+     * @param page 1-based page number (BFF default 1)
+     */
+    @GET("api/predictions/v1/search")
+    suspend fun searchEvents(
+        @Query("query") query: String,
+        @Query("limit") limit: Int,
+        @Query("page") page: Int,
+    ): ApiResponse<PolymarketSearchResponse>
 
     /**
      * Details of a single prediction event. Unlike the feed, which carries only the top active
