@@ -33,6 +33,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.common)
+    api(projects.domain.cloudBackup)
     api(projects.domain.feedback)
     implementation(projects.domain.card)
     implementation(projects.domain.cloudBackup)

@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.token
 
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
 import kotlinx.coroutines.flow.Flow
 
 interface StakingYieldsStore {
