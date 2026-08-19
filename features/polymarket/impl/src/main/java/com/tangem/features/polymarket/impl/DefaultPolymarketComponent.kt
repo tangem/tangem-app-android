@@ -153,6 +153,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.EventDetails -> error("EventDetails is presented as a bottom sheet, not a stack screen")
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
+            params = PolymarketSearchComponent.Params(userWalletId = configuration.userWalletId),
         )
     }
 
