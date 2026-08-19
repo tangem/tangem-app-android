@@ -65,6 +65,15 @@ sealed class SwapCardState {
         val isBalanceHidden: Boolean,
         val appCurrency: AppCurrency,
         val amountField: AmountFieldModel? = null,
+        /**
+         * When non-null, overrides the rendered currency label (e.g. "USD"). Used to abstract the TO card
+         * in an account top-up flow (Tangem Pay Add funds via swap), where the real token is resolved
+         * under the hood but the user should see a fiat-abstracted card (the same transform also swaps
+         * [currencyIconState] to [com.tangem.core.ui.components.currency.icon.CurrencyIconState.PaymentAccount]).
+         */
+        val fiatSymbolOverride: String? = null,
+        /** When `true`, suppresses the "Choose token" tap affordance on this card. */
+        val isSelectionLocked: Boolean = false,
     ) : SwapCardState()
 
     data class Empty(
@@ -138,7 +147,7 @@ data class LegalState(
 )
 
 enum class ChangeCardsButtonState {
-    ENABLED, DISABLED, UPDATE_IN_PROGRESS
+    ENABLED, DISABLED, UPDATE_IN_PROGRESS, HIDDEN
 }
 
 sealed class SwapPermissionUM {
