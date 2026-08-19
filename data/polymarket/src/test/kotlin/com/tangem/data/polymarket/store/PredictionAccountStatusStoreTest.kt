@@ -140,10 +140,6 @@ internal class PredictionAccountStatusStoreTest {
         assertThat(store.getSyncOrNull(WALLET_B)).isEqualTo(ACTIVE.copy(source = StatusSource.CACHE))
     }
 
-    /**
-     * With nothing cached there is no balance to keep, and an absent entry reads as [PredictionAccountStatusValue
-     * .Loading] downstream — which would shimmer forever for a balance that is not coming.
-     */
     @Test
     fun `GIVEN nothing stored WHEN markUnrefreshed THEN the failure is recorded`() = runTest {
         // Arrange
