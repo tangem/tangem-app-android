@@ -351,10 +351,9 @@ internal class TangemPayDetailsModelTest {
         displayMode = CashbackDisplayMode.FULL,
         cashback = TangemPayCashback(
             confirmedAmount = BigDecimal("2.70"),
-            pendingAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal("2.70"),
             currency = "USD",
-            payoutCurrency = "USDC",
-            payoutNetwork = "Polygon",
+            previousPayout = null,
             period = TangemPayCashback.Period(
                 year = 2026,
                 month = 8,
