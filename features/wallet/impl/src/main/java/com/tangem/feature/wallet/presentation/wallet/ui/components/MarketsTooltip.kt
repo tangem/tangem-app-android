@@ -31,7 +31,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
-import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -51,6 +50,7 @@ private val OBSTACLE_GAP = 4.dp
 /**
  * Onboarding tooltip for the markets bottom sheet, anchored right above the sheet peek.
  *
+ * @param sheetTopOffset provider of the sheet's top edge in root coordinates, px.
  * @param obstacleBounds provider of root-coordinates bounds of content the tooltip must not cover —
  * e.g. the "Add & Manage" button. When the anchored tooltip would overlap the obstacle, the tooltip
  * is lifted to sit just above it.
@@ -59,7 +59,7 @@ private val OBSTACLE_GAP = 4.dp
 @Composable
 internal fun MarketsTooltip(
     availableHeight: Dp,
-    bottomSheetState: TangemSheetState,
+    sheetTopOffset: () -> Float,
     isVisible: Boolean,
     onCloseClick: () -> Unit,
     sheetTopInset: Dp,
@@ -68,10 +68,10 @@ internal fun MarketsTooltip(
 ) {
     val density = LocalDensity.current
     var tooltipHeight by remember { mutableIntStateOf(0) }
-    val tooltipOffset by remember(availableHeight, sheetTopInset, obstacleBounds) {
+    val tooltipOffset by remember(availableHeight, sheetTopInset, sheetTopOffset, obstacleBounds) {
         derivedStateOf {
             // Sheet offset is in root coordinates: the scaffold content fills the screen edge to edge
-            val sheetTop = runCatching { bottomSheetState.requireOffset() }.getOrElse { 0f }
+            val sheetTop = sheetTopOffset()
 
             with(density) {
                 val anchoredBottom = sheetTop + sheetTopInset.toPx()

@@ -7,7 +7,7 @@ import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
