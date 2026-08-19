@@ -80,6 +80,16 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
     ) { contentPadding ->
         MembersContent(state = state, contentPadding = contentPadding)
 
+        val activation = state.activation
+        if (activation != null) {
+            ActivateAccountFooter(
+                onActivateClick = activation.onActivateClick,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = contentPadding.calculateBottomPadding()),
+            )
+        }
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -93,6 +103,19 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
             )
         }
     }
+}
+
+@Composable
+private fun ActivateAccountFooter(onActivateClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemButton(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        variant = TangemButton.Variant.Primary,
+        size = TangemButton.Size.X12,
+        text = resourceReference(CoreUiR.string.joint_account_activation_account_button_title),
+        onClick = onActivateClick,
+    )
 }
 
 @Composable
@@ -148,7 +171,8 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding() + 16.dp,
+            // The activation footer overlays the list bottom — reserve its height so the last row scrolls above it
+            bottom = contentPadding.calculateBottomPadding() + if (state.activation != null) 88.dp else 16.dp,
         ),
     ) {
         item(key = "header") { MembersHeader(title = state.title, progress = state.progress) }
@@ -347,10 +371,16 @@ private class JointAccountMembersPreviewProvider :
             previewState(title = "Invite members", canInvite = true, canArchive = true),
             previewState(title = "Invite members", canInvite = false, canArchive = false),
             previewState(title = "Members", canInvite = false, canArchive = false),
+            previewState(title = "Invite members", canInvite = false, canArchive = true, canActivate = true),
         ),
     )
 
-private fun previewState(title: String, canInvite: Boolean, canArchive: Boolean): JointAccountMembersUM {
+private fun previewState(
+    title: String,
+    canInvite: Boolean,
+    canArchive: Boolean,
+    canActivate: Boolean = false,
+): JointAccountMembersUM {
     val creator = MemberUM.Joined(
         id = "creator",
         avatar = JointAccountMembersUM.MemberAvatarUM(monogram = "I", color = CryptoPortfolioIcon.Color.Azure),
@@ -380,6 +410,11 @@ private fun previewState(title: String, canInvite: Boolean, canArchive: Boolean)
         members = (listOf(creator) + freeSlots).toImmutableList(),
         otherMembersLabel = stringReference("Other members"),
         canArchive = canArchive,
+        activation = if (canActivate) {
+            JointAccountMembersUM.ActivationUM(onActivateClick = {}, confirmation = null)
+        } else {
+            null
+        },
         onArchiveClick = {},
         onCloseClick = {},
     )
