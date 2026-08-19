@@ -72,6 +72,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.pagination)
+    implementation(projects.grow.datasource)
 
     /** Feature Apis */
     api(projects.features.survey.api)
