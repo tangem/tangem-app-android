@@ -38,6 +38,17 @@ interface TxHistoryRepositoryV2 {
         currency: CryptoCurrency,
         limit: Int,
     ): Flow<ExpressHistoryPage>
+
+    /**
+     * Reactive single express operation by its [txId], resolved from whichever of the swap/onramp tables holds
+     * it — the two id spaces are disjoint, so at most one table ever matches. Used by the details sheet to bridge
+     * a deal not yet present in [getExpressHistory]'s window (e.g. opened from a push deep link before pagination
+     * catches up); emits nothing while the id is not found in either table.
+     *
+     * A swap's direction is resolved the same way [getExpressHistory] windows it: by matching [currency]'s
+     * addresses (default + used dynamic ones) against the row's `from_address`.
+     */
+    fun getExpressTxById(userWalletId: UserWalletId, currency: CryptoCurrency, txId: String): Flow<ExpressTx>
 }
 
 data class ExpressHistoryPage(
