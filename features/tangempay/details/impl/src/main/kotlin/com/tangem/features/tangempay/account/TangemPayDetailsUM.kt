@@ -104,5 +104,6 @@ internal fun TangemPayCardState.toUiState(): TangemPayCardUiState = when (this) 
     TangemPayCardState.Reissuing,
     TangemPayCardState.Closing,
     TangemPayCardState.Delivering,
+    TangemPayCardState.Activating,
     -> TangemPayCardUiState.InProgress
 }

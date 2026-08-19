@@ -11,6 +11,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
@@ -96,7 +97,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             isPinSet = isPinSet == true,
             images = images.orEmpty().mapNotNull(::convertCardImage),
             embossName = embossName?.trim()?.ifEmpty { null },
-            cardType = CardInfo.CardType.fromString(cardType),
+            cardType = TangemPayCardType.fromString(cardType),
         )
     }
 

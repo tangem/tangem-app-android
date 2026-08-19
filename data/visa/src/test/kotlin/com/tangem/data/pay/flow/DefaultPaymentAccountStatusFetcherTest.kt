@@ -23,14 +23,18 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderStep
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -48,6 +52,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -119,7 +124,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private fun createCardInfo(
         cardId: String = "card_1",
         cardStatus: TangemPayCard.Status = TangemPayCard.Status.ACTIVE,
-        cardType: CustomerInfo.CardInfo.CardType = CustomerInfo.CardInfo.CardType.VIRTUAL,
+        cardType: TangemPayCardType = TangemPayCardType.VIRTUAL,
     ) = CustomerInfo.CardInfo(
         cardId = cardId,
         cardStatus = cardStatus,
@@ -128,6 +133,22 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         images = emptyList(),
         embossName = "JOHNNY SILVERHAND",
         cardType = cardType,
+    )
+
+    private fun activationOrder(productInstanceId: String) = Order(
+        id = "activation-order-1",
+        customerId = "customer_1",
+        type = OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
+        status = OrderStatus.PROCESSING,
+        step = OrderStep.UNKNOWN,
+        stepChangeCode = null,
+        productInstanceId = productInstanceId,
+        paymentAccountId = null,
+        cardId = null,
+        toTariffPlanId = null,
+        withdrawTxHash = null,
+        createdAt = null,
+        updatedAt = null,
     )
 
     private val basicPlan = TangemPayTariffPlan(
@@ -228,6 +249,14 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         coEvery { reissueCardRepository.getReissueOrderId(any(), any()) } returns Either.Right(null)
 
         coEvery { issueCardRepository.getIssueOrderIds(any()) } returns emptyList()
+
+        coEvery {
+            customerOrderRepository.findOrders(
+                userWalletId = any(),
+                types = setOf(OrderType.CARD_ACTIVATION_PLASTIC_RAIN),
+                statuses = OrderStatus.activeStatuses,
+            )
+        } returns Either.Right(emptyList())
 
         coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
         coEvery { onboardingRepository.fetchCustomerEligibility(userWalletId) } returns Either.Right(emptyList())
@@ -757,6 +786,15 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 cards = listOf(createCardInfo(cardStatus = model.cardStatus, cardType = model.cardType)),
             )
             stubHappyPath(customerInfo)
+            if (model.hasActiveActivationOrder) {
+                coEvery {
+                    customerOrderRepository.findOrders(
+                        userWalletId = any(),
+                        types = setOf(OrderType.CARD_ACTIVATION_PLASTIC_RAIN),
+                        statuses = OrderStatus.activeStatuses,
+                    )
+                } returns Either.Right(listOf(activationOrder(productInstanceId = cardProductInstance.id)))
+            }
             val storedStatuses = captureStoredStatuses()
 
             // Act
@@ -766,73 +804,138 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             assertThat(storedStatuses.lastLoaded().cards.single().state).isEqualTo(model.expectedState)
         }
 
+        @Test
+        fun `GIVEN no card awaits activation WHEN fetched THEN active orders are not requested`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance),
+                cards = listOf(createCardInfo(cardStatus = TangemPayCard.Status.ACTIVE)),
+            )
+            stubHappyPath(customerInfo)
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            coVerify(exactly = 0) { customerOrderRepository.findOrders(any(), any(), any()) }
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideForeignOrders")
+        fun `GIVEN an order that is not an active activation one WHEN fetched THEN the card stays Delivering`(
+            order: Order,
+        ) = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance),
+                cards = listOf(
+                    createCardInfo(
+                        cardStatus = TangemPayCard.Status.INACTIVE,
+                        cardType = TangemPayCardType.PHYSICAL,
+                    ),
+                ),
+            )
+            stubHappyPath(customerInfo)
+            coEvery {
+                customerOrderRepository.findOrders(
+                    userWalletId = any(),
+                    types = setOf(OrderType.CARD_ACTIVATION_PLASTIC_RAIN),
+                    statuses = OrderStatus.activeStatuses,
+                )
+            } returns Either.Right(listOf(order))
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().cards.single().state)
+                .isEqualTo(TangemPayCardState.Delivering)
+        }
+
+        private fun provideForeignOrders() = listOf(
+            activationOrder(productInstanceId = "another-instance"),
+            activationOrder(productInstanceId = cardProductInstance.id)
+                .copy(type = OrderType.CARD_ISSUE_PLASTIC_RAIN),
+            activationOrder(productInstanceId = cardProductInstance.id)
+                .copy(status = OrderStatus.COMPLETED),
+        )
+
         private fun provideTestModels() = listOf(
             DeliveryStateModel(
                 name = "PHYSICAL + INACTIVE while shipping -> Delivering",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
                 expectedState = TangemPayCardState.Delivering,
             ),
             DeliveryStateModel(
                 name = "PHYSICAL + INACTIVE before shipping -> Delivering",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.READY_FOR_MANUFACTURING,
                 expectedState = TangemPayCardState.Delivering,
             ),
             DeliveryStateModel(
                 name = "PHYSICAL + INACTIVE after delivery -> Delivering",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.DELIVERED,
                 expectedState = TangemPayCardState.Delivering,
             ),
             DeliveryStateModel(
+                name = "PHYSICAL + INACTIVE with an activation order in flight -> Activating",
+                cardType = TangemPayCardType.PHYSICAL,
+                cardStatus = TangemPayCard.Status.INACTIVE,
+                productInstanceStatus = CustomerInfo.ProductInstance.Status.DELIVERED,
+                expectedState = TangemPayCardState.Activating,
+                hasActiveActivationOrder = true,
+            ),
+            DeliveryStateModel(
                 name = "VIRTUAL card that is INACTIVE -> Active",
-                cardType = CustomerInfo.CardInfo.CardType.VIRTUAL,
+                cardType = TangemPayCardType.VIRTUAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
                 expectedState = TangemPayCardState.Active,
             ),
             DeliveryStateModel(
                 name = "PHYSICAL already activated (card ACTIVE) -> Active",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.ACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
                 expectedState = TangemPayCardState.Active,
             ),
             DeliveryStateModel(
                 name = "PHYSICAL + INACTIVE but the order was canceled -> Active",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.CANCELED,
                 expectedState = TangemPayCardState.Active,
             ),
             DeliveryStateModel(
                 name = "PHYSICAL + INACTIVE but the product instance is blocked -> Active",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.BLOCKED,
                 expectedState = TangemPayCardState.Active,
             ),
             DeliveryStateModel(
                 name = "PHYSICAL + INACTIVE and the product instance is deactivating -> Active",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.DEACTIVATING,
                 expectedState = TangemPayCardState.Active,
             ),
             DeliveryStateModel(
                 name = "PHYSICAL + INACTIVE with an unknown product instance status -> Delivering",
-                cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                cardType = TangemPayCardType.PHYSICAL,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.UNKNOWN,
                 expectedState = TangemPayCardState.Delivering,
             ),
             DeliveryStateModel(
                 name = "card type absent from the response (UNDEFINED) -> Active",
-                cardType = CustomerInfo.CardInfo.CardType.UNDEFINED,
+                cardType = TangemPayCardType.UNDEFINED,
                 cardStatus = TangemPayCard.Status.INACTIVE,
                 productInstanceStatus = CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
                 expectedState = TangemPayCardState.Active,
@@ -852,7 +955,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 cards = listOf(
                     createCardInfo(
                         cardStatus = TangemPayCard.Status.INACTIVE,
-                        cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                        cardType = TangemPayCardType.PHYSICAL,
                     ),
                 ),
             )
@@ -885,7 +988,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                         createCardInfo(
                             cardId = "card_2",
                             cardStatus = TangemPayCard.Status.INACTIVE,
-                            cardType = CustomerInfo.CardInfo.CardType.PHYSICAL,
+                            cardType = TangemPayCardType.PHYSICAL,
                         ),
                     ),
                 )
@@ -908,10 +1011,11 @@ internal class DefaultPaymentAccountStatusFetcherTest {
 
     internal data class DeliveryStateModel(
         val name: String,
-        val cardType: CustomerInfo.CardInfo.CardType,
+        val cardType: TangemPayCardType,
         val cardStatus: TangemPayCard.Status,
         val productInstanceStatus: CustomerInfo.ProductInstance.Status,
         val expectedState: TangemPayCardState,
+        val hasActiveActivationOrder: Boolean = false,
     ) {
         override fun toString(): String = name
     }
