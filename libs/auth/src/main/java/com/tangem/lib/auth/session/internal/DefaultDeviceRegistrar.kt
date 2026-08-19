@@ -14,6 +14,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.lib.auth.attestation.AttestationProvider
+import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
@@ -84,7 +85,7 @@ internal class DefaultDeviceRegistrar(
         val payload = RegisterPayload(
             devicePublicKey = devicePublicKeyBase64,
             nonce = nonce,
-            attestationToken = attestationProvider.getAttestationToken(nonce),
+            attestationToken = attestationProvider.getAttestationTokenOrNull(nonce),
             metadata = signedRequestPayload.deviceMetadata,
         )
         val signature = try {
