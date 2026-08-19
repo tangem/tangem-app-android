@@ -19,9 +19,12 @@ import kotlinx.collections.immutable.ImmutableList
  * @property members         joined members followed by free slots, in display order.
  * @property otherMembersLabel section label shown above the free slots; `null` hides it (no free slots).
  * @property canArchive      whether the three-dot menu with the destructive "Archive account" action is shown.
+ * @property activation      the "Activate account" call to action; `null` hides it (not the creator, the
+ * composition is not full yet, or the reference view).
  * @property onArchiveClick  archive the account.
  * @property onCloseClick    close the screen and return to the wallet.
  */
+@Immutable
 data class JointAccountMembersUM(
     val title: TextReference,
     val progress: TextReference,
@@ -29,9 +32,36 @@ data class JointAccountMembersUM(
     val members: ImmutableList<MemberUM>,
     val otherMembersLabel: TextReference?,
     val canArchive: Boolean,
+    val activation: ActivationUM?,
     val onArchiveClick: () -> Unit,
     val onCloseClick: () -> Unit,
 ) {
+
+    /**
+     * The "Activate account" call to action pinned to the bottom of the screen — creator only, shown when
+     * every slot is filled.
+     *
+     * @property onActivateClick open the activation confirmation sheet.
+     * @property confirmation    the confirmation sheet state; `null` while the sheet is hidden.
+     */
+    @Immutable
+    data class ActivationUM(
+        val onActivateClick: () -> Unit,
+        val confirmation: ConfirmationUM?,
+    ) {
+
+        /**
+         * The "You're activating a shared account" confirmation sheet.
+         *
+         * @property onConfirmClick proceed with the activation (leads into the NFC signing session).
+         * @property onCancelClick  close the sheet; dismissing it by swipe or the close icon acts the same.
+         */
+        @Immutable
+        data class ConfirmationUM(
+            val onConfirmClick: () -> Unit,
+            val onCancelClick: () -> Unit,
+        )
+    }
 
     /**
      * "Share invites safely" info block.
