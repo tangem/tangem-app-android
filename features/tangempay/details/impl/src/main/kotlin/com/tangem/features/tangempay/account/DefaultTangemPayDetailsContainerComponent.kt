@@ -139,10 +139,11 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 userWalletId = params.initialStatus.userWalletId,
             ),
         )
-        TangemPayAccountDetailsInnerRoute.OrderCard -> orderCardComponentFactory.create(
+        is TangemPayAccountDetailsInnerRoute.OrderCard -> orderCardComponentFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayOrderCardComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
+                intent = config.intent,
             ),
         )
     }
