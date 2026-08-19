@@ -21,8 +21,10 @@ class StakingBalanceConverter(
     constructor(isCached: Boolean) : this(source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL)
 
     override fun convert(value: YieldBalanceWrapperDTO): StakingBalance? {
+        // Bound to a local val because smart-casting a public property from another module isn't allowed.
+        val integrationId = value.integrationId ?: return null
         val stakingId = StakingID(
-            integrationId = value.integrationId ?: return null,
+            integrationId = integrationId,
             address = value.addresses.address,
         )
 
@@ -35,7 +37,7 @@ class StakingBalanceConverter(
                     items = value.balances
                         .map { item -> item.toBalanceItem() }
                         .sortedWith(comparator = compareBy({ it.type }, { it.amount })),
-                    integrationId = value.integrationId,
+                    integrationId = integrationId,
                 ),
                 source = source,
             )
