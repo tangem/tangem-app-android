@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
@@ -52,6 +53,7 @@ internal class TangemPayCashbackModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val cashbackRepository: CashbackRepository = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
     fun setup() {
@@ -250,6 +252,7 @@ internal class TangemPayCashbackModelTest {
         urlOpener = urlOpener,
         cashbackRepository = cashbackRepository,
         onboardingRepository = onboardingRepository,
+        analytics = analytics,
     )
 
     private fun TangemPayCashbackModel.content(): TangemPayCashbackScreenUM.Content =
@@ -295,10 +298,9 @@ internal class TangemPayCashbackModelTest {
         displayMode = CashbackDisplayMode.FULL,
         cashback = TangemPayCashback(
             confirmedAmount = BigDecimal("32.15"),
-            pendingAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal("132.15"),
             currency = "USD",
-            payoutCurrency = "USDC",
-            payoutNetwork = "Polygon",
+            previousPayout = null,
             period = TangemPayCashback.Period(
                 year = 2026,
                 month = 6,
@@ -309,11 +311,17 @@ internal class TangemPayCashbackModelTest {
     )
 
     private fun history() = CashbackHistory(
-        currency = "USD",
         months = listOf(
-            CashbackHistory.MonthlyCashback(year = 2026, month = 5, confirmedAmount = BigDecimal("26.10")),
-            CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("32.15")),
+            month(month = 5, amount = "26.10"),
+            month(month = 6, amount = "32.15"),
         ),
+    )
+
+    private fun month(month: Int, amount: String) = CashbackHistory.MonthlyCashback(
+        year = 2026,
+        month = month,
+        confirmedAmount = BigDecimal(amount),
+        currency = "USD",
     )
 
     private fun customerInfo(tierId: String, planName: String): CustomerInfo {

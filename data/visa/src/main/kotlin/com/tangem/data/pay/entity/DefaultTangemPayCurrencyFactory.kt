@@ -92,12 +92,16 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         blockchain: Blockchain,
         fiatRate: BigDecimal?,
     ): PaymentNetworkStatus {
-        val currencies = tokens.map { token -> createToken(network, blockchain, token) }
+        val tokensWithCurrency = tokens.mapNotNull { token ->
+            val currency = createToken(network, blockchain, token) ?: return@mapNotNull null
+            token to currency
+        }
+        val currencies = tokensWithCurrency.map { (_, currency) -> currency }
         return when (status) {
             CustomerInfo.NetworkInfo.Status.ENABLED -> PaymentNetworkStatus.Available(
                 network = network,
                 depositAddress = depositAddress.orEmpty(),
-                cryptoCurrencyStatuses = tokens.zip(currencies).map { (token, currency) ->
+                cryptoCurrencyStatuses = tokensWithCurrency.map { (token, currency) ->
                     buildStatus(
                         currency = currency,
                         amount = token.availableForWithdrawal.orZero(),
@@ -117,17 +121,24 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         }
     }
 
+    /**
+     * `null` when the backend entry cannot describe a currency: [CryptoCurrency.Token] rejects a blank symbol or
+     * contract address, and the contract address is absent for a network that has not issued one yet. Dropping
+     * just that token keeps its network in the list instead of throwing and losing the whole mapping.
+     */
     private fun createToken(
         network: Network,
         blockchain: Blockchain,
         token: CustomerInfo.NetworkInfo.Token,
-    ): CryptoCurrency.Token {
+    ): CryptoCurrency.Token? {
+        val symbol = token.symbol.takeIf(String::isNotBlank) ?: return null
+        val contractAddress = token.contractAddress?.takeIf(String::isNotBlank) ?: return null
         return cryptoCurrencyFactory.createToken(
             network = network,
-            rawId = rawIdFor(token.symbol),
-            name = token.symbol,
-            symbol = token.symbol,
-            contractAddress = token.contractAddress,
+            rawId = rawIdFor(symbol),
+            name = symbol,
+            symbol = symbol,
+            contractAddress = contractAddress,
             decimals = PaymentTokenDecimalsResolver.decimalsFor(blockchain),
         )
     }

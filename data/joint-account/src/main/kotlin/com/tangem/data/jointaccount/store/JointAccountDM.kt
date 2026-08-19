@@ -12,7 +12,7 @@ internal data class JointAccountDM(
     val cryptoAccountId: String,
     val membersCount: Int,
     val threshold: Int,
-    val address: String?,
+    val safeAddress: String?,
     val status: String,
     val members: List<MemberDM>,
 ) {
