@@ -17,6 +17,9 @@ import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import java.math.BigInteger
 
 interface PolymarketRepository {
@@ -48,6 +51,16 @@ interface PolymarketRepository {
      * (unlike the feed, which carries only the top active ones).
      */
     suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent>
+
+    /**
+     * Preview a fill-and-kill order against the live book (BFF `POST /orders/quote`). Places nothing.
+     *
+     * The result is only as good as the book at the moment it was served, so callers re-request it on a
+     * timer rather than caching it.
+     */
+    suspend fun getOrderQuote(
+        request: PredictionOrderQuoteRequest,
+    ): Either<PredictionOrderQuoteError, PredictionOrderQuote>
 
     /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
