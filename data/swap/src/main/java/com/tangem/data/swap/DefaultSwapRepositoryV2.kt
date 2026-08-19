@@ -20,7 +20,7 @@ import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWi
 import com.tangem.grow.datasource.express.models.response.RateType
 import com.tangem.grow.datasource.express.models.response.SwapPairProvider
 import com.tangem.grow.datasource.express.models.response.TxDetails
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore

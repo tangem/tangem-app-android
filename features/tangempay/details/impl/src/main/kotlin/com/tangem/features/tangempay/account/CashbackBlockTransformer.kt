@@ -50,7 +50,7 @@ internal class CashbackBlockTransformer(
         val window = dateFormatter.formatWindow(cashback.period.payoutStart, cashback.period.payoutEnd)
         return CashbackBlockUM.Widget(
             title = resourceReference(R.string.tangempay_cashback_widget_title, wrappedList(amount, month)),
-            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(window)),
+            subtitle = window?.let { resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(it)) },
             onClick = onClick,
         )
     }

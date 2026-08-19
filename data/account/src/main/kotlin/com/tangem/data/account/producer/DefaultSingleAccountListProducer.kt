@@ -11,6 +11,8 @@ import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isTangemPayCompatible
+import com.tangem.domain.polymarket.isPredictionAccountSupported
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -32,12 +34,14 @@ import kotlinx.coroutines.flow.map
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     @Assisted val params: SingleAccountListProducer.Params,
     override val flowProducerTools: FlowProducerTools,
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountListProducer {
 
@@ -55,6 +59,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
                 accountList
                     .addAccountIf(userWallet.isTangemPayCompatible) { Account.Payment(walletId) }
                     .addAccountIf(userWallet.isVirtualAccountSupported()) { Account.Virtual(walletId) }
+                    .addAccountIf(userWallet.isPredictionSupported()) { Account.Prediction(walletId) }
             }
             .flowOn(dispatchers.default)
     }
@@ -64,6 +69,16 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
 
         return isTangemPayCompatible
     }
+
+    private fun UserWallet.isPredictionSupported(): Boolean {
+        if (!polymarketFeatureToggles.isPolymarketEnabled) return false
+
+        return isPredictionAccountSupported && hasPredictionAccount()
+    }
+
+    /** Temporary — the real answer comes from the backend: [REDACTED_JIRA] */
+    @Suppress("FunctionOnlyReturningConstant")
+    private fun hasPredictionAccount(): Boolean = true
 
     private inline fun AccountList.addAccountIf(condition: Boolean, account: () -> Account): AccountList {
         return if (condition) {

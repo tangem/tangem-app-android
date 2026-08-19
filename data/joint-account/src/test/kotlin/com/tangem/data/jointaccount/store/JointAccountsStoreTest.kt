@@ -158,7 +158,7 @@ internal class JointAccountsStoreTest {
         advanceUntilIdle()
         val otherWalletId = UserWalletId("FF1121314151617181910A0B0C0D0E0F011121314151617181910A0B0C0D0EFF")
         val first = createJointAccount(status = JointAccount.Status.PENDING)
-        val second = createJointAccount(status = JointAccount.Status.ACTIVE, address = "0x1")
+        val second = createJointAccount(status = JointAccount.Status.ACTIVE, safeAddress = "0x1")
 
         // Act
         store.store(walletId, listOf(first))

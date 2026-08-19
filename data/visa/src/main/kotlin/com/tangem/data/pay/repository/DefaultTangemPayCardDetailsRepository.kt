@@ -12,7 +12,7 @@ import com.tangem.data.pay.util.RainCryptoUtil
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.CardDetailsRequest
 import com.tangem.spend.datasource.pay.models.request.FreezeUnfreezeCardRequest

@@ -56,6 +56,12 @@ sealed interface AccountStatus {
         override val account: Account.Prediction,
         val value: PredictionAccountStatusValue,
     ) : AccountStatus
+
+    @Serializable
+    data class Joint(
+        override val account: Account.Joint,
+        val value: JointAccountStatusValue,
+    ) : AccountStatus
 }
 
 fun Iterable<AccountStatus>.filterCryptoPortfolio(): List<AccountStatus.CryptoPortfolio> {

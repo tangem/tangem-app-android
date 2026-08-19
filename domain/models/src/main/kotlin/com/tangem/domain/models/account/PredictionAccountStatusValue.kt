@@ -22,6 +22,17 @@ sealed class PredictionAccountStatusValue {
 
     abstract val source: StatusSource
 
+    /**
+     * The collateral priced in the app's currency, or `null` when it cannot be priced. The wallet total and the
+     * row on the wallet screen both read it, so neither can multiply differently from the other.
+     */
+    val fiatBalance: SerializedBigDecimal?
+        get() {
+            val active = this as? Active ?: return null
+
+            return active.fiatRate?.let(active.balance::multiply)
+        }
+
     /** The total fiat balance associated with this status. */
     val totalFiatBalance: TotalFiatBalance
         get() = when (this) {
@@ -31,8 +42,8 @@ sealed class PredictionAccountStatusValue {
             is Error,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             is Active -> {
-                val rate = fiatRate ?: return TotalFiatBalance.Failed
-                TotalFiatBalance.Loaded(amount = balance.multiply(rate), source = source)
+                val amount = fiatBalance ?: return TotalFiatBalance.Failed
+                TotalFiatBalance.Loaded(amount = amount, source = source)
             }
         }
 

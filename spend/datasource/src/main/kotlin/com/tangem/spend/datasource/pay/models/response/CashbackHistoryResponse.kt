@@ -13,7 +13,6 @@ data class CashbackHistoryResponse(
 ) {
     @JsonClass(generateAdapter = true)
     data class Result(
-        @Json(name = "currency") val currency: String?,
         @Json(name = "items") val items: List<Item>?,
     )
 
@@ -21,6 +20,7 @@ data class CashbackHistoryResponse(
     data class Item(
         @Json(name = "year") val year: Int,
         @Json(name = "month") val month: Int,
-        @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal?,
+        @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal,
+        @Json(name = "currency") val currency: String,
     )
 }

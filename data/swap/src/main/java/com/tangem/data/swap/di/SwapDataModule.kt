@@ -10,7 +10,7 @@ import com.tangem.data.swap.DefaultSwapRepositoryV2
 import com.tangem.data.swap.DefaultSwapTransactionRepository
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.account.supplier.MultiAccountListSupplier

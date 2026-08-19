@@ -2015,7 +2015,7 @@
   <string name="tangempay_common_card">Карта</string>
   <string name="tangempay_common_error_loading">Ошибка загрузки</string>
   <string name="tangempay_current_plan_active_till_notification">Ваш тариф %1$s активен до %2$s, после чего мы переведём вас на %3$s. %4$s не будет списано.</string>
-  <string name="tangempay_current_plan_change">Изменить тариф</string>
+  <string name="tangempay_current_plan_change">Сменить тариф</string>
   <string name="tangempay_current_plan_fee_charged_notification">Ежемесячная плата %1$s будет списана %2$s</string>
   <string name="tangempay_current_plan_section_card">По карте</string>
   <string name="tangempay_current_plan_section_plan">По тарифу</string>

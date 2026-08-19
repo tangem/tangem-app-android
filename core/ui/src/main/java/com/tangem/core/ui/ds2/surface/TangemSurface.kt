@@ -65,10 +65,11 @@ import dev.chrisbanes.haze.HazeTint
  * @param enabled Forwarded to the click handler.
 
  * @param shadowRadius Blur size of the material drop shadow, expressed as a Figma `box-shadow`
- *   blur. Ignored when [isMaterial] is `false`.
+ *   blur. Ignored when [isMaterial] is `false`. Provide [LocalMaterialShadowEnabled] as `false` to
+ *   suppress the shadow entirely (e.g. for blocks laid on an already-elevated container).
  * @param content Content rendered inside the clipped surface.
  */
-@Suppress("UnsafeCallOnNullableType", "")
+@Suppress("UnsafeCallOnNullableType", "LongParameterList")
 @Composable
 @NonRestartableComposable
 fun TangemSurface(
