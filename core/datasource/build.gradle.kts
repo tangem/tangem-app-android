@@ -136,5 +136,6 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(projects.grow.datasource)
     // endregion
 }
