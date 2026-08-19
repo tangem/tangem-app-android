@@ -442,9 +442,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     }
                     is Account.Payment -> null
                     is Account.Virtual -> null
-                    // Unlike its neighbours the prediction row is shown while it loads, so the list does not
-                    // grow by a row once the status arrives
-                    is Account.Prediction -> AccountStatus.Prediction(account, PredictionAccountStatusValue.Loading)
+                    is Account.Prediction -> null
                 }
             },
             totalAccounts = accountList.totalAccounts,
