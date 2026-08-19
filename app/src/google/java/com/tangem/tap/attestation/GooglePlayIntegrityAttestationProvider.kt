@@ -20,6 +20,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -55,22 +56,35 @@ internal class GooglePlayIntegrityAttestationProvider @Inject constructor(
                 return@withContext null
             }
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
-            ?: return@withContext null
+            ?: run {
+                TangemLogger.e("Play Integrity: device public key unavailable — returning null token")
+                return@withContext null
+            }
 
         val requestHash = AttestationRequestHash.create(devicePublicKey, nonce)
-        val provider = obtainTokenProvider(cloudProjectNumber) ?: return@withContext null
 
-        runSuspendCatching {
-            provider
-                .request(StandardIntegrityTokenRequest.builder().setRequestHash(requestHash).build())
-                .await()
-                .token()
-        }.getOrElse { e ->
-            // A prepared provider can expire; drop it so the next attempt re-prepares.
-            TangemLogger.e("Play Integrity token request failed", e)
-            tokenProvider = null
-            null
+        // Attestation is inline before signing, so a stalled Play Integrity call would block auth
+        // (including /authenticate on 401 refresh). Cap the whole warm-up + request so a hang or slow
+        // network resolves to a null token and auth proceeds.
+        val token = withTimeoutOrNull(ATTESTATION_TIMEOUT_MS) {
+            val provider = obtainTokenProvider(cloudProjectNumber)
+                ?: return@withTimeoutOrNull null // prepare failure already logged in obtainTokenProvider
+            runSuspendCatching {
+                provider
+                    .request(StandardIntegrityTokenRequest.builder().setRequestHash(requestHash).build())
+                    .await()
+                    .token()
+            }.getOrElse { e ->
+                // A prepared provider can expire; drop it so the next attempt re-prepares.
+                TangemLogger.e("Play Integrity token request failed — returning null token", e)
+                tokenProvider = null
+                null
+            }
         }
+        if (token == null) {
+            TangemLogger.i("Play Integrity produced no token (timeout or failure) — returning null")
+        }
+        token
     }
 
     private suspend fun obtainTokenProvider(cloudProjectNumber: Long): StandardIntegrityTokenProvider? {
@@ -93,5 +107,10 @@ internal class GooglePlayIntegrityAttestationProvider @Inject constructor(
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
         addOnSuccessListener { result -> continuation.resume(result) }
         addOnFailureListener { e -> continuation.resumeWithException(e) }
+    }
+
+    private companion object {
+        // Generous enough for a first-call warm-up, bounded so attestation can never block auth.
+        const val ATTESTATION_TIMEOUT_MS = 10_000L
     }
 }
