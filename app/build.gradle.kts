@@ -439,7 +439,6 @@ dependencies {
     implementation(deps.googlePlay.services.wallet)
     implementation(deps.googlePlay.services)
     implementation(deps.googlePlay.advertising)
-    coreLibraryDesugaring(deps.desugar)
     implementation(deps.coil)
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
