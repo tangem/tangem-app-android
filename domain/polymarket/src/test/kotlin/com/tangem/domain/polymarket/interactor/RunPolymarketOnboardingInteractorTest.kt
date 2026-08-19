@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.approval.PolymarketApprovalCalls
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -34,7 +35,9 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.math.BigInteger
 
 internal class RunPolymarketOnboardingInteractorTest {
@@ -48,6 +51,7 @@ internal class RunPolymarketOnboardingInteractorTest {
     private val deriveApiCredentials: DeriveApiCredentialsUseCase = mockk()
     private val submitApprovals: SubmitApprovalsUseCase = mockk()
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase = mockk()
+    private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
 
     private val useCase = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
@@ -59,6 +63,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         deriveApiCredentials = deriveApiCredentials,
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
+        checkGeoblock = checkGeoblock,
     )
 
     @BeforeEach
@@ -73,6 +78,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             deriveApiCredentials,
             submitApprovals,
             syncBalanceAllowance,
+            checkGeoblock,
         )
         coEvery { deriveAddresses(USER_WALLET_ID) } returns ADDRESSES.right()
         coEvery { getRelayerNonce(ADDRESSES) } returns NONCE.right()
@@ -84,6 +90,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         coEvery { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) } returns CREDENTIALS.right()
         coEvery { getApiCredentials(USER_WALLET_ID) } returns null
         coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { checkGeoblock() } returns false.right()
     }
 
     @Test
@@ -668,5 +675,91 @@ internal class RunPolymarketOnboardingInteractorTest {
         )
 
         val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RegionGuard {
+
+        @Test
+        fun `GIVEN a blocked region WHEN a new account would be deployed THEN the run refuses before signing`() =
+            runTest {
+                // Arrange
+                coEvery { checkGeoblock() } returns true.right()
+                coEvery { getWalletStatus(ADDRESSES) } returns walletState(PolymarketWalletStatus.NOT_CREATED).right()
+
+                // Act & Assert
+                useCase(USER_WALLET_ID).test {
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                    assertThat(awaitItem()).isEqualTo(
+                        PolymarketOnboardingProgress.Failed(
+                            error = PolymarketOnboardingError.RegionBlocked,
+                            isRetryable = false,
+                        ),
+                    )
+                    awaitComplete()
+                }
+                coVerify(exactly = 0) { signOnboardingDigests(any(), any()) }
+                coVerify(exactly = 0) { deployDepositWallet(any()) }
+            }
+
+        /** An unknown region must not open an account, so a failed read refuses just like a blocked one. */
+        @Test
+        fun `GIVEN the region cannot be read WHEN a new account would be deployed THEN the run refuses`() = runTest {
+            // Arrange
+            coEvery { checkGeoblock() } returns PolymarketOnboardingError.Network.left()
+            coEvery { getWalletStatus(ADDRESSES) } returns walletState(PolymarketWalletStatus.NOT_CREATED).right()
+
+            // Act & Assert
+            useCase(USER_WALLET_ID).test {
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                assertThat(awaitItem()).isEqualTo(
+                    PolymarketOnboardingProgress.Failed(
+                        error = PolymarketOnboardingError.RegionBlocked,
+                        isRetryable = false,
+                    ),
+                )
+                awaitComplete()
+            }
+            coVerify(exactly = 0) { deployDepositWallet(any()) }
+        }
+
+        /**
+         * The settled rule: a blocked region stops a new account, never an existing one. This user has a deposit
+         * wallet and only lost the local credentials, so the run must restore them.
+         */
+        @Test
+        fun `GIVEN a blocked region AND an existing deposit wallet WHEN credentials are missing THEN they restore`() =
+            runTest {
+                // Arrange
+                coEvery { checkGeoblock() } returns true.right()
+                coEvery { getWalletStatus(ADDRESSES) } returns
+                    walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+
+                // Act & Assert
+                useCase(USER_WALLET_ID).test {
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                    awaitComplete()
+                }
+                coVerify(exactly = 1) { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) }
+                coVerify(exactly = 0) { deployDepositWallet(any()) }
+            }
+
+        @Test
+        fun `GIVEN a blocked region WHEN the region is never consulted for a deployed wallet THEN no check runs`() =
+            runTest {
+                // Arrange
+                coEvery { getWalletStatus(ADDRESSES) } returns
+                    walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+                coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
+
+                // Act
+                useCase(USER_WALLET_ID).test { cancelAndIgnoreRemainingEvents() }
+
+                // Assert
+                coVerify(exactly = 0) { checkGeoblock() }
+            }
     }
 }
