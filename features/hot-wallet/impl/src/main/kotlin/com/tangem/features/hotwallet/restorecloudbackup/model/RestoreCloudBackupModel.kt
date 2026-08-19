@@ -1,5 +1,7 @@
 package com.tangem.features.hotwallet.restorecloudbackup.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,6 +10,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.cloudbackup.analytics.analyticsMessage
+import com.tangem.domain.cloudbackup.analytics.analyticsWalletId
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
@@ -50,6 +54,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private val mnemonicRepository: MnemonicRepository,
     private val hotWalletImporter: HotWalletImporter,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<RestoreCloudBackupComponent.Params>()
@@ -99,10 +104,22 @@ internal class RestoreCloudBackupModel @Inject constructor(
         backups = loaded
         return if (loaded.size == 1) {
             selectedBackup = loaded.first()
+            sendEnterPasswordScreenEvent()
             buildEnterPasswordUM()
         } else {
+            analyticsEventHandler.send(
+                event = OnboardingAnalyticsEvent.Backup.SelectCloudBackupScreen(backupCount = loaded.size),
+            )
             buildBackupListUM(loaded)
         }
+    }
+
+    private fun sendEnterPasswordScreenEvent() {
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Backup.EnterCloudBackupPasswordScreen(
+                userWalletId = analyticsWalletId(selectedBackup?.walletId),
+            ),
+        )
     }
 
     private fun buildBackupListUM(list: List<CloudBackupInfo>): RestoreCloudBackupUM.BackupList =
@@ -121,6 +138,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private fun showEnterPassword(backup: CloudBackupInfo) {
         selectedBackup = backup
         wipePassword()
+        sendEnterPasswordScreenEvent()
         uiState.value = buildEnterPasswordUM()
     }
 
@@ -171,7 +189,12 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private suspend fun runRestore(backup: CloudBackupInfo) {
         restoreCloudBackupUseCase(fileId = backup.fileId, password = password).fold(
             ifLeft = { error ->
-                if (error == CloudBackupError.WrongPassword) showWrongPassword() else showError()
+                if (error == CloudBackupError.WrongPassword) {
+                    analyticsEventHandler.send(OnboardingAnalyticsEvent.Backup.WrongCloudBackupPassword())
+                    showWrongPassword()
+                } else {
+                    showError(error)
+                }
             },
             ifRight = { secret -> onSecretRestored(secret, name = backup.walletName) },
         )
@@ -235,7 +258,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
         }.getOrNull()
 
         if (mnemonic == null) {
-            showError()
+            showError(CloudBackupError.InvalidBackupFile)
             return
         }
 
@@ -248,7 +271,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
             ifLeft = { error ->
                 when (error) {
                     HotWalletImportError.AlreadySaved -> showAlreadyAdded()
-                    is HotWalletImportError.Unknown -> showError()
+                    is HotWalletImportError.Unknown -> showError(CloudBackupError.Unknown())
                 }
             },
             ifRight = { userWalletId ->
@@ -274,7 +297,13 @@ internal class RestoreCloudBackupModel @Inject constructor(
         uiState.value = buildEnterPasswordUM()
     }
 
-    private fun showError() {
+    private fun showError(error: CloudBackupError) {
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Backup.ImportCloudBackupError(
+                userWalletId = analyticsWalletId(selectedBackup?.walletId),
+                errorMessage = error.analyticsMessage(),
+            ),
+        )
         uiState.value = buildCurrentStepUM()
         uiMessageSender.send(genericErrorDialog())
     }
