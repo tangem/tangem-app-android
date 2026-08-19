@@ -106,4 +106,12 @@ interface ExpressHistoryDao {
         fromCreatedAtIso: String,
         activeStatuses: List<String>,
     ): Flow<List<ExpressOnrampEntity>>
+
+    /** Swap row for [txId], regardless of address/window; `null` if [txId] is not a swap. */
+    @Query("SELECT * FROM express_exchange WHERE tx_id = :txId")
+    fun observeExchangeById(txId: String): Flow<ExpressExchangeEntity?>
+
+    /** Onramp row for [txId], regardless of address/window; `null` if [txId] is not an onramp. */
+    @Query("SELECT * FROM express_onramp WHERE tx_id = :txId")
+    fun observeOnrampById(txId: String): Flow<ExpressOnrampEntity?>
 }
