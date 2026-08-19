@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    api(deps.kotlin.coroutines)
     api(projects.core.utils)
     api(deps.kotlin.serialization.core)
     api(deps.moshi)
