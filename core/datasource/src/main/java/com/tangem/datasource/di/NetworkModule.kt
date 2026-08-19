@@ -1,6 +1,5 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.api.common.config.StakeKit
 import com.tangem.datasource.api.common.config.P2PEthPool
 import com.tangem.datasource.api.common.config.TangemTech
 import com.tangem.datasource.api.common.config.News
@@ -27,7 +26,6 @@ import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
-import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.core.remote.RetrofitApiSpec
@@ -71,24 +69,6 @@ internal object NetworkModule {
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)
             else -> ProdApiConfigsManager(apiConfigs)
         }
-    }
-
-    @Provides
-    @Singleton
-    fun provideStakeKitApi(retrofitApiBuilder: RetrofitApiBuilder): StakeKitApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = StakeKit.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    writeTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
-            ),
-        )
     }
 
     @Provides

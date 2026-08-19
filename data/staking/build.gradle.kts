@@ -50,6 +50,7 @@ dependencies {
     api(projects.core.datasource)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.grow.datasource)
     // endregion
 
     // region Data
