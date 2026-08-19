@@ -7,7 +7,6 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
@@ -308,7 +307,10 @@ internal class PolymarketMainModelTest {
         // Assert
         verify {
             router.push(
-                PolymarketRoute.EventDetails(eventId = "event-1", userWalletId = userWalletId),
+                PolymarketRoute.EventDetails(
+                    eventId = "event-1",
+                    userWalletId = userWalletId,
+                ),
                 any(),
             )
         }
