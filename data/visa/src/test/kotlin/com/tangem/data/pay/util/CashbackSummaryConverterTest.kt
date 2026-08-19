@@ -1,10 +1,10 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.spend.datasource.pay.models.response.CashbackSummaryResponse
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.spend.datasource.pay.models.response.CashbackSummaryResponse
 import org.joda.time.DateTime
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -43,30 +43,58 @@ internal class CashbackSummaryConverterTest {
             ),
         ),
         ConvertModel(
-            name = "enabled + missing display mode -> Enabled(FULL)",
-            response = createResponse(status = "enabled", displayMode = null),
+            name = "enabled + no previous payout amount -> previousPayout is null",
+            response = createResponse(previousPayoutAmount = null),
             expected = CashbackSummary.Enabled(
                 displayMode = CashbackDisplayMode.FULL,
-                cashback = expectedCashback(),
+                cashback = expectedCashback(previousPayout = null),
             ),
         ),
         ConvertModel(
-            name = "enabled + zero amounts -> Enabled with zeros",
+            name = "enabled + no previous payout date -> previousPayout is null",
+            response = createResponse(previousPayoutEndDate = null),
+            expected = CashbackSummary.Enabled(
+                displayMode = CashbackDisplayMode.FULL,
+                cashback = expectedCashback(previousPayout = null),
+            ),
+        ),
+        ConvertModel(
+            name = "enabled + malformed previous payout date -> previousPayout is null",
+            response = createResponse(previousPayoutEndDate = "not-a-date"),
+            expected = CashbackSummary.Enabled(
+                displayMode = CashbackDisplayMode.FULL,
+                cashback = expectedCashback(previousPayout = null),
+            ),
+        ),
+        ConvertModel(
+            name = "enabled + no payout window -> Enabled without payout dates",
             response = createResponse(
-                status = "enabled",
-                displayMode = "full",
-                confirmedAmount = null,
-                pendingAmount = null,
+                period = CashbackSummaryResponse.Period(
+                    year = 2026,
+                    month = 6,
+                    payoutStartDate = null,
+                    payoutEndDate = null,
+                ),
             ),
             expected = CashbackSummary.Enabled(
                 displayMode = CashbackDisplayMode.FULL,
-                cashback = expectedCashback(confirmedAmount = BigDecimal.ZERO, pendingAmount = BigDecimal.ZERO),
+                cashback = expectedCashback(payoutStart = null, payoutEnd = null),
             ),
         ),
         ConvertModel(
-            name = "enabled but missing period -> Unknown",
-            response = createResponse(status = "enabled", period = null),
-            expected = CashbackSummary.Unknown,
+            name = "enabled + malformed payout start -> Enabled without that date",
+            response = createResponse(
+                period = CashbackSummaryResponse.Period(
+                    year = 2026,
+                    month = 6,
+                    payoutStartDate = "07/02/2026",
+                    payoutEndDate = "2026-07-05",
+                ),
+            ),
+            expected = CashbackSummary.Enabled(
+                displayMode = CashbackDisplayMode.FULL,
+                cashback = expectedCashback(payoutStart = null),
+            ),
         ),
         ConvertModel(
             name = "fraud -> Deactivated",
@@ -93,11 +121,6 @@ internal class CashbackSummaryConverterTest {
             response = createResponse(status = "something_new"),
             expected = CashbackSummary.Unknown,
         ),
-        ConvertModel(
-            name = "missing result envelope -> Unknown",
-            response = CashbackSummaryResponse(result = null),
-            expected = CashbackSummary.Unknown,
-        ),
     )
 
     internal data class ConvertModel(
@@ -112,46 +135,51 @@ internal class CashbackSummaryConverterTest {
 
         fun createResponse(
             status: String = "enabled",
-            displayMode: String? = "full",
-            period: CashbackSummaryResponse.Period? = CashbackSummaryResponse.Period(
+            displayMode: String = "full",
+            period: CashbackSummaryResponse.Period = CashbackSummaryResponse.Period(
                 year = 2026,
                 month = 6,
                 payoutStartDate = "2026-07-02",
                 payoutEndDate = "2026-07-05",
             ),
-            confirmedAmount: BigDecimal? = BigDecimal("22.54"),
-            pendingAmount: BigDecimal? = BigDecimal("13.65"),
-            currency: String? = "USD",
-            payoutCurrency: String? = "USDC",
-            payoutNetwork: String? = "Polygon",
+            confirmedAmount: BigDecimal = BigDecimal("22.54"),
+            totalEarnedAmount: BigDecimal? = BigDecimal("132.15"),
+            previousPayoutEndDate: String? = "2026-06-05",
+            previousPayoutAmount: BigDecimal? = BigDecimal("18.00"),
+            currency: String = "USD",
         ) = CashbackSummaryResponse(
             result = CashbackSummaryResponse.Result(
                 cashbackProgramStatus = status,
                 cashbackDisplayMode = displayMode,
                 period = period,
                 confirmedAmount = confirmedAmount,
-                pendingAmount = pendingAmount,
+                totalEarnedAmount = totalEarnedAmount,
+                previousPayoutEndDate = previousPayoutEndDate,
+                previousPayoutAmount = previousPayoutAmount,
                 currency = currency,
-                payoutCurrency = payoutCurrency,
-                payoutNetwork = payoutNetwork,
             ),
         )
 
         fun expectedCashback(
             confirmedAmount: BigDecimal = BigDecimal("22.54"),
-            pendingAmount: BigDecimal = BigDecimal("13.65"),
+            totalEarnedAmount: BigDecimal? = BigDecimal("132.15"),
+            previousPayout: TangemPayCashback.PreviousPayout? = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-06-05"),
+                amount = BigDecimal("18.00"),
+            ),
+            payoutStart: DateTime? = DateTime.parse("2026-07-02"),
+            payoutEnd: DateTime? = DateTime.parse("2026-07-05"),
         ) = TangemPayCashback(
             confirmedAmount = confirmedAmount,
-            pendingAmount = pendingAmount,
+            totalEarnedAmount = totalEarnedAmount,
             currency = "USD",
-            payoutCurrency = "USDC",
-            payoutNetwork = "Polygon",
             period = TangemPayCashback.Period(
                 year = 2026,
                 month = 6,
-                payoutStart = DateTime.parse("2026-07-02"),
-                payoutEnd = DateTime.parse("2026-07-05"),
+                payoutStart = payoutStart,
+                payoutEnd = payoutEnd,
             ),
+            previousPayout = previousPayout,
         )
     }
 }
