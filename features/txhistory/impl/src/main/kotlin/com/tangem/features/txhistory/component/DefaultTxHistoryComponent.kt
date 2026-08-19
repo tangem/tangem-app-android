@@ -2,7 +2,14 @@ package com.tangem.features.txhistory.component
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
@@ -13,13 +20,38 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.builtins.serializer
 
 internal class DefaultTxHistoryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: TxHistoryComponent.Params,
+    private val txHistoryDetailsComponentFactory: TxHistoryDetailsComponent.Factory,
 ) : TxHistoryComponent, AppComponentContext by appComponentContext {
 
     private val model: TxHistoryModel = getOrCreateModel(params)
+
+    private val txHistoryDetailsSlot = childSlot(
+        key = TX_HISTORY_DETAILS_SLOT_KEY,
+        source = model.txDetailsNavigation,
+        serializer = TxHistoryDetailsSlotConfig.serializer(),
+        handleBackButton = true,
+        childFactory = { config, ctx ->
+            txHistoryDetailsComponentFactory.create(
+                context = childByContext(ctx),
+                params = TxHistoryDetailsComponent.Params(
+                    txId = config.txId,
+                    historyTxListManager = requireNotNull(model.historyTxListManager),
+                    userWalletId = params.userWalletId,
+                    currency = params.currency,
+                    onDismiss = model.txDetailsNavigation::dismiss,
+                    onOpenTokenDetails = { currency ->
+                        model.txDetailsNavigation.dismiss()
+                        model.openTokenDetails(currency)
+                    },
+                ),
+            )
+        },
+    )
 
     override val legacyTxHistoryState: StateFlow<TxHistoryUM>
         get() = model.legacyUiState
@@ -35,8 +67,18 @@ internal class DefaultTxHistoryComponent @AssistedInject constructor(
         txHistoryItems(listState, state)
     }
 
+    @Composable
+    override fun Content(modifier: Modifier) {
+        val txHistoryDetails by txHistoryDetailsSlot.subscribeAsState()
+        txHistoryDetails.child?.instance?.BottomSheet()
+    }
+
     @AssistedFactory
     interface Factory : TxHistoryComponent.Factory {
         override fun create(context: AppComponentContext, params: TxHistoryComponent.Params): DefaultTxHistoryComponent
+    }
+
+    companion object {
+        private const val TX_HISTORY_DETAILS_SLOT_KEY = "txHistoryDetailsSlot"
     }
 }
