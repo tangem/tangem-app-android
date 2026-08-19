@@ -10,7 +10,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal class TangemPayCashbackAccrualsConverter(
-    private val onDocClick: (url: String) -> Unit,
+    private val onDocClick: (doc: CashbackDocument) -> Unit,
 ) : Converter<List<CashbackDocument>, TangemPayCashbackAccrualsUM> {
 
     override fun convert(value: List<CashbackDocument>): TangemPayCashbackAccrualsUM {
@@ -20,7 +20,7 @@ internal class TangemPayCashbackAccrualsConverter(
             docRows = value.map { doc ->
                 TangemPayCashbackAccrualsUM.DocRow(
                     title = stringReference(doc.title),
-                    onClick = { onDocClick(doc.url) },
+                    onClick = { onDocClick(doc) },
                 )
             }.toImmutableList(),
         )

@@ -1,9 +1,9 @@
 package com.tangem.data.staking.converters
 
-import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.AddressArgumentDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
 import com.tangem.datasource.local.txhistory.db.entity.staking.StakingValidatorEntity
 import com.tangem.domain.staking.model.common.RewardInfo

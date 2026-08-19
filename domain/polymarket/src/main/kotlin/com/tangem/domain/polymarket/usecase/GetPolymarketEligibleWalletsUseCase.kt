@@ -3,7 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.polymarket.isPredictionAccountSupported
 
 /**
  * Wallets a user may onboard to Predictions.
@@ -34,5 +34,5 @@ class GetPolymarketEligibleWalletsUseCase(
     }
 
     /** Whether [userWallet] can be onboarded — the single rule both the auto-pick and the chooser obey. */
-    fun isEligible(userWallet: UserWallet): Boolean = !userWallet.isLocked && userWallet.isMultiCurrency
+    fun isEligible(userWallet: UserWallet): Boolean = !userWallet.isLocked && userWallet.isPredictionAccountSupported
 }

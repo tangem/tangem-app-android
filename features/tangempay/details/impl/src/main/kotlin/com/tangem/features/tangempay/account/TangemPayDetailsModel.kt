@@ -5,7 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.entity.AccountFlow
+import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -31,6 +31,7 @@ import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
@@ -128,6 +129,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     private var shownTiersBanner: TangemPayTiersBannerType? = null
+    private var shownCashbackBlock: CashbackBlockAnalyticsType? = null
 
     private val isInitialRouteHandled = MutableStateFlow(false)
 
@@ -221,22 +223,22 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openAddFunds() {
-        val balance = currentStatus.value.balanceOrNull()
-        val address = currentStatus.value.ifLoadedOrNull { it.depositAddress }
-        if (balance == null || address.isNullOrEmpty()) {
+        val loaded = currentStatus.value.ifLoadedOrNull { it }
+        if (loaded == null || !loaded.canAddFunds(tangemPayFeatureToggles.isAccountMultichainEnabled)) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
-        } else {
-            bottomSheetNavigation.activate(
-                TangemPayDetailsNavigation.AddFunds(
-                    walletId = userWalletId,
-                    fiatBalance = balance.availableForWithdrawal,
-                    cryptoBalance = balance.availableForWithdrawal,
-                    depositAddress = balance.cryptoBalance.depositAddress,
-                    cryptoCurrency = cryptoCurrency,
-                    virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
-                ),
-            )
+            return
         }
+        val balance = loaded.balance
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.AddFunds(
+                walletId = userWalletId,
+                fiatBalance = balance.availableForWithdrawal,
+                cryptoBalance = balance.availableForWithdrawal,
+                depositAddress = balance.cryptoBalance.depositAddress,
+                cryptoCurrency = cryptoCurrency,
+                virtualAccountOnramp = loaded.virtualAccount,
+            ),
+        )
     }
 
     private fun onConfirmWithdrawal(currency: CryptoCurrency) {
@@ -261,6 +263,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             getCashbackSummaryUseCase(userWalletId).onRight { summary ->
                 val isDismissed = getCashbackDeactivationDismissedUseCase(userWalletId)
+                sendCashbackBlockAnalytics(summary = summary, isDeactivationDismissed = isDismissed)
                 uiState.update(
                     transformer = CashbackBlockTransformer(
                         summary = summary,
@@ -274,7 +277,36 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(cashbackBlockJobHolder)
     }
 
+    private fun sendCashbackBlockAnalytics(summary: CashbackSummary, isDeactivationDismissed: Boolean) {
+        val block = when (summary) {
+            is CashbackSummary.Enabled -> CashbackBlockAnalyticsType.Widget
+
+            CashbackSummary.Deactivated ->
+                CashbackBlockAnalyticsType.DeactivationBanner.takeIf { !isDeactivationDismissed }
+
+            CashbackSummary.Disabled,
+            CashbackSummary.Unknown,
+            -> null
+        }
+
+        if (block == shownCashbackBlock) return
+        shownCashbackBlock = block
+
+        val event = when (block) {
+            CashbackBlockAnalyticsType.Widget -> {
+                TangemPayAnalyticsEvents.Cashback.BannerShowed()
+            }
+            CashbackBlockAnalyticsType.DeactivationBanner -> {
+                TangemPayAnalyticsEvents.Cashback.DeactivationBannerShowed()
+            }
+            null -> null
+        }
+
+        event?.let { analytics.send(it) }
+    }
+
     private fun onDismissCashbackDeactivation() {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.DeactivationBannerGotItClicked())
         modelScope.launch {
             setCashbackDeactivationDismissedUseCase(userWalletId)
             uiState.update { it.copy(cashbackBlockState = null) }
@@ -492,6 +524,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickCashback() {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.BannerClicked())
         router.push(TangemPayAccountDetailsInnerRoute.Cashback)
     }
 
@@ -621,3 +654,5 @@ internal class TangemPayDetailsModel @Inject constructor(
         event?.let { analytics.send(it) }
     }
 }
+
+private enum class CashbackBlockAnalyticsType { Widget, DeactivationBanner }
