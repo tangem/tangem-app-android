@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 @Immutable
 internal data class TangemPayCashbackUM(
     val title: TextReference,
-    val subtitle: TextReference,
+    val subtitle: TextReference?,
     val isEmpty: Boolean,
     val banner: Banner?,
 ) {
