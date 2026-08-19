@@ -24,6 +24,7 @@ huaweiPush = "6.11.0.300"
 androidxActivity = "1.10.1"
 androidxActivityCompose = "1.8.0"
 androidxAnnotation = "1.9.1"
+androidxAnnotationExperimental = "1.4.1"
 androidxAppCompat = "1.5.1"
 androidxBiometric = "1.1.0"
 androidxBrowser = "1.4.0"
@@ -39,6 +40,9 @@ androidx-palette = "1.0.0"
 androidx-datastore = "1.0.0"
 androidxWindowManager = "1.3.0"
 androidxWorkManager = "2.9.0"
+# Pinned to the version the prebuilt `usedesk:chat-gui` declares. Resolution takes the highest, so a newer media3
+# here silently re-versions the player inside that chat, which nothing in this repo tests.
+androidxMedia3 = "1.7.1"
 # endregion AndroidX
 
 # region Compose
@@ -167,6 +171,7 @@ gradle-kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinp
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivityCompose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
+androidx-annotation-experimental = { module = "androidx.annotation:annotation-experimental", version.ref = "androidxAnnotationExperimental" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidxBiometric" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidxBrowser" }
@@ -191,6 +196,9 @@ androidx-datastore-base = { module = "androidx.datastore:datastore", version.ref
 androidx-datastore-core = { module = "androidx.datastore:datastore-core", version.ref = "androidx-datastore" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "androidx-datastore" }
 androidx-workmanager = { module = "androidx.work:work-runtime", version.ref = "androidxWorkManager" }
+androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "androidxMedia3" }
+androidx-media3-datasource = { module = "androidx.media3:media3-datasource", version.ref = "androidxMedia3" }
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "androidxMedia3" }
 hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-work" }
 # region AndroidX
 
