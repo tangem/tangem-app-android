@@ -90,14 +90,14 @@ internal class PredictionAccountStatusStoreTest {
     }
 
     @Test
-    fun `GIVEN a stored value WHEN updateStatusSource THEN only the source changes`() = runTest {
+    fun `GIVEN a stored value WHEN markUnrefreshed THEN only the source changes`() = runTest {
         // Arrange
         val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
         val store = createStore(testScope = this, persistenceDataStore = persisted)
         store.store(userWalletId = WALLET_A, value = ACTIVE)
 
         // Act
-        store.updateStatusSource(userWalletId = WALLET_A, source = StatusSource.ONLY_CACHE)
+        store.markUnrefreshed(userWalletId = WALLET_A)
 
         // Assert — "could not be refreshed" is about this session, so it must not survive to the next launch
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
@@ -141,15 +141,17 @@ internal class PredictionAccountStatusStoreTest {
     }
 
     @Test
-    fun `GIVEN nothing stored WHEN updateStatusSource THEN nothing is stored`() = runTest {
+    fun `GIVEN nothing stored WHEN markUnrefreshed THEN the failure is recorded`() = runTest {
         // Arrange
-        val store = createStore(testScope = this)
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
 
         // Act
-        store.updateStatusSource(userWalletId = WALLET_A, source = StatusSource.ONLY_CACHE)
+        store.markUnrefreshed(userWalletId = WALLET_A)
 
-        // Assert
-        assertThat(store.getSyncOrNull(WALLET_A)).isNull()
+        // Assert — recorded for this session only, so the disk copy stays untouched
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
+        assertThat(persisted.data.first()).isEmpty()
     }
 
     private fun createStore(
