@@ -41,6 +41,10 @@ dependencies {
     implementation(projects.core.utils)
     // endregion
 
+    // region Data
+    implementation(projects.data.common)
+    // endregion
+
     // region Domain
     api(projects.domain.jointAccount)
     implementation(projects.domain.common)
