@@ -11,6 +11,7 @@ import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CardActivationOrder
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
@@ -103,6 +104,32 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                     customerWalletAddress = walletAddress,
                     specificationName = specificationName,
                     order = order,
+                    idempotencyKey = idempotencyKey,
+                ),
+            )
+        }.flatMap { response ->
+            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
+            OrderConverter.convert(result).right()
+        }
+    }
+
+    override suspend fun createCardActivationOrder(
+        userWalletId: UserWalletId,
+        order: CardActivationOrder,
+        idempotencyKey: String,
+    ): Either<VisaApiError, Order> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayApi.createOrder(
+                authHeader = authHeader,
+                body = OrderRequest(
+                    data = OrderRequest.Data(
+                        customerWalletAddress = walletAddress,
+                        specificationName = null,
+                        type = OrderType.CARD_ACTIVATION_PLASTIC_RAIN.wireValue,
+                        productInstanceId = order.productInstanceId,
+                        lastFourDigits = order.lastFourDigits,
+                    ),
                     idempotencyKey = idempotencyKey,
                 ),
             )
