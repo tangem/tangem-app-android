@@ -24,6 +24,7 @@ import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardData
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardSuccessModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardTypeModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayReissuePlasticCardModel
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanModel
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanModel
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryModel
@@ -163,6 +164,11 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayOrderCardDataModel::class)
     fun bindTangemPayOrderCardDataModel(model: TangemPayOrderCardDataModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayReissuePlasticCardModel::class)
+    fun bindTangemPayReissuePlasticCardModel(model: TangemPayReissuePlasticCardModel): Model
 
     @Binds
     @IntoMap
