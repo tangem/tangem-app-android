@@ -347,7 +347,7 @@ internal class WalletSettingsModel @Inject constructor(
             val isCodeSet = userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAccessCode(isCodeSet))
             if (!state.value.isWalletBackedUp) {
-                showMakeBackupAtFirstAlertBS()
+                showMakeBackupAtFirstAlertBS(userWallet)
             } else {
                 unlockWalletIfNeedAndProceed { _ ->
                     router.push(
@@ -379,13 +379,19 @@ internal class WalletSettingsModel @Inject constructor(
         router.push(AppRoute.CardSettings(params.userWalletId))
     }
 
-    private fun showMakeBackupAtFirstAlertBS() {
-        analyticsEventHandler.send(
-            event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
-                source = AnalyticsParam.ScreensSources.WalletSettings.value,
-                action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
-            ),
-        )
+    private fun showMakeBackupAtFirstAlertBS(userWallet: UserWallet.Hot) {
+        modelScope.launch {
+            val hasCloudBackup = hotWalletFeatureToggles.isGoogleDriveBackupEnabled &&
+                getCloudBackupStateUseCase(userWallet.walletId.stringValue)
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
+                    source = AnalyticsParam.ScreensSources.WalletSettings.value,
+                    action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
+                    cloudBackupState = cloudBackupState(hasCloudBackup),
+                    isBackedUp = manualBackupState(userWallet.backedUp),
+                ),
+            )
+        }
         val message = bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_passcode_lock_32) {
@@ -509,11 +515,32 @@ internal class WalletSettingsModel @Inject constructor(
         val hasCloudBackup = hotWalletFeatureToggles.isGoogleDriveBackupEnabled &&
             getCloudBackupStateUseCase(userWallet.walletId.stringValue)
 
+        analyticsEventHandler.send(
+            event = WalletSettingsAnalyticEvents.ForgetWalletRequest(
+                source = AnalyticsParam.ScreensSources.WalletSettings.value,
+                cloudBackupState = cloudBackupState(hasCloudBackup),
+                isBackedUp = userWallet.backedUp,
+            ),
+        )
+
         if (hasCloudBackup) {
             sendForgetWithCloudBackupSheet(userWallet)
         } else {
             sendForgetSeedBackupSheet(userWallet)
         }
+    }
+
+    /**
+     * Forget wallet reads the local flag only, which cannot tell `Action Required` from `Done`.
+     * With the feature off the parameter is omitted rather than reported as `Incomplete`.
+     */
+    private fun manualBackupState(isBackedUp: Boolean): Boolean? =
+        isBackedUp.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled }
+
+    private fun cloudBackupState(hasCloudBackup: Boolean): AnalyticsParam.CloudBackupState? = when {
+        !hotWalletFeatureToggles.isGoogleDriveBackupEnabled -> null
+        hasCloudBackup -> AnalyticsParam.CloudBackupState.Done
+        else -> AnalyticsParam.CloudBackupState.Incomplete
     }
 
     private fun sendForgetWithCloudBackupSheet(userWallet: UserWallet.Hot) {
@@ -552,6 +579,8 @@ internal class WalletSettingsModel @Inject constructor(
                 event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Remove,
+                    cloudBackupState = cloudBackupState(hasCloudBackup = false),
+                    isBackedUp = manualBackupState(isBackedUp = false),
                 ),
             )
         }
