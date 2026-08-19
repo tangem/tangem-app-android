@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
@@ -100,10 +101,12 @@ internal object PolymarketDomainUseCasesModule {
         derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
+        polymarketOnboardedStore: PolymarketOnboardedStore,
     ): ResolvePolymarketEntryInteractor = ResolvePolymarketEntryInteractor(
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase = getPolymarketApiCredentialsUseCase,
+        polymarketOnboardedStore = polymarketOnboardedStore,
     )
 
     @Provides
