@@ -8,18 +8,12 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.decompose.navigation.Route
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
@@ -43,32 +37,10 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
 
     private val stackNavigation = StackNavigation<PolymarketRoute>()
 
-    private val detailsSlotNavigation = SlotNavigation<PolymarketRoute.EventDetails>()
-
-    private val stackRouter = InnerRouter<PolymarketRoute>(
+    private val innerRouter = InnerRouter<PolymarketRoute>(
         stackNavigation = stackNavigation,
         popCallback = { onChildBack() },
     )
-
-    // Event details is presented as a modal bottom sheet over the feed (per design), so its route is
-    // diverted from the stack into a slot: the feed stays composed and visible behind the sheet's scrim.
-    private val innerRouter = object : Router by stackRouter {
-        override fun push(route: Route, onComplete: (Boolean) -> Unit) {
-            if (route is PolymarketRoute.EventDetails) {
-                detailsSlotNavigation.activate(route)
-                onComplete(true)
-            } else {
-                stackRouter.push(route, onComplete)
-            }
-        }
-    }
-
-    /** Router of the details sheet itself: popping it dismisses the slot, anything else goes up as usual. */
-    private val detailsRouter = object : Router by stackRouter {
-        override fun pop(onComplete: (Boolean) -> Unit) {
-            detailsSlotNavigation.dismiss { isSuccess -> onComplete(isSuccess) }
-        }
-    }
 
     private val model: PolymarketModel = getOrCreateModel(
         params = params,
@@ -92,34 +64,9 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         },
     )
 
-    // Declared after the stack so its back handler takes priority while the sheet is shown.
-    private val detailsSlot = childSlot(
-        key = "polymarketEventDetailsSlot",
-        source = detailsSlotNavigation,
-        serializer = null,
-        handleBackButton = true,
-        childFactory = { route, factoryContext ->
-            PolymarketEventDetailsComponent(
-                appComponentContext = childByContext(
-                    componentContext = factoryContext,
-                    router = detailsRouter,
-                ),
-                params = PolymarketEventDetailsComponent.Params(
-                    eventId = route.eventId,
-                    // The route carries the wallet the feed was opened for; the feature's own params
-                    // hold none until the entry gate picks one.
-                    userWalletId = route.userWalletId,
-                    marketId = route.marketId,
-                    assetId = route.assetId,
-                ),
-            )
-        },
-    )
-
     @Composable
     override fun Content(modifier: Modifier) {
         val childStackValue by childStack.subscribeAsState()
-        val detailsSlotValue by detailsSlot.subscribeAsState()
 
         Children(
             stack = childStackValue,
@@ -128,8 +75,6 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         ) { child ->
             child.instance.Content(Modifier.fillMaxSize())
         }
-
-        detailsSlotValue.child?.instance?.BottomSheet()
     }
 
     private fun getChildComponent(
@@ -150,7 +95,17 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
             userWalletId = configuration.userWalletId,
             accessMode = configuration.accessMode,
         )
-        is PolymarketRoute.EventDetails -> error("EventDetails is presented as a bottom sheet, not a stack screen")
+        is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketEventDetailsComponent.Params(
+                eventId = configuration.eventId,
+                // The route carries the wallet the feed was opened for; the feature's own params
+                // hold none until the entry gate picks one.
+                userWalletId = configuration.userWalletId,
+                marketId = configuration.marketId,
+                assetId = configuration.assetId,
+            ),
+        )
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
         )
