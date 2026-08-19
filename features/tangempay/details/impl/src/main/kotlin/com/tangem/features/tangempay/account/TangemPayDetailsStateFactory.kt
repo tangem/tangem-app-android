@@ -18,6 +18,7 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.models.pay.thumbnailUrl
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
+import com.tangem.features.tangempay.common.canAddFunds
 import com.tangem.features.tangempay.common.hasWithdrawableAmount
 import com.tangem.features.tangempay.common.isFresh
 import com.tangem.features.tangempay.details.impl.R
@@ -32,7 +33,7 @@ internal class TangemPayDetailsStateFactory(
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
     private val isTiersPlusPlanEnabled: Boolean,
-    isMultichainEnabled: Boolean,
+    private val isMultichainEnabled: Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(
         intents = intents,
@@ -76,6 +77,7 @@ internal class TangemPayDetailsStateFactory(
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
         val isAddCardEnabled = isFresh && !hasIssuingCard
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
+        val canAddFunds = status.canAddFunds(isMultichainEnabled)
         val hasWithdrawableBalance = status.balance.hasWithdrawableAmount
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
@@ -105,7 +107,7 @@ internal class TangemPayDetailsStateFactory(
                 isNegative = fiatBalance.availableBalance.signum() < 0,
                 isInactive = false,
                 actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = areActionButtonsEnabled,
+                    isAddFundsEnabled = areActionButtonsEnabled && canAddFunds,
                     isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
                 ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
