@@ -35,10 +35,15 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsPage
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketSearchConfig
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -83,6 +88,43 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 fetchPage = ::fetchEventsPage,
             ),
         ).toBatchFlow()
+    }
+
+    override fun searchEventsBatchFlow(
+        context: PolymarketSearchBatchingContext,
+        batchSize: Int,
+    ): PolymarketSearchBatchFlow {
+        return BatchListSource(
+            fetchDispatcher = dispatchers.io,
+            context = context,
+            generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
+            batchFetcher = LimitOffsetBatchFetcher(
+                prefetchDistance = batchSize,
+                batchSize = batchSize,
+                subFetcher = ::fetchSearchPage,
+            ),
+        ).toBatchFlow()
+    }
+
+    /** The BFF pages search with a 1-based page number; the fetcher speaks offsets, so translate. */
+    private suspend fun fetchSearchPage(
+        request: LimitOffsetBatchFetcher.Request<PolymarketSearchConfig>,
+        @Suppress("UnusedParameter") lastResult: BatchFetchResult<List<PolymarketEvent>>?,
+        @Suppress("UnusedParameter") isFirstBatchFetching: Boolean,
+    ): BatchFetchResult<List<PolymarketEvent>> {
+        val response = polymarketApi.searchEvents(
+            query = request.params.query,
+            limit = request.limit,
+            page = request.offset / request.limit + 1,
+        )
+        return when (response) {
+            is ApiResponse.Success -> BatchFetchResult.Success(
+                data = response.data.events.map(PolymarketEventConverter::convert),
+                empty = response.data.events.isEmpty(),
+                last = !response.data.hasNext,
+            )
+            is ApiResponse.Error -> throw response.cause
+        }
     }
 
     /** Throws on failure: the pagination turns the throwable into a fetch error of the batch. */
