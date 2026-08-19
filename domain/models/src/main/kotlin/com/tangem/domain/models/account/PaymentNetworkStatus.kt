@@ -22,8 +22,8 @@ sealed class PaymentNetworkStatus {
     abstract val network: Network
 
     /**
-     * @property depositAddress the network's deposit address; empty when the backend reports the
-     * network `ENABLED` but has not provided an address (receive actions must stay disabled then).
+     * @property depositAddress the network's deposit address; never empty — an `ENABLED` network the backend
+     * has not provided an address for is dropped by the data layer instead of becoming [Available].
      */
     @Serializable
     data class Available(
