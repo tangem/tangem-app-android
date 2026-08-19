@@ -1,6 +1,5 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.api.common.config.P2PEthPool
 import com.tangem.datasource.api.common.config.TangemTech
 import com.tangem.datasource.api.common.config.News
 import com.tangem.datasource.api.common.config.YieldSupply
@@ -20,7 +19,6 @@ import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.news.NewsApi
-import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
@@ -46,7 +44,6 @@ import javax.inject.Singleton
 internal object NetworkModule {
 
     private const val TIMEOUT_60_SECONDS = 60L
-    private const val TIMEOUT_90_SECONDS = 90L
 
     @Provides
     @Singleton
@@ -69,24 +66,6 @@ internal object NetworkModule {
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)
             else -> ProdApiConfigsManager(apiConfigs)
         }
-    }
-
-    @Provides
-    @Singleton
-    fun provideP2PEthPoolApi(retrofitApiBuilder: RetrofitApiBuilder): P2PEthPoolApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = P2PEthPool.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_90_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_90_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_90_SECONDS,
-                    writeTimeoutSeconds = TIMEOUT_90_SECONDS,
-                ),
-            ),
-        )
     }
 
     @Provides
