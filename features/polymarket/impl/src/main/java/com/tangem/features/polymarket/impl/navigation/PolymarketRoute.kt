@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.navigation
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 
 /**
  * Internal navigation routes for the Polymarket feature stack.
@@ -24,18 +23,11 @@ internal sealed interface PolymarketRoute : Route {
     /**
      * Discovery feed — reached once [Onboarding] resolves the entry decision.
      *
-     * @property accessMode whether trading is permitted. Nothing downstream reads it yet — the feed is
-     *  identical in every region and the place-prediction flow is still a stub. It is carried so the
-     *  account screen inherits the decision, and so the real place-prediction flow can refuse
-     *  [PolymarketAccessMode.READ_ONLY] without re-deriving it.
      * @property userWalletId the wallet the entry gate resolved, carried on the route rather than taken from
      *  the feature params because the gate may resolve a *different* wallet than the one the feature was
      *  opened with — the user can choose among several eligible wallets.
      */
-    data class Main(
-        val accessMode: PolymarketAccessMode,
-        val userWalletId: UserWalletId,
-    ) : PolymarketRoute
+    data class Main(val userWalletId: UserWalletId) : PolymarketRoute
 
     /**
      * Details of a single prediction event.
