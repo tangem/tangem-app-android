@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
-import com.tangem.common.routing.entity.AccountFlow
 import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -249,6 +248,18 @@ sealed class AppRoute(val path: String) : Route {
             FROM,
             TO,
             ANY,
+        }
+
+        /**
+         * Explicit mode for account top-up / withdraw flows opened on the swap screen.
+         * TopUp anchors the account as an abstract TO; Withdraw anchors it as the concrete FROM.
+         * Single Payment account per wallet — resolved by userWalletId on the swap side, no id needed here.
+         */
+        @Serializable
+        sealed interface AccountFlow {
+            @Serializable data object TopUp : AccountFlow
+
+            @Serializable data object Withdraw : AccountFlow
         }
     }
 
