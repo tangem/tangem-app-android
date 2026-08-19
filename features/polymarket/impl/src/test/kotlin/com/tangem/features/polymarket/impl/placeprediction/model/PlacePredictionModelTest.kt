@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -53,6 +54,7 @@ internal class PlacePredictionModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val getEventUseCase: GetPolymarketEventUseCase = mockk()
     private val deriveAddressesUseCase: DerivePolymarketAddressesUseCase = mockk()
     private val getBalanceInteractor: GetPolymarketBalanceInteractor = mockk()
@@ -65,6 +67,7 @@ internal class PlacePredictionModelTest {
     fun setUp() {
         clearMocks(
             router,
+            urlOpener,
             messageSender,
             getEventUseCase,
             deriveAddressesUseCase,
@@ -312,6 +315,7 @@ internal class PlacePredictionModelTest {
                 ),
             ),
             router = router,
+            urlOpener = urlOpener,
             messageSender = messageSender,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getPolymarketEventUseCase = getEventUseCase,
