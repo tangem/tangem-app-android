@@ -3,6 +3,8 @@ package com.tangem.features.hotwallet.restorecloudbackup.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -41,6 +43,7 @@ import org.junit.jupiter.api.Test
 internal class RestoreCloudBackupModelTest {
 
     private val restoreCloudBackupUseCase: RestoreCloudBackupUseCase = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val mnemonicRepository: MnemonicRepository = mockk()
     private val hotWalletImporter: HotWalletImporter = mockk()
@@ -347,6 +350,7 @@ internal class RestoreCloudBackupModelTest {
             mnemonicRepository = mnemonicRepository,
             hotWalletImporter = hotWalletImporter,
             uiMessageSender = uiMessageSender,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 
@@ -359,6 +363,59 @@ internal class RestoreCloudBackupModelTest {
             default = testDispatcher,
             single = testDispatcher,
         )
+    }
+
+    @Test
+    fun `GIVEN wrong password WHEN restore clicked THEN wrong password event sent`() = runTest {
+        // Arrange
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.WrongPassword.left()
+        val model = createModel(this, holderOf(backupInfo))
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange("wrong-password")
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(match<OnboardingAnalyticsEvent.Backup.WrongCloudBackupPassword> { true })
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN download fails WHEN restore clicked THEN import error event sent with message`() = runTest {
+        // Arrange
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.ReadError().left()
+        val model = createModel(this, holderOf(backupInfo))
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                match<OnboardingAnalyticsEvent.Backup.ImportCloudBackupError> { it.params["Error Message"] == "Read error" },
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN single backup WHEN model created THEN enter password screen event sent`() = runTest {
+        // Act
+        val model = createModel(this, holderOf(backupInfo))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(match<OnboardingAnalyticsEvent.Backup.EnterCloudBackupPasswordScreen> { true })
+        }
+        model.onDestroy()
     }
 
     private companion object {
