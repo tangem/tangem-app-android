@@ -7,12 +7,14 @@ import com.google.common.truth.Truth
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
+import io.mockk.mockk
 import com.tangem.test.mock.MockAccounts.createAccount
 import com.tangem.test.mock.MockAccounts.createAccountList
 import com.tangem.test.mock.MockAccounts.createAccounts
@@ -57,6 +59,66 @@ internal class AccountListTest {
         // Act & Assert
         val expected = 5
         Truth.assertThat(accountList.activeAccounts).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN joint accounts with duplicate names WHEN create THEN list is valid`() {
+        // Arrange
+        val accounts = listOf(
+            Account.CryptoPortfolio.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(derivationIndex = 0, name = "Family"),
+            MockAccounts.createJointAccount(derivationIndex = 1, name = "Family"),
+        )
+
+        // Act
+        val actual = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+        )
+
+        // Assert
+        Truth.assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN full crypto limit and a joint WHEN create THEN joint does not consume the limit`() {
+        // Arrange
+        val accounts = createAccounts(count = 20) + MockAccounts.createJointAccount(derivationIndex = 0)
+
+        // Act
+        val actual = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+        )
+
+        // Assert
+        Truth.assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN joint account with currencies WHEN flattenCurrencies THEN joint currencies are excluded`() {
+        // Arrange
+        val jointCurrency = mockk<CryptoCurrency>()
+        val accounts = listOf(
+            Account.CryptoPortfolio.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(derivationIndex = 0, cryptoCurrencies = listOf(jointCurrency)),
+        )
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+        ).getOrNull()!!
+
+        // Act
+        val actual = accountList.flattenCurrencies()
+
+        // Assert
+        Truth.assertThat(actual).isEmpty()
     }
 
     @Test

@@ -105,6 +105,9 @@ data class AccountList private constructor(
                 is Account.Payment -> emptyList()
                 is Account.Virtual -> emptyList()
                 is Account.Prediction -> emptyList()
+                // A joint account is a Safe contract, not an EOA: its currencies must never reach the regular
+                // send/swap/staking flows, which sign a plain transfer from the participant's own key
+                is Account.Joint -> emptyList()
             }
         }
     }
@@ -239,7 +242,11 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            val customNames = accounts.map { (it.accountName as? AccountName.Custom)?.value }
+            // Joint account names come from the backend, which does not guarantee their uniqueness — two accounts
+            // named "Family" from different creators are a legal response and must not invalidate the whole list
+            val customNames = accounts
+                .filter { it !is Account.Joint }
+                .map { (it.accountName as? AccountName.Custom)?.value }
             val uniqueCustomNameCount = customNames.distinct().size
 
             ensure(customNames.size == uniqueCustomNameCount) {
