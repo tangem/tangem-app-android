@@ -388,7 +388,6 @@ internal class PolymarketMainModelTest {
             paramsContainer = MutableParamsContainer(
                 value = PolymarketMainParams(
                     userWalletId = userWalletId,
-                    accessMode = PolymarketAccessMode.TRADING,
                 ),
             ),
             router = router,
