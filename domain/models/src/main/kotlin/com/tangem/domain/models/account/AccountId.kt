@@ -56,11 +56,8 @@ data class AccountId private constructor(
          *
          * @return an [Either] containing the [AccountId] on success, or an [Error] on failure
          */
-        fun forCryptoPortfolio(userWalletId: UserWalletId, value: String): Either<Error, AccountId> = either {
-            ensure(value.isNotBlank()) { Error.Empty }
-            ensure(value.matches(hexRegex)) { Error.InvalidFormat }
-
-            AccountId(value = value, userWalletId = userWalletId)
+        fun forCryptoPortfolio(userWalletId: UserWalletId, value: String): Either<Error, AccountId> {
+            return forValidatedHex(userWalletId = userWalletId, value = value)
         }
 
         /**
@@ -74,6 +71,25 @@ data class AccountId private constructor(
             val value = sha256Digest.digest(input).toHexString()
 
             return AccountId(value = value, userWalletId = userWalletId)
+        }
+
+        /**
+         * Creates a unique account identifier for a joint account
+         *
+         * @param userWalletId the identifier of the user wallet
+         * @param value        the identifier computed and returned by the backend (64 hex chars)
+         *
+         * @return an [Either] containing the [AccountId] on success, or an [Error] on failure
+         */
+        fun forJointAccount(userWalletId: UserWalletId, value: String): Either<Error, AccountId> {
+            return forValidatedHex(userWalletId = userWalletId, value = value)
+        }
+
+        private fun forValidatedHex(userWalletId: UserWalletId, value: String): Either<Error, AccountId> = either {
+            ensure(value.isNotBlank()) { Error.Empty }
+            ensure(value.matches(hexRegex)) { Error.InvalidFormat }
+
+            AccountId(value = value, userWalletId = userWalletId)
         }
 
         fun forPaymentAccount(userWalletId: UserWalletId): AccountId {

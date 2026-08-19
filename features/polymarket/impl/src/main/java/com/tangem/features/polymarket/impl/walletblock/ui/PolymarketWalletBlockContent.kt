@@ -4,31 +4,34 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.account.AccountIcon
-import com.tangem.common.ui.account.AccountIconUM
-import com.tangem.common.ui.account.AccountRow
-import com.tangem.core.ui.components.TextShimmer
+import com.tangem.core.ui.components.account.PredictionAccountIcon
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.components.account.toBoxSize
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.row.token.TangemTokenRow
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.polymarket.impl.R
+import com.tangem.features.polymarket.impl.walletblock.PREDICTION_ACCOUNT_ROW_ID
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import com.tangem.utils.extensions.addIf
+import kotlinx.collections.immutable.toImmutableList
+import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun PolymarketWalletBlockContent(
@@ -38,71 +41,79 @@ internal fun PolymarketWalletBlockContent(
 ) {
     when (state) {
         is PolymarketWalletBlockUM.Hidden -> Unit
-        is PolymarketWalletBlockUM.Loading -> PredictionAccountLoading(state, modifier)
-        is PolymarketWalletBlockUM.Content -> PredictionAccountContent(state, isBalanceHidden, modifier)
-        is PolymarketWalletBlockUM.Unavailable -> PredictionAccountUnavailable(state, modifier)
+        is PolymarketWalletBlockUM.Content -> {
+            val rowUM = state.toRowUM()
+
+            // The overload the wallet's own account rows use: it pads the head slot the same way and takes the
+            // click from the model, so this row cannot drift from them
+            TangemTokenRow(
+                tokenRowUM = rowUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier.roundedShapeItemDecoration(
+                    radius = 20.dp,
+                    currentIndex = 0,
+                    addDefaultPadding = false,
+                    lastIndex = 0,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                ),
+                headComponent = { headModifier ->
+                    TangemIcon(
+                        tangemIconUM = rowUM.headIconUM,
+                        modifier = headModifier.size(AccountIconSize.Default.toBoxSize()),
+                    )
+                },
+                titleComponent = { titleModifier ->
+                    TokenRowTitle(titleUM = rowUM.titleUM, modifier = titleModifier)
+                },
+            )
+        }
     }
 }
 
 @Composable
-private fun PredictionAccountContent(
-    state: PolymarketWalletBlockUM.Content,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    AccountRow(
-        modifier = modifier.predictionAccountCard(),
-        title = title,
-        subtitle = state.subtitle,
-        icon = AccountIconUM.Prediction,
-        balance = state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-        isBalanceFlickering = state.isBalanceFlickering,
-        isBalanceFromCache = state.isBalanceFromCache,
-        onClick = state.onClick,
-    )
-}
-
-/** A dash, not a zero: a zero would claim the account is empty, which is exactly what is unknown here. */
-@Composable
-private fun PredictionAccountUnavailable(state: PolymarketWalletBlockUM.Unavailable, modifier: Modifier = Modifier) {
-    AccountRow(
-        modifier = modifier.predictionAccountCard(),
-        title = title,
-        subtitle = state.subtitle,
-        icon = AccountIconUM.Prediction,
-        balance = stringReference(DASH_SIGN).resolveAnnotatedReference(),
-        onClick = state.onClick,
-    )
-}
+private fun PolymarketWalletBlockUM.Content.toRowUM(): TangemTokenRowUM = TangemTokenRowUM.Content(
+    id = PREDICTION_ACCOUNT_ROW_ID,
+    headIconUM = TangemIconUM.Currency(
+        currencyIconState = CurrencyIconState.CryptoPortfolio.Icon(
+            resId = PredictionAccountIcon.resId,
+            color = PredictionAccountIcon.color,
+            isGrayscale = false,
+            size = AccountIconSize.Default,
+        ),
+    ),
+    titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.prediction_account_title)),
+    // Empty until the positions contract lands: the mock shows a count of open predictions, which
+    // nothing can supply yet
+    subtitleUM = TangemTokenRowUM.SubtitleUM.Empty,
+    topEndContentUM = toEndContentUM(),
+    bottomEndContentUM = TangemTokenRowUM.EndContentUM.Empty,
+    onItemClick = onClick,
+    onItemLongClick = null,
+)
 
 @Composable
-private fun PredictionAccountLoading(state: PolymarketWalletBlockUM.Loading, modifier: Modifier = Modifier) {
-    TangemRow(
-        modifier = modifier.predictionAccountCard(),
-        contentLead = TangemRowContentLead.Start,
-        verticalAlignment = TangemRowVerticalAlignment.Center,
-        startSlot = {
-            AccountIcon(name = title, icon = AccountIconUM.Prediction, size = AccountIconSize.Default)
-        },
-        titleSlot = { TangemRowText(text = title, role = TangemRowTextRole.Title) },
-        subtitleSlot = { TangemRowText(text = state.subtitle, role = TangemRowTextRole.Subtitle) },
-        valueSlot = {
-            TextShimmer(
-                style = TangemTheme.typography3.body.medium,
-                radius = 10.dp,
-                modifier = Modifier.width(width = 80.dp),
-            )
-        },
-    )
-}
-
-private val title: TextReference
-    get() = resourceReference(R.string.prediction_account_title)
+private fun PolymarketWalletBlockUM.Content.toEndContentUM(): TangemTokenRowUM.EndContentUM =
+    when (val balance = balance) {
+        is PolymarketWalletBlockUM.Balance.Loading -> TangemTokenRowUM.EndContentUM.Loading
+        // A dash, not a zero: a zero would claim the account is empty, which is exactly what is unknown
+        is PolymarketWalletBlockUM.Balance.Unknown -> endContent(text = stringReference(DASH_SIGN))
+        is PolymarketWalletBlockUM.Balance.Amount -> endContent(text = balance.text)
+    }
 
 @Composable
-private fun Modifier.predictionAccountCard(): Modifier = this
-    .clip(RoundedCornerShape(size = 24.dp))
-    .background(TangemTheme.colors3.bg.secondary)
+private fun PolymarketWalletBlockUM.Content.endContent(text: TextReference) = TangemTokenRowUM.EndContentUM.Content(
+    text = text,
+    isFlickering = isBalanceFlickering,
+    startIcons = buildList {
+        addIf(
+            element = TangemIconUM.Icon(
+                iconRes = CoreUiR.drawable.ic_error_sync_default_24,
+                tintReference = { TangemTheme.colors2.graphic.neutral.tertiary },
+            ),
+            condition = isBalanceFromCache,
+        )
+    }.toImmutableList(),
+)
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
@@ -117,30 +128,29 @@ private fun PolymarketWalletBlockContent_Preview(
             isBalanceHidden = false,
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)
-                .padding(all = 16.dp)
-                .size(width = 360.dp, height = 72.dp),
+                .padding(all = 12.dp),
         )
     }
 }
 
-private class PolymarketWalletBlockPreviewProvider : CollectionPreviewParameterProvider<PolymarketWalletBlockUM>(
-    collection = listOf(
-        PolymarketWalletBlockUM.Loading(subtitle = stringReference("Prediction markets")),
-        PolymarketWalletBlockUM.Content(
-            subtitle = stringReference("Prediction markets"),
-            balance = stringReference("$1,234.00"),
-            isBalanceFlickering = false,
-            isBalanceFromCache = false,
-            onClick = {},
+private class PolymarketWalletBlockPreviewProvider :
+    CollectionPreviewParameterProvider<PolymarketWalletBlockUM>(
+        collection = listOf(
+            previewContent(balance = PolymarketWalletBlockUM.Balance.Amount(stringReference("$1,234.00"))),
+            previewContent(balance = PolymarketWalletBlockUM.Balance.Loading),
+            previewContent(balance = PolymarketWalletBlockUM.Balance.Unknown),
+            previewContent(
+                balance = PolymarketWalletBlockUM.Balance.Amount(stringReference("$1,234.00")),
+                isBalanceFromCache = true,
+            ),
         ),
-        PolymarketWalletBlockUM.Content(
-            subtitle = stringReference("Prediction markets"),
-            balance = stringReference("$1,234.00"),
-            isBalanceFlickering = true,
-            isBalanceFromCache = true,
-            onClick = {},
-        ),
-        PolymarketWalletBlockUM.Unavailable(subtitle = stringReference("Unavailable"), onClick = {}),
-    ),
-)
+    )
+
+private fun previewContent(balance: PolymarketWalletBlockUM.Balance, isBalanceFromCache: Boolean = false) =
+    PolymarketWalletBlockUM.Content(
+        balance = balance,
+        isBalanceFlickering = false,
+        isBalanceFromCache = isBalanceFromCache,
+        onClick = {},
+    )
 // endregion
