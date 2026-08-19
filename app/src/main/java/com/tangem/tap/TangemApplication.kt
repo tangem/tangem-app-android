@@ -16,7 +16,7 @@ import com.tangem.core.analytics.filter.AppsFlyerEventFilter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.LogConfig
