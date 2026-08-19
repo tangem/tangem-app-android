@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
+import com.tangem.features.jointaccount.main.ui.JointAccountActivationConfirmationBS
 import com.tangem.features.jointaccount.main.ui.JointAccountMembersScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -44,6 +45,9 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
         JointAccountMembersScreen(state = state, modifier = modifier)
 
         memberCard.child?.instance?.BottomSheet()
+        state.activation?.confirmation?.let { confirmation ->
+            JointAccountActivationConfirmationBS(state = confirmation)
+        }
     }
 
     private fun memberCardChild(
