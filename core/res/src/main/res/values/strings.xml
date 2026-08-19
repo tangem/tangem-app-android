@@ -997,6 +997,9 @@
   <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
   <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
+  <string name="joint_account_activation_account_button_title">Activate account</string>
+  <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval.</string>
+  <string name="joint_account_activation_title">You\'re activating a shared account</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
