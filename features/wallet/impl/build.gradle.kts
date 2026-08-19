@@ -157,6 +157,5 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(projects.common.test)
-    testImplementation(projects.features.polymarket.api)
     testImplementation(projects.test.core)
 }
