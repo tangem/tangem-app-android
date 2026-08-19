@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -121,6 +122,7 @@ internal fun tariffPlanState(
 
 internal fun tangemPayCard(
     id: String = "card_1",
+    productInstanceId: String = "product_1",
     lastDigits: String = "1234",
     frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
     state: TangemPayCardState = TangemPayCardState.Active,
@@ -128,7 +130,7 @@ internal fun tangemPayCard(
     images: List<TangemPayTariffPlan.Image> = emptyList(),
 ): TangemPayCard = TangemPayCard(
     id = id,
-    productInstanceId = "product_1",
+    productInstanceId = productInstanceId,
     cardStatus = TangemPayCard.Status.ACTIVE,
     hasPinCode = true,
     displayName = null,
@@ -138,4 +140,5 @@ internal fun tangemPayCard(
     images = images,
     state = state,
     embossName = embossName,
+    cardType = TangemPayCardType.VIRTUAL,
 )
