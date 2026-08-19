@@ -29,6 +29,7 @@ import com.tangem.feature.tester.presentation.storybook.page.pagerindicator.tang
 import com.tangem.feature.tester.presentation.storybook.page.placeholder.placeholderStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.progress.progressIndicatorStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.tangemSearchFieldStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.storiesv2.storiesV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tab.tangemTabStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tabs.tangemSegmentedPickerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.tangemTokenRowStoryFactory
@@ -39,6 +40,7 @@ private data class StoryItem(val title: String, val factory: StoryPageFactory)
 
 private fun buildStories() = listOf(
     StoryItem(title = "💎 DS Components", factory = dsComponentsListStoryFactory),
+    StoryItem(title = "🎬 Stories Player", factory = storiesV2StoryFactory),
     StoryItem(title = "🔘 Buttons", factory = buttonsStoryFactory),
     StoryItem(title = "🏷️ Badge", factory = tangemBadgeStoryFactory),
     StoryItem(title = "✨ Opportunities BG", factory = opportunitiesBGStoryFactory),
