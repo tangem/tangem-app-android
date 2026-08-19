@@ -39,6 +39,10 @@ dependencies {
     implementation(projects.core.pagination)
     // endregion
 
+    // region Store
+    implementation(projects.store.datasource)
+    // endregion
+
     // region Data
     api(projects.data.common)
     // endregion
