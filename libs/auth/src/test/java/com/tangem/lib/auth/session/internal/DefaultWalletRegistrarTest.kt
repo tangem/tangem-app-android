@@ -135,8 +135,8 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `register attaches attestation token from provider to the wallet request`() = runTest {
-        stubHappyPath()
-        coEvery { attestationProvider.getAttestationToken(any()) } returns "attest-token"
+        stubHappyPath() // decryptNonce("abc") returns "decrypted"
+        coEvery { attestationProvider.getAttestationToken("decrypted") } returns "attest-token"
         val slot = slot<WalletRegistrationRequest>()
         coEvery { authApi.registerWallet(capture(slot)) } returns tokenSuccess()
 
@@ -144,6 +144,7 @@ class DefaultWalletRegistrarTest {
 
         assertThat(result.isRight()).isTrue()
         assertThat(slot.captured.attestationToken).isEqualTo("attest-token")
+        coVerify { attestationProvider.getAttestationToken("decrypted") }
     }
 
     @Test
