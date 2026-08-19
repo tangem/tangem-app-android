@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.ethpool.models.response
+package com.tangem.grow.datasource.ethpool.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
