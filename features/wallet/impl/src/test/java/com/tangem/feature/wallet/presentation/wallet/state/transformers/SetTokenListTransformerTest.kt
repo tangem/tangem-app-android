@@ -88,7 +88,6 @@ class SetTokenListTransformerTest {
             shouldShowMainPromo = false,
             isAccountsModeEnabled = false,
             isMultipleCardsEnabled = false,
-            isPolymarketEnabled = false,
         )
     }
 
