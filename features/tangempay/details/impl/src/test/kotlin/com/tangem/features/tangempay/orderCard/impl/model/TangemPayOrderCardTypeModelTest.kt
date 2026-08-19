@@ -21,6 +21,7 @@ import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
+import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -55,10 +56,12 @@ internal class TangemPayOrderCardTypeModelTest {
     }
 
     private var model: TangemPayOrderCardTypeModel? = null
+    private var selectedPlasticEta: Int? = null
 
     @BeforeEach
     fun setUp() {
         Locale.setDefault(Locale.US)
+        selectedPlasticEta = null
         every { featureToggles.isPlasticCardOrderEnabled } returns true
         every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(status)
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
@@ -85,12 +88,46 @@ internal class TangemPayOrderCardTypeModelTest {
             assertThat(state.isLoading).isFalse()
             assertThat(state.isError).isFalse()
             assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
-            assertThat(state.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.Default)
-            assertThat(state.plastic?.country).isEqualTo("US")
-            assertThat(state.plastic?.deliveryEtaMaxBusinessDays).isEqualTo(4)
-            assertThat(state.plastic?.deliveryFee).contains("$")
-            assertThat(state.plastic?.deliveryFee).contains("21.69")
+            val plastic = state.availablePlastic
+            assertThat(plastic?.feeState).isEqualTo(FeeState.Default)
+            assertThat(plastic?.country).isEqualTo("US")
+            assertThat(plastic?.deliveryEta)
+                .isEqualTo(TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = 2, maxBusinessDays = 4))
+            assertThat(plastic?.deliveryFee).contains("$")
+            assertThat(plastic?.deliveryFee).contains("21.69")
         }
+
+    @Test
+    fun `GIVEN whole delivery fee WHEN model created THEN fee shown without fractional digits`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+            listOf(virtualOffer(), plasticOffer(feeAmount = BigDecimal("10.00"))).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.deliveryFee).isEqualTo("$10")
+    }
+
+    @Test
+    fun `GIVEN plastic offer without min eta WHEN model created THEN only max business days carried`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+            listOf(
+                virtualOffer(),
+                plasticOffer(deliveryEta = Offer.DeliveryEta(minBusinessDays = null, maxBusinessDays = 4)),
+            ).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.deliveryEta)
+            .isEqualTo(TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = null, maxBusinessDays = 4))
+    }
 
     @Test
     fun `GIVEN zero delivery fee WHEN model created THEN free delivery state`() = runTest {
@@ -103,7 +140,9 @@ internal class TangemPayOrderCardTypeModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.FreeDelivery)
+        val plastic = model.state.value.availablePlastic
+        assertThat(plastic?.feeState).isEqualTo(FeeState.FreeDelivery)
+        assertThat(plastic?.deliveryFee).isNull()
     }
 
     @Test
@@ -117,7 +156,7 @@ internal class TangemPayOrderCardTypeModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.InsufficientFunds)
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.InsufficientFunds)
     }
 
     @Test
@@ -131,7 +170,7 @@ internal class TangemPayOrderCardTypeModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.Default)
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.Default)
     }
 
     @Test
@@ -147,7 +186,7 @@ internal class TangemPayOrderCardTypeModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.FreeDelivery)
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.FreeDelivery)
     }
 
     @Test
@@ -161,7 +200,7 @@ internal class TangemPayOrderCardTypeModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.InsufficientFunds)
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.InsufficientFunds)
     }
 
     @Test
@@ -176,28 +215,28 @@ internal class TangemPayOrderCardTypeModelTest {
 
             // Assert
             assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Virtual)
-            assertThat(model.state.value.plastic).isNull()
             coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
         }
 
     @Test
-    fun `GIVEN no plastic offer WHEN model created THEN virtual only and no customer info requested`() = runTest {
-        // Arrange
-        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(virtualOffer()).right()
+    fun `GIVEN no plastic offer WHEN model created THEN plastic is unavailable with the residence country`() =
+        runTest {
+            // Arrange
+            coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(virtualOffer()).right()
 
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
 
-        // Assert
-        assertThat(model.state.value.isError).isFalse()
-        assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Virtual)
-        assertThat(model.state.value.plastic).isNull()
-        coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
-    }
+            // Assert
+            val state = model.state.value
+            assertThat(state.isError).isFalse()
+            assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
+            assertThat(state.plastic).isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = "US"))
+        }
 
     @Test
-    fun `GIVEN plastic offer without delivery eta WHEN model created THEN virtual only`() = runTest {
+    fun `GIVEN plastic offer without delivery eta WHEN model created THEN plastic is unavailable`() = runTest {
         // Arrange
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
             listOf(virtualOffer(), plasticOffer(deliveryEta = null)).right()
@@ -207,9 +246,37 @@ internal class TangemPayOrderCardTypeModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.state.value.isError).isFalse()
-        assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Virtual)
-        assertThat(model.state.value.plastic).isNull()
+        val state = model.state.value
+        assertThat(state.isError).isFalse()
+        assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
+        assertThat(state.plastic).isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = "US"))
+    }
+
+    @Test
+    fun `GIVEN available plastic WHEN select plastic THEN max business days passed on`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onSelectPlastic()
+
+        // Assert
+        assertThat(selectedPlasticEta).isEqualTo(4)
+    }
+
+    @Test
+    fun `GIVEN unavailable plastic WHEN select plastic THEN selection ignored`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(virtualOffer()).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onSelectPlastic()
+
+        // Assert
+        assertThat(selectedPlasticEta).isNull()
     }
 
     @Test
@@ -250,12 +317,15 @@ internal class TangemPayOrderCardTypeModelTest {
         assertThat(model.state.value.isError).isTrue()
     }
 
+    private val TangemPayOrderCardTypeUM.availablePlastic: TangemPayOrderCardTypeUM.Plastic.Available?
+        get() = plastic as? TangemPayOrderCardTypeUM.Plastic.Available
+
     private fun createModel(testScope: TestScope) = TangemPayOrderCardTypeModel(
         paramsContainer = MutableParamsContainer(
             TangemPayOrderCardTypeComponent.Params(
                 userWalletId = userWalletId,
                 onSelectVirtual = {},
-                onSelectPlastic = {},
+                onSelectPlastic = { selectedPlasticEta = it },
             ),
         ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
