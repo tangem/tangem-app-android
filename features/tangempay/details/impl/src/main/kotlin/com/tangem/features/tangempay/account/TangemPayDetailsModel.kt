@@ -221,22 +221,22 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openAddFunds() {
-        val balance = currentStatus.value.balanceOrNull()
-        val address = currentStatus.value.ifLoadedOrNull { it.depositAddress }
-        if (balance == null || address.isNullOrEmpty()) {
+        val loaded = currentStatus.value.ifLoadedOrNull { it }
+        if (loaded == null || !loaded.canAddFunds(tangemPayFeatureToggles.isAccountMultichainEnabled)) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
-        } else {
-            bottomSheetNavigation.activate(
-                TangemPayDetailsNavigation.AddFunds(
-                    walletId = userWalletId,
-                    fiatBalance = balance.availableForWithdrawal,
-                    cryptoBalance = balance.availableForWithdrawal,
-                    depositAddress = balance.cryptoBalance.depositAddress,
-                    cryptoCurrency = cryptoCurrency,
-                    virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
-                ),
-            )
+            return
         }
+        val balance = loaded.balance
+        bottomSheetNavigation.activate(
+            TangemPayDetailsNavigation.AddFunds(
+                walletId = userWalletId,
+                fiatBalance = balance.availableForWithdrawal,
+                cryptoBalance = balance.availableForWithdrawal,
+                depositAddress = balance.cryptoBalance.depositAddress,
+                cryptoCurrency = cryptoCurrency,
+                virtualAccountOnramp = loaded.virtualAccount,
+            ),
+        )
     }
 
     private fun onConfirmWithdrawal(currency: CryptoCurrency) {
