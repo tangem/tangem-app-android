@@ -21,6 +21,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
@@ -88,9 +89,43 @@ internal class JointAccountMembersModel @Inject constructor(
             members = (listOf(creator) + freeSlots).toImmutableList(),
             otherMembersLabel = if (freeSlots.isNotEmpty()) stringReference("Other members") else null,
             canArchive = isInviteMode,
+            // TODO([REDACTED_TASK_KEY]): on the stubbed state the action is gated by the creator flag only; the real
+            //  gate — every slot is filled and the account is `confirming` — arrives with domain integration
+            activation = if (canInvite) {
+                JointAccountMembersUM.ActivationUM(
+                    onActivateClick = ::onActivateClick,
+                    confirmation = null,
+                )
+            } else {
+                null
+            },
             onArchiveClick = ::onArchiveClick,
             onCloseClick = ::onCloseClick,
         )
+    }
+
+    private fun onActivateClick() {
+        updateActivationConfirmation(
+            confirmation = JointAccountMembersUM.ActivationUM.ConfirmationUM(
+                onConfirmClick = ::onConfirmActivationClick,
+                onCancelClick = ::onCancelActivationClick,
+            ),
+        )
+    }
+
+    private fun onConfirmActivationClick() {
+        // TODO([REDACTED_TASK_KEY]): run the activation orchestrator (one-tap payload signing) once it lands
+        updateActivationConfirmation(confirmation = null)
+    }
+
+    private fun onCancelActivationClick() {
+        updateActivationConfirmation(confirmation = null)
+    }
+
+    private fun updateActivationConfirmation(confirmation: JointAccountMembersUM.ActivationUM.ConfirmationUM?) {
+        uiState.update { state ->
+            state.copy(activation = state.activation?.copy(confirmation = confirmation))
+        }
     }
 
     private fun onShareSafelyClick() {
