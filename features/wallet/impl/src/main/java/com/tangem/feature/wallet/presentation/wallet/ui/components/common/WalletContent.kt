@@ -53,7 +53,6 @@ internal fun WalletListContent(
 ) {
     val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
     val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
-    val accountRowItemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x2)
 
     LazyColumn(
         modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
@@ -106,8 +105,7 @@ internal fun WalletListContent(
             polymarketComponent = polymarketComponent,
             polymarketUM = currentWallet.polymarketWalletBlockUM,
             isBalanceHidden = isBalanceHidden,
-            // The spacing the account rows keep between each other, since this row continues that list
-            modifier = accountRowItemModifier,
+            modifier = itemModifier,
         )
 
         nftCollections2(state = currentWallet, itemModifier = itemModifier)
