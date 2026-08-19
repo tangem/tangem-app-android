@@ -13,6 +13,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.lib.auth.attestation.AttestationProvider
+import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
@@ -143,7 +144,7 @@ internal class DefaultWalletRegistrar(
                 cardSignature = bundle.cardSignature?.toBase64NoWrap(),
                 cardSignatureSalt = bundle.cardSignatureSalt?.toBase64NoWrap(),
                 walletStatus = bundle.walletStatusByte?.let { byteArrayOf(it).toBase64NoWrap() },
-                attestationToken = attestationProvider.getAttestationToken(nonce),
+                attestationToken = attestationProvider.getAttestationTokenOrNull(nonce),
                 metadata = signedRequestPayload.deviceMetadata,
             ),
         )
