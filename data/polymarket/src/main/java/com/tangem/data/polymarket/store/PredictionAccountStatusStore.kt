@@ -88,17 +88,22 @@ internal class PredictionAccountStatusStore(
     }
 
     /**
-     * Marks what is already cached as un-refreshed. Runtime only, and in one atomic update: a refresh that failed
-     * must not overwrite the value a concurrent successful one has just written, and a source saying "could not be
-     * refreshed" must not survive to the next launch, where nothing has been attempted yet.
+     * Records that a refresh failed. Runtime only, and in one atomic update: a refresh that failed must not
+     * overwrite the value a concurrent successful one has just written, and a failure must not survive to the next
+     * launch, where nothing has been attempted yet.
+     *
+     * A cached value keeps its balance and is flagged [StatusSource.ONLY_CACHE]. With nothing cached there is no
+     * balance to keep, so the failure itself is recorded: leaving the entry absent would keep the account reporting
+     * [PredictionAccountStatusValue.Loading] forever, and the row would shimmer for a balance that is not coming.
      */
-    suspend fun updateStatusSource(userWalletId: UserWalletId, source: StatusSource) {
+    suspend fun markUnrefreshed(userWalletId: UserWalletId) {
         preloaded.await()
 
         runtimeStore.update(default = emptyMap()) { stored ->
-            val value = stored[userWalletId.stringValue] ?: return@update stored
+            val value = stored[userWalletId.stringValue]?.copySealed(source = StatusSource.ONLY_CACHE)
+                ?: PredictionAccountStatusValue.Error.Unavailable
 
-            stored + (userWalletId.stringValue to value.copySealed(source = source))
+            stored + (userWalletId.stringValue to value)
         }
     }
 
