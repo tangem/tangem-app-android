@@ -12,18 +12,14 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.domain.pay.repository.CashbackRepository
-import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
@@ -52,7 +48,6 @@ internal class TangemPayCashbackModelTest {
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val cashbackRepository: CashbackRepository = mockk()
-    private val onboardingRepository: OnboardingRepository = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     @BeforeEach
@@ -62,12 +57,10 @@ internal class TangemPayCashbackModelTest {
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "July 1 – 5"
-        clearMocks(cashbackRepository, onboardingRepository)
+        clearMocks(cashbackRepository)
         coEvery { cashbackRepository.getCashbackSummary(any()) } returns CashbackSummary.Disabled.right()
         coEvery { cashbackRepository.getCashbackPromotions(any()) } returns promotions().right()
         coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns docs().right()
-        coEvery { onboardingRepository.getCustomerInfo(any()) } returns
-            customerInfo(tierId = "basic", planName = "Basic").right()
     }
 
     @AfterEach
@@ -85,23 +78,23 @@ internal class TangemPayCashbackModelTest {
         // Assert
         assertThat(model.content().infoTiles).isNotNull()
         assertThat(model.content().infoTiles?.rate?.title)
-            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")))
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")))
         assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITH_CAP)
         assertThat(model.accrualsSheet.value.docRows).hasSize(2)
     }
 
     @Test
-    fun `GIVEN PLUS plan WHEN model created THEN rate tile shows up to the max rate`() {
+    fun `GIVEN single card WHEN model created THEN rate tile shows its exact backend rate`() {
         // Arrange
-        coEvery { onboardingRepository.getCustomerInfo(any()) } returns
-            customerInfo(tierId = "plus", planName = "Plus").right()
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns
+            promotions(cards = listOf(card(cardType = "prestige", title = "Prestige Card", rate = "1.5"))).right()
 
         // Act
         val model = createModel()
 
         // Assert
         assertThat(model.content().infoTiles?.rate?.title)
-            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")))
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1.5")))
     }
 
     @Test
@@ -174,19 +167,6 @@ internal class TangemPayCashbackModelTest {
     }
 
     @Test
-    fun `GIVEN customer info fails WHEN model created THEN rate title falls back to the base rate`() {
-        // Arrange
-        coEvery { onboardingRepository.getCustomerInfo(any()) } throws RuntimeException("boom")
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        assertThat(model.content().infoTiles?.rate?.title)
-            .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")))
-    }
-
-    @Test
     fun `GIVEN docs load fails WHEN model created THEN accrual doc rows empty but info rows kept`() {
         // Arrange
         coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } throws RuntimeException("boom")
@@ -251,7 +231,6 @@ internal class TangemPayCashbackModelTest {
         router = router,
         urlOpener = urlOpener,
         cashbackRepository = cashbackRepository,
-        onboardingRepository = onboardingRepository,
         analytics = analytics,
     )
 
@@ -259,34 +238,34 @@ internal class TangemPayCashbackModelTest {
         uiState.value as TangemPayCashbackScreenUM.Content
 
     private fun promotions(
+        cards: List<CashbackPromotions.CardPromotion> = listOf(
+            card(cardType = "basic", title = "Basic Card", rate = "1.0"),
+            card(cardType = "plus", title = "Plus Card", rate = "2.0"),
+        ),
         additional: List<CashbackPromotions.AdditionalCashback> = emptyList(),
     ) = CashbackPromotions(
-        cardTiers = listOf(
-            CashbackPromotions.CardTier(
-                tier = "basic",
-                label = "Basic",
-                scope = "All purchases",
-                minTransactionAmount = BigDecimal("30"),
-                monthlyCapAmount = BigDecimal("100"),
-            ),
-            CashbackPromotions.CardTier(
-                tier = "plus",
-                label = "Plus",
-                scope = "All purchases",
-                minTransactionAmount = BigDecimal("30"),
-                monthlyCapAmount = BigDecimal("300"),
-            ),
-        ),
-        monthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"),
+        cards = cards,
+        accountMonthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("300"), currency = "USD"),
         additionalCashback = additional,
+    )
+
+    private fun card(cardType: String, title: String, rate: String) = CashbackPromotions.CardPromotion(
+        cardType = cardType,
+        title = title,
+        cashbackRate = BigDecimal(rate),
+        minTransactionAmount = BigDecimal("30"),
+        promotionId = "promo-$cardType",
     )
 
     private fun additionalPromo() = CashbackPromotions.AdditionalCashback(
         id = "promo-1",
+        cardType = null,
         name = "Groceries increase",
         description = "+1% cashback for groceries stores",
-        isPermanent = true,
         endDate = null,
+        promoCap = null,
+        minTransactionAmount = null,
+        priority = 99,
     )
 
     private fun docs() = listOf(
@@ -323,19 +302,6 @@ internal class TangemPayCashbackModelTest {
         confirmedAmount = BigDecimal(amount),
         currency = "USD",
     )
-
-    private fun customerInfo(tierId: String, planName: String): CustomerInfo {
-        val currentPlan = TangemPayTariffPlan(
-            id = "plan-$tierId",
-            tierId = tierId,
-            isBasicTier = tierId == "basic",
-            name = planName,
-            programName = "program",
-            descriptionItems = emptyList(),
-        )
-        val customerTariffPlanMock = mockk<TangemPayCustomerTariffPlan> { every { plan } returns currentPlan }
-        return mockk { every { tariffPlan } returns customerTariffPlanMock }
-    }
 
     private companion object {
         const val DETAILS_ROWS_WITH_CAP = 5
