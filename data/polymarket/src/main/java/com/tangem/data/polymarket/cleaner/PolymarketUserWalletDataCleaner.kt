@@ -10,7 +10,8 @@ import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
- * Removes the Polymarket CLOB credentials and the cached prediction account status of deleted wallets.
+ * Removes the Polymarket CLOB credentials, the cached prediction account status and the onboarding
+ * confirmation record of deleted wallets.
  *
  * [UserWalletId] is derived from the wallet key, so re-adding the same wallet reproduces the storage key.
  * Without this, the credentials of a deleted wallet are handed back to it: the onboarding run returns any
