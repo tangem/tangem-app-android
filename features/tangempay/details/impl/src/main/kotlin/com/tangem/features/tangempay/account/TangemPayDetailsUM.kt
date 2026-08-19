@@ -95,6 +95,8 @@ internal sealed interface CardsProgressBannerUM {
 
     data object Reissuing : CardsProgressBannerUM
 
+    data object Activating : CardsProgressBannerUM
+
     data class Delivering(val onActivateClick: () -> Unit) : CardsProgressBannerUM
 }
 
