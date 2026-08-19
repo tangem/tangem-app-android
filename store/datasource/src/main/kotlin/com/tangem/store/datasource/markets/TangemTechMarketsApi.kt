@@ -1,7 +1,7 @@
-package com.tangem.datasource.api.markets
+package com.tangem.store.datasource.markets
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.markets.models.response.*
+import com.tangem.store.datasource.markets.models.response.*
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

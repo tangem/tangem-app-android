@@ -2,7 +2,6 @@ package com.tangem.data.markets
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -16,8 +15,8 @@ import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.*
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
+import com.tangem.store.datasource.markets.TangemTechMarketsApi
+import com.tangem.store.datasource.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
