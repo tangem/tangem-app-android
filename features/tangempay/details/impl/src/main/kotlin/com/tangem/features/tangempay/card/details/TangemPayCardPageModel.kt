@@ -464,14 +464,15 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onViewPinAuthFailure(failure: BiometricAuthManager.Result.Failure) {
         when (failure.error) {
-            BiometricAuthError.NoDeviceCredential -> {
+            BiometricAuthError.NoBiometricEnrolled,
+            BiometricAuthError.NoDeviceCredential,
+            -> {
                 uiMessageSender.send(
                     message = TangemPayMessagesFactory.createProtectionNotSetMessage(
                         onOpenSettingsClick = settingsManager::openScreenLockSettings,
                     ),
                 )
             }
-            BiometricAuthError.NoBiometricEnrolled,
             BiometricAuthError.HardwareUnavailable,
             BiometricAuthError.NoForegroundActivity,
             BiometricAuthError.Unknown,
@@ -691,6 +692,16 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onSelectDisabled() {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(TangemPayCardNavigation.OtherNetworks)
+    }
+
+    /**
+     * Both sheets share the single bottom-sheet slot, so opening "Other networks" replaced the
+     * "Choose network" sheet it was opened from instead of stacking on top of it. Closing it therefore has to
+     * bring that sheet back explicitly — otherwise the user is dropped all the way out to the card screen.
+     */
+    fun onOtherNetworksDismiss() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(TangemPayCardNavigation.ChooseNetwork(walletId = userWalletId))
     }
 
     override fun onDismiss() {

@@ -76,7 +76,6 @@ internal class TangemPayTxHistoryItemToDMConverter @Inject constructor() :
         currency = currency,
         isCapTrimmed = isCapTrimmed,
         exclusionReason = exclusionReason?.toDM(),
-        promotionIds = promotionIds,
     )
 
     private fun CashbackDomain.Status.toDM(): CashbackDM.Status = when (this) {
@@ -90,7 +89,6 @@ internal class TangemPayTxHistoryItemToDMConverter @Inject constructor() :
     private fun CashbackDomain.ExclusionReason.toDM(): CashbackDM.ExclusionReason = when (this) {
         CashbackDomain.ExclusionReason.MCC_EXCLUDED -> CashbackDM.ExclusionReason.MCC_EXCLUDED
         CashbackDomain.ExclusionReason.MONTHLY_CAP_REACHED -> CashbackDM.ExclusionReason.MONTHLY_CAP_REACHED
-        CashbackDomain.ExclusionReason.CUSTOMER_BLOCKLISTED -> CashbackDM.ExclusionReason.CUSTOMER_BLOCKLISTED
         CashbackDomain.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED ->
             CashbackDM.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED
         CashbackDomain.ExclusionReason.BELOW_MIN -> CashbackDM.ExclusionReason.BELOW_MIN
@@ -168,7 +166,6 @@ internal class TangemPayTxHistoryItemToDomainConverter @Inject constructor() :
         currency = currency,
         isCapTrimmed = isCapTrimmed,
         exclusionReason = exclusionReason?.toDomain(),
-        promotionIds = promotionIds,
     )
 
     private fun CashbackDM.Status.toDomain(): CashbackDomain.Status = when (this) {
@@ -182,7 +179,6 @@ internal class TangemPayTxHistoryItemToDomainConverter @Inject constructor() :
     private fun CashbackDM.ExclusionReason.toDomain(): CashbackDomain.ExclusionReason = when (this) {
         CashbackDM.ExclusionReason.MCC_EXCLUDED -> CashbackDomain.ExclusionReason.MCC_EXCLUDED
         CashbackDM.ExclusionReason.MONTHLY_CAP_REACHED -> CashbackDomain.ExclusionReason.MONTHLY_CAP_REACHED
-        CashbackDM.ExclusionReason.CUSTOMER_BLOCKLISTED -> CashbackDomain.ExclusionReason.CUSTOMER_BLOCKLISTED
         CashbackDM.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED ->
             CashbackDomain.ExclusionReason.MERCHANT_COUNTRY_EXCLUDED
         CashbackDM.ExclusionReason.BELOW_MIN -> CashbackDomain.ExclusionReason.BELOW_MIN

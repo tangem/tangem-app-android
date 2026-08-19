@@ -30,7 +30,6 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
-import com.tangem.core.ui.ds2.button.GroupEntry
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -48,7 +47,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_24
+import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_info_24
 import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24_filled
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -113,8 +112,11 @@ private fun MembersMenuButton(onArchiveClick: () -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Box {
-        TangemButton.GroupEntry(
-            imageVector = Icons.ic_dots_horizontal_24,
+        TangemButton(
+            variant = TangemButton.Variant.Ghost,
+            size = TangemButton.Size.X11,
+            iconStart = TangemIconUM.Icon(Icons.ic_dots_horizontal_20),
+            contentDescription = stringResourceSafe(CoreUiR.string.common_more),
             onClick = { isExpanded = true },
         )
         DropdownMenu(

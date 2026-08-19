@@ -5,7 +5,7 @@ import com.tangem.spend.datasource.config.TangemPay
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackDocument
@@ -57,10 +57,10 @@ internal class MockAwareCashbackRepository @Inject constructor(
 
     override suspend fun getCashbackHistory(
         userWalletId: UserWalletId,
-        months: Int,
+        monthsNumber: Int,
     ): Either<VisaApiError, CashbackHistory> {
-        if (isMockMode) return MOCK_HISTORY.copy(months = MOCK_HISTORY.months.takeLast(months)).right()
-        return real.getCashbackHistory(userWalletId, months)
+        if (isMockMode) return MOCK_HISTORY.copy(months = MOCK_HISTORY.months.takeLast(monthsNumber)).right()
+        return real.getCashbackHistory(userWalletId, monthsNumber)
     }
 
     override suspend fun getCashbackDetails(
@@ -82,10 +82,12 @@ internal class MockAwareCashbackRepository @Inject constructor(
             displayMode = CashbackDisplayMode.FULL,
             cashback = TangemPayCashback(
                 confirmedAmount = BigDecimal("22.54"),
-                pendingAmount = BigDecimal("13.65"),
+                totalEarnedAmount = BigDecimal("132.15"),
                 currency = "USD",
-                payoutCurrency = "USDC",
-                payoutNetwork = "Polygon",
+                previousPayout = TangemPayCashback.PreviousPayout(
+                    endDate = DateTime.parse("2026-06-05"),
+                    amount = BigDecimal("18.00"),
+                ),
                 period = TangemPayCashback.Period(
                     year = 2026,
                     month = 6,
@@ -152,14 +154,20 @@ internal class MockAwareCashbackRepository @Inject constructor(
         )
 
         val MOCK_HISTORY = CashbackHistory(
-            currency = "USD",
             months = listOf(
-                CashbackHistory.MonthlyCashback(year = 2026, month = 2, confirmedAmount = BigDecimal("12.02")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 3, confirmedAmount = BigDecimal("44.22")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 4, confirmedAmount = BigDecimal("38.52")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 5, confirmedAmount = BigDecimal("26.10")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
+                mockMonth(month = 2, amount = "12.02"),
+                mockMonth(month = 3, amount = "44.22"),
+                mockMonth(month = 4, amount = "38.52"),
+                mockMonth(month = 5, amount = "26.10"),
+                mockMonth(month = 6, amount = "22.54"),
             ),
+        )
+
+        private fun mockMonth(month: Int, amount: String) = CashbackHistory.MonthlyCashback(
+            year = 2026,
+            month = month,
+            confirmedAmount = BigDecimal(amount),
+            currency = "USD",
         )
 
         private val USD: Currency = Currency.getInstance("USD")
@@ -206,7 +214,6 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 currency = value?.let { USD },
                 isCapTrimmed = isCapTrimmed,
                 exclusionReason = exclusionReason,
-                promotionIds = emptyList(),
             )
         }
     }

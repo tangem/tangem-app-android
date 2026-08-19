@@ -12,7 +12,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoU
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.combine8
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -37,7 +36,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) : BasicAccountListSubscriber() {
 
@@ -96,7 +94,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
                 isMultipleCardsEnabled = true,
-                isPolymarketEnabled = polymarketFeatureToggles.isPolymarketEnabled,
                 isHotBackedUp = isHotBackedUp,
             )
         }
