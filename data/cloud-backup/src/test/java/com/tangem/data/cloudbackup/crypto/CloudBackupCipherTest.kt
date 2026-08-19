@@ -213,6 +213,37 @@ internal class CloudBackupCipherTest {
         )
     }
 
+    @Test
+    fun `GIVEN encrypted file data WHEN isSupportedFormat THEN true`() {
+        // Arrange
+        val encrypted = cipher.encrypt(byteArrayOf(1, 2, 3), "password".toCharArray(), METADATA, LIGHT_PARAMS)
+
+        // Act & Assert
+        assertThat(cipher.isSupportedFormat(encrypted)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN unsupported version WHEN isSupportedFormat THEN false`() {
+        // Arrange
+        val encrypted = cipher.encrypt(byteArrayOf(1, 2, 3), "password".toCharArray(), METADATA, LIGHT_PARAMS)
+        val broken = encrypted.copy(version = 2)
+
+        // Act & Assert
+        assertThat(cipher.isSupportedFormat(broken)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN malformed salt WHEN isSupportedFormat THEN false`() {
+        // Arrange
+        val encrypted = cipher.encrypt(byteArrayOf(1, 2, 3), "password".toCharArray(), METADATA, LIGHT_PARAMS)
+        val broken = encrypted.copy(
+            crypto = encrypted.crypto.copy(kdfparams = encrypted.crypto.kdfparams.copy(salt = "not hex")),
+        )
+
+        // Act & Assert
+        assertThat(cipher.isSupportedFormat(broken)).isFalse()
+    }
+
     private class SequentialRandom : SecureRandom() {
         private var counter = 0
         override fun nextBytes(bytes: ByteArray) {
