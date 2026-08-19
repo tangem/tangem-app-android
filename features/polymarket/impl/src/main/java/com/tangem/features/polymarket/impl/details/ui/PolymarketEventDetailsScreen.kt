@@ -54,6 +54,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 private const val KEY_HEADER = "header"
 private const val KEY_SUBCATEGORIES = "subcategories"
+private const val KEY_CLOSED_CHIP = "closed_chip"
 
 /** Gap between the sheet's top edge and the scrolling header at rest. */
 private val ContentTopGap = 8.dp
@@ -219,6 +220,21 @@ private fun ContentState(
         }
 
         marketCards(markets = state.activeMarkets)
+
+        if (state.closedMarkets.isNotEmpty()) {
+            item(key = KEY_CLOSED_CHIP) {
+                ClosedMarketsChip(
+                    count = state.closedMarkets.size,
+                    onClick = state.onClosedMarketsClick,
+                )
+            }
+
+            if (state.isClosedMarketsExpanded) {
+                marketCards(markets = state.closedMarkets)
+            }
+        }
+
+        summarySection(state = state)
     }
 }
 
@@ -291,17 +307,35 @@ private fun previewContent(): PolymarketEventDetailsUM.Content {
             previewMarket(id = "germany", title = "Germany", volume = "\$250K"),
             previewMarket(id = "argentina", title = "Argentina", volume = "\$6.3M"),
         ),
+        closedMarkets = persistentListOf(
+            previewMarket(id = "closed", title = "Qatar", volume = "\$120K", withOutcomes = false),
+        ),
+        isClosedMarketsExpanded = false,
+        description = stringReference(
+            "This market will resolve to the team that is officially declared the winner " +
+                "of the 2026 FIFA World Cup final by the official governing body.",
+        ),
+        isDescriptionExpanded = false,
+        resolutionDate = stringReference("Jul 11, 2026, 6:00 PM ET"),
+        marketOpenedDate = stringReference("Jul 11, 2026, 6:00 PM ET"),
         onShareClick = {},
+        onClosedMarketsClick = {},
+        onReadMoreClick = {},
     )
 }
 
-private fun previewMarket(id: String, title: String, volume: String) = PolymarketDetailsMarketUM(
-    id = id,
-    title = stringReference(title),
-    volume = stringReference(volume),
-    iconUrl = null,
-    outcomes = persistentListOf(
-        PolymarketDetailsOutcomeUM(assetId = "yes", title = stringReference("Yes • 25¢"), onClick = {}),
-        PolymarketDetailsOutcomeUM(assetId = "no", title = stringReference("No • 74¢"), onClick = {}),
-    ),
-)
+private fun previewMarket(id: String, title: String, volume: String, withOutcomes: Boolean = true) =
+    PolymarketDetailsMarketUM(
+        id = id,
+        title = stringReference(title),
+        volume = stringReference(volume),
+        iconUrl = null,
+        outcomes = if (withOutcomes) {
+            persistentListOf(
+                PolymarketDetailsOutcomeUM(assetId = "yes", title = stringReference("Yes • 25¢"), onClick = {}),
+                PolymarketDetailsOutcomeUM(assetId = "no", title = stringReference("No • 74¢"), onClick = {}),
+            )
+        } else {
+            persistentListOf()
+        },
+    )
