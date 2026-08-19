@@ -19,6 +19,7 @@ import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataCompon
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.FieldUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
+import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -105,7 +106,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
             val info = onboardingRepository.getCustomerInfo(params.userWalletId).getOrNull()
             val mask = info?.phoneMask.orEmpty().takeIf(PhoneMaskFormatter::isUsable).orEmpty()
             val email = info?.email.orEmpty()
-            val country = info?.country.orEmpty().trim()
+            val country = CountryNames.getDisplayName(info?.country)
             state.value = if (email.isNotBlank() && country.isNotBlank()) {
                 createFormState(country = country, email = email, mask = mask)
             } else {
