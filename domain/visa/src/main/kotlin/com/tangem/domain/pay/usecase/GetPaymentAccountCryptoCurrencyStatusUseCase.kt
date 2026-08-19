@@ -62,4 +62,16 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
         }
         return (accountStatus to cryptoCurrencyStatus).some()
     }
+
+    /**
+     * Every currency the payment account holds — one per token per issued network. Collapses to the single
+     * legacy currency while the account is not multichain, so callers get the same shape either way.
+     */
+    suspend fun invokeSyncCurrencies(userWalletId: UserWalletId): List<CryptoCurrencyStatus> {
+        val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return emptyList()
+        return when (val statusValue = accountStatus.value) {
+            is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatuses
+            else -> emptyList()
+        }
+    }
 }
