@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 /**
- * Response from `GET /v1/customer/cashback/summary`
+ * Response from `GET /v1/customer/cashback/summary`.
  */
 @JsonClass(generateAdapter = true)
 data class CashbackSummaryResponse(
@@ -14,13 +14,13 @@ data class CashbackSummaryResponse(
     @JsonClass(generateAdapter = true)
     data class Result(
         @Json(name = "cashback_program_status") val cashbackProgramStatus: String,
-        @Json(name = "cashback_display_mode") val cashbackDisplayMode: String?,
-        @Json(name = "period") val period: Period?,
-        @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal?,
-        @Json(name = "pending_amount") val pendingAmount: BigDecimal?,
-        @Json(name = "currency") val currency: String?,
-        @Json(name = "payout_currency") val payoutCurrency: String?,
-        @Json(name = "payout_network") val payoutNetwork: String?,
+        @Json(name = "cashback_display_mode") val cashbackDisplayMode: String,
+        @Json(name = "period") val period: Period,
+        @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal,
+        @Json(name = "total_earned_amount") val totalEarnedAmount: BigDecimal?,
+        @Json(name = "previous_payout_end_date") val previousPayoutEndDate: String?,
+        @Json(name = "previous_payout_amount") val previousPayoutAmount: BigDecimal?,
+        @Json(name = "currency") val currency: String,
     )
 
     @JsonClass(generateAdapter = true)
