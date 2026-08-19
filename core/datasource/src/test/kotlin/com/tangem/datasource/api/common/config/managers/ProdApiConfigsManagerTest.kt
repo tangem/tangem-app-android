@@ -18,7 +18,6 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
-import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
@@ -40,7 +39,6 @@ import java.util.TimeZone
 internal class ProdApiConfigsManagerTest {
 
     private val environmentConfig = createMockEnvironmentConfig()
-    private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
     private val p2pEthPoolAuthProvider = mockk<P2PEthPoolAuthProvider>()
     private val appAuthProvider = mockk<AuthProvider>()
     private val appInfoProvider = mockk<AppInfoProvider>()
@@ -51,13 +49,11 @@ internal class ProdApiConfigsManagerTest {
     @BeforeEach
     fun setup() {
         clearMocks(
-            stakeKitAuthProvider,
             appAuthProvider,
             appInfoProvider,
         )
 
         every { appInfoProvider.appVersion } returns VERSION_NAME
-        every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { p2pEthPoolAuthProvider.getApiKey() } returns P2P_API_KEY
         every { appAuthProvider.getApiKey(any()) } returns tangemApiKeyProvider
         coEvery { tangemApiKeyProvider.invoke() } returns TANGEM_API_KEY
@@ -95,7 +91,6 @@ internal class ProdApiConfigsManagerTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = appInfoProvider,
             ),
-            StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
             P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
             News(
                 authProvider = appAuthProvider,
@@ -114,7 +109,6 @@ internal class ProdApiConfigsManagerTest {
     private fun provideTestModels() = listOf(
         createYieldSupplyModel(),
         createTangemTechModel(),
-        createStakeKitModel(),
         createP2PModel(),
         createNewsModel(),
         createAuthModel(),
@@ -219,20 +213,6 @@ internal class ProdApiConfigsManagerTest {
                         TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                     },
                     "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
-                ),
-            ),
-        )
-    }
-
-    private fun createStakeKitModel(): TestModel {
-        return TestModel(
-            id = StakeKit.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.stakek.it/v1/",
-                headers = mapOf(
-                    "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
-                    "accept" to ProviderSuspend { "application/json" },
                 ),
             ),
         )
