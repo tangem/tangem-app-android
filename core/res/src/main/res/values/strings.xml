@@ -535,6 +535,7 @@
   <string name="common_transfer">Transfer</string>
   <string name="common_transferred">Transferred</string>
   <string name="common_try_again_later">Please try again later.</string>
+  <string name="common_type">Type</string>
   <string name="common_unable_to_load">Unable to load data…</string>
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
