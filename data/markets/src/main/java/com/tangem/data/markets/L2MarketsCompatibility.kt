@@ -6,7 +6,7 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.store.datasource.markets.models.response.TokenMarketInfoResponse
 import com.tangem.store.datasource.markets.models.response.TokenMarketListResponse
 
-fun TokenMarketInfoResponse.applyL2Compatibility(coinId: String): TokenMarketInfoResponse {
+internal fun TokenMarketInfoResponse.applyL2Compatibility(coinId: String): TokenMarketInfoResponse {
     val networks = this.networks ?: return this
     if (coinId != ETHEREUM_COIN_ID) return this
 
@@ -23,7 +23,7 @@ fun TokenMarketInfoResponse.applyL2Compatibility(coinId: String): TokenMarketInf
     return this.copy(networks = networksWithL2)
 }
 
-fun TokenMarketListResponse.Token.applyL2Compatibility(): TokenMarketListResponse.Token {
+internal fun TokenMarketListResponse.Token.applyL2Compatibility(): TokenMarketListResponse.Token {
     val networks = this.networks ?: return this
     if (id != ETHEREUM_COIN_ID) return this
 
