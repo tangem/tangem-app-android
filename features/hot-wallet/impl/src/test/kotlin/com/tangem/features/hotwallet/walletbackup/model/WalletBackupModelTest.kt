@@ -112,7 +112,12 @@ internal class WalletBackupModelTest {
 
             verify { trackingContextProxy.addHotWalletContext() }
             verify {
-                analyticsEventHandler.send(WalletSettingsAnalyticEvents.BackupScreenOpened(isBackedUp = false))
+                analyticsEventHandler.send(
+                    WalletSettingsAnalyticEvents.BackupScreenOpened(
+                        isBackedUp = false,
+                        cloudBackupState = null,
+                    ),
+                )
             }
             val state = model.uiState.value
             Assertions.assertEquals(false, state.isBackedUp)
@@ -514,6 +519,72 @@ internal class WalletBackupModelTest {
             assertThat(sentMessages.any { it is SnackbarMessage }).isTrue()
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN delete fails with NetworkError WHEN delete confirmed THEN dialog explains the network problem`() =
+        runTest {
+            // Arrange
+            val sentMessages = deleteWithError(CloudBackupError.NetworkError)
+
+            // Assert
+            val errorDialog = sentMessages.filterIsInstance<DialogMessage>().last()
+            assertThat(errorDialog.message).isEqualTo(resourceReference(R.string.hw_cloud_backup_error_network))
+        }
+
+    @Test
+    fun `GIVEN delete fails with CloudUnavailable WHEN delete confirmed THEN dialog explains cloud is unavailable`() =
+        runTest {
+            // Arrange
+            val sentMessages = deleteWithError(CloudBackupError.CloudUnavailable)
+
+            // Assert
+            val errorDialog = sentMessages.filterIsInstance<DialogMessage>().last()
+            assertThat(errorDialog.message).isEqualTo(resourceReference(R.string.hw_cloud_backup_error_unavailable))
+        }
+
+    @Test
+    fun `GIVEN delete fails with WriteError WHEN delete confirmed THEN dialog reports an unknown error`() = runTest {
+        // Arrange
+        val sentMessages = deleteWithError(CloudBackupError.WriteError())
+
+        // Assert
+        val errorDialog = sentMessages.filterIsInstance<DialogMessage>().last()
+        assertThat(errorDialog.message).isEqualTo(resourceReference(R.string.common_unknown_error))
+    }
+
+    @Test
+    fun `GIVEN delete canceled by the user WHEN delete confirmed THEN no error dialog is shown`() = runTest {
+        // Arrange
+        val sentMessages = deleteWithError(CloudBackupError.AuthCanceled)
+
+        // Assert
+        assertThat(sentMessages.filterIsInstance<DialogMessage>()).hasSize(1)
+        assertThat(sentMessages.filterIsInstance<SnackbarMessage>()).isEmpty()
+    }
+
+    private fun TestScope.deleteWithError(error: CloudBackupError): List<UiMessage> {
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(walletId = "011")).right()
+        coEvery { cloudBackupRepository.deleteBackup("file-1") } returns error.left()
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        model.uiState.value.onGoogleDriveClick()
+        val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+        sheet.messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.Button>()
+            .first()
+            .onClick
+            ?.invoke(sheet.messageBottomSheetUM.closeScope)
+        sentMessages.filterIsInstance<DialogMessage>().last().firstAction.onClick()
+        advanceUntilIdle()
+        model.onDestroy()
+
+        return sentMessages
+    }
 
     @Test
     fun `GIVEN cloud unread AND backup exists WHEN google drive tapped THEN backup recognized AND flag restored`() =
