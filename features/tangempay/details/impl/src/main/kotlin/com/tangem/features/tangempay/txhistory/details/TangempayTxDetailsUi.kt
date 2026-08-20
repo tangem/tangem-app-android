@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.txhistory.details
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,7 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
@@ -23,6 +27,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -132,22 +139,52 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
 private fun TransactionIcon(iconState: TangemIconUM, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x20)
+            .size(80.dp)
             .clip(CircleShape)
             .background(TangemTheme.colors3.bg.opaque.primary),
         contentAlignment = Alignment.Center,
     ) {
-        TangemIcon(
-            tangemIconUM = iconState,
-            modifier = Modifier.size(
-                if (iconState is TangemIconUM.Icon) {
-                    TangemTheme.dimens2.x12
-                } else {
-                    TangemTheme.dimens2.x20
-                },
-            ),
-        )
+        when (iconState) {
+            is TangemIconUM.Url -> MerchantIcon(url = iconState.url, fallbackRes = iconState.fallbackRes)
+            else -> TangemIcon(
+                tangemIconUM = iconState,
+                modifier = Modifier.size(
+                    if (iconState is TangemIconUM.Icon) {
+                        48.dp
+                    } else {
+                        80.dp
+                    },
+                ),
+            )
+        }
     }
+}
+
+@Composable
+private fun MerchantIcon(url: String?, @DrawableRes fallbackRes: Int) {
+    SubcomposeAsyncImage(
+        model = ImageRequest.Builder(context = LocalContext.current)
+            .data(url)
+            .crossfade(enable = true)
+            .allowHardware(enable = false)
+            .build(),
+        contentDescription = null,
+        modifier = Modifier.size(80.dp),
+        loading = { CircleShimmer(Modifier.size(80.dp)) },
+        // A logo fills the circle, but the fallback glyph is a 24dp icon: drawn at the logo's size it
+        // renders as an oversized untinted shape, so it keeps the plain-icon size and tint instead.
+        // The Box absorbs the min constraints the image propagates, which would otherwise stretch it.
+        error = {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(fallbackRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = TangemTheme.colors3.icon.secondary,
+                )
+            }
+        },
+    )
 }
 
 @Composable

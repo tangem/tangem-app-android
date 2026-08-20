@@ -1,6 +1,7 @@
 package com.tangem.common.routing.deeplink
 
 import com.tangem.common.routing.deeplink.DeeplinkConst.TANGEM_SCHEME
+import java.net.URLEncoder
 
 /** Builder class for constructing deep links with a fluent interface */
 internal class DeepLinkBuilder {
@@ -45,9 +46,13 @@ internal class DeepLinkBuilder {
         val queryString = if (queryParams.isEmpty()) {
             ""
         } else {
-            "?" + queryParams.entries.joinToString("&") { "${it.key}=${it.value}" }
+            "?" + queryParams.entries.joinToString("&") { "${it.key.urlEncoded()}=${it.value.urlEncoded()}" }
         }
 
         return "$scheme://$path$queryString"
     }
+
+    // Values arrive from push payloads: an unencoded & or = would end one param early and turn the
+    // rest of the value into params of its own, overwriting other fields.
+    private fun String.urlEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8.name())
 }
