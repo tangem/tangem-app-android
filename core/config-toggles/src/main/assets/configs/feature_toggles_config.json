@@ -1,5 +1,9 @@
 [
     {
+        "name": "AND_16115_OTEL_METRICS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED",
         "version": "undefined"
     },
