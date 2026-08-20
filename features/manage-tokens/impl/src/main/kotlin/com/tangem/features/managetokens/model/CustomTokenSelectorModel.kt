@@ -16,6 +16,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.managetokens.GetManageTokensAllowedNetworksUseCase
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
@@ -49,6 +50,7 @@ import javax.inject.Inject
 internal class CustomTokenSelectorModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSupportedNetworksUseCase: GetSupportedNetworksUseCase,
+    private val getManageTokensAllowedNetworksUseCase: GetManageTokensAllowedNetworksUseCase,
     private val messageSender: UiMessageSender,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     paramsContainer: ParamsContainer,
@@ -169,7 +171,9 @@ internal class CustomTokenSelectorModel @Inject constructor(
     }
 
     private suspend fun getSupportedNetworks(mode: AddCustomTokenMode): List<Network> {
-        return getSupportedNetworksUseCase(mode.userWalletId).getOrElse { _ ->
+        val allowedNetworkIds = getManageTokensAllowedNetworksUseCase(mode.accountId)
+
+        return getSupportedNetworksUseCase(mode.userWalletId, allowedNetworkIds).getOrElse { _ ->
             val message = SnackbarMessage(message = resourceReference(R.string.common_unknown_error))
             messageSender.send(message)
 

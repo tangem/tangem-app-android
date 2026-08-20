@@ -20,7 +20,10 @@ dependencies {
     // endregion
 
     // region Domain
+    api(projects.domain.account)
+    api(projects.domain.jointAccount)
     api(projects.domain.models)
+    implementation(projects.domain.core)
     // endregion
 
     // region Domain models
