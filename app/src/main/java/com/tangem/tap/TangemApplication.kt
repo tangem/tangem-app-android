@@ -249,6 +249,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     private fun initOpenTelemetry() {
-        openTelemetryMetricsHolder.initialize(application = this, scope = appScope)
+        openTelemetryMetricsHolder.initialize()
     }
 }
