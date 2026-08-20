@@ -33,6 +33,7 @@ import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHand
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
@@ -231,6 +232,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder(appsFlyerClientFactory))
 
         factory.addHandlerBuilder(CustomerIoAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(OpenTelemetryAnalyticsHandler.Builder(openTelemetryMetricsHolder))
 
         factory.addFilter(oneTimeEventFilter)
         factory.addFilter(AppsFlyerEventFilter())
