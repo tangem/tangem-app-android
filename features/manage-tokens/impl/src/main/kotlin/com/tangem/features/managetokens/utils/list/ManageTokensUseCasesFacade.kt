@@ -3,17 +3,16 @@ package com.tangem.features.managetokens.utils.list
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.GetDistinctManagedCurrenciesUseCase
+import com.tangem.domain.managetokens.GetManageTokensAllowedNetworksUseCase
 import com.tangem.domain.managetokens.GetManagedTokensUseCase
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -22,6 +21,9 @@ import com.tangem.features.managetokens.component.ManageTokensMode
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @Suppress("LongParameterList")
 internal class ManageTokensUseCasesFacade @AssistedInject constructor(
@@ -32,20 +34,43 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val customTokensRepository: CustomTokensRepository,
     private val singleAccountSupplier: SingleAccountSupplier,
+    private val getManageTokensAllowedNetworksUseCase: GetManageTokensAllowedNetworksUseCase,
     @Assisted private val mode: ManageTokensMode,
 ) {
 
     private val nonePortfolioError: IllegalStateException
         get() = IllegalStateException("Unsupported")
 
-    fun manageTokensListConfig(searchText: String?): ManageTokensListConfig {
+    private val allowedNetworkIdsMutex = Mutex()
+    private var isAllowedNetworkIdsResolved = false
+    private var allowedNetworkIdsCache: Set<Network.RawID>? = null
+
+    suspend fun manageTokensListConfig(searchText: String?): ManageTokensListConfig {
         return when (mode) {
             is ManageTokensMode.Account -> {
-                ManageTokensListConfig(accountId = mode.accountId, searchText = searchText)
+                ManageTokensListConfig(
+                    accountId = mode.accountId,
+                    searchText = searchText,
+                    allowedNetworkIds = resolveAllowedNetworkIds(mode),
+                )
             }
             ManageTokensMode.None -> {
                 ManageTokensListConfig(accountId = null, searchText = searchText)
             }
+        }
+    }
+
+    /**
+     * The allowlist doesn't change for the lifetime of this facade, so it's resolved only once.
+     * Reads/writes stay under the mutex to avoid a cross-thread visibility race on the cache.
+     */
+    private suspend fun resolveAllowedNetworkIds(mode: ManageTokensMode.Account): Set<Network.RawID>? {
+        return allowedNetworkIdsMutex.withLock {
+            if (!isAllowedNetworkIdsResolved) {
+                allowedNetworkIdsCache = getManageTokensAllowedNetworksUseCase(mode.accountId)
+                isAllowedNetworkIdsResolved = true
+            }
+            allowedNetworkIdsCache
         }
     }
 
@@ -73,9 +98,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
                 val added = tempAddedTokens.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId)
                 val removed = tempRemovedTokens.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId)
 
-                val account = singleAccountSupplier.getSyncOrNull(
-                    params = SingleAccountProducer.Params(accountId = mode.accountId),
-                ) as? Account.CryptoPortfolio
+                val account = singleAccountSupplier.filterPortfolioAccount(mode.accountId).firstOrNull()
                     ?: return IllegalStateException("Account not found").left()
 
                 (account.cryptoCurrencies + added - removed).any { currency ->
