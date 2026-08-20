@@ -7,7 +7,9 @@ import com.tangem.crypto.Secp256k1
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.BIP32
 import com.tangem.crypto.hdWallet.bip32.ExtendedPrivateKey
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
+import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.signing.CanonicalJson
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -102,14 +104,14 @@ internal class JointAccountCrossPlatformVectorTest {
     }
 
     private fun vectorPayload() = JointAccountCreationPayload(
-        config = JointAccountCreationPayload.Config(
+        config = JointAccountConfig(
             name = "Family",
             icon = "Family",
             iconColor = "Azure",
             membersCount = 3,
             threshold = 2,
         ),
-        creator = JointAccountCreationPayload.Creator(
+        creator = JointAccountParticipant(
             walletId = VECTOR_WALLET_ID,
             name = "Alice",
             address = EXPECTED_OWNER_ADDRESS_0,

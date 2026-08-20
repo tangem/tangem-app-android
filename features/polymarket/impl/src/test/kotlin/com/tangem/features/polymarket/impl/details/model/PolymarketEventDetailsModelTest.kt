@@ -78,14 +78,14 @@ internal class PolymarketEventDetailsModelTest {
     }
 
     @Test
-    fun `WHEN close clicked THEN router pops`() = runTest {
+    fun `WHEN back clicked THEN router pops`() = runTest {
         // Arrange
         coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
         // Act
-        model.onCloseClick()
+        model.onBackClick()
 
         // Assert
         verify { router.pop(any()) }

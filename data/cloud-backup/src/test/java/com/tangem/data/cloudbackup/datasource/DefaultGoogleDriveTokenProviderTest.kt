@@ -4,6 +4,7 @@ import android.content.Context
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.test.core.ProvideTestModels
@@ -30,18 +31,21 @@ internal class DefaultGoogleDriveTokenProviderTest {
     private val authorizer: GoogleDriveAuthorizer = mockk()
     private val api: GoogleDriveApi = mockk(relaxed = true)
     private val context: Context = mockk()
+    private val networkConnectionManager: NetworkConnectionManager = mockk()
 
     private lateinit var provider: DefaultGoogleDriveTokenProvider
 
     @BeforeEach
     fun setUp() {
-        clearMocks(authorizer, api)
+        clearMocks(authorizer, api, networkConnectionManager)
         mockkObject(GoogleServicesHelper)
         every { GoogleServicesHelper.checkGoogleServicesAvailability(any()) } returns true
+        every { networkConnectionManager.isOnline } returns true
         provider = DefaultGoogleDriveTokenProvider(
             authorizer = authorizer,
             api = api,
             context = context,
+            networkConnectionManager = networkConnectionManager,
         )
     }
 
@@ -61,6 +65,33 @@ internal class DefaultGoogleDriveTokenProviderTest {
         // Assert
         assertThat(actual).isEqualTo(CloudBackupError.CloudUnavailable.left())
         coVerify(exactly = 0) { authorizer.authorize() }
+    }
+
+    @Test
+    fun `GIVEN device offline WHEN getAccessToken THEN NetworkError and no authorize`() = runTest {
+        // Arrange
+        every { networkConnectionManager.isOnline } returns false
+
+        // Act
+        val actual = provider.getAccessToken()
+
+        // Assert
+        assertThat(actual).isEqualTo(CloudBackupError.NetworkError.left())
+        coVerify(exactly = 0) { authorizer.authorize() }
+    }
+
+    @Test
+    fun `GIVEN cached token AND device offline WHEN getAccessToken THEN cached token returned`() = runTest {
+        // Arrange
+        coEvery { authorizer.authorize() } returns GoogleDriveAuthResult(TOKEN).right()
+        provider.getAccessToken()
+        every { networkConnectionManager.isOnline } returns false
+
+        // Act
+        val actual = provider.getAccessToken()
+
+        // Assert
+        assertThat(actual).isEqualTo(TOKEN.right())
     }
 
     @Test

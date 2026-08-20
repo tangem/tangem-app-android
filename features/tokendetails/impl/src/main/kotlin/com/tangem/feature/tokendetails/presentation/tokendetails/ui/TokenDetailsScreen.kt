@@ -333,6 +333,9 @@ private fun TokenDetailsScreen_Preview() {
                 override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
+
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
             },
             expressTransactionsComponent = PreviewExpressTransactionsComponent,
             ratingComponent = null,

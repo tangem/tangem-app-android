@@ -19,7 +19,7 @@ internal class TangemPayAdditionalCashbackConverter(
                 TangemPayAdditionalCashbackUM.Item(
                     id = promo.id,
                     name = stringReference(promo.name),
-                    description = stringReference(promo.description),
+                    description = promo.description?.let(::stringReference),
                     badge = promo.toBadge(),
                 )
             }.toImmutableList(),
@@ -28,7 +28,7 @@ internal class TangemPayAdditionalCashbackConverter(
 
     private fun CashbackPromotions.AdditionalCashback.toBadge(): TangemPayAdditionalCashbackUM.Badge {
         val expiry = endDate
-        return if (isPermanent || expiry == null) {
+        return if (expiry == null) {
             TangemPayAdditionalCashbackUM.Badge.Permanent
         } else {
             TangemPayAdditionalCashbackUM.Badge.Until(

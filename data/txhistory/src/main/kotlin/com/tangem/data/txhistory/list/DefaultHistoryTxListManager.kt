@@ -14,7 +14,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.list.HistoryTxListManager
 import com.tangem.domain.txhistory.list.HistoryTxListManager.*
+import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -41,6 +44,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
     private val bsdkOnChainHistoryFactory: BsdkOnChainHistory.Factory,
     private val tangemPayOnChainHistoryFactory: TangemPayOnChainHistory.Factory,
     private val indexTableOnChainHistoryFactory: IndexTableOnChainHistory.Factory,
+    private val txHistoryRepositoryV2: TxHistoryRepositoryV2,
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val currency: CryptoCurrency,
     @Assisted private val modelScope: CoroutineScope,
@@ -72,6 +76,36 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
 
     override fun loadMore() {
         actionsFlow.trySend(Action.LoadMore)
+    }
+
+    override fun txExpressHistoryItemFlow(txId: String): Flow<TxHistoryInfo> {
+        val alreadyLoaded = (state.value as? HistoryState.Content)
+            ?.items?.find { it.txId == txId }
+
+        val mergedTxByIdFlow = state
+            .mapNotNull { (it as? HistoryState.Content)?.items }
+            .mapNotNull { list -> list.firstOrNull { it.txId == txId } }
+            .distinctUntilChanged()
+
+        return if (alreadyLoaded != null) {
+            mergedTxByIdFlow
+        } else {
+            val standaloneExpressTxFlow: Flow<ExpressTx> = txHistoryRepositoryV2.getExpressTxById(
+                userWalletId = userWalletId,
+                currency = currency,
+                txId = txId,
+            )
+            channelFlow {
+                val standaloneListen = standaloneExpressTxFlow
+                    .onEach { send(it) }
+                    .launchIn(this)
+
+                mergedTxByIdFlow
+                    // Once pagination merges the item in, the DB-only standalone lookup is redundant — drop it.
+                    .onEach { standaloneListen.cancel() }
+                    .collect { send(it) }
+            }.distinctUntilChanged()
+        }
     }
 
     private fun buildPipeline(): Flow<HistoryState> = channelFlow {

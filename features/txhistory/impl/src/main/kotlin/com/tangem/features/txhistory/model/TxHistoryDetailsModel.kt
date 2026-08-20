@@ -79,6 +79,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val params: TxHistoryDetailsComponent.Params = paramsContainer.require()
 
     private val shareTextConverter = ExpressTxToShareTextConverter()
+    private val txHistoryInfo = params.historyTxListManager.txExpressHistoryItemFlow(params.txId)
 
     /**
      * Known staking targets (StakeKit validators and P2P vaults) keyed by on-chain address, used to resolve the target
@@ -89,7 +90,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * subscribed only while the viewed tx is a staking op ([requiresValidatorLookup]); a Send / Swap / onramp has no
      * target to resolve and stays on the empty map.
      */
-    private val targetsByAddress: Flow<Map<String, StakingTarget>> = params.txHistoryInfo
+    private val targetsByAddress: Flow<Map<String, StakingTarget>> = txHistoryInfo
         .map { it.requiresValidatorLookup() }
         .distinctUntilChanged()
         .flatMapLatest { requiresLookup ->
@@ -116,7 +117,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     init {
         // One-shot: the portfolio add must not re-run when the UI resubscribes.
         modelScope.launch(dispatchers.default) {
-            val refundAssetId = params.txHistoryInfo
+            val refundAssetId = txHistoryInfo
                 .mapNotNull { it.bridgeRefundTx()?.refundAssetId }
                 .first()
             refundCurrency.value = addRefundTokenToPortfolio(refundAssetId)
@@ -124,7 +125,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     }
 
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
-        flow = params.txHistoryInfo,
+        flow = txHistoryInfo,
         flow2 = ownerLookupProducer(),
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
@@ -164,7 +165,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     fun activateRatingForSwap() {
         if (isRatingActivationStarted) return
         isRatingActivationStarted = true
-        params.txHistoryInfo
+        txHistoryInfo
             .mapNotNull { (it as? ExpressTx.Swap)?.tx }
             .map { tx ->
                 RatingKey(

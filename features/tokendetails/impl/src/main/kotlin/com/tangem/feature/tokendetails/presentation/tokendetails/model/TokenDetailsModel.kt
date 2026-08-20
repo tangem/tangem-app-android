@@ -70,7 +70,10 @@ import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.optionOrNull
-import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
+import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
+import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
+import com.tangem.domain.tokens.SaveViewedYieldSupplyWarningUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
@@ -85,12 +88,12 @@ import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
-import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
@@ -106,13 +109,15 @@ import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
+import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
@@ -161,7 +166,7 @@ internal class TokenDetailsModel @Inject constructor(
     getUserWalletUseCase: GetUserWalletUseCase,
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
-    private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
+    private val expressDeepLinkListener: ExpressDeepLinkListener,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
@@ -186,6 +191,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -224,7 +230,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
     val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
-    val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
@@ -1282,7 +1287,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun checkForActionUpdates() {
-        tokenDetailsDeepLinkActionListener.tokenDetailsActionFlow
+        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) return
+        expressDeepLinkListener.actionFlow
             .onEach { txId -> expressTransactionsEventListener.send(ExpressTransactionsEvent.OpenTx(txId)) }
             .launchIn(modelScope)
     }
