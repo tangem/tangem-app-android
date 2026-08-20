@@ -24,4 +24,6 @@ dependencies {
 
     api(projects.core.remote)
     implementation(projects.core.utils)
+
+    implementation(projects.store.datasource.api)
 }
