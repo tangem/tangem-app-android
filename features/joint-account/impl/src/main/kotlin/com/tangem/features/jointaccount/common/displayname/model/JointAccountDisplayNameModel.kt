@@ -15,7 +15,6 @@ import com.tangem.features.jointaccount.common.displayname.state.transformers.Up
 import com.tangem.features.jointaccount.common.displayname.state.transformers.UpdateDisplayNameTransformer
 import com.tangem.features.jointaccount.common.displayname.ui.state.JointAccountDisplayNameUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -70,20 +69,14 @@ internal class JointAccountDisplayNameModel @Inject constructor(
 
         if (state.isButtonLoading) return
         stateController.update(UpdateButtonLoadingTransformer(isLoading = true))
-        params.onContinueClick(state.name)
 
-        // TODO: replace the imitation with the real card-signature (NFC) session once its task exists
         modelScope.launch {
-            delay(timeMillis = SIGNING_IMITATION_DURATION)
+            params.onContinueClick(state.name)
             stateController.update(UpdateButtonLoadingTransformer(isLoading = false))
         }
     }
 
     private fun onBackClick() {
         router.pop()
-    }
-
-    private companion object {
-        const val SIGNING_IMITATION_DURATION = 2_000L
     }
 }

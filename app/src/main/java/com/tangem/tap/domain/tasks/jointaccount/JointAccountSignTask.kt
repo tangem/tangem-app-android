@@ -1,16 +1,11 @@
 package com.tangem.tap.domain.tasks.jointaccount
 
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.toDecompressedPublicKey
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -71,15 +66,15 @@ class JointAccountSignTask @AssistedInject constructor(
             is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
             is CompletionResult.Success<ExtendedPublicKey> -> result.data
         }
-        val ownerAddress = generateEvmAddress(extendedPublicKey)
+        val ownerAddress = JointAccountSigning.evmAddress(ownerKey = extendedPublicKey)
 
         val payload = input.makePayload(ownerAddress)
         val canonicalPayload = CanonicalJson.canonicalize(payload.toCanonicalMap())
-        val hash = hashPersonalMessage(canonicalPayload)
+        val digest = JointAccountSigning.eip191Digest(canonicalPayload = canonicalPayload)
 
         val signResult = sign(
             session = session,
-            hash = hash,
+            hash = digest,
             seedPublicKey = seedPublicKey,
             derivationPath = derivationPath,
         )
@@ -92,7 +87,11 @@ class JointAccountSignTask @AssistedInject constructor(
             data = JointAccountSignResult(
                 ownerAddress = ownerAddress,
                 canonicalPayload = canonicalPayload,
-                signature = toRsvHex(signResponse.signature, hash, extendedPublicKey),
+                signature = JointAccountSigning.toRsvHex(
+                    signature = signResponse.signature,
+                    digest = digest,
+                    ownerKey = extendedPublicKey,
+                ),
                 derivedKeys = mapOf(
                     seedPublicKey.toMapKey() to ExtendedPublicKeysMap(mapOf(derivationPath to extendedPublicKey)),
                 ),
@@ -121,29 +120,6 @@ class JointAccountSignTask @AssistedInject constructor(
         SignHashCommand(hash = hash, walletPublicKey = seedPublicKey, derivationPath = derivationPath)
             .run(session = session, callback = deferred::complete)
         return deferred.await()
-    }
-
-    private fun generateEvmAddress(extendedPublicKey: ExtendedPublicKey): String {
-        return Blockchain.Ethereum.makeAddressesFromExtendedPublicKey(
-            extendedPublicKey = extendedPublicKey,
-            rawPath = null,
-            cachedIndex = null,
-        ).address
-    }
-
-    private fun hashPersonalMessage(message: ByteArray): ByteArray {
-        val prefix = "\u0019Ethereum Signed Message:\n${message.size}".toByteArray()
-        return (prefix + message).toKeccak()
-    }
-
-    private fun toRsvHex(signature: ByteArray, hash: ByteArray, extendedPublicKey: ExtendedPublicKey): String {
-        val rsv = UnmarshalHelper.unmarshalSignatureExtended(
-            signature = signature,
-            hash = hash,
-            publicKey = extendedPublicKey.publicKey.toDecompressedPublicKey(),
-        ).asRSVLegacyEVM()
-
-        return "0x" + rsv.toHexString().lowercase()
     }
 
     @AssistedFactory
