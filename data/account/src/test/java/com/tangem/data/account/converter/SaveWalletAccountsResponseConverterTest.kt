@@ -2,6 +2,7 @@ package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
 import org.junit.jupiter.api.Test
@@ -28,7 +29,7 @@ class SaveWalletAccountsResponseConverterTest {
                     derivationIndex = accountList.mainAccount.derivationIndex.value,
                     icon = accountList.mainAccount.icon.value.name,
                     iconColor = accountList.mainAccount.icon.color.name,
-                    type = SaveWalletAccountsResponse.TYPE_CRYPTO,
+                    type = WalletAccountDTO.TYPE_CRYPTO,
                 ),
             ),
         )

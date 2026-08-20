@@ -27,8 +27,6 @@ data class SaveWalletAccountsResponse(
 
     companion object {
 
-        const val TYPE_CRYPTO = "crypto"
-
         operator fun invoke(accounts: List<WalletAccountDTO>): SaveWalletAccountsResponse {
             return SaveWalletAccountsResponse(
                 accounts = accounts.map { accountDto ->
@@ -38,7 +36,7 @@ data class SaveWalletAccountsResponse(
                         derivationIndex = accountDto.derivationIndex,
                         icon = accountDto.icon,
                         iconColor = accountDto.iconColor,
-                        type = accountDto.type ?: TYPE_CRYPTO,
+                        type = accountDto.type ?: WalletAccountDTO.TYPE_CRYPTO,
                     )
                 },
             )
