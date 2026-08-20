@@ -158,6 +158,7 @@ private fun reissueTitleOrNull(cardState: TangemPayCardState): TextReference? {
             stringReference(". "),
             resourceReference(R.string.tangempay_card_page_closing_banner_description),
         )
+        TangemPayCardState.Activating,
         TangemPayCardState.Delivering,
         TangemPayCardState.Active,
         -> null

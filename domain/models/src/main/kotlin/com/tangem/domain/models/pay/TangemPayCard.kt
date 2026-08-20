@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
  * @property images card artwork images provided by the backend, keyed by [TangemPayTariffPlan.Image.Type].
  * @property state current lifecycle state of the card (reissuing / closing / active).
  * @property embossName cardholder name embossed on the card
+ * @property cardType whether the card is a digital (virtual) or a physical one.
  */
 @Serializable
 data class TangemPayCard(
@@ -34,7 +35,9 @@ data class TangemPayCard(
     @SerialName("images") val images: List<TangemPayTariffPlan.Image>,
     @SerialName("state") val state: TangemPayCardState,
     @SerialName("emboss_name") val embossName: String?,
+    @SerialName("card_type") val cardType: TangemPayCardType,
 ) {
+
     @Serializable
     enum class Status {
         @SerialName("ACTIVE")

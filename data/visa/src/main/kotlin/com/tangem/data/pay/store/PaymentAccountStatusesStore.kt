@@ -9,6 +9,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -107,6 +108,32 @@ internal class PaymentAccountStatusesStore(
                 val newValue = paymentAccountStatus.copy(
                     value = loaded.copy(virtualAccount = VirtualAccountOnramp.Processing),
                 )
+                put(key = userWalletId.stringValue, value = newValue)
+            }
+        }
+    }
+
+    /**
+     * Optimistically flips the cached card of [productInstanceId] to [TangemPayCardState.Activating] so the
+
+     * the order yet. Only a card that is still awaiting activation is touched, so this can never downgrade an
+     * already active card. Same atomicity, no-op and non-persistence semantics as
+     * [markVirtualAccountProcessing].
+     */
+    suspend fun markCardActivating(userWalletId: UserWalletId, productInstanceId: String) {
+        logger.i("markCardActivating($userWalletId, $productInstanceId)")
+        runtimeStore.update(emptyMap()) { stored ->
+            stored.toMutableMap().apply {
+                val paymentAccountStatus = this[userWalletId.stringValue] ?: return@update stored
+                val loaded = paymentAccountStatus.value as? PaymentAccountStatusValue.Loaded ?: return@update stored
+                val cards = loaded.cards.map { card ->
+                    if (card.productInstanceId == productInstanceId && card.state == TangemPayCardState.Delivering) {
+                        card.copy(state = TangemPayCardState.Activating)
+                    } else {
+                        card
+                    }
+                }
+                val newValue = paymentAccountStatus.copy(value = loaded.copy(cards = cards))
                 put(key = userWalletId.stringValue, value = newValue)
             }
         }

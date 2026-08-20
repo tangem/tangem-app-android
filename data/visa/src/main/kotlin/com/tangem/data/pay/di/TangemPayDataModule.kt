@@ -318,13 +318,13 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideRestoreActiveIssueOrdersUseCase(
+        fun provideRestoreActiveCardOrdersUseCase(
             customerOrderRepository: CustomerOrderRepository,
             issueCardRepository: TangemPayIssueCardRepository,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
             appCoroutineScope: AppCoroutineScope,
-        ): RestoreActiveIssueOrdersUseCase {
-            return RestoreActiveIssueOrdersUseCase(
+        ): RestoreActiveCardOrdersUseCase {
+            return RestoreActiveCardOrdersUseCase(
                 customerOrderRepository = customerOrderRepository,
                 issueCardRepository = issueCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,

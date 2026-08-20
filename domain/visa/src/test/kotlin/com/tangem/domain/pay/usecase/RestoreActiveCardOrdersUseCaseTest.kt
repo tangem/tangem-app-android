@@ -19,12 +19,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-internal class RestoreActiveIssueOrdersUseCaseTest {
+internal class RestoreActiveCardOrdersUseCaseTest {
 
     private val orderRepository: CustomerOrderRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk(relaxed = true)
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase = mockk(relaxed = true)
-    private val useCase = RestoreActiveIssueOrdersUseCase(
+    private val useCase = RestoreActiveCardOrdersUseCase(
         customerOrderRepository = orderRepository,
         issueCardRepository = issueCardRepository,
         startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
@@ -40,7 +40,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
         coEvery {
             orderRepository.findOrders(
                 userWalletId = userWalletId,
-                types = ISSUE_ORDER_TYPES,
+                types = RESTORED_ORDER_TYPES,
                 statuses = ACTIVE_STATUSES,
             )
         } returns listOf(first, second).right()
@@ -64,7 +64,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
     fun `GIVEN no active orders WHEN invoke THEN nothing is stored or polled`() = runTest {
         // Arrange
         coEvery {
-            orderRepository.findOrders(userWalletId, types = ISSUE_ORDER_TYPES, statuses = ACTIVE_STATUSES)
+            orderRepository.findOrders(userWalletId, types = RESTORED_ORDER_TYPES, statuses = ACTIVE_STATUSES)
         } returns emptyList<Order>().right()
 
         // Act
@@ -81,7 +81,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
         // Arrange
         val completed = order(id = "done", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN, status = OrderStatus.COMPLETED)
         coEvery {
-            orderRepository.findOrders(userWalletId, types = ISSUE_ORDER_TYPES, statuses = ACTIVE_STATUSES)
+            orderRepository.findOrders(userWalletId, types = RESTORED_ORDER_TYPES, statuses = ACTIVE_STATUSES)
         } returns listOf(completed).right()
 
         // Act
@@ -97,7 +97,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
     fun `GIVEN findOrders fails WHEN invoke THEN returns Unspecified and stores nothing`() = runTest {
         // Arrange
         coEvery {
-            orderRepository.findOrders(userWalletId, types = ISSUE_ORDER_TYPES, statuses = ACTIVE_STATUSES)
+            orderRepository.findOrders(userWalletId, types = RESTORED_ORDER_TYPES, statuses = ACTIVE_STATUSES)
         } returns VisaApiError.Unspecified.left()
 
         // Act
@@ -108,6 +108,34 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
         coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
         coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any()) }
     }
+
+    @Test
+    fun `GIVEN an active activation order WHEN invoke THEN it is polled but not stored as an issue order`() =
+        runTest {
+            // Arrange
+            val activation = order(
+                id = "activation",
+                type = OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
+                status = OrderStatus.PROCESSING,
+            )
+            coEvery {
+                orderRepository.findOrders(userWalletId, types = RESTORED_ORDER_TYPES, statuses = ACTIVE_STATUSES)
+            } returns listOf(activation).right()
+
+            // Act
+            val result = useCase(userWalletId)
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
+            coVerify(exactly = 1) {
+                startTangemPayOrderPollingUseCase(
+                    TangemPayOrderInfo(activation.id, activation.status),
+                    userWalletId,
+                    any(),
+                )
+            }
+        }
 
     private fun order(id: String, type: OrderType, status: OrderStatus): Order = Order(
         id = id,
@@ -126,7 +154,7 @@ internal class RestoreActiveIssueOrdersUseCaseTest {
     )
 
     private companion object {
-        val ISSUE_ORDER_TYPES = OrderType.issueCardTypes
+        val RESTORED_ORDER_TYPES = OrderType.issueCardTypes + OrderType.CARD_ACTIVATION_PLASTIC_RAIN
         val ACTIVE_STATUSES = OrderStatus.activeStatuses
     }
 }
