@@ -39,6 +39,7 @@ internal fun createJointAccountDto(
         JointAccountDto.Member(name = "Alice", address = FIXTURE_ALICE_ADDRESS, role = "creator"),
         JointAccountDto.Member(name = "Bob", address = FIXTURE_BOB_ADDRESS, role = "member"),
     ),
+    invites: List<JointAccountDto.Invite>? = null,
 ): JointAccountDto = JointAccountDto(
     cryptoAccountId = cryptoAccountId,
     membersCount = membersCount,
@@ -46,5 +47,5 @@ internal fun createJointAccountDto(
     safeAddress = safeAddress,
     status = status,
     members = members,
-    invites = null,
+    invites = invites,
 )
