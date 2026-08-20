@@ -6,8 +6,8 @@ import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountsListResponse
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountsListResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 

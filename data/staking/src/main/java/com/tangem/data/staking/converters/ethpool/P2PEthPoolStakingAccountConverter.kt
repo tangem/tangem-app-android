@@ -1,9 +1,9 @@
 package com.tangem.data.staking.converters.ethpool
 
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolExitQueueDTO
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolExitRequestDTO
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolStakeDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolExitQueueDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolExitRequestDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolStakeDTO
 import com.tangem.domain.models.staking.P2PEthPoolExitQueue
 import com.tangem.domain.models.staking.P2PEthPoolExitRequest
 import com.tangem.domain.models.staking.P2PEthPoolStake

@@ -195,6 +195,33 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
+    fun `GIVEN deactivated without issued networks WHEN getDeactivatedState THEN add funds disabled`() {
+        // Arrange
+        val status = deactivatedStatus(
+            availableForWithdrawal = BigDecimal.ZERO,
+            statusNetworks = listOf(notIssuedNetwork),
+        )
+
+        // Act
+        val state = factory.getDeactivatedState(status)
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN deactivated with deposit address WHEN getDeactivatedState THEN add funds enabled`() {
+        // Arrange
+        val status = deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO, statusNetworks = emptyList())
+
+        // Act
+        val state = singleNetworkFactory.getDeactivatedState(status)
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isTrue()
+    }
+
+    @Test
     fun `GIVEN plan transition in progress WHEN getLoadedState THEN current plan menu item stays clickable`() {
         // Arrange
         val planState = tariffPlanState(order = awaitingDepositOrder())
@@ -266,7 +293,7 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN exactly one delivering card WHEN banner activate clicked THEN opens that card`() {
+    fun `GIVEN exactly one delivering card WHEN banner activate clicked THEN opens activation for that card`() {
         // Arrange
         val status = loadedStatus(
             statusCards = listOf(
@@ -280,7 +307,8 @@ internal class TangemPayDetailsStateFactoryTest {
         (banner as CardsProgressBannerUM.Delivering).onActivateClick()
 
         // Assert
-        verify(exactly = 1) { intents.onCardClick("plastic") }
+        verify(exactly = 1) { intents.onActivateCardClick("plastic") }
+        verify(exactly = 0) { intents.onCardClick(any()) }
     }
 
     @ParameterizedTest
@@ -336,11 +364,14 @@ internal class TangemPayDetailsStateFactoryTest {
         every { networks } returns statusNetworks
     }
 
-    private fun deactivatedStatus(availableForWithdrawal: BigDecimal): PaymentAccountStatusValue.Deactivated =
-        mockk(relaxed = true) {
-            every { source } returns StatusSource.ACTUAL
-            every { balance } returns balance(availableForWithdrawal)
-        }
+    private fun deactivatedStatus(
+        availableForWithdrawal: BigDecimal,
+        statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork),
+    ): PaymentAccountStatusValue.Deactivated = mockk(relaxed = true) {
+        every { source } returns StatusSource.ACTUAL
+        every { balance } returns balance(availableForWithdrawal)
+        every { networks } returns statusNetworks
+    }
 
     private fun balance(availableForWithdrawal: BigDecimal) = PaymentAccountStatusValue.Balance(
         fiatBalance = PaymentAccountStatusValue.FiatBalance(

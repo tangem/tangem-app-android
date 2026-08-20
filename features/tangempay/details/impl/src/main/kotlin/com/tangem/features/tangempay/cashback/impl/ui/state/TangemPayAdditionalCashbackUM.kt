@@ -16,14 +16,14 @@ internal data class TangemPayAdditionalCashbackUM(
 
     /**
      * @property name short promotion name shown above the description
-     * @property description one-line promotion description
+     * @property description one-line promotion description; `null` hides the line
      * @property badge validity badge — permanent or time-limited
      */
     @Immutable
     data class Item(
         val id: String,
         val name: TextReference,
-        val description: TextReference,
+        val description: TextReference?,
         val badge: Badge,
     )
 
