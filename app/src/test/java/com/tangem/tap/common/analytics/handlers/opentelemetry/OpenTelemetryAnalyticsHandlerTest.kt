@@ -2,6 +2,8 @@ package com.tangem.tap.common.analytics.handlers.opentelemetry
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -25,23 +27,7 @@ internal class OpenTelemetryAnalyticsHandlerTest {
     private val meter: Meter = mockk()
     private val metricsHolder: OpenTelemetryMetricsHolder = mockk()
 
-    private val registry = OtelMetricRegistry(
-        specs = mapOf(
-            "[Basic] Transaction sent" to OtelMetricRegistry.counter(
-                category = "Basic",
-                event = "Transaction sent",
-                allowedParams = setOf("Blockchain", "Fee type"),
-            ),
-            "[Swap] Express Duration" to OtelMetricRegistry.histogram(
-                category = "Swap",
-                event = "Express Duration",
-                valueParam = "Duration",
-                allowedParams = setOf("Provider"),
-            ),
-        ),
-    )
-
-    private val handler = OpenTelemetryAnalyticsHandler(metricsHolder = metricsHolder, registry = registry)
+    private val handler = OpenTelemetryAnalyticsHandler(metricsHolder = metricsHolder)
 
     @BeforeEach
     fun setupMocks() {
@@ -53,20 +39,34 @@ internal class OpenTelemetryAnalyticsHandlerTest {
         every { histogramBuilder.build() } returns histogram
     }
 
+    private class TransactionSentEvent(
+        params: Map<String, String> = emptyMap(),
+    ) : AnalyticsEvent(category = "Basic", event = "Transaction sent", params = params), OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf("Blockchain", "Fee type"))
+    }
+
+    private class ExpressDurationEvent(
+        params: Map<String, String> = emptyMap(),
+    ) : AnalyticsEvent(category = "Swap", event = "Express Duration", params = params), OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Histogram(valueParam = "Duration", allowedParams = setOf("Provider"))
+    }
+
     @Test
     fun `GIVEN pipeline not initialized WHEN send THEN nothing is recorded`() {
         // Arrange
         every { metricsHolder.getMeter() } returns null
 
         // Act
-        handler.send(AnalyticsEvent(category = "Basic", event = "Transaction sent"))
+        handler.send(TransactionSentEvent())
 
         // Assert
         verify(exactly = 0) { meter.counterBuilder(any()) }
     }
 
     @Test
-    fun `GIVEN event not in registry WHEN send THEN nothing is recorded`() {
+    fun `GIVEN unmarked event WHEN send THEN nothing is recorded`() {
         // Act
         handler.send(AnalyticsEvent(category = "Basic", event = "Card Was Scanned"))
 
@@ -76,11 +76,9 @@ internal class OpenTelemetryAnalyticsHandlerTest {
     }
 
     @Test
-    fun `GIVEN counter spec WHEN send THEN counter incremented with allowlisted normalized attributes`() {
+    fun `GIVEN counter event WHEN send THEN counter incremented with allowlisted normalized attributes`() {
         // Arrange
-        val event = AnalyticsEvent(
-            category = "Basic",
-            event = "Transaction sent",
+        val event = TransactionSentEvent(
             params = mapOf(
                 "Blockchain" to "Bitcoin",
                 "Fee type" to "Fixed",
@@ -90,39 +88,36 @@ internal class OpenTelemetryAnalyticsHandlerTest {
         val expectedAttributes = Attributes.of(
             AttributeKey.stringKey("blockchain"), "Bitcoin",
             AttributeKey.stringKey("fee_type"), "Fixed",
+            AttributeKey.stringKey("category"), "basic",
         )
 
         // Act
         handler.send(event)
 
         // Assert
-        verify(exactly = 1) { meter.counterBuilder("app_basic_transaction_sent") }
+        verify(exactly = 1) { meter.counterBuilder("transaction_sent") }
         verify(exactly = 1) { counter.add(1, expectedAttributes) }
     }
 
     @Test
     fun `GIVEN two sends of one metric WHEN send THEN instrument is built once`() {
-        // Arrange
-        val event = AnalyticsEvent(category = "Basic", event = "Transaction sent")
-
         // Act
-        handler.send(event)
-        handler.send(event)
+        handler.send(TransactionSentEvent())
+        handler.send(TransactionSentEvent())
 
         // Assert
-        verify(exactly = 1) { meter.counterBuilder("app_basic_transaction_sent") }
-        verify(exactly = 2) { counter.add(1, Attributes.empty()) }
+        verify(exactly = 1) { meter.counterBuilder("transaction_sent") }
+        verify(exactly = 2) { counter.add(1, Attributes.of(AttributeKey.stringKey("category"), "basic")) }
     }
 
     @Test
-    fun `GIVEN histogram spec WHEN send THEN value recorded from the value param`() {
+    fun `GIVEN histogram event WHEN send THEN value recorded from the value param`() {
         // Arrange
-        val event = AnalyticsEvent(
-            category = "Swap",
-            event = "Express Duration",
-            params = mapOf("Duration" to "12.5", "Provider" to "ChangeNow"),
+        val event = ExpressDurationEvent(params = mapOf("Duration" to "12.5", "Provider" to "ChangeNow"))
+        val expectedAttributes = Attributes.of(
+            AttributeKey.stringKey("provider"), "ChangeNow",
+            AttributeKey.stringKey("category"), "swap",
         )
-        val expectedAttributes = Attributes.of(AttributeKey.stringKey("provider"), "ChangeNow")
 
         // Act
         handler.send(event)
@@ -134,10 +129,8 @@ internal class OpenTelemetryAnalyticsHandlerTest {
     @Test
     fun `GIVEN histogram value missing or non-numeric WHEN send THEN nothing is recorded`() {
         // Act
-        handler.send(AnalyticsEvent(category = "Swap", event = "Express Duration"))
-        handler.send(
-            AnalyticsEvent(category = "Swap", event = "Express Duration", params = mapOf("Duration" to "fast")),
-        )
+        handler.send(ExpressDurationEvent())
+        handler.send(ExpressDurationEvent(params = mapOf("Duration" to "fast")))
 
         // Assert
         verify(exactly = 0) { histogram.record(any(), any()) }
