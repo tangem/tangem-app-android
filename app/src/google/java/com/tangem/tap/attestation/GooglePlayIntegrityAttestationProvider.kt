@@ -11,7 +11,6 @@ import com.google.firebase.FirebaseApp
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.AttestationRequestHash
-import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -35,7 +34,6 @@ import kotlin.coroutines.resumeWithException
  */
 internal class GooglePlayIntegrityAttestationProvider @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val deviceKeyManager: DeviceKeyManager,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : AttestationProvider {
 
@@ -56,13 +54,7 @@ internal class GooglePlayIntegrityAttestationProvider @Inject constructor(
                 TangemLogger.e("Play Integrity: cloud project number unavailable — returning null token")
                 return@withContext null
             }
-        val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
-            ?: run {
-                TangemLogger.e("Play Integrity: device public key unavailable — returning null token")
-                return@withContext null
-            }
-
-        val requestHash = AttestationRequestHash.create(devicePublicKey, nonce)
+        val requestHash = AttestationRequestHash.create(nonce)
 
         // Attestation is inline before signing, so a stalled Play Integrity call would block auth
         // (including /authenticate on 401 refresh). Cap the whole warm-up + request so a hang or slow
