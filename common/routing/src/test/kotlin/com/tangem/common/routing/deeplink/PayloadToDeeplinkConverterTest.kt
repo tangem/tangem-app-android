@@ -47,7 +47,8 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isEqualTo(
-            "tangem://token?network_id=ethereum&token_id=0x123&type=token&user_wallet_id=wallet123&derivation_path=m'0'0'0",
+            "tangem://token?network_id=ethereum&token_id=0x123&type=token&user_wallet_id=wallet123" +
+                "&derivation_path=m%270%270%270",
         )
     }
 
@@ -359,7 +360,8 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isEqualTo(
-            "tangem://pay-app-main?type=card_ready&customer_wallet_id=wallet123&link=https://tangem.com/pricing/",
+            "tangem://pay-app-main?type=card_ready&customer_wallet_id=wallet123" +
+                "&link=https%3A%2F%2Ftangem.com%2Fpricing%2F",
         )
     }
 }
