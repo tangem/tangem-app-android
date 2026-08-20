@@ -99,8 +99,22 @@ internal class DefaultWalletRegistrar(
                         }
                         is ApiResponse.Error -> {
                             val authError = errorConverter.convert(response.cause)
-                            TangemLogger.e("/wallet/unregister request failed: $authError")
-                            raise(WalletRegistrationError.Api(authError))
+                            if (authError is AuthError.NotFound) {
+                                // Wallet is already not registered server-side (e.g. unregistered
+                                // elsewhere). The desired end state is reached, so clear the local
+                                // marker and treat it as success — idempotent, mirroring how register
+                                // treats a 409 Conflict.
+                                TangemLogger.i("Wallet already not registered server-side (404) — clearing marker")
+                                try {
+                                    markUnregistered(walletId)
+                                } catch (e: Exception) {
+                                    TangemLogger.e("Failed to clear marker after unregister 404", e)
+                                    raise(WalletRegistrationError.PersistenceFailed(e))
+                                }
+                            } else {
+                                TangemLogger.e("/wallet/unregister request failed: $authError")
+                                raise(WalletRegistrationError.Api(authError))
+                            }
                         }
                     }
                 }
