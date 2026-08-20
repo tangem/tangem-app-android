@@ -311,13 +311,6 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideCheckOrderConflictUseCase(
-            customerOrderRepository: CustomerOrderRepository,
-        ): CheckOrderConflictUseCase {
-            return CheckOrderConflictUseCase(customerOrderRepository)
-        }
-
-        @Provides
         fun provideRestoreActiveCardOrdersUseCase(
             customerOrderRepository: CustomerOrderRepository,
             issueCardRepository: TangemPayIssueCardRepository,
