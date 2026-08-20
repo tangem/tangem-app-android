@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.PlasticCardOrder
@@ -28,7 +29,7 @@ class IssuePlasticCardUseCase(
         userWalletId: UserWalletId,
         plasticCardOrder: PlasticCardOrder,
         idempotencyKey: String,
-    ): Either<VisaApiError, Unit> = either {
+    ): Either<VisaApiError, Order> = either {
         val offer = catch(
             block = { customerOffersRepository.getOffers(userWalletId).bind().plasticOffer() },
             catch = { handleError(it) },
@@ -71,6 +72,8 @@ class IssuePlasticCardUseCase(
                 userWalletId = userWalletId,
             )
         }
+
+        order
     }
 
     private fun Raise<VisaApiError>.handleError(throwable: Throwable): Nothing {

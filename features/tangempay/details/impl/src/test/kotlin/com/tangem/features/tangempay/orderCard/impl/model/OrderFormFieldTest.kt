@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.orderCard.impl.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
-import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError.Invalid
+import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError.NonLatin
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError.Required
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
@@ -86,7 +86,7 @@ internal class OrderFormFieldTest {
     ) = FieldModel(field, isRequired, blankError, accentedError)
 
     private fun fieldCases() = listOf(
-        case(OrderFormField.EmbossName, accentedError = Invalid),
+        case(OrderFormField.EmbossName, accentedError = NonLatin),
         case(OrderFormField.FirstName),
         case(OrderFormField.LastName),
         case(OrderFormField.Region),
