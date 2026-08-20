@@ -23,6 +23,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -121,6 +122,41 @@ internal class CreateJointAccountUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountCreationError.ExistingAccountNotFound.left())
+    }
+
+    @Test
+    fun `GIVEN refresh fails on conflict WHEN invoke THEN Failed and not ExistingAccountNotFound`() = runTest {
+        // Arrange — on the conflict path the refresh is the only source of the existing account, so blaming the
+        // data for a network problem would send the user chasing a non-existent account
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+        coEvery { repository.create(any(), any(), any()) } returns
+            JointAccountCreationResult.CreatorAlreadyRegistered
+        val cause = IllegalStateException("no network")
+        coEvery { fetcher.invoke(params = any()) } returns cause.left()
+
+        // Act
+        val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountCreationError.Failed(cause = cause).left())
+        verify(inverse = true) { supplier.invoke(userWalletId = any()) }
+    }
+
+    @Test
+    fun `GIVEN refresh fails after creation WHEN invoke THEN the created account is still returned`() = runTest {
+        // Arrange — the account is registered; failing here would push the user into a retry that can only conflict
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+        val created = account()
+        coEvery { repository.create(any(), any(), any()) } returns JointAccountCreationResult.Created(created)
+        coEvery { fetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
+
+        // Act
+        val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+        // Assert
+        assertThat(actual).isEqualTo(created.right())
     }
 
     @Test
