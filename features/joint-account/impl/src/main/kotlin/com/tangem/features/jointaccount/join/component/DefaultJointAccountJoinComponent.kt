@@ -110,9 +110,12 @@ internal class DefaultJointAccountJoinComponent @AssistedInject constructor(
         )
     }
 
-    private fun onDisplayNameContinue(name: String) {
+    // The suspend modifier is redundant until the join orchestrator lands, but the callback is suspending:
+    // the button's loading state ends when the action returns
+    @Suppress("RedundantSuspendModifier")
+    private suspend fun onDisplayNameContinue(name: String) {
         model.draftHolder.setDisplayName(name)
-        // TODO: start the join signing (NFC) session — a separate task once the domain integration lands
+        // TODO: start the join signing (NFC) session — the join orchestrator is a separate task
     }
 
     private fun onChildBack() {
