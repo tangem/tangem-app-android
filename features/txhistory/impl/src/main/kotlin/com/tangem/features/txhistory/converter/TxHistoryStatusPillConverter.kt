@@ -45,7 +45,7 @@ internal class TxHistoryStatusPillConverter(
                 allowance == null -> resourceReference(R.string.transaction_history_unlimited)
                 else -> stringReference(
                     (allowance.value ?: BigDecimal.ZERO)
-                        .format { crypto(symbol = "", decimals = currency.decimals) }
+                        .format { crypto(symbol = "", decimals = allowance.decimals) }
                         .trim(),
                 )
             },
