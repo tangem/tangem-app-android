@@ -5,6 +5,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 
 internal enum class CardDataType {
     Number, CardholderName, Expiry, CVV
@@ -28,6 +29,7 @@ internal data class TangemPayCardDetailsUM(
     val isActionsAvailable: Boolean = false,
     val shouldShowCardDetailsButtonOnCard: Boolean = false,
     val cardState: TangemPayCardState = TangemPayCardState.Active,
+    val cardType: TangemPayCardType = TangemPayCardType.VIRTUAL,
 )
 
 @Immutable
