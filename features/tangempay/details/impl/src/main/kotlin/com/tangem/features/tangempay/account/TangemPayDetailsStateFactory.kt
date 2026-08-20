@@ -70,7 +70,8 @@ internal class TangemPayDetailsStateFactory(
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
         val isAddCardEnabled = isFresh && !hasIssuingCard
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
-        val hasWithdrawableBalance = status.balance.hasWithdrawableAmount
+        val balance = status.balance
+        val hasWithdrawableBalance = balance?.hasWithdrawableAmount == true
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
         val tiersNotificationType = status.tariffPlan?.let { plan ->
@@ -80,7 +81,23 @@ internal class TangemPayDetailsStateFactory(
             tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
                 type != CardsProgressBannerUM.Issuing
         }
-        val fiatBalance = status.balance.fiatBalance
+        val cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
+            cards = status.cards
+                .map { cardItem ->
+                    TangemPayDetailsBalanceBlockState.Card(
+                        lastDigits = cardItem.lastDigits,
+                        imageUrl = cardItem.thumbnailUrl,
+                        onClick = { intents.onCardClick(cardItem.id) },
+                        isEnabled = status.error == null,
+                        isFrozen = cardItem.isFrozen,
+                        state = cardItem.state.toUiState(),
+                    )
+                }
+                .toImmutableList(),
+            onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
+            isAddCardEnabled = isAddCardEnabled,
+            progressBanner = issueCardNotificationType,
+        )
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -91,38 +108,49 @@ internal class TangemPayDetailsStateFactory(
                 isRefreshing = false,
                 onRefresh = intents::onRefreshSwipe,
             ),
-            balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
-                isBalanceFlickering = false,
-                fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
+            balanceBlockState = getBalanceBlockState(
+                fiatBalance = balance?.fiatBalance,
+                cardsBlockState = cardsBlockState,
                 isMuted = !isFresh,
-                isNegative = fiatBalance.availableBalance.signum() < 0,
-                isInactive = false,
-                actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = areActionButtonsEnabled,
-                    isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
-                ),
-                cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-                    cards = status.cards
-                        .map { cardItem ->
-                            TangemPayDetailsBalanceBlockState.Card(
-                                lastDigits = cardItem.lastDigits,
-                                imageUrl = cardItem.thumbnailUrl,
-                                onClick = { intents.onCardClick(cardItem.id) },
-                                isEnabled = status.error == null,
-                                isFrozen = cardItem.isFrozen,
-                                state = cardItem.state.toUiState(),
-                            )
-                        }
-                        .toImmutableList(),
-                    onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
-                    isAddCardEnabled = isAddCardEnabled,
-                    progressBanner = issueCardNotificationType,
-                ),
+                isAddFundsEnabled = areActionButtonsEnabled,
+                isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
             errorNotificationConfig = errorNotification ?: tiersNotification,
             accountDeactivatedNotificationConfig = null,
             cashbackBlockState = null,
+        )
+    }
+
+    /**
+     * Balance block for an account-bearing status. A `null` [fiatBalance] means the account is operational but
+     * its balances are unavailable: render the placeholder [TangemPayDetailsBalanceBlockState.Error] instead of
+     * a fabricated zero and keep the money actions out of reach.
+     */
+    private fun getBalanceBlockState(
+        fiatBalance: PaymentAccountStatusValue.FiatBalance?,
+        cardsBlockState: TangemPayDetailsBalanceBlockState.CardsBlockState?,
+        isMuted: Boolean,
+        isAddFundsEnabled: Boolean,
+        isWithdrawEnabled: Boolean,
+    ): TangemPayDetailsBalanceBlockState {
+        if (fiatBalance == null) {
+            return TangemPayDetailsBalanceBlockState.Error(
+                actionButtons = getActionButtonsConfig(isAddFundsEnabled = false, isWithdrawEnabled = false),
+                cardsBlockState = cardsBlockState,
+            )
+        }
+        return TangemPayDetailsBalanceBlockState.Content(
+            isBalanceFlickering = false,
+            fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
+            isMuted = isMuted,
+            isNegative = fiatBalance.availableBalance.signum() < 0,
+            isInactive = false,
+            actionButtons = getActionButtonsConfig(
+                isAddFundsEnabled = isAddFundsEnabled,
+                isWithdrawEnabled = isWithdrawEnabled,
+            ),
+            cardsBlockState = cardsBlockState,
         )
     }
 
@@ -133,9 +161,10 @@ internal class TangemPayDetailsStateFactory(
     }
 
     fun getDeactivatedState(status: PaymentAccountStatusValue.Deactivated): TangemPayDetailsUM {
-        val hasWithdrawableBalance: Boolean = status.balance.hasWithdrawableAmount
+        val balance = status.balance
+        val hasWithdrawableBalance: Boolean = balance?.hasWithdrawableAmount == true
         val accountDeactivatedNotification = notificationFactory.createAccountDeactivatedConfig()
-        val fiatBalance = status.balance.fiatBalance
+        val fiatBalance = balance?.fiatBalance
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -146,17 +175,12 @@ internal class TangemPayDetailsStateFactory(
                 isRefreshing = false,
                 onRefresh = intents::onRefreshSwipe,
             ),
-            balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
-                isBalanceFlickering = false,
-                fiatBalance = DetailsBalanceTransformer.getFiatBalanceText(fiatBalance),
-                isMuted = status.source != StatusSource.ACTUAL,
-                isNegative = fiatBalance.availableBalance.signum() < 0,
-                isInactive = false,
-                actionButtons = getActionButtonsConfig(
-                    isAddFundsEnabled = true,
-                    isWithdrawEnabled = hasWithdrawableBalance,
-                ),
+            balanceBlockState = getBalanceBlockState(
+                fiatBalance = fiatBalance,
                 cardsBlockState = null,
+                isMuted = status.source != StatusSource.ACTUAL,
+                isAddFundsEnabled = true,
+                isWithdrawEnabled = hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
             errorNotificationConfig = null,

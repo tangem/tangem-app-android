@@ -31,16 +31,12 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         val cryptoBalance = value.balance?.crypto
 
         val productInstances = value.productInstances.map { it.toDomain() }
-        val cards = if (value.paymentAccount == null || value.balance == null) {
-            emptyList()
-        } else {
-            value.cards.mapNotNull { it.toDomain() }
-        }
 
         return CustomerInfo(
             customerId = value.id,
+            paymentAccount = value.paymentAccount?.toDomain(),
             productInstances = productInstances,
-            cards = cards,
+            cards = value.cards.mapNotNull { it.toDomain() },
             kycStatus = kycStatus,
             state = CustomerInfo.State.fromString(value.state),
             fiatBalance = fiatBalance?.toDomain(),
@@ -53,6 +49,12 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             email = value.kyc?.email,
         )
     }
+
+    private fun CustomerMeResponse.PaymentAccount.toDomain() = CustomerInfo.PaymentAccount(
+        id = id,
+        address = address,
+        customerWalletAddress = customerWalletAddress,
+    )
 
     private fun CustomerMeResponse.CustomerTariffPlan.toDomain(): TangemPayCustomerTariffPlan? {
         val plan = tariffPlan?.toDomain() ?: return null
