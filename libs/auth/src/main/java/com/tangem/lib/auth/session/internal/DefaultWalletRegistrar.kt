@@ -7,6 +7,7 @@ import arrow.core.raise.either
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
+import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -73,6 +74,36 @@ internal class DefaultWalletRegistrar(
         withContext(dispatchers.io) {
             getMutex(prepared.walletId).withLock {
                 either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
+            }
+        }
+
+    override suspend fun unregister(walletId: String): Either<WalletRegistrationError, Unit> =
+        withContext(dispatchers.io) {
+            getMutex(walletId).withLock {
+                either {
+                    val request = WalletUnregisterRequest(walletId = walletId)
+                    when (val response = authApi.unregisterWallet(request)) {
+                        is ApiResponse.Success -> {
+                            try {
+                                // Server rotated the session tokens to reflect the removed wallet;
+                                // convert, persist and drop the local marker in one catch so this
+                                // method stays total — every failure becomes a typed Left, never a throw.
+                                val tokens = SessionTokensConverter.convertBack(response.data)
+                                store.save(tokens)
+                                markUnregistered(walletId)
+                            } catch (e: Exception) {
+                                TangemLogger.e("Failed to persist wallet-unregister tokens / marker", e)
+                                raise(WalletRegistrationError.PersistenceFailed(e))
+                            }
+                            TangemLogger.i("Wallet unregistered successfully")
+                        }
+                        is ApiResponse.Error -> {
+                            val authError = errorConverter.convert(response.cause)
+                            TangemLogger.e("/wallet/unregister request failed: $authError")
+                            raise(WalletRegistrationError.Api(authError))
+                        }
+                    }
+                }
             }
         }
 
@@ -199,6 +230,13 @@ internal class DefaultWalletRegistrar(
         appPreferencesStore.editData { preferences ->
             val current = preferences.getOrDefault(PreferencesKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
             preferences[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = current + walletId
+        }
+    }
+
+    private suspend fun markUnregistered(walletId: String) {
+        appPreferencesStore.editData { preferences ->
+            val current = preferences.getOrDefault(PreferencesKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
+            preferences[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = current - walletId
         }
     }
 }
