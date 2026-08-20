@@ -71,8 +71,13 @@ internal class JointAccountDisplayNameModel @Inject constructor(
         stateController.update(UpdateButtonLoadingTransformer(isLoading = true))
 
         modelScope.launch {
-            params.onContinueClick(state.name)
-            stateController.update(UpdateButtonLoadingTransformer(isLoading = false))
+            try {
+                params.onContinueClick(state.name)
+            } finally {
+                // The callback owns a card session and a network call: whatever it throws, and however it is
+                // cancelled, the button must not stay spinning forever
+                stateController.update(UpdateButtonLoadingTransformer(isLoading = false))
+            }
         }
     }
 
