@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -77,6 +78,7 @@ internal class StableOrderTest {
             images = emptyList(),
             state = TangemPayCardState.Active,
             embossName = null,
+            cardType = TangemPayCardType.VIRTUAL,
         )
     }
 }
