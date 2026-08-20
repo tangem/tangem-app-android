@@ -16,6 +16,11 @@ import retrofit2.http.Path
  * Joint accounts API: creation, retrieval, joining, activation.
  *
  * Contract: OpenAPI spec v1.2.
+ *
+ * The paths carry the `api/` prefix, unlike the neighbouring `/v1/wallets/{walletId}/accounts` of
+ * `TangemTechApi`. That is not a typo and not a copy-paste: v1.2 moved the joint endpoints under `/api/v1`, and
+ * the two prefixes are different routes at the edge — the wrong one answers 403 with a Cloudflare page instead of
+ * a 404, so a mistake here looks like a blocked feature rather than a missing path.
  */
 interface JointAccountApi {
 
@@ -28,7 +33,7 @@ interface JointAccountApi {
      * is already registered in a joint account. On 409 do NOT retry under the next derivation index — resolve with
      * [getJointAccounts], which will show that account.
      */
-    @POST("v1/wallets/{walletId}/joint-accounts")
+    @POST("api/v1/wallets/{walletId}/joint-accounts")
     suspend fun createJointAccount(
         @Path("walletId") walletId: String,
         @Body body: CreateJointAccountRequest,
@@ -42,7 +47,7 @@ interface JointAccountApi {
      * Not cacheable — `If-None-Match` is not supported, since participants join in other wallets and move no version
      * of this one. Refresh on push and on screen opening.
      */
-    @GET("v1/wallets/{walletId}/joint-accounts")
+    @GET("api/v1/wallets/{walletId}/joint-accounts")
     suspend fun getJointAccounts(@Path("walletId") walletId: String): ApiResponse<GetJointAccountsResponse>
 
     /**
@@ -52,7 +57,7 @@ interface JointAccountApi {
      *
      * Errors: 404 — no such invite; 409 — the invite is already redeemed, or this wallet already holds a slot.
      */
-    @GET("v1/wallets/{walletId}/joint-accounts/invites/{inviteId}")
+    @GET("api/v1/wallets/{walletId}/joint-accounts/invites/{inviteId}")
     suspend fun getJointAccountInvite(
         @Path("walletId") walletId: String,
         @Path("inviteId") inviteId: String,
@@ -68,7 +73,7 @@ interface JointAccountApi {
      * resolved as in creation. A joiner who lost the response finds the account in [getJointAccounts]; retrying
      * is 409.
      */
-    @POST("v1/wallets/{walletId}/joint-accounts/join")
+    @POST("api/v1/wallets/{walletId}/joint-accounts/join")
     suspend fun joinJointAccount(
         @Path("walletId") walletId: String,
         @Body body: JoinJointAccountRequest,
@@ -83,7 +88,7 @@ interface JointAccountApi {
      * has no such joint account; 409 — the account is still `pending`, or `config` differs from what the account
      * holds.
      */
-    @POST("v1/wallets/{walletId}/joint-accounts/activate")
+    @POST("api/v1/wallets/{walletId}/joint-accounts/activate")
     suspend fun activateJointAccount(
         @Path("walletId") walletId: String,
         @Body body: ActivateJointAccountRequest,
