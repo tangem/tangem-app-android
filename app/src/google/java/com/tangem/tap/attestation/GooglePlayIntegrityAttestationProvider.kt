@@ -28,9 +28,9 @@ import kotlin.coroutines.resumeWithException
  * Google Play Integrity (Standard) implementation of [AttestationProvider].
  *
  * Warms up a [StandardIntegrityTokenProvider] once (cached), then requests a token bound by
- * `requestHash = Base64(SHA-256(devicePublicKey ‖ nonce))` per [AttestationRequestHash]. Strictly
- * best-effort: unavailable Google Play services, a missing device key / cloud project number, or any
- * platform failure resolves to `null` and never blocks authentication.
+ * `requestHash = Base64(SHA-256(nonce))` per [AttestationRequestHash]. Strictly best-effort:
+ * unavailable Google Play services, a missing cloud project number, or any platform failure resolves
+ * to `null` and never blocks authentication.
  */
 internal class GooglePlayIntegrityAttestationProvider @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -98,8 +98,12 @@ internal class GooglePlayIntegrityAttestationProvider @Inject constructor(
     }
 
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
-        addOnSuccessListener { result -> continuation.resume(result) }
-        addOnFailureListener { e -> continuation.resumeWithException(e) }
+        // Guard every resume with isActive: a Play Integrity Task can complete AFTER the coroutine was
+        // cancelled (e.g. by withTimeoutOrNull), and resuming an already-cancelled continuation on the
+        // GMS callback thread would crash. See GoogleIdentityAuthorizer for the same pattern.
+        addOnSuccessListener { result -> if (continuation.isActive) continuation.resume(result) }
+        addOnFailureListener { e -> if (continuation.isActive) continuation.resumeWithException(e) }
+        addOnCanceledListener { continuation.cancel() }
     }
 
     private companion object {
