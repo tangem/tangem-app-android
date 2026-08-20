@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CardActivationOrder
