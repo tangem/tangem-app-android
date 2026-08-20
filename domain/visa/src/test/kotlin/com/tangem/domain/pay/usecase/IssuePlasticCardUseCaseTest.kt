@@ -83,7 +83,7 @@ internal class IssuePlasticCardUseCaseTest {
         )
 
         // Assert
-        assertThat(result).isEqualTo(Unit.right())
+        assertThat(result).isEqualTo(created.right())
         coVerify(exactly = 1) {
             startTangemPayOrderPollingUseCase(
                 order = TangemPayOrderInfo.fromOrder(created),
@@ -160,9 +160,10 @@ internal class IssuePlasticCardUseCaseTest {
         coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(plasticOffer()).right()
         coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns
             listOf(order(id = "done", status = OrderStatus.COMPLETED)).right()
+        val created = order(id = "created", status = OrderStatus.NEW)
         coEvery {
             orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
-        } returns order(id = "created", status = OrderStatus.NEW).right()
+        } returns created.right()
 
         // Act
         val result = useCase(
@@ -172,7 +173,7 @@ internal class IssuePlasticCardUseCaseTest {
         )
 
         // Assert
-        assertThat(result).isEqualTo(Unit.right())
+        assertThat(result).isEqualTo(created.right())
         coVerify(exactly = 1) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
     }
 

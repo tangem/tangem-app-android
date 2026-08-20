@@ -71,6 +71,41 @@ internal class TangemPayErrorConverterTest {
             expected = VisaApiError.Unknown(errorCode = FEATURE_CODE + UNMODELLED_CODE),
         ),
         ConvertModel(
+            name = "400 with the activation invalid-card-data code -> CardActivationInvalidCardData",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ACTIVATION_INVALID_CARD_DATA)),
+            expected = VisaApiError.CardActivationInvalidCardData,
+        ),
+        ConvertModel(
+            name = "400 with the not-physical code -> CardActivationCardNotPhysical",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ACTIVATION_CARD_NOT_PHYSICAL)),
+            expected = VisaApiError.CardActivationCardNotPhysical,
+        ),
+        ConvertModel(
+            name = "400 with the already-active code -> CardActivationCardAlreadyActive",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ACTIVATION_CARD_ALREADY_ACTIVE)),
+            expected = VisaApiError.CardActivationCardAlreadyActive,
+        ),
+        ConvertModel(
+            name = "400 with the not-ready code -> CardActivationCardNotReadyForActivation",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ACTIVATION_CARD_NOT_READY)),
+            expected = VisaApiError.CardActivationCardNotReadyForActivation,
+        ),
+        ConvertModel(
+            name = "409 with the active-order code -> CardActivationActiveOrderExists",
+            throwable = httpException(Code.CONFLICT, body = coded(CARD_ACTIVATION_ACTIVE_ORDER_EXISTS)),
+            expected = VisaApiError.CardActivationActiveOrderExists,
+        ),
+        ConvertModel(
+            name = "400 with the real activation body shape -> mapped by code, extra fields ignored",
+            throwable = httpException(
+                Code.BAD_REQUEST,
+                body = """{"error":{"code":$CARD_ACTIVATION_INVALID_CARD_DATA,""" +
+                    """"name":"CardActivationInvalidCardDataException","type":"validation",""" +
+                    """"correlationId":"123"},"result":null}""",
+            ),
+            expected = VisaApiError.CardActivationInvalidCardData,
+        ),
+        ConvertModel(
             name = "400 without a body -> UnknownWithoutCode",
             throwable = httpException(Code.BAD_REQUEST, body = null),
             expected = VisaApiError.UnknownWithoutCode,
@@ -96,6 +131,11 @@ internal class TangemPayErrorConverterTest {
         const val CARD_ISSUE_OFFER_NOT_AVAILABLE = 140115
         const val CARD_ISSUE_INSUFFICIENT_BALANCE = 140116
         const val CARD_ISSUE_INVALID_SHIPPING_ADDRESS = 140126
+        const val CARD_ACTIVATION_INVALID_CARD_DATA = 140127
+        const val CARD_ACTIVATION_CARD_NOT_PHYSICAL = 140128
+        const val CARD_ACTIVATION_CARD_ALREADY_ACTIVE = 140129
+        const val CARD_ACTIVATION_CARD_NOT_READY = 140130
+        const val CARD_ACTIVATION_ACTIVE_ORDER_EXISTS = 140131
         const val UNMODELLED_CODE = 149999
 
         fun httpException(code: Code, body: String?) = ApiResponseError.HttpException(
