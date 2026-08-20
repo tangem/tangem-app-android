@@ -18,6 +18,7 @@ import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
+import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.log.TangemLoggingInitializer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import dagger.hilt.EntryPoint
@@ -68,4 +69,6 @@ interface ApplicationEntryPoint {
     fun getWalletRegistrationLauncher(): WalletRegistrationLauncher
 
     fun getUserWalletsListRepository(): UserWalletsListRepository
+
+    fun getOpenTelemetryMetricsHolder(): OpenTelemetryMetricsHolder
 }
