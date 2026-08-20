@@ -18,7 +18,6 @@ import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.derivationIndex
-import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.account.AccountDetailsComponent
@@ -57,10 +56,9 @@ internal class AccountDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onEditAccountClick(account: Account.CryptoPortfolio) {
-        val personal = account as? Account.Personal ?: return
+    private fun onEditAccountClick(account: Account.Personal) {
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonEdit())
-        router.push(AppRoute.EditAccount(personal))
+        router.push(AppRoute.EditAccount(account))
     }
 
     private fun onManageTokensClick(account: Account.CryptoPortfolio) {
@@ -74,18 +72,18 @@ internal class AccountDetailsModel @Inject constructor(
         router.push(route)
     }
 
-    private fun onArchiveAccountClick() {
-        val accountDerivation = params.account.derivationIndex?.value
+    private fun onArchiveAccountClick(account: Account.Personal) {
+        val accountDerivation = account.derivationIndex.value
         val event = AccountSettingsAnalyticEvents.ButtonArchiveAccount(accountDerivation)
         analyticsEventHandler.send(event)
-        confirmArchiveDialog()
+        confirmArchiveDialog(account)
     }
 
-    private fun confirmArchiveDialog() {
+    private fun confirmArchiveDialog(account: Account.Personal) {
         val secondAction = EventMessageAction(
             title = resourceReference(R.string.common_cancel),
             onClick = {
-                val accountDerivation = params.account.derivationIndex?.value
+                val accountDerivation = account.derivationIndex.value
                 val event = AccountSettingsAnalyticEvents.ButtonCancelAccountArchivation(accountDerivation)
                 analyticsEventHandler.send(event)
             },
@@ -93,7 +91,7 @@ internal class AccountDetailsModel @Inject constructor(
         val firstAction = EventMessageAction(
             title = resourceReference(R.string.account_details_archive_action),
             isWarning = true,
-            onClick = ::archiveCryptoPortfolio,
+            onClick = { archiveCryptoPortfolio(account) },
         )
         messageSender.send(
             DialogMessage(
@@ -105,14 +103,14 @@ internal class AccountDetailsModel @Inject constructor(
         )
     }
 
-    private fun archiveCryptoPortfolio() = modelScope.launch {
-        val accountDerivation = params.account.derivationIndex?.value
+    private fun archiveCryptoPortfolio(account: Account.Personal) = modelScope.launch {
+        val accountDerivation = account.derivationIndex.value
         val event = AccountSettingsAnalyticEvents.ButtonArchiveAccountConfirmation(accountDerivation)
         analyticsEventHandler.send(event)
         uiState.update { it.toggleProgress(true) }
         archiveCryptoPortfolioUseCase(accountId)
             .onLeft { error ->
-                failedArchiveDialog(error)
+                failedArchiveDialog(error, account)
                 uiState.update { it.toggleProgress(false) }
             }
             .onRight {
@@ -123,11 +121,11 @@ internal class AccountDetailsModel @Inject constructor(
             }
     }
 
-    private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error) {
+    private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error, account: Account.Personal) {
         val event = AccountSettingsAnalyticEvents.AccountError(
             source = AccountSettingsAnalyticEvents.Source.ARCHIVE,
             error = error.tag,
-            accountDerivation = params.account.derivationIndex?.value,
+            accountDerivation = account.derivationIndex.value,
         )
         analyticsEventHandler.send(event)
         val titleRes: Int
@@ -154,16 +152,19 @@ internal class AccountDetailsModel @Inject constructor(
         messageSender.send(dialogMessage)
     }
 
-    private fun buildUI(account: Account.CryptoPortfolio): AccountDetailsUM {
+    private fun buildUI(account: Account.CryptoPortfolio): AccountDetailsUM = when (account) {
+        is Account.Personal -> buildPersonalUI(account)
+        is Account.Joint -> buildJointUI(account)
+    }
+
+    private fun buildPersonalUI(account: Account.Personal): AccountDetailsUM {
         val archiveMode = when (account.isMainAccount) {
             true -> ArchiveMode.None
             false -> ArchiveMode.Available(
-                onArchiveAccountClick = ::onArchiveAccountClick,
+                onArchiveAccountClick = { onArchiveAccountClick(account) },
                 isLoading = false,
             )
         }
-        val isMultiCurrency = getUserWalletUseCase(account.accountId.userWalletId).getOrNull()
-            ?.isMultiCurrency == true
         return AccountDetailsUM(
             accountName = account.accountName.toUM().value,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
@@ -171,8 +172,25 @@ internal class AccountDetailsModel @Inject constructor(
             onAccountEditClick = { onEditAccountClick(account) },
             onManageTokensClick = { onManageTokensClick(account) },
             archiveMode = archiveMode,
-            isManageTokensAvailable = isMultiCurrency,
+            isManageTokensAvailable = isMultiCurrency(account),
         )
+    }
+
+    private fun buildJointUI(account: Account.Joint): AccountDetailsUM {
+        return AccountDetailsUM(
+            accountName = account.accountName.toUM().value,
+            accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
+            onCloseClick = { router.pop() },
+            onAccountEditClick = null,
+            onManageTokensClick = { onManageTokensClick(account) },
+            archiveMode = ArchiveMode.None,
+            isManageTokensAvailable = isMultiCurrency(account),
+        )
+    }
+
+    private fun isMultiCurrency(account: Account.CryptoPortfolio): Boolean {
+        return getUserWalletUseCase(account.accountId.userWalletId).getOrNull()
+            ?.isMultiCurrency == true
     }
 
     private fun AccountDetailsUM.toggleProgress(isLoading: Boolean): AccountDetailsUM {
