@@ -7,6 +7,7 @@ import arrow.core.right
 import com.tangem.data.pay.util.OrderConverter
 import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.data.pay.util.PlasticIssueOrderRequestConverter
+import com.tangem.data.pay.util.ShippingAddressRequestConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
@@ -104,6 +105,33 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                     customerWalletAddress = walletAddress,
                     specificationName = specificationName,
                     order = order,
+                    idempotencyKey = idempotencyKey,
+                ),
+            )
+        }.flatMap { response ->
+            val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
+            OrderConverter.convert(result).right()
+        }
+    }
+
+    override suspend fun createPlasticReissueOrder(
+        userWalletId: UserWalletId,
+        sourceProductInstanceId: String,
+        order: PlasticCardOrder,
+        idempotencyKey: String,
+    ): Either<VisaApiError, Order> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayApi.createOrder(
+                authHeader = authHeader,
+                body = OrderRequest(
+                    data = OrderRequest.Data(
+                        customerWalletAddress = walletAddress,
+                        specificationName = null,
+                        type = OrderType.CARD_REISSUE_PLASTIC_RAIN.wireValue,
+                        sourceProductInstanceId = sourceProductInstanceId,
+                        shippingAddress = ShippingAddressRequestConverter.convert(order.shippingAddress),
+                    ),
                     idempotencyKey = idempotencyKey,
                 ),
             )
