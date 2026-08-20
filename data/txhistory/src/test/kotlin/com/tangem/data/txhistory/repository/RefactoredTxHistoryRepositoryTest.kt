@@ -3,12 +3,16 @@ package com.tangem.data.txhistory.repository
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
+import com.tangem.data.txhistory.repository.factory.ExpressTxByIdFactory
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
 import com.tangem.datasource.local.txhistory.db.entity.HistoryIndexEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.CapturingSlot
@@ -19,6 +23,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
@@ -47,6 +52,7 @@ internal class RefactoredTxHistoryRepositoryTest {
         expressHistoryDao = expressHistoryDao,
         historyIndexDao = historyIndexDao,
         expressTransactionAssetFactory = expressTransactionAssetFactory,
+        expressTxByIdFactory = ExpressTxByIdFactory(expressTransactionAssetFactory),
         cacheRegistry = cacheRegistry,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -190,6 +196,130 @@ internal class RefactoredTxHistoryRepositoryTest {
         return addresses
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetExpressTxById {
+
+        @Test
+        fun `GIVEN a swap row from this address WHEN getExpressTxById THEN it converts to an outgoing swap`() =
+            runTest {
+                // Arrange
+                every { expressHistoryDao.observeExchangeById(TX_ID) } returns
+                    flowOf(createExchangeEntity(fromAddress = ADDRESS))
+                every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
+
+                // Act
+                val result = repository.getExpressTxById(USER_WALLET_ID, currency, TX_ID).first()
+
+                // Assert
+                assertThat(result).isInstanceOf(ExpressTx.Swap::class.java)
+                assertThat((result as ExpressTx.Swap).isOutgoing).isTrue()
+            }
+
+        @Test
+        fun `GIVEN a swap row from another address WHEN getExpressTxById THEN it converts to an incoming swap`() =
+            runTest {
+                // Arrange
+                every { expressHistoryDao.observeExchangeById(TX_ID) } returns
+                    flowOf(createExchangeEntity(fromAddress = "someone-else"))
+                every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
+
+                // Act
+                val result = repository.getExpressTxById(USER_WALLET_ID, currency, TX_ID).first()
+
+                // Assert
+                assertThat((result as ExpressTx.Swap).isOutgoing).isFalse()
+            }
+
+        @Test
+        fun `GIVEN an onramp row WHEN getExpressTxById THEN it converts to an onramp`() = runTest {
+            // Arrange
+            every { expressHistoryDao.observeExchangeById(TX_ID) } returns flowOf(null)
+            every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(createOnrampEntity())
+
+            // Act
+            val result = repository.getExpressTxById(USER_WALLET_ID, currency, TX_ID).first()
+
+            // Assert
+            assertThat(result).isInstanceOf(ExpressTx.Onramp::class.java)
+        }
+
+        @Test
+        fun `GIVEN the id is in neither table WHEN getExpressTxById THEN nothing is emitted`() = runTest {
+            // Arrange
+            every { expressHistoryDao.observeExchangeById(TX_ID) } returns flowOf(null)
+            every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
+
+            // Act
+            val result = repository.getExpressTxById(USER_WALLET_ID, currency, TX_ID).toList()
+
+            // Assert
+            assertThat(result).isEmpty()
+        }
+    }
+
+    private fun createExchangeEntity(fromAddress: String) = ExpressExchangeEntity(
+        txId = TX_ID,
+        providerId = "provider",
+        fromAddress = fromAddress,
+        payinAddress = "payin-addr",
+        payinExtraId = null,
+        payoutAddress = "payout-addr",
+        refundAddress = null,
+        refundExtraId = null,
+        rateType = "float",
+        status = "waiting",
+        externalTxId = null,
+        externalTxUrl = null,
+        payinHash = "payin",
+        payoutHash = "payout",
+        refundNetwork = null,
+        refundContractAddress = null,
+        createdAt = CREATED_AT,
+        updatedAt = CREATED_AT,
+        payTill = null,
+        averageDuration = null,
+        from = ExpressExchangeEntity.AssetEmbedded(
+            contractAddress = "",
+            network = "ethereum",
+            decimals = 18,
+            amount = "1000000000000000000",
+            actualAmount = null,
+        ),
+        to = ExpressExchangeEntity.AssetEmbedded(
+            contractAddress = "0xtoken",
+            network = "bitcoin",
+            decimals = 8,
+            amount = "100000",
+            actualAmount = null,
+        ),
+    )
+
+    private fun createOnrampEntity() = ExpressOnrampEntity(
+        txId = TX_ID,
+        providerId = "provider",
+        payoutAddress = ADDRESS,
+        status = "finished",
+        failReason = null,
+        externalTxId = null,
+        externalTxUrl = null,
+        payoutHash = "payout",
+        createdAt = CREATED_AT,
+        updatedAt = CREATED_AT,
+        fromCurrencyCode = "USD",
+        fromAmount = "10000",
+        fromPrecision = 2,
+        to = ExpressOnrampEntity.AssetEmbedded(
+            contractAddress = "0xtoken",
+            network = "ethereum",
+            decimals = 18,
+            amount = "500000000000000000",
+            actualAmount = null,
+        ),
+        paymentMethod = "card",
+        countryCode = "US",
+    )
+
     /** Stubs the three express queries and captures the `created_at` bound they are filtered by. */
     private fun stubQueries(): CapturingSlot<String> {
         val bound = slot<String>()
@@ -220,5 +350,7 @@ internal class RefactoredTxHistoryRepositoryTest {
         const val DYNAMIC_ADDRESS = "addr-dynamic"
         const val NO_LOWER_BOUND = 0L
         const val EPOCH_ISO = "1970-01-01T00:00:00Z"
+        const val TX_ID = "tx-1"
+        const val CREATED_AT = "2026-06-01T00:00:00Z"
     }
 }
