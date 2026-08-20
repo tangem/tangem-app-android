@@ -55,7 +55,7 @@ internal sealed interface PolymarketEventDetailsUM {
 }
 
 /**
- * A market-filter tab of the event-details sheet (e.g. "Game lines" / "Exact score").
+ * A market-filter tab of the event-details screen (e.g. "Game lines" / "Exact score").
  *
  * @property id subcategory id, used as the lazy-row key
  * @property label localized display name, as provided by the backend

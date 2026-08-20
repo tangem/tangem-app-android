@@ -27,10 +27,12 @@ dependencies {
 
     /** Common */
     api(projects.common.ui)
+    implementation(projects.common.routing)
     implementation(projects.common)
 
     /** Features api */
     api(projects.features.txhistory.api)
+    implementation(projects.features.tokendetails.api)
     implementation(projects.features.rating.api)
 
     /** Domain */
