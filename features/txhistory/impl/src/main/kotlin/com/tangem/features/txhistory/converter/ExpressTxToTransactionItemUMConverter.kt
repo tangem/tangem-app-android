@@ -13,7 +13,6 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -177,17 +176,13 @@ internal class ExpressTxToTransactionItemUMConverter(
     private fun swapTitle(status: Status): TextReference = when (status) {
         is Status.Confirmed -> resourceReference(R.string.common_swapped)
         is Status.Unconfirmed -> resourceReference(R.string.common_swapping)
-        is Status.Failed ->
-            resourceReference(R.string.common_action_failed, wrappedList(resourceReference(R.string.common_swapping)))
+        is Status.Failed -> resourceReference(R.string.transaction_history_status_swap_failed)
     }
 
     private fun onrampTitle(status: Status): TextReference = when (status) {
         is Status.Confirmed -> resourceReference(R.string.tx_history_onramp_topped_up)
-        is Status.Unconfirmed -> resourceReference(R.string.tx_history_onramp_top_up)
-        is Status.Failed -> resourceReference(
-            R.string.common_action_failed,
-            wrappedList(resourceReference(R.string.tx_history_onramp_top_up)),
-        )
+        is Status.Unconfirmed -> resourceReference(R.string.transaction_history_status_topping_up)
+        is Status.Failed -> resourceReference(R.string.transaction_history_status_top_up_failed)
     }
 
     /**
