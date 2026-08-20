@@ -8,6 +8,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
+import com.tangem.domain.models.pay.TangemPayCardType
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -110,23 +111,8 @@ data class CustomerInfo(
         val isPinSet: Boolean,
         val images: List<TangemPayTariffPlan.Image>,
         val embossName: String?,
-        val cardType: CardType,
-    ) {
-        enum class CardType {
-            VIRTUAL,
-            PHYSICAL,
-            UNDEFINED,
-            ;
-
-            companion object {
-                fun fromString(value: String?): CardType = when (value?.uppercase(Locale.US)) {
-                    "VIRTUAL" -> VIRTUAL
-                    "PHYSICAL" -> PHYSICAL
-                    else -> UNDEFINED
-                }
-            }
-        }
-    }
+        val cardType: TangemPayCardType,
+    )
 
     /**
      * Raw multichain network as delivered by `customer/me`.networks[] — the transport used by the data
