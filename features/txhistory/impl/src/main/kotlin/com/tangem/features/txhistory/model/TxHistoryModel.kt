@@ -2,27 +2,33 @@ package com.tangem.features.txhistory.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.Option
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.list.HistoryTxListManager
-import com.tangem.domain.txhistory.list.txHistoryInfoFlow
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
+import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
@@ -58,12 +64,15 @@ internal class TxHistoryModel @Inject constructor(
     private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
     private val historyTxListManagerFactory: HistoryTxListManager.Factory,
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
+    private val router: Router,
+    private val cryptoCurrencyDeepLinkListener: ExpressDeepLinkListener,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) : Model(), TxHistoryUiActions {
 
     private val params: TxHistoryComponent.Params = paramsContainer.require()
+    val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
 
     private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer()
         .flowOn(dispatchers.default)
@@ -83,7 +92,7 @@ internal class TxHistoryModel @Inject constructor(
         null
     }
 
-    private val historyTxListManager: HistoryTxListManager? = if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+    val historyTxListManager: HistoryTxListManager? = if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
         historyTxListManagerFactory.create(
             userWalletId = params.userWalletId,
             currency = params.currency,
@@ -104,6 +113,16 @@ internal class TxHistoryModel @Inject constructor(
         loadTxInfo()
         subscribeToUpdateListener()
         subscribeOnCurrencyStatusUpdates()
+        deepLinkListener()
+    }
+
+    /** Opens the given currency's Token Details on top of this screen (e.g. the refunded token from the tx details sheet). */
+    fun openTokenDetails(currency: CryptoCurrency) {
+        val route = AppRoute.CurrencyDetails(
+            userWalletId = params.userWalletId,
+            currency = currency,
+        )
+        router.push(route)
     }
 
     private fun subscribeToUiItemChanges() {
@@ -194,6 +213,13 @@ internal class TxHistoryModel @Inject constructor(
         modelScope.launch {
             txHistoryListManager?.init()
         }
+    }
+
+    private fun deepLinkListener() {
+        if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) return
+        cryptoCurrencyDeepLinkListener.actionFlow
+            .onEach { txId -> openHistoryDetailsById(txId) }
+            .launchIn(modelScope)
     }
 
     private fun loadTxInfo() {
@@ -331,9 +357,13 @@ internal class TxHistoryModel @Inject constructor(
         // manager is non-null only under the new tx-history toggle.
         val manager = historyTxListManager
         if (manager != null) {
-            params.onTxDetailsRequested(manager.txHistoryInfoFlow(item))
+            txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(item.txId))
         } else {
             item.explorerHash?.let(::openTxInExplorer)
         }
+    }
+
+    private fun openHistoryDetailsById(txId: String) {
+        txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(txId))
     }
 }
