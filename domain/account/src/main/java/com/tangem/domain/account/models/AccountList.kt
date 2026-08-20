@@ -20,7 +20,10 @@ typealias AccountCurrencyId = Pair<AccountId, CryptoCurrency.ID>
  *
  * @property userWalletId  the user wallet id associated with the account list
  * @property accounts      a list of accounts belonging to the user wallet
- * @property totalAccounts the total number of accounts (including archived ones)
+ * @property totalAccounts the backend's counter of the wallet's **crypto** accounts, archived ones included.
+ * Joint accounts have their own parallel counter (`totalJointAccounts` of `GET /accounts`) and are not in this one,
+ * and the special accounts (payment, virtual, prediction) are injected by the app rather than counted by the
+ * backend at all — so this number must never be compared against the length of [accounts]
  * @property sortType      the sorting type applied to the accounts
  * @property groupType     the grouping type applied to the accounts
  *
@@ -253,7 +256,11 @@ data class AccountList private constructor(
                 Error.DuplicateAccountNames
             }
 
-            ensure(totalAccounts >= accounts.size) {
+            // Against the crypto accounts only, because that is what the counter counts: it comes from
+            // `wallet.totalAccounts`, while joint rows are counted by `totalJointAccounts` and the special
+            // accounts are added client-side. Comparing it with the whole list rejected every wallet that has a
+            // joint account — the list refused to be built and the producer above retried the same failure forever
+            ensure(totalAccounts >= cryptoAccounts.size) {
                 Error.TotalAccountsLessThanActive
             }
 

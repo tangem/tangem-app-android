@@ -241,6 +241,24 @@ internal class AccountListTest {
                 totalAccounts = 1,
                 expected = AccountList.Error.TotalAccountsLessThanActive.left(),
             ),
+            // The backend counts joint accounts separately, in `totalJointAccounts`, so a wallet with one crypto
+            // and one joint account arrives as `totalAccounts = 1` with two rows. Comparing the counter with the
+            // whole list rejected such a wallet outright and left the producer retrying the same failure forever
+            run {
+                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val jointAccount = MockAccounts.createJointAccount(derivationIndex = 0)
+
+                CreateTestModel(
+                    accounts = listOf(mainAccount, jointAccount),
+                    totalAccounts = 1,
+                    expected = AccountList(
+                        userWalletId = userWalletId,
+                        accounts = listOf(mainAccount, jointAccount),
+                        totalAccounts = 1,
+                        totalArchivedAccounts = 0,
+                    ),
+                )
+            },
             createAccountList(activeAccounts = 1).let {
                 CreateTestModel(
                     accounts = it.accounts,
