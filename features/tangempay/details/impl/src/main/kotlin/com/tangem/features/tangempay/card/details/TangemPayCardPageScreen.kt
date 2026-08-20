@@ -36,6 +36,7 @@ import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletBlock
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueBlock
 import com.tangem.features.tangempay.card.view.DisplayNameState
@@ -91,7 +92,7 @@ private fun TangemPayCardPageScreen(
     ) { scaffoldPaddings ->
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
         val contentBottomPadding = TangemTheme.dimens.spacing16 + bottomBarHeight
-        val reissueTitle = reissueTitleOrNull(cardState = state.cardState)
+        val reissueTitle = progressBannerTitleOrNull(cardState = state.cardState)
 
         if (state.delivery != null) {
             CardDeliveryLayout(
@@ -141,7 +142,7 @@ private fun TangemPayCardPageScreen(
     }
 }
 
-private fun reissueTitleOrNull(cardState: TangemPayCardState): TextReference? {
+private fun progressBannerTitleOrNull(cardState: TangemPayCardState): TextReference? {
     return when (cardState) {
         TangemPayCardState.Reissuing -> combinedReference(
             resourceReference(R.string.tangempay_reissue_card_in_progress),
@@ -158,7 +159,11 @@ private fun reissueTitleOrNull(cardState: TangemPayCardState): TextReference? {
             stringReference(". "),
             resourceReference(R.string.tangempay_card_page_closing_banner_description),
         )
-        TangemPayCardState.Activating,
+        TangemPayCardState.Activating -> combinedReference(
+            resourceReference(R.string.tangempay_card_activation_in_progress),
+            stringReference(". "),
+            resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+        )
         TangemPayCardState.Delivering,
         TangemPayCardState.Active,
         -> null
@@ -395,8 +400,10 @@ private fun LazyListScope.cardPageItem(
 
 private fun previewCardDetailsState(
     cardState: TangemPayCardState = TangemPayCardState.Active,
+    cardType: TangemPayCardType = TangemPayCardType.VIRTUAL,
 ): TangemPayCardDetailsUM = TangemPayCardDetailsUM(
     cardState = cardState,
+    cardType = cardType,
     number = "•••• •••• •••• 1245",
     numberShort = "··1245",
     cardholderName = "JOHNNY SILVERHAND",
@@ -453,7 +460,34 @@ private fun TangemPayCardPageScreenDeliveryPreview(
             ),
             cardSection = {
                 TangemPayCard(
-                    state = previewCardDetailsState(cardState = TangemPayCardState.Delivering),
+                    state = previewCardDetailsState(
+                        cardState = TangemPayCardState.Delivering,
+                        cardType = TangemPayCardType.PHYSICAL,
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            },
+        )
+    }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemPayCardPageScreenActivatingPreview() {
+    TangemThemePreviewRedesign {
+        TangemPayCardPageScreen(
+            state = TangemPayCardPageUM.stub(
+                cardState = TangemPayCardState.Activating,
+                addToWalletBlockState = null,
+                settings = persistentListOf(),
+            ),
+            cardSection = {
+                TangemPayCard(
+                    state = previewCardDetailsState(
+                        cardState = TangemPayCardState.Activating,
+                        cardType = TangemPayCardType.PHYSICAL,
+                    ),
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             },
