@@ -15,6 +15,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayCardDetails
@@ -325,6 +326,7 @@ internal class TangemPayCardDetailsControllerTest {
         images = emptyList(),
         state = state,
         embossName = embossName,
+        cardType = TangemPayCardType.VIRTUAL,
     )
 
     private companion object {
