@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.PillKind
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -15,6 +16,7 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
+import java.math.BigDecimal
 
 internal class TxHistoryStatusPillConverter(
     private val currency: CryptoCurrency,
@@ -25,16 +27,27 @@ internal class TxHistoryStatusPillConverter(
         val tx = value.tx
         val uiStatus = value.uiStatus
         val spec = value.spec
+        // An Approve's amount/address are parameters of the granted allowance (TransactionType.Approve), not the
+        // tx's own amount/interaction address. A null allowance means an unlimited approval, shown as "Unlimited"
+        // in place of the number (mirrors the details screen's "Unlimited <symbol>" + risk banner treatment).
+        val approve = tx.type as? TransactionType.Approve
+        val allowance = approve?.amount
         val hasAmount = spec.amount.show(uiStatus)
         return TransactionItemUM.Pill(
             txHash = tx.txHash,
             kind = spec.kind,
             status = uiStatus,
             label = spec.labels.resolve(uiStatus),
-            amount = if (hasAmount) {
-                tx.amount.format { crypto(symbol = "", decimals = currency.decimals) }.trim()
-            } else {
-                null
+            amount = when {
+                !hasAmount -> null
+                approve == null ->
+                    stringReference(tx.amount.format { crypto(symbol = "", decimals = currency.decimals) }.trim())
+                allowance == null -> resourceReference(R.string.transaction_history_unlimited)
+                else -> stringReference(
+                    (allowance.value ?: BigDecimal.ZERO)
+                        .format { crypto(symbol = "", decimals = currency.decimals) }
+                        .trim(),
+                )
             },
             currencySymbol = if (hasAmount) currency.symbol else null,
             subtitle = tx.buildPillSubtitle(uiStatus),
@@ -149,9 +162,9 @@ internal val YieldExitSpec = PillSpec(
 )
 
 private fun TxInfo.buildPillSubtitle(status: TransactionItemUM.Content.Status): TransactionItemUM.PillSubtitle? {
-    if (type !is TransactionType.Approve) return null
+    val approve = type as? TransactionType.Approve ?: return null
     if (status is TransactionItemUM.Content.Status.Failed) return null
-    val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address ?: return null
+    val address = approve.address.takeIf { it.isNotBlank() } ?: return null
     return TransactionItemUM.PillSubtitle.Address(
         rawAddress = address,
         briefAddress = address.toBriefAddressFormat(),
