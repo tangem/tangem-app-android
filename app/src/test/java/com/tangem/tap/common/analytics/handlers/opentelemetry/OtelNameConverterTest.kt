@@ -23,26 +23,26 @@ internal class OtelNameConverterTest {
         }
 
         private fun provideTestModels() = listOf(
-            MetricNameModel(category = "Basic", event = "Transaction sent", expected = "app.basic.transaction_sent"),
+            MetricNameModel(category = "Basic", event = "Transaction sent", expected = "app_basic_transaction_sent"),
             MetricNameModel(
                 category = "Sign In",
                 event = "Sign In Screen Opened",
-                expected = "app.sign_in.sign_in_screen_opened",
+                expected = "app_sign_in_sign_in_screen_opened",
             ),
             MetricNameModel(
                 category = "Token / Withdraw",
                 event = "Screen Opened",
-                expected = "app.token_withdraw.screen_opened",
+                expected = "app_token_withdraw_screen_opened",
             ),
             MetricNameModel(
                 category = "Markets / Chart",
                 event = "Data Error",
-                expected = "app.markets_chart.data_error",
+                expected = "app_markets_chart_data_error",
             ),
             MetricNameModel(
                 category = "Wallet Connect",
                 event = "Signature Request Failed",
-                expected = "app.wallet_connect.signature_request_failed",
+                expected = "app_wallet_connect_signature_request_failed",
             ),
         )
     }
