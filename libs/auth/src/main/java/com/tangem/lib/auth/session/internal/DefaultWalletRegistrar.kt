@@ -84,10 +84,11 @@ internal class DefaultWalletRegistrar(
                     val request = WalletUnregisterRequest(walletId = walletId)
                     when (val response = authApi.unregisterWallet(request)) {
                         is ApiResponse.Success -> {
-                            val tokens = SessionTokensConverter.convertBack(response.data)
                             try {
                                 // Server rotated the session tokens to reflect the removed wallet;
-                                // persist them and drop the local marker in one catch.
+                                // convert, persist and drop the local marker in one catch so this
+                                // method stays total — every failure becomes a typed Left, never a throw.
+                                val tokens = SessionTokensConverter.convertBack(response.data)
                                 store.save(tokens)
                                 markUnregistered(walletId)
                             } catch (e: Exception) {
