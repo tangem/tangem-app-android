@@ -65,6 +65,7 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardT
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.Plastic
 import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
+import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
@@ -154,7 +155,11 @@ private fun ColumnScope.OrderTypeBody(
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
-        CardArea(imageUrl = state.cardImageUrl, availableTypes = availableTypes, pagerState = cardPagerState)
+        CardArea(
+            imageUrls = availableTypes.map(state::imageUrlFor),
+            availableTypes = availableTypes,
+            pagerState = cardPagerState,
+        )
     }
     Column(
         modifier = Modifier
@@ -174,14 +179,14 @@ private fun ColumnScope.OrderTypeBody(
 @Suppress("MagicNumber")
 @Composable
 private fun CardArea(
-    imageUrl: String?,
+    imageUrls: List<String?>,
     availableTypes: List<OrderCardType>,
     pagerState: PagerState,
     modifier: Modifier = Modifier,
 ) {
     if (availableTypes.size <= 1) {
         CardArtwork(
-            imageUrl = imageUrl,
+            imageUrl = imageUrls.firstOrNull(),
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 48.dp),
@@ -193,8 +198,8 @@ private fun CardArea(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 48.dp),
         pageSpacing = 24.dp,
-    ) {
-        CardArtwork(imageUrl = imageUrl, modifier = Modifier.fillMaxWidth())
+    ) { page ->
+        CardArtwork(imageUrl = imageUrls.getOrNull(page), modifier = Modifier.fillMaxWidth())
     }
 }
 
