@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.converter.TxHistoryStatusPillConverter.Input
@@ -27,10 +28,12 @@ internal class TxHistoryStatusPillConverterTest {
     // region Approve
 
     @Test
-    fun `GIVEN Approve uiStatus Confirmed with User address WHEN convert THEN approved label and address subtitle`() {
+    fun `GIVEN Approve with known allowance WHEN convert THEN approved label, allowance amount and spender subtitle`() {
         val tx = txInfo(
-            type = TransactionType.Approve,
-            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            type = TransactionType.Approve(
+                amount = SdkAmount(currencySymbol = "ETH", value = BigDecimal("1.5"), decimals = 18),
+                address = USER_ADDRESS,
+            ),
         )
 
         val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec))
@@ -48,8 +51,10 @@ internal class TxHistoryStatusPillConverterTest {
     @Test
     fun `GIVEN Approve uiStatus Unconfirmed WHEN convert THEN approving label`() {
         val tx = txInfo(
-            type = TransactionType.Approve,
-            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            type = TransactionType.Approve(
+                amount = SdkAmount(currencySymbol = "ETH", value = BigDecimal("1.5"), decimals = 18),
+                address = USER_ADDRESS,
+            ),
         )
 
         val result = converter.convert(Input(tx, Status.Unconfirmed, ApproveSpec))
@@ -60,8 +65,10 @@ internal class TxHistoryStatusPillConverterTest {
     @Test
     fun `GIVEN Approve uiStatus Failed WHEN convert THEN non-composed approving label and no subtitle`() {
         val tx = txInfo(
-            type = TransactionType.Approve,
-            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+            type = TransactionType.Approve(
+                amount = SdkAmount(currencySymbol = "ETH", value = BigDecimal("1.5"), decimals = 18),
+                address = USER_ADDRESS,
+            ),
         )
 
         val result = converter.convert(Input(tx, Status.Failed, ApproveSpec))
@@ -71,15 +78,17 @@ internal class TxHistoryStatusPillConverterTest {
     }
 
     @Test
-    fun `GIVEN Approve uiStatus Confirmed without User interaction address WHEN convert THEN no subtitle`() {
-        val tx = txInfo(
-            type = TransactionType.Approve,
-            interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
-        )
+    fun `GIVEN Approve with no allowance limit WHEN convert THEN Unlimited amount and address subtitle`() {
+        // A null TransactionType.Approve#amount means the approval is unlimited — shown as "Unlimited" in place of
+        // a number, same wording the details screen uses.
+        val tx = txInfo(type = TransactionType.Approve(amount = null, address = USER_ADDRESS))
 
         val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec))
 
-        assertThat(result.subtitle).isNull()
+        assertThat(result.amount).isEqualTo(resRef(R.string.transaction_history_unlimited))
+        assertThat(result.currencySymbol).isEqualTo("ETH")
+        val subtitle = result.subtitle as TransactionItemUM.PillSubtitle.Address
+        assertThat(subtitle.rawAddress).isEqualTo(USER_ADDRESS)
     }
 
     // endregion
