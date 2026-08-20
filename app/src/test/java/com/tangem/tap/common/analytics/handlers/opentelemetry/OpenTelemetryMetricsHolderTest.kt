@@ -4,6 +4,8 @@ import android.app.Application
 import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -28,12 +30,19 @@ internal class OpenTelemetryMetricsHolderTest {
         every { cacheDir } returns tempDir
     }
 
-    private fun createHolder(apiKey: String?, isToggleEnabled: Boolean): OpenTelemetryMetricsHolder {
+    private fun createHolder(
+        apiKey: String?,
+        isToggleEnabled: Boolean,
+        appScope: AppCoroutineScope,
+        application: Application = createApplication(),
+    ): OpenTelemetryMetricsHolder {
         every { featureToggles.isMetricsEnabled } returns isToggleEnabled
         return OpenTelemetryMetricsHolder(
+            application = application,
             environmentConfig = EnvironmentConfig(otlpApiKey = apiKey),
             featureToggles = featureToggles,
             dispatchers = dispatchers,
+            appScope = appScope,
         )
     }
 
@@ -45,10 +54,14 @@ internal class OpenTelemetryMetricsHolderTest {
         @ProvideTestModels
         fun `GIVEN toggle or key missing WHEN initialize THEN meter stays null`(model: SkipModel) = runTest {
             // Arrange
-            val holder = createHolder(apiKey = model.apiKey, isToggleEnabled = model.isToggleEnabled)
+            val holder = createHolder(
+                apiKey = model.apiKey,
+                isToggleEnabled = model.isToggleEnabled,
+                appScope = TestAppCoroutineScope(testScope = this),
+            )
 
             // Act
-            holder.initialize(application = createApplication(), scope = this)
+            holder.initialize()
             advanceUntilIdle()
 
             // Assert
@@ -67,10 +80,14 @@ internal class OpenTelemetryMetricsHolderTest {
     @Test
     fun `GIVEN toggle on and key present WHEN initialize THEN meter is available and flush succeeds`() = runTest {
         // Arrange
-        val holder = createHolder(apiKey = "dev-key", isToggleEnabled = true)
+        val holder = createHolder(
+            apiKey = "dev-key",
+            isToggleEnabled = true,
+            appScope = TestAppCoroutineScope(testScope = this),
+        )
 
         // Act
-        holder.initialize(application = createApplication(), scope = this)
+        holder.initialize()
         advanceUntilIdle()
 
         // Assert
@@ -84,10 +101,15 @@ internal class OpenTelemetryMetricsHolderTest {
         val application: Application = mockk(relaxed = true) {
             every { cacheDir } throws IllegalStateException("no cache dir")
         }
-        val holder = createHolder(apiKey = "dev-key", isToggleEnabled = true)
+        val holder = createHolder(
+            apiKey = "dev-key",
+            isToggleEnabled = true,
+            appScope = TestAppCoroutineScope(testScope = this),
+            application = application,
+        )
 
         // Act
-        holder.initialize(application = application, scope = this)
+        holder.initialize()
         advanceUntilIdle()
 
         // Assert
