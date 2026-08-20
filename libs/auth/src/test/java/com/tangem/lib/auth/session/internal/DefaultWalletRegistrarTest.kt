@@ -10,6 +10,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
+import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
 import com.tangem.datasource.api.auth.models.response.NonceApiResponse
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
@@ -377,6 +378,41 @@ class DefaultWalletRegistrarTest {
         assertThat(result.isRight()).isTrue()
         assertThat(capturedNonceBytes.captured).isEqualTo(decodedNonce)
         verify { android.util.Base64.decode("decrypted", android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP) }
+    }
+
+    @Test
+    fun `unregister posts, persists rotated tokens and removes only that id from the marker`() = runTest {
+        preferencesDataStore.edit {
+            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+        val slot = slot<WalletUnregisterRequest>()
+        coEvery { authApi.unregisterWallet(capture(slot)) } returns tokenSuccess()
+
+        val result = registrar.unregister(WALLET_ID)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.walletId).isEqualTo(WALLET_ID)
+        coVerify { store.save(any()) }
+        assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+    }
+
+    @Test
+    fun `unregister surfaces API error and keeps the marker`() = runTest {
+        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.FORBIDDEN,
+                message = "forbidden",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.unregister(WALLET_ID)
+
+        assertThat(result.leftOrNull()).isInstanceOf(WalletRegistrationError.Api::class.java)
+        coVerify(exactly = 0) { store.save(any()) }
+        assertThat(registeredIds()).contains(WALLET_ID)
     }
 
     private fun stubHappyPath() {
