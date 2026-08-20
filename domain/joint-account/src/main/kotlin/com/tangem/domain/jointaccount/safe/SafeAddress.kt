@@ -1,5 +1,9 @@
 package com.tangem.domain.jointaccount.safe
 
+import arrow.core.Either
+import arrow.core.raise.Raise
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import org.spongycastle.crypto.digests.KeccakDigest
@@ -20,6 +24,11 @@ import java.math.BigInteger
  * Owners are sorted AFTER lowercasing: `'B'` (0x42) sorts before `'a'` (0x61), so sorting the
  * checksummed strings gives a different order in the initializer and a different address.
  *
+ * The composition is validated before anything is hashed, because every malformed input has a silent
+ * failure mode here: an odd-length hex string loses its last nibble in `hexToBytes`, an address that is
+ * not 20 bytes shifts the whole ABI word it is padded into, and a negative threshold encodes as a small
+ * positive number instead of two's complement. All of them produce a well-formed address that simply is
+ * not the account's — the worst possible outcome for a value funds are sent to.
  */
 object SafeAddress {
 
@@ -42,6 +51,31 @@ object SafeAddress {
             "fea2646970667358221220e61834ebd2d8cd909d362bf67c47ef58fd665df38e6dd036ce65611101d072e964736f6c634300" +
             "07060033496e76616c69642073696e676c65746f6e20616464726573732070726f7669646564"
 
+    /** Errors of a composition that cannot belong to any deployable Safe. */
+    sealed interface Error {
+
+        /** A Safe without owners cannot be set up */
+        data object NoOwners : Error {
+            override fun toString(): String = "${this::class.simpleName}: The owners list is empty"
+        }
+
+        /** The owner [address] is not a `0x`-prefixed 20-byte hex address */
+        data class MalformedOwnerAddress(val address: String) : Error {
+            override fun toString(): String = "${this::class.simpleName}: Not a 20-byte hex address: $address"
+        }
+
+        /** The [address] appears among the owners more than once, case-insensitively */
+        data class DuplicateOwners(val address: String) : Error {
+            override fun toString(): String = "${this::class.simpleName}: Duplicate owner: $address"
+        }
+
+        /** The [threshold] is outside `1..ownersCount`, so no signature set can ever satisfy it */
+        data class ThresholdOutOfRange(val threshold: Int, val ownersCount: Int) : Error {
+            override fun toString(): String =
+                "${this::class.simpleName}: Threshold $threshold is not in 1..$ownersCount"
+        }
+    }
+
     // keccak256("setup(address[],uint256,address,bytes,address,address,uint256,address)")[0..3]
     private const val SETUP_SELECTOR = "0xb63e800d"
     private const val SALT_NONCE = 0
@@ -51,8 +85,12 @@ object SafeAddress {
     private const val CREATE2_PREFIX = 0xff
     private const val KECCAK_BITS = 256
     private const val EIP55_UPPERCASE_THRESHOLD = 8
+    private const val MIN_THRESHOLD = 1
+    private val ADDRESS_FORMAT = Regex(pattern = "^0x[0-9a-fA-F]{40}$")
 
-    fun compute(owners: List<String>, threshold: Int, singleton: SafeSingleton): String {
+    fun compute(owners: List<String>, threshold: Int, singleton: SafeSingleton): Either<Error, String> = either {
+        validate(owners = owners, threshold = threshold)
+
         val salt = (initializer(owners, threshold).keccak() + word(SALT_NONCE)).keccak()
         val deploymentData = PROXY_CREATION_CODE.hexToBytes() + singleton.address.toAddressWord()
 
@@ -60,7 +98,29 @@ object SafeAddress {
             byteArrayOf(CREATE2_PREFIX.toByte()) + PROXY_FACTORY.hexToBytes() + salt + deploymentData.keccak()
             ).keccak()
 
-        return eip55Checksum(proxy.copyOfRange(ADDRESS_WORD_PADDING, WORD).toHexString().lowercase())
+        eip55Checksum(proxy.copyOfRange(ADDRESS_WORD_PADDING, WORD).toHexString().lowercase())
+    }
+
+    private fun Raise<Error>.validate(owners: List<String>, threshold: Int) {
+        ensure(owners.isNotEmpty()) { Error.NoOwners }
+
+        owners.forEach { owner ->
+            ensure(ADDRESS_FORMAT.matches(owner)) { Error.MalformedOwnerAddress(address = owner) }
+        }
+
+        owners.map { it.lowercase() }.firstDuplicateOrNull()?.let { duplicate ->
+            raise(Error.DuplicateOwners(address = duplicate))
+        }
+
+        ensure(threshold in MIN_THRESHOLD..owners.size) {
+            Error.ThresholdOutOfRange(threshold = threshold, ownersCount = owners.size)
+        }
+    }
+
+    private fun List<String>.firstDuplicateOrNull(): String? {
+        val seen = mutableSetOf<String>()
+
+        return firstOrNull { !seen.add(it) }
     }
 
     /** ABI encoding of `setup`: eight head words, then the owners array, then the empty `data`. */
