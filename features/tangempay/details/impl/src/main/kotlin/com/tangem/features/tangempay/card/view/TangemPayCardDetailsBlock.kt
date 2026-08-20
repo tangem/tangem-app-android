@@ -68,6 +68,8 @@ import com.tangem.core.ui.res.generated.icons.ic_copy_16
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.isAwaitingActivation
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
 import kotlin.math.roundToInt
 
@@ -142,7 +144,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 .fillMaxSize()
                 .zIndex(1f),
         ) {
-            if (state.cardState != TangemPayCardState.Delivering) {
+            if (state.cardType != TangemPayCardType.PHYSICAL) {
                 CardTopBlock()
             }
 
@@ -217,8 +219,7 @@ private fun TangemPayCardBackground(
     cardImageUrl: String?,
     modifier: Modifier = Modifier,
 ) {
-    val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen &&
-        cardState != TangemPayCardState.Delivering
+    val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen && !cardState.isAwaitingActivation
     val freezeProgress by animateFloatAsState(
         targetValue = if (isFrozen) 1f else 0f,
         animationSpec = tween(
