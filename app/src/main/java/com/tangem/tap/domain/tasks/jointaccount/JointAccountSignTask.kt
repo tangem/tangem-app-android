@@ -61,7 +61,7 @@ class JointAccountSignTask @AssistedInject constructor(
         val seedPublicKey = wallet.publicKey
             ?: return CompletionResult.Failure(TangemSdkError.WalletNotFound())
 
-        val derivationPath = jointAccountOwnerDerivationPath(index = input.derivationIndex)
+        val derivationPath = jointAccountOwnerDerivationPath(index = input.derivationIndex.value)
         val extendedPublicKey = when (val result = derive(session, seedPublicKey, derivationPath)) {
             is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
             is CompletionResult.Success<ExtendedPublicKey> -> result.data
