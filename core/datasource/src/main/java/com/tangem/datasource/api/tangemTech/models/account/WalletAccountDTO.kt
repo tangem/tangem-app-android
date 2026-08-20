@@ -20,4 +20,10 @@ data class WalletAccountDTO(
     @Json(name = "tokens") val tokens: List<UserTokensResponse.Token>? = null,
     @Json(name = "totalTokens") val totalTokens: Int? = null,
     @Json(name = "totalNetworks") val totalNetworks: Int? = null,
-)
+) {
+
+    companion object {
+        const val TYPE_CRYPTO = "crypto"
+        const val TYPE_JOINT = "joint"
+    }
+}
