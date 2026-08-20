@@ -91,6 +91,31 @@ internal class OnrampAmountStateFactory(
         )
     }
 
+    fun getSecondaryFieldRestrictedErrorState(): OnrampMainComponentUM {
+        val currentState = currentStateProvider()
+        if (currentState !is OnrampMainComponentUM.Content) return currentState
+
+        val amountState = currentState.amountBlockState
+        if (amountState.amountFieldModel.fiatValue.isEmpty()) return currentState
+
+        return currentState.copy(
+            amountBlockState = amountState.copy(
+                amountFieldModel = amountState.amountFieldModel.copy(isError = false),
+                secondaryFieldModel = OnrampSecondaryFieldErrorUM.Error(
+                    resourceReference(R.string.express_onramp_restrictions_amount_error),
+                ),
+            ),
+            errorNotification = null,
+            // Restricted offers stay visible (rendered disabled); only flip a stuck Loading to Empty
+            // because getOffersState drops offer emissions while the block is Loading
+            offersBlockState = if (currentState.offersBlockState is OnrampOffersBlockUM.Loading) {
+                OnrampOffersBlockUM.Empty
+            } else {
+                currentState.offersBlockState
+            },
+        )
+    }
+
     fun getAmountSecondaryFieldResetState(): OnrampMainComponentUM {
         val currentState = currentStateProvider()
         if (currentState !is OnrampMainComponentUM.Content) return currentState

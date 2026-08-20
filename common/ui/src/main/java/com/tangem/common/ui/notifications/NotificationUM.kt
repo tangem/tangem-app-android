@@ -1,5 +1,6 @@
 package com.tangem.common.ui.notifications
 
+import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -13,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import java.math.BigDecimal
 
+@Immutable
 sealed class NotificationUM(val config: NotificationConfig) {
 
     open class Error(
