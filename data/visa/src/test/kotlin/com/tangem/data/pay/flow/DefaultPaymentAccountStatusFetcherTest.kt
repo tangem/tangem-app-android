@@ -35,6 +35,7 @@ import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -748,6 +749,60 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 assertThat(loaded.cards).hasSize(1)
                 assertThat(loaded.cards.single().state).isEqualTo(TangemPayCardState.Issuing)
             }
+
+        @Test
+        fun `GIVEN an active virtual issue order WHEN invoke THEN an issuing placeholder is added`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = emptyList())
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("virtual_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "virtual_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "virtual_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN,
+                ),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val loaded = storedStatuses.lastLoaded()
+            assertThat(loaded.cards).hasSize(1)
+            assertThat(loaded.cards.single().state).isEqualTo(TangemPayCardState.Issuing)
+        }
+
+        @Test
+        fun `GIVEN an active plastic issue order WHEN invoke THEN no issuing placeholder is added`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = emptyList())
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("plastic_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "plastic_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "plastic_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+                ),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value)
+                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+            coVerify(exactly = 0) { issueCardRepository.removeIssueOrderId(userWalletId, "plastic_order") }
+        }
 
         @Test
         fun `GIVEN local issue order missing on backend WHEN invoke THEN placeholder dropped and order forgotten`() =
