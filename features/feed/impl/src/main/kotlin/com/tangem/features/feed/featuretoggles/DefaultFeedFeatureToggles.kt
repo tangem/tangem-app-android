@@ -11,4 +11,7 @@ internal class DefaultFeedFeatureToggles @Inject constructor(
 
     override val isNewShtorkaEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1608_NEW_SHTORKA_ENABLED)
+
+    override val isRwaAndCategoriesEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1477_RWA_AND_CATEGORIES_ENABLED)
 }
