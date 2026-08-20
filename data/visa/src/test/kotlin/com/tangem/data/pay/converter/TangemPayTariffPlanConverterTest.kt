@@ -1,5 +1,6 @@
 package com.tangem.data.pay.converter
 
+import com.tangem.domain.models.pay.TangemPayImage
 import com.google.common.truth.Truth.assertThat
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.domain.models.account.TangemPayTariffPlan
@@ -53,7 +54,7 @@ internal class TangemPayTariffPlanConverterTest {
 
     @Test
     fun `GIVEN full valid plan WHEN convert THEN maps all fields`() {
-        // GIVEN
+        // Arrange
         val value = tariffPlan(
             type = "PLUS",
             descriptionItems = listOf(
@@ -76,10 +77,10 @@ internal class TangemPayTariffPlanConverterTest {
             ),
         )
 
-        // WHEN
+        // Act
         val result = TangemPayTariffPlanConverter.convert(value)
 
-        // THEN
+        // Assert
         val expected = TangemPayTariffPlan(
             id = PLAN_ID,
             tierId = "PLUS",
@@ -95,7 +96,7 @@ internal class TangemPayTariffPlanConverterTest {
                 ),
             ),
             images = listOf(
-                TangemPayTariffPlan.Image(type = TangemPayTariffPlan.Image.Type.MAIN, url = "https://img"),
+                TangemPayImage(type = "MAIN", url = "https://img"),
             ),
             fees = listOf(
                 TangemPayTariffPlan.Fee(
@@ -111,8 +112,20 @@ internal class TangemPayTariffPlanConverterTest {
     }
 
     @Test
+    fun `GIVEN an image type this app does not know WHEN convert THEN the backend value is kept as is`() {
+        // Arrange
+        val value = tariffPlan(images = listOf(CustomerMeResponse.Image(type = "SPLASH", url = "https://img")))
+
+        // Act
+        val result = TangemPayTariffPlanConverter.convert(value)
+
+        // Assert
+        assertThat(result?.images).containsExactly(TangemPayImage(type = "SPLASH", url = "https://img"))
+    }
+
+    @Test
     fun `GIVEN unknown enum strings and null optional fields WHEN convert THEN falls back to defaults`() {
-        // GIVEN
+        // Arrange
         val value = tariffPlan(
             type = "SOMETHING_NEW",
             descriptionItems = listOf(
@@ -130,10 +143,10 @@ internal class TangemPayTariffPlanConverterTest {
             ),
         )
 
-        // WHEN
+        // Act
         val result = TangemPayTariffPlanConverter.convert(value)
 
-        // THEN
+        // Assert
         val expected = TangemPayTariffPlan(
             id = PLAN_ID,
             tierId = "SOMETHING_NEW",
@@ -149,7 +162,7 @@ internal class TangemPayTariffPlanConverterTest {
                 ),
             ),
             images = listOf(
-                TangemPayTariffPlan.Image(type = TangemPayTariffPlan.Image.Type.UNKNOWN, url = "https://img"),
+                TangemPayImage(type = "", url = "https://img"),
             ),
             fees = listOf(
                 TangemPayTariffPlan.Fee(
@@ -166,7 +179,7 @@ internal class TangemPayTariffPlanConverterTest {
 
     @Test
     fun `GIVEN nested items with missing required fields WHEN convert THEN filters them out`() {
-        // GIVEN
+        // Arrange
         val value = tariffPlan(
             descriptionItems = listOf(
                 CustomerMeResponse.DescriptionItem(type = "PLAN_RELATED", order = 1, title = null, body = "Body"),
@@ -183,10 +196,10 @@ internal class TangemPayTariffPlanConverterTest {
             ),
         )
 
-        // WHEN
+        // Act
         val result = TangemPayTariffPlanConverter.convert(value)
 
-        // THEN
+        // Assert
         assertThat(result?.descriptionItems).isEmpty()
         assertThat(result?.images).isEmpty()
         assertThat(result?.fees).isEmpty()
