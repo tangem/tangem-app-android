@@ -35,18 +35,29 @@ internal fun TxInfo.TransactionStatus.toUiStatus(): Status = when (this) {
 }
 
 /**
- * Status-aware action title: the [confirmed] label once settled, the [pending] label while in flight, and the
- * "{pending} failed" template on failure.
+ * Status-aware action title: the [confirmed] label once settled, the [pending] label while in flight, and on
+ * failure either the dedicated [failed] label or, when none is given, the "{pending} failed" template.
  */
-internal fun Status.statusAwareTitle(@StringRes pending: Int, @StringRes confirmed: Int): TextReference = when (this) {
-    is Status.Failed -> resourceReference(R.string.common_action_failed, wrappedList(resourceReference(pending)))
+internal fun Status.statusAwareTitle(
+    @StringRes pending: Int,
+    @StringRes confirmed: Int,
+    @StringRes failed: Int? = null,
+): TextReference = when (this) {
+    is Status.Failed -> if (failed != null) {
+        resourceReference(failed)
+    } else {
+        resourceReference(R.string.common_action_failed, wrappedList(resourceReference(pending)))
+    }
     is Status.Unconfirmed -> resourceReference(pending)
     is Status.Confirmed -> resourceReference(confirmed)
 }
 
 /** [statusAwareTitle] keyed off an on-chain [TxInfo]'s status. */
-internal fun TxInfo.statusAwareTitle(@StringRes pending: Int, @StringRes confirmed: Int): TextReference =
-    status.toUiStatus().statusAwareTitle(pending, confirmed)
+internal fun TxInfo.statusAwareTitle(
+    @StringRes pending: Int,
+    @StringRes confirmed: Int,
+    @StringRes failed: Int? = null,
+): TextReference = status.toUiStatus().statusAwareTitle(pending, confirmed, failed)
 
 // endregion
 
