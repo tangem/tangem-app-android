@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -14,6 +15,7 @@ import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
@@ -42,6 +44,7 @@ private const val TAG = "TangemPayOrderCardDataModel"
 internal class TangemPayOrderCardDataModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val onboardingRepository: OnboardingRepository,
     private val issuePlasticCard: IssuePlasticCardUseCase,
@@ -57,6 +60,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         field = MutableStateFlow<TangemPayOrderCardDataScreenUM>(createLoadingState())
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.AddressScreenOpened())
         loadData()
     }
 
@@ -163,6 +167,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         val form = state.value as? Form ?: return
         if (!form.isOrderEnabled || form.isSubmitting) return
 
+        analytics.send(TangemPayAnalyticsEvents.Plastic.OrderCardClicked())
         submitOrder(
             order = form.toPlasticCardOrder(),
             email = form.email,
