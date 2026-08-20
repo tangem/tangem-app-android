@@ -180,7 +180,7 @@ internal class BsdkOnChainHistoryTest {
             txHash = "approve",
             amount = BigDecimal.ZERO,
             isOutgoing = false,
-            type = TxInfo.TransactionType.Approve,
+            type = TxInfo.TransactionType.Approve(amount = null, address = "spender-addr"),
         )
 
         // Act
