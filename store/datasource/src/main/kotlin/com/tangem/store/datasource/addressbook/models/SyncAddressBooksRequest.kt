@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.addressbook.models
+package com.tangem.store.datasource.addressbook.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
