@@ -12,11 +12,13 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.Meter
 import io.opentelemetry.contrib.disk.buffering.exporters.MetricToDiskExporter
 import io.opentelemetry.contrib.disk.buffering.exporters.callback.ExporterCallback
+import io.opentelemetry.contrib.disk.buffering.storage.SignalStorage
 import io.opentelemetry.contrib.disk.buffering.storage.impl.FileMetricStorage
 import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter
 import io.opentelemetry.sdk.metrics.SdkMeterProvider
 import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector
+import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader
 import io.opentelemetry.sdk.resources.Resource
 import kotlinx.coroutines.CoroutineScope
@@ -41,15 +43,9 @@ internal class OpenTelemetryMetricsClient(
     apiKey: String,
     private val scope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val networkExporter: MetricExporter = createOtlpExporter(apiKey),
+    private val storage: SignalStorage.Metric = FileMetricStorage.create(File(application.cacheDir, STORAGE_DIR_NAME)),
 ) {
-
-    private val storage = FileMetricStorage.create(File(application.cacheDir, STORAGE_DIR_NAME))
-
-    private val otlpExporter = OtlpHttpMetricExporter.builder()
-        .setEndpoint(ENDPOINT)
-        .addHeader(API_KEY_HEADER, apiKey)
-        .setAggregationTemporalitySelector(AggregationTemporalitySelector.deltaPreferred())
-        .build()
 
     private val meterProvider: SdkMeterProvider = SdkMeterProvider.builder()
         .setResource(
@@ -78,7 +74,8 @@ internal class OpenTelemetryMetricsClient(
     fun getMeter(): Meter = meterProvider.get(INSTRUMENTATION_SCOPE_NAME)
 
     fun flush() {
-        meterProvider.forceFlush()
+        // joining guarantees the batch reaches the disk WAL before the process may be killed
+        meterProvider.forceFlush().join(EXPORT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
     }
 
     fun start(application: Application) {
@@ -98,9 +95,12 @@ internal class OpenTelemetryMetricsClient(
             // batches are deleted from disk as they are iterated (deleteItemsOnIteration default)
             for (batch in storage) {
                 if (batch.isEmpty()) continue
-                val result = otlpExporter.export(batch).join(EXPORT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                val result = networkExporter.export(batch).join(EXPORT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 if (!result.isSuccess) {
-                    storage.write(batch)
+                    val writeBack = storage.write(batch).join(EXPORT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    if (!writeBack.isSuccess) {
+                        TangemLogger.e("OpenTelemetry metrics batch dropped: WAL write-back failed")
+                    }
                     break
                 }
             }
@@ -144,5 +144,13 @@ internal class OpenTelemetryMetricsClient(
         private val SERVICE_NAME_KEY = AttributeKey.stringKey("service.name")
         private val SERVICE_VERSION_KEY = AttributeKey.stringKey("service.version")
         private val OS_NAME_KEY = AttributeKey.stringKey("os.name")
+
+        private fun createOtlpExporter(apiKey: String): MetricExporter {
+            return OtlpHttpMetricExporter.builder()
+                .setEndpoint(ENDPOINT)
+                .addHeader(API_KEY_HEADER, apiKey)
+                .setAggregationTemporalitySelector(AggregationTemporalitySelector.deltaPreferred())
+                .build()
+        }
     }
 }
