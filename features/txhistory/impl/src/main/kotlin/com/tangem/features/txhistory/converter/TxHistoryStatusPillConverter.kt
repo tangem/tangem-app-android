@@ -84,19 +84,31 @@ internal val ApproveSpec = PillSpec(
 )
 internal val StakeSpec = PillSpec(
     kind = PillKind.STAKING,
-    labels = PillLabels(R.string.common_staked, R.string.common_staking),
+    labels = PillLabels(
+        confirmed = R.string.common_staked,
+        pending = R.string.common_staking,
+        failedBase = R.string.transaction_history_status_stake_failed,
+        hasFailedTemplate = false,
+    ),
     amount = PillAmount.IF_NOT_FAILED,
 )
 internal val UnstakeSpec = PillSpec(
     kind = PillKind.STAKING,
-    labels = PillLabels(R.string.staking_unstaked, R.string.staking_unstaking),
+    labels = PillLabels(
+        confirmed = R.string.staking_unstaked,
+        pending = R.string.staking_unstaking,
+        failedBase = R.string.transaction_history_status_unstake_failed,
+        hasFailedTemplate = false,
+    ),
     amount = PillAmount.IF_NOT_FAILED,
 )
 internal val RestakeSpec = PillSpec(
     kind = PillKind.STAKING,
     labels = PillLabels(
         confirmed = R.string.transaction_history_rewards_restaked,
-        pending = R.string.transaction_history_rewards_restaking,
+        pending = R.string.transaction_history_status_restaking_rewards,
+        failedBase = R.string.transaction_history_status_rewards_restake_failed,
+        hasFailedTemplate = false,
     ),
     amount = PillAmount.IF_NOT_FAILED,
 )
