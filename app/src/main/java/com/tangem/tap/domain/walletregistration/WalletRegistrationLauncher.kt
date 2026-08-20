@@ -102,16 +102,15 @@ class WalletRegistrationLauncher @Inject internal constructor(
     }
 
     /**
-     * Unregisters a wallet from the auth service (e.g. on wallet deletion). Never throws — any
-     * failure is caught and logged, so it never blocks the deletion flow.
+     * Unregisters a wallet from the auth service (e.g. on wallet deletion). Failures are surfaced
+     * through the registrar's total [Either] contract and logged here — no `runSuspendCatching`
+     * wrapper, because the registrar never throws (it routes every failure to a `Left`).
      */
     suspend fun unregister(userWalletId: UserWalletId) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
 
-        runSuspendCatching {
-            walletRegistrar.unregister(userWalletId.toBase64())
-                .onLeft { TangemLogger.e("Wallet unregister deferred: $it") }
-        }.onFailure { TangemLogger.e("Wallet unregister failed", it) }
+        walletRegistrar.unregister(userWalletId.toBase64())
+            .onLeft { TangemLogger.e("Wallet unregister deferred: $it") }
     }
 
     private fun UserWalletId.toBase64(): String = Base64.encodeToString(value, Base64.NO_WRAP)
