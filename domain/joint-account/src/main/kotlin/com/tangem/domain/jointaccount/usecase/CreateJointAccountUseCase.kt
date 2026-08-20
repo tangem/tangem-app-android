@@ -76,12 +76,19 @@ class CreateJointAccountUseCase(
             .mapLeft(JointAccountCreationError::Failed)
             .bind()
 
-        refreshAccounts(userWalletId = userWalletId)
+        val refresh = refreshAccounts(userWalletId = userWalletId)
 
         when (result) {
+            // The account is registered, so a failed refresh must not fail the creation: the list catches up on
+            // the next fetch, and reporting an error here would push the user into a retry that can only conflict
             is JointAccountCreationResult.Created -> result.account
-            JointAccountCreationResult.CreatorAlreadyRegistered ->
+            JointAccountCreationResult.CreatorAlreadyRegistered -> {
+                // Here the refresh is the only source of the existing account, so its failure is the real cause —
+                // reporting "not found" instead would blame the data for a network problem
+                refresh.mapLeft(JointAccountCreationError::Failed).bind()
+
                 findOwnAccount(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress).bind()
+            }
         }
     }
 
@@ -103,8 +110,8 @@ class CreateJointAccountUseCase(
         )
     }
 
-    private suspend fun refreshAccounts(userWalletId: UserWalletId) {
-        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId))
+    private suspend fun refreshAccounts(userWalletId: UserWalletId): Either<Throwable, Unit> {
+        return fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId))
     }
 
     /** The own account is found by the owner address derived from the card, never by trusting an index. */
