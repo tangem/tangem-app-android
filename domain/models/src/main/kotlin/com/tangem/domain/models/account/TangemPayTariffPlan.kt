@@ -1,6 +1,8 @@
 package com.tangem.domain.models.account
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.domain.models.pay.TangemPayImage
+import com.tangem.domain.models.pay.urlOfType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.Locale
@@ -13,7 +15,7 @@ data class TangemPayTariffPlan(
     @SerialName("name") val name: String,
     @SerialName("program_name") val programName: String,
     @SerialName("description_items") val descriptionItems: List<DescriptionItem>,
-    @SerialName("images") val images: List<Image> = emptyList(),
+    @SerialName("images") val images: List<TangemPayImage> = emptyList(),
     @SerialName("fees") val fees: List<Fee> = emptyList(),
 ) {
     @Serializable
@@ -72,45 +74,6 @@ data class TangemPayTariffPlan(
     )
 
     @Serializable
-    data class Image(
-        @SerialName("type") val type: Type,
-        @SerialName("url") val url: String,
-    ) {
-        @Serializable
-        enum class Type {
-            @SerialName("THUMBNAIL")
-            THUMBNAIL,
-
-            @SerialName("MAIN")
-            MAIN,
-
-            @SerialName("BANNER")
-            BANNER,
-
-            @SerialName("BACKGROUND")
-            BACKGROUND,
-
-            @SerialName("ACTIVATION")
-            ACTIVATION,
-
-            @SerialName("UNKNOWN")
-            UNKNOWN,
-            ;
-
-            companion object {
-                fun fromString(value: String?) = when (value?.uppercase(Locale.US)) {
-                    "THUMBNAIL" -> THUMBNAIL
-                    "MAIN" -> MAIN
-                    "BANNER" -> BANNER
-                    "BACKGROUND" -> BACKGROUND
-                    "ACTIVATION" -> ACTIVATION
-                    else -> UNKNOWN
-                }
-            }
-        }
-    }
-
-    @Serializable
     enum class Section {
         @SerialName("CARD_RELATED")
         CARD_RELATED,
@@ -135,6 +98,15 @@ data class TangemPayTariffPlan(
         }
     }
 }
+
+private const val MAIN_IMAGE = "MAIN"
+private const val ACTIVATION_IMAGE = "ACTIVATION"
+
+val TangemPayTariffPlan.mainImageUrl: String?
+    get() = images.urlOfType(MAIN_IMAGE)
+
+val TangemPayTariffPlan.activationImageUrl: String?
+    get() = images.urlOfType(ACTIVATION_IMAGE)
 
 fun TangemPayTariffPlan.feeCurrencyOrDefault(defaultCurrencyCode: String = "USD"): String {
     return fees.firstOrNull()?.currency ?: defaultCurrencyCode
