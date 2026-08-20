@@ -158,7 +158,11 @@ internal class ActivatePlasticCardUseCaseTest {
         assertThat(result).isEqualTo(Unit.right())
         coVerify(exactly = 1) {
             startTangemPayOrderPollingUseCase(
-                order = TangemPayOrderInfo(orderId = ORDER_ID, orderStatus = OrderStatus.COMPLETED),
+                order = TangemPayOrderInfo(
+                    orderId = ORDER_ID,
+                    orderStatus = OrderStatus.COMPLETED,
+                    orderType = OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
+                ),
                 userWalletId = USER_WALLET_ID,
                 onOrderStateChange = null,
                 timeout = null,
