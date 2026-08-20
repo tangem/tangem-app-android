@@ -12,9 +12,11 @@ import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
+import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.FieldUM
@@ -33,6 +35,7 @@ import javax.inject.Inject
 
 private const val TAG = "TangemPayOrderCardDataModel"
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayOrderCardDataModel @Inject constructor(
@@ -41,6 +44,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     private val router: Router,
     private val onboardingRepository: OnboardingRepository,
     private val issuePlasticCard: IssuePlasticCardUseCase,
+    private val reissuePlasticCard: ReissuePlasticCardUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -154,11 +158,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     private fun submitOrder(order: PlasticCardOrder, email: String, idempotencyKey: String) {
         setSubmitting(isSubmitting = true)
         modelScope.launch {
-            issuePlasticCard(
-                userWalletId = params.userWalletId,
-                plasticCardOrder = order,
-                idempotencyKey = idempotencyKey,
-            ).fold(
+            submit(order = order, idempotencyKey = idempotencyKey).fold(
                 ifLeft = { error ->
                     setSubmitting(isSubmitting = false)
                     TangemLogger.withTag(TAG).e("Plastic card order was not accepted: $error")
@@ -174,21 +174,47 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         }.saveIn(submitJobHolder)
     }
 
+    private suspend fun submit(order: PlasticCardOrder, idempotencyKey: String) = when (val intent = params.intent) {
+        TangemPayOrderCardIntent.Issue -> issuePlasticCard(
+            userWalletId = params.userWalletId,
+            plasticCardOrder = order,
+            idempotencyKey = idempotencyKey,
+        )
+        is TangemPayOrderCardIntent.ReissuePlastic -> reissuePlasticCard(
+            userWalletId = params.userWalletId,
+            sourceProductInstanceId = intent.sourceProductInstanceId,
+            plasticCardOrder = order,
+            idempotencyKey = idempotencyKey,
+        )
+    }
+
     private fun createSubmitFailedMessage(error: VisaApiError, onRetry: () -> Unit): BottomSheetMessage {
         return when (error) {
-            VisaApiError.CardIssueInvalidShippingAddress -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueInvalidShippingAddress,
+            VisaApiError.CardReissuePlasticInvalidShippingAddress,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_invalid_address),
             )
-            VisaApiError.CardIssueInsufficientBalance -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueInsufficientBalance,
+            VisaApiError.CardReissuePlasticInsufficientBalance,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_insufficient_balance),
                 onCloseClick = params.onClose,
             )
-            VisaApiError.CardIssueActiveOrderExists -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueActiveOrderExists,
+            VisaApiError.CardReissuePlasticActiveOrderExists,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_active_order),
                 onCloseClick = params.onClose,
             )
-            VisaApiError.CardIssueOfferNotAvailable -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueOfferNotAvailable,
+            VisaApiError.CardReissuePlasticNotAvailable,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_offer_unavailable),
+                onCloseClick = params.onClose,
+            )
+            VisaApiError.CardReissuePlasticInvalidSourceCard -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+                title = resourceReference(R.string.tangempay_order_card_error_invalid_source_card),
                 onCloseClick = params.onClose,
             )
             else -> TangemPayMessagesFactory.createOrderFailedMessage(onRetry.takeIf { error.isRetryable() })
