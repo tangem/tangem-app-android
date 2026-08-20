@@ -176,12 +176,12 @@ internal class TangemPayCardPageModel @Inject constructor(
             null
         }
         val limit = card?.limit?.actualCardLimit?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
-        return if (status is PaymentAccountStatusValue.Loaded && limit != null) {
+        val fiatCurrencyCode = (status as? PaymentAccountStatusValue.Loaded)?.balance?.fiatBalance?.currency
+        return if (fiatCurrencyCode != null && limit != null) {
             TangemPayDailyLimitBlockState.Content(
                 limit = limit.amount.format {
-                    val currencyCode = status.balance.fiatBalance.currency
-                    val symbol = getJavaCurrencyByCode(currencyCode).symbol
-                    fiat(currencyCode, symbol).optionalDecimals()
+                    val symbol = getJavaCurrencyByCode(fiatCurrencyCode).symbol
+                    fiat(fiatCurrencyCode, symbol).optionalDecimals()
                 },
                 onChangeClick = ::onClickLimitChange,
             )
@@ -580,11 +580,16 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
+        val paymentAccountAddress = loaded.balance?.cryptoBalance?.depositAddress
+        if (paymentAccountAddress == null) {
+            uiMessageSender.send(TangemPayMessagesFactory.createErrorMessage(TangemPayDetailsErrorType.Receive))
+            return
+        }
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.VirtualAccountDeposit(
                 virtualAccountOnramp = onramp,
                 userWalletId = userWalletId,
-                paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
+                paymentAccountAddress = paymentAccountAddress,
             ),
         )
     }
