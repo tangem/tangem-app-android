@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -27,6 +28,7 @@ import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
 import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
@@ -36,6 +38,7 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardD
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
 import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -70,6 +73,7 @@ internal class TangemPayOrderCardDataModelTest {
 
     private val userWalletId = UserWalletId("123")
 
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val onboardingRepository: OnboardingRepository = mockk()
     private val issuePlasticCard: IssuePlasticCardUseCase = mockk()
@@ -85,6 +89,7 @@ internal class TangemPayOrderCardDataModelTest {
 
     @BeforeEach
     fun setUp() {
+        clearMocks(analytics)
         submittedKeys.clear()
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns customerInfo().right()
         coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
@@ -812,6 +817,43 @@ internal class TangemPayOrderCardDataModelTest {
         val requestFails: Boolean = false,
     )
 
+    @Test
+    fun `GIVEN the address screen WHEN the model is created THEN the screen opened event is sent`() = runTest {
+        // Act
+        createLoadedModel()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.AddressScreenOpened>()) }
+    }
+
+    @Test
+    fun `GIVEN a valid form WHEN order clicked twice THEN the order card clicked event is sent once`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.OrderCardClicked>()) }
+    }
+
+    @Test
+    fun `GIVEN an incomplete form WHEN order clicked THEN no order card clicked event is sent`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.OrderCardClicked>()) }
+    }
+
     private val TangemPayOrderCardDataModel.form: Form
         get() = state.value as Form
 
@@ -902,6 +944,7 @@ internal class TangemPayOrderCardDataModelTest {
             ),
         ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+        analytics = analytics,
         router = router,
         onboardingRepository = onboardingRepository,
         issuePlasticCard = issuePlasticCard,
