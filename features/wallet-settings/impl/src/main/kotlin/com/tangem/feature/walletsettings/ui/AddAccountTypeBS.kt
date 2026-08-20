@@ -21,14 +21,13 @@ import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.ColorReference2
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_card_24
-import com.tangem.core.ui.res.generated.icons.ic_wallet_24
+import com.tangem.core.ui.res.generated.icons.ic_user_20
+import com.tangem.core.ui.res.generated.icons.ic_users_20
 import com.tangem.feature.walletsettings.impl.R
 
 @Composable
@@ -76,16 +75,14 @@ private fun AddAccountTypeContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AccountTypeItem(
-            // TODO([REDACTED_TASK_KEY]): placeholder icon, the final one is not designed yet
-            icon = Icons.ic_wallet_24,
+            icon = Icons.ic_user_20,
             title = resourceReference(R.string.common_crypto_account),
             subtitle = resourceReference(R.string.add_crypto_account_subtitle),
             onClick = onCryptoAccountClick,
         )
 
         AccountTypeItem(
-            // TODO([REDACTED_TASK_KEY]): placeholder icon, the final one is not designed yet
-            icon = Icons.ic_card_24,
+            icon = Icons.ic_users_20,
             title = resourceReference(R.string.common_joint_account),
             subtitle = resourceReference(R.string.add_joint_account_subtitle),
             onClick = onJointAccountClick,
@@ -112,7 +109,7 @@ private fun AccountTypeItem(
             TangemIcon(
                 tangemIconUM = TangemIconUM.Icon(
                     imageVector = icon,
-                    tintReference = ColorReference2 { TangemTheme.colors3.icon.primary },
+                    tintReference = { TangemTheme.colors3.icon.primary },
                 ),
                 modifier = Modifier
                     .size(40.dp)

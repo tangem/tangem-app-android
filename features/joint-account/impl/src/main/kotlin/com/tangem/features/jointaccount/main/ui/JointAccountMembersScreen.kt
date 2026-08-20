@@ -48,6 +48,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_info_24
 import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24_filled
+import com.tangem.core.ui.res.generated.icons.ic_user_24
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.JointAccountMembersUM.MemberUM
@@ -159,7 +160,6 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
-            // The activation footer overlays the list bottom — reserve its height so the last row scrolls above it
             bottom = contentPadding.calculateBottomPadding() +
                 if (state.activation != null) ACTIVATION_FOOTER_HEIGHT + 16.dp else 16.dp,
         ),
@@ -314,7 +314,7 @@ private fun FreeSlotAvatar(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(CoreUiR.drawable.ic_user_24),
+            imageVector = Icons.ic_user_24,
             tint = TangemTheme.colors3.icon.tertiary,
             contentDescription = null,
             modifier = Modifier.size(20.dp),
