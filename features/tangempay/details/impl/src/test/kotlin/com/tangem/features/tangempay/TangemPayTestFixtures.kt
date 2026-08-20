@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay
 
+import com.tangem.domain.models.pay.TangemPayImage
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -127,7 +128,7 @@ internal fun tangemPayCard(
     frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
     state: TangemPayCardState = TangemPayCardState.Active,
     embossName: String? = null,
-    images: List<TangemPayTariffPlan.Image> = emptyList(),
+    images: List<TangemPayImage> = emptyList(),
 ): TangemPayCard = TangemPayCard(
     id = id,
     productInstanceId = productInstanceId,
