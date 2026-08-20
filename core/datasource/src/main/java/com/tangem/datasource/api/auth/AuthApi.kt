@@ -5,6 +5,7 @@ import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
 import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
 import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
+import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
 import com.tangem.datasource.api.auth.models.response.NonceApiResponse
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
@@ -80,4 +81,8 @@ interface AuthApi {
     @POST("api/authentication/v1/mobile/wallet/register")
     @RequiresSessionAuth
     suspend fun registerWallet(@Body request: WalletRegistrationRequest): ApiResponse<TokenApiResponse>
+
+    @POST("api/authentication/v1/mobile/wallet/unregister")
+    @RequiresSessionAuth
+    suspend fun unregisterWallet(@Body request: WalletUnregisterRequest): ApiResponse<TokenApiResponse>
 }
