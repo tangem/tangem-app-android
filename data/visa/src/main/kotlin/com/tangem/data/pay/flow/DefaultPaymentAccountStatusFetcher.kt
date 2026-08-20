@@ -609,8 +609,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      * and the in-memory poller does not survive a force close.
      *
      * The request is skipped entirely unless some card is awaiting activation, and the response is
-     * re-filtered client-side: the still-open issue order for the same product instance would otherwise pin
-     * the card to activating forever if the backend ignored the type filter.
+     * re-filtered client-side, so that an order of any other type for the same product instance cannot pin
+     * the card to activating if the backend ignored the type filter.
      */
     private suspend fun CustomerInfo.resolveActivatingProductInstanceIds(
         userWalletId: UserWalletId,
@@ -660,6 +660,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      * Builds the issuing placeholder cards from locally tracked additional-card orders. Each order is
      * re-checked against the backend; terminal orders are dropped (and forgotten) because the real card
      * is now part of [CustomerInfo], while in-flight orders surface as an issuing placeholder card.
+     *
+     * A plastic issue order gets no placeholder: the backend creates its product instance as part of the
+     * order, so the real physical card surfaces from [CustomerInfo] as a delivering card instead.
      */
     private suspend fun buildIssuingCards(userWalletId: UserWalletId): List<TangemPayCard> {
         val orderIds = issueCardRepository.getIssueOrderIds(userWalletId)
@@ -675,11 +678,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     }
                 },
                 ifRight = { order ->
-                    if (order.orderStatus.isTerminal) {
-                        issueCardRepository.removeIssueOrderId(userWalletId, orderId)
-                        null
-                    } else {
-                        issuingPlaceholderCard(orderId)
+                    when {
+                        order.orderStatus.isTerminal -> {
+                            issueCardRepository.removeIssueOrderId(userWalletId, orderId)
+                            null
+                        }
+                        order.orderType == OrderType.CARD_ISSUE_PLASTIC_RAIN -> null
+                        else -> issuingPlaceholderCard(orderId)
                     }
                 },
             )
