@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -29,10 +32,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.button.Close
+import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.loader.TangemLoader
@@ -56,14 +60,14 @@ private const val KEY_HEADER = "header"
 private const val KEY_SUBCATEGORIES = "subcategories"
 private const val KEY_CLOSED_CHIP = "closed_chip"
 
-/** Gap between the sheet's top edge and the scrolling header at rest. */
+/** Gap between the pinned chrome and the scrolling header at rest. */
 private val ContentTopGap = 8.dp
 
 /** Height of the collapsed bar (below the status bar): a 40dp icon + a single-line title, centered. */
 private val CollapsedBarHeight = 56.dp
 
-/** End inset of the collapsed title so it clears the two pinned 44dp buttons. */
-private val PinnedButtonsClearance = 124.dp
+/** Horizontal inset of the collapsed title so it clears the pinned 44dp button on either side. */
+private val PinnedButtonsClearance = 72.dp
 
 /** Vertical offset centering the pinned 44dp buttons within the collapsed bar. */
 private val PinnedButtonsTopOffset = 6.dp
@@ -71,16 +75,16 @@ private val PinnedButtonsTopOffset = 6.dp
 @Composable
 internal fun PolymarketEventDetailsScreen(
     state: PolymarketEventDetailsUM,
-    onCloseClick: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     // The collapsed bar takes over once the scrolling header's bottom passes the bar's bottom edge.
-    // Item offsets are relative to the content area, which starts ContentTopGap below the sheet's top
-    // edge, so the bar's bottom edge sits at (CollapsedBarHeight - ContentTopGap) in item-offset
-    // coordinates.
-    val collapseLinePx = with(LocalDensity.current) { (CollapsedBarHeight - ContentTopGap).roundToPx() }
+    // Item offsets are relative to the content area, which rests ContentTopGap *below* that edge, so in
+    // item-offset coordinates the edge sits at -ContentTopGap.
+    val collapseLinePx = with(LocalDensity.current) { -ContentTopGap.roundToPx() }
     val isBarCollapsed by remember(listState, collapseLinePx) {
         derivedStateOf { listState.isHeaderScrolledAway(collapseLinePx) }
     }
@@ -94,7 +98,8 @@ internal fun PolymarketEventDetailsScreen(
             HeaderOverlay(
                 state = state,
                 isBarCollapsed = isBarCollapsed,
-                onCloseClick = onCloseClick,
+                statusBarPadding = statusBarPadding,
+                onBackClick = onBackClick,
             )
         },
     ) { contentPadding ->
@@ -105,6 +110,7 @@ internal fun PolymarketEventDetailsScreen(
                 state = state,
                 listState = listState,
                 contentPadding = contentPadding,
+                statusBarPadding = statusBarPadding,
             )
             is PolymarketEventDetailsUM.Error -> ErrorState(
                 modifier = Modifier.fillMaxSize(),
@@ -128,14 +134,15 @@ private fun LazyListState.isHeaderScrolledAway(collapseLinePx: Int): Boolean {
 private fun BoxScope.HeaderOverlay(
     state: PolymarketEventDetailsUM,
     isBarCollapsed: Boolean,
-    onCloseClick: () -> Unit,
+    statusBarPadding: Dp,
+    onBackClick: () -> Unit,
 ) {
     val content = state as? PolymarketEventDetailsUM.Content
 
     // One shared frost for the collapsed bar: the blur and tint dissolve to transparent with alpha at
     // the bar's bottom edge. At rest the header scrolls free of chrome, so the frost shrinks away.
     val frostHeight by animateDpAsState(
-        targetValue = if (isBarCollapsed) CollapsedBarHeight else 0.dp,
+        targetValue = if (isBarCollapsed) statusBarPadding + CollapsedBarHeight else 0.dp,
         label = "detailsFrostHeight",
     )
     TangemFade(
@@ -150,25 +157,30 @@ private fun BoxScope.HeaderOverlay(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            CollapsedBar(state = content)
+            CollapsedBar(
+                state = content,
+                modifier = Modifier.padding(top = statusBarPadding),
+            )
         }
     }
 
-    Row(
+    TangemButton.Back(
         modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(top = PinnedButtonsTopOffset, end = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        if (content != null) {
-            TangemButton(
-                variant = TangemButton.Variant.Material,
-                size = TangemButton.Size.X11,
-                iconStart = TangemIconUM.Icon(Icons.ic_share_android_20),
-                onClick = content.onShareClick,
-            )
-        }
-        TangemButton.Close(onClick = onCloseClick)
+            .align(Alignment.TopStart)
+            .padding(top = statusBarPadding + PinnedButtonsTopOffset, start = 16.dp),
+        onClick = onBackClick,
+    )
+
+    if (content != null) {
+        TangemButton(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = statusBarPadding + PinnedButtonsTopOffset, end = 16.dp),
+            variant = TangemButton.Variant.Material,
+            size = TangemButton.Size.X11,
+            iconStart = TangemIconUM.Icon(Icons.ic_share_android_20),
+            onClick = content.onShareClick,
+        )
     }
 }
 
@@ -178,7 +190,7 @@ private fun CollapsedBar(state: PolymarketEventDetailsUM.Content, modifier: Modi
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = CollapsedBarHeight)
-            .padding(start = 16.dp, end = PinnedButtonsClearance),
+            .padding(horizontal = PinnedButtonsClearance),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -198,13 +210,14 @@ private fun ContentState(
     state: PolymarketEventDetailsUM.Content,
     listState: LazyListState,
     contentPadding: PaddingValues,
+    statusBarPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier,
         state = listState,
         contentPadding = PaddingValues(
-            top = ContentTopGap,
+            top = statusBarPadding + CollapsedBarHeight + ContentTopGap,
             bottom = contentPadding.calculateBottomPadding() + 16.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -286,7 +299,7 @@ private fun PolymarketEventDetailsScreenPreview() {
     TangemThemePreviewRedesign {
         PolymarketEventDetailsScreen(
             state = previewContent(),
-            onCloseClick = {},
+            onBackClick = {},
         )
     }
 }
