@@ -40,7 +40,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
 
-
     @Provides
     @Singleton
     fun provideApiConfigManager(
