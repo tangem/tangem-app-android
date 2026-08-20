@@ -62,6 +62,7 @@ import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.balanceOrNull
+import com.tangem.features.tangempay.common.cardActivationImageUrl
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.common.userWalletId
@@ -271,7 +272,17 @@ internal class TangemPayCardPageModel @Inject constructor(
         return TangemPayCardDeliveryUM(
             email = email.orEmpty(),
             onContactSupportClick = ::onContactSupportClicked,
-            onActivateCardClick = {},
+            onActivateCardClick = ::onClickActivateCard,
+        )
+    }
+
+    private fun onClickActivateCard() {
+        val card = selectedCard() ?: return
+        router.push(
+            TangemPayCardDetailsInnerRoute.ActivateCard(
+                card = card,
+                cardImageUrl = currentStatus.value.cardActivationImageUrl,
+            ),
         )
     }
 
