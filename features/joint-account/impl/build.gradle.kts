@@ -22,6 +22,7 @@ dependencies {
 
     /** Common */
     implementation(projects.common)
+    implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /** Features */
