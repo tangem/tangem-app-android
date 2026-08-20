@@ -205,6 +205,25 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                 )
             }
         }
+        CardsProgressBannerUM.Activating -> {
+            item("activatingBannerBlock") {
+                SpacerH12()
+                TangemMessage(
+                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    title = resourceReference(R.string.tangempay_card_activation_in_progress),
+                    subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+                    contentColor = TangemTheme.colors3.bg.opaque.secondary,
+                    leadingContent = {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.icon.primary,
+                        )
+                    },
+                )
+            }
+        }
         is CardsProgressBannerUM.Delivering -> {
             item("deliveringBannerBlock") {
                 SpacerH12()
