@@ -73,6 +73,23 @@ internal class JointAccountRowRoutingTest {
     )
 
     @Test
+    fun `GIVEN a row of an unknown type without tokens WHEN convert THEN the account list still renders`() {
+        // Arrange
+        val response = response(secondRowType = "shared_v2").let { value ->
+            value.copy(accounts = value.accounts.map { it.copy(tokens = null) })
+        }
+
+        // Act
+        val actual = listConverter.convert(value = response)
+
+        // Assert
+        // The crypto converter refuses a row without tokens, and the producer turns that refusal into an endless
+        // retry — a value the backend adds later must not cost the user the whole account list
+        assertThat(actual.accounts.map { it.accountId.value })
+            .containsExactly(cryptoAccount().accountId.value, SECOND_ROW_ID)
+    }
+
+    @Test
     fun `GIVEN account list with a joint account WHEN convert back THEN the joint row keeps its type`() {
         // Arrange
         val accountList = AccountList(
