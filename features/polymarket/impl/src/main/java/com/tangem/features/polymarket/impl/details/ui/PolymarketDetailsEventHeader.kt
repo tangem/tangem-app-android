@@ -40,7 +40,7 @@ private const val GROWTH_GLYPH = "▲"
 
 private val SubcategoryShape = RoundedCornerShape(percent = 50)
 
-/** The first item of the sheet: the event's icon, its question and the volume figures. */
+/** The first item of the screen: the event's icon, its question and the volume figures. */
 @Composable
 internal fun EventHeader(state: PolymarketEventDetailsUM.Content) {
     Column(

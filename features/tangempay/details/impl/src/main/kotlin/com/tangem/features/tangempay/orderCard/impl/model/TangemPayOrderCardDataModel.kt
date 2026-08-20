@@ -6,15 +6,19 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
+import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.FieldUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
-import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -157,16 +161,37 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
                 ifLeft = { error ->
                     setSubmitting(isSubmitting = false)
                     TangemLogger.withTag(TAG).e("Plastic card order was not accepted: $error")
-                    val onRetry = { submitOrder(order, email, idempotencyKey) }
-                        .takeIf { error.isRetryable() }
-                    uiMessageSender.send(TangemPayMessagesFactory.createOrderFailedMessage(onRetry))
+                    uiMessageSender.send(
+                        createSubmitFailedMessage(error) { submitOrder(order, email, idempotencyKey) },
+                    )
                 },
-                ifRight = {
+                ifRight = { createdOrder ->
                     setSubmitting(isSubmitting = false)
-                    params.onOrderAccepted(email)
+                    params.onOrderAccepted(email, createdOrder.productInstanceId)
                 },
             )
         }.saveIn(submitJobHolder)
+    }
+
+    private fun createSubmitFailedMessage(error: VisaApiError, onRetry: () -> Unit): BottomSheetMessage {
+        return when (error) {
+            VisaApiError.CardIssueInvalidShippingAddress -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+                title = resourceReference(R.string.tangempay_order_card_error_invalid_address),
+            )
+            VisaApiError.CardIssueInsufficientBalance -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+                title = resourceReference(R.string.tangempay_order_card_error_insufficient_balance),
+                onCloseClick = params.onClose,
+            )
+            VisaApiError.CardIssueActiveOrderExists -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+                title = resourceReference(R.string.tangempay_order_card_error_active_order),
+                onCloseClick = params.onClose,
+            )
+            VisaApiError.CardIssueOfferNotAvailable -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+                title = resourceReference(R.string.tangempay_order_card_error_offer_unavailable),
+                onCloseClick = params.onClose,
+            )
+            else -> TangemPayMessagesFactory.createOrderFailedMessage(onRetry.takeIf { error.isRetryable() })
+        }
     }
 
     private fun onBackClick() {

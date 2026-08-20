@@ -290,6 +290,21 @@ internal class TangemPayDetailsModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN deactivated account WHEN add funds clicked THEN add funds sheet opened`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, statusValue = deactivatedStatus(id = "customer-id"))
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+
+        // Act
+        model.onClickAddFunds()
+
+        // Assert
+        assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>()).hasSize(1)
+        model.onDestroy()
+    }
+
     private fun SlotNavigation<TangemPayDetailsNavigation>.trackSlot(): List<TangemPayDetailsNavigation?> {
         val tracked = mutableListOf<TangemPayDetailsNavigation?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }

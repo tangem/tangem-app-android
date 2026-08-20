@@ -2,6 +2,7 @@ package com.tangem.tap.di.data
 
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
+import com.tangem.datasource.local.config.environment.models.P2PKeys
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import dagger.Module
 import dagger.Provides
@@ -28,6 +29,7 @@ internal object GrowConfigModule {
             gaslessTxApiKeyDev = environmentConfig.gaslessTxApiKeyDev,
             express = environmentConfig.express?.toGrowExpressModel(),
             devExpress = environmentConfig.devExpress?.toGrowExpressModel(),
+            p2pApiKey = environmentConfig.p2pApiKey?.toGrowP2PKeys(),
         )
     }
 
@@ -36,5 +38,9 @@ internal object GrowConfigModule {
             apiKey = apiKey,
             signVerifierPublicKey = signVerifierPublicKey,
         )
+    }
+
+    private fun P2PKeys.toGrowP2PKeys(): GrowEnvironmentConfig.P2PKeys {
+        return GrowEnvironmentConfig.P2PKeys(mainnet = mainnet, hoodi = hoodi)
     }
 }

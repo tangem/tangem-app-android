@@ -17,13 +17,17 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.findCardWithId
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositSuccessComponent
+import com.tangem.features.tangempay.card.activation.TangemPayCardActivationComponent
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletComponent
 import com.tangem.features.tangempay.card.limit.setup.TangemPayCardLimitSetupComponent
 import com.tangem.features.tangempay.card.limit.setup.TangemPayCardLimitSetupSuccessComponent
 import com.tangem.features.tangempay.card.name.TangemPayEditDisplayNameComponent
 import com.tangem.features.tangempay.card.pin.TangemPayChangePinComponent
 import com.tangem.features.tangempay.card.pin.TangemPayChangePinSuccessComponent
+import com.tangem.features.tangempay.common.cardActivationImageUrl
+import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
@@ -49,7 +53,7 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         key = "tangemPayCardPageInnerStack",
         source = stackNavigation,
         serializer = TangemPayCardDetailsInnerRoute.serializer(),
-        initialConfiguration = TangemPayCardDetailsInnerRoute.Details,
+        initialStack = ::initialStack,
         childFactory = ::screenChild,
     )
 
@@ -63,6 +67,17 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         ) { child ->
             child.instance.Content(modifier = Modifier.fillMaxSize())
         }
+    }
+
+    private fun initialStack(): List<TangemPayCardDetailsInnerRoute> {
+        val details = listOf(TangemPayCardDetailsInnerRoute.Details)
+        if (!params.shouldOpenActivation) return details
+
+        val card = params.initialStatus.ifLoadedOrNull { it.findCardWithId(params.cardId) } ?: return details
+        return details + TangemPayCardDetailsInnerRoute.ActivateCard(
+            card = card,
+            cardImageUrl = params.initialStatus.cardActivationImageUrl,
+        )
     }
 
     private fun screenChild(
@@ -86,6 +101,14 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
             appComponentContext = childByContext(
                 componentContext = componentContext,
                 router = innerRouter,
+            ),
+        )
+        is TangemPayCardDetailsInnerRoute.ActivateCard -> TangemPayCardActivationComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayCardActivationComponent.Params(
+                card = config.card,
+                userWalletId = params.initialStatus.userWalletId,
+                cardImageUrl = config.cardImageUrl,
             ),
         )
         is TangemPayCardDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
@@ -129,6 +152,7 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
     data class Params(
         val initialStatus: AccountStatus.Payment,
         val cardId: String,
+        val shouldOpenActivation: Boolean = false,
     )
 
     @AssistedFactory

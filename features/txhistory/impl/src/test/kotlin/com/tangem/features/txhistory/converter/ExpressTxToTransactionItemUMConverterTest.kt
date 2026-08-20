@@ -183,20 +183,28 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         val swapped = converter.convert(
             createSwap(status = ExpressExchangeStatus.Finished),
         ) as TransactionItemUM.Content
+        val swapFailed = converter.convert(
+            createSwap(status = ExpressExchangeStatus.TxFailed),
+        ) as TransactionItemUM.Content
 
         assertThat(swapping.title).isEqualTo(resourceReference(R.string.common_swapping))
         assertThat(swapped.title).isEqualTo(resourceReference(R.string.common_swapped))
+        assertThat(swapFailed.title).isEqualTo(resourceReference(R.string.transaction_history_status_swap_failed))
     }
 
     @Test
     fun `GIVEN onramp statuses WHEN convert THEN status-aware title`() {
-        val topUp = converter.convert(createOnramp(status = ExpressOnrampStatus.Sending)) as TransactionItemUM.Content
+        val toppingUp = converter.convert(createOnramp(status = ExpressOnrampStatus.Sending)) as TransactionItemUM.Content
         val toppedUp = converter.convert(
             createOnramp(status = ExpressOnrampStatus.Finished),
         ) as TransactionItemUM.Content
+        val topUpFailed = converter.convert(
+            createOnramp(status = ExpressOnrampStatus.Failed),
+        ) as TransactionItemUM.Content
 
-        assertThat(topUp.title).isEqualTo(resourceReference(R.string.tx_history_onramp_top_up))
+        assertThat(toppingUp.title).isEqualTo(resourceReference(R.string.transaction_history_status_topping_up))
         assertThat(toppedUp.title).isEqualTo(resourceReference(R.string.tx_history_onramp_topped_up))
+        assertThat(topUpFailed.title).isEqualTo(resourceReference(R.string.transaction_history_status_top_up_failed))
     }
 
     @Test

@@ -1,11 +1,11 @@
 package com.tangem.data.staking.multi
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.ethpool.P2PEthPoolApi
-import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolAccountsListRequest
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountsListResponse
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
+import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
+import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolAccountsListRequest
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountsListResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

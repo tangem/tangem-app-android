@@ -229,6 +229,12 @@ internal class TxHistoryListManagerTest {
             limit: Int,
         ) = emptyFlow<ExpressHistoryPage>()
 
+        override fun getExpressTxById(
+            userWalletId: UserWalletId,
+            currency: CryptoCurrency,
+            txId: String,
+        ) = emptyFlow<ExpressTx>()
+
         fun loadedItemsCount(): Int = batchFlow.state.value.data.sumOf { batch -> batch.data.items.size }
 
         fun status(): PaginationStatus<*> = batchFlow.state.value.status

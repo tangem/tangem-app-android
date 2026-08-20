@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 /**
  * Persisted representation of a single P2P.org pooled-staking vault.
  *
- * Mirrors [com.tangem.datasource.api.ethpool.models.response.P2PEthPoolVaultDTO].
+ * Mirrors [com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultDTO].
  */
 @Entity(tableName = "p2p_eth_pool_vault")
 data class P2PEthPoolVaultEntity(

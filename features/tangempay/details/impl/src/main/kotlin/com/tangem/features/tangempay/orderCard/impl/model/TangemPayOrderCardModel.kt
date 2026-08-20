@@ -70,7 +70,7 @@ internal class TangemPayOrderCardModel @Inject constructor(
         }.saveIn(issueJobHolder)
     }
 
-    fun onShowOrderedCard() {
+    fun onShowOrderedCard(orderedProductInstanceId: String?) {
         if (showOrderedCardJobHolder.isActive) return
         modelScope.launch {
             paymentAccountStatusFetcher.invoke(params.userWalletId)
@@ -78,12 +78,13 @@ internal class TangemPayOrderCardModel @Inject constructor(
                 .first()
                 .ifLoadedOrNull { loaded -> loaded.cards }
                 .orEmpty()
-            val targetCardId = cards.firstOrNull { it.state == TangemPayCardState.Delivering }?.id
-                ?: cards.firstOrNull()?.id
-            if (targetCardId == null) {
+            val orderedCard = orderedProductInstanceId
+                ?.let { instanceId -> cards.firstOrNull { it.productInstanceId == instanceId } }
+                ?: cards.firstOrNull { it.state == TangemPayCardState.Delivering }
+            if (orderedCard == null) {
                 router.pop()
             } else {
-                router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = targetCardId))
+                router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = orderedCard.id))
             }
         }.saveIn(showOrderedCardJobHolder)
     }

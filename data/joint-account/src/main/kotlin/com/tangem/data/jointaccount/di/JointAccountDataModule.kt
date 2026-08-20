@@ -10,6 +10,7 @@ import com.tangem.data.jointaccount.cleaner.JointAccountUserWalletDataCleaner
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
 import com.tangem.data.jointaccount.fetcher.DefaultSingleJointAccountListFetcher
 import com.tangem.data.jointaccount.producer.DefaultSingleJointAccountListProducer
+import com.tangem.data.jointaccount.repository.DefaultJointAccountRepository
 import com.tangem.data.jointaccount.store.DefaultJointAccountInvitesStore
 import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.data.jointaccount.store.JointAccountsStore
@@ -18,6 +19,7 @@ import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
+import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -49,6 +51,10 @@ internal interface JointAccountDataModule {
     @Binds
     @Singleton
     fun bindSingleJointAccountListFetcher(fetcher: DefaultSingleJointAccountListFetcher): SingleJointAccountListFetcher
+
+    @Binds
+    @Singleton
+    fun bindJointAccountRepository(repository: DefaultJointAccountRepository): JointAccountRepository
 
     @Binds
     @Singleton
