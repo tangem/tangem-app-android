@@ -22,6 +22,7 @@ import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
+import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -385,14 +386,27 @@ class DefaultWalletRegistrarTest {
         preferencesDataStore.edit {
             it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
         }
-        val slot = slot<WalletUnregisterRequest>()
-        coEvery { authApi.unregisterWallet(capture(slot)) } returns tokenSuccess()
+        val request = slot<WalletUnregisterRequest>()
+        // Server rotates the session tokens to the wallets that remain bound (WALLET_ID removed).
+        coEvery { authApi.unregisterWallet(capture(request)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "rotated-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "rotated-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf(OTHER_WALLET_ID),
+            ),
+        )
+        val saved = slot<SessionTokens>()
 
         val result = registrar.unregister(WALLET_ID)
 
         assertThat(result.isRight()).isTrue()
-        assertThat(slot.captured.walletId).isEqualTo(WALLET_ID)
-        coVerify { store.save(any()) }
+        assertThat(request.captured.walletId).isEqualTo(WALLET_ID)
+        // The rotated tokens actually persisted reflect the updated bound-wallet set.
+        coVerify { store.save(capture(saved)) }
+        assertThat(saved.captured.accessToken).isEqualTo("rotated-access")
+        assertThat(saved.captured.walletIds).containsExactly(OTHER_WALLET_ID)
         assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
     }
 
