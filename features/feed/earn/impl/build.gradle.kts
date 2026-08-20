@@ -13,10 +13,12 @@ android {
 dependencies {
     /* Project - API */
     implementation(projects.features.feed.api)
+    implementation(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
 
     /* Project - Domain */
     implementation(projects.domain.earn)
+    implementation(projects.domain.markets)
     implementation(projects.domain.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.tokens.models)
@@ -35,14 +37,17 @@ dependencies {
     implementation(projects.common.ui)
 
     /* Project - Libs */
+    implementation(projects.libs.blockchainSdk)
     implementation(tangemDeps.blockchain)
 
     /* Compose */
+    implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
+    implementation(deps.lifecycle.compose)
 
     /* Other */
     implementation(deps.androidx.appCompat)
