@@ -11,6 +11,7 @@ import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
@@ -164,5 +165,6 @@ internal class TangemPayEditDisplayNameModelTest {
         images = emptyList(),
         state = TangemPayCardState.Active,
         embossName = null,
+        cardType = TangemPayCardType.VIRTUAL,
     )
 }
