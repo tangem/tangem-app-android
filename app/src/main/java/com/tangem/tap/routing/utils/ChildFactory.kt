@@ -23,6 +23,7 @@ import com.tangem.features.hotwallet.*
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
+import com.tangem.features.jointaccount.supportednetworks.JointSupportedNetworksComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
@@ -125,6 +126,7 @@ internal class ChildFactory @Inject constructor(
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
+    private val jointSupportedNetworksComponentFactory: JointSupportedNetworksComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
@@ -690,6 +692,13 @@ internal class ChildFactory @Inject constructor(
                         isCreator = true,
                     ),
                     componentFactory = jointAccountMembersComponentFactory,
+                )
+            }
+            is AppRoute.JointSupportedNetworks -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = jointSupportedNetworksComponentFactory,
                 )
             }
             is AppRoute.EditAccount -> {
