@@ -115,7 +115,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN Swap failed WHEN convert THEN Content with composed failed title and directional icon`() {
+    fun `GIVEN Swap failed WHEN convert THEN Content with swap failed title and directional icon`() {
         val tx = txInfo(
             type = TransactionType.Swap,
             status = TxInfo.TransactionStatus.Failed,
@@ -124,9 +124,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(
-            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_swapping))),
-        )
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_swap_failed))
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
     }
 
@@ -166,7 +164,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_staking_reward))
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_rewards_claimed))
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.Plain(resRef(R.string.transaction_history_earned_from_stake)),
         )
@@ -183,7 +181,19 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_claiming_reward))
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_claiming_rewards))
+    }
+
+    @Test
+    fun `GIVEN ClaimRewards failed WHEN convert THEN Content with rewards claim failed title`() {
+        val tx = txInfo(
+            type = TransactionType.Staking.ClaimRewards,
+            status = TxInfo.TransactionStatus.Failed,
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_rewards_claim_failed))
     }
 
     // endregion
@@ -224,7 +234,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN outgoing Transfer failed WHEN convert THEN composed failed title`() {
+    fun `GIVEN outgoing Transfer failed WHEN convert THEN send failed title`() {
         val tx = txInfo(
             type = TransactionType.Transfer,
             isOutgoing = true,
@@ -234,9 +244,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(
-            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_sending))),
-        )
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_send_failed))
     }
 
     @Test
@@ -268,6 +276,20 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_receiving))
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer failed WHEN convert THEN receive failed title`() {
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            status = TxInfo.TransactionStatus.Failed,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_receive_failed))
     }
 
     @Test
