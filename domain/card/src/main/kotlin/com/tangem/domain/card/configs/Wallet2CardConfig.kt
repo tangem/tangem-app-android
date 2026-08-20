@@ -228,6 +228,8 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.RobinhoodTestnet -> EllipticCurve.Secp256k1
             Blockchain.Igra -> EllipticCurve.Secp256k1
             Blockchain.IgraTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Electroneum -> EllipticCurve.Secp256k1
+            Blockchain.ElectroneumTestnet -> EllipticCurve.Secp256k1
         }
     }
 }
