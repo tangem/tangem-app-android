@@ -23,6 +23,7 @@ import com.tangem.domain.txhistory.list.HistoryTxListManager.HistorySources
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
 import com.tangem.domain.txhistory.list.HistoryTxListManager.OnChainSource
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.getEmittedValues
@@ -66,6 +67,7 @@ internal class DefaultHistoryTxListManagerTest {
     private val getAccountCurrencyStatusUseCase = mockk<GetAccountCurrencyStatusUseCase>()
     private val txHistoryItemsCountUseCase = mockk<GetTxHistoryItemsCountUseCase>()
     private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxed = true)
+    private val txHistoryRepositoryV2 = mockk<TxHistoryRepositoryV2>()
 
     private val bsdk = mockk<BsdkOnChainHistory>(relaxed = true)
     private val tangemPay = mockk<TangemPayOnChainHistory>(relaxed = true)
@@ -82,6 +84,7 @@ internal class DefaultHistoryTxListManagerTest {
             getAccountCurrencyStatusUseCase,
             txHistoryItemsCountUseCase,
             analyticsExceptionHandler,
+            txHistoryRepositoryV2,
             bsdk,
             tangemPay,
             indexTable,
@@ -318,6 +321,7 @@ internal class DefaultHistoryTxListManagerTest {
         bsdkOnChainHistoryFactory = bsdkFactory,
         tangemPayOnChainHistoryFactory = tangemPayFactory,
         indexTableOnChainHistoryFactory = indexTableFactory,
+        txHistoryRepositoryV2 = txHistoryRepositoryV2,
         userWalletId = userWalletId,
         currency = currency,
         modelScope = modelScope,
