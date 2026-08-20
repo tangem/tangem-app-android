@@ -119,7 +119,10 @@ internal class TransactionDataToTxHistoryItemConverter(
                     is EthereumYieldSupplyExitCallData -> TxInfo.TransactionType.YieldSupply.Exit(
                         callData.tokenContractAddress,
                     )
-                    is ApprovalERC20TokenCallData -> TxInfo.TransactionType.Approve
+                    is ApprovalERC20TokenCallData -> TxInfo.TransactionType.Approve(
+                        amount = callData.amount?.toDomain(),
+                        address = callData.spenderAddress,
+                    )
                     else -> TxInfo.TransactionType.Transfer
                 }
             }
