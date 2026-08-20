@@ -98,7 +98,10 @@ data class TxInfo(
         data object Transfer : TransactionType
 
         @Serializable
-        data object Approve : TransactionType
+        data class Approve(
+            val amount: SdkAmount?,
+            val address: String,
+        ) : TransactionType
 
         @Serializable
         data object Swap : TransactionType

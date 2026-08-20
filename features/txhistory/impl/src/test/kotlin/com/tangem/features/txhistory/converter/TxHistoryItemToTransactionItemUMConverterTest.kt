@@ -54,7 +54,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN Pill TransactionType WHEN convert THEN result is Pill with expected kind`() {
         val cases = listOf(
-            TransactionType.Approve to TransactionItemUM.PillKind.APPROVE,
+            TransactionType.Approve(amount = null, address = USER_ADDRESS) to TransactionItemUM.PillKind.APPROVE,
             TransactionType.Staking.Stake to TransactionItemUM.PillKind.STAKING,
             TransactionType.Staking.Unstake to TransactionItemUM.PillKind.STAKING,
             TransactionType.Staking.Restake to TransactionItemUM.PillKind.STAKING,

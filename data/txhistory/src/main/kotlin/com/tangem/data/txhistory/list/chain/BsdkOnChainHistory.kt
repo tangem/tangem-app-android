@@ -88,7 +88,7 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
      */
     private fun isDust(txInfo: TxInfo, usdQuote: BigDecimal): Boolean = when {
         txInfo.isOutgoing -> false
-        txInfo.type == TxInfo.TransactionType.Approve -> false
+        txInfo.type is TxInfo.TransactionType.Approve -> false
         else -> txInfo.amount * usdQuote < DUST_THRESHOLD_USD
     }
 

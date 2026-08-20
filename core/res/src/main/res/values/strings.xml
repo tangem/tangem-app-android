@@ -535,6 +535,7 @@
   <string name="common_transfer">Transfer</string>
   <string name="common_transferred">Transferred</string>
   <string name="common_try_again_later">Please try again later.</string>
+  <string name="common_type">Type</string>
   <string name="common_unable_to_load">Unable to load data…</string>
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
@@ -2366,6 +2367,7 @@
   <string name="tangempay_order_card_error_active_order">A card order is already in progress.</string>
   <string name="tangempay_order_card_error_insufficient_balance">Not enough money for delivery. Add funds and try again.</string>
   <string name="tangempay_order_card_error_invalid_address">Check the delivery address and try again.</string>
+  <string name="tangempay_order_card_error_invalid_source_card">This card can’t be replaced.</string>
   <string name="tangempay_order_card_error_offer_unavailable">This card is no longer available.</string>
   <string name="tangempay_order_data_address_line1">Address line 1</string>
   <string name="tangempay_order_data_address_line2">Address line 2</string>
@@ -2541,6 +2543,9 @@
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Unavailable for swap</string>
+  <string name="transaction_history_approve_high_risk_subtitle">You\'re connected. Funds may be at risk. Consider revoking access.</string>
+  <string name="transaction_history_approve_high_risk_title">High Risk</string>
+  <string name="transaction_history_approved_amount">Approved amount</string>
   <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
   <string name="transaction_history_detail_page_amount_signed_value" formatted="false">%1s %2s %3s</string>
@@ -2577,6 +2582,8 @@
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
+  <string name="transaction_history_unlimited">Unlimited</string>
+  <string name="transaction_history_unlimited_amount">Unlimited %s</string>
   <string name="transaction_history_withdrawn">Withdrawn</string>
   <string name="transaction_notifications_warning_description">Notifications are enabled but won\'t work until you allow notifications in your device settings.</string>
   <string name="transaction_notifications_warning_title">Transaction Notifications</string>
