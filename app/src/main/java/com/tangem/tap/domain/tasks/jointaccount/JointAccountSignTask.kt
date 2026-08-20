@@ -15,9 +15,8 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.jointaccount.derivation.jointAccountOwnerDerivationPath
-import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
-import com.tangem.domain.jointaccount.model.JointAccountCreationSignInput
-import com.tangem.domain.jointaccount.model.JointAccountCreationSignResult
+import com.tangem.domain.jointaccount.model.JointAccountSignInput
+import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.signing.CanonicalJson
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -31,35 +30,36 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Signs the joint account creation payload in a single NFC session: derives the owner key at
- * `m/44'/60'/888888'/0/{index}` for [JointAccountCreationSignInput.derivationIndex], computes its EVM address,
- * builds the payload around the address, and signs its EIP-191 hash over the RFC 8785 canonical form — all without
- * a second tap. `DeriveWalletPublicKeyTask` writes the derived key into the live session environment, so the
- * subsequent [SignHashCommand] resolves the derivation path within the same session.
+ * Signs a joint account payload in a single NFC session: derives the owner key at
+ * `m/44'/60'/888888'/0/{index}` for [JointAccountSignInput.derivationIndex], computes its EVM address,
+ * builds the payload around the address via [JointAccountSignInput.makePayload], and signs the payload's
+ * EIP-191 hash over the RFC 8785 canonical form — all without a second tap. `DeriveWalletPublicKeyTask` writes
+ * the derived key into the live session environment, so the subsequent [SignHashCommand] resolves the derivation
+ * path within the same session.
  *
- * The task does not validate the index against the backend: the caller must take it from a freshly synced
- * `wallet.totalJointAccounts` right before starting the session (see [JointAccountCreationSignInput]). A stale
- * index is detected by the backend as a 409 on `POST /joint-accounts`.
+ * One task serves every signed joint account flow — creation, joining and activation differ only in the payload
+ * and in where the index comes from (see [JointAccountSignInput]). The task does not validate the index against
+ * the backend: a stale index is detected by the backend as a 409 after the tap is already spent.
  *
  * The derived key is returned (keyed by the seed wallet public key) so the caller can persist it via
  * `DerivationsRepository.storeDerivedKeys` — the session's in-memory copy dies with the session.
  *
  * Run via the generic `TangemSdkManager.runTaskAsync` with `UserWalletIdPreflightReadFilter` of the wallet the
-
+ * payload belongs to: any backup card of that wallet signs equally, so the session is filtered by wallet,
  * not by a specific card id.
  */
-class JointAccountCreationSignTask @AssistedInject constructor(
+class JointAccountSignTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
-    @Assisted private val input: JointAccountCreationSignInput,
-) : CardSessionRunnable<JointAccountCreationSignResult> {
+    @Assisted private val input: JointAccountSignInput,
+) : CardSessionRunnable<JointAccountSignResult> {
 
-    override fun run(session: CardSession, callback: CompletionCallback<JointAccountCreationSignResult>) {
+    override fun run(session: CardSession, callback: CompletionCallback<JointAccountSignResult>) {
         coroutineScope.launch {
             callback(runSuspend(session = session))
         }
     }
 
-    private suspend fun runSuspend(session: CardSession): CompletionResult<JointAccountCreationSignResult> {
+    private suspend fun runSuspend(session: CardSession): CompletionResult<JointAccountSignResult> {
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
             ?: return CompletionResult.Failure(TangemSdkError.WalletNotFound())
@@ -73,15 +73,7 @@ class JointAccountCreationSignTask @AssistedInject constructor(
         }
         val ownerAddress = generateEvmAddress(extendedPublicKey)
 
-        val payload = JointAccountCreationPayload(
-            config = input.config,
-            creator = JointAccountCreationPayload.Creator(
-                walletId = input.walletId,
-                name = input.creatorName,
-                address = ownerAddress,
-                derivation = input.derivationIndex,
-            ),
-        )
+        val payload = input.makePayload(ownerAddress)
         val canonicalPayload = CanonicalJson.canonicalize(payload.toCanonicalMap())
         val hash = hashPersonalMessage(canonicalPayload)
 
@@ -97,7 +89,7 @@ class JointAccountCreationSignTask @AssistedInject constructor(
         }
 
         return CompletionResult.Success(
-            data = JointAccountCreationSignResult(
+            data = JointAccountSignResult(
                 ownerAddress = ownerAddress,
                 canonicalPayload = canonicalPayload,
                 signature = toRsvHex(signResponse.signature, hash, extendedPublicKey),
@@ -156,6 +148,6 @@ class JointAccountCreationSignTask @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(coroutineScope: CoroutineScope, input: JointAccountCreationSignInput): JointAccountCreationSignTask
+        fun create(coroutineScope: CoroutineScope, input: JointAccountSignInput): JointAccountSignTask
     }
 }
