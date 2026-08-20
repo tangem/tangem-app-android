@@ -28,6 +28,23 @@ sealed interface Account {
         get() = accountId.userWalletId
 
     /**
+     * Marker for accounts that hold a portfolio of crypto currencies: [CryptoPortfolio] and [Joint].
+     * [Payment], [Virtual] and [Prediction] accounts hold no portfolio and are deliberately excluded.
+     */
+    @Serializable
+    sealed interface Portfolio : Account {
+
+        /** Icon representing the account */
+        val icon: CryptoPortfolioIcon
+
+        /** Index used for derivation of the account */
+        val derivationIndex: DerivationIndex
+
+        /** Set of tokens associated with the account */
+        val cryptoCurrencies: List<CryptoCurrency>
+    }
+
+    /**
      * Represents a crypto portfolio account
      *
      * @property accountId        unique identifier of the account
@@ -40,10 +57,10 @@ sealed interface Account {
     data class CryptoPortfolio private constructor(
         override val accountId: AccountId,
         override val accountName: AccountName,
-        val icon: CryptoPortfolioIcon,
-        val derivationIndex: DerivationIndex,
-        val cryptoCurrencies: List<CryptoCurrency>,
-    ) : Account {
+        override val icon: CryptoPortfolioIcon,
+        override val derivationIndex: DerivationIndex,
+        override val cryptoCurrencies: List<CryptoCurrency>,
+    ) : Portfolio {
 
         /** Indicates if the account is the main account */
         val isMainAccount: Boolean
@@ -235,10 +252,10 @@ sealed interface Account {
     data class Joint private constructor(
         override val accountId: AccountId,
         override val accountName: AccountName,
-        val icon: CryptoPortfolioIcon,
-        val derivationIndex: DerivationIndex,
-        val cryptoCurrencies: List<CryptoCurrency>,
-    ) : Account {
+        override val icon: CryptoPortfolioIcon,
+        override val derivationIndex: DerivationIndex,
+        override val cryptoCurrencies: List<CryptoCurrency>,
+    ) : Portfolio {
 
         /**
          * Represents possible errors when creating a joint account
@@ -320,10 +337,4 @@ sealed interface Account {
 }
 
 val Account.derivationIndex: DerivationIndex?
-    get() = when (this) {
-        is Account.CryptoPortfolio -> derivationIndex
-        is Account.Payment -> null
-        is Account.Virtual -> null
-        is Account.Prediction -> null
-        is Account.Joint -> derivationIndex
-    }
+    get() = (this as? Account.Portfolio)?.derivationIndex
