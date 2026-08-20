@@ -5,6 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -12,6 +13,8 @@ import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
 import com.tangem.domain.pay.model.CardActivationOrder
 import com.tangem.domain.pay.usecase.ActivatePlasticCardUseCase
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -32,6 +35,7 @@ internal class TangemPayCardActivationModel @Inject constructor(
     private val router: Router,
     private val activatePlasticCardUseCase: ActivatePlasticCardUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params: TangemPayCardActivationComponent.Params = paramsContainer.require()
@@ -102,32 +106,52 @@ internal class TangemPayCardActivationModel @Inject constructor(
     }
 
     private suspend fun onSubmitFailed(error: VisaApiError) {
+        setSubmitFinished()
         when (error) {
-            VisaApiError.CardActivationInvalidCardData -> showError(
+            VisaApiError.CardActivationInvalidCardData -> showInlineError(
                 message = resourceReference(R.string.tangempay_card_activation_error),
-                shouldClearInput = true,
             )
-            VisaApiError.CardActivationCardAlreadyActive,
-            VisaApiError.CardActivationActiveOrderExists,
-            -> {
+            VisaApiError.CardActivationCardNotPhysical -> showRejectionSheet(
+                title = resourceReference(R.string.tangempay_card_activation_error_not_physical),
+                onClose = { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails::class) },
+            )
+            VisaApiError.CardActivationCardAlreadyActive -> {
                 paymentAccountStatusFetcher.invoke(params.userWalletId)
-                router.pop()
+                showRejectionSheet(
+                    title = resourceReference(R.string.tangempay_card_activation_error_already_active),
+                    onClose = { router.pop() },
+                )
             }
-            else -> showError(
-                message = resourceReference(CoreUiR.string.common_unknown_error),
-                shouldClearInput = false,
+            VisaApiError.CardActivationCardNotReadyForActivation -> showRejectionSheet(
+                title = resourceReference(R.string.tangempay_card_activation_error_not_ready),
+                onClose = { router.pop() },
+            )
+            VisaApiError.CardActivationActiveOrderExists -> {
+                paymentAccountStatusFetcher.invoke(params.userWalletId)
+                showRejectionSheet(
+                    title = resourceReference(R.string.tangempay_card_activation_error_in_progress),
+                    onClose = { router.pop() },
+                )
+            }
+            else -> showRejectionSheet(
+                title = resourceReference(CoreUiR.string.common_something_went_wrong),
             )
         }
     }
 
-    private fun showError(message: TextReference, shouldClearInput: Boolean) {
+    private fun showRejectionSheet(title: TextReference, onClose: () -> Unit = {}) {
+        uiMessageSender.send(
+            TangemPayMessagesFactory.createSubmitRejectedMessage(title = title, onCloseClick = onClose),
+        )
+    }
+
+    private fun showInlineError(message: TextReference) {
         uiState.update { current ->
-            current.copy(
-                lastDigits = if (shouldClearInput) "" else current.lastDigits,
-                isLoading = false,
-                hint = message,
-                isHintError = true,
-            )
+            current.copy(lastDigits = "", hint = message, isHintError = true)
         }
+    }
+
+    private fun setSubmitFinished() {
+        uiState.update { current -> current.copy(isLoading = false) }
     }
 }
