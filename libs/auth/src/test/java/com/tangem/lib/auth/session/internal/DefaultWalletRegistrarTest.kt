@@ -411,6 +411,28 @@ class DefaultWalletRegistrarTest {
     }
 
     @Test
+    fun `unregister treats 404 NotFound as success and clears the marker without persisting tokens`() = runTest {
+        preferencesDataStore.edit {
+            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "wallet not registered for this device",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.unregister(WALLET_ID)
+
+        // Already not registered server-side — desired end state reached, marker cleared, no tokens.
+        assertThat(result.isRight()).isTrue()
+        assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+        coVerify(exactly = 0) { store.save(any()) }
+    }
+
+    @Test
     fun `unregister surfaces API error and keeps the marker`() = runTest {
         preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
         @Suppress("UNCHECKED_CAST")
