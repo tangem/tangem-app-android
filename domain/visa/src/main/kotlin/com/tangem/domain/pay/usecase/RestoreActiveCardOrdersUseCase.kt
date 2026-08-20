@@ -16,15 +16,15 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
 
 /**
- * Restores in-flight card-issuance and card-activation orders on app launch / when returning to the wallet
- * screen.
+ * Restores in-flight card-issuance, plastic card-reissuance and card-activation orders on app launch /
+ * when returning to the wallet screen.
  *
  * `findOrders` is the source of truth — a locally stored order id is only a hint that does not
 
  * survive a force close. This use case re-discovers the active orders and (re)starts polling so each is
  * driven to its terminal state. Only issue orders get their ids persisted, because only those render an
- * "issuing" placeholder card — an activation order is already reflected by the card's own state, and
- * persisting its id would add a phantom placeholder next to the real card.
+ * "issuing" placeholder card — an activation or reissue order is already reflected by the card's own
+ * state, and persisting its id would add a phantom placeholder next to the real card.
  *
  * Non-fatal exceptions are logged and collapsed to [VisaApiError.Unspecified]; the caller treats the
  * result as fire-and-forget.
@@ -44,12 +44,12 @@ class RestoreActiveCardOrdersUseCase(
             block = {
                 customerOrderRepository.findOrders(
                     userWalletId = userWalletId,
-                    types = OrderType.issueCardTypes + OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
+                    types = RESTORED_ORDER_TYPES,
                     statuses = OrderStatus.activeStatuses,
                 ).bind()
             },
             catch = { handleError(it) },
-        ).filter { it.status.isActive }
+        ).filter { it.status.isActive && it.type in RESTORED_ORDER_TYPES }
 
         orders.forEach { order ->
             if (order.type.isIssuing) {
@@ -73,5 +73,12 @@ class RestoreActiveCardOrdersUseCase(
     private fun Raise<VisaApiError>.handleError(throwable: Throwable): Nothing {
         TangemLogger.e("Error in RestoreActiveCardOrdersUseCase", throwable)
         raise(VisaApiError.Unspecified)
+    }
+
+    private companion object {
+        val RESTORED_ORDER_TYPES = OrderType.issueCardTypes + setOf(
+            OrderType.CARD_REISSUE_PLASTIC_RAIN,
+            OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
+        )
     }
 }
