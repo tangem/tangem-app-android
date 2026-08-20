@@ -91,6 +91,11 @@ internal class ImportOptionsBottomSheetModel @Inject constructor(
                 body = resourceReference(R.string.hw_cloud_backup_permissions_description),
                 isWarning = false,
             )
+            CloudBackupError.NetworkError -> showError(
+                title = resourceReference(R.string.hw_cloud_backup_error_title),
+                body = resourceReference(R.string.hw_cloud_backup_error_network),
+                isWarning = false,
+            )
             else -> showError(
                 title = resourceReference(R.string.hw_cloud_backup_error_title),
                 body = resourceReference(R.string.hw_cloud_backup_restore_error_with_recovery),
