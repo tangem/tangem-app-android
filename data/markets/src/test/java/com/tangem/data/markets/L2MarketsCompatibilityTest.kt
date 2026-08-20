@@ -1,6 +1,7 @@
 package com.tangem.data.markets
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.store.datasource.markets.models.response.TokenMarketInfoResponse
 import org.junit.jupiter.api.Test
