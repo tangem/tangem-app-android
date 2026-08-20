@@ -22,6 +22,7 @@ import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeCompon
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
+import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
 import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -39,6 +40,8 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
+
+private const val PLASTIC_IMAGE_URL = "https://images.us.paera.com/Physical-main.png"
 
 internal class TangemPayOrderCardTypeModelTest {
 
@@ -359,9 +362,53 @@ internal class TangemPayOrderCardTypeModelTest {
         ),
     )
 
+    @Test
+    fun `GIVEN the plastic offer carries a MAIN image WHEN loaded THEN the plastic page uses it`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val plastic = model.state.value.plastic as TangemPayOrderCardTypeUM.Plastic.Available
+        assertThat(plastic.offerImageUrl).isEqualTo(PLASTIC_IMAGE_URL)
+        assertThat(model.state.value.imageUrlFor(OrderCardType.Plastic)).isEqualTo(PLASTIC_IMAGE_URL)
+    }
+
+    @Test
+    fun `GIVEN the plastic offer has no image WHEN loaded THEN the plastic page falls back to the card image`() =
+        runTest {
+            // Arrange
+            coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+                listOf(virtualOffer(), plasticOffer(mainImageUrl = null)).right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val plastic = model.state.value.plastic as TangemPayOrderCardTypeUM.Plastic.Available
+            assertThat(plastic.offerImageUrl).isNull()
+            assertThat(model.state.value.imageUrlFor(OrderCardType.Plastic))
+                .isEqualTo(model.state.value.cardImageUrl)
+        }
+
+    @Test
+    fun `GIVEN the virtual offer has no image WHEN loaded THEN the virtual page falls back to the card image`() =
+        runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.virtual.offerImageUrl).isNull()
+            assertThat(model.state.value.imageUrlFor(OrderCardType.Virtual))
+                .isEqualTo(model.state.value.cardImageUrl)
+        }
+
     private fun plasticOffer(
         feeAmount: BigDecimal = BigDecimal("21.69"),
         deliveryEta: Offer.DeliveryEta? = Offer.DeliveryEta(minBusinessDays = 2, maxBusinessDays = 4),
+        mainImageUrl: String? = PLASTIC_IMAGE_URL,
     ) = Offer(
         type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
         fee = Offer.Fee(amount = feeAmount, currency = usd),
@@ -370,6 +417,7 @@ internal class TangemPayOrderCardTypeModelTest {
             orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
             deliveryEta = deliveryEta,
         ),
+        mainImageUrl = mainImageUrl,
     )
 
     private fun customerInfo(availableBalance: BigDecimal? = BigDecimal("100.00")) = CustomerInfo(
