@@ -208,32 +208,22 @@ internal object TangemPayMessagesFactory {
 
     fun createOrderFailedMessage(onRetryClick: (() -> Unit)?): BottomSheetMessage {
         return bottomSheetMessage {
-            infoBlock {
-                vector(Icons.ic_error_28) {
-                    type = MessageBottomSheetUM.Vector.Type.Attention
-                    backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
-                }
+            errorInfoBlock {
                 title = resourceReference(R.string.common_something_went_wrong)
                 body = resourceReference(R.string.common_try_again_later)
             }
-            if (onRetryClick == null) {
-                primaryButton {
-                    text = resourceReference(R.string.common_close)
-                    onClick { closeBs() }
-                }
-            } else {
-                secondaryButton {
-                    text = resourceReference(R.string.common_close)
-                    onClick { closeBs() }
-                }
-                primaryButton {
-                    text = resourceReference(R.string.common_retry)
-                    onClick {
-                        onRetryClick()
-                        closeBs()
-                    }
-                }
-            }
+            closeOrRetryButtons(onRetryClick = onRetryClick)
+        }
+    }
+
+    fun createSubmitRejectedMessage(
+        title: TextReference,
+        onCloseClick: () -> Unit = {},
+        onRetryClick: (() -> Unit)? = null,
+    ): BottomSheetMessage {
+        return bottomSheetMessage {
+            errorInfoBlock { this.title = title }
+            closeOrRetryButtons(onCloseClick = onCloseClick, onRetryClick = onRetryClick)
         }
     }
 
@@ -298,6 +288,41 @@ internal object TangemPayMessagesFactory {
                     text = resourceReference(R.string.common_got_it)
                     onClick { closeBs() }
                 }
+            }
+        }
+    }
+}
+
+private fun MessageBottomSheetUM.errorInfoBlock(init: MessageBottomSheetUM.InfoBlock.() -> Unit) = infoBlock {
+    vector(Icons.ic_error_28) {
+        type = MessageBottomSheetUM.Vector.Type.Attention
+        backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
+    }
+    init()
+}
+
+private fun MessageBottomSheetUM.closeOrRetryButtons(onCloseClick: () -> Unit = {}, onRetryClick: (() -> Unit)?) {
+    if (onRetryClick != null) {
+        secondaryButton {
+            text = resourceReference(R.string.common_close)
+            onClick {
+                onCloseClick()
+                closeBs()
+            }
+        }
+        primaryButton {
+            text = resourceReference(R.string.common_retry)
+            onClick {
+                onRetryClick()
+                closeBs()
+            }
+        }
+    } else {
+        primaryButton {
+            text = resourceReference(R.string.common_close)
+            onClick {
+                onCloseClick()
+                closeBs()
             }
         }
     }
