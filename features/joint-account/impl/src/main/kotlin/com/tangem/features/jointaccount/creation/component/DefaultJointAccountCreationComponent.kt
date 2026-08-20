@@ -129,10 +129,9 @@ internal class DefaultJointAccountCreationComponent @AssistedInject constructor(
         )
     }
 
-    private fun onDisplayNameContinue(name: String) {
+    private suspend fun onDisplayNameContinue(name: String) {
         model.draftHolder.setDisplayName(name)
-
-        // TODO: start the card-signature (NFC) session — a separate task once the backend contract settles
+        model.createAccount(displayName = name)
     }
 
     private fun onChildBack() {
