@@ -104,6 +104,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPayCardPageComponent.Params(
                 initialStatus = params.initialStatus,
                 cardId = config.cardId,
+                shouldOpenActivation = config.shouldOpenActivation,
             ),
         )
         is TangemPayAccountDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
