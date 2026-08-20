@@ -42,6 +42,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val amountBlock: AmountBlockUM,
         val counterparty: CounterpartyUM?,
         val rows: ImmutableList<InfoRowUM>,
+        /** Warning plaque under the amount block (currently: the unlimited-approval "High Risk" notice). */
+        val statusBanner: StatusBannerUM? = null,
     ) : TxHistoryDetailsUM
 
     /**
@@ -65,7 +67,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     ) : TxHistoryDetailsUM
 
     /**
-     * Express status plaque under the two-asset block. The UI animates between successive emissions.
+     * Warning/status plaque rendered under the amount block. On [TwoAssets] it is the express deal's live status
+     * (animates between successive emissions); on [SingleAsset] it is currently only the static unlimited-approval
+     * "High Risk" notice (no animation between emissions needed there).
      *
      * @property style Visual identity of the status — selects the plaque colors, the trailing glyph and the title
      * motion together. One value per distinct look, so a terminal whose glyph diverges from a plain colour (the grey
