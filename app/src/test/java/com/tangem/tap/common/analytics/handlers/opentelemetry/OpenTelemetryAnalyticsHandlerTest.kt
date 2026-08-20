@@ -96,7 +96,7 @@ internal class OpenTelemetryAnalyticsHandlerTest {
         handler.send(event)
 
         // Assert
-        verify(exactly = 1) { meter.counterBuilder("app.basic.transaction_sent") }
+        verify(exactly = 1) { meter.counterBuilder("app_basic_transaction_sent") }
         verify(exactly = 1) { counter.add(1, expectedAttributes) }
     }
 
@@ -110,7 +110,7 @@ internal class OpenTelemetryAnalyticsHandlerTest {
         handler.send(event)
 
         // Assert
-        verify(exactly = 1) { meter.counterBuilder("app.basic.transaction_sent") }
+        verify(exactly = 1) { meter.counterBuilder("app_basic_transaction_sent") }
         verify(exactly = 2) { counter.add(1, Attributes.empty()) }
     }
 
