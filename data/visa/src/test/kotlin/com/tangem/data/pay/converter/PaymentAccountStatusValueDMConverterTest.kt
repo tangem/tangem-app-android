@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.test.core.ProvideTestModels
@@ -242,7 +243,11 @@ internal class PaymentAccountStatusValueDMConverterTest {
         @ProvideTestModels
         fun convert(model: CardStateModel) {
             // GIVEN
-            val domain = loadedWithCard(state = model.state, frozenState = model.frozenState)
+            val domain = loadedWithCard(
+                state = model.state,
+                frozenState = model.frozenState,
+                cardType = model.cardType,
+            )
 
             // WHEN
             val restored = converter.convertBack(userWalletId, converter.convert(domain))
@@ -251,12 +256,19 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val card = (restored as PaymentAccountStatusValue.Loaded).cards.single()
             assertThat(card.state).isEqualTo(model.state)
             assertThat(card.frozenState).isEqualTo(model.frozenState)
+            assertThat(card.cardType).isEqualTo(model.cardType)
             assertThat(card.embossName).isEqualTo("JOHNNY SILVERHAND")
             assertThat(card.lastDigits).isEqualTo("8890")
         }
 
         private fun provideTestModels() = TangemPayCardState.entries.map { state ->
             CardStateModel(state = state, frozenState = TangemPayCardFrozenState.Unfrozen)
+        } + TangemPayCardType.entries.map { cardType ->
+            CardStateModel(
+                state = TangemPayCardState.Active,
+                frozenState = TangemPayCardFrozenState.Unfrozen,
+                cardType = cardType,
+            )
         } + CardStateModel(
             state = TangemPayCardState.Delivering,
             frozenState = TangemPayCardFrozenState.Frozen,
@@ -266,13 +278,15 @@ internal class PaymentAccountStatusValueDMConverterTest {
     internal data class CardStateModel(
         val state: TangemPayCardState,
         val frozenState: TangemPayCardFrozenState,
+        val cardType: TangemPayCardType = TangemPayCardType.VIRTUAL,
     ) {
-        override fun toString(): String = "$state / $frozenState"
+        override fun toString(): String = "$state / $frozenState / $cardType"
     }
 
     private fun loadedWithCard(
         state: TangemPayCardState,
         frozenState: TangemPayCardFrozenState,
+        cardType: TangemPayCardType = TangemPayCardType.VIRTUAL,
     ) = PaymentAccountStatusValue.Loaded(
         source = StatusSource.ACTUAL,
         customerId = "cust_1",
@@ -299,6 +313,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 images = emptyList(),
                 state = state,
                 embossName = "JOHNNY SILVERHAND",
+                cardType = cardType,
             ),
         ),
         fiatRate = null,
