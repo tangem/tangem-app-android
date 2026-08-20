@@ -25,7 +25,11 @@ internal object JointAccountSigning {
         ).address
     }
 
-    /** EIP-191 (`0x45`) digest of the canonical payload — what the owner key actually signs. */
+    /**
+     * EIP-191 digest of the canonical payload — what the owner key actually signs. Version `0x45` (`personal_sign`),
+     * whose envelope is the `0x19` prefix byte followed by the version character `E` of "Ethereum Signed Message:\n"
+     * — the two bytes are different things, both are required, and [EIP191_PREFIX] carries them.
+     */
     fun eip191Digest(canonicalPayload: ByteArray): ByteArray {
         val prefix = (EIP191_PREFIX + canonicalPayload.size).toByteArray()
 
