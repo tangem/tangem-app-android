@@ -20,7 +20,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.serialization.builtins.serializer
 
 internal class DefaultTxHistoryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
