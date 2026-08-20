@@ -17,6 +17,7 @@ import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.config.TangemPay
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +26,13 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
     private val real: DefaultCustomerOrderRepository,
     private val apiConfigsManager: ApiConfigsManager,
 ) : CustomerOrderRepository {
+
+    /**
+
+     * The mocked `customer/me` is served by a remote stub that cannot flip the card to `ACTIVE`, so these
+     * orders never complete — restarting the app clears them.
+     */
+    private val mockActivationOrders = ConcurrentHashMap<String, Order>()
 
     private val isMockMode: Boolean
         get() = apiConfigsManager
@@ -38,7 +46,13 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
         userWalletId: UserWalletId,
         types: Set<OrderType>,
         statuses: Set<OrderStatus>,
-    ): Either<VisaApiError, List<Order>> = real.findOrders(userWalletId, types, statuses)
+    ): Either<VisaApiError, List<Order>> {
+        if (!isMockMode) return real.findOrders(userWalletId, types, statuses)
+
+        val mocked = mockActivationOrders.values.filter { it.type in types && it.status in statuses }
+        return real.findOrders(userWalletId, types, statuses)
+            .fold(ifLeft = { mocked.right() }, ifRight = { (it + mocked).right() })
+    }
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
@@ -80,11 +94,11 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
         }
         if (order.lastFourDigits != MOCK_VALID_LAST_DIGITS) return VisaApiError.CardActivationInvalidCardData.left()
 
-        return Order(
+        val created = Order(
             id = "$MOCK_ORDER_ID_PREFIX${order.productInstanceId}",
             customerId = null,
             type = OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
-            status = OrderStatus.COMPLETED,
+            status = OrderStatus.PROCESSING,
             step = OrderStep.UNKNOWN,
             stepChangeCode = null,
             productInstanceId = order.productInstanceId,
@@ -94,7 +108,9 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
             withdrawTxHash = null,
             createdAt = null,
             updatedAt = null,
-        ).right()
+        )
+        mockActivationOrders[order.productInstanceId] = created
+        return created.right()
     }
 
     override suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit> =

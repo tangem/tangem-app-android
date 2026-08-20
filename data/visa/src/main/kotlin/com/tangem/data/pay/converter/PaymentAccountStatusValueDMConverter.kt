@@ -60,6 +60,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         },
                         state = card.state.toString(),
                         embossName = card.embossName,
+                        cardType = card.cardType.name,
                     )
                 },
             )
@@ -124,6 +125,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         images = card.getImages(),
                         state = TangemPayCardState.fromString(card.state),
                         embossName = card.embossName,
+                        cardType = TangemPayCardType.fromString(card.cardType),
                     )
                 },
                 error = null,

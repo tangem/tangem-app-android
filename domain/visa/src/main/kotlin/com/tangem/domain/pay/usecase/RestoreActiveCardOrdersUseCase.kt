@@ -16,13 +16,15 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
 
 /**
- * Restores in-flight card-issuance orders on app launch / when returning to the wallet screen.
+ * Restores in-flight card-issuance and card-activation orders on app launch / when returning to the wallet
+ * screen.
  *
  * `findOrders` is the source of truth — a locally stored order id is only a hint that does not
 
- * survive a force close. This use case re-discovers the active issue orders, persists their ids so
- * the payment-account state renders an "issuing" placeholder card, and (re)starts polling so the
- * placeholder is driven to its terminal state.
+ * survive a force close. This use case re-discovers the active orders and (re)starts polling so each is
+ * driven to its terminal state. Only issue orders get their ids persisted, because only those render an
+ * "issuing" placeholder card — an activation order is already reflected by the card's own state, and
+ * persisting its id would add a phantom placeholder next to the real card.
  *
  * Non-fatal exceptions are logged and collapsed to [VisaApiError.Unspecified]; the caller treats the
  * result as fire-and-forget.
@@ -31,7 +33,7 @@ import kotlinx.coroutines.launch
  * @property issueCardRepository persists issue-order ids for placeholder rendering.
  * @property startTangemPayOrderPollingUseCase drives a restored order to its terminal state.
  */
-class RestoreActiveIssueOrdersUseCase(
+class RestoreActiveCardOrdersUseCase(
     private val customerOrderRepository: CustomerOrderRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
@@ -42,7 +44,7 @@ class RestoreActiveIssueOrdersUseCase(
             block = {
                 customerOrderRepository.findOrders(
                     userWalletId = userWalletId,
-                    types = OrderType.issueCardTypes,
+                    types = OrderType.issueCardTypes + OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
                     statuses = OrderStatus.activeStatuses,
                 ).bind()
             },
@@ -50,14 +52,16 @@ class RestoreActiveIssueOrdersUseCase(
         ).filter { it.status.isActive }
 
         orders.forEach { order ->
-            issueCardRepository.storeIssueOrderId(userWalletId = userWalletId, orderId = order.id)
+            if (order.type.isIssuing) {
+                issueCardRepository.storeIssueOrderId(userWalletId = userWalletId, orderId = order.id)
+            }
 
             appCoroutineScope.launch {
                 startTangemPayOrderPollingUseCase(
                     order = TangemPayOrderInfo.fromOrder(order),
                     userWalletId = userWalletId,
                     onOrderStateChange = { newOrder ->
-                        if (newOrder.orderStatus.isTerminal) {
+                        if (newOrder.orderStatus.isTerminal && order.type.isIssuing) {
                             issueCardRepository.removeIssueOrderId(userWalletId, order.id)
                         }
                     },
@@ -67,7 +71,7 @@ class RestoreActiveIssueOrdersUseCase(
     }
 
     private fun Raise<VisaApiError>.handleError(throwable: Throwable): Nothing {
-        TangemLogger.e("Error in RestoreActiveIssueOrdersUseCase", throwable)
+        TangemLogger.e("Error in RestoreActiveCardOrdersUseCase", throwable)
         raise(VisaApiError.Unspecified)
     }
 }
