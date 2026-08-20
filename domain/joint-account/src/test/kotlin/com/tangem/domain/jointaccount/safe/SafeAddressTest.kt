@@ -1,9 +1,12 @@
 package com.tangem.domain.jointaccount.safe
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -37,7 +40,7 @@ internal class SafeAddressTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(model.expected)
+        assertThat(actual).isEqualTo(model.expected.right())
     }
 
     private fun provideTestModels() = listOf(
@@ -96,6 +99,86 @@ internal class SafeAddressTest {
         return ByteArray(digest.digestSize).also { digest.doFinal(it, 0) }
     }
 
+    /**
+     * A composition that no Safe can have must be rejected before hashing: every case here would otherwise
+     * produce a well-formed address that is not the account's.
+     */
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Validation {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun compute(model: ValidationModel) {
+            // Act
+            val actual = SafeAddress.compute(
+                owners = model.owners,
+                threshold = model.threshold,
+                singleton = SafeSingleton.SAFE,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected.left())
+        }
+
+        private fun provideTestModels() = listOf(
+            ValidationModel(
+                owners = emptyList(),
+                threshold = 1,
+                expected = SafeAddress.Error.NoOwners,
+            ),
+            ValidationModel(
+                owners = listOf(OWNERS[0].dropLast(n = 1)),
+                threshold = 1,
+                expected = SafeAddress.Error.MalformedOwnerAddress(address = OWNERS[0].dropLast(n = 1)),
+            ),
+            ValidationModel(
+                owners = listOf(OWNERS[0] + "00"),
+                threshold = 1,
+                expected = SafeAddress.Error.MalformedOwnerAddress(address = OWNERS[0] + "00"),
+            ),
+            ValidationModel(
+                owners = listOf(OWNERS[0].removePrefix(prefix = "0x")),
+                threshold = 1,
+                expected = SafeAddress.Error.MalformedOwnerAddress(address = OWNERS[0].removePrefix(prefix = "0x")),
+            ),
+            ValidationModel(
+                owners = listOf(NON_HEX_ADDRESS),
+                threshold = 1,
+                expected = SafeAddress.Error.MalformedOwnerAddress(address = NON_HEX_ADDRESS),
+            ),
+            // A Safe whose owners differ only in case is not deployable, and the duplicate is invisible
+            // once the composition is lowercased for the initializer
+            ValidationModel(
+                owners = listOf(OWNERS[0], OWNERS[0].uppercase().replace(oldValue = "0X", newValue = "0x")),
+                threshold = 2,
+                expected = SafeAddress.Error.DuplicateOwners(address = OWNERS[0].lowercase()),
+            ),
+            ValidationModel(
+                owners = OWNERS.take(n = 2),
+                threshold = 0,
+                expected = SafeAddress.Error.ThresholdOutOfRange(threshold = 0, ownersCount = 2),
+            ),
+            ValidationModel(
+                owners = OWNERS.take(n = 2),
+                threshold = 3,
+                expected = SafeAddress.Error.ThresholdOutOfRange(threshold = 3, ownersCount = 2),
+            ),
+            // Encoded by `word` as a small positive number rather than two's complement, so it would pass silently
+            ValidationModel(
+                owners = OWNERS.take(n = 2),
+                threshold = -1,
+                expected = SafeAddress.Error.ThresholdOutOfRange(threshold = -1, ownersCount = 2),
+            ),
+        )
+    }
+
+    internal data class ValidationModel(
+        val owners: List<String>,
+        val threshold: Int,
+        val expected: SafeAddress.Error,
+    )
+
     internal data class VectorModel(
         val members: Int,
         val threshold: Int,
@@ -106,6 +189,7 @@ internal class SafeAddressTest {
     private companion object {
 
         const val KECCAK_BITS = 256
+        const val NON_HEX_ADDRESS = "0xZZ36482d7d056d6f843f5C6088Ff0123b796bCC1"
 
         val OWNERS = listOf(
             "0xa9936482d7d056d6f843f5C6088Ff0123b796bCC", // m/44'/60'/888888'/0/3
