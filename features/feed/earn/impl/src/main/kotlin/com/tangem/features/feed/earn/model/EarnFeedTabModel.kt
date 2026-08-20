@@ -22,13 +22,13 @@ import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams.Companion.CategoryEarn
 import com.tangem.features.feed.earn.components.EarnBottomSheetRoute
+import com.tangem.features.feed.earn.components.EarnNetworkFilterComponent
+import com.tangem.features.feed.earn.components.EarnTypeFilterComponent
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.earn.model.analytics.EarnSource
+import com.tangem.features.feed.earn.model.filters.state.EarnFilterChipsFactory
 import com.tangem.features.feed.earn.model.state.EarnStateController
-import com.tangem.features.feed.earn.model.state.transformers.UpdateBestOpportunitiesStateTransformer
-import com.tangem.features.feed.earn.model.state.transformers.UpdateEarnFeedTabUMInitialStateTransformer
-import com.tangem.features.feed.earn.model.state.transformers.UpdateOpportunitiesStateLoadingTransformer
-import com.tangem.features.feed.earn.model.state.transformers.UpdateOpportunitiesStateTransformer
+import com.tangem.features.feed.earn.model.state.transformers.*
 import com.tangem.features.feed.earn.model.statemanager.EarnListBatchFlowManager
 import com.tangem.features.feed.earn.model.statemanager.EarnListStateManager
 import com.tangem.features.feed.earn.ui.state.EarnBestOpportunitiesUM
@@ -64,6 +64,13 @@ internal class EarnFeedTabModel @Inject constructor(
 
     private val currentFilter: EarnFilter get() = appliedFilter.value ?: DEFAULT_FILTER
 
+    private val filterChipsFactory = EarnFilterChipsFactory(
+        onNetworkClick = ::onNetworkFilterClick,
+        onTypeClick = ::onTypeFilterClick,
+        onNetworkClear = ::onClearNetworkFilterClick,
+        onTypeClear = ::onClearTypeFilterClick,
+    )
+
     private val earnListConfigProvider = Provider {
         createEarnTokensListConfig(filter = appliedFilter.value, earnNetworks = earnNetworks.value)
     }
@@ -76,9 +83,7 @@ internal class EarnFeedTabModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    private val bottomSheetNavigation: SlotNavigation<EarnBottomSheetRoute> = SlotNavigation()
-
-    private var currentAddToPortfolioManager: AddToPortfolioManager? = null
+    val bottomSheetNavigation: SlotNavigation<EarnBottomSheetRoute> = SlotNavigation()
 
     private var currentAddToPortfolioManagerScope: CoroutineScope? = null
 
@@ -157,7 +162,11 @@ internal class EarnFeedTabModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             combine(getEarnFilterUseCase(), earnNetworks) { filter, networks ->
                 appliedFilter.value = filter
-                // TODO add UpdateEarnFiltersTransformer
+                stateController.update(
+                    UpdateEarnFiltersTransformer(
+                        filters = filterChipsFactory.create(filter = filter, networks = networks),
+                    ),
+                )
                 batchFlowManager.reload()
             }.collect()
         }
@@ -185,24 +194,37 @@ internal class EarnFeedTabModel @Inject constructor(
     }
 
     /* start of clicks area */
-    @Suppress("UnusedPrivateMember")
     private fun onTypeFilterClick() {
-        // TODO activate bottomSheet EarnTypeFilterComponent
+        bottomSheetNavigation.activate(
+            EarnBottomSheetRoute.TypeFilter(
+                params = EarnTypeFilterComponent.Params(
+                    selectedFilter = currentFilter.earnFilterType,
+                    onFilterSelected = ::onTypeFilterOptionSelected,
+                    onDismiss = { bottomSheetNavigation.dismiss() },
+                ),
+            ),
+        )
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun onNetworkFilterClick() {
-        // TODO activate bottomSheet EarnNetworkFilterComponent
+        bottomSheetNavigation.activate(
+            EarnBottomSheetRoute.NetworkFilter(
+                params = EarnNetworkFilterComponent.Params(
+                    networks = earnNetworks.value?.getOrNull().orEmpty(),
+                    selectedFilter = currentFilter.earnFilterNetwork,
+                    onFilterSelected = ::onNetworkFilterOptionSelected,
+                    onDismiss = { bottomSheetNavigation.dismiss() },
+                ),
+            ),
+        )
     }
 
     private fun onClearFiltersClick() = applyFilter(DEFAULT_FILTER)
 
-    @Suppress("UnusedPrivateMember")
     private fun onClearNetworkFilterClick() {
         applyFilter(currentFilter.copy(earnFilterNetwork = DEFAULT_FILTER.earnFilterNetwork))
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun onClearTypeFilterClick() {
         applyFilter(currentFilter.copy(earnFilterType = DEFAULT_FILTER.earnFilterType))
     }
@@ -230,10 +252,14 @@ internal class EarnFeedTabModel @Inject constructor(
             setTokenParams(token)
             setTokenNetworks(listOf(network))
         }
-        currentAddToPortfolioManager = manager
         // Drop the slot through null so the same-source repeat click still recreates the child.
         bottomSheetNavigation.dismiss()
-        bottomSheetNavigation.activate(EarnBottomSheetRoute.AddToPortfolio(source = source.value))
+        bottomSheetNavigation.activate(
+            EarnBottomSheetRoute.AddToPortfolio(
+                source = source.value,
+                manager = manager,
+            ),
+        )
     }
 
     private fun createAddToPortfolioManager(source: EarnSource): AddToPortfolioManager {
@@ -266,7 +292,6 @@ internal class EarnFeedTabModel @Inject constructor(
         return manager
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun onTypeFilterOptionSelected(type: EarnFilterType) {
         modelScope.launch(dispatchers.default) {
             setEarnFilterUseCase(currentFilter.copy(earnFilterType = type))
@@ -275,7 +300,6 @@ internal class EarnFeedTabModel @Inject constructor(
         }
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun onNetworkFilterOptionSelected(filter: EarnFilterNetwork) {
         applyFilter(currentFilter.copy(earnFilterNetwork = filter))
         bottomSheetNavigation.dismiss()
