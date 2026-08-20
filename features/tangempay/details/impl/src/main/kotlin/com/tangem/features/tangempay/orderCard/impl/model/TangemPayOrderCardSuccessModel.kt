@@ -1,9 +1,11 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardSuccessComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardSuccessScreenUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -16,6 +18,7 @@ import javax.inject.Inject
 internal class TangemPayOrderCardSuccessModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayOrderCardSuccessComponent.Params>()
@@ -28,4 +31,8 @@ internal class TangemPayOrderCardSuccessModel @Inject constructor(
                 onShowCardClick = params.onShowCard,
             ),
         )
+
+    init {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.CardOrderedSuccessScreenShowed())
+    }
 }
