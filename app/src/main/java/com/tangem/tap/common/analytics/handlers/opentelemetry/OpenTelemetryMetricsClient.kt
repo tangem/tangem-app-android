@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.ComponentCallbacks2
 import android.content.res.Configuration
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -34,7 +36,7 @@ import java.util.concurrent.TimeUnit
  * The resource carries only the app coordinates — no user, device or session identifiers, per the
  * app privacy policy.
  */
-class OpenTelemetryMetricsClient private constructor(
+internal class OpenTelemetryMetricsClient(
     application: Application,
     apiKey: String,
     private val scope: CoroutineScope,
@@ -79,9 +81,16 @@ class OpenTelemetryMetricsClient private constructor(
         meterProvider.forceFlush()
     }
 
-    private fun start(application: Application) {
-        scope.launch(dispatchers.io) { drainStorage() }
+    fun start(application: Application) {
+        drainAsync()
         application.registerComponentCallbacks(FlushOnBackgroundCallbacks())
+    }
+
+    private fun drainAsync() {
+        scope.launch(dispatchers.io) {
+            runSuspendCatching { drainStorage() }
+                .onFailure { TangemLogger.e("OpenTelemetry metrics drain failed", it) }
+        }
     }
 
     private suspend fun drainStorage() {
@@ -99,11 +108,11 @@ class OpenTelemetryMetricsClient private constructor(
     }
 
     private inner class DrainOnFlushCallback : ExporterCallback<MetricData> {
-        override fun onExportSuccess(items: Collection<MetricData>) {
-            scope.launch(dispatchers.io) { drainStorage() }
-        }
+        override fun onExportSuccess(items: Collection<MetricData>) = drainAsync()
 
-        override fun onExportError(items: Collection<MetricData>, error: Throwable?) = Unit
+        // a rejected disk write usually means the WAL hit its size cap — draining frees the space,
+        // so the next flush can persist again
+        override fun onExportError(items: Collection<MetricData>, error: Throwable?) = drainAsync()
 
         override fun onShutdown() = Unit
     }
@@ -123,10 +132,6 @@ class OpenTelemetryMetricsClient private constructor(
 
     companion object {
 
-        @Volatile
-        var instance: OpenTelemetryMetricsClient? = null
-            private set
-
         private const val ENDPOINT = "https://otlp.services.tangem.org/v1/metrics"
         private const val API_KEY_HEADER = "x-api-key"
         private const val EXPORT_INTERVAL_SECONDS = 300L
@@ -139,22 +144,5 @@ class OpenTelemetryMetricsClient private constructor(
         private val SERVICE_NAME_KEY = AttributeKey.stringKey("service.name")
         private val SERVICE_VERSION_KEY = AttributeKey.stringKey("service.version")
         private val OS_NAME_KEY = AttributeKey.stringKey("os.name")
-
-        fun initialize(
-            application: Application,
-            apiKey: String,
-            scope: CoroutineScope,
-            dispatchers: CoroutineDispatcherProvider,
-        ) {
-            // the storage touches the disk on creation, so the whole setup runs off the main thread
-            scope.launch(dispatchers.io) {
-                instance = OpenTelemetryMetricsClient(
-                    application = application,
-                    apiKey = apiKey,
-                    scope = scope,
-                    dispatchers = dispatchers,
-                ).apply { start(application) }
-            }
-        }
     }
 }
