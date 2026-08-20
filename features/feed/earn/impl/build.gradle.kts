@@ -18,7 +18,6 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.earn)
-    implementation(projects.domain.markets)
     implementation(projects.domain.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.tokens.models)
@@ -41,7 +40,6 @@ dependencies {
     implementation(tangemDeps.blockchain)
 
     /* Compose */
-    implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
@@ -56,6 +54,7 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /* DI */
     implementation(deps.hilt.android)
