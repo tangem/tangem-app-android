@@ -448,6 +448,16 @@ dependencies {
     implementation(deps.coil.svg)
     implementation(deps.amplitude)
     implementation(deps.appsflyer)
+    implementation(platform(deps.otel.bom))
+    implementation(deps.otel.api)
+    implementation(deps.otel.sdk.common)
+    implementation(deps.otel.sdk.metrics)
+    implementation(deps.otel.exporter.otlp) {
+        // OTel is compiled against OkHttp 5, whose okhttp-jvm artifact duplicates the OkHttp 4
+        // classes already on the classpath; the sender runs on the project-wide OkHttp 4.12.
+        exclude(group = "com.squareup.okhttp3", module = "okhttp-jvm")
+    }
+    implementation(deps.otel.disk.buffering)
     implementation(deps.appsflyer.oaid)
     implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
