@@ -33,6 +33,7 @@ import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHand
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
@@ -116,6 +117,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val userWalletsListRepository: UserWalletsListRepository
         get() = entryPoint.getUserWalletsListRepository()
 
+    private val openTelemetryMetricsHolder: OpenTelemetryMetricsHolder
+        get() = entryPoint.getOpenTelemetryMetricsHolder()
+
     // endregion
 
     private val appScope = MainScope()
@@ -190,6 +194,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         initAnalytics(application = this, environmentConfig = environmentConfig)
 
+        initOpenTelemetry()
+
         abTestsManager.init()
 
         appScope.launch {
@@ -240,5 +246,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         Analytics.addParamsInterceptor(interceptor = sendTransactionSignerInfoInterceptor)
 
         factory.build(Analytics, buildData)
+    }
+
+    private fun initOpenTelemetry() {
+        openTelemetryMetricsHolder.initialize()
     }
 }
