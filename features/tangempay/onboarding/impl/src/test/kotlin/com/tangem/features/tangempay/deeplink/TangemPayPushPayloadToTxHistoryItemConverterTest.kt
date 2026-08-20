@@ -397,4 +397,55 @@ class TangemPayPushPayloadToTxHistoryItemConverterTest {
         val result = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(emptyMap())
         assertThat(result).isNull()
     }
+
+    @Test
+    fun `GIVEN refund type WHEN convertSpend THEN amount and local amount are negative`() {
+        // Arrange
+        val payload = spendPayload(type = "transaction_spend_refund", amount = "12.50", localAmount = "11.80")
+
+        // Act
+        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
+
+        // Assert
+        assertThat(result!!.amount).isEqualTo(BigDecimal("-12.50"))
+        assertThat(result.localAmount).isEqualTo(BigDecimal("-11.80"))
+    }
+
+    @Test
+    fun `GIVEN refund type with already negative amount WHEN convertSpend THEN sign is kept`() {
+        // Arrange
+        val payload = spendPayload(type = "transaction_spend_refund", amount = "-12.50", localAmount = "-11.80")
+
+        // Act
+        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
+
+        // Assert
+        assertThat(result!!.amount).isEqualTo(BigDecimal("-12.50"))
+        assertThat(result.localAmount).isEqualTo(BigDecimal("-11.80"))
+    }
+
+    @Test
+    fun `GIVEN spend type WHEN convertSpend THEN amount is left untouched`() {
+        // Arrange
+        val payload = spendPayload(type = "transaction_spend", amount = "12.50", localAmount = "11.80")
+
+        // Act
+        val result = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
+
+        // Assert
+        assertThat(result!!.amount).isEqualTo(BigDecimal("12.50"))
+        assertThat(result.localAmount).isEqualTo(BigDecimal("11.80"))
+    }
+
+    private fun spendPayload(type: String, amount: String, localAmount: String) = mapOf(
+        "type" to type,
+        "transaction_id" to "txn-123",
+        "amount" to amount,
+        "currency" to "usd",
+        "local_amount" to localAmount,
+        "local_currency" to "eur",
+        "merchant_name" to "Tangem Coffee",
+        "status" to "completed",
+        "authorized_at" to "2025-10-24T10:32:24.496Z",
+    )
 }
