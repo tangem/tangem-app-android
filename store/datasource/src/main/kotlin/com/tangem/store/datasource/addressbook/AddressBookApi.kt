@@ -1,10 +1,10 @@
-package com.tangem.datasource.api.addressbook
+package com.tangem.store.datasource.addressbook
 
-import com.tangem.datasource.api.addressbook.models.SyncAddressBooksRequest
-import com.tangem.datasource.api.addressbook.models.SyncAddressBooksResponse
-import com.tangem.datasource.api.addressbook.models.UpdateAddressBookRequest
-import com.tangem.datasource.api.addressbook.models.UpdateAddressBookResponse
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.store.datasource.addressbook.models.SyncAddressBooksRequest
+import com.tangem.store.datasource.addressbook.models.SyncAddressBooksResponse
+import com.tangem.store.datasource.addressbook.models.UpdateAddressBookRequest
+import com.tangem.store.datasource.addressbook.models.UpdateAddressBookResponse
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.PUT

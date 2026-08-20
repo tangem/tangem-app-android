@@ -4,6 +4,8 @@ import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.store.datasource.api.TangemTech
+import com.tangem.store.datasource.addressbook.AddressBookApi
 import com.tangem.store.datasource.blockaid.BlockAidApi
 import com.tangem.store.datasource.config.BlockAid
 import com.tangem.store.datasource.config.StoreEnvironmentConfig
@@ -53,6 +55,18 @@ internal object StoreDatasourceModule {
         return factory.build(
             RetrofitApiSpec(
                 apiConfigId = BlockAid.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddressBookApi(factory: RetrofitFactory): AddressBookApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
