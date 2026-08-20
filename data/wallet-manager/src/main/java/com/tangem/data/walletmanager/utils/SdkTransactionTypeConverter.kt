@@ -80,15 +80,7 @@ internal class SdkTransactionTypeConverter(
     ): TxInfo.TransactionType {
         return when (methodName) {
             "transfer" -> TxInfo.TransactionType.Transfer
-            "approve" -> callData?.let { data ->
-                ApprovalERC20TokenCallData(data.hexToBytes())
-                    ?.let { approval ->
-                        TxInfo.TransactionType.Approve(
-                            amount = approval.amount?.toDomain(),
-                            address = approval.spenderAddress,
-                        )
-                    }
-            }
+            "approve" -> decodeApprove(callData)
             "swap" -> TxInfo.TransactionType.Swap
             "buyVoucher",
             "buyVoucherPOL",
@@ -151,6 +143,15 @@ internal class SdkTransactionTypeConverter(
             null -> TxInfo.TransactionType.UnknownOperation
             else -> TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         } ?: TxInfo.TransactionType.Operation(name = methodName?.replaceFirstChar { it.titlecase() }.orEmpty())
+    }
+
+    private fun decodeApprove(callData: String?): TxInfo.TransactionType.Approve? {
+        val data = callData ?: return null
+        val approval = ApprovalERC20TokenCallData(data.hexToBytes()) ?: return null
+        return TxInfo.TransactionType.Approve(
+            amount = approval.amount?.toDomain(),
+            address = approval.spenderAddress,
+        )
     }
 
     private fun getTypeForGaslessMethod(destination: TransactionHistoryItem.DestinationType): TxInfo.TransactionType {
