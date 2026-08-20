@@ -58,10 +58,6 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindCustomerOrderRepository(repository: DefaultCustomerOrderRepository): CustomerOrderRepository
-
-    @Binds
-    @Singleton
     fun bindCustomerOffersRepository(repository: DefaultCustomerOffersRepository): CustomerOffersRepository
 
     @Binds
@@ -372,6 +368,21 @@ internal interface TangemPayDataModule {
                 customerOffersRepository = customerOffersRepository,
                 customerOrderRepository = customerOrderRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideActivatePlasticCardUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            appCoroutineScope: AppCoroutineScope,
+        ): ActivatePlasticCardUseCase {
+            return ActivatePlasticCardUseCase(
+                customerOrderRepository = customerOrderRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 appCoroutineScope = appCoroutineScope,
             )
         }
