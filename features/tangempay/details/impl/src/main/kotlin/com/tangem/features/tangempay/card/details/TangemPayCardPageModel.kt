@@ -124,6 +124,8 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private val deliveryEmail = MutableStateFlow(onboardingRepository.getSavedCustomerInfo(userWalletId)?.email)
 
+    private var isDeliveryDetailsShown = false
+
     val selectedCardId: StateFlow<String>
         field = MutableStateFlow(params.cardId)
 
@@ -262,6 +264,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                     delivery = buildDeliveryState(cardState = card.state, email = email),
                 )
             }
+            sendDeliveryDetailsAnalytics(cardState = card.state)
         } else {
             uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
         }
@@ -278,7 +281,17 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
+    private fun sendDeliveryDetailsAnalytics(cardState: TangemPayCardState) {
+        val isShown = cardState == TangemPayCardState.Delivering
+
+        if (isShown == isDeliveryDetailsShown) return
+        isDeliveryDetailsShown = isShown
+
+        if (isShown) analytics.send(TangemPayAnalyticsEvents.Plastic.CardInTransitDetailsShowed())
+    }
+
     private fun onClickActivateCard() {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.ActivateCardManagementButtonClicked())
         val card = selectedCard() ?: return
         router.push(TangemPayCardDetailsInnerRoute.ActivateCard(card = card))
     }
