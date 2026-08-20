@@ -59,7 +59,7 @@ internal class PolymarketEventDetailsModel @Inject constructor(
         load()
     }
 
-    fun onCloseClick() {
+    fun onBackClick() {
         router.pop()
     }
 
