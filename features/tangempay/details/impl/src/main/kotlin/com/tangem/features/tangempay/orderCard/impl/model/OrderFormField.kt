@@ -35,7 +35,7 @@ internal fun Form.fieldError(field: OrderFormField): OrderFieldError? {
     val value = field.read(this).value.trim()
     return when {
         value.isEmpty() -> OrderFieldError.Required.takeIf { field.isRequired }
-        !field.isContentValid(value) -> OrderFieldError.Invalid
+        !field.isContentValid(value) -> OrderFieldError.NonLatin
         else -> null
     }
 }
