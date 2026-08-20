@@ -14,6 +14,7 @@ data class Offer(
     val type: Type,
     val fee: Fee,
     val data: Data,
+    val mainImageUrl: String? = null,
 ) {
 
     val isPlastic: Boolean get() = type == Type.CARD_ISSUE_PLASTIC_RAIN
