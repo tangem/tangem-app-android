@@ -86,7 +86,11 @@ internal class ExpressTxToDetailsUMConverter(
             header = TxHistoryDetailsUM.HeaderUM(
                 icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                 status = status,
-                title = status.statusAwareTitle(R.string.common_swapping, R.string.common_swapped),
+                title = status.statusAwareTitle(
+                    pending = R.string.common_swapping,
+                    confirmed = R.string.common_swapped,
+                    failed = R.string.transaction_history_status_swap_failed,
+                ),
                 subtitle = headerSubtitle(swap.timestampMillis),
                 menu = menu,
             ),
@@ -153,8 +157,9 @@ internal class ExpressTxToDetailsUMConverter(
                 icon = TxIcon.Vector(Icons.ic_card_20),
                 status = status,
                 title = status.statusAwareTitle(
-                    R.string.tx_history_onramp_top_up,
-                    R.string.tx_history_onramp_topped_up,
+                    pending = R.string.transaction_history_status_topping_up,
+                    confirmed = R.string.tx_history_onramp_topped_up,
+                    failed = R.string.transaction_history_status_top_up_failed,
                 ),
                 subtitle = headerSubtitle(onramp.timestampMillis),
                 menu = menu,

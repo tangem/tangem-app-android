@@ -76,8 +76,15 @@ sealed class VisaApiError(
     data object CustomerIdUnavailable : VisaApiError(104004007)
     data object OrderNotFound : VisaApiError(104004008)
 
+    data object CardActivationInvalidCardData : VisaApiError(104140127)
+    data object CardActivationCardNotPhysical : VisaApiError(104140128)
+    data object CardActivationCardAlreadyActive : VisaApiError(104140129)
+    data object CardActivationCardNotReadyForActivation : VisaApiError(104140130)
+    data object CardActivationActiveOrderExists : VisaApiError(104140131)
+
     companion object {
 
+        @Suppress("CyclomaticComplexMethod")
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
             val universalErrorCode = 104_000_000 + backendErrorCode
             return when (universalErrorCode) {
@@ -91,6 +98,11 @@ sealed class VisaApiError(
                 CardIssueOfferNotAvailable.errorCode -> CardIssueOfferNotAvailable
                 CardIssueInsufficientBalance.errorCode -> CardIssueInsufficientBalance
                 CardIssueInvalidShippingAddress.errorCode -> CardIssueInvalidShippingAddress
+                CardActivationInvalidCardData.errorCode -> CardActivationInvalidCardData
+                CardActivationCardNotPhysical.errorCode -> CardActivationCardNotPhysical
+                CardActivationCardAlreadyActive.errorCode -> CardActivationCardAlreadyActive
+                CardActivationCardNotReadyForActivation.errorCode -> CardActivationCardNotReadyForActivation
+                CardActivationActiveOrderExists.errorCode -> CardActivationActiveOrderExists
                 else -> Unknown(universalErrorCode)
             }
         }

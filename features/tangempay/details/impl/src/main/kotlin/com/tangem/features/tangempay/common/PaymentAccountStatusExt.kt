@@ -47,7 +47,13 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
     }
 
 internal val AccountStatus.Payment.cardMainImageUrl: String?
-    get() = tariffPlan?.plan?.images?.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url
+    get() = tariffPlanImageUrl(TangemPayTariffPlan.Image.Type.MAIN)
+
+internal val AccountStatus.Payment.cardActivationImageUrl: String?
+    get() = tariffPlanImageUrl(TangemPayTariffPlan.Image.Type.ACTIVATION) ?: cardMainImageUrl
+
+private fun AccountStatus.Payment.tariffPlanImageUrl(type: TangemPayTariffPlan.Image.Type): String? =
+    tariffPlan?.plan?.images?.firstOrNull { it.type == type }?.url
 
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null
@@ -67,19 +73,27 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
     else -> null
 }
 
+internal fun AccountStatus.Payment.networksOrNull(): List<PaymentNetworkStatus>? = when (val v = value) {
+    is PaymentAccountStatusValue.Loaded -> v.networks
+    is PaymentAccountStatusValue.Deactivated -> v.networks
+    else -> null
+}
+
 internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
     get() = availableForWithdrawal.signum() > 0
 
-/**
- * Every top-up way (receive, swap, bank transfer) settles on a deposit address, so without one the
- * Add funds entry points must stay disabled.
- *
- * @param isMultichainEnabled [com.tangem.features.tangempay.TangemPayFeatureToggles.isAccountMultichainEnabled]
- */
-internal fun PaymentAccountStatusValue.Loaded.canAddFunds(isMultichainEnabled: Boolean): Boolean {
-    return if (isMultichainEnabled) {
-        networks.any { it is PaymentNetworkStatus.Available }
+internal fun PaymentAccountStatusValue.canAddFunds(isMultichainEnabled: Boolean): Boolean = when (this) {
+    is PaymentAccountStatusValue.Loaded -> if (isMultichainEnabled) {
+        networks.hasAvailableNetwork()
     } else {
         !depositAddress.isNullOrEmpty()
     }
+    is PaymentAccountStatusValue.Deactivated -> if (isMultichainEnabled) {
+        networks.hasAvailableNetwork()
+    } else {
+        balance.cryptoBalance.depositAddress.isNotEmpty()
+    }
+    else -> false
 }
+
+private fun List<PaymentNetworkStatus>.hasAvailableNetwork(): Boolean = any { it is PaymentNetworkStatus.Available }

@@ -11,7 +11,7 @@ import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
 import com.tangem.data.staking.utils.DefaultStakingCleaner
 import com.tangem.data.staking.verification.DefaultStakingBlockAidRequestFactory
 import com.tangem.data.staking.verification.DefaultStakingTransactionRecognizer
-import com.tangem.datasource.api.ethpool.P2PEthPoolApi
+import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
