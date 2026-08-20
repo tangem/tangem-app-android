@@ -199,6 +199,7 @@ internal class DefaultManageTokensRepository(
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
                 accountIndex = accountIndex,
+                allowedNetworkIds = params.allowedNetworkIds,
             )
         } else {
             managedCryptoCurrencyFactory.create(
@@ -206,6 +207,7 @@ internal class DefaultManageTokensRepository(
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
                 accountIndex = accountIndex,
+                allowedNetworkIds = params.allowedNetworkIds,
             )
         }
 
@@ -260,6 +262,7 @@ internal class DefaultManageTokensRepository(
             tokensResponse = tokensResponse,
             userWallet = userWallet,
             accountIndex = accountIndex,
+            allowedNetworkIds = params.allowedNetworkIds,
         )
 
         return BatchFetchResult.Success(
