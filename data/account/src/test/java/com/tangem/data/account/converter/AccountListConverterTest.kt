@@ -24,11 +24,18 @@ class AccountListConverterTest {
     }
     private val cryptoPortfolioConverterFactory = mockk<CryptoPortfolioConverter.Factory>()
     private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
-    private val converter = AccountListConverter(userWallet, cryptoPortfolioConverterFactory)
+    private val jointAccountConverterFactory = mockk<JointAccountConverter.Factory>()
+    private val jointAccountConverter = mockk<JointAccountConverter>()
+    private val converter = AccountListConverter(
+        userWallet = userWallet,
+        cryptoPortfolioConverterFactory = cryptoPortfolioConverterFactory,
+        jointAccountConverterFactory = jointAccountConverterFactory,
+    )
 
     @BeforeAll
     fun setupAll() {
         every { cryptoPortfolioConverterFactory.create(userWallet) } returns cryptoPortfolioConverter
+        every { jointAccountConverterFactory.create(userWallet) } returns jointAccountConverter
     }
 
     @BeforeEach
