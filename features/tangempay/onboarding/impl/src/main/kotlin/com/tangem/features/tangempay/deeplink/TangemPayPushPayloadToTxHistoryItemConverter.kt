@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.deeplink
 
 import com.tangem.domain.pay.utils.TangemPayTxHistoryItemStatusConverter
+import com.tangem.domain.visa.model.TangemPayPushNotificationType
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.extensions.orZero
 import org.joda.time.DateTime
@@ -10,6 +11,7 @@ import java.util.Currency
 
 object TangemPayPushPayloadToTxHistoryItemConverter {
 
+    private const val KEY_TYPE = "type"
     private const val KEY_ID = "transaction_id"
     private const val KEY_AMOUNT = "amount"
     private const val KEY_CURRENCY = "currency"
@@ -36,15 +38,17 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
         val merchantName = payload[KEY_MERCHANT_NAME] ?: payload[KEY_ENRICHED_MERCHANT_NAME] ?: return null
         val status = payload[KEY_STATUS]?.ifEmpty { null } ?: return null
         val authorizedAt = payload[KEY_AUTHORIZED_AT]?.let(::parseDateTime) ?: return null
+        val isRefund = payload[KEY_TYPE]?.let(TangemPayPushNotificationType::fromValue) ==
+            TangemPayPushNotificationType.TRANSACTION_SPEND_REFUND
 
         return TangemPayTxHistoryItem.Spend(
             id = id,
             jsonRepresentation = payload.toString(),
             date = authorizedAt.withZone(DateTimeZone.getDefault()),
-            amount = amount,
+            amount = amount.negativeForRefund(isRefund),
             currency = currency,
             authorizedAmount = payload[KEY_AUTHORIZED_AMOUNT]?.toBigDecimalOrNull().orZero(),
-            localAmount = payload[KEY_LOCAL_AMOUNT]?.toBigDecimalOrNull(),
+            localAmount = payload[KEY_LOCAL_AMOUNT]?.toBigDecimalOrNull()?.negativeForRefund(isRefund),
             localCurrency = payload[KEY_LOCAL_CURRENCY]?.let(::parseCurrency),
             enrichedMerchantName = payload[KEY_ENRICHED_MERCHANT_NAME],
             merchantName = merchantName,
@@ -79,6 +83,8 @@ object TangemPayPushPayloadToTxHistoryItemConverter {
             },
         )
     }
+
+    private fun BigDecimal.negativeForRefund(isRefund: Boolean): BigDecimal = if (isRefund) abs().negate() else this
 
     private fun parseCurrency(code: String): Currency? = runCatching {
         return Currency.getInstance(code.uppercase())

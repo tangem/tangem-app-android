@@ -134,6 +134,42 @@ internal class DeepLinkBuilderTest {
     }
 
     @Test
+    fun `GIVEN value with ampersand WHEN build THEN value is encoded and cannot inject params`() {
+        // GIVEN
+        val icon = "https://cdn.tangem.com/logo.png?w=64&enriched_merchant_name=HIJACKED"
+
+        // WHEN
+        val result = deepLinkBuilder
+            .setAction("pay-app-main")
+            .addQueryParam("enriched_merchant_icon", icon)
+            .addQueryParam("enriched_merchant_name", "Tangem Coffee")
+            .build()
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "${DeeplinkConst.TANGEM_SCHEME}://pay-app-main" +
+                "?enriched_merchant_icon=https%3A%2F%2Fcdn.tangem.com%2Flogo.png%3Fw%3D64" +
+                "%26enriched_merchant_name%3DHIJACKED" +
+                "&enriched_merchant_name=Tangem+Coffee",
+        )
+    }
+
+    @Test
+    fun `GIVEN value with plus WHEN build THEN plus is encoded`() {
+        // WHEN
+        val result = deepLinkBuilder
+            .setAction("pay-app-main")
+            .addQueryParam("enriched_merchant_icon", "https://cdn.tangem.com/a+b.png")
+            .build()
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "${DeeplinkConst.TANGEM_SCHEME}://pay-app-main" +
+                "?enriched_merchant_icon=https%3A%2F%2Fcdn.tangem.com%2Fa%2Bb.png",
+        )
+    }
+
+    @Test
     fun `GIVEN complex deep link WHEN build THEN should construct correct URI`() {
         // GIVEN
         val scheme = "https"
