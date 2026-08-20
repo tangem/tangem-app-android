@@ -13,7 +13,10 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
     data object AccountDetails : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
-    data class CardDetails(val cardId: String) : TangemPayAccountDetailsInnerRoute()
+    data class CardDetails(
+        val cardId: String,
+        val shouldOpenActivation: Boolean = false,
+    ) : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
     data class AddToWallet(val card: TangemPayCard) : TangemPayAccountDetailsInnerRoute()

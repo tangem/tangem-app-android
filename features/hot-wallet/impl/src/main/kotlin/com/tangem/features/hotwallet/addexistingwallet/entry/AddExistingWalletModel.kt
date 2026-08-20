@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.stack.*
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -150,18 +151,26 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class AddExistingWalletImportModelCallbacks : AddExistingWalletImportComponent.ModelCallbacks {
         override fun onWalletImported(userWalletId: UserWalletId) {
+            sendImportCompletedEvent(AnalyticsParam.BackupType.Manual)
             stackNavigation.replaceAll(AddExistingWalletRoute.BackupCompleted(userWalletId))
         }
     }
 
     inner class RestoreCloudBackupModelCallbacks : RestoreCloudBackupComponent.ModelCallbacks {
         override fun onWalletImported(userWalletId: UserWalletId) {
+            sendImportCompletedEvent(AnalyticsParam.BackupType.Cloud)
             stackNavigation.replaceAll(AddExistingWalletRoute.BackupCompleted(userWalletId))
         }
 
         override fun onBack() {
             router.pop()
         }
+    }
+
+    private fun sendImportCompletedEvent(backupType: AnalyticsParam.BackupType) {
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Backup.ImportCompletedScreenOpened(backupType = backupType),
+        )
     }
 
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {

@@ -172,6 +172,7 @@ fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtrasType {
         Blockchain.Monad, Blockchain.MonadTestnet,
         Blockchain.Robinhood, Blockchain.RobinhoodTestnet,
         Blockchain.Igra, Blockchain.IgraTestnet,
+        Blockchain.Electroneum, Blockchain.ElectroneumTestnet,
         -> Network.TransactionExtrasType.NONE
         // endregion
     }
