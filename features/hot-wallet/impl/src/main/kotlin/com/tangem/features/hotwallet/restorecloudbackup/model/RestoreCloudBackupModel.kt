@@ -305,7 +305,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
             ),
         )
         uiState.value = buildCurrentStepUM()
-        uiMessageSender.send(genericErrorDialog())
+        uiMessageSender.send(errorDialog(error))
     }
 
     /** Rebuilds the step the flow is currently on, clearing its loading state */
@@ -314,11 +314,18 @@ internal class RestoreCloudBackupModel @Inject constructor(
         else -> buildEnterPasswordUM()
     }
 
-    private fun genericErrorDialog(): DialogMessage = DialogMessage(
-        title = resourceReference(R.string.hw_cloud_backup_restore_error_title),
-        message = resourceReference(R.string.hw_cloud_backup_restore_error_with_recovery),
-        firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
-    )
+    private fun errorDialog(error: CloudBackupError): DialogMessage {
+        val messageRes = if (error == CloudBackupError.NetworkError) {
+            R.string.hw_cloud_backup_error_network
+        } else {
+            R.string.hw_cloud_backup_restore_error_with_recovery
+        }
+        return DialogMessage(
+            title = resourceReference(R.string.hw_cloud_backup_restore_error_title),
+            message = resourceReference(messageRes),
+            firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
+        )
+    }
 
     private fun onRootBack() {
         wipeSecrets()
