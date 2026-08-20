@@ -188,24 +188,55 @@ internal class TangemPayDetailsStateFactoryTest {
         assertThat(buttons.withdrawButton.isEnabled).isTrue()
     }
 
+    @Test
+    fun `GIVEN loaded status without balance WHEN getLoadedState THEN balance block is Error with cards kept`() {
+        // Arrange
+        val status = loadedStatus(statusBalance = null)
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
+        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.cardsBlockState?.cards).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN deactivated status without balance WHEN getDeactivatedState THEN balance block is Error`() {
+        // Arrange
+        val status = deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO, statusBalance = null)
+
+        // Act
+        val state = factory.getDeactivatedState(status)
+
+        // Assert
+        assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
+        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+    }
+
     private fun loadedStatus(
         statusSource: StatusSource = StatusSource.ACTUAL,
         statusError: PaymentAccountStatusValue.Error? = null,
         statusCards: List<TangemPayCard> = listOf(activeUnfrozenCard),
         availableForWithdrawal: BigDecimal = BigDecimal.TEN,
         statusTariffPlan: TangemPayTariffPlanState? = null,
+        statusBalance: PaymentAccountStatusValue.Balance? = balance(availableForWithdrawal),
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards
-        every { balance } returns balance(availableForWithdrawal)
+        every { balance } returns statusBalance
         every { tariffPlan } returns statusTariffPlan
     }
 
-    private fun deactivatedStatus(availableForWithdrawal: BigDecimal): PaymentAccountStatusValue.Deactivated =
+    private fun deactivatedStatus(
+        availableForWithdrawal: BigDecimal,
+        statusBalance: PaymentAccountStatusValue.Balance? = balance(availableForWithdrawal),
+    ): PaymentAccountStatusValue.Deactivated =
         mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL
-            every { balance } returns balance(availableForWithdrawal)
+            every { balance } returns statusBalance
         }
 
     private fun balance(availableForWithdrawal: BigDecimal) = PaymentAccountStatusValue.Balance(
