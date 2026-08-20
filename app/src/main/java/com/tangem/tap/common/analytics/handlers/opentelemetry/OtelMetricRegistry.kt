@@ -45,7 +45,22 @@ internal data class OtelMetricSpec(
     val valueParam: String? = null,
 )
 
+/**
+ * How a mirrored analytics event is aggregated on the OTel side.
+ */
 internal enum class OtelInstrument {
+
+    /**
+     * Counts event occurrences: every [AnalyticsEvent][com.tangem.core.analytics.models.AnalyticsEvent]
+     * adds 1 to the metric. With delta temporality each export carries the number of occurrences since
+
+     */
     COUNTER,
+
+    /**
+     * Records the distribution of a numeric value carried by one of the event params
+     * ([OtelMetricSpec.valueParam]); events with a missing or non-numeric value are skipped.
+     * For measurement events — e.g. an express swap duration by provider.
+     */
     HISTOGRAM,
 }
