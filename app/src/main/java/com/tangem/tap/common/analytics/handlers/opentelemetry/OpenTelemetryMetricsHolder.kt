@@ -2,10 +2,10 @@ package com.tangem.tap.common.analytics.handlers.opentelemetry
 
 import android.app.Application
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import io.opentelemetry.api.metrics.Meter
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,25 +18,27 @@ import javax.inject.Singleton
  */
 @Singleton
 class OpenTelemetryMetricsHolder @Inject constructor(
+    private val application: Application,
     private val environmentConfig: EnvironmentConfig,
     private val featureToggles: OtelFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val appScope: AppCoroutineScope,
 ) {
 
     @Volatile
     private var client: OpenTelemetryMetricsClient? = null
 
-    fun initialize(application: Application, scope: CoroutineScope) {
+    fun initialize() {
         val apiKey = environmentConfig.otlpApiKey
         if (!featureToggles.isMetricsEnabled || apiKey.isNullOrEmpty()) return
 
         // telemetry must never crash the app, so setup failures are logged and swallowed
-        scope.launch(dispatchers.io) {
+        appScope.launch(dispatchers.io) {
             runCatching {
                 OpenTelemetryMetricsClient(
                     application = application,
                     apiKey = apiKey,
-                    scope = scope,
+                    scope = appScope,
                     dispatchers = dispatchers,
                 ).apply { start(application) }
             }
