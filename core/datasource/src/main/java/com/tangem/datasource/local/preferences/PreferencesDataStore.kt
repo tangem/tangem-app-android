@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.datasource.local.preferences.PreferencesDataStore.INSTANCE
 import com.tangem.datasource.local.preferences.PreferencesKeys.APP_LOGS_KEY
 import com.tangem.datasource.local.preferences.utils.CleanupKeyMigration
@@ -31,14 +32,25 @@ internal object PreferencesDataStore {
 
     private var INSTANCE: DataStore<Preferences>? = null
 
-    fun getInstance(context: Context, appScope: AppCoroutineScope): DataStore<Preferences> {
-        return INSTANCE ?: create(context, appScope).also { INSTANCE = it }
+    fun getInstance(
+        context: Context,
+        appScope: AppCoroutineScope,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
+    ): DataStore<Preferences> {
+        return INSTANCE ?: create(context, appScope, analyticsExceptionHandler).also { INSTANCE = it }
     }
 
-    private fun create(context: Context, appScope: AppCoroutineScope): DataStore<Preferences> {
+    private fun create(
+        context: Context,
+        appScope: AppCoroutineScope,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
+    ): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
             corruptionHandler = createCorruptionHandler(),
-            migrations = createMigrations(context = context),
+            migrations = createMigrations(
+                context = context,
+                analyticsExceptionHandler = analyticsExceptionHandler,
+            ),
             scope = appScope,
             produceFile = { context.preferencesDataStoreFile(name = PREFERENCES_FILE_NAME) },
         )
@@ -53,7 +65,10 @@ internal object PreferencesDataStore {
         )
     }
 
-    private fun createMigrations(context: Context): List<DataMigration<Preferences>> {
+    private fun createMigrations(
+        context: Context,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
+    ): List<DataMigration<Preferences>> {
         return listOf(
             SharedPreferencesMigration(
                 context = context,
@@ -65,18 +80,21 @@ internal object PreferencesDataStore {
                 legacyPrefsName = "app_theme",
                 legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
                 keyName = PreferencesKeys.APP_THEME_MODE_KEY.name,
+                analyticsExceptionHandler = analyticsExceptionHandler,
             ),
             SharedPreferencesKeyMigration(
                 context = context,
                 legacyPrefsName = "selected_app_currency",
                 legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
                 keyName = PreferencesKeys.SELECTED_APP_CURRENCY_KEY.name,
+                analyticsExceptionHandler = analyticsExceptionHandler,
             ),
             SharedPreferencesKeyMigration(
                 context = context,
                 legacyPrefsName = "balance_hiding_settings",
                 legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
                 keyName = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY.name,
+                analyticsExceptionHandler = analyticsExceptionHandler,
             ),
             SwapCurrencyIdMigration(),
             CleanupKeyMigration(key = APP_LOGS_KEY),
