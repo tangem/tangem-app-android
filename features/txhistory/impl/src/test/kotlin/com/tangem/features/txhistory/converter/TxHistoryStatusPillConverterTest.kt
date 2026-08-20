@@ -99,14 +99,12 @@ internal class TxHistoryStatusPillConverterTest {
     }
 
     @Test
-    fun `GIVEN Stake uiStatus Failed WHEN convert THEN composed failed label and no amount`() {
+    fun `GIVEN Stake uiStatus Failed WHEN convert THEN stake failed label and no amount`() {
         val tx = txInfo(type = TransactionType.Staking.Stake)
 
         val result = converter.convert(Input(tx, Status.Failed, StakeSpec))
 
-        assertThat(result.label).isEqualTo(
-            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_staking))),
-        )
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_stake_failed))
         assertThat(result.amount).isNull()
         assertThat(result.currencySymbol).isNull()
     }
@@ -121,12 +119,39 @@ internal class TxHistoryStatusPillConverterTest {
     }
 
     @Test
+    fun `GIVEN Unstake uiStatus Failed WHEN convert THEN unstake failed label`() {
+        val tx = txInfo(type = TransactionType.Staking.Unstake)
+
+        val result = converter.convert(Input(tx, Status.Failed, UnstakeSpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_unstake_failed))
+    }
+
+    @Test
     fun `GIVEN Restake uiStatus Confirmed WHEN convert THEN restaked label`() {
         val tx = txInfo(type = TransactionType.Staking.Restake)
 
         val result = converter.convert(Input(tx, Status.Confirmed, RestakeSpec))
 
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_rewards_restaked))
+    }
+
+    @Test
+    fun `GIVEN Restake uiStatus Unconfirmed WHEN convert THEN restaking rewards label`() {
+        val tx = txInfo(type = TransactionType.Staking.Restake)
+
+        val result = converter.convert(Input(tx, Status.Unconfirmed, RestakeSpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_restaking_rewards))
+    }
+
+    @Test
+    fun `GIVEN Restake uiStatus Failed WHEN convert THEN rewards restake failed label`() {
+        val tx = txInfo(type = TransactionType.Staking.Restake)
+
+        val result = converter.convert(Input(tx, Status.Failed, RestakeSpec))
+
+        assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_rewards_restake_failed))
     }
 
     @Test
