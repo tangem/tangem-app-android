@@ -47,7 +47,13 @@ class CreateJointAccountUseCase(
             .sign(
                 userWalletId = userWalletId,
                 input = JointAccountSignInput(derivationIndex = derivationIndex) { ownerAddress ->
-                    createPayload(userWalletId, config, creatorName, derivationIndex, ownerAddress)
+                    createPayload(
+                        userWalletId = userWalletId,
+                        config = config,
+                        creatorName = creatorName,
+                        derivationIndex = derivationIndex,
+                        ownerAddress = ownerAddress,
+                    )
                 },
             )
             .mapLeft(::toCreationError)
