@@ -72,15 +72,16 @@ internal class DefaultJointAccountSigner @Inject constructor(
 
         when (result) {
             is CompletionResult.Failure<*> -> result.error.left()
-            is CompletionResult.Success<JointAccountSignResult> -> {
-                // The session's in-memory copy of the derived key dies with the session
-                derivationsRepository.storeDerivedKeys(
-                    userWalletId = userWalletId,
-                    derivedKeys = result.data.derivedKeys,
-                )
+            is CompletionResult.Success<JointAccountSignResult> -> Either
+                .catch {
+                    // The session's in-memory copy of the derived key dies with the session
+                    derivationsRepository.storeDerivedKeys(
+                        userWalletId = userWalletId,
+                        derivedKeys = result.data.derivedKeys,
+                    )
 
-                result.data.right()
-            }
+                    result.data
+                }
         }
     }
 
