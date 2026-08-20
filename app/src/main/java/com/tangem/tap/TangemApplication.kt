@@ -33,12 +33,10 @@ import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHand
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsClient
-import com.tangem.tap.common.analytics.handlers.opentelemetry.OtelFeatureToggles
+import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
@@ -119,11 +117,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val userWalletsListRepository: UserWalletsListRepository
         get() = entryPoint.getUserWalletsListRepository()
 
-    private val otelFeatureToggles: OtelFeatureToggles
-        get() = entryPoint.getOtelFeatureToggles()
-
-    private val coroutineDispatcherProvider: CoroutineDispatcherProvider
-        get() = entryPoint.getCoroutineDispatcherProvider()
+    private val openTelemetryMetricsHolder: OpenTelemetryMetricsHolder
+        get() = entryPoint.getOpenTelemetryMetricsHolder()
 
     // endregion
 
@@ -254,14 +249,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     private fun initOpenTelemetry() {
-        val apiKey = environmentConfig.otlpApiKey
-        if (!otelFeatureToggles.isMetricsEnabled || apiKey.isNullOrEmpty()) return
-
-        OpenTelemetryMetricsClient.initialize(
-            application = this,
-            apiKey = apiKey,
-            scope = appScope,
-            dispatchers = coroutineDispatcherProvider,
-        )
+        openTelemetryMetricsHolder.initialize(application = this, scope = appScope)
     }
 }
