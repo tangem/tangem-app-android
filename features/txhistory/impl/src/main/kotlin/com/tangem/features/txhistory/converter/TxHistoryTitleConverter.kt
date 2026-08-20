@@ -37,11 +37,16 @@ internal class TxHistoryTitleConverter {
 
         // region Content
         is TransactionType.Operation -> stringReference(type.name)
-        is TransactionType.Swap -> tx.statusAwareTitle(R.string.common_swapping, R.string.common_swapped)
+        is TransactionType.Swap -> tx.statusAwareTitle(
+            pending = R.string.common_swapping,
+            confirmed = R.string.common_swapped,
+            failed = R.string.transaction_history_status_swap_failed,
+        )
         is TransactionType.Transfer -> tx.transferTitle(isOwnTransfer)
         is TransactionType.Staking.ClaimRewards -> tx.statusAwareTitle(
-            pending = R.string.transaction_history_claiming_reward,
-            confirmed = R.string.transaction_history_staking_reward,
+            pending = R.string.transaction_history_status_claiming_rewards,
+            confirmed = R.string.transaction_history_status_rewards_claimed,
+            failed = R.string.transaction_history_status_rewards_claim_failed,
         )
         is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
         // Send routes through the yield provider (never the user's own account), so "Transfer" is impossible:
@@ -63,14 +68,26 @@ internal class TxHistoryTitleConverter {
     }
 
     private fun TxInfo.transferTitle(isOwnTransfer: Boolean): TextReference = when {
-        isOwnTransfer -> statusAwareTitle(R.string.common_transfer, R.string.common_transferred)
+        isOwnTransfer -> statusAwareTitle(
+            pending = R.string.transaction_history_status_transferring,
+            confirmed = R.string.common_transferred,
+            failed = R.string.transaction_history_status_transfer_failed,
+        )
         else -> sendReceiveTitle()
     }
 
     private fun TxInfo.sendReceiveTitle(): TextReference = if (isOutgoing) {
-        statusAwareTitle(R.string.common_sending, R.string.common_sent)
+        statusAwareTitle(
+            pending = R.string.common_sending,
+            confirmed = R.string.common_sent,
+            failed = R.string.transaction_history_status_send_failed,
+        )
     } else {
-        statusAwareTitle(R.string.common_receiving, R.string.common_received)
+        statusAwareTitle(
+            pending = R.string.common_receiving,
+            confirmed = R.string.common_received,
+            failed = R.string.transaction_history_status_receive_failed,
+        )
     }
 
     private fun TxInfo.pillTitle(spec: PillSpec): TextReference = spec.labels.resolve(status.toUiStatus())
