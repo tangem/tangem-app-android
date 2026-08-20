@@ -18,6 +18,8 @@ data class OrderRequest(
         @Json(name = "chain_id") val chainId: Int? = null,
         @Json(name = "emboss_name") val embossName: String? = null,
         @Json(name = "shipping_address") val shippingAddress: ShippingAddress? = null,
+        @Json(name = "product_instance_id") val productInstanceId: String? = null,
+        @Json(name = "last_four_digits") val lastFourDigits: String? = null,
     )
 
     @JsonClass(generateAdapter = true)
