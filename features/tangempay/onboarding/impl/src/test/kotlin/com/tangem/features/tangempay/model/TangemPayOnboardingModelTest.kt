@@ -208,6 +208,7 @@ internal class TangemPayOnboardingModelTest {
 
     private fun buildCustomerInfo(kycStatus: KycStatus) = CustomerInfo(
         customerId = "cust_1",
+        paymentAccount = null,
         productInstances = emptyList(),
         cards = emptyList(),
         kycStatus = kycStatus,

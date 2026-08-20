@@ -357,11 +357,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
+        val paymentAccountAddress = loaded.balance?.cryptoBalance?.depositAddress
+        if (paymentAccountAddress == null) {
+            showBottomSheetError(TangemPayDetailsErrorType.Receive)
+            return
+        }
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.VirtualAccountDeposit(
                 virtualAccountOnramp = onramp,
                 userWalletId = userWalletId,
-                paymentAccountAddress = loaded.balance.cryptoBalance.depositAddress,
+                paymentAccountAddress = paymentAccountAddress,
             ),
         )
     }
