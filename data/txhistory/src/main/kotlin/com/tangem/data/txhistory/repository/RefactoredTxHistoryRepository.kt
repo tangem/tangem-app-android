@@ -7,6 +7,7 @@ import com.tangem.data.txhistory.repository.converter.ExpressStatusMapper
 import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
 import com.tangem.data.txhistory.repository.converter.OnrampCurrencyConverter
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
+import com.tangem.data.txhistory.repository.factory.ExpressTxByIdFactory
 import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.data.txhistory.repository.factory.toRefundAssetId
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
@@ -52,6 +53,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     private val expressHistoryDao: ExpressHistoryDao,
     private val historyIndexDao: HistoryIndexDao,
     private val expressTransactionAssetFactory: ExpressTransactionAssetFactory,
+    private val expressTxByIdFactory: ExpressTxByIdFactory,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TxHistoryRepositoryV2 {
@@ -157,6 +159,34 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                     .map { express -> ExpressHistoryPage(items = express, hasMore = window.hasMore) }
             }
         emitAll(pages)
+    }.flowOn(dispatchers.io)
+
+    override fun getExpressTxById(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        txId: String,
+    ): Flow<ExpressTx> = flow {
+        val addresses = getAddresses(userWalletId, currency.network)
+
+        val flow = combine(
+            flow = expressHistoryDao.observeExchangeById(txId).distinctUntilChanged(),
+            flow2 = expressHistoryDao.observeOnrampById(txId).distinctUntilChanged(),
+            flow3 = expressHistoryDao.getProvidersById().distinctUntilChanged(),
+            flow4 = expressHistoryDao.getCurrenciesByCode().distinctUntilChanged(),
+            transform = { exchange, onramp, providers, fiatCurrencies ->
+                expressTxByIdFactory.create(
+                    userWalletId = userWalletId,
+                    outgoingAddresses = addresses,
+                    sources = ExpressTxByIdFactory.Sources(
+                        exchange = exchange,
+                        onramp = onramp,
+                        providers = providers,
+                        fiatCurrencies = fiatCurrencies,
+                    ),
+                )
+            },
+        )
+        emitAll(flow.filterNotNull())
     }.flowOn(dispatchers.io)
 
     /**
