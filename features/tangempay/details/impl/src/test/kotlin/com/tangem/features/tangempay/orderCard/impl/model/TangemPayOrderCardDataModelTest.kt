@@ -488,6 +488,7 @@ internal class TangemPayOrderCardDataModelTest {
         email: String? = EMAIL,
     ) = CustomerInfo(
         customerId = "c1",
+        paymentAccount = null,
         productInstances = emptyList(),
         cards = emptyList(),
         kycStatus = KycStatus.APPROVED,
