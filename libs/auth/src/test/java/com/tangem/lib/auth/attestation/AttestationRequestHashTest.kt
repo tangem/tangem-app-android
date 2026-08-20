@@ -28,20 +28,13 @@ internal class AttestationRequestHashTest {
 
     @Test
     fun `GIVEN contract test vector WHEN create THEN matches backend-agreed requestHash`() {
-        // Arrange — the shared spec test vector (synthetic P-256 SPKI + example nonce).
-        val devicePublicKey = hexToBytes(
-            "3059301306072a8648ce3d020106082a8648ce3d030107034200" +
-                "04" + "22".repeat(64),
-        )
+        // Arrange — the shared spec test vector (example base64url nonce).
         val nonce = "aGVsbG8td29ybGQtdGVzdC1ub25jZQ"
 
         // Act
-        val requestHash = AttestationRequestHash.create(devicePublicKey, nonce)
+        val requestHash = AttestationRequestHash.create(nonce)
 
         // Assert
-        assertThat(requestHash).isEqualTo("ppnhIAKZzU9Xy0Wkv9NH/dX1lmKDYHnO2kVWM6YUzsY=")
+        assertThat(requestHash).isEqualTo("0Ek1sCc/KyGP2rJE6Q7UkQE/OfzN98QSCk6wOgx5kGs=")
     }
-
-    private fun hexToBytes(hex: String): ByteArray =
-        ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(radix = 16).toByte() }
 }
