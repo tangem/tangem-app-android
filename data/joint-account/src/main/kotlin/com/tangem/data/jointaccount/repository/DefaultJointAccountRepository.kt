@@ -78,8 +78,11 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private suspend fun storeInvites(userWalletId: UserWalletId, cryptoAccountId: String, invites: List<String>) {
         runSuspendCatching {
             invitesStore.store(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId, invites = invites)
-        }.onFailure {
-            logger.e(messageString = "Failed to persist the invites of the created joint account")
+        }.onFailure { throwable ->
+            logger.e(
+                messageString = "Failed to persist the invites of the created joint account",
+                throwable = throwable,
+            )
         }
     }
 
