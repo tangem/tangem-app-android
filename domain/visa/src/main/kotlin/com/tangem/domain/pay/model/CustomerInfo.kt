@@ -25,6 +25,7 @@ data class MainScreenCustomerInfo(
 
 data class CustomerInfo(
     val customerId: String?,
+    val paymentAccount: PaymentAccount?,
     val productInstances: List<ProductInstance>,
     val cards: List<CardInfo>,
     val kycStatus: KycStatus,
@@ -48,6 +49,41 @@ data class CustomerInfo(
     /** Card-level product instances only (excludes the VA ACCOUNT instance). */
     val cardProductInstances: List<ProductInstance>
         get() = productInstances.filter { it.specificationDataType == ProductInstance.SpecificationDataType.CARD }
+
+    /**
+     * Card-level product instances the customer is enrolled with — the backend-side proof that the payment
+     * account exists, independent of balances and of the `cards[]` payload.
+     */
+    val activeCardProductInstances: List<ProductInstance>
+        get() = cardProductInstances.filter {
+            it.status == ProductInstance.Status.ACTIVE || it.status == ProductInstance.Status.BLOCKED
+        }
+
+    /** Whether the response carried both balance dimensions. */
+    val hasBalances: Boolean get() = fiatBalance != null && cryptoBalance != null
+
+    /**
+     * Backend-side proof that the payment account exists: an enrolled card instance, a payment account, or
+     * balances (only an existing account has them). Deliberately independent of the `cards[]` payload, which
+     * the backend can omit for an operational account.
+     */
+    val isEnrolled: Boolean
+        get() = activeCardProductInstances.isNotEmpty() ||
+            paymentAccount != null ||
+            hasBalances
+
+    /**
+     * Payment account attached to the customer, as delivered by `customer/me`.payment_account.
+     *
+     * @property id payment account identifier.
+     * @property address payment account address on chain, or `null` when not provisioned yet.
+     * @property customerWalletAddress address of the wallet that owns the account.
+     */
+    data class PaymentAccount(
+        val id: String,
+        val address: String?,
+        val customerWalletAddress: String,
+    )
 
     enum class State {
         NEW,
