@@ -1,7 +1,7 @@
 package com.tangem.data.markets.converters
 
-import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset
-import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
+import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResponse.Asset
+import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.CoinIndicators.Reading
 import com.tangem.utils.converter.Converter
