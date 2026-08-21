@@ -539,6 +539,9 @@ dependencies {
         exclude(group = "com.google.guava", module = "listenablefuture")
     }
 
+    /** Google flavor-specific dependencies */
+    "googleImplementation"(deps.googlePlay.integrity)
+
     /** Huawei flavor-specific dependencies */
     "huaweiImplementation"(deps.huawei.push)
     "huaweiImplementation"(deps.agconnect.agcp)
