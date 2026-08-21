@@ -10,7 +10,6 @@ import com.tangem.core.decompose.model.ModelsEntryPoint
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
@@ -48,7 +47,6 @@ internal class PolymarketMainComponentTest {
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
 
     private val userWalletId = UserWalletId("011")
-    private val accessMode = PolymarketAccessMode.READ_ONLY
 
     init {
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
@@ -79,12 +77,11 @@ internal class PolymarketMainComponentTest {
         PolymarketMainComponent(
             appComponentContext = appComponentContext,
             userWalletId = userWalletId,
-            accessMode = accessMode,
         )
 
         // Assert
         assertThat(paramsContainerSlot.captured.require<PolymarketMainParams>())
-            .isEqualTo(PolymarketMainParams(userWalletId = userWalletId, accessMode = accessMode))
+            .isEqualTo(PolymarketMainParams(userWalletId = userWalletId))
     }
 
     private fun createAppComponentContext(paramsContainerSlot: CapturingSlot<ParamsContainer>): AppComponentContext {
