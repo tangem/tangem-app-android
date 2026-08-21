@@ -80,6 +80,8 @@ internal class DetailsModel @Inject constructor(
     val state: MutableStateFlow<DetailsUM>
 
     init {
+        analyticsEventHandler.send(Settings.ScreenOpened())
+
         val isWalletConnectAvailable = runBlocking {
             // danger region, this works immediately, but will be refactored later with WC
             checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse { throwable ->
