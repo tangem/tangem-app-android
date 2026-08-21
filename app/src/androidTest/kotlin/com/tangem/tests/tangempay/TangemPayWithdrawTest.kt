@@ -12,6 +12,7 @@ import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertEquals
@@ -41,7 +42,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "5"
         val receiveToken = "Bitcoin"
         val balanceAfterText = "5"
-        val withdrawalRowTitle = io.github.kakaocup.kakao.common.utilities.getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
+        val withdrawalRowTitle = getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
         val withdrawalAmountText = "-$${withdrawAmount}.00"
 
         setupHooks(
@@ -287,7 +288,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "10"
         val receiveToken = "Bitcoin"
         val zeroBalanceText = "0.00"
-        val withdrawalRowTitle = io.github.kakaocup.kakao.common.utilities.getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
+        val withdrawalRowTitle = getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
         val withdrawalAmountText = "-$${withdrawAmount}.00"
 
         setupHooks(
