@@ -86,8 +86,9 @@ class ResolvePolymarketEntryInteractor(
         }
 
     /**
-     * Kept symmetric on purpose: a wallet the backend stops calling ready must lose the record, or the gate
-     * would never ask again and the user could not re-run onboarding after the backend changed its mind.
+     * Only reached while the wallet is not yet confirmed — a confirmed one short-circuits above and never gets
+     * here. The record is therefore also maintained by the wallet-screen refresh, which keeps reading the backend
+     * for wallets this gate has stopped asking about.
      */
     private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
         if (status == PolymarketWalletStatus.READY_TO_TRADE) {
