@@ -147,4 +147,6 @@ private fun previewState(isInProgress: Boolean) = PolymarketOnboardingUM.Welcome
     onStartClick = {},
     onPolymarketTermsClick = {},
     onTangemTermsClick = {},
+    isRegionRestrictionsShown = false,
+    onRegionRestrictionsDismiss = {},
 )
