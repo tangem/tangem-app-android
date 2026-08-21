@@ -2,6 +2,7 @@ package com.tangem.domain.pay.model
 
 import com.tangem.domain.pay.model.OrderType.Companion.fromString
 import com.tangem.domain.pay.model.OrderType.Companion.issueCardTypes
+import com.tangem.domain.pay.model.OrderType.Companion.reissueCardTypes
 
 /**
  * Order type used for findOrders filtering and order-conflict checks.
@@ -17,6 +18,7 @@ enum class OrderType(val wireValue: String) {
     CARD_ISSUE_PLASTIC_RAIN("CARD_ISSUE_PLASTIC_RAIN"),
     CARD_ACTIVATION_PLASTIC_RAIN("CARD_ACTIVATION_PLASTIC_RAIN"),
     CARD_REISSUE("CARD_REISSUE"),
+    CARD_REISSUE_PLASTIC_RAIN("CARD_REISSUE_PLASTIC_RAIN"),
     CARD_FREEZE("CARD_FREEZE"),
     CARD_UNFREEZE("CARD_UNFREEZE"),
     WITHDRAW("WITHDRAW"),
@@ -31,8 +33,8 @@ enum class OrderType(val wireValue: String) {
     /** `true` for card freeze / unfreeze orders. */
     val isFreezingUnfreezing: Boolean get() = this == CARD_FREEZE || this == CARD_UNFREEZE
 
-    /** `true` for card reissue orders. */
-    val isReissuing: Boolean get() = this == CARD_REISSUE
+    /** `true` for any card reissue order type — see [reissueCardTypes]. */
+    val isReissuing: Boolean get() = reissueCardTypes.contains(this)
 
     companion object {
 
@@ -44,6 +46,11 @@ enum class OrderType(val wireValue: String) {
             CARD_ISSUE_VIRTUAL_RAIN,
             CARD_ISSUE_VIRTUAL_RAIN_KYC,
             CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+        )
+
+        val reissueCardTypes = setOf(
+            CARD_REISSUE,
+            CARD_REISSUE_PLASTIC_RAIN,
         )
 
         fun fromString(value: String?): OrderType {
