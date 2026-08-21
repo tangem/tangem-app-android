@@ -6,7 +6,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 
 internal interface TangemPayOrderCardComponent : ComposableContentComponent {
 
-    data class Params(val userWalletId: UserWalletId)
+    data class Params(
+        val userWalletId: UserWalletId,
+        val intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
+    )
 
     interface Factory : ComponentFactory<Params, TangemPayOrderCardComponent>
 }
