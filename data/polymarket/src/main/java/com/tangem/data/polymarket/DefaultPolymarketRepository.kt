@@ -1,6 +1,7 @@
 package com.tangem.data.polymarket
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
@@ -67,7 +68,7 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultPolymarketRepository @Inject constructor(
     private val polymarketApi: PolymarketApi,
     private val geoApi: PolymarketGeoApi,
@@ -202,7 +203,14 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 ).bind()
 
                 Either.catch { PredictionPlaceOrderConverter.convert(value = response) }
-                    .mapLeft { PredictionPlaceOrderError.Unknown(httpCode = null, detail = it.message) }
+                    .mapLeft { PredictionPlaceOrderError.Ambiguous(detail = it.message) }
+                    .flatMap { result ->
+                        if (result.isSuccess) {
+                            result.right()
+                        } else {
+                            PredictionPlaceOrderError.Rejected(detail = result.errorMessage).left()
+                        }
+                    }
             },
             onError = { placeOrderErrorResolver.resolve(it).left() },
         )
