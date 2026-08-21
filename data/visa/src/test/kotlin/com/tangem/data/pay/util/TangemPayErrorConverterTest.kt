@@ -106,6 +106,41 @@ internal class TangemPayErrorConverterTest {
             expected = VisaApiError.CardActivationInvalidCardData,
         ),
         ConvertModel(
+            name = "400 with the reissue invalid-source-card code -> CardReissuePlasticInvalidSourceCard",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_REISSUE_PLASTIC_INVALID_SOURCE_CARD)),
+            expected = VisaApiError.CardReissuePlasticInvalidSourceCard,
+        ),
+        ConvertModel(
+            name = "409 with the reissue active-order code -> CardReissuePlasticActiveOrderExists",
+            throwable = httpException(Code.CONFLICT, body = coded(CARD_REISSUE_PLASTIC_ACTIVE_ORDER_EXISTS)),
+            expected = VisaApiError.CardReissuePlasticActiveOrderExists,
+        ),
+        ConvertModel(
+            name = "400 with the reissue balance code -> CardReissuePlasticInsufficientBalance",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_REISSUE_PLASTIC_INSUFFICIENT_BALANCE)),
+            expected = VisaApiError.CardReissuePlasticInsufficientBalance,
+        ),
+        ConvertModel(
+            name = "400 with the reissue not-available code -> CardReissuePlasticNotAvailable",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_REISSUE_PLASTIC_NOT_AVAILABLE)),
+            expected = VisaApiError.CardReissuePlasticNotAvailable,
+        ),
+        ConvertModel(
+            name = "400 with the reissue shipping-address code -> CardReissuePlasticInvalidShippingAddress",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_REISSUE_PLASTIC_INVALID_SHIPPING_ADDRESS)),
+            expected = VisaApiError.CardReissuePlasticInvalidShippingAddress,
+        ),
+        ConvertModel(
+            name = "400 with the real reissue body shape -> mapped by code, error name ignored",
+            throwable = httpException(
+                Code.BAD_REQUEST,
+                body = """{"error":{"code":$CARD_REISSUE_PLASTIC_INVALID_SOURCE_CARD,""" +
+                    """"name":"CardReissuePlasticInvalidSourceCardException","type":"validation",""" +
+                    """"correlationId":"123"},"result":null}""",
+            ),
+            expected = VisaApiError.CardReissuePlasticInvalidSourceCard,
+        ),
+        ConvertModel(
             name = "400 without a body -> UnknownWithoutCode",
             throwable = httpException(Code.BAD_REQUEST, body = null),
             expected = VisaApiError.UnknownWithoutCode,
@@ -136,6 +171,11 @@ internal class TangemPayErrorConverterTest {
         const val CARD_ACTIVATION_CARD_ALREADY_ACTIVE = 140129
         const val CARD_ACTIVATION_CARD_NOT_READY = 140130
         const val CARD_ACTIVATION_ACTIVE_ORDER_EXISTS = 140131
+        const val CARD_REISSUE_PLASTIC_INVALID_SOURCE_CARD = 140132
+        const val CARD_REISSUE_PLASTIC_ACTIVE_ORDER_EXISTS = 140133
+        const val CARD_REISSUE_PLASTIC_INSUFFICIENT_BALANCE = 140134
+        const val CARD_REISSUE_PLASTIC_NOT_AVAILABLE = 140135
+        const val CARD_REISSUE_PLASTIC_INVALID_SHIPPING_ADDRESS = 140136
         const val UNMODELLED_CODE = 149999
 
         fun httpException(code: Code, body: String?) = ApiResponseError.HttpException(
