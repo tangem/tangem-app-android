@@ -43,10 +43,10 @@ internal fun PolymarketWelcomeFooter(
             modifier = Modifier.fillMaxWidth(),
             size = TangemButton.Size.X12,
             variant = TangemButton.Variant.Primary,
-            isLoading = state.isStarting,
+            isLoading = state.isInProgress,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
             text = state.startButtonText,
-            contentDescription = if (state.isStarting) {
+            contentDescription = if (state.isInProgress) {
                 stringResourceSafe(R.string.common_in_progress)
             } else {
                 null
