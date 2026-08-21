@@ -10,15 +10,15 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
+import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
-import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -235,8 +235,8 @@ internal class PolymarketOnboardingModelTest {
                 assertThat(state.isInProgress).isFalse()
                 assertThat(state.isRegionRestrictionsShown).isFalse()
                 verify(exactly = 1) {
-                messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-            }
+                    messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
+                }
                 verify(exactly = 0) { runOnboardingUseCase(userWalletId) }
                 model.onDestroy()
             }
@@ -558,8 +558,9 @@ internal class PolymarketOnboardingModelTest {
         gateResolves(PolymarketEntry.Onboarded)
         val model = createModel(testScope = this)
 
-        // Act & Assert — the gate resolves straight to the feed, so Welcome is never a state it passes through
+        // Act
         model.uiState.test {
+            // Assert
             assertThat(awaitItem()).isEqualTo(PolymarketOnboardingUM.Resolving)
             advanceUntilIdle()
             expectNoEvents()
