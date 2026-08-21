@@ -13,26 +13,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal object PlacePredictionNotificationsFactory {
 
     fun build(state: PlacePredictionUM): ImmutableList<PredictionNotificationUM> = buildList {
-        when (val quote = state.quote) {
-            is QuoteUM.Content -> when (quote.status) {
-                PredictionQuoteStatus.FULL -> Unit
-                PredictionQuoteStatus.PARTIAL -> add(PredictionNotificationUM.PartialFill)
-                PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE ->
-                    add(PredictionNotificationUM.BelowMinOrderSize(minOrderSize = quote.minOrderSize))
-                // A placeable status is the only one Content is built for
-                PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY, PredictionQuoteStatus.MARKET_CLOSED -> Unit
-            }
-            is QuoteUM.Unavailable -> when (quote.status) {
-                PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY -> add(PredictionNotificationUM.NoLiquidity)
-                PredictionQuoteStatus.MARKET_CLOSED -> add(PredictionNotificationUM.MarketClosed)
-                PredictionQuoteStatus.FULL,
-                PredictionQuoteStatus.PARTIAL,
-                PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
-                -> Unit
-            }
-            is QuoteUM.Error -> add(PredictionNotificationUM.QuoteFailed)
-            QuoteUM.Empty, QuoteUM.Loading -> Unit
-        }
+        addAll(state.quote.notifications())
 
         val isBalanceKnown = state.payment.balance != null
         if (isBalanceKnown && state.quote is QuoteUM.Content && !state.payment.hasSufficientBalance) {
@@ -41,6 +22,21 @@ internal object PlacePredictionNotificationsFactory {
 
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
     }.toImmutableList()
+
+    private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {
+        is QuoteUM.Content -> when (status) {
+            PredictionQuoteStatus.PARTIAL -> listOf(PredictionNotificationUM.PartialFill)
+            PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE -> listOf(PredictionNotificationUM.BelowMinOrderSize)
+            else -> emptyList()
+        }
+        is QuoteUM.Unavailable -> when (status) {
+            PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY -> listOf(PredictionNotificationUM.NoLiquidity)
+            PredictionQuoteStatus.MARKET_CLOSED -> listOf(PredictionNotificationUM.MarketClosed)
+            else -> emptyList()
+        }
+        is QuoteUM.Error -> listOf(PredictionNotificationUM.QuoteFailed)
+        QuoteUM.Empty, QuoteUM.Loading -> emptyList()
+    }
 }
 
 /**
