@@ -29,7 +29,7 @@ class SaveWalletAccountsResponseConverterTest {
                     derivationIndex = accountList.mainAccount.derivationIndex.value,
                     icon = accountList.mainAccount.icon.value.name,
                     iconColor = accountList.mainAccount.icon.color.name,
-                    type = WalletAccountDTO.TYPE_CRYPTO,
+                    type = WalletAccountDTO.Type.CRYPTO.value,
                 ),
             ),
         )

@@ -21,9 +21,12 @@ typealias AccountCurrencyId = Pair<AccountId, CryptoCurrency.ID>
  * @property userWalletId  the user wallet id associated with the account list
  * @property accounts      a list of accounts belonging to the user wallet
  * @property totalAccounts the backend's counter of the wallet's **crypto** accounts, archived ones included.
- * Joint accounts have their own parallel counter (`totalJointAccounts` of `GET /accounts`) and are not in this one,
- * and the special accounts (payment, virtual, prediction) are injected by the app rather than counted by the
- * backend at all — so this number must never be compared against the length of [accounts]
+ * Joint accounts have their own parallel counter ([totalJointAccounts]) and are not in this one, and the special
+ * accounts (payment, virtual, prediction) are injected by the app rather than counted by the backend at all — so
+ * this number must never be compared against the length of [accounts]
+ * @property totalJointAccounts the backend's counter of the wallet's joint accounts, archived ones included
+ * (`totalJointAccounts` of `GET /accounts`). Zero for a wallet that has none, and for a list assembled without
+ * joint rows at all
  * @property sortType      the sorting type applied to the accounts
  * @property groupType     the grouping type applied to the accounts
  *
@@ -35,6 +38,7 @@ data class AccountList private constructor(
     val accounts: List<Account>,
     val totalAccounts: Int,
     val totalArchivedAccounts: Int,
+    val totalJointAccounts: Int,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
 ) {
@@ -190,6 +194,11 @@ data class AccountList private constructor(
         data object TotalAccountsLessThanActive : Error {
             override fun toString(): String = "$tag: Total accounts cannot be less than active accounts"
         }
+
+        @Serializable
+        data object TotalJointAccountsLessThanActive : Error {
+            override fun toString(): String = "$tag: Total joint accounts cannot be less than active ones"
+        }
     }
 
     companion object {
@@ -209,11 +218,13 @@ data class AccountList private constructor(
          * @param accounts      a set of accounts belonging to the user wallet
          * @param totalAccounts the total number of accounts
          */
+        @Suppress("LongParameterList")
         operator fun invoke(
             userWalletId: UserWalletId,
             accounts: List<Account>,
             totalAccounts: Int,
             totalArchivedAccounts: Int,
+            totalJointAccounts: Int = 0,
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
         ): Either<Error, AccountList> = either {
@@ -264,11 +275,17 @@ data class AccountList private constructor(
                 Error.TotalAccountsLessThanActive
             }
 
+            // The joint counter is policed the same way, against the joint rows alone
+            ensure(totalJointAccounts >= accounts.count { it is Account.Joint }) {
+                Error.TotalJointAccountsLessThanActive
+            }
+
             AccountList(
                 userWalletId = userWalletId,
                 accounts = accounts,
                 totalAccounts = totalAccounts,
                 totalArchivedAccounts = totalArchivedAccounts,
+                totalJointAccounts = totalJointAccounts,
                 sortType = sortType,
                 groupType = groupType,
             )
@@ -295,6 +312,7 @@ data class AccountList private constructor(
                 ),
                 totalAccounts = 1,
                 totalArchivedAccounts = 0,
+                totalJointAccounts = 0,
                 sortType = sortType,
                 groupType = groupType,
             )
