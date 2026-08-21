@@ -77,12 +77,14 @@ internal sealed interface MarketPulseListUM {
  * A single markets-list row.
  *
  * @param chartData mini-chart series; `null` while the chart batch is still loading
+ * @param isUnderMarketCapLimit low-capitalisation token, hidden behind a notification in search results
  */
 @Immutable
 internal data class MarketPulseItemUM(
     val row: TangemTokenRowMarket.State.Content,
     val chartData: MarketChartRawData?,
     val chartType: MarketChartLook.Type,
+    val isUnderMarketCapLimit: Boolean = false,
 ) {
     val id: String get() = row.id
 }
