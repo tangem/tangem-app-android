@@ -42,14 +42,14 @@ internal class OpenTelemetryMetricsClientTest {
     fun `GIVEN recorded counter WHEN flush THEN batch is drained to the network exporter`() = runTest {
         // Arrange
         val client = createClient()
-        client.getMeter().counterBuilder("app.test.event").build().add(1)
+        client.getMeter().counterBuilder("app_test_event").build().add(1)
 
         // Act
         client.flush()
 
         // Assert
         val exported = networkExporter.exportedBatches.flatten()
-        assertThat(exported.map { it.name }).contains("app.test.event")
+        assertThat(exported.map { it.name }).contains("app_test_event")
     }
 
     @Test
@@ -57,24 +57,24 @@ internal class OpenTelemetryMetricsClientTest {
         // Arrange
         val client = createClient()
         networkExporter.shouldFail = true
-        client.getMeter().counterBuilder("app.test.first").build().add(1)
+        client.getMeter().counterBuilder("app_test_first").build().add(1)
         client.flush()
 
         // Act
         networkExporter.shouldFail = false
-        client.getMeter().counterBuilder("app.test.second").build().add(1)
+        client.getMeter().counterBuilder("app_test_second").build().add(1)
         client.flush()
 
         // Assert
         val delivered = networkExporter.successfulBatches.flatten().map { it.name }
-        assertThat(delivered).containsAtLeast("app.test.first", "app.test.second")
+        assertThat(delivered).containsAtLeast("app_test_first", "app_test_second")
     }
 
     @Test
     fun `GIVEN exported batch WHEN inspecting resource THEN only app coordinates are attached`() = runTest {
         // Arrange
         val client = createClient()
-        client.getMeter().counterBuilder("app.test.event").build().add(1)
+        client.getMeter().counterBuilder("app_test_event").build().add(1)
 
         // Act
         client.flush()
@@ -89,7 +89,7 @@ internal class OpenTelemetryMetricsClientTest {
     fun `GIVEN app goes background WHEN onTrimMemory THEN pending metrics are flushed`() = runTest {
         // Arrange
         val client = createClient()
-        client.getMeter().counterBuilder("app.test.background").build().add(1)
+        client.getMeter().counterBuilder("app_test_background").build().add(1)
 
         // Act
         (componentCallbacks.captured as ComponentCallbacks2)
@@ -97,7 +97,7 @@ internal class OpenTelemetryMetricsClientTest {
 
         // Assert
         val exported = networkExporter.exportedBatches.flatten()
-        assertThat(exported.map { it.name }).contains("app.test.background")
+        assertThat(exported.map { it.name }).contains("app_test_background")
     }
 
     private class InMemoryMetricStorage : SignalStorage.Metric {
