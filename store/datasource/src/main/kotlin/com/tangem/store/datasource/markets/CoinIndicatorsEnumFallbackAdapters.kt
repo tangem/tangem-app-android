@@ -1,8 +1,8 @@
-package com.tangem.datasource.api.common.adapter
+package com.tangem.store.datasource.markets
 
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.moshi.UnknownEnumMoshiAdapter
-import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
+import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
 
 fun Moshi.Builder.addCoinIndicatorsEnumFallbackAdapters(): Moshi.Builder {
     val map = mapOf(
