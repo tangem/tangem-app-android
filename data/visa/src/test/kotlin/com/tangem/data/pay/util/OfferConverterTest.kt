@@ -184,7 +184,56 @@ internal class OfferConverterTest {
         override fun toString(): String = name
     }
 
+    @Test
+    fun `GIVEN an offer with a MAIN image WHEN convert THEN mainImageUrl exposes it`() {
+        // Act
+        val actual = OfferConverter.convert(
+            createResponseOffer(
+                type = "CARD_ISSUE_PLASTIC_RAIN",
+                images = listOf(CustomerOffersResponse.Image(type = "MAIN", url = PLASTIC_IMAGE_URL)),
+            ),
+        )
+
+        // Assert
+        assertThat(actual.mainImageUrl).isEqualTo(PLASTIC_IMAGE_URL)
+    }
+
+    @Test
+    fun `GIVEN an offer without images WHEN convert THEN mainImageUrl is null`() {
+        // Act
+        val actual = OfferConverter.convert(createResponseOffer(type = "CARD_ISSUE_VIRTUAL_RAIN"))
+
+        // Assert
+        assertThat(actual.mainImageUrl).isNull()
+    }
+
+    @Test
+    fun `GIVEN a MAIN image without a url WHEN convert THEN mainImageUrl is null`() {
+        // Act
+        val actual = OfferConverter.convert(
+            createResponseOffer(images = listOf(CustomerOffersResponse.Image(type = "MAIN", url = null))),
+        )
+
+        // Assert
+        assertThat(actual.mainImageUrl).isNull()
+    }
+
+    @Test
+    fun `GIVEN only a non-MAIN image WHEN convert THEN mainImageUrl stays null`() {
+        // Act
+        val actual = OfferConverter.convert(
+            createResponseOffer(
+                images = listOf(CustomerOffersResponse.Image(type = "THUMBNAIL", url = PLASTIC_IMAGE_URL)),
+            ),
+        )
+
+        // Assert
+        assertThat(actual.mainImageUrl).isNull()
+    }
+
     private companion object {
+
+        const val PLASTIC_IMAGE_URL = "https://images.us.paera.com/Physical-main.png"
         fun createResponseOffer(
             type: String = "CARD_ISSUE_VIRTUAL_RAIN",
             amount: String = "1.00",
@@ -193,6 +242,7 @@ internal class OfferConverterTest {
             orderType: String = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
             deliveryEtaMinDays: Int? = null,
             deliveryEtaMaxDays: Int? = null,
+            images: List<CustomerOffersResponse.Image> = emptyList(),
         ) = CustomerOffersResponse.Offer(
             type = type,
             fee = CustomerOffersResponse.Fee(amount = BigDecimal(amount), currency = currency),
@@ -202,6 +252,7 @@ internal class OfferConverterTest {
                 deliveryEtaMinDays = deliveryEtaMinDays,
                 deliveryEtaMaxDays = deliveryEtaMaxDays,
             ),
+            images = images,
         )
     }
 }
