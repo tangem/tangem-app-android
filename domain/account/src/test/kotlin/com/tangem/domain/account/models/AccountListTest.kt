@@ -76,6 +76,7 @@ internal class AccountListTest {
             accounts = accounts,
             totalAccounts = accounts.size,
             totalArchivedAccounts = 0,
+            totalJointAccounts = 2,
         )
 
         // Assert
@@ -93,6 +94,50 @@ internal class AccountListTest {
             accounts = accounts,
             totalAccounts = accounts.size,
             totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        )
+
+        // Assert
+        Truth.assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN more joint rows than the counter WHEN create THEN the list is refused`() {
+        // Arrange
+        val accounts = listOf(
+            Account.CryptoPortfolio.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(derivationIndex = 0),
+            MockAccounts.createJointAccount(derivationIndex = 1),
+        )
+
+        // Act
+        val actual = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        )
+
+        // Assert
+        Truth.assertThat(actual.leftOrNull()).isEqualTo(AccountList.Error.TotalJointAccountsLessThanActive)
+    }
+
+    @Test
+    fun `GIVEN archived joint accounts WHEN create THEN the counter may exceed the rows`() {
+        // Arrange
+        val accounts = listOf(
+            Account.CryptoPortfolio.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(derivationIndex = 0),
+        )
+
+        // Act
+        val actual = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 5,
         )
 
         // Assert
@@ -112,6 +157,7 @@ internal class AccountListTest {
             accounts = accounts,
             totalAccounts = accounts.size,
             totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
         ).getOrNull()!!
 
         // Act
