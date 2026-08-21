@@ -121,6 +121,9 @@ class ValidatePredictionOrderUseCase {
                 expected = depositWalletAddress,
             )
         }
+        ensure(order.signer.equals(order.maker, ignoreCase = true)) {
+            PredictionOrderValidationError.SignerIsNotMaker(signer = order.signer, maker = order.maker)
+        }
         ensure(order.side == draft.side) {
             PredictionOrderValidationError.SideMismatch(signed = order.side, quoted = draft.side)
         }
