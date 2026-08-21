@@ -19,13 +19,13 @@ internal sealed interface PolymarketOnboardingUM {
     /**
      * The user owes onboarding and is being invited to start it.
      *
-     * @property isStarting whether the start button shows its loader in place of its label.
+     * @property isInProgress whether the start button shows its loader in place of its label.
      * @property startButtonText label of the start button. A user whose account is already part-built is
      *  resuming rather than starting, so the label is state, not a constant.
      * @property isRegionRestrictionsShown whether the region-restrictions sheet covers the content.
      */
     data class Welcome(
-        val isStarting: Boolean,
+        val isInProgress: Boolean,
         val startButtonText: TextReference,
         val onStartClick: () -> Unit,
         val onPolymarketTermsClick: () -> Unit,
