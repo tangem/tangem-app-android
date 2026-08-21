@@ -67,7 +67,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         ),
         GateModel(
             quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrderSize(minOrderSize = BigDecimal("5"))),
+            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrderSize),
             expectedButtonEnabled = false,
         ),
         GateModel(
@@ -175,7 +175,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         ),
         payment = PaymentSourceUM(tokenSymbol = "USDC", balance = balance, hasSufficientBalance = false),
         amountValue = "10",
-        slippage = SlippageUM(percent = BigDecimal("0.25"), isDefault = true),
+        slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),
         quote = quote,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
