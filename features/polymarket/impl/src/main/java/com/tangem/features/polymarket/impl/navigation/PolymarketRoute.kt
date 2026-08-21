@@ -46,6 +46,11 @@ internal sealed interface PolymarketRoute : Route {
         val assetId: String? = null,
     ) : PolymarketRoute
 
-    /** Events/markets search screen. */
-    data object Search : PolymarketRoute
+    /**
+     * Full-text search over discoverable events.
+     *
+     * @property userWalletId the wallet the feature runs for, carried for the same reason as
+     *  [Main.userWalletId] — a tapped result opens [EventDetails], which needs it
+     */
+    data class Search(val userWalletId: UserWalletId) : PolymarketRoute
 }
