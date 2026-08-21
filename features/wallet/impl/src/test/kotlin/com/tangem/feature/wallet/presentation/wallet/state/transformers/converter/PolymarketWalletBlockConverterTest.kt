@@ -108,6 +108,10 @@ internal class PolymarketWalletBlockConverterTest {
         BalanceModel(status = PredictionAccountStatusValue.Loading, expected = loading),
         BalanceModel(status = PredictionAccountStatusValue.NotOnboarded, expected = unknown),
         BalanceModel(
+            status = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
+            expected = unknown,
+        ),
+        BalanceModel(
             status = PredictionAccountStatusValue.Onboarding(
                 source = StatusSource.ACTUAL,
                 stage = PredictionAccountStatusValue.Onboarding.Stage.DEPLOYED,
