@@ -1,13 +1,13 @@
-package com.tangem.datasource.api.auth
+package com.tangem.lib.auth.api
 
-import com.tangem.datasource.api.auth.models.request.AuthApiRequest
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
-import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
-import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
-import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
-import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
-import com.tangem.datasource.api.auth.models.response.NonceApiResponse
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.models.request.AuthApiRequest
+import com.tangem.lib.auth.api.models.request.NonceApiRequest
+import com.tangem.lib.auth.api.models.request.RefreshApiRequest
+import com.tangem.lib.auth.api.models.request.RegisterApiRequest
+import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
+import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
+import com.tangem.lib.auth.api.models.response.NonceApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
