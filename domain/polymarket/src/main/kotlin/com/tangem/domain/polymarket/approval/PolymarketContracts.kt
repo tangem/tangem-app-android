@@ -20,6 +20,8 @@ object PolymarketContracts {
 
     const val COLLATERAL_DECIMALS: Int = 6
 
+    const val SIGNATURE_TYPE_DEPOSIT_WALLET: Int = 3
+
     const val DW_FACTORY: String = "0x00000000000Fb5C9ADea0298D729A0CB3823Cc07"
     const val DW_BEACON: String = "0x7A18EDfe055488A3128f01F563e5B479D92ffc3a"
 

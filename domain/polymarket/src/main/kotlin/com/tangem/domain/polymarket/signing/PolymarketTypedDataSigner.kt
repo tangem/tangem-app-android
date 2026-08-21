@@ -5,11 +5,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
 import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PredictionOrderDraft
+import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import java.math.BigInteger
 
-/**
- * Signs the Polymarket onboarding payloads with the owner EOA key. The key must already be derived;
- * signing never derives it.
- */
 interface PolymarketTypedDataSigner {
 
     /** Signs both onboarding payloads within a single signing session. */
@@ -19,6 +18,11 @@ interface PolymarketTypedDataSigner {
         approvals: PolymarketApprovalsPayload,
     ): Either<PolymarketSigningError, PolymarketOnboardingSignatures>
 
+    suspend fun signOrder(
+        userWalletId: UserWalletId,
+        payload: PredictionOrderPayload,
+    ): Either<PolymarketSigningError, PredictionSignedOrder>
+
     /** Signs only the `ClobAuth` payload — used when re-issuing API credentials. */
     suspend fun signClobAuth(
         userWalletId: UserWalletId,
@@ -26,13 +30,18 @@ interface PolymarketTypedDataSigner {
     ): Either<PolymarketSigningError, String>
 }
 
-/** Variable part of the `ClobAuth` payload; the signed address comes from the signing key. */
 data class PolymarketClobAuthData(
     val timestamp: String,
     val nonce: String = "0",
 )
 
-/** Unsigned half of the approvals batch. */
+data class PredictionOrderPayload(
+    val draft: PredictionOrderDraft,
+    val depositWalletAddress: String,
+    val salt: BigInteger,
+    val timestampMillis: Long,
+)
+
 data class PolymarketApprovalsPayload(
     val depositWalletAddress: String,
     val nonce: String,
