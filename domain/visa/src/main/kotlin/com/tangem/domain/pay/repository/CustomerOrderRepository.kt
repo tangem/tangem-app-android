@@ -54,6 +54,13 @@ interface CustomerOrderRepository {
         idempotencyKey: String,
     ): Either<VisaApiError, Order>
 
+    suspend fun createPlasticReissueOrder(
+        userWalletId: UserWalletId,
+        sourceProductInstanceId: String,
+        order: PlasticCardOrder,
+        idempotencyKey: String,
+    ): Either<VisaApiError, Order>
+
     suspend fun createCardActivationOrder(
         userWalletId: UserWalletId,
         order: CardActivationOrder,
