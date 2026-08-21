@@ -75,6 +75,7 @@ val TangemPayCard.isFrozen
 private const val THUMBNAIL_IMAGE = "THUMBNAIL"
 private const val MAIN_IMAGE = "MAIN"
 private const val BACKGROUND_IMAGE = "BACKGROUND"
+private const val ACTIVATION_IMAGE = "ACTIVATION"
 
 val TangemPayCard.thumbnailUrl: String?
     get() = images.urlOfType(THUMBNAIL_IMAGE)
@@ -84,3 +85,6 @@ val TangemPayCard.mainImageUrl: String?
 
 val TangemPayCard.backgroundImageUrl: String?
     get() = images.urlOfType(BACKGROUND_IMAGE)
+
+val TangemPayCard.activationImageUrl: String?
+    get() = images.urlOfType(ACTIVATION_IMAGE)
