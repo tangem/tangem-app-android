@@ -8,6 +8,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 
@@ -16,9 +17,16 @@ internal class SetQuoteResultTransformer(
     private val receivedAtMillis: Long,
 ) : Transformer<PlacePredictionUM> {
 
-    override fun transform(prevState: PlacePredictionUM): PlacePredictionUM = prevState.copy(
-        quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote),
-    ).recomputeGate()
+    /**
+     * A submission owns the state once it starts, so a quote arriving after that is dropped here rather
+     * than at each call site: what freezes the slice is this refusal, and it must not depend on every
+     * future caller remembering to check.
+     */
+    override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
+        if (prevState.submit !is SubmitUM.Idle) return prevState
+
+        return prevState.copy(quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)).recomputeGate()
+    }
 
     private fun toError(error: PredictionOrderQuoteError): QuoteUM.Error = QuoteUM.Error(
         reason = when (error) {
