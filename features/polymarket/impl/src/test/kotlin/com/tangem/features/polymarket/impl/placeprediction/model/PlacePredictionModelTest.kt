@@ -372,6 +372,83 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN quote loaded WHEN read THEN headline is the expectation AND floor is the guarantee`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        val quote = model.uiState.value.quote as QuoteUM.Content
+        assertThat(quote.expectedShares).isEqualTo(BigDecimal("23.8"))
+        assertThat(quote.guaranteedShares).isEqualTo(BigDecimal("23.2"))
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN liquidity disappears WHEN next tick arrives THEN button is gated on the latest quote`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().right(),
+            createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
+
+        // Act
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Unavailable::class.java)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance below the total WHEN quote loaded THEN a blocking notification explains why`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns createQuote(total = BigDecimal("120")).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "100")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.InsufficientBalance)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the screen is hidden WHEN interval elapses THEN no quote is requested`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        model.onScreenHidden()
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `WHEN next clicked THEN summary pushed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -444,7 +521,7 @@ internal class PlacePredictionModelTest {
         isLive: Boolean = false,
     ): PredictionOrderQuote = PredictionOrderQuote(
         status = status,
-        shares = BigDecimal("23.8"),
+        shares = BigDecimal("23.2"),
         notional = BigDecimal("10"),
         expectedExecutionAmount = BigDecimal("23.8"),
         averagePrice = BigDecimal("0.42"),
