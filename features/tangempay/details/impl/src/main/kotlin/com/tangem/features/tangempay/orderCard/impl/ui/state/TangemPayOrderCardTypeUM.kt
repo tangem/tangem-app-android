@@ -14,6 +14,8 @@ internal data class TangemPayOrderCardTypeUM(
     val onRetry: () -> Unit,
     val onSelectVirtual: () -> Unit,
     val onSelectPlastic: () -> Unit,
+    val onTypeClick: (OrderCardType) -> Unit,
+    val onTypeSwipe: (OrderCardType) -> Unit,
 ) {
 
     @Immutable
