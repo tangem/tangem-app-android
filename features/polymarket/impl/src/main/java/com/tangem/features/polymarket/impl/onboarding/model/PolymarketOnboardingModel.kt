@@ -66,16 +66,22 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val onboardingJob = JobHolder()
 
     init {
-        resolveEntry(userWalletId)
+        resolveEntry()
     }
 
     fun onCloseClick() {
         router.pop()
     }
 
-    private fun resolveEntry(walletId: UserWalletId) {
+    private fun resolveEntry() {
         modelScope.launch {
-            resolvePolymarketEntryInteractor.withoutPrompting(walletId).fold(
+            val result = resolvePolymarketEntryInteractor.withoutPrompting(userWalletId)
+
+            // The use case reports cancellation as a failure rather than propagating it, so a gate the user has
+            // already left would otherwise report itself — and the snackbar is global, landing on their new screen.
+            ensureActive()
+
+            result.fold(
                 ifLeft = {
                     uiState.value = welcome(isInProgress = false)
                     reportFailure()
@@ -103,14 +109,15 @@ internal class PolymarketOnboardingModel @Inject constructor(
         uiState.value = current.copy(isInProgress = true)
 
         modelScope.launch {
-            val entry = resolvePolymarketEntryInteractor(userWalletId)
-                .getOrElse {
-                    stopStarting()
-                    reportFailure()
-                    return@launch
-                }
+            val result = resolvePolymarketEntryInteractor(userWalletId)
 
             ensureActive()
+
+            val entry = result.getOrElse {
+                stopStarting()
+                reportFailure()
+                return@launch
+            }
 
             when (entry) {
                 is PolymarketEntry.Onboard,
@@ -122,7 +129,8 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun showRegionRestrictions() {
-        uiState.value = welcome(isInProgress = false, isRegionRestrictionsShown = true)
+        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
+        uiState.value = current.copy(isInProgress = false, isRegionRestrictionsShown = true)
     }
 
     private fun dismissRegionRestrictions() {

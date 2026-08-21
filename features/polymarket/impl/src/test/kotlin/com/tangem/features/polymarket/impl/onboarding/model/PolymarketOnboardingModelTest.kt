@@ -567,6 +567,72 @@ internal class PolymarketOnboardingModelTest {
         model.onDestroy()
     }
 
+
+    @Test
+    fun `GIVEN the run fails WHEN collected THEN the button returns to idle AND the failure is reported`() = runTest {
+        // Arrange
+        owesOnboarding()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(
+            PolymarketOnboardingProgress.Failed(error = PolymarketOnboardingError.Network, isRetryable = true),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onStartClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.welcome().isInProgress).isFalse()
+        verify(exactly = 1) {
+            messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
+        }
+        model.onDestroy()
+    }
+
+    /**
+     * The use case reports cancellation as a failure, and the snackbar is global — a gate the user has left
+     * would otherwise report itself on whatever screen they moved to.
+     */
+    @Test
+    fun `GIVEN the gate is destroyed WHEN the in-flight resolution fails THEN nothing is reported`() = runTest {
+        // Arrange
+        coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } coAnswers {
+            runCatching { delay(RESOLUTION_DELAY_MILLIS) }
+            PolymarketOnboardingError.Network.left()
+        }
+        val model = createModel(testScope = this)
+        runCurrent()
+
+        // Act
+        model.onDestroy()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN the gate is destroyed WHEN the in-flight start resolution fails THEN nothing is reported`() = runTest {
+        // Arrange
+        gateResolves(PolymarketEntry.Undetermined)
+        coEvery { resolvePolymarketEntryInteractor(userWalletId) } coAnswers {
+            runCatching { delay(RESOLUTION_DELAY_MILLIS) }
+            PolymarketOnboardingError.Derivation(PolymarketDerivationError.UserCancelled).left()
+        }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.welcome().onStartClick()
+        runCurrent()
+
+        // Act
+        model.onDestroy()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
     internal data class ProgressModel(
         val progress: PolymarketOnboardingProgress,
         val expectedIsInProgress: Boolean,
