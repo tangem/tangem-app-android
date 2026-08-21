@@ -26,22 +26,18 @@ internal class JointAccountConverter @AssistedInject constructor(
 
     override fun convert(value: WalletAccountDTO): Account.Joint {
         val derivationIndex = value.derivationIndex.toDerivationIndex()
-        val tokens = value.tokens.orEmpty()
 
         return Account.Joint(
             accountId = value.id.toJointAccountId(userWallet.walletId),
             accountName = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),
             derivationIndex = derivationIndex,
-            cryptoCurrencies = if (tokens.isEmpty()) {
-                emptyList()
-            } else {
-                responseCryptoCurrenciesFactory.createCurrencies(
-                    tokens = tokens,
-                    userWallet = userWallet,
-                    accountIndex = derivationIndex,
-                )
-            },
+            // A joint account may legitimately carry no tokens at all: it is created empty
+            cryptoCurrencies = responseCryptoCurrenciesFactory.createAccountCurrencies(
+                tokens = value.tokens,
+                userWallet = userWallet,
+                accountIndex = derivationIndex,
+            ),
         )
     }
 
@@ -52,10 +48,11 @@ internal class JointAccountConverter @AssistedInject constructor(
             derivationIndex = value.derivationIndex.value,
             icon = value.icon.value.name,
             iconColor = value.icon.color.name,
-            type = WalletAccountDTO.TYPE_JOINT,
-            tokens = value.cryptoCurrencies.map {
-                userTokensResponseFactory.createResponseToken(currency = it, accountId = value.accountId)
-            },
+            type = WalletAccountDTO.Type.JOINT.value,
+            tokens = userTokensResponseFactory.createAccountTokens(
+                currencies = value.cryptoCurrencies,
+                accountId = value.accountId,
+            ),
         )
     }
 
