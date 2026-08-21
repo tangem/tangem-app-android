@@ -33,8 +33,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Paginated markets list for the Market Pulse block. Port of the old feed's
- * `MarketsListBatchFlowManager` (main flow only — no search).
+ * Paginated markets list, used both for the Market Pulse block and for the Crypto tab's search
+ * results. Port of the old feed's `MarketsListBatchFlowManager`.
+ *
+ * Search mode is one instance with [batchFlowType] `Search` and a non-null [currentSearchText]; the two
+ * modes never share an instance, because their request configs differ and a single batch flow would
+ * thrash between them.
  */
 @Suppress("LongParameterList")
 internal class MarketPulseBatchFlowManager(
@@ -45,6 +49,8 @@ internal class MarketPulseBatchFlowManager(
     private val onItemClick: (CryptoCurrency.RawID) -> Unit,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
+    batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
+    private val currentSearchText: Provider<String?> = Provider { null },
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
     private val updateStateJob = JobHolder()
@@ -54,7 +60,7 @@ internal class MarketPulseBatchFlowManager(
             actionsFlow = actionsFlow,
             coroutineScope = modelScope,
         ),
-        batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
+        batchFlowType = batchFlowType,
     )
 
     private val batchConverter = object : BatchItemConverter<TokenMarket, MarketPulseItemUM> {
@@ -118,6 +124,20 @@ internal class MarketPulseBatchFlowManager(
             initialValue = false,
         )
 
+    /** True only once the source is exhausted, so an in-flight search never renders as "not found". */
+    val isSearchNotFoundState: StateFlow<Boolean> = batchFlow.state
+        .map { state ->
+            currentSearchText().isNullOrEmpty().not() &&
+                state.status is PaginationStatus.EndOfPagination &&
+                state.data.isEmpty()
+        }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
+
     init {
         batchFlow.state
             .map { it.data }
@@ -141,18 +161,26 @@ internal class MarketPulseBatchFlowManager(
         }.saveIn(updateStateJob)
     }
 
-    fun reload() {
+    fun reload(searchText: String? = null) {
         modelScope.launch {
             actionsFlow.emit(
                 BatchAction.Reload(
                     requestParams = TokenMarketListConfig(
                         fiatPriceCurrency = currentAppCurrency().code,
-                        searchText = null,
+                        // a search text is ignored outside search mode, so the Market Pulse list cannot be
+                        // narrowed by a stray argument
+                        searchText = currentSearchText()?.let { current -> searchText ?: current },
                         priceChangeInterval = currentTrendInterval().toBatchRequestInterval(),
                         order = currentCategory().toRequestOrder(),
                     ),
                 ),
             )
+        }
+    }
+
+    fun clearStateAndStopAllActions() {
+        modelScope.launch {
+            actionsFlow.emit(BatchAction.Reset)
         }
     }
 
