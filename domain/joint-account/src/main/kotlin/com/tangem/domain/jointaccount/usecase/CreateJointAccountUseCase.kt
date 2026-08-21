@@ -16,6 +16,7 @@ import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.firstOrNull
 
@@ -38,9 +39,13 @@ class CreateJointAccountUseCase(
         config: JointAccountConfig,
         creatorName: String,
     ): Either<JointAccountCreationError, JointAccount> = either {
-        val derivationIndex = Either
+        val rawIndex = Either
             .catch { repository.getFreeOwnerDerivationIndex(userWalletId = userWalletId) }
             .mapLeft(JointAccountCreationError::Failed)
+            .bind()
+
+        val derivationIndex = DerivationIndex(value = rawIndex)
+            .mapLeft { JointAccountCreationError.InvalidDerivationIndex(cause = it) }
             .bind()
 
         val signResult = signer
@@ -96,7 +101,7 @@ class CreateJointAccountUseCase(
         userWalletId: UserWalletId,
         config: JointAccountConfig,
         creatorName: String,
-        derivationIndex: Int,
+        derivationIndex: DerivationIndex,
         ownerAddress: String,
     ): JointAccountCreationPayload {
         return JointAccountCreationPayload(
@@ -105,7 +110,7 @@ class CreateJointAccountUseCase(
                 walletId = userWalletId.stringValue,
                 name = creatorName,
                 address = ownerAddress,
-                derivation = derivationIndex,
+                derivation = derivationIndex.value,
             ),
         )
     }
