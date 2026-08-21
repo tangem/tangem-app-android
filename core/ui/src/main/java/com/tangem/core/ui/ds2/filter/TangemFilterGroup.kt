@@ -29,6 +29,8 @@ import kotlinx.collections.immutable.persistentListOf
  * @param modifier Modifier applied to the row. The row fills the available width by default.
  * @param variant Visual style applied to every chip (Figma `APPEARANCE`).
  *   See [TangemFilterItem.Variant].
+ * @param arrangement Horizontal arrangement of the chips. Defaults to the Figma spacing; pass e.g.
+ *   `Arrangement.SpaceBetween` to spread a short, fixed set of chips across the full width.
  * @param contentPadding Padding around the chips, applied inside the scrollable area so the first
  *   and last chip can scroll under it.
  */
@@ -37,13 +39,14 @@ fun TangemFilterGroup(
     items: ImmutableList<TangemFilterItemUM>,
     modifier: Modifier = Modifier,
     variant: TangemFilterItem.Variant = TangemFilterItem.Variant.Material,
+    arrangement: Arrangement.Horizontal = Arrangement.spacedBy(ItemSpacing),
     contentPadding: PaddingValues = PaddingValues(horizontal = HorizontalPadding),
 ) {
     ProvideTangemShimmer {
         LazyRow(
             modifier = modifier,
             contentPadding = contentPadding,
-            horizontalArrangement = Arrangement.spacedBy(ItemSpacing),
+            horizontalArrangement = arrangement,
         ) {
             items(items = items, key = { it.id }) { item ->
                 TangemFilterItem(state = item, variant = variant)
