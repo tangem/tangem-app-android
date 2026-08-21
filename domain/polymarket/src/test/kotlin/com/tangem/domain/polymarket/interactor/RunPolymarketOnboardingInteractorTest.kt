@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.approval.PolymarketApprovalCalls
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -30,7 +31,9 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.Runs
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -51,6 +54,7 @@ internal class RunPolymarketOnboardingInteractorTest {
     private val deriveApiCredentials: DeriveApiCredentialsUseCase = mockk()
     private val submitApprovals: SubmitApprovalsUseCase = mockk()
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase = mockk()
+    private val onboardedStore: PolymarketOnboardedStore = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
 
     private val useCase = RunPolymarketOnboardingInteractor(
@@ -63,6 +67,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         deriveApiCredentials = deriveApiCredentials,
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
+        polymarketOnboardedStore = onboardedStore,
         checkGeoblock = checkGeoblock,
     )
 
@@ -78,6 +83,7 @@ internal class RunPolymarketOnboardingInteractorTest {
             deriveApiCredentials,
             submitApprovals,
             syncBalanceAllowance,
+            onboardedStore,
             checkGeoblock,
         )
         coEvery { deriveAddresses(USER_WALLET_ID) } returns ADDRESSES.right()
@@ -90,6 +96,7 @@ internal class RunPolymarketOnboardingInteractorTest {
         coEvery { deriveApiCredentials(USER_WALLET_ID, OWNER, L1_SIGNATURE, TIMESTAMP) } returns CREDENTIALS.right()
         coEvery { getApiCredentials(USER_WALLET_ID) } returns null
         coEvery { syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { onboardedStore.markOnboarded(any()) } just Runs
         coEvery { checkGeoblock() } returns false.right()
     }
 
@@ -675,6 +682,26 @@ internal class RunPolymarketOnboardingInteractorTest {
         )
 
         val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
+    }
+
+    @Test
+    fun `GIVEN the run reaches Ready WHEN collected THEN the wallet is recorded as confirmed`() = runTest {
+        // Arrange
+        coEvery { getWalletStatus(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+        coEvery { getApiCredentials(USER_WALLET_ID) } returns CREDENTIALS
+
+        // Act
+        useCase(USER_WALLET_ID).test {
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+            awaitComplete()
+        }
+
+        // Assert
+        coVerifyOrder {
+            onboardedStore.markOnboarded(USER_WALLET_ID)
+            syncBalanceAllowance(OWNER, CREDENTIALS)
+        }
     }
 
     @Nested
