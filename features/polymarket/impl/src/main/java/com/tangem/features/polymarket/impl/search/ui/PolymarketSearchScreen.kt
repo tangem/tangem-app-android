@@ -43,6 +43,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -105,15 +106,15 @@ private fun SearchLayout(
         ) {
             when (state.content) {
                 is PolymarketSearchUM.ContentUM.Initial -> CenterPrompt(
-                    title = stringReference("Start typing to search"),
-                    subtitle = stringReference("Search events or your predictions"),
+                    title = resourceReference(R.string.prediction_search_initial_title),
+                    subtitle = resourceReference(R.string.prediction_search_initial_subtitle),
                 )
                 is PolymarketSearchUM.ContentUM.Loading -> PolymarketLoadingState(
                     modifier = Modifier.align(Alignment.Center),
                 )
                 is PolymarketSearchUM.ContentUM.NothingFound -> CenterPrompt(
-                    title = stringReference("No results found"),
-                    subtitle = stringReference("Try to type something else"),
+                    title = resourceReference(R.string.prediction_search_empty_title),
+                    subtitle = resourceReference(R.string.prediction_search_empty_subtitle),
                 )
                 is PolymarketSearchUM.ContentUM.Error -> PolymarketReloadPrompt(
                     modifier = Modifier.align(Alignment.Center),
@@ -143,7 +144,7 @@ private fun SearchField(state: PolymarketSearchUM, focusRequester: FocusRequeste
 
     TangemSearch(
         state = TangemSearch.State(
-            placeholderText = stringReference("Search"),
+            placeholderText = resourceReference(R.string.common_search),
             query = state.query,
             onQueryChange = state.onQueryChange,
             isActive = isActive,
@@ -176,7 +177,7 @@ private fun ResultsList(content: PolymarketSearchUM.ContentUM.Results, onLoadMor
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                text = stringReference("Search results").resolveReference(),
+                text = stringResourceSafe(R.string.prediction_search_results_title),
                 color = TangemTheme.colors3.text.tertiary,
                 style = TangemTheme.typography3.body.medium,
             )
