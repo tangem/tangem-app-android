@@ -6,13 +6,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
-/**
- * State of the whole place-prediction flow. Every step renders a slice of it; nothing else holds state.
- *
- * [notifications], [PaymentSourceUM.hasSufficientBalance] and [isPrimaryButtonEnabled] are derived — they are
- * never assigned directly, only produced by
- * [com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate].
- */
 @Immutable
 internal data class PlacePredictionUM(
     val market: MarketHeaderUM,
@@ -42,7 +35,6 @@ internal data class PlacePredictionUM(
     }
 }
 
-/** The BFF's own default, applied when the request omits slippage. */
 internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("3")
 
 /**
@@ -56,10 +48,6 @@ internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
-/**
- * @property outcomePriceCents the outcome's price as a caption, `null` when the backend states none. A price
- *  nobody reported is not a price of zero, and the screen has nothing to show in its place.
- */
 @Immutable
 internal data class MarketHeaderUM(
     val title: String,
@@ -68,11 +56,6 @@ internal data class MarketHeaderUM(
     val outcomePriceCents: Int?,
 )
 
-/**
- * @property balance the spending power the order is paid from, `null` while it has not been read. A balance
- *  the exchange did not answer for is not a balance of zero: reading it as one would tell the user their
- *  money is gone and refuse the order in the same breath.
- */
 @Immutable
 internal data class PaymentSourceUM(
     val tokenSymbol: String,
@@ -80,11 +63,6 @@ internal data class PaymentSourceUM(
     val hasSufficientBalance: Boolean,
 )
 
-/**
- * Whether the region allows placing an order. The flow reads this itself, so until the answer arrives it is
- * neither of the two: [Unknown] keeps the button shut without claiming the user is restricted, which a
- * plain `false` could not express and which the screen would otherwise announce as a restriction.
- */
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
 @Immutable
@@ -97,14 +75,6 @@ internal sealed interface QuoteUM {
 
     data object Loading : QuoteUM
 
-    /**
-     * A priced order.
-     *
-     * The two share counts are not interchangeable: [expectedShares] is what the fill is expected to
-     * deliver (priced at the book's average) and belongs in the headline, [guaranteedShares] is the floor
-     * the price cap guarantees. A winning share redeems for exactly $1, which is why both are shown as
-     * money. A SELL flow will need its own fields — there the same two figures are denominated in USDC.
-     */
     data class Content(
         val status: PredictionQuoteStatus,
         val expectedShares: BigDecimal,
@@ -114,16 +84,18 @@ internal sealed interface QuoteUM {
         val minOrderSize: BigDecimal,
     ) : QuoteUM
 
-    /**
-     * The order cannot be placed, and the response carried every figure as zero — so none of them may
-     * reach the screen. The reason is in [status]; the notification built from it is what the user sees.
-     */
     data class Unavailable(val status: PredictionQuoteStatus) : QuoteUM
 
     data class Error(val reason: QuoteErrorUM) : QuoteUM
 }
 
 internal enum class QuoteErrorUM { Network, Unknown }
+
+@Immutable
+internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecimal)
+
+internal fun QuoteUM.payout(): PayoutUM? = (this as? QuoteUM.Content)
+    ?.let { PayoutUM(expected = it.expectedShares, guaranteed = it.guaranteedShares) }
 
 @Immutable
 internal sealed interface SubmitUM {
