@@ -22,6 +22,7 @@ import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeCompon
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
+import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -90,7 +91,7 @@ internal class TangemPayOrderCardTypeModelTest {
             assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
             val plastic = state.availablePlastic
             assertThat(plastic?.feeState).isEqualTo(FeeState.Default)
-            assertThat(plastic?.country).isEqualTo("US")
+            assertThat(plastic?.country).isEqualTo(CountryNames.getDisplayName("US"))
             assertThat(plastic?.deliveryEta)
                 .isEqualTo(TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = 2, maxBusinessDays = 4))
             assertThat(plastic?.deliveryFee).contains("$")
@@ -232,7 +233,8 @@ internal class TangemPayOrderCardTypeModelTest {
             val state = model.state.value
             assertThat(state.isError).isFalse()
             assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
-            assertThat(state.plastic).isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = "US"))
+            assertThat(state.plastic)
+                .isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = CountryNames.getDisplayName("US")))
         }
 
     @Test
@@ -249,7 +251,8 @@ internal class TangemPayOrderCardTypeModelTest {
         val state = model.state.value
         assertThat(state.isError).isFalse()
         assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
-        assertThat(state.plastic).isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = "US"))
+        assertThat(state.plastic)
+            .isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = CountryNames.getDisplayName("US")))
     }
 
     @Test
