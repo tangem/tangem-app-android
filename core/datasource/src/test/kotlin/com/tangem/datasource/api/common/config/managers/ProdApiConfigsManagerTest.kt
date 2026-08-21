@@ -91,7 +91,6 @@ internal class ProdApiConfigsManagerTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = appInfoProvider,
             ),
-            Auth(),
             PolymarketWeb(),
             PolymarketRelayer(),
             PolymarketClob(),
@@ -105,7 +104,6 @@ internal class ProdApiConfigsManagerTest {
         createYieldSupplyModel(),
         createTangemTechModel(),
         createNewsModel(),
-        createAuthModel(),
         createPolymarketWebModel(),
         createPolymarketRelayerModel(),
         createPolymarketClobModel(),
@@ -137,31 +135,6 @@ internal class ProdApiConfigsManagerTest {
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://clob.polymarket.com/",
-            ),
-        )
-    }
-
-    private fun createAuthModel(): TestModel {
-        val environment = when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
-            DEBUG_BUILD_TYPE,
-            INTERNAL_BUILD_TYPE,
-            -> ApiEnvironment.DEV
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-        }
-
-        return TestModel(
-            id = Auth.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = when (environment) {
-                    ApiEnvironment.PROD -> "https://api.tangem.org/"
-                    else -> "[REDACTED_ENV_URL]"
-                },
-                headers = emptyMap(),
             ),
         )
     }

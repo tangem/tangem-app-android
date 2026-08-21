@@ -44,6 +44,7 @@ dependencies {
     // region Core modules
     implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
+    implementation(projects.core.remote)
     implementation(projects.core.utils)
     // endregion
 
