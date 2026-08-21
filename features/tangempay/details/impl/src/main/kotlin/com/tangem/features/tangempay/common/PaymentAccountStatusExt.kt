@@ -49,9 +49,6 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
 internal val AccountStatus.Payment.cardMainImageUrl: String?
     get() = tariffPlan?.plan?.mainImageUrl
 
-internal val AccountStatus.Payment.cardActivationImageUrl: String?
-    get() = tariffPlan?.plan?.activationImageUrl ?: cardMainImageUrl
-
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null
 
