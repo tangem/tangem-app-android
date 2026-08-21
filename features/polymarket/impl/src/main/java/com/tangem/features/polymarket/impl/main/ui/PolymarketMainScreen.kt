@@ -55,7 +55,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
@@ -405,7 +404,6 @@ private fun PolymarketMainScreenContentPreview() {
     TangemThemePreviewRedesign {
         PolymarketMainScreen(
             state = PolymarketMainUM(
-                accessMode = PolymarketAccessMode.TRADING,
                 categories = previewCategories(),
                 content = PolymarketMainUM.ContentUM.Content(
                     events = previewEvents(),
