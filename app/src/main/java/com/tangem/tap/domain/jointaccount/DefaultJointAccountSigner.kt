@@ -91,7 +91,7 @@ internal class DefaultJointAccountSigner @Inject constructor(
     ): Either<Throwable, JointAccountSignResult> = either {
         val seedKey = userWallet.primarySecp256k1PublicKey()
             ?: raise(TangemSdkError.WalletNotFound())
-        val derivationPath = jointAccountOwnerDerivationPath(index = input.derivationIndex)
+        val derivationPath = jointAccountOwnerDerivationPath(index = input.derivationIndex.value)
         val ownerKey = deriveOwnerKey(
             userWalletId = userWallet.walletId,
             seedKey = seedKey,
