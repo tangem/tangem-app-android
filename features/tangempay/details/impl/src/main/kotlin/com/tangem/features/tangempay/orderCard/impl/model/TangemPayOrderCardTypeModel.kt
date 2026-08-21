@@ -122,6 +122,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                     isError = false,
                     virtual = TangemPayOrderCardTypeUM.Virtual(
                         issueFee = virtualOffer?.fee?.let { fee -> fee.amount.formatFiat(fee.currency) }.orEmpty(),
+                        offerImageUrl = virtualOffer?.mainImageUrl,
                     ),
                     plastic = plasticContent ?: current.plastic,
                 )
@@ -146,6 +147,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 maxBusinessDays = deliveryEta.maxBusinessDays,
             ),
             feeState = feeState,
+            offerImageUrl = mainImageUrl,
         )
     }
 
