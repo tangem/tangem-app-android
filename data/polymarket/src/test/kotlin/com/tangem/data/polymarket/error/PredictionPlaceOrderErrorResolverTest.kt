@@ -57,14 +57,14 @@ internal class PredictionPlaceOrderErrorResolverTest {
             expected = PredictionPlaceOrderError.Rejected(detail = "min size"),
         ),
         ResolveModel(
-            name = "a 5xx is neither our fault nor a verdict on the order",
+            name = "a 5xx is no verdict on the order, so its outcome is unknown",
             error = ApiResponseError.HttpException(code = Code.INTERNAL_SERVER_ERROR, message = null, errorBody = "x"),
-            expected = PredictionPlaceOrderError.Unknown(httpCode = 500, detail = "x"),
+            expected = PredictionPlaceOrderError.Ambiguous(detail = "x"),
         ),
         ResolveModel(
-            name = "anything else keeps its cause",
+            name = "an unclassifiable failure may still have reached the exchange",
             error = ApiResponseError.UnknownException(IOException("boom")),
-            expected = PredictionPlaceOrderError.Unknown(httpCode = null, detail = "boom"),
+            expected = PredictionPlaceOrderError.Ambiguous(detail = "boom"),
         ),
     )
 }
