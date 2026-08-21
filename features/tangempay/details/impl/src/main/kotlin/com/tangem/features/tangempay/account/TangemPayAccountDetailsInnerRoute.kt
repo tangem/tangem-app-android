@@ -4,6 +4,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import kotlinx.serialization.Serializable
 
@@ -39,5 +40,7 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
     data object Cashback : TangemPayAccountDetailsInnerRoute()
 
     @Serializable
-    data object OrderCard : TangemPayAccountDetailsInnerRoute()
+    data class OrderCard(
+        val intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
+    ) : TangemPayAccountDetailsInnerRoute()
 }
