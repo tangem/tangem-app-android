@@ -1712,6 +1712,8 @@
   <string name="swap_story_third_subtitle_v2">跨主流网络和数千种代币进行兑换 0% 稳定币之间互换的手续费</string>
   <string name="swap_story_third_title">简单方便</string>
   <string name="swap_story_third_title_v2">90+ 条区块链\n16,000+ 项资产</string>
+  <string name="swap_token_selector_empty_filtered_message">该钱包中没有已充值的代币。请查看其他钱包或更改筛选条件</string>
+  <string name="swap_token_selector_filter_hide_zero_balance">隐藏 0 余额</string>
   <string name="swap_via_provider">通过提供商进行互换</string>
   <string name="swap_your_assets_title">您的资产</string>
   <string name="swapping_alert_cex_description">该金额包括：\n- 服务提供商的费用\n- 从交易所向用户地址发送 %s 的网络费用。</string>
@@ -1782,7 +1784,7 @@
   <string name="tangem_pay_terms_fees_limits">条款、费用和限制</string>
   <string name="tangem_pay_terms_limits">条款和限制</string>
   <string name="tangem_pay_transaction_declined_notification_text">银行拒绝了这项交易请求。</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">最低交易金额为 %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">最低交易金额为</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">已达月度上限</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC 已排除</string>
   <string name="tangem_pay_transaction_details_cashback_none">无返现</string>
@@ -2006,8 +2008,8 @@
   <string name="tangempay_newonboard_body">随时随地花加密资产——无需银行、无需中介、无需交易所。自托管的自由，结合日常支付体验。</string>
   <string name="tangempay_newonboard_bottomleft_body">可在线支付，也支持 Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">全球受理</string>
-  <string name="tangempay_newonboard_bottomright_body">全球都能用</string>
-  <string name="tangempay_newonboard_bottomright_title">汇兑费仅 1%</string>
+  <string name="tangempay_newonboard_bottomright_body">美元 1:1 兑换 USDC；固定费用 1 美元</string>
+  <string name="tangempay_newonboard_bottomright_title">接收 ACH 转账</string>
   <string name="tangempay_newonboard_title">获取你的 Tangem Pay 卡</string>
   <string name="tangempay_newonboard_topleft_body">看多少，付多少</string>
   <string name="tangempay_newonboard_topleft_title">无消费手续费，\n1 USDC = 1 USD</string>
