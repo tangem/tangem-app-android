@@ -5,17 +5,19 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
-import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
@@ -30,36 +32,21 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Model of the entry gate.
+ * Model of the entry gate. The wallet is already settled by `PolymarketEntryModel`.
  *
- * The wallet is settled before this screen is reached — `PolymarketEntryModel` resolves it, choosing among
- * eligible wallets when the caller left that choice to the user. This model only resolves the entry decision
- * for that already-fixed wallet.
+ * Opening the gate prompts for nothing: an undetermined wallet lands on Welcome with an idle button rather than
+ * an unasked-for card prompt, and the full decision is taken when the user presses it.
  *
- * Opening the gate prompts the user for nothing. It resolves only as far as it can without a card session or a
- * wallet unlock, so a wallet that has not derived the Polymarket key here lands on the Welcome screen with an
- * idle button instead of an unasked-for card prompt. The full decision — including that derivation — is taken
- * when the user presses the button, and it goes through the same use case, so the two can never disagree.
- *
- * That decision is deliberately deferred, not guessed: an undetermined wallet is never reported as having no
- * deposit wallet. A user returning after a reinstall or on a second device presses the button once and is then
- * taken to their existing wallet rather than being told it does not exist. So an undetermined wallet and one
- * that owes onboarding take the same branch on the button: the run is next either way, and it re-reads the
- * wallet status itself before signing anything.
- *
- * A failed resolution never falls through to the feed: the region is unknown, and treating that as permission
- * would let a restricted user trade. Which failure surface applies depends on who asked — a failure while the
- * gate opens raises the error overlay, since there is nothing else on screen to retry from, while a failure
- * after the user pressed the button returns that button to idle, because the button is itself the retry.
- *
- * A superseded resolution never reports its outcome: the use case turns cancellation into a failure instead of
- * propagating it, so a retried attempt would otherwise overwrite the fresh state with the stale error.
+ * Nothing blocks the screen on a failure. Welcome is the gate's only content and its button is the only retry,
+ * so a failed resolution and a failed run both leave it idle and report through a snackbar.
  */
 @ModelScoped
+@Suppress("LongParameterList")
 internal class PolymarketOnboardingModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val urlOpener: UrlOpener,
+    private val messageSender: UiMessageSender,
     private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor,
     private val runPolymarketOnboardingInteractor: RunPolymarketOnboardingInteractor,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -73,67 +60,63 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val onTangemTermsClick: () -> Unit = { urlOpener.openUrl(TANGEM_TERMS_URL) }
 
     val uiState: StateFlow<PolymarketOnboardingUM>
-        field = MutableStateFlow(welcome(isStarting = true))
+        field = MutableStateFlow<PolymarketOnboardingUM>(PolymarketOnboardingUM.Resolving)
 
-    private val resolveJob = JobHolder()
     private val onboardingJob = JobHolder()
 
     init {
-        resolveEntry(userWalletId)
+        resolveEntry()
     }
 
     fun onCloseClick() {
         router.pop()
     }
 
-    private fun dismissRegionRestrictions() {
-        uiState.value = uiState.value.copy(overlay = null)
-    }
-
-    private fun resolveEntry(walletId: UserWalletId) {
+    private fun resolveEntry() {
         modelScope.launch {
-            uiState.value = welcome(isStarting = true)
+            val result = resolvePolymarketEntryInteractor.withoutPrompting(userWalletId)
 
-            val result = resolvePolymarketEntryInteractor.withoutPrompting(walletId)
-
+            // The use case reports cancellation as a failure rather than propagating it, so a gate the user has
+            // already left would otherwise report itself — and the snackbar is global, landing on their new screen.
             ensureActive()
 
             result.fold(
                 ifLeft = {
-                    uiState.value = welcome(
-                        isStarting = false,
-                        overlay = PolymarketOnboardingUM.Overlay.Error(onRetryClick = { resolveEntry(walletId) }),
-                    )
+                    uiState.value = welcome(isInProgress = false)
+                    reportFailure()
                 },
                 ifRight = { entry -> renderEntry(entry) },
             )
-        }.saveIn(resolveJob)
+        }
     }
 
     private fun renderEntry(entry: PolymarketEntry) {
         when (entry) {
             is PolymarketEntry.Onboard -> uiState.value = welcome(
-                isStarting = false,
+                isInProgress = false,
                 startButtonText = startButtonText(status = entry.status),
             )
-            PolymarketEntry.Undetermined -> uiState.value = welcome(isStarting = false)
+            PolymarketEntry.Undetermined -> uiState.value = welcome(isInProgress = false)
             PolymarketEntry.Onboarded -> openFeed()
         }
     }
 
     private fun startOnboarding() {
-        if (uiState.value.isStarting) return
+        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
+        if (current.isInProgress) return
 
-        uiState.value = uiState.value.copy(isStarting = true)
+        uiState.value = current.copy(isInProgress = true)
 
         modelScope.launch {
-            val entry = resolvePolymarketEntryInteractor(userWalletId)
-                .getOrElse {
-                    uiState.value = uiState.value.copy(isStarting = false)
-                    return@launch
-                }
+            val result = resolvePolymarketEntryInteractor(userWalletId)
 
             ensureActive()
+
+            val entry = result.getOrElse {
+                stopStarting()
+                reportFailure()
+                return@launch
+            }
 
             when (entry) {
                 is PolymarketEntry.Onboard,
@@ -145,10 +128,11 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun showRegionRestrictions() {
-        uiState.value = welcome(
-            isStarting = false,
-            overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(onDismiss = ::dismissRegionRestrictions),
-        )
+        updateWelcome { it.copy(isInProgress = false, isRegionRestrictionsShown = true) }
+    }
+
+    private fun dismissRegionRestrictions() {
+        updateWelcome { it.copy(isRegionRestrictionsShown = false) }
     }
 
     private suspend fun CoroutineScope.runOnboarding() {
@@ -163,28 +147,44 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.Deriving,
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
-            -> uiState.value = uiState.value.copy(isStarting = true)
+            -> updateWelcome { it.copy(isInProgress = true) }
             PolymarketOnboardingProgress.Ready -> openFeed()
             is PolymarketOnboardingProgress.Failed ->
                 if (progress.error == PolymarketOnboardingError.RegionBlocked) {
                     showRegionRestrictions()
                 } else {
-                    uiState.value = uiState.value.copy(isStarting = false)
+                    stopStarting()
+                    reportFailure()
                 }
         }
     }
 
+    private fun stopStarting() {
+        updateWelcome { it.copy(isInProgress = false) }
+    }
+
+    /** Leaves the state alone unless the gate is showing Welcome — the only state these updates apply to. */
+    private fun updateWelcome(update: (PolymarketOnboardingUM.Welcome) -> PolymarketOnboardingUM.Welcome) {
+        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
+        uiState.value = update(current)
+    }
+
+    private fun reportFailure() {
+        messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
+    }
+
     private fun welcome(
-        isStarting: Boolean,
+        isInProgress: Boolean,
         startButtonText: TextReference = resourceReference(R.string.prediction_onboarding_start_button),
-        overlay: PolymarketOnboardingUM.Overlay? = null,
-    ) = PolymarketOnboardingUM(
-        isStarting = isStarting,
+        isRegionRestrictionsShown: Boolean = false,
+    ) = PolymarketOnboardingUM.Welcome(
+        isInProgress = isInProgress,
         startButtonText = startButtonText,
         onStartClick = ::startOnboarding,
         onPolymarketTermsClick = onPolymarketTermsClick,
         onTangemTermsClick = onTangemTermsClick,
-        overlay = overlay,
+        isRegionRestrictionsShown = isRegionRestrictionsShown,
+        onRegionRestrictionsDismiss = ::dismissRegionRestrictions,
     )
 
     private fun startButtonText(status: PolymarketWalletStatus): TextReference = when (status) {
