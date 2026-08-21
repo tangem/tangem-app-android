@@ -31,4 +31,7 @@ data class ExchangeQuoteResponse(
     @Json(name = "txType")
     val txType: TxType? = null,
 
+    @property:Json(name = "isRestricted")
+    val isRestricted: Boolean = false,
+
 )

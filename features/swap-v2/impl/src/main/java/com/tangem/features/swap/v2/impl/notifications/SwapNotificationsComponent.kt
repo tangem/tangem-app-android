@@ -5,13 +5,12 @@ import androidx.compose.ui.Modifier
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.domain.express.models.ExpressError
-import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import java.math.BigDecimal
 import com.tangem.features.swap.v2.impl.notifications.model.SwapNotificationsModel
 import com.tangem.features.swap.v2.impl.notifications.ui.swapNotifications
@@ -44,7 +43,6 @@ internal class SwapNotificationsComponent(
         val swapNotificationData: SwapNotificationData,
     ) {
         data class SwapNotificationData(
-            val expressError: ExpressError?,
             val fromCryptoCurrency: CryptoCurrency?,
             val destinationAddress: String,
             val memo: String? = null,
@@ -53,10 +51,10 @@ internal class SwapNotificationsComponent(
             val enteredFromAmount: BigDecimal? = null,
             val fromCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
             val priceImpact: PriceImpact? = null,
-            val provider: ExpressProvider? = null,
             val amountType: SwapAmountType? = null,
             val shouldIncludeFeeInBalanceCheck: Boolean = false,
             val feeValue: BigDecimal? = null,
+            val quote: SwapQuoteUM?,
         )
     }
 }

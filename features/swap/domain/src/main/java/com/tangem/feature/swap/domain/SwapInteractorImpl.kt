@@ -489,6 +489,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allowanceInfo = allowanceInfo,
                 spenderAddress = spenderAddress,
                 dexRouterSpenderAddress = dexRouterSpenderAddress,
+                isRestricted = maybeQuote.getOrNull()?.isRestricted == true,
             )?.let { provider to it }
         } else {
             val quoteBalanceStatus = if (isBalanceWithoutFeeEnough) {
@@ -570,6 +571,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allowanceInfo = null,
                 spenderAddress = null,
                 dexRouterSpenderAddress = null,
+                isRestricted = maybeQuotes.getOrNull()?.isRestricted == true,
             )?.let { provider to it }
         } else {
             provider to getQuotesState(
@@ -1917,6 +1919,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     ),
                     minAdaValue = null,
                     txType = quoteModel.txType,
+                    isRestricted = quoteModel.isRestricted,
                 )
 
                 when (resolveQuoteFlow(provider, quoteModel.txType)) {
@@ -2132,6 +2135,7 @@ internal class SwapInteractorImpl @Inject constructor(
         allowanceInfo: AllowanceInfo?,
         spenderAddress: String?,
         dexRouterSpenderAddress: String?,
+        isRestricted: Boolean,
     ): SwapState? {
         val fromNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
         val dexFromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
@@ -2213,6 +2217,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         feeValue = BigDecimal.ZERO,
                     ),
                     preparedSwapConfigState = preparedSwapConfigState,
+                    isRestricted = isRestricted,
                 )
             },
             ifLeft = { error ->

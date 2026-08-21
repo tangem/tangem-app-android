@@ -68,6 +68,11 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val tokenInfoConverter = TokenInfoConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
+    private val isExpressCategoriesGeoBlockingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+        )
+
     override suspend fun getPairs(
         primarySwapCurrencyStatus: SwapCurrencyStatus,
         secondarySwapCurrencyStatus: SwapCurrencyStatus,
@@ -292,6 +297,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             fromTokenAmount = fromTokenAmount,
             allowanceContract = response.allowanceContract,
             quoteId = response.quoteId,
+            isRestricted = response.isRestricted && isExpressCategoriesGeoBlockingEnabled,
         )
     }
 
