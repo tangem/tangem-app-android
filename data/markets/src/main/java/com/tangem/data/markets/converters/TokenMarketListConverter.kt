@@ -1,7 +1,7 @@
 package com.tangem.data.markets.converters
 
-import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
-import com.tangem.datasource.api.markets.models.response.TokenMarketListResponse
+import com.tangem.data.markets.applyL2Compatibility
+import com.tangem.store.datasource.markets.models.response.TokenMarketListResponse
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListWithMaxApy
 import com.tangem.domain.markets.TokenQuotesShort

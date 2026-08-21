@@ -2,10 +2,10 @@ package com.tangem.data.markets
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse
-import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset
-import com.tangem.datasource.api.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
+import com.tangem.store.datasource.markets.TangemTechMarketsApi
+import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResponse
+import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResponse.Asset
+import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.markets.CoinIndicators
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
