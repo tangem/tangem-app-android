@@ -145,6 +145,44 @@ internal class AccountListTest {
     }
 
     @Test
+    fun `GIVEN a joint account WHEN added THEN it counts against the joint counter alone`() {
+        // Arrange
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = listOf(Account.CryptoPortfolio.createMainAccount(userWalletId)),
+            totalAccounts = 1,
+            totalArchivedAccounts = 0,
+        ).getOrNull()!!
+
+        // Act
+        val actual = (accountList + MockAccounts.createJointAccount(derivationIndex = 0)).getOrNull()!!
+
+        // Assert
+        Truth.assertThat(actual.totalJointAccounts).isEqualTo(1)
+        Truth.assertThat(actual.totalAccounts).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN a joint account in the list WHEN removed THEN the joint counter follows it`() {
+        // Arrange
+        val joint = MockAccounts.createJointAccount(derivationIndex = 0)
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = listOf(Account.CryptoPortfolio.createMainAccount(userWalletId), joint),
+            totalAccounts = 1,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        ).getOrNull()!!
+
+        // Act
+        val actual = (accountList - joint).getOrNull()!!
+
+        // Assert
+        Truth.assertThat(actual.totalJointAccounts).isEqualTo(0)
+        Truth.assertThat(actual.totalAccounts).isEqualTo(1)
+    }
+
+    @Test
     fun `GIVEN joint account with currencies WHEN flattenCurrencies THEN joint currencies are excluded`() {
         // Arrange
         val jointCurrency = mockk<CryptoCurrency>()

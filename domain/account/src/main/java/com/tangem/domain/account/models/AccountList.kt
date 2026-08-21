@@ -66,12 +66,16 @@ data class AccountList private constructor(
     operator fun plus(other: Account): Either<Error, AccountList> {
         val isNewAccount = this.accounts.none { it.accountId == other.accountId }
         val accounts = this.accounts.addOrReplace(other) { it.accountId == other.accountId }
+        // Each counter follows the rows it counts: a joint account belongs to its own, and adding one must not
+        // inflate the crypto counter — nor leave the joint one behind the list it now describes
+        val isNewJointAccount = isNewAccount && other is Account.Joint
 
         return invoke(
             userWalletId = this.userWalletId,
             accounts = accounts,
-            totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
+            totalAccounts = this.totalAccounts + if (isNewAccount && other !is Account.Joint) 1 else 0,
             totalArchivedAccounts = this.totalArchivedAccounts,
+            totalJointAccounts = this.totalJointAccounts + if (isNewJointAccount) 1 else 0,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -90,11 +94,14 @@ data class AccountList private constructor(
             removeIf { it.accountId == other.accountId }
         }
 
+        val wasJointAccount = isExistingAccount && other is Account.Joint
+
         return invoke(
             userWalletId = this.userWalletId,
             accounts = accounts,
-            totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
+            totalAccounts = this.totalAccounts - if (isExistingAccount && other !is Account.Joint) 1 else 0,
             totalArchivedAccounts = this.totalArchivedAccounts,
+            totalJointAccounts = this.totalJointAccounts - if (wasJointAccount) 1 else 0,
             sortType = this.sortType,
             groupType = this.groupType,
         )
