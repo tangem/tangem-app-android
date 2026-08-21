@@ -17,20 +17,6 @@ internal object FeedV2TabsModule {
 
     @Provides
     @IntoSet
-    fun provideRealAssetsTab(): FeedTabContributor = PlaceholderFeedTabContributor(
-        id = FeedTabId.RealAssets,
-        title = stringReference("Real assets"),
-    )
-
-    @Provides
-    @IntoSet
-    fun provideEarnTab(): FeedTabContributor = PlaceholderFeedTabContributor(
-        id = FeedTabId.Earn,
-        title = stringReference("Earn"),
-    )
-
-    @Provides
-    @IntoSet
     fun providePredictionsTab(): FeedTabContributor = PlaceholderFeedTabContributor(
         id = FeedTabId.Predictions,
         title = stringReference("Predictions"),
