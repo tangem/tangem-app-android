@@ -142,5 +142,9 @@
     {
         "name": "TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1477_RWA_AND_CATEGORIES_ENABLED",
+        "version": "undefined"
     }
 ]
