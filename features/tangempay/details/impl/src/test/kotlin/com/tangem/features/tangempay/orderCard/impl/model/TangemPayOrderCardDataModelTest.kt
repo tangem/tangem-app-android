@@ -23,8 +23,10 @@ import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
+import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Error
@@ -53,6 +55,11 @@ private const val COUNTRY = "US"
 private const val EMAIL = "j.silverhand@gmail.com"
 private const val PHONE_MASK = "+1 (###) ###-####"
 private const val SLOW_LOAD_MS = 1_000L
+private const val SOURCE_PRODUCT_INSTANCE_ID = "pi_source_0001"
+private val REISSUE_INTENT = TangemPayOrderCardIntent.ReissuePlastic(
+    sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+    deliveryEtaMaxBusinessDays = 20,
+)
 
 internal class TangemPayOrderCardDataModelTest {
 
@@ -61,6 +68,7 @@ internal class TangemPayOrderCardDataModelTest {
     private val router: Router = mockk(relaxed = true)
     private val onboardingRepository: OnboardingRepository = mockk()
     private val issuePlasticCard: IssuePlasticCardUseCase = mockk()
+    private val reissuePlasticCard: ReissuePlasticCardUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     private var submitted: PlasticCardOrder? = null
@@ -78,6 +86,11 @@ internal class TangemPayOrderCardDataModelTest {
             submitted = secondArg()
             submittedKeys += thirdArg<String>()
             createdOrder().right()
+        }
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } coAnswers {
+            submitted = thirdArg()
+            submittedKeys += arg<String>(n = 3)
+            createdOrder(productInstanceId = REISSUED_PRODUCT_INSTANCE_ID).right()
         }
     }
 
@@ -489,6 +502,88 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     @Test
+    fun `GIVEN the reissue intent WHEN order clicked THEN a reissue is submitted for the source card`() = runTest {
+        // Arrange
+        val model = createLoadedModel(intent = REISSUE_INTENT)
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            reissuePlasticCard(userWalletId, SOURCE_PRODUCT_INSTANCE_ID, any(), any())
+        }
+        coVerify(exactly = 0) { issuePlasticCard(any(), any(), any()) }
+        assertThat(acceptedEmail).isEqualTo(EMAIL)
+        assertThat(acceptedProductInstanceId).isEqualTo(REISSUED_PRODUCT_INSTANCE_ID)
+    }
+
+    @Test
+    fun `GIVEN the reissue intent WHEN order clicked THEN the same form payload is submitted as for an issue`() =
+        runTest {
+            // Arrange
+            val model = createLoadedModel(intent = REISSUE_INTENT)
+            model.fillValidForm()
+
+            // Act
+            model.form.onOrderClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(submitted).isEqualTo(
+                PlasticCardOrder(
+                    embossName = "JOHNNY SILVERHAND",
+                    shippingAddress = ShippingAddress(
+                        firstName = "Johnny",
+                        lastName = "Silverhand",
+                        region = "California",
+                        city = "Night City",
+                        line1 = "Crescent st. 24",
+                        line2 = "Apt. 56",
+                        postalCode = "0000",
+                        phone = "+12345678901",
+                    ),
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN the reissue intent WHEN submit fails THEN nothing is accepted and the form stays editable`() = runTest {
+        // Arrange
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } returns
+            VisaApiError.CardReissuePlasticActiveOrderExists.left()
+        val model = createLoadedModel(intent = REISSUE_INTENT)
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(acceptedEmail).isNull()
+        assertThat(model.form.isSubmitting).isFalse()
+        assertThat(model.form.isOrderEnabled).isTrue()
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN the issue intent WHEN order clicked THEN no reissue is submitted`() = runTest {
+        // Arrange
+        val model = createLoadedModel()
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { issuePlasticCard(userWalletId, any(), any()) }
+        coVerify(exactly = 0) { reissuePlasticCard(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN submit in flight WHEN order clicked again THEN the order is created once`() = runTest {
         // Arrange
         coEvery { issuePlasticCard(userWalletId, any(), any()) } coAnswers {
@@ -624,6 +719,45 @@ internal class TangemPayOrderCardDataModelTest {
         assertThat(isClosed).isEqualTo(testModel.closesFlow)
     }
 
+    @ParameterizedTest
+    @MethodSource("reissueRejectionCases")
+    fun `GIVEN a reissue rejection with a known reason WHEN order clicked THEN that reason is shown`(
+        testModel: RejectionModel,
+    ) = runTest {
+        // Arrange
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } returns testModel.error.left()
+        val model = createLoadedModel(intent = REISSUE_INTENT)
+        model.fillValidForm()
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(lastMessageTitle()).isEqualTo(resourceReference(testModel.title))
+        assertThat(lastMessageButtons()).hasSize(testModel.buttonCount)
+        assertThat(model.form.isSubmitting).isFalse()
+    }
+
+    @ParameterizedTest
+    @MethodSource("reissueRejectionCases")
+    fun `GIVEN a reissue rejection sheet WHEN closed THEN the flow is left only when the form cannot fix it`(
+        testModel: RejectionModel,
+    ) = runTest {
+        // Arrange
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } returns testModel.error.left()
+        val model = createLoadedModel(intent = REISSUE_INTENT)
+        model.fillValidForm()
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Act
+        closeLastMessage()
+
+        // Assert
+        assertThat(isClosed).isEqualTo(testModel.closesFlow)
+    }
+
     internal data class RejectionModel(
         val error: VisaApiError,
         @StringRes val title: Int,
@@ -708,13 +842,18 @@ internal class TangemPayOrderCardDataModelTest {
         updatedAt = null,
     )
 
-    private fun TestScope.createLoadedModel(): TangemPayOrderCardDataModel =
-        createModel(testScope = this).also { advanceUntilIdle() }
+    private fun TestScope.createLoadedModel(
+        intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
+    ): TangemPayOrderCardDataModel = createModel(testScope = this, intent = intent).also { advanceUntilIdle() }
 
-    private fun createModel(testScope: TestScope) = TangemPayOrderCardDataModel(
+    private fun createModel(
+        testScope: TestScope,
+        intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
+    ) = TangemPayOrderCardDataModel(
         paramsContainer = MutableParamsContainer(
             TangemPayOrderCardDataComponent.Params(
                 userWalletId = userWalletId,
+                intent = intent,
                 onOrderAccepted = { email, productInstanceId ->
                     acceptedEmail = email
                     acceptedProductInstanceId = productInstanceId
@@ -726,6 +865,7 @@ internal class TangemPayOrderCardDataModelTest {
         router = router,
         onboardingRepository = onboardingRepository,
         issuePlasticCard = issuePlasticCard,
+        reissuePlasticCard = reissuePlasticCard,
         uiMessageSender = uiMessageSender,
     ).also { model = it }
 
@@ -762,6 +902,7 @@ internal class TangemPayOrderCardDataModelTest {
     companion object {
 
         private const val ORDERED_PRODUCT_INSTANCE_ID = "pi-ordered"
+        private const val REISSUED_PRODUCT_INSTANCE_ID = "pi-reissued"
 
         @JvmStatic
         fun masklessCases() = listOf(null, "", "(###) ###-####", "+1 (XXX) XXX")
@@ -771,6 +912,31 @@ internal class TangemPayOrderCardDataModelTest {
             LoadErrorModel(requestFails = true),
             LoadErrorModel(email = null),
             LoadErrorModel(country = null, phoneMask = null),
+        )
+
+        @JvmStatic
+        fun reissueRejectionCases() = listOf(
+            RejectionModel(
+                error = VisaApiError.CardReissuePlasticInvalidShippingAddress,
+                title = R.string.tangempay_order_card_error_invalid_address,
+                closesFlow = false,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardReissuePlasticInsufficientBalance,
+                title = R.string.tangempay_order_card_error_insufficient_balance,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardReissuePlasticActiveOrderExists,
+                title = R.string.tangempay_order_card_error_active_order,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardReissuePlasticNotAvailable,
+                title = R.string.tangempay_order_card_error_offer_unavailable,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardReissuePlasticInvalidSourceCard,
+                title = R.string.tangempay_order_card_error_invalid_source_card,
+            ),
         )
 
         @JvmStatic

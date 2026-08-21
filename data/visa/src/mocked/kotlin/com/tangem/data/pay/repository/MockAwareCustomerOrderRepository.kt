@@ -84,6 +84,18 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
         idempotencyKey = idempotencyKey,
     )
 
+    override suspend fun createPlasticReissueOrder(
+        userWalletId: UserWalletId,
+        sourceProductInstanceId: String,
+        order: PlasticCardOrder,
+        idempotencyKey: String,
+    ): Either<VisaApiError, Order> = real.createPlasticReissueOrder(
+        userWalletId = userWalletId,
+        sourceProductInstanceId = sourceProductInstanceId,
+        order = order,
+        idempotencyKey = idempotencyKey,
+    )
+
     override suspend fun createCardActivationOrder(
         userWalletId: UserWalletId,
         order: CardActivationOrder,
