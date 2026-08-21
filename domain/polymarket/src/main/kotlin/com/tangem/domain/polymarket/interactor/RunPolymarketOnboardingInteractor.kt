@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.interactor
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -48,6 +49,7 @@ class RunPolymarketOnboardingInteractor(
     private val deriveApiCredentials: DeriveApiCredentialsUseCase,
     private val submitApprovals: SubmitApprovalsUseCase,
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase,
+    private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val checkGeoblock: CheckPolymarketGeoblockUseCase,
 ) {
 
@@ -75,8 +77,7 @@ class RunPolymarketOnboardingInteractor(
 
         if (!entry.owesApprovals() && credentials != null) {
             awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
-            primeBalanceCache(addresses, credentials)
-            emit(PolymarketOnboardingProgress.Ready)
+            finish(addresses, credentials)
             return
         }
 
@@ -139,8 +140,7 @@ class RunPolymarketOnboardingInteractor(
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
-        primeBalanceCache(addresses, activeCredentials)
-        emit(PolymarketOnboardingProgress.Ready)
+        finish(addresses, activeCredentials)
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.awaitStatus(
@@ -191,6 +191,15 @@ class RunPolymarketOnboardingInteractor(
 
             delay(POLL_INTERVAL_MILLIS)
         }
+    }
+
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.finish(
+        addresses: PolymarketAddresses,
+        credentials: PolymarketApiCredentials,
+    ) {
+        polymarketOnboardedStore.markOnboarded(addresses.userWalletId)
+        primeBalanceCache(addresses, credentials)
+        emit(PolymarketOnboardingProgress.Ready)
     }
 
     /** Best-effort refresh of the CLOB's cached balance and allowance; onboarding is complete either way. */
