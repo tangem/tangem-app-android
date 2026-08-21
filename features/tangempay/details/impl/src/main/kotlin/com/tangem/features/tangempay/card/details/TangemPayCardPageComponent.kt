@@ -26,7 +26,6 @@ import com.tangem.features.tangempay.card.limit.setup.TangemPayCardLimitSetupSuc
 import com.tangem.features.tangempay.card.name.TangemPayEditDisplayNameComponent
 import com.tangem.features.tangempay.card.pin.TangemPayChangePinComponent
 import com.tangem.features.tangempay.card.pin.TangemPayChangePinSuccessComponent
-import com.tangem.features.tangempay.common.cardActivationImageUrl
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -74,10 +73,7 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         if (!params.shouldOpenActivation) return details
 
         val card = params.initialStatus.ifLoadedOrNull { it.findCardWithId(params.cardId) } ?: return details
-        return details + TangemPayCardDetailsInnerRoute.ActivateCard(
-            card = card,
-            cardImageUrl = params.initialStatus.cardActivationImageUrl,
-        )
+        return details + TangemPayCardDetailsInnerRoute.ActivateCard(card = card)
     }
 
     private fun screenChild(
@@ -108,7 +104,6 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
             params = TangemPayCardActivationComponent.Params(
                 card = config.card,
                 userWalletId = params.initialStatus.userWalletId,
-                cardImageUrl = config.cardImageUrl,
             ),
         )
         is TangemPayCardDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
