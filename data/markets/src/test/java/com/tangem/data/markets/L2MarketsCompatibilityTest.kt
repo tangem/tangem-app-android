@@ -1,12 +1,13 @@
-package com.tangem.blockchainsdk.compatibility
+package com.tangem.data.markets
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
+import com.tangem.store.datasource.markets.models.response.TokenMarketInfoResponse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
-internal class L2NetworksTest {
+internal class L2MarketsCompatibilityTest {
 
     @Test
     fun `GIVEN ethereum info with networks WHEN applyL2Compatibility THEN missing L2 networks are appended`() {

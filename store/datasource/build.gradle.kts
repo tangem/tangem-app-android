@@ -18,6 +18,7 @@ dependencies {
     ksp(deps.moshi.kotlin.codegen)
     api(deps.retrofit)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    api(deps.jodatime)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
