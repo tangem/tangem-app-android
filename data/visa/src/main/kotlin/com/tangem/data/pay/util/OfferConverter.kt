@@ -8,6 +8,8 @@ import java.util.Currency
 
 internal object OfferConverter : Converter<CustomerOffersResponse.Offer, Offer> {
 
+    private const val MAIN_IMAGE_TYPE = "MAIN"
+
     override fun convert(value: CustomerOffersResponse.Offer): Offer {
         return Offer(
             type = Offer.Type.fromString(value.type),
@@ -17,6 +19,7 @@ internal object OfferConverter : Converter<CustomerOffersResponse.Offer, Offer> 
                 orderType = OrderType.fromString(value.data.orderType),
                 deliveryEta = value.data.toDeliveryEta(),
             ),
+            mainImageUrl = value.images.firstOrNull { it.type.equals(MAIN_IMAGE_TYPE, ignoreCase = true) }?.url,
         )
     }
 
