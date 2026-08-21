@@ -113,7 +113,7 @@ internal fun PolymarketMainScreen(
             // A sibling of the whole scaffold: the scaffold marks its content as the haze source, and
             // glass inside its own source has nothing to sample.
             PolymarketSearchBar(
-                placeholder = stringReference("Search"),
+                placeholder = resourceReference(R.string.common_search),
                 onClick = onSearchClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
