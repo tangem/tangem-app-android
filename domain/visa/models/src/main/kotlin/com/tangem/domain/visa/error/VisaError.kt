@@ -82,6 +82,12 @@ sealed class VisaApiError(
     data object CardActivationCardNotReadyForActivation : VisaApiError(104140130)
     data object CardActivationActiveOrderExists : VisaApiError(104140131)
 
+    data object CardReissuePlasticInvalidSourceCard : VisaApiError(104140132)
+    data object CardReissuePlasticActiveOrderExists : VisaApiError(104140133)
+    data object CardReissuePlasticInsufficientBalance : VisaApiError(104140134)
+    data object CardReissuePlasticNotAvailable : VisaApiError(104140135)
+    data object CardReissuePlasticInvalidShippingAddress : VisaApiError(104140136)
+
     companion object {
 
         @Suppress("CyclomaticComplexMethod")
@@ -103,6 +109,11 @@ sealed class VisaApiError(
                 CardActivationCardAlreadyActive.errorCode -> CardActivationCardAlreadyActive
                 CardActivationCardNotReadyForActivation.errorCode -> CardActivationCardNotReadyForActivation
                 CardActivationActiveOrderExists.errorCode -> CardActivationActiveOrderExists
+                CardReissuePlasticInvalidSourceCard.errorCode -> CardReissuePlasticInvalidSourceCard
+                CardReissuePlasticActiveOrderExists.errorCode -> CardReissuePlasticActiveOrderExists
+                CardReissuePlasticInsufficientBalance.errorCode -> CardReissuePlasticInsufficientBalance
+                CardReissuePlasticNotAvailable.errorCode -> CardReissuePlasticNotAvailable
+                CardReissuePlasticInvalidShippingAddress.errorCode -> CardReissuePlasticInvalidShippingAddress
                 else -> Unknown(universalErrorCode)
             }
         }
