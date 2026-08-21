@@ -56,6 +56,12 @@ internal object SwapNotificationUM {
             title = resourceReference(R.string.swapping_insufficient_funds),
             subtitle = resourceReference(R.string.swapping_insufficient_funds_description),
         )
+
+        data object RegionRestriction : Error(
+            title = resourceReference(R.string.express_swap_restrictions_title),
+            subtitle = resourceReference(R.string.express_swap_restrictions_text),
+            iconResId = R.drawable.ic_alert_circle_24,
+        )
     }
 
     sealed class Warning(
