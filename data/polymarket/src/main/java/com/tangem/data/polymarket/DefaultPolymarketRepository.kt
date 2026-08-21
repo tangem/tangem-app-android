@@ -164,6 +164,17 @@ internal class DefaultPolymarketRepository @Inject constructor(
             )
         }
 
+    override suspend fun getWalletStatusByWalletId(
+        walletId: String,
+    ): Either<PolymarketWalletError, PolymarketWalletState> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                PolymarketWalletConverter.toState(polymarketApi.getWalletStatusByWalletId(walletId).bind()).right()
+            },
+            onError = { walletErrorResolver.resolve(it).left() },
+        )
+    }
+
     override suspend fun deployWallet(
         ownerAddress: String,
         walletId: String,

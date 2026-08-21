@@ -55,6 +55,10 @@ internal class PredictionAccountStatusValueTest {
                 expected = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
             ),
             TotalFiatBalanceModel(
+                value = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
+                expected = TotalFiatBalance.Failed,
+            ),
+            TotalFiatBalanceModel(
                 value = onboarding(
                     source = StatusSource.ACTUAL,
                     stage = PredictionAccountStatusValue.Onboarding.Stage.DEPLOYING,
@@ -119,6 +123,10 @@ internal class PredictionAccountStatusValueTest {
             CopySealedModel(
                 value = PredictionAccountStatusValue.NotOnboarded,
                 expected = PredictionAccountStatusValue.NotOnboarded,
+            ),
+            CopySealedModel(
+                value = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
+                expected = PredictionAccountStatusValue.Onboarded(source = StatusSource.ONLY_CACHE),
             ),
             CopySealedModel(
                 value = PredictionAccountStatusValue.Error.OnboardingFailed,
