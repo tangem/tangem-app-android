@@ -308,13 +308,11 @@ internal class PlacePredictionModelTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
-            model.onPlaceClick()
-            clearMocks(messageSender)
 
             // Act
-            model.showPlaceFailure()
+            model.showPlaceFailure(reason = "the exchange refused the order")
 
-            // Assert — the placeholder dialog of onPlaceClick is cleared above, so this is the failure one
+            // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
             verify(exactly = 1) { messageSender.send(any()) }
 
@@ -665,6 +663,99 @@ internal class PlacePredictionModelTest {
         assertThat(request.captured.quote).isEqualTo(createQuote())
         assertThat(request.captured.assetId).isEqualTo(ASSET_ID)
         assertThat(request.captured.isNegRisk).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a failed attempt WHEN the flow returns to idle THEN the quote starts refreshing again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.onScreenShown()
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { signOrderInteractor(request = any()) } returns
+            PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+
+        // Act — the attempt ends back in Idle, and the loop that stopped for it has to come back
+        model.onPlaceClick()
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+        // Assert — without this the frozen quote would age until every retry failed the age check
+        coVerify(atLeast = 2) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the screen is hidden WHEN an attempt returns to idle THEN nothing is polled off-screen`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.onScreenShown()
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { signOrderInteractor(request = any()) } returns
+            PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a submission in flight WHEN close is tapped THEN the flow refuses to leave`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.onScreenShown()
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+            // Act — tapped while the order is on its way to the exchange
+            model.onCloseClick()
+            model.onBackClick()
+            createPlaceResult().right()
+        }
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert — leaving would cancel the request and lose an outcome nobody can ask for again
+        verify(exactly = 0) { router.pop(onComplete = any()) }
+        verify(exactly = 0) { router.popTo(route = any<PlacePredictionRoute>(), onComplete = any()) }
+        assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the balance cannot be read WHEN place clicked THEN the user is told instead of nothing`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.onScreenShown()
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns PolymarketAuthError.KeyNotFound.left()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert — an unreadable balance is not the same answer as one that is too small
+        assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+        verify { messageSender.send(any()) }
+        coVerify(exactly = 0) { signOrderInteractor(request = any()) }
 
         model.onDestroy()
     }
