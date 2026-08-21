@@ -128,7 +128,7 @@ private fun PolymarketOnboardingScreenResolvingPreview() {
 @Composable
 private fun PolymarketOnboardingScreenWelcomePreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewState(isStarting = false), onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewState(isInProgress = false), onCloseClick = {})
     }
 }
 
@@ -137,12 +137,12 @@ private fun PolymarketOnboardingScreenWelcomePreview() {
 @Composable
 private fun PolymarketOnboardingScreenStartingPreview() {
     TangemThemePreviewRedesign {
-        PolymarketOnboardingScreen(state = previewState(isStarting = true), onCloseClick = {})
+        PolymarketOnboardingScreen(state = previewState(isInProgress = true), onCloseClick = {})
     }
 }
 
-private fun previewState(isStarting: Boolean) = PolymarketOnboardingUM.Welcome(
-    isStarting = isStarting,
+private fun previewState(isInProgress: Boolean) = PolymarketOnboardingUM.Welcome(
+    isInProgress = isInProgress,
     startButtonText = resourceReference(R.string.prediction_onboarding_start_button),
     onStartClick = {},
     onPolymarketTermsClick = {},

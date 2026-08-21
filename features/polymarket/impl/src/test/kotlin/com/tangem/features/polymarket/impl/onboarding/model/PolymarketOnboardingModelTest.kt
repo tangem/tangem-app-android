@@ -11,7 +11,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketEntry
@@ -73,7 +72,7 @@ internal class PolymarketOnboardingModelTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.welcome().isStarting).isFalse()
+            assertThat(model.welcome().isInProgress).isFalse()
             verify(exactly = 1) {
                 messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
             }
@@ -83,28 +82,7 @@ internal class PolymarketOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN entry is Trade WHEN model created THEN the feed is opened in trading mode`() = runTest {
-        // Arrange
-        gateResolves(PolymarketEntry.Onboarded)
-
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) {
-            router.replaceAll(
-                routes = arrayOf(
-                    PolymarketRoute.Main(userWalletId = userWalletId),
-                ),
-                onComplete = any(),
-            )
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN entry is ReadOnly WHEN model created THEN the feed is opened in read-only mode`() = runTest {
+    fun `GIVEN entry is Onboarded WHEN model created THEN the feed is opened`() = runTest {
         // Arrange
         gateResolves(PolymarketEntry.Onboarded)
 
@@ -136,7 +114,7 @@ internal class PolymarketOnboardingModelTest {
 
             // Assert
             val state = model.welcome()
-            assertThat(state.isStarting).isFalse()
+            assertThat(state.isInProgress).isFalse()
             assertThat(state.isRegionRestrictionsShown).isFalse()
             verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
             model.onDestroy()
@@ -183,7 +161,7 @@ internal class PolymarketOnboardingModelTest {
 
                 // Assert
                 val state = model.welcome()
-                assertThat(state.isStarting).isFalse()
+                assertThat(state.isInProgress).isFalse()
                 assertThat(state.isRegionRestrictionsShown).isFalse()
                 assertThat(state.startButtonText)
                     .isEqualTo(resourceReference(R.string.prediction_onboarding_start_button))
@@ -254,7 +232,7 @@ internal class PolymarketOnboardingModelTest {
 
                 // Assert
                 val state = model.welcome()
-                assertThat(state.isStarting).isFalse()
+                assertThat(state.isInProgress).isFalse()
                 assertThat(state.isRegionRestrictionsShown).isFalse()
                 verify(exactly = 1) {
                 messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
@@ -284,7 +262,7 @@ internal class PolymarketOnboardingModelTest {
                 // Assert
                 val state = model.welcome()
                 assertThat(state.isRegionRestrictionsShown).isTrue()
-                assertThat(state.isStarting).isFalse()
+                assertThat(state.isInProgress).isFalse()
                 verify(exactly = 0) { messageSender.send(any()) }
                 model.onDestroy()
             }
@@ -353,25 +331,25 @@ internal class PolymarketOnboardingModelTest {
     inner class ProgressMapping {
 
         private fun provideTestModels() = listOf(
-            ProgressModel(progress = PolymarketOnboardingProgress.Deriving, expectedIsStarting = true),
-            ProgressModel(progress = PolymarketOnboardingProgress.AwaitingSignature, expectedIsStarting = true),
+            ProgressModel(progress = PolymarketOnboardingProgress.Deriving, expectedIsInProgress = true),
+            ProgressModel(progress = PolymarketOnboardingProgress.AwaitingSignature, expectedIsInProgress = true),
             ProgressModel(
                 progress = PolymarketOnboardingProgress.Working(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS),
-                expectedIsStarting = true,
+                expectedIsInProgress = true,
             ),
             ProgressModel(
                 progress = PolymarketOnboardingProgress.Failed(
                     error = PolymarketOnboardingError.Network,
                     isRetryable = true,
                 ),
-                expectedIsStarting = false,
+                expectedIsInProgress = false,
             ),
             ProgressModel(
                 progress = PolymarketOnboardingProgress.Failed(
                     error = PolymarketOnboardingError.AddressMismatch(expected = "0xA", actual = "0xB"),
                     isRetryable = false,
                 ),
-                expectedIsStarting = false,
+                expectedIsInProgress = false,
             ),
         )
 
@@ -390,7 +368,7 @@ internal class PolymarketOnboardingModelTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(subject.uiState.value).isEqualTo(idleState.copy(isStarting = model.expectedIsStarting))
+            assertThat(subject.uiState.value).isEqualTo(idleState.copy(isInProgress = model.expectedIsInProgress))
             subject.onDestroy()
         }
     }
@@ -482,7 +460,7 @@ internal class PolymarketOnboardingModelTest {
         model.welcome().onStartClick()
 
         // Assert
-        assertThat(model.welcome().isStarting).isTrue()
+        assertThat(model.welcome().isInProgress).isTrue()
         advanceUntilIdle()
         model.onDestroy()
     }
@@ -591,7 +569,7 @@ internal class PolymarketOnboardingModelTest {
 
     internal data class ProgressModel(
         val progress: PolymarketOnboardingProgress,
-        val expectedIsStarting: Boolean,
+        val expectedIsInProgress: Boolean,
     )
 
     internal data class ResumeLabelModel(val status: PolymarketWalletStatus)
