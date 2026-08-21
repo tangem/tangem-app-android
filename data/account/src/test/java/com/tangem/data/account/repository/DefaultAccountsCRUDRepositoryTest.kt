@@ -618,6 +618,7 @@ class DefaultAccountsCRUDRepositoryTest {
                 accounts = listOf(CryptoPortfolio.createMainAccount(userWalletId = userWalletId), jointAccount()),
                 totalAccounts = 2,
                 totalArchivedAccounts = 0,
+                totalJointAccounts = 1,
             ).getOrNull()!!
 
             val accountsResponse = createGetWalletAccountsResponse(userWalletId)
@@ -632,7 +633,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
             // Assert
             Truth.assertThat(bodySlot.captured.accounts.map { it.type })
-                .containsExactly(WalletAccountDTO.TYPE_CRYPTO, WalletAccountDTO.TYPE_JOINT)
+                .containsExactly(WalletAccountDTO.Type.CRYPTO.value, WalletAccountDTO.Type.JOINT.value)
             Truth.assertThat(bodySlot.captured.accounts.map { it.id })
                 .containsExactly(
                     CryptoPortfolio.createMainAccount(userWalletId = userWalletId).accountId.value,
