@@ -47,6 +47,7 @@ internal sealed interface TangemPayOrderCardDataScreenUM {
         val value: String,
         val error: OrderFieldError?,
         val isRequired: Boolean,
+        val isEditable: Boolean = true,
         val onValueChange: (String) -> Unit,
         val onFocusChange: (Boolean) -> Unit,
     )
