@@ -130,7 +130,7 @@ internal class PlacePredictionModelTest {
                     assetId = ASSET_ID,
                     side = PredictionOrderSide.BUY,
                     amount = BigDecimal("10"),
-                    slippagePercent = BigDecimal("0.25"),
+                    slippagePercent = BigDecimal("3"),
                 ),
             )
         }
@@ -298,6 +298,80 @@ internal class PlacePredictionModelTest {
         }
 
     @Test
+    fun `GIVEN no liquidity WHEN quote loaded THEN figures are not shown AND button disabled`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote)
+            .isEqualTo(QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY))
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN below min order size WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN quote reports a live market WHEN interval elapses THEN it re-quotes on the fast cadence`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns createQuote(isLive = true).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        advanceTimeBy(delayTimeMillis = LIVE_QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+        // Assert
+        coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount below one cent WHEN entered THEN quote is Empty AND no request made`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "0.001")
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+
+        // Assert
+        coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `WHEN next clicked THEN summary pushed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -364,8 +438,12 @@ internal class PlacePredictionModelTest {
         )
     }
 
-    private fun createQuote(total: BigDecimal = BigDecimal("10.4")): PredictionOrderQuote = PredictionOrderQuote(
-        status = PredictionQuoteStatus.FULL,
+    private fun createQuote(
+        total: BigDecimal = BigDecimal("10.4"),
+        status: PredictionQuoteStatus = PredictionQuoteStatus.FULL,
+        isLive: Boolean = false,
+    ): PredictionOrderQuote = PredictionOrderQuote(
+        status = status,
         shares = BigDecimal("23.8"),
         notional = BigDecimal("10"),
         expectedExecutionAmount = BigDecimal("23.8"),
@@ -380,7 +458,7 @@ internal class PlacePredictionModelTest {
         builderCode = "0xbuilder",
         minOrderSize = BigDecimal("5"),
         tickSize = BigDecimal("0.001"),
-        isLive = true,
+        isLive = isLive,
     )
 
     private fun createEvent(): PolymarketEvent = PolymarketEvent(

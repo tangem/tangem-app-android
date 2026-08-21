@@ -90,7 +90,7 @@ internal fun PlacePredictionAmountContent(
             }
             PredictionAmountBlock(
                 amountValue = state.amountValue,
-                toWin = (state.quote as? QuoteUM.Content)?.toWin,
+                toWin = (state.quote as? QuoteUM.Content)?.expectedShares,
                 payment = state.payment,
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
