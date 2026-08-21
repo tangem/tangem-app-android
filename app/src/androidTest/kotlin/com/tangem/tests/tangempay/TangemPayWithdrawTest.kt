@@ -41,6 +41,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "5"
         val receiveToken = "Bitcoin"
         val balanceAfterText = "5"
+        val withdrawalRowTitle = "Withdrawal"
+        val withdrawalAmountText = "-\$5.00"
 
         setupHooks(
             additionalBeforeSection = {
@@ -85,9 +87,13 @@ class TangemPayWithdrawTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert pending express withdrawal transaction is displayed") {
+            step("Assert the withdrawal transaction is appended to history") {
                 onTangemPayMainScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { pendingExpressTransaction.assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        scrollToTransactionWithText(withdrawalRowTitle)
+                        transactionRowWithText(withdrawalRowTitle).assertIsDisplayed()
+                        transactionRowWithText(withdrawalAmountText).assertIsDisplayed()
+                    }
                 }
             }
         }
@@ -281,6 +287,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "10"
         val receiveToken = "Bitcoin"
         val zeroBalanceText = "0.00"
+        val withdrawalRowTitle = "Withdrawal"
+        val withdrawalAmountText = "-\$10.00"
 
         setupHooks(
             additionalBeforeSection = {
@@ -325,9 +333,13 @@ class TangemPayWithdrawTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert pending express withdrawal transaction is displayed") {
+            step("Assert the withdrawal transaction is appended to history") {
                 onTangemPayMainScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { pendingExpressTransaction.assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        scrollToTransactionWithText(withdrawalRowTitle)
+                        transactionRowWithText(withdrawalRowTitle).assertIsDisplayed()
+                        transactionRowWithText(withdrawalAmountText).assertIsDisplayed()
+                    }
                 }
             }
         }
