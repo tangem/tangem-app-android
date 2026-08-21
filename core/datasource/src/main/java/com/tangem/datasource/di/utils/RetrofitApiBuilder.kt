@@ -8,8 +8,8 @@ import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
-import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
+import com.tangem.core.remote.auth.SessionAuthAuthenticator
+import com.tangem.core.remote.auth.SessionAuthInterceptor
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs
