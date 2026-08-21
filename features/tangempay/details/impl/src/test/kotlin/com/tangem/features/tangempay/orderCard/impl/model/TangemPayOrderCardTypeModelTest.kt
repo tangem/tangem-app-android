@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.orderCard.impl.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.account.AccountStatus
@@ -16,6 +17,7 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
@@ -25,10 +27,12 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardT
 import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
 import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -42,6 +46,7 @@ import java.util.Currency
 import java.util.Locale
 
 private const val PLASTIC_IMAGE_URL = "https://images.us.paera.com/Physical-main.png"
+private const val EXPECTED_MAX_BUSINESS_DAYS = 4
 
 internal class TangemPayOrderCardTypeModelTest {
 
@@ -49,6 +54,7 @@ internal class TangemPayOrderCardTypeModelTest {
     private val usd = Currency.getInstance("USD")
     private val originalLocale = Locale.getDefault()
 
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val customerOffersRepository: CustomerOffersRepository = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
@@ -64,6 +70,7 @@ internal class TangemPayOrderCardTypeModelTest {
 
     @BeforeEach
     fun setUp() {
+        clearMocks(analytics)
         Locale.setDefault(Locale.US)
         selectedPlasticEta = null
         every { featureToggles.isPlasticCardOrderEnabled } returns true
@@ -326,6 +333,135 @@ internal class TangemPayOrderCardTypeModelTest {
     private val TangemPayOrderCardTypeUM.availablePlastic: TangemPayOrderCardTypeUM.Plastic.Available?
         get() = plastic as? TangemPayOrderCardTypeUM.Plastic.Available
 
+    @Test
+    fun `GIVEN the order type screen WHEN the model is created THEN the screen opened event is sent`() = runTest {
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardTypeSelectionScreenOpened>())
+        }
+    }
+
+    @Test
+    fun `GIVEN insufficient balance WHEN the plastic page was never shown THEN no not-enough-money event`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal("1.00")).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((model.state.value.plastic as TangemPayOrderCardTypeUM.Plastic.Available).feeState)
+            .isEqualTo(FeeState.InsufficientFunds)
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+        }
+    }
+
+    @Test
+    fun `GIVEN insufficient balance WHEN the plastic page is shown twice THEN one not-enough-money event`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal("1.00")).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onTypeClick(OrderCardType.Plastic)
+        model.state.value.onTypeSwipe(OrderCardType.Virtual)
+        model.state.value.onTypeSwipe(OrderCardType.Plastic)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+        }
+    }
+
+    @Test
+    fun `GIVEN the plastic page shown before loading WHEN insufficient balance loads THEN the event is sent`() =
+        runTest {
+            // Arrange
+            coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+                customerInfo(availableBalance = BigDecimal("1.00")).right()
+            val model = createModel(testScope = this)
+
+            // Act
+            model.state.value.onTypeSwipe(OrderCardType.Plastic)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+            }
+        }
+
+    @Test
+    fun `GIVEN sufficient balance WHEN the plastic page is shown THEN no not-enough-money event`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onTypeClick(OrderCardType.Plastic)
+
+        // Assert
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+        }
+    }
+
+    @Test
+    fun `GIVEN the type pills WHEN each is tapped THEN the matching type clicked event is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onTypeClick(OrderCardType.Virtual)
+        model.state.value.onTypeClick(OrderCardType.Plastic)
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.VirtualTypeClicked>()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.PlasticTypeClicked>()) }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardTypeSwiped>()) }
+    }
+
+    @Test
+    fun `GIVEN a swipe between types WHEN reported THEN the swiped event is sent without a type clicked event`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.state.value.onTypeSwipe(OrderCardType.Plastic)
+
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardTypeSwiped>()) }
+            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.PlasticTypeClicked>()) }
+        }
+
+    @Test
+    fun `GIVEN the select button WHEN tapped on each page THEN the matching select event is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onSelectVirtual()
+        model.state.value.onSelectPlastic()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.VirtualSelectClicked>()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.PlasticSelectClicked>()) }
+        assertThat(selectedPlasticEta).isEqualTo(EXPECTED_MAX_BUSINESS_DAYS)
+    }
+
     private fun createModel(testScope: TestScope) = TangemPayOrderCardTypeModel(
         paramsContainer = MutableParamsContainer(
             TangemPayOrderCardTypeComponent.Params(
@@ -335,6 +471,7 @@ internal class TangemPayOrderCardTypeModelTest {
             ),
         ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+        analytics = analytics,
         router = router,
         getCustomerOffers = GetCustomerOffersUseCase(customerOffersRepository),
         onboardingRepository = onboardingRepository,
