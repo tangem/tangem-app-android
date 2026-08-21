@@ -42,11 +42,19 @@ internal data class PlacePredictionUM(
     }
 }
 
-internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("0.25")
+/** The BFF's own default, applied when the request omits slippage. */
+internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("3")
 
-/** The sum to quote, or `null` while what the user typed is not one yet. */
+/**
+ * The sum to quote, or `null` while what the user typed is not one yet.
+ *
+ * Anything below a cent is not one: the BFF normalises amounts onto a 2-decimal grid, so a finer figure
+ * becomes zero there and comes back as a `400` rather than a quote.
+ */
 internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
-    amountValue.toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
+    amountValue.toBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT }
+
+private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
 /**
  * @property outcomePriceCents the outcome's price as a caption, `null` when the backend states none. A price
@@ -89,14 +97,28 @@ internal sealed interface QuoteUM {
 
     data object Loading : QuoteUM
 
+    /**
+     * A priced order.
+     *
+     * The two share counts are not interchangeable: [expectedShares] is what the fill is expected to
+     * deliver (priced at the book's average) and belongs in the headline, [guaranteedShares] is the floor
+     * the price cap guarantees. A winning share redeems for exactly $1, which is why both are shown as
+     * money. A SELL flow will need its own fields — there the same two figures are denominated in USDC.
+     */
     data class Content(
         val status: PredictionQuoteStatus,
-        val shares: BigDecimal,
-        val toWin: BigDecimal,
+        val expectedShares: BigDecimal,
+        val guaranteedShares: BigDecimal,
         val feeTotal: BigDecimal,
         val total: BigDecimal,
         val minOrderSize: BigDecimal,
     ) : QuoteUM
+
+    /**
+     * The order cannot be placed, and the response carried every figure as zero — so none of them may
+     * reach the screen. The reason is in [status]; the notification built from it is what the user sees.
+     */
+    data class Unavailable(val status: PredictionQuoteStatus) : QuoteUM
 
     data class Error(val reason: QuoteErrorUM) : QuoteUM
 }
