@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.placeprediction.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -72,7 +73,7 @@ private fun previewState(
     ),
     payment = PaymentSourceUM(tokenSymbol = "USDC", balance = balance, hasSufficientBalance = false),
     amountValue = amountValue,
-    slippage = SlippageUM(percent = BigDecimal("0.25"), isDefault = true),
+    slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
     quote = quote,
     tradingPermission = tradingPermission,
     notifications = persistentListOf(),

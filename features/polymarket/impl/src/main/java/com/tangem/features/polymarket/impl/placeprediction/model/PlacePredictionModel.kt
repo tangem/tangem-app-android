@@ -52,22 +52,9 @@ import javax.inject.Inject
 
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 
-/**
- * The contract prescribes no interval and enforces none — it reports whether the market's event is in play
- * and leaves the cadence to us. A live match reprices tick by tick and earns the fast loop; a market
- * resolving next month does not, and polling it hard only burns battery and rate limit.
- */
 internal const val LIVE_QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 15_000L
 
-/**
- * The only owner of the place-prediction state: every step renders a slice of [uiState] and writes back through
- * [PlacePredictionIntents].
- *
- * The quote is re-requested on an interval rather than fetched once, because the number it carries is the sum that
- * is actually debited, and the book moves. The loop stops as soon as a submission starts, so what is signed is what
- * was shown.
- */
 @Suppress("LongParameterList")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
@@ -117,6 +104,18 @@ internal class PlacePredictionModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    /**
+     * The flow polls a live market every few seconds, so it must not keep doing that off-screen: the loop is
+     * suspended with the screen and resumed with it, rather than living as long as the model.
+     */
+    fun onScreenShown() {
+        restartQuoteLoop(withDebounce = false)
+    }
+
+    fun onScreenHidden() {
+        quoteJobHolder.cancel()
     }
 
     override fun onAmountChange(value: String) {
