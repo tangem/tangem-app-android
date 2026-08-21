@@ -1038,6 +1038,7 @@
   <string name="joint_account_members_total_subtitle">Max %1$s people, including you</string>
   <string name="joint_account_members_total_title">Total members</string>
   <string name="joint_account_name_display_name">Display name</string>
+  <string name="joint_account_name_fill_validation_error">Unsupported characters</string>
   <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you.</string>
   <string name="joint_account_name_subtitle">Other members will see this name in the joint account</string>
   <string name="joint_account_name_title">What is your name?</string>

@@ -42,9 +42,9 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_percent_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_minus_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
+import com.tangem.core.ui.res.generated.icons.ic_user_24
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
 import com.tangem.features.jointaccount.impl.R
 
@@ -183,7 +183,7 @@ private fun MemberSlot(isActive: Boolean, modifier: Modifier = Modifier) {
     ) {
         Icon(
             modifier = Modifier.size(24.dp),
-            imageVector = Icons.ic_percent_24, // TODO change with real icon
+            imageVector = Icons.ic_user_24,
             contentDescription = null,
             tint = if (isActive) {
                 TangemTheme.colors3.icon.brand
