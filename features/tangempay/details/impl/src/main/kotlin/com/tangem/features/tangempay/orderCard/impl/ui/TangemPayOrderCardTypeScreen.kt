@@ -12,8 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +70,7 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardT
 import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
 import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
 
@@ -167,7 +171,12 @@ private fun ColumnScope.OrderTypeBody(
             .padding(horizontal = 16.dp)
             .navigationBarsPadding(),
     ) {
-        CardTypeTabs(availableTypes = availableTypes, pagerState = cardPagerState)
+        CardTypeTabs(
+            availableTypes = availableTypes,
+            pagerState = cardPagerState,
+            onTypeClick = state.onTypeClick,
+            onTypeSwipe = state.onTypeSwipe,
+        )
         SpacerH(16.dp)
         DetailsArea(state = state, availableTypes = availableTypes, pagerState = detailsPagerState)
         SpacerH(16.dp)
@@ -234,8 +243,26 @@ private fun DetailsArea(
 }
 
 @Composable
-private fun CardTypeTabs(availableTypes: List<OrderCardType>, pagerState: PagerState, modifier: Modifier = Modifier) {
+private fun CardTypeTabs(
+    availableTypes: List<OrderCardType>,
+    pagerState: PagerState,
+    onTypeClick: (OrderCardType) -> Unit,
+    onTypeSwipe: (OrderCardType) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val scope = rememberCoroutineScope()
+    var tabDrivenPage by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(pagerState, availableTypes, onTypeSwipe) {
+        snapshotFlow { pagerState.settledPage }
+            .drop(1)
+            .collect { page ->
+                val isTabDriven = tabDrivenPage == page
+                tabDrivenPage = null
+                if (!isTabDriven) availableTypes.getOrNull(page)?.let(onTypeSwipe)
+            }
+    }
+
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         availableTypes.fastForEachIndexed { index, type ->
             TangemTabItem(
@@ -244,7 +271,11 @@ private fun CardTypeTabs(availableTypes: List<OrderCardType>, pagerState: PagerS
                     label = resourceReference(type.titleRes()),
                     counter = type.labelSuffixRes()?.let { resourceReference(it) },
                     isSelected = pagerState.currentPage == index,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                    onClick = {
+                        onTypeClick(type)
+                        if (pagerState.currentPage != index) tabDrivenPage = index
+                        scope.launch { pagerState.animateScrollToPage(index) }
+                    },
                 ),
             )
         }
@@ -593,6 +624,8 @@ private fun previewOrderTypeState(
     onRetry = {},
     onSelectVirtual = {},
     onSelectPlastic = {},
+    onTypeClick = {},
+    onTypeSwipe = {},
 )
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 780)
