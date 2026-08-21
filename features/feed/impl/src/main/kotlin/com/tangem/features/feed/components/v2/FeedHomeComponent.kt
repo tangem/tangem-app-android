@@ -28,9 +28,9 @@ import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedTabComponent
 import com.tangem.features.feed.nav.FeedTabContributor
 import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.nav.FeedTabSet
+import com.tangem.features.feed.ui.FeedTabUM
 import com.tangem.features.feed.ui.v2.FeedV2Content
-import com.tangem.features.feed.ui.v2.state.FeedV2TabUM
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -42,24 +42,17 @@ import kotlinx.collections.immutable.toImmutableList
  */
 internal class FeedHomeComponent(
     context: AppComponentContext,
-    tabContributors: Set<FeedTabContributor>,
+    tabSet: FeedTabSet,
 ) : FeedScreenComponent, AppComponentContext by context {
 
     private val topBlocksComponent = FeedTopBlocksComponent(context = child("feedTopBlocks"))
 
-    private val contributors: List<FeedTabContributor> = run {
-        val byId = tabContributors.associateBy { it.id }
-        tabContributors
-            .filter { it.id !in FeedTabsOrder }
-            .forEach { TangemLogger.e("Feed tab '${it.id.value}' is not in FeedTabsOrder — skipped") }
-
-        FeedTabsOrder.mapNotNull(byId::get).filter { it.isAvailable }
-    }
+    private val contributors: List<FeedTabContributor> = tabSet.tabs
 
     private val contributorsById: Map<FeedTabId, FeedTabContributor> = contributors.associateBy { it.id }
 
-    private val tabs: ImmutableList<FeedV2TabUM> = contributors
-        .map { FeedV2TabUM(id = it.id.value, title = it.title) }
+    private val tabs: ImmutableList<FeedTabUM> = contributors
+        .map { FeedTabUM(id = it.id.value, title = it.title) }
         .toImmutableList()
 
     private val pagesNavigation = PagesNavigation<FeedTabId>()
