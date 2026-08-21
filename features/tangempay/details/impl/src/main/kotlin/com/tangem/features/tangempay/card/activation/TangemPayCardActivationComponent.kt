@@ -28,6 +28,5 @@ internal class TangemPayCardActivationComponent(
     data class Params(
         val card: TangemPayCard,
         val userWalletId: UserWalletId,
-        val cardImageUrl: String?,
     )
 }
