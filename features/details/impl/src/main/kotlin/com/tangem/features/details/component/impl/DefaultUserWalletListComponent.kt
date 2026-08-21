@@ -8,6 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.model.UserWalletListModel
+import com.tangem.features.details.ui.AddWalletBottomSheet
 import com.tangem.features.details.ui.UserWalletListBlock
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -27,6 +28,8 @@ internal class DefaultUserWalletListComponent @AssistedInject constructor(
             modifier = modifier,
             state = state,
         )
+
+        AddWalletBottomSheet(state.addWalletBSConfig)
     }
 
     @AssistedFactory
