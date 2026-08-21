@@ -14,6 +14,7 @@ dependencies {
 
     /* Kotlin */
     api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
     api(deps.kotlin.serialization.core)
 
     /* Compose */

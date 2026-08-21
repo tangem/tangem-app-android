@@ -1,8 +1,10 @@
 package com.tangem.features.feed.di
 
 import com.tangem.features.feed.components.v2.DefaultFeedSearchBarController
+import com.tangem.features.feed.components.v2.DefaultFeedTabSet
 import com.tangem.features.feed.nav.FeedScreenFactory
 import com.tangem.features.feed.nav.FeedTabContributor
+import com.tangem.features.feed.nav.FeedTabSet
 import com.tangem.features.feed.search.FeedSearchBarController
 import dagger.Binds
 import dagger.Module
@@ -30,4 +32,9 @@ internal interface FeedV2NavModule {
     @Binds
     @Singleton
     fun bindFeedSearchBarController(impl: DefaultFeedSearchBarController): FeedSearchBarController
+
+    // unscoped on purpose: `isAvailable` is read once per surface creation, so a feature toggle
+    // flipped in the tester screen takes effect on the next feed entry instead of after a restart
+    @Binds
+    fun bindFeedTabSet(impl: DefaultFeedTabSet): FeedTabSet
 }
