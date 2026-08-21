@@ -8,6 +8,7 @@ googleServices = "4.4.1"
 playServices = "18.10.0"
 playServicesAds = "18.2.0"
 playServicesAuth = "21.2.0"
+playIntegrity = "1.4.0"
 kotlin = "2.1.10"
 ksp = "2.1.10-1.0.30"
 firebasePerf = "1.4.2"
@@ -279,6 +280,7 @@ googlePlay-services-wallet = { module = "com.google.android.gms:play-services-wa
 googlePlay-services = { module = "com.google.android.gms:play-services-base", version.ref = "playServices" }
 googlePlay-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 googlePlay-advertising = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playServicesAds" }
+googlePlay-integrity = { module = "com.google.android.play:integrity", version.ref = "playIntegrity" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 hilt-kapt = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
