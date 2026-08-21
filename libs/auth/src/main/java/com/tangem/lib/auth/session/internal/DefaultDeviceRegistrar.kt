@@ -3,11 +3,11 @@ package com.tangem.lib.auth.session.internal
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
-import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
-import com.tangem.datasource.api.auth.models.request.RegisterPayload
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.NonceApiRequest
+import com.tangem.lib.auth.api.models.request.RegisterApiRequest
+import com.tangem.lib.auth.api.models.request.RegisterPayload
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys

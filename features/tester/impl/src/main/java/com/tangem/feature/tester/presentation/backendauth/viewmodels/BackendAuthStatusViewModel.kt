@@ -1,6 +1,6 @@
 package com.tangem.feature.tester.presentation.backendauth.viewmodels
 
-import com.tangem.datasource.api.common.config.Auth
+import com.tangem.lib.auth.api.config.Auth
 
 import android.content.Context
 import android.util.Base64
