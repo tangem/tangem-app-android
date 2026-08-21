@@ -3,11 +3,11 @@ package com.tangem.lib.auth.session.internal
 import arrow.core.None
 import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.AuthApiRequest
-import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
-import com.tangem.datasource.api.auth.models.response.NonceApiResponse
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.AuthApiRequest
+import com.tangem.lib.auth.api.models.request.RefreshApiRequest
+import com.tangem.lib.auth.api.models.response.NonceApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.lib.auth.attestation.AttestationProvider
