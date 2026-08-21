@@ -130,6 +130,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private var shownTiersBanner: TangemPayTiersBannerType? = null
     private var shownCashbackBlock: CashbackBlockAnalyticsType? = null
+    private var isDeliveryBannerShown = false
 
     private val isInitialRouteHandled = MutableStateFlow(false)
 
@@ -153,6 +154,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                             stateFactory.getLoadedState(state)
                                 .copy(cashbackBlockState = prevState.cashbackBlockState)
                         }
+                        sendDeliveryBannerAnalytics()
                         handleInitialRoute()
                     }
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
@@ -532,6 +534,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onActivateCardClick(cardId: String) {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.ActivateCardBannerButtonClicked())
         router.push(
             TangemPayAccountDetailsInnerRoute.CardDetails(cardId = cardId, shouldOpenActivation = true),
         )
@@ -630,6 +633,16 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
         uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(errorType = type))
+    }
+
+    private fun sendDeliveryBannerAnalytics() {
+        val banner = uiState.value.balanceBlockState.cardsBlockState?.progressBanner
+        val isShown = banner is CardsProgressBannerUM.Delivering
+
+        if (isShown == isDeliveryBannerShown) return
+        isDeliveryBannerShown = isShown
+
+        if (isShown) analytics.send(TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed())
     }
 
     private fun sendTiersAnalytics(state: PaymentAccountStatusValue) {
