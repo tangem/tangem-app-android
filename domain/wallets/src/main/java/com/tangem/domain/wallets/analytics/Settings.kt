@@ -11,6 +11,8 @@ sealed class Settings(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
+    class ScreenOpened : Settings(event = "Settings Screen Opened")
+
     class ButtonManageTokens : Settings(event = "Button - Manage Tokens")
 
     class ButtonOpenChat : Settings(event = "Button - Open Chat")
