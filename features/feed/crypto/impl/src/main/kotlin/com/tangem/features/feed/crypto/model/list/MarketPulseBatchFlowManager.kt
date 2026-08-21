@@ -23,7 +23,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -122,6 +124,22 @@ internal class MarketPulseBatchFlowManager(
             scope = modelScope,
             started = SharingStarted.Eagerly,
             initialValue = false,
+        )
+
+    val initialLoadingError: Flow<Throwable> = batchFlow.state
+        .map { it.status }
+        .distinctUntilChanged()
+        .filterIsInstance<PaginationStatus.InitialLoadingError>()
+        .map { it.throwable }
+
+    /** The source's own result count, which can exceed the number of batches loaded so far. */
+    val totalCount: StateFlow<Int?> = batchFlow.state
+        .map { it.totalCount }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
         )
 
     /** True only once the source is exhausted, so an in-flight search never renders as "not found". */
