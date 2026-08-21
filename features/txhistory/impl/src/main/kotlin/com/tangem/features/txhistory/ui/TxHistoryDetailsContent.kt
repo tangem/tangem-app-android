@@ -47,12 +47,23 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             )
         }
+        TxHistoryDetailsStatusBanner(
+            state = state.statusBanner,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        )
         TxHistoryDetailsInfoRows(
             rows = state.rows,
             isBalanceHidden = state.isBalanceHidden,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = if (state.statusBanner != null) 16.dp else 0.dp,
+                    bottom = 16.dp,
+                ),
         )
     }
 }
