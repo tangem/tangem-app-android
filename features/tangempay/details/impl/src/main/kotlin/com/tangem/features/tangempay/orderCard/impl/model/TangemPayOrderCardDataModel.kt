@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -70,13 +71,13 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         onRetry = ::loadData,
     )
 
-    private fun createFormState(country: String, email: String, mask: String) = Form(
+    private fun createFormState(country: String, email: String, mask: String, embossName: FieldUM) = Form(
         onBackClick = ::onBackClick,
         onCloseClick = params.onClose,
         country = country,
         email = email,
         phoneMask = mask,
-        embossName = emptyField(OrderFormField.EmbossName),
+        embossName = embossName,
         firstName = emptyField(OrderFormField.FirstName),
         lastName = emptyField(OrderFormField.LastName),
         region = emptyField(OrderFormField.Region),
@@ -96,6 +97,20 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         onOrderClick = ::onOrderClick,
     )
 
+    private fun embossNameField(info: CustomerInfo?): FieldUM {
+        val intent = params.intent
+        if (intent !is TangemPayOrderCardIntent.ReissuePlastic) return emptyField(OrderFormField.EmbossName)
+
+        return FieldUM(
+            value = info?.sourceCardEmbossName(intent.sourceProductInstanceId).orEmpty(),
+            error = null,
+            isRequired = OrderFormField.EmbossName.isRequired,
+            isEditable = false,
+            onValueChange = {},
+            onFocusChange = {},
+        )
+    }
+
     private fun emptyField(field: OrderFormField) = FieldUM(
         value = "",
         error = null,
@@ -112,7 +127,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
             val email = info?.email.orEmpty()
             val country = CountryNames.getDisplayName(info?.country)
             state.value = if (email.isNotBlank() && country.isNotBlank()) {
-                createFormState(country = country, email = email, mask = mask)
+                createFormState(country = country, email = email, mask = mask, embossName = embossNameField(info))
             } else {
                 createErrorState()
             }
@@ -240,6 +255,13 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         }
     }
 }
+
+private fun CustomerInfo.sourceCardEmbossName(productInstanceId: String): String? =
+    productInstances.firstOrNull { it.id == productInstanceId }
+        ?.cardId
+        ?.ifBlank { null }
+        ?.let { cardId -> cards.firstOrNull { it.cardId == cardId } }
+        ?.embossName
 
 private fun Form.toPlasticCardOrder() = PlasticCardOrder(
     embossName = embossName.value.trim(),

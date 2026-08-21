@@ -13,6 +13,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.Order
@@ -56,6 +59,8 @@ private const val EMAIL = "j.silverhand@gmail.com"
 private const val PHONE_MASK = "+1 (###) ###-####"
 private const val SLOW_LOAD_MS = 1_000L
 private const val SOURCE_PRODUCT_INSTANCE_ID = "pi_source_0001"
+private const val SOURCE_CARD_ID = "card_source_0001"
+private const val SOURCE_CARD_EMBOSS_NAME = "V ARASAKA"
 private val REISSUE_INTENT = TangemPayOrderCardIntent.ReissuePlastic(
     sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
     deliveryEtaMaxBusinessDays = 20,
@@ -521,7 +526,42 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     @Test
-    fun `GIVEN the reissue intent WHEN order clicked THEN the same form payload is submitted as for an issue`() =
+    fun `GIVEN the reissue intent WHEN the form loads THEN the emboss name is taken from the source card`() = runTest {
+        // Act
+        val model = createLoadedModel(intent = REISSUE_INTENT)
+
+        // Assert
+        assertThat(model.form.embossName.value).isEqualTo(SOURCE_CARD_EMBOSS_NAME)
+        assertThat(model.form.embossName.isEditable).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the issue intent WHEN the form loads THEN the emboss name is empty and editable`() = runTest {
+        // Act
+        val model = createLoadedModel()
+
+        // Assert
+        assertThat(model.form.embossName.value).isEmpty()
+        assertThat(model.form.embossName.isEditable).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a source card without an emboss name WHEN the address is filled THEN order is enabled`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(sourceCardEmbossName = null).right()
+        val model = createLoadedModel(intent = REISSUE_INTENT)
+
+        // Act
+        model.fillValidForm()
+
+        // Assert
+        assertThat(model.form.embossName.value).isEmpty()
+        assertThat(model.form.isOrderEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the reissue intent WHEN order clicked THEN the source card emboss name is submitted`() =
         runTest {
             // Arrange
             val model = createLoadedModel(intent = REISSUE_INTENT)
@@ -534,7 +574,7 @@ internal class TangemPayOrderCardDataModelTest {
             // Assert
             assertThat(submitted).isEqualTo(
                 PlasticCardOrder(
-                    embossName = "JOHNNY SILVERHAND",
+                    embossName = SOURCE_CARD_EMBOSS_NAME,
                     shippingAddress = ShippingAddress(
                         firstName = "Johnny",
                         lastName = "Silverhand",
@@ -884,10 +924,11 @@ internal class TangemPayOrderCardDataModelTest {
         country: String? = COUNTRY,
         phoneMask: String? = PHONE_MASK,
         email: String? = EMAIL,
+        sourceCardEmbossName: String? = SOURCE_CARD_EMBOSS_NAME,
     ) = CustomerInfo(
         customerId = "c1",
-        productInstances = emptyList(),
-        cards = emptyList(),
+        productInstances = listOf(sourceProductInstance()),
+        cards = listOf(sourceCard(embossName = sourceCardEmbossName)),
         kycStatus = KycStatus.APPROVED,
         state = CustomerInfo.State.ACTIVE,
         fiatBalance = null,
@@ -897,6 +938,27 @@ internal class TangemPayOrderCardDataModelTest {
         country = country,
         phoneMask = phoneMask,
         email = email,
+    )
+
+    private fun sourceProductInstance() = CustomerInfo.ProductInstance(
+        id = SOURCE_PRODUCT_INSTANCE_ID,
+        cardId = SOURCE_CARD_ID,
+        frozenState = TangemPayCardFrozenState.Unfrozen,
+        displayName = null,
+        actualCardLimit = null,
+        adminCardLimit = null,
+        status = CustomerInfo.ProductInstance.Status.ACTIVE,
+        specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.CARD,
+    )
+
+    private fun sourceCard(embossName: String?) = CustomerInfo.CardInfo(
+        cardId = SOURCE_CARD_ID,
+        cardStatus = TangemPayCard.Status.ACTIVE,
+        lastFourDigits = "1234",
+        isPinSet = true,
+        images = emptyList(),
+        embossName = embossName,
+        cardType = TangemPayCardType.PHYSICAL,
     )
 
     companion object {
