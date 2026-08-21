@@ -107,6 +107,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         )
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
+            params = PolymarketSearchComponent.Params(userWalletId = configuration.userWalletId),
         )
     }
 
