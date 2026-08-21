@@ -21,6 +21,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.test.core.ProvideTestModels
@@ -37,6 +38,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -51,10 +53,11 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     private val getBalance: GetPolymarketBalanceInteractor = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val quoteFetcher: SingleQuoteStatusFetcher = mockk(relaxed = true)
+    private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, checkGeoblock, quoteFetcher)
+        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, checkGeoblock, quoteFetcher, onboardedStore)
         coEvery { quoteFetcher.invoke(any()) } returns Unit.right()
         every { userWallet.isLocked } returns false
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
@@ -334,6 +337,64 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         scope = TestAppCoroutineScope(testScope),
     )
 
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OnboardingRecord {
+
+        /**
+         * The entry gate stops asking the backend once a wallet is recorded, so this refresh is the only thing
+         * that can notice the backend changing its mind and drop the record.
+         */
+        @Test
+        fun `GIVEN the backend stops reporting ready WHEN invoke THEN the onboarding record is dropped`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.APPROVALS_FAILED).right()
+
+            // Act
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            coVerify(exactly = 1) { onboardedStore.clear(WALLET) }
+            coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
+        }
+
+        @Test
+        fun `GIVEN the backend reports ready WHEN invoke THEN the onboarding record is kept`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+            coEvery { getBalance.invoke(ADDRESSES) } returns
+                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            coEvery { checkGeoblock.invoke() } returns false.right()
+
+            // Act
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            coVerify(exactly = 1) { onboardedStore.markOnboarded(WALLET) }
+            coVerify(exactly = 0) { onboardedStore.clear(any()) }
+        }
+
+        /** A status that could not be read says nothing about the record, so it must not clear it. */
+        @Test
+        fun `GIVEN the status cannot be read WHEN invoke THEN the record is left alone`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns PolymarketOnboardingError.Unknown.left()
+
+            // Act
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            coVerify(exactly = 0) { onboardedStore.clear(any()) }
+            coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
+        }
+    }
+
     private fun createFetcher(store: PredictionAccountStatusStore) = DefaultPredictionAccountStatusFetcher(
         statusStore = store,
         userWalletsListRepository = userWalletsListRepository,
@@ -341,6 +402,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         getPolymarketWalletStatusUseCase = getWalletStatus,
         getPolymarketBalanceInteractor = getBalance,
         checkPolymarketGeoblockUseCase = checkGeoblock,
+        polymarketOnboardedStore = onboardedStore,
         singleQuoteStatusFetcher = quoteFetcher,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
