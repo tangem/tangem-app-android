@@ -31,7 +31,7 @@ internal class TxHistoryTitleConverterTest {
     private fun provideTestModels() = listOf(
         // Pills resolve to the status-aware label text (no amount)
         TitleModel(
-            tx = txInfo(TransactionType.Approve),
+            tx = txInfo(TransactionType.Approve(amount = null, address = "0xspender")),
             expected = resRef(R.string.common_approved),
         ),
         TitleModel(
