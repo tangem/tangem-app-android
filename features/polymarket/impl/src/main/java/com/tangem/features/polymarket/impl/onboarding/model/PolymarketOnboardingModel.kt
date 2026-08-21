@@ -32,8 +32,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Model of the entry gate. The wallet is already settled by `PolymarketEntryModel`; this only decides where the
- * user lands.
+ * Model of the entry gate. The wallet is already settled by `PolymarketEntryModel`.
  *
  * Opening the gate prompts for nothing: an undetermined wallet lands on Welcome with an idle button rather than
  * an unasked-for card prompt, and the full decision is taken when the user presses it.
@@ -129,13 +128,11 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun showRegionRestrictions() {
-        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
-        uiState.value = current.copy(isInProgress = false, isRegionRestrictionsShown = true)
+        updateWelcome { it.copy(isInProgress = false, isRegionRestrictionsShown = true) }
     }
 
     private fun dismissRegionRestrictions() {
-        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
-        uiState.value = current.copy(isRegionRestrictionsShown = false)
+        updateWelcome { it.copy(isRegionRestrictionsShown = false) }
     }
 
     private suspend fun CoroutineScope.runOnboarding() {
@@ -150,7 +147,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.Deriving,
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
-            -> (uiState.value as? PolymarketOnboardingUM.Welcome)?.let { uiState.value = it.copy(isInProgress = true) }
+            -> updateWelcome { it.copy(isInProgress = true) }
             PolymarketOnboardingProgress.Ready -> openFeed()
             is PolymarketOnboardingProgress.Failed ->
                 if (progress.error == PolymarketOnboardingError.RegionBlocked) {
@@ -163,8 +160,13 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun stopStarting() {
+        updateWelcome { it.copy(isInProgress = false) }
+    }
+
+    /** Leaves the state alone unless the gate is showing Welcome — the only state these updates apply to. */
+    private fun updateWelcome(update: (PolymarketOnboardingUM.Welcome) -> PolymarketOnboardingUM.Welcome) {
         val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
-        uiState.value = current.copy(isInProgress = false)
+        uiState.value = update(current)
     }
 
     private fun reportFailure() {
