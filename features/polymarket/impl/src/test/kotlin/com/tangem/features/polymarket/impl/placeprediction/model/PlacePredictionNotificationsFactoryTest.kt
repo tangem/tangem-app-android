@@ -11,6 +11,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
+import io.mockk.mockk
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -233,6 +235,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         feeTotal = feeTotal,
         total = total,
         minOrderSize = minOrderSize,
+        signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0),
     )
 
     private companion object {
