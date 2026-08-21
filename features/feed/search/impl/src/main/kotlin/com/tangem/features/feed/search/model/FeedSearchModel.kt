@@ -8,13 +8,11 @@ import com.tangem.features.feed.search.FeedSearchBarController
 import com.tangem.features.feed.search.ui.state.FeedSearchUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 
 @ModelScoped
 internal class FeedSearchModel @Inject constructor(
@@ -25,15 +23,22 @@ internal class FeedSearchModel @Inject constructor(
 
     private val params = paramsContainer.require<FeedRoute.Search>()
 
-    val uiState: StateFlow<FeedSearchUM>
-        field = MutableStateFlow(FeedSearchUM(source = params.source))
+    // the query is typed into the host's search bar, not into this screen. Eagerly, because the tab
+    // pages are constructed before anything composes and must already see the current query
+    val query: StateFlow<String> = searchBarController.state
+        .map { it.query }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = searchBarController.state.value.query,
+        )
 
-    init {
-        // the query is typed into the host's search bar, not into this screen
-        searchBarController.state
-            .map { it.query }
-            .distinctUntilChanged()
-            .onEach { query -> uiState.update { it.copy(query = query) } }
-            .launchIn(modelScope)
-    }
+    val uiState: StateFlow<FeedSearchUM> = query
+        .map { FeedSearchUM(source = params.source, query = it) }
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = FeedSearchUM(source = params.source, query = query.value),
+        )
 }
