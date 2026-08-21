@@ -192,7 +192,7 @@ private fun OrderDataField(@StringRes label: Int, field: FieldUM, isDisabled: Bo
         value = field.value,
         onValueChange = field.onValueChange,
         modifier = modifier.fillMaxWidth().revealAboveFooter(),
-        state = field.error.toInputState(isDisabled = isDisabled),
+        state = field.error.toInputState(isDisabled = isDisabled || !field.isEditable),
         isOptional = !field.isRequired,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
         onFocusChange = field.onFocusChange,
