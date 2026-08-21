@@ -24,26 +24,28 @@ import dagger.assisted.AssistedInject
 internal class AccountListConverter @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory,
-    private val jointAccountConverterFactory: JointAccountConverter.Factory,
+    jointAccountConverterFactory: JointAccountConverter.Factory,
 ) : Converter<GetWalletAccountsResponse, AccountList> {
 
-    private val cryptoPortfolioConverter: CryptoPortfolioConverter by lazy {
+    private val cryptoPortfolioConverter: CryptoPortfolioConverter =
         cryptoPortfolioConverterFactory.create(userWallet)
-    }
 
-    private val jointAccountConverter: JointAccountConverter by lazy {
-        jointAccountConverterFactory.create(userWallet)
-    }
+    private val jointAccountConverter: JointAccountConverter = jointAccountConverterFactory.create(userWallet)
 
     override fun convert(value: GetWalletAccountsResponse): AccountList {
         val sortType = value.wallet.sort?.let(TokensSortTypeConverter::convert) ?: TokensSortType.NONE
         val groupType = value.wallet.group?.let(TokensGroupTypeConverter::convert) ?: TokensGroupType.NONE
+        val accounts = value.accounts.map(::convertAccount)
 
         return AccountList(
             userWalletId = userWallet.walletId,
-            accounts = value.accounts.map(::convertAccount),
+            accounts = accounts,
             totalAccounts = value.wallet.totalAccounts,
             totalArchivedAccounts = value.wallet.totalArchivedAccounts,
+            // A backend that does not report the counter yet cannot be policed by it: falling back to the rows it
+            // did send keeps the list buildable instead of failing it over a field this response never had
+            totalJointAccounts = value.wallet.totalJointAccounts
+                ?: accounts.count { account -> account is Account.Joint },
             sortType = sortType,
             groupType = groupType,
         )
@@ -61,9 +63,11 @@ internal class AccountListConverter @AssistedInject constructor(
      * list producer turns it into an endless retry, leaving the wallet screen dead with no visible cause.
      */
     private fun convertAccount(value: WalletAccountDTO): Account {
-        return when (value.type) {
-            WalletAccountDTO.TYPE_JOINT -> jointAccountConverter.convert(value)
-            else -> cryptoPortfolioConverter.convert(value.copy(tokens = value.tokens.orEmpty()))
+        return when (WalletAccountDTO.Type.of(raw = value.type)) {
+            WalletAccountDTO.Type.JOINT -> jointAccountConverter.convert(value)
+            WalletAccountDTO.Type.CRYPTO,
+            null,
+            -> cryptoPortfolioConverter.convert(value.copy(tokens = value.tokens.orEmpty()))
         }
     }
 

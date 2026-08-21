@@ -36,7 +36,7 @@ data class SaveWalletAccountsResponse(
                         derivationIndex = accountDto.derivationIndex,
                         icon = accountDto.icon,
                         iconColor = accountDto.iconColor,
-                        type = accountDto.type ?: WalletAccountDTO.TYPE_CRYPTO,
+                        type = accountDto.type ?: WalletAccountDTO.Type.CRYPTO.value,
                     )
                 },
             )
