@@ -10,9 +10,8 @@ import com.tangem.core.ui.extensions.TextReference
 internal sealed interface PolymarketOnboardingUM {
 
     /**
-     * The entry decision is not taken yet, so there is nothing to offer the user. Rendered as a bare loader
-     * rather than as the Welcome screen: a user who turns out to be onboarded never owed onboarding, and
-     * showing them its hero for a frame says otherwise.
+     * Rendered as a bare loader, not as the Welcome screen: a user who turns out to be onboarded never owed
+     * onboarding, and showing them its hero for a frame says otherwise.
      */
     data object Resolving : PolymarketOnboardingUM
 
