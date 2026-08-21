@@ -16,6 +16,7 @@ import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -85,7 +86,7 @@ internal class CreateJointAccountUseCaseTest {
         useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(inputSlot.captured.derivationIndex).isEqualTo(7)
+        assertThat(inputSlot.captured.derivationIndex.value).isEqualTo(7)
     }
 
     @Test
@@ -172,6 +173,24 @@ internal class CreateJointAccountUseCaseTest {
         assertThat(actual).isEqualTo(JointAccountCreationError.UserCancelled.left())
         coVerify(exactly = 0) { repository.create(any(), any(), any()) }
     }
+
+    @Test
+    fun `GIVEN negative index from the backend WHEN invoke THEN typed error and the card is never asked`() =
+        runTest {
+            // Arrange
+            coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns -1
+
+            // Act
+            val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+            // Assert
+            // Broken backend data must not crash the app on a failed requirement
+            val expected = JointAccountCreationError.InvalidDerivationIndex(
+                cause = DerivationIndex.Error.NegativeDerivationIndex(derivationIndex = -1),
+            )
+            assertThat(actual).isEqualTo(expected.left())
+            coVerify(exactly = 0) { signer.sign(any(), any()) }
+        }
 
     @Test
     fun `GIVEN index request fails WHEN invoke THEN Failed and the card is never asked`() = runTest {
