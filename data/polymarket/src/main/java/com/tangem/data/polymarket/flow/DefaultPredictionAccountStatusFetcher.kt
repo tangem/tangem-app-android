@@ -16,6 +16,7 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -42,6 +43,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
+    private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
@@ -86,6 +88,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             .onLeft { logger.e("Prediction wallet status is unavailable for $userWalletId: $it") }
             .getOrNull()
             ?: return null
+
+        recordConfirmation(userWalletId = userWalletId, status = state.status)
 
         return when (state.status) {
             PolymarketWalletStatus.NOT_CREATED -> PredictionAccountStatusValue.NotOnboarded
@@ -146,6 +150,19 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             },
             ifRight = { isBlocked -> !isBlocked },
         )
+    }
+
+    /**
+     * Keeps the onboarding record honest. This is the only place that re-reads the backend for a wallet the entry
+     * gate has stopped asking about, so a wallet the backend no longer calls ready loses its record here — without
+     * it the gate would answer from a record that outlived the fact and the user could never re-run onboarding.
+     */
+    private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
+        if (status == PolymarketWalletStatus.READY_TO_TRADE) {
+            polymarketOnboardedStore.markOnboarded(userWalletId)
+        } else {
+            polymarketOnboardedStore.clear(userWalletId)
+        }
     }
 
     private fun onboarding(stage: PredictionAccountStatusValue.Onboarding.Stage) =
