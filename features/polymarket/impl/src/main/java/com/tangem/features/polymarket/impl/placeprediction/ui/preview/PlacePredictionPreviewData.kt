@@ -4,6 +4,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
@@ -26,6 +27,20 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
                 amountValue = "4000",
                 quote = previewQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
             ),
+        )
+}
+
+internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResultUM> {
+
+    override val values: Sequence<PlaceResultUM>
+        get() = sequenceOf(
+            PlaceResultUM.Filled(placedAt = PLACED_AT, amount = BigDecimal("4000")),
+            PlaceResultUM.PartiallyFilled(
+                placedAt = PLACED_AT,
+                filledAmount = BigDecimal("2000"),
+                requestedAmount = BigDecimal("4000"),
+            ),
+            PlaceResultUM.NotFilled(placedAt = PLACED_AT),
         )
 }
 
@@ -73,3 +88,5 @@ private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.F
     total = BigDecimal("4001.4"),
     minOrderSize = BigDecimal("5"),
 )
+
+private const val PLACED_AT = 1_787_000_000_000L
