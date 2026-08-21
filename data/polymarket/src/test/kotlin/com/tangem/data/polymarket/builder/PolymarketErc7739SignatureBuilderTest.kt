@@ -71,8 +71,21 @@ internal class PolymarketErc7739SignatureBuilderTest {
     }
 
     @Test
+    fun `GIVEN a wrapped signature WHEN read THEN it is prefixed hex like every other signature we send`() {
+        // Act
+        val actual = PolymarketErc7739SignatureBuilder.wrap(
+            innerSignature = INNER_SIGNATURE,
+            order = createOrder(),
+            isNegRisk = false,
+        )
+
+        // Assert
+        assertThat(actual).startsWith("0x")
+    }
+
+    @Test
     fun `GIVEN the description WHEN read THEN it ends with a bracket so the wallet derives the type name`() {
-        // Assert — a trailing bracket is what selects the implicit mode; appending the name again would not
+        // Assert
         assertThat(PolymarketOrderTypedDataBuilder.orderTypeString()).endsWith(")")
         assertThat(PolymarketOrderTypedDataBuilder.orderTypeString()).startsWith("Order(")
     }
