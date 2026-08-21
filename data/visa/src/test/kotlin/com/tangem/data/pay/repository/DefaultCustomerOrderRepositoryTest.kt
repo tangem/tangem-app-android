@@ -8,13 +8,18 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.visa.error.VisaApiError
+import com.squareup.moshi.Moshi
 import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
+import io.mockk.CapturingSlot
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import org.json.JSONObject
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -103,12 +108,112 @@ internal class DefaultCustomerOrderRepositoryTest {
         coVerify(exactly = 0) { tangemPayApi.createOrder(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN a reissue order WHEN createPlasticReissueOrder THEN the request matches the reissue contract`() =
+        runTest {
+            // Arrange
+            val body = captureCreateOrderBody()
+            val repository = createRepository()
+
+            // Act
+            repository.createPlasticReissueOrder(
+                userWalletId = userWalletId,
+                sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+                order = plasticCardOrder(),
+                idempotencyKey = IDEMPOTENCY_KEY,
+            )
+
+            // Assert
+            assertThat(body.captured).isEqualTo(
+                OrderRequest(
+                    data = OrderRequest.Data(
+                        customerWalletAddress = WALLET_ADDRESS,
+                        specificationName = null,
+                        type = "CARD_REISSUE_PLASTIC_RAIN",
+                        sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+                        shippingAddress = OrderRequest.ShippingAddress(
+                            firstName = "Johnny",
+                            lastName = "Silverhand",
+                            line1 = "Crescent st. 24",
+                            line2 = "Apt. 56",
+                            city = "Night City",
+                            region = "California",
+                            postalCode = "90210",
+                            phoneNumber = "+12345678901",
+                        ),
+                    ),
+                    idempotencyKey = IDEMPOTENCY_KEY,
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN a reissue order WHEN createPlasticReissueOrder THEN only the declared fields are sent`() = runTest {
+        // Arrange
+        val body = captureCreateOrderBody()
+        val repository = createRepository()
+
+        // Act
+        repository.createPlasticReissueOrder(
+            userWalletId = userWalletId,
+            sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+            order = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
+
+        // Assert
+        val data = JSONObject(MOSHI.adapter(OrderRequest::class.java).toJson(body.captured)).getJSONObject("data")
+        assertThat(data.keys().asSequence().toList()).containsExactly(
+            "customer_wallet_address",
+            "type",
+            "source_product_instance_id",
+            "shipping_address",
+        )
+        assertThat(data.getJSONObject("shipping_address").keys().asSequence().toList()).containsExactly(
+            "first_name",
+            "last_name",
+            "line1",
+            "line2",
+            "city",
+            "region",
+            "postal_code",
+            "phone_number",
+        )
+    }
+
+    @Test
+    fun `GIVEN a reissue order without the second address line WHEN createPlasticReissueOrder THEN it stays unset`() =
+        runTest {
+            // Arrange
+            val body = captureCreateOrderBody()
+            val repository = createRepository()
+
+            // Act
+            repository.createPlasticReissueOrder(
+                userWalletId = userWalletId,
+                sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+                order = plasticCardOrder(line2 = null),
+                idempotencyKey = IDEMPOTENCY_KEY,
+            )
+
+            // Assert
+            assertThat(body.captured.data.shippingAddress?.line2).isNull()
+        }
+
+    private fun captureCreateOrderBody(): CapturingSlot<OrderRequest> {
+        val body = slot<OrderRequest>()
+        coEvery {
+            tangemPayApi.createOrder(any(), capture(body))
+        } returns ApiResponse.Success(orderResponse())
+        return body
+    }
+
     private fun createRepository() = DefaultCustomerOrderRepository(
         tangemPayApi = tangemPayApi,
         requestHelper = requestHelper,
     )
 
-    private fun plasticCardOrder() = PlasticCardOrder(
+    private fun plasticCardOrder(line2: String? = "Apt. 56") = PlasticCardOrder(
         embossName = "JOHNNY SILVERHAND",
         shippingAddress = ShippingAddress(
             firstName = "Johnny",
@@ -116,7 +221,7 @@ internal class DefaultCustomerOrderRepositoryTest {
             region = "California",
             city = "Night City",
             line1 = "Crescent st. 24",
-            line2 = "Apt. 56",
+            line2 = line2,
             postalCode = "90210",
             phone = "+12345678901",
         ),
@@ -146,7 +251,9 @@ internal class DefaultCustomerOrderRepositoryTest {
     )
 
     private companion object {
+        val MOSHI: Moshi = Moshi.Builder().build()
         const val AUTH_HEADER = "auth-header"
+        const val SOURCE_PRODUCT_INSTANCE_ID = "pi_source_0001"
         const val WALLET_ADDRESS = "0xWALLET"
         const val SPEC_NAME = "SP_000010"
         const val ORDER_ID = "order-1"
