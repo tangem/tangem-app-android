@@ -41,8 +41,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "5"
         val receiveToken = "Bitcoin"
         val balanceAfterText = "5"
-        val withdrawalRowTitle = "Withdrawal"
-        val withdrawalAmountText = "-\$5.00"
+        val withdrawalRowTitle = io.github.kakaocup.kakao.common.utilities.getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
+        val withdrawalAmountText = "-$${withdrawAmount}.00"
 
         setupHooks(
             additionalBeforeSection = {
@@ -287,8 +287,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "10"
         val receiveToken = "Bitcoin"
         val zeroBalanceText = "0.00"
-        val withdrawalRowTitle = "Withdrawal"
-        val withdrawalAmountText = "-\$10.00"
+        val withdrawalRowTitle = io.github.kakaocup.kakao.common.utilities.getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
+        val withdrawalAmountText = "-$${withdrawAmount}.00"
 
         setupHooks(
             additionalBeforeSection = {
