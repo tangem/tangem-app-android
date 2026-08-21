@@ -156,6 +156,7 @@ internal object PolymarketDomainModule {
         deriveApiCredentials: DeriveApiCredentialsUseCase,
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
+        checkGeoblock: CheckPolymarketGeoblockUseCase,
     ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
@@ -166,5 +167,6 @@ internal object PolymarketDomainModule {
         deriveApiCredentials = deriveApiCredentials,
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
+        checkGeoblock = checkGeoblock,
     )
 }
