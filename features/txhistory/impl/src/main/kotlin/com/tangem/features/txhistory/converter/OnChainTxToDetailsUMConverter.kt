@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -33,6 +34,7 @@ import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.toBriefAddressFormat
+import java.math.BigDecimal
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -84,6 +86,7 @@ internal class OnChainTxToDetailsUMConverter(
                 tx.protocolRow()?.let(::add)
                 if (!tx.hasForeignFee()) addAll(tx.toInfoRows())
             }.toImmutableList(),
+            statusBanner = tx.approveRiskBanner(),
         )
     }
 
@@ -204,10 +207,27 @@ internal class OnChainTxToDetailsUMConverter(
 
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
         icon = amountIcon(),
-        amount = stringReference(signedAmount(currency)),
+        amount = approveAmountText() ?: stringReference(signedAmount(currency)),
         label = amountLabel(),
         isFailed = status is TxInfo.TransactionStatus.Failed,
     )
+
+    /**
+     * Approve's amount is a parameter of the granted allowance, not the tx's own transferred value — it comes from
+     * [TransactionType.Approve.amount] instead of [signedAmount]. `null` allowance means an unlimited approval, shown
+     * as "Unlimited <symbol>" rather than a number (paired with [approveRiskBanner]). `null` return (non-Approve
+     * types) tells the caller to fall back to the regular signed amount.
+     */
+    private fun TxInfo.approveAmountText(): TextReference? {
+        val approve = type as? TransactionType.Approve ?: return null
+        val allowance = approve.amount
+            ?: return resourceReference(R.string.transaction_history_unlimited_amount, wrappedList(currency.symbol))
+        return stringReference(
+            (allowance.value ?: BigDecimal.ZERO).format {
+                crypto(symbol = allowance.currencySymbol, decimals = allowance.decimals, ignoreSymbolPosition = true)
+            },
+        )
+    }
 
     /**
      * Amount icon. Yield-supply enter/exit shows the asset paired with the hard-wired Aave protocol icon, ordered by
@@ -227,11 +247,31 @@ internal class OnChainTxToDetailsUMConverter(
         }
     }
 
-    /** "Supplied"/"Returned" label above the amount for yield-supply enter/exit; `null` (no label) for other types. */
+    /**
+     * "Supplied"/"Returned" label above the amount for yield-supply enter/exit, "Approved amount" for an approval;
+     * `null` (no label) for other types.
+     */
     private fun TxInfo.amountLabel(): TextReference? = when (type) {
         is TransactionType.YieldSupply.Enter -> resourceReference(R.string.yield_module_transaction_supplied)
         is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_returned)
+        is TransactionType.Approve -> resourceReference(R.string.transaction_history_approved_amount)
         else -> null
+    }
+
+    /**
+     * "High Risk" warning shown under the amount block for an unlimited approval — `null` (no banner) once the
+     * approval carries a concrete amount, or while the tx is [Failed][TxInfo.TransactionStatus.Failed] (an approval
+     * that never went through granted no real allowance, so there is nothing to warn about).
+     */
+    private fun TxInfo.approveRiskBanner(): TxHistoryDetailsUM.StatusBannerUM? {
+        val approve = type as? TransactionType.Approve ?: return null
+        if (approve.amount != null || status is TxInfo.TransactionStatus.Failed) return null
+        return TxHistoryDetailsUM.StatusBannerUM(
+            style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
+            title = resourceReference(R.string.transaction_history_approve_high_risk_title),
+            subtitle = resourceReference(R.string.transaction_history_approve_high_risk_subtitle),
+            isLoading = false,
+        )
     }
 
     /**
