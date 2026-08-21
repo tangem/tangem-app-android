@@ -1,6 +1,14 @@
 package com.tangem.features.jointaccount.common.displayname.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +30,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
@@ -38,6 +47,10 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.jointaccount.common.displayname.ui.state.JointAccountDisplayNameUM
+
+/** Matches the feel of the design-system v2 components: the same snappy spring for alpha and for size. */
+private val ALPHA_SPEC: FiniteAnimationSpec<Float> = spring(stiffness = Spring.StiffnessMediumLow)
+private val SIZE_SPEC: FiniteAnimationSpec<IntSize> = spring(stiffness = Spring.StiffnessMediumLow)
 
 @Composable
 internal fun JointAccountDisplayNameScreen(
@@ -141,15 +154,30 @@ private fun NameField(state: JointAccountDisplayNameUM, modifier: Modifier = Mod
 
         Underline(isError = state.isError, isFocused = isFocused)
 
+        SupportingText(isError = state.isError, modifier = Modifier.padding(vertical = 8.dp))
+    }
+}
+
+@Composable
+private fun SupportingText(isError: Boolean, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        AnimatedVisibility(
+            visible = isError,
+            enter = fadeIn(animationSpec = ALPHA_SPEC) + expandVertically(animationSpec = SIZE_SPEC),
+            exit = fadeOut(animationSpec = ALPHA_SPEC) + shrinkVertically(animationSpec = SIZE_SPEC),
+        ) {
+            Text(
+                modifier = Modifier.padding(bottom = 12.dp),
+                text = stringResourceSafe(R.string.joint_account_name_fill_validation_error),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.status.error,
+            )
+        }
+
         Text(
-            modifier = Modifier.padding(vertical = 12.dp),
             text = stringResourceSafe(R.string.joint_account_name_hint),
             style = TangemTheme.typography3.caption.medium,
-            color = if (state.isError) {
-                TangemTheme.colors3.text.status.error
-            } else {
-                TangemTheme.colors3.text.secondary
-            },
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
