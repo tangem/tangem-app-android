@@ -588,6 +588,11 @@
   <string name="custom_token_validation_error_not_found">Note that tokens can be created by anyone. Be aware of adding scam tokens, they can cost nothing.</string>
   <string name="custom_token_validation_error_not_found_description">Be aware of adding scam tokens, they can cost nothing</string>
   <string name="custom_token_validation_error_not_found_title">Note that tokens can be created by anyone</string>
+  <string name="details_add_wallet_selector_add_hardware_wallet_description">Scan a Tangem card to add it</string>
+  <string name="details_add_wallet_selector_add_hardware_wallet_title">Add hardware wallet</string>
+  <string name="details_add_wallet_selector_add_mobile_wallet_description">Create a new wallet on this device</string>
+  <string name="details_add_wallet_selector_add_mobile_wallet_title">Add mobile wallet</string>
+  <string name="details_add_wallet_selector_coming_soon_description">We\'re working on the ability to create more than one mobile wallet.</string>
   <string name="details_buy_wallet">Buy Tangem Wallet</string>
   <string name="details_chat">Chat</string>
   <string name="details_manage_security_access_code">Access code</string>
@@ -1570,6 +1575,11 @@
   <string name="prediction_place_you_will_pay">You will pay</string>
   <string name="prediction_region_restrictions_subtitle">Predictions – not supported in your region, you still can view events</string>
   <string name="prediction_region_restrictions_title">Region restrictions</string>
+  <string name="prediction_search_empty_subtitle">Try to type something else</string>
+  <string name="prediction_search_empty_title">No results found</string>
+  <string name="prediction_search_initial_subtitle">Search events or your predictions</string>
+  <string name="prediction_search_initial_title">Start typing to search</string>
+  <string name="prediction_search_results_title">Search results</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
   <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
@@ -2202,6 +2212,7 @@
   <string name="tangempay_card_edit_name_placeholder">Card name</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
   <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again</string>
+  <string name="tangempay_card_page_activating_banner_title">Activating your physical card</string>
   <string name="tangempay_card_page_closing_banner_description">Usually takes up to 5 minutes</string>
   <string name="tangempay_card_page_closing_banner_title">Closing your card</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>
