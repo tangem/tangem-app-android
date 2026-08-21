@@ -19,6 +19,7 @@ internal object PredictionAccountStatusValueDTOConverter {
 
     fun convert(value: PredictionAccountStatusValue): PredictionAccountStatusValueDTO? = when (value) {
         is PredictionAccountStatusValue.NotOnboarded -> PredictionAccountStatusValueDTO.NotOnboarded
+        is PredictionAccountStatusValue.Onboarded -> PredictionAccountStatusValueDTO.Onboarded
         is PredictionAccountStatusValue.Onboarding -> PredictionAccountStatusValueDTO.Onboarding(
             stage = value.stage.toDTO(),
         )
@@ -33,6 +34,9 @@ internal object PredictionAccountStatusValueDTOConverter {
 
     fun convertBack(value: PredictionAccountStatusValueDTO): PredictionAccountStatusValue = when (value) {
         is PredictionAccountStatusValueDTO.NotOnboarded -> PredictionAccountStatusValue.NotOnboarded
+        is PredictionAccountStatusValueDTO.Onboarded -> PredictionAccountStatusValue.Onboarded(
+            source = StatusSource.CACHE,
+        )
         is PredictionAccountStatusValueDTO.Onboarding -> PredictionAccountStatusValue.Onboarding(
             source = StatusSource.CACHE,
             stage = value.stage.toDomain(),
