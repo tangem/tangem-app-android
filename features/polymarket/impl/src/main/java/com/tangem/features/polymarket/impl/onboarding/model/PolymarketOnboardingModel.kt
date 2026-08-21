@@ -77,7 +77,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
         modelScope.launch {
             resolvePolymarketEntryInteractor.withoutPrompting(walletId).fold(
                 ifLeft = {
-                    uiState.value = welcome(isStarting = false)
+                    uiState.value = welcome(isInProgress = false)
                     reportFailure()
                 },
                 ifRight = { entry -> renderEntry(entry) },
@@ -88,19 +88,19 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private fun renderEntry(entry: PolymarketEntry) {
         when (entry) {
             is PolymarketEntry.Onboard -> uiState.value = welcome(
-                isStarting = false,
+                isInProgress = false,
                 startButtonText = startButtonText(status = entry.status),
             )
-            PolymarketEntry.Undetermined -> uiState.value = welcome(isStarting = false)
+            PolymarketEntry.Undetermined -> uiState.value = welcome(isInProgress = false)
             PolymarketEntry.Onboarded -> openFeed()
         }
     }
 
     private fun startOnboarding() {
         val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
-        if (current.isStarting) return
+        if (current.isInProgress) return
 
-        uiState.value = current.copy(isStarting = true)
+        uiState.value = current.copy(isInProgress = true)
 
         modelScope.launch {
             val entry = resolvePolymarketEntryInteractor(userWalletId)
@@ -122,7 +122,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun showRegionRestrictions() {
-        uiState.value = welcome(isStarting = false, isRegionRestrictionsShown = true)
+        uiState.value = welcome(isInProgress = false, isRegionRestrictionsShown = true)
     }
 
     private fun dismissRegionRestrictions() {
@@ -142,7 +142,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.Deriving,
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
-            -> (uiState.value as? PolymarketOnboardingUM.Welcome)?.let { uiState.value = it.copy(isStarting = true) }
+            -> (uiState.value as? PolymarketOnboardingUM.Welcome)?.let { uiState.value = it.copy(isInProgress = true) }
             PolymarketOnboardingProgress.Ready -> openFeed()
             is PolymarketOnboardingProgress.Failed ->
                 if (progress.error == PolymarketOnboardingError.RegionBlocked) {
@@ -156,7 +156,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun stopStarting() {
         val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
-        uiState.value = current.copy(isStarting = false)
+        uiState.value = current.copy(isInProgress = false)
     }
 
     private fun reportFailure() {
@@ -164,11 +164,11 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun welcome(
-        isStarting: Boolean,
+        isInProgress: Boolean,
         startButtonText: TextReference = resourceReference(R.string.prediction_onboarding_start_button),
         isRegionRestrictionsShown: Boolean = false,
     ) = PolymarketOnboardingUM.Welcome(
-        isStarting = isStarting,
+        isInProgress = isInProgress,
         startButtonText = startButtonText,
         onStartClick = ::startOnboarding,
         onPolymarketTermsClick = onPolymarketTermsClick,
