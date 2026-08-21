@@ -12,6 +12,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessage
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayImage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CardActivationOrder
@@ -73,6 +75,37 @@ internal class TangemPayCardActivationModelTest {
         assertThat(state.isContinueEnabled).isFalse()
         assertThat(state.isHintError).isFalse()
         assertThat(state.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a card with an activation image WHEN opened THEN that image is shown`() = runTest {
+        // Arrange
+        val card = tangemPayCard(
+            images = listOf(
+                TangemPayImage(type = "MAIN", url = MAIN_IMAGE_URL),
+                TangemPayImage(type = "ACTIVATION", url = ACTIVATION_IMAGE_URL),
+            ),
+        )
+
+        // Act
+        val model = createModel(testScope = this, card = card)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().cardImageUrl).isEqualTo(ACTIVATION_IMAGE_URL)
+    }
+
+    @Test
+    fun `GIVEN a card without an activation image WHEN opened THEN no image is shown`() = runTest {
+        // Arrange
+        val card = tangemPayCard(images = listOf(TangemPayImage(type = "MAIN", url = MAIN_IMAGE_URL)))
+
+        // Act
+        val model = createModel(testScope = this, card = card)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().cardImageUrl).isNull()
     }
 
     @Test
@@ -349,13 +382,12 @@ internal class TangemPayCardActivationModelTest {
 
     private fun TangemPayCardActivationModel.state() = uiState.value
 
-    private fun createModel(testScope: TestScope) = TangemPayCardActivationModel(
+    private fun createModel(
+        testScope: TestScope,
+        card: TangemPayCard = tangemPayCard(id = CARD_ID, productInstanceId = PRODUCT_INSTANCE_ID),
+    ) = TangemPayCardActivationModel(
         paramsContainer = MutableParamsContainer(
-            TangemPayCardActivationComponent.Params(
-                card = tangemPayCard(id = CARD_ID, productInstanceId = PRODUCT_INSTANCE_ID),
-                userWalletId = WALLET_ID,
-                cardImageUrl = null,
-            ),
+            TangemPayCardActivationComponent.Params(card = card, userWalletId = WALLET_ID),
         ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
@@ -379,5 +411,7 @@ internal class TangemPayCardActivationModelTest {
         val WALLET_ID = UserWalletId("1234567890ABCDEF")
         const val CARD_ID = "card-1"
         const val PRODUCT_INSTANCE_ID = "pi-1"
+        const val MAIN_IMAGE_URL = "https://tangem.com/card-main.png"
+        const val ACTIVATION_IMAGE_URL = "https://tangem.com/card-activation.png"
     }
 }
