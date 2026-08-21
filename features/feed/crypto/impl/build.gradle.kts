@@ -32,6 +32,7 @@ dependencies {
 
     /* Project - Common */
     implementation(projects.common.uiCharts)
+    implementation(projects.common.uiMarkets)
 
     /* Compose */
     implementation(deps.compose.foundation)
