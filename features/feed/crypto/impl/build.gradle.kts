@@ -19,18 +19,27 @@ dependencies {
     /* Project - Domain */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.common)
     implementation(projects.domain.markets)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.search)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
 
     /* Project - Core */
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
     implementation(projects.core.pagination)
+    implementation(projects.core.remote)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
     /* Project - Common */
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
     implementation(projects.common.uiCharts)
     implementation(projects.common.uiMarkets)
 
@@ -38,6 +47,7 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.material3)
+    implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
 
     /* Other */
@@ -50,4 +60,9 @@ dependencies {
     /* DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /* Tests */
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
+    testImplementation(tangemDeps.blockchain)
 }
