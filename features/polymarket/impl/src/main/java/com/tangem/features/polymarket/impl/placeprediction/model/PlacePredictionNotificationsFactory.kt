@@ -17,10 +17,18 @@ internal object PlacePredictionNotificationsFactory {
             is QuoteUM.Content -> when (quote.status) {
                 PredictionQuoteStatus.FULL -> Unit
                 PredictionQuoteStatus.PARTIAL -> add(PredictionNotificationUM.PartialFill)
-                PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY -> add(PredictionNotificationUM.NoLiquidity)
                 PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE ->
                     add(PredictionNotificationUM.BelowMinOrderSize(minOrderSize = quote.minOrderSize))
+                // A placeable status is the only one Content is built for
+                PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY, PredictionQuoteStatus.MARKET_CLOSED -> Unit
+            }
+            is QuoteUM.Unavailable -> when (quote.status) {
+                PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY -> add(PredictionNotificationUM.NoLiquidity)
                 PredictionQuoteStatus.MARKET_CLOSED -> add(PredictionNotificationUM.MarketClosed)
+                PredictionQuoteStatus.FULL,
+                PredictionQuoteStatus.PARTIAL,
+                PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+                -> Unit
             }
             is QuoteUM.Error -> add(PredictionNotificationUM.QuoteFailed)
             QuoteUM.Empty, QuoteUM.Loading -> Unit
