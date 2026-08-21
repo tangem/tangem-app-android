@@ -22,6 +22,8 @@ object PolymarketOrderTypedDataBuilder {
 
     private val EIP191_PREFIX = byteArrayOf(0x19, 0x01)
 
+    fun orderTypeString(): String = ORDER_TYPE
+
     fun orderTypeHash(): ByteArray = ORDER_TYPE.toByteArray().toKeccak()
 
     /** The exchange the order is signed against: the only thing a neg-risk market changes. */
