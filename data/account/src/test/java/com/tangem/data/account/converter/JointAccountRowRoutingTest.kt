@@ -29,10 +29,16 @@ internal class JointAccountRowRoutingTest {
     private val userWallet: UserWallet = mockk {
         every { walletId } returns WALLET_ID
     }
-    private val cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory = mockk()
     private val cryptoPortfolioConverter: CryptoPortfolioConverter = mockk()
-    private val jointAccountConverterFactory: JointAccountConverter.Factory = mockk()
     private val jointAccountConverter: JointAccountConverter = mockk()
+
+    // Stubbed where they are declared: the converter resolves both factories in its constructor
+    private val cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory = mockk {
+        every { create(userWallet) } returns cryptoPortfolioConverter
+    }
+    private val jointAccountConverterFactory: JointAccountConverter.Factory = mockk {
+        every { create(userWallet) } returns jointAccountConverter
+    }
 
     private val listConverter = AccountListConverter(
         userWallet = userWallet,
@@ -41,8 +47,6 @@ internal class JointAccountRowRoutingTest {
     )
 
     init {
-        every { cryptoPortfolioConverterFactory.create(userWallet) } returns cryptoPortfolioConverter
-        every { jointAccountConverterFactory.create(userWallet) } returns jointAccountConverter
         every { jointAccountConverter.convert(any()) } returns jointAccount()
         every { cryptoPortfolioConverter.convert(any()) } answers {
             val dto = firstArg<WalletAccountDTO>()
@@ -64,8 +68,8 @@ internal class JointAccountRowRoutingTest {
     }
 
     private fun provideTestModels() = listOf(
-        RoutingModel(type = WalletAccountDTO.TYPE_JOINT, expected = Account.Joint::class.java),
-        RoutingModel(type = WalletAccountDTO.TYPE_CRYPTO, expected = Account.CryptoPortfolio::class.java),
+        RoutingModel(type = WalletAccountDTO.Type.JOINT.value, expected = Account.Joint::class.java),
+        RoutingModel(type = WalletAccountDTO.Type.CRYPTO.value, expected = Account.CryptoPortfolio::class.java),
         // The field predates joint accounts, so its absence means crypto
         RoutingModel(type = null, expected = Account.CryptoPortfolio::class.java),
         // A type this build does not know must render as crypto rather than fail the whole account list
@@ -97,6 +101,7 @@ internal class JointAccountRowRoutingTest {
             accounts = listOf(cryptoAccount(), jointAccount()),
             totalAccounts = 2,
             totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
         ).getOrNull()!!
 
         // Act
@@ -106,7 +111,7 @@ internal class JointAccountRowRoutingTest {
         // A row missing from the document means "archived" to the backend, so the joint row must survive the
         // round trip — otherwise editing the portfolio would archive the joint account
         assertThat(actual.accounts.map { it.type })
-            .containsExactly(WalletAccountDTO.TYPE_CRYPTO, WalletAccountDTO.TYPE_JOINT)
+            .containsExactly(WalletAccountDTO.Type.CRYPTO.value, WalletAccountDTO.Type.JOINT.value)
         assertThat(actual.accounts.map { it.id })
             .containsExactly(cryptoAccount().accountId.value, jointAccount().accountId.value)
     }
