@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.auth.models.request
+package com.tangem.lib.auth.api.models.request
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
  * Registration request — registers a new device and establishes initial trust.
  *
  * On success the server returns
- * [com.tangem.datasource.api.auth.models.response.TokenApiResponse] (the initial session token pair).
+ * [com.tangem.lib.auth.api.models.response.TokenApiResponse] (the initial session token pair).
  */
 @JsonClass(generateAdapter = true)
 data class RegisterApiRequest(
