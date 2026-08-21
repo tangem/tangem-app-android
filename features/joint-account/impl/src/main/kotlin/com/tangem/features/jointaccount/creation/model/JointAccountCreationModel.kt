@@ -72,6 +72,7 @@ internal class JointAccountCreationModel @Inject constructor(
             JointAccountCreationError.UserCancelled -> Unit
             // The cause is already logged by safeApiCall in the data layer
             JointAccountCreationError.ExistingAccountNotFound,
+            is JointAccountCreationError.InvalidDerivationIndex,
             is JointAccountCreationError.Failed,
             -> showError()
         }
