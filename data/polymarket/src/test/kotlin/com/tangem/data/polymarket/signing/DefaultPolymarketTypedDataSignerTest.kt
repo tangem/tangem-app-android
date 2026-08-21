@@ -393,22 +393,21 @@ internal class DefaultPolymarketTypedDataSignerTest {
         }
 
         @Test
-        fun `GIVEN an order payload WHEN signOrder THEN the deposit wallet is the maker and the owner is the signer`() =
-            runTest {
-                // Arrange
-                arrangeSigning()
-                stubSuccessfulSigning()
+        fun `GIVEN an order payload WHEN signOrder THEN both parties are the deposit wallet`() = runTest {
+            // Arrange
+            arrangeSigning()
+            stubSuccessfulSigning()
 
-                // Act
-                val result = signer.signOrder(userWalletId, orderPayload())
+            // Act
+            val result = signer.signOrder(userWalletId, orderPayload())
 
-                // Assert
-                val order = result.getOrNull()!!.order
-                assertThat(order.maker).isEqualTo(DEPOSIT_WALLET)
-                assertThat(order.signer).isEqualTo(PolymarketAddressFactory().createAddress(ownerKey))
-                assertThat(order.signer).isNotEqualTo(order.maker)
-                assertThat(order.signatureType).isEqualTo(PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET)
-            }
+            // Assert
+            val order = result.getOrNull()!!.order
+            assertThat(order.maker).isEqualTo(DEPOSIT_WALLET)
+            assertThat(order.signer).isEqualTo(DEPOSIT_WALLET)
+            assertThat(order.signer).isNotEqualTo(PolymarketAddressFactory().createAddress(ownerKey))
+            assertThat(order.signatureType).isEqualTo(PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET)
+        }
 
         @Test
         fun `GIVEN an order payload WHEN signOrder THEN the signature is the wrapped one and not the bare inner`() =

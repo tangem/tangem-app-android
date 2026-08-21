@@ -65,7 +65,7 @@ class SignPredictionOrderInteractor(
     private fun newSalt(): BigInteger = BigInteger(SALT_BITS, random)
 
     private companion object {
-        const val SALT_BITS = 64
+        const val SALT_BITS = 52
 
         val random = SecureRandom()
     }
