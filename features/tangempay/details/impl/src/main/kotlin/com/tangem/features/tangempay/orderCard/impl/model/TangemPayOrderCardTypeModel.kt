@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -15,9 +16,11 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.plasticOffer
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.cardMainImageUrl
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
+import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
 import com.tangem.utils.CountryNames
@@ -39,6 +42,7 @@ import javax.inject.Inject
 internal class TangemPayOrderCardTypeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val getCustomerOffers: GetCustomerOffersUseCase,
     private val onboardingRepository: OnboardingRepository,
@@ -48,6 +52,9 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
 
     private val params = paramsContainer.require<TangemPayOrderCardTypeComponent.Params>()
     private val loadDataJobHolder = JobHolder()
+
+    private var displayedType = OrderCardType.Virtual
+    private var isNotEnoughMoneyReported = false
 
     val state: StateFlow<TangemPayOrderCardTypeUM>
         field = MutableStateFlow(
@@ -60,12 +67,15 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 plastic = TangemPayOrderCardTypeUM.Plastic.Unavailable(country = ""),
                 onBackClick = ::onBackClick,
                 onRetry = ::loadData,
-                onSelectVirtual = params.onSelectVirtual,
+                onSelectVirtual = ::onSelectVirtual,
                 onSelectPlastic = ::onSelectPlastic,
+                onTypeClick = ::onTypeClick,
+                onTypeSwipe = ::onTypeSwipe,
             ),
         )
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.CardTypeSelectionScreenOpened())
         loadData()
         observeCardImage()
     }
@@ -74,9 +84,44 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
         router.pop()
     }
 
+    private fun onSelectVirtual() {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.VirtualSelectClicked())
+        params.onSelectVirtual()
+    }
+
     private fun onSelectPlastic() {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.PlasticSelectClicked())
         val plastic = state.value.plastic as? TangemPayOrderCardTypeUM.Plastic.Available ?: return
         params.onSelectPlastic(plastic.deliveryEta.maxBusinessDays)
+    }
+
+    private fun onTypeClick(type: OrderCardType) {
+        val event = when (type) {
+            OrderCardType.Virtual -> TangemPayAnalyticsEvents.Plastic.VirtualTypeClicked()
+            OrderCardType.Plastic -> TangemPayAnalyticsEvents.Plastic.PlasticTypeClicked()
+        }
+        analytics.send(event)
+        onTypeDisplayed(type)
+    }
+
+    private fun onTypeSwipe(type: OrderCardType) {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.CardTypeSwiped())
+        onTypeDisplayed(type)
+    }
+
+    private fun onTypeDisplayed(type: OrderCardType) {
+        displayedType = type
+        sendNotEnoughMoneyAnalytics()
+    }
+
+    private fun sendNotEnoughMoneyAnalytics() {
+        if (isNotEnoughMoneyReported || displayedType != OrderCardType.Plastic) return
+        val plastic = state.value.plastic
+        if (plastic !is TangemPayOrderCardTypeUM.Plastic.Available) return
+        if (plastic.feeState != TangemPayOrderCardTypeUM.FeeState.InsufficientFunds) return
+
+        isNotEnoughMoneyReported = true
+        analytics.send(TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed())
     }
 
     private fun observeCardImage() {
@@ -127,6 +172,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                     plastic = plasticContent ?: current.plastic,
                 )
             }
+            sendNotEnoughMoneyAnalytics()
         }.saveIn(loadDataJobHolder)
     }
 
