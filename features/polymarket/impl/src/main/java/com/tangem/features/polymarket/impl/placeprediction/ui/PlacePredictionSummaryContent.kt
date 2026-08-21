@@ -95,7 +95,7 @@ internal fun PlacePredictionSummaryContent(
         ) {
             PredictionPaymentBlock(
                 amountValue = state.amountValue,
-                toWin = (state.quote as? QuoteUM.Content)?.toWin,
+                toWin = (state.quote as? QuoteUM.Content)?.expectedShares,
                 payment = state.payment,
             )
             TangemSurface(color = TangemTheme.colors3.bg.secondary) {

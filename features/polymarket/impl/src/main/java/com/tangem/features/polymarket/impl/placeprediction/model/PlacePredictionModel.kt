@@ -51,7 +51,14 @@ import java.math.BigDecimal
 import javax.inject.Inject
 
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
-internal const val QUOTE_POLL_INTERVAL_MILLIS = 10_000L
+
+/**
+ * The contract prescribes no interval and enforces none — it reports whether the market's event is in play
+ * and leaves the cadence to us. A live match reprices tick by tick and earns the fast loop; a market
+ * resolving next month does not, and polling it hard only burns battery and rate limit.
+ */
+internal const val LIVE_QUOTE_POLL_INTERVAL_MILLIS = 3_000L
+internal const val QUOTE_POLL_INTERVAL_MILLIS = 15_000L
 
 /**
  * The only owner of the place-prediction state: every step renders a slice of [uiState] and writes back through
@@ -84,6 +91,8 @@ internal class PlacePredictionModel @Inject constructor(
         field = MutableStateFlow(PlacePredictionUM.initial())
 
     private val quoteJobHolder = JobHolder()
+
+    private var isMarketLive = false
 
     init {
         loadMarket()
@@ -249,10 +258,12 @@ internal class PlacePredictionModel @Inject constructor(
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
-                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)
     }
+
+    private fun pollInterval(): Long = if (isMarketLive) LIVE_QUOTE_POLL_INTERVAL_MILLIS else QUOTE_POLL_INTERVAL_MILLIS
 
     private suspend fun requestQuote() {
         val state = uiState.value
@@ -273,6 +284,7 @@ internal class PlacePredictionModel @Inject constructor(
             )
         }
 
+        result.onRight { isMarketLive = it.isLive }
         if (uiState.value.submit is SubmitUM.Idle) {
             uiState.update(SetQuoteResultTransformer(result = result))
         }
