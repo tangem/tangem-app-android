@@ -15,7 +15,8 @@ import kotlinx.serialization.Serializable
  *
  * @property userWalletId     the user wallet id to which the account statuses belong
  * @property accountStatuses  a set of account statuses associated with the user wallet
- * @property totalAccounts    the total number of accounts (including archived ones)
+ * @property totalAccounts    the total number of crypto accounts (including archived ones)
+ * @property totalJointAccounts the total number of joint accounts (including archived ones)
  * @property totalFiatBalance the total fiat balance across all accounts
  * @property sortType      the sorting type applied to the accounts
  * @property groupType     the grouping type applied to the accounts
@@ -28,6 +29,7 @@ data class AccountStatusList(
     val accountStatuses: List<AccountStatus>,
     val totalAccounts: Int,
     val totalArchivedAccounts: Int,
+    val totalJointAccounts: Int = 0,
     val totalFiatBalance: TotalFiatBalance,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
@@ -53,6 +55,7 @@ data class AccountStatusList(
             accounts = accountStatuses.map(AccountStatus::account),
             totalAccounts = totalAccounts,
             totalArchivedAccounts = totalArchivedAccounts,
+            totalJointAccounts = totalJointAccounts,
             sortType = sortType,
             groupType = groupType,
         )
