@@ -305,6 +305,7 @@ dependencies {
     implementation(projects.features.feed.impl)
     implementation(projects.features.feed.crypto.api)
     implementation(projects.features.feed.crypto.impl)
+    implementation(projects.features.feed.earn.impl)
     implementation(projects.features.feed.search.api)
     implementation(projects.features.feed.search.impl)
     implementation(projects.features.promoBanners.api)

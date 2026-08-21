@@ -52,6 +52,7 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -486,7 +487,7 @@ internal fun TokenRowBalanceContent(
             )
         }
         Text(
-            text = fiatBalance.orMaskWithStars(isBalanceHidden).resolveReference(),
+            text = fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
             style = TangemTheme.typography3.body.medium.applyBladeBrush(
                 isEnabled = isFlickering,
                 textColor = TangemTheme.colors3.text.primary,
