@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.account
 
+import com.tangem.domain.models.pay.TangemPayImage
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -587,8 +588,8 @@ internal class TangemPayDetailsStateFactoryTest {
 
         private const val THUMBNAIL_URL = "https://tangem.com/card_thumb.png"
 
-        private fun thumbnail() = TangemPayTariffPlan.Image(
-            type = TangemPayTariffPlan.Image.Type.THUMBNAIL,
+        private fun thumbnail() = TangemPayImage(
+            type = "THUMBNAIL",
             url = THUMBNAIL_URL,
         )
 
