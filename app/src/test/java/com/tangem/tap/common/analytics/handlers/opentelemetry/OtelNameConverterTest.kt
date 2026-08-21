@@ -14,40 +14,48 @@ internal class OtelNameConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN event coordinates WHEN metricName THEN snake_case dot-namespaced name`(model: MetricNameModel) {
+        fun `GIVEN event name WHEN metricName THEN snake_case name without prefix`(model: MetricNameModel) {
             // Act
-            val actual = OtelNameConverter.metricName(category = model.category, event = model.event)
+            val actual = OtelNameConverter.metricName(model.event)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
         }
 
         private fun provideTestModels() = listOf(
-            MetricNameModel(category = "Basic", event = "Transaction sent", expected = "app.basic.transaction_sent"),
-            MetricNameModel(
-                category = "Sign In",
-                event = "Sign In Screen Opened",
-                expected = "app.sign_in.sign_in_screen_opened",
-            ),
-            MetricNameModel(
-                category = "Token / Withdraw",
-                event = "Screen Opened",
-                expected = "app.token_withdraw.screen_opened",
-            ),
-            MetricNameModel(
-                category = "Markets / Chart",
-                event = "Data Error",
-                expected = "app.markets_chart.data_error",
-            ),
-            MetricNameModel(
-                category = "Wallet Connect",
-                event = "Signature Request Failed",
-                expected = "app.wallet_connect.signature_request_failed",
-            ),
+            MetricNameModel(event = "Transaction sent", expected = "transaction_sent"),
+            MetricNameModel(event = "Sign In Screen Opened", expected = "sign_in_screen_opened"),
+            MetricNameModel(event = "Data Error", expected = "data_error"),
+            MetricNameModel(event = "Signature Request Failed", expected = "signature_request_failed"),
+            MetricNameModel(event = "Wallet Created Successfully", expected = "wallet_created_successfully"),
         )
     }
 
-    data class MetricNameModel(val category: String, val event: String, val expected: String)
+    data class MetricNameModel(val event: String, val expected: String)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CategoryValue {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN category WHEN categoryValue THEN snake_case value`(model: CategoryModel) {
+            // Act
+            val actual = OtelNameConverter.categoryValue(model.category)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            CategoryModel(category = "Basic", expected = "basic"),
+            CategoryModel(category = "Token / Withdraw", expected = "token_withdraw"),
+            CategoryModel(category = "Markets / Chart", expected = "markets_chart"),
+            CategoryModel(category = "Wallet Connect", expected = "wallet_connect"),
+        )
+    }
+
+    data class CategoryModel(val category: String, val expected: String)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
