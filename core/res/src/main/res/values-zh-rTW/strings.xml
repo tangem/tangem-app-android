@@ -352,7 +352,7 @@
   <string name="tangem_pay_terms_fees_limits">條款、費用與限制</string>
   <string name="tangem_pay_terms_limits">條款與限制</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行拒絕了此交易請求。</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">最低交易金額為 %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">最低交易金額為</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">已達月度上限</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC 已排除</string>
   <string name="tangem_pay_transaction_details_cashback_none">無現金回饋</string>
@@ -576,8 +576,8 @@
   <string name="tangempay_newonboard_body">隨時隨地花用加密資產——無需銀行、無需中介、無需交易所。自我託管的掌控力，結合日常支付。</string>
   <string name="tangempay_newonboard_bottomleft_body">可線上付款，也支援 Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">全球受理</string>
-  <string name="tangempay_newonboard_bottomright_body">全球都能用</string>
-  <string name="tangempay_newonboard_bottomright_title">匯兌費僅 1%</string>
+  <string name="tangempay_newonboard_bottomright_body">美元 1:1 兌換 USDC；固定費用 1 美元</string>
+  <string name="tangempay_newonboard_bottomright_title">接收 ACH 轉帳</string>
   <string name="tangempay_newonboard_title">取得你的 Tangem Pay 卡</string>
   <string name="tangempay_newonboard_topleft_body">看多少，付多少</string>
   <string name="tangempay_newonboard_topleft_title">消費零手續費，\n1 USDC = 1 USD</string>
