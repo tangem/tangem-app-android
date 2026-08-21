@@ -43,6 +43,7 @@ internal class PredictionOrderQuoteConverterTest {
         assertThat(actual).isEqualTo(
             PredictionOrderQuote(
                 status = PredictionQuoteStatus.FULL,
+                side = PredictionOrderSide.BUY,
                 shares = BigDecimal("674.76383"),
                 notional = BigDecimal("500.00"),
                 expectedExecutionAmount = BigDecimal("684.93150"),
