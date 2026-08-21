@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -57,6 +58,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
                 onMove = { _, _ -> },
                 onDragStopped = {},
             ),
+            addWalletBSConfig = TangemBottomSheetConfig.Empty,
         ),
     )
 
