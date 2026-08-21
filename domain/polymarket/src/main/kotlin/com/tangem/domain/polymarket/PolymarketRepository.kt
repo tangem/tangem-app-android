@@ -56,6 +56,12 @@ interface PolymarketRepository {
     suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState>
 
     /**
+     * The same read, keyed by the Tangem wallet id. Serves a wallet whose owner address this device has never
+     * derived — deriving it would open a card session, which a background refresh may not ask for.
+     */
+    suspend fun getWalletStatusByWalletId(walletId: String): Either<PolymarketWalletError, PolymarketWalletState>
+
+    /**
      * Initiate deposit-wallet deployment (BFF `POST /wallet/deploy`). Gasless, unsigned; the client then
      * polls `GET /wallet`.
      *
