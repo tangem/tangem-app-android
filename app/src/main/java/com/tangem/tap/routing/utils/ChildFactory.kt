@@ -20,6 +20,8 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
+import com.tangem.features.introduction.IntroductionComponent
+import com.tangem.features.introduction.IntroductionFeatureToggles
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
@@ -84,6 +86,8 @@ internal class ChildFactory @Inject constructor(
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
     private val homeComponentFactory: HomeComponent.Factory,
+    private val introductionComponentFactory: IntroductionComponent.Factory,
+    private val introductionFeatureToggles: IntroductionFeatureToggles,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
     private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
@@ -366,11 +370,19 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                createComponentChild(
-                    context = context,
-                    params = HomeComponent.Params(route.launchMode),
-                    componentFactory = homeComponentFactory,
-                )
+                if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
+                    createComponentChild(
+                        context = context,
+                        params = IntroductionComponent.Params(route.launchMode),
+                        componentFactory = introductionComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        context = context,
+                        params = HomeComponent.Params(route.launchMode),
+                        componentFactory = homeComponentFactory,
+                    )
+                }
             }
             is AppRoute.WalletConnectSessions -> {
                 createComponentChild(
