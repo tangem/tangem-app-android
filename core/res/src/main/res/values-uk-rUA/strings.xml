@@ -2292,6 +2292,11 @@
   <string name="user_push_notification_agreement_header">Бажаєте використовувати Push-повідомлення?</string>
   <string name="user_push_notification_banner_subtitle">Увімкніть push-сповіщення, щоб отримувати повідомлення, коли кошти надходять на ваш гаманець.</string>
   <string name="user_push_notification_banner_title">Не пропустіть транзакцію</string>
+  <string name="user_wallet_add_hardware_description">Відскануйте картку Tangem, щоб додати його</string>
+  <string name="user_wallet_add_hardware_title">Додати апаратний гаманець</string>
+  <string name="user_wallet_add_mobile_description">Створіть новий гаманець на цьому пристрої</string>
+  <string name="user_wallet_add_mobile_title">Додати мобільний гаманець</string>
+  <string name="user_wallet_coming_soon_dialog_description">Ми працюємо над можливістю створювати кілька мобільних гаманців.</string>
   <string name="user_wallet_list_add_button">Додати гаманець</string>
   <string name="user_wallet_list_delete_hw_prompt">Якщо ви видалите цей гаманець без резервної копії, ви назавжди втратите доступ до своїх коштів.</string>
   <string name="user_wallet_list_delete_prompt">Ви впевнені, що хочете видалити цей гаманець?</string>
