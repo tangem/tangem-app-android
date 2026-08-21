@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.pay.activationImageUrl
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
 import com.tangem.domain.pay.model.CardActivationOrder
@@ -52,7 +53,7 @@ internal class TangemPayCardActivationModel @Inject constructor(
         field = MutableStateFlow(
             TangemPayCardActivationUM(
                 lastDigits = "",
-                cardImageUrl = params.cardImageUrl,
+                cardImageUrl = params.card.activationImageUrl,
                 hint = resourceReference(R.string.tangempay_card_activation_description),
                 isHintError = false,
                 isLoading = false,
