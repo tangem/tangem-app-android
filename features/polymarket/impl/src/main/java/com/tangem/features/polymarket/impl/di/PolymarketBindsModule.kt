@@ -4,7 +4,6 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
@@ -98,12 +97,10 @@ internal object PolymarketDomainUseCasesModule {
     @Provides
     @Singleton
     fun provideResolvePolymarketEntryInteractor(
-        checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
         derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
     ): ResolvePolymarketEntryInteractor = ResolvePolymarketEntryInteractor(
-        checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase = getPolymarketApiCredentialsUseCase,
