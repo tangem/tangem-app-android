@@ -13,12 +13,12 @@ internal class PredictionPlaceOrderErrorResolver @Inject constructor() {
         -> PredictionPlaceOrderError.Ambiguous(detail = error.message)
         is ApiResponseError.HttpException -> error.toPlaceOrderError()
         is ApiResponseError.UnknownException ->
-            PredictionPlaceOrderError.Unknown(httpCode = null, detail = error.cause.message ?: error.message)
+            PredictionPlaceOrderError.Ambiguous(detail = error.cause.message ?: error.message)
     }
 
     private fun ApiResponseError.HttpException.toPlaceOrderError(): PredictionPlaceOrderError = when {
         code == Code.UNAUTHORIZED -> PredictionPlaceOrderError.Unauthorized(detail = errorBody)
         code == Code.BAD_REQUEST -> PredictionPlaceOrderError.Rejected(detail = errorBody)
-        else -> PredictionPlaceOrderError.Unknown(httpCode = code.numericCode, detail = errorBody)
+        else -> PredictionPlaceOrderError.Ambiguous(detail = errorBody)
     }
 }
