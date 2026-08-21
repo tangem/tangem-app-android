@@ -100,13 +100,9 @@ data class TangemPayTariffPlan(
 }
 
 private const val MAIN_IMAGE = "MAIN"
-private const val ACTIVATION_IMAGE = "ACTIVATION"
 
 val TangemPayTariffPlan.mainImageUrl: String?
     get() = images.urlOfType(MAIN_IMAGE)
-
-val TangemPayTariffPlan.activationImageUrl: String?
-    get() = images.urlOfType(ACTIVATION_IMAGE)
 
 fun TangemPayTariffPlan.feeCurrencyOrDefault(defaultCurrencyCode: String = "USD"): String {
     return fees.firstOrNull()?.currency ?: defaultCurrencyCode

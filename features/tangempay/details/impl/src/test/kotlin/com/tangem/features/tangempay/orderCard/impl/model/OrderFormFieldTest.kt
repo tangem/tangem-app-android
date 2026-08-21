@@ -41,6 +41,19 @@ internal class OrderFormFieldTest {
         assertThat(actual).isEqualTo(expected)
     }
 
+    @Test
+    fun `GIVEN a blank read-only field WHEN validated THEN the form stays valid`() {
+        // Arrange
+        val form = validForm().updateField(OrderFormField.EmbossName) { copy(value = "", isEditable = false) }
+
+        // Act
+        val embossError = form.fieldError(OrderFormField.EmbossName)
+
+        // Assert
+        assertThat(embossError).isNull()
+        assertThat(form.isFormValid()).isTrue()
+    }
+
     internal data class FieldModel(
         val field: OrderFormField,
         val isRequired: Boolean,
@@ -49,6 +62,10 @@ internal class OrderFormFieldTest {
     )
 
     private fun Form.withValue(field: OrderFormField, value: String) = updateField(field) { copy(value = value) }
+
+    private fun validForm(): Form = OrderFormField.entries
+        .fold(emptyForm()) { form, field -> form.withValue(field, "Night City") }
+        .let { form -> form.copy(phone = form.phone.copy(value = "2345678901"), phoneMask = "##########") }
 
     private fun emptyForm() = Form(
         onBackClick = {},
