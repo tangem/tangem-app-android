@@ -166,8 +166,9 @@ sealed interface TransactionItemUM {
      * @property kind            controls leading icon and color tint
      * @property status          drives background/text colors and Failed/Unconfirmed icon override
      * @property label           full pill label text (already composed by converter, e.g. "Staked")
-     * @property amount          optional signed numeric value rendered after [label] (e.g. "950.43");
-     *                           null for kinds that don't carry amount (Vote, Withdraw, Yield mode)
+     * @property amount          optional value rendered after [label] — a signed number (e.g. "950.43") or, for an
+     *                           unlimited approval, a resolved word like "Unlimited"; null for kinds that don't
+     *                           carry amount (Vote, Withdraw, Yield mode)
      * @property currencySymbol  currency symbol rendered after [amount]; null when [amount] is null
      * @property subtitle        optional subtitle (e.g. "to: 33Bd...ga2B" with avatar) for Approve
      */
@@ -176,7 +177,7 @@ sealed interface TransactionItemUM {
         val kind: PillKind,
         val status: Content.Status,
         val label: TextReference,
-        val amount: String?,
+        val amount: TextReference?,
         val currencySymbol: String?,
         val subtitle: PillSubtitle?,
         val timestamp: Long,

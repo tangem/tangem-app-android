@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
@@ -47,7 +48,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     private fun provideTestModels() = listOf(
         TransactionType.Transfer,
-        TransactionType.Approve,
+        TransactionType.Approve(amount = null, address = USER_ADDRESS),
         TransactionType.Operation(name = "Mint NFT"),
         TransactionType.UnknownOperation,
         TransactionType.GaslessFee,
@@ -285,7 +286,10 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         TransactionType.Staking.Restake,
         TransactionType.Staking.Withdraw,
         TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS),
-        TransactionType.Approve,
+        TransactionType.Approve(
+            amount = SdkAmount(currencySymbol = "ETH", value = BigDecimal("1000"), decimals = 18),
+            address = USER_ADDRESS,
+        ),
     )
 
     @Test
@@ -364,6 +368,67 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     // endregion
 
+    // region Approve amount / risk banner
+
+    @Test
+    fun `GIVEN Approve with a known allowance WHEN convert THEN amount block shows the allowance and no risk banner`() {
+        // Arrange — the allowance amount comes from TransactionType.Approve, not the tx's own amount field.
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(currencySymbol = "USDT", value = BigDecimal("1000"), decimals = 6),
+                address = USER_ADDRESS,
+            ),
+            amount = BigDecimal.ZERO,
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.amount.resolveString()).contains("USDT")
+        assertThat(result.amountBlock.label).isEqualTo(resourceReference(R.string.transaction_history_approved_amount))
+        assertThat(result.statusBanner).isNull()
+    }
+
+    @Test
+    fun `GIVEN Approve with no allowance limit WHEN convert THEN amount block shows Unlimited and a Warning risk banner`() {
+        // Arrange — a null TransactionType.Approve#amount means the approval is unlimited.
+        val tx = txInfo(type = TransactionType.Approve(amount = null, address = USER_ADDRESS))
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.amountBlock.amount).isEqualTo(
+            resourceReference(R.string.transaction_history_unlimited_amount, wrappedList(currency.symbol)),
+        )
+        assertThat(result.statusBanner).isEqualTo(
+            TxHistoryDetailsUM.StatusBannerUM(
+                style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
+                title = resourceReference(R.string.transaction_history_approve_high_risk_title),
+                subtitle = resourceReference(R.string.transaction_history_approve_high_risk_subtitle),
+                isLoading = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN Approve with no allowance limit but Failed WHEN convert THEN no risk banner`() {
+        // Arrange — an approval that never went through granted no real allowance, so there is nothing to warn about.
+        val tx = txInfo(
+            type = TransactionType.Approve(amount = null, address = USER_ADDRESS),
+            status = TxInfo.TransactionStatus.Failed,
+        )
+
+        // Act
+        val result = converter.convert(tx)
+
+        // Assert
+        assertThat(result.statusBanner).isNull()
+    }
+
+    // endregion
+
     // region Counterparty
 
     @Test
@@ -419,7 +484,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         TransactionType.YieldSupply.Exit(address = USER_ADDRESS),
         TransactionType.Staking.Stake,
         TransactionType.Staking.Vote(validatorAddress = VALIDATOR_ADDRESS),
-        TransactionType.Approve,
+        TransactionType.Approve(amount = null, address = USER_ADDRESS),
     )
 
     @Test
