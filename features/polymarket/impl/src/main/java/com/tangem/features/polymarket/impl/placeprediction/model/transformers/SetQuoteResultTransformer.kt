@@ -26,9 +26,9 @@ internal class SetQuoteResultTransformer(
     )
 
     /**
-     * A quote whose status forbids placing carries zeros in every figure, so it becomes [QuoteUM.Unavailable]
-     * rather than content the screen would render as prices. `BELOW_MIN_ORDER_SIZE` is the exception the
-     * contract makes: it blocks the order but keeps the figures, so the user can see what was attempted.
+     * A quote whose status forbids placing becomes [QuoteUM.Unavailable] rather than content the screen would
+     * render as prices — the status decides that, not the figures, which are only zeroes when the exchange
+     * itself refused.
      */
     private fun toQuote(quote: PredictionOrderQuote): QuoteUM = when (quote.status) {
         PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
