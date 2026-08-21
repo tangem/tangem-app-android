@@ -259,6 +259,7 @@ internal class AccountListTest {
                 accounts = model.accounts,
                 totalAccounts = model.totalAccounts,
                 totalArchivedAccounts = 0,
+                totalJointAccounts = model.totalJointAccounts,
             )
 
             // Assert
@@ -335,11 +336,13 @@ internal class AccountListTest {
                 CreateTestModel(
                     accounts = listOf(mainAccount, jointAccount),
                     totalAccounts = 1,
+                    totalJointAccounts = 1,
                     expected = AccountList(
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount, jointAccount),
                         totalAccounts = 1,
                         totalArchivedAccounts = 0,
+                        totalJointAccounts = 1,
                     ),
                 )
             },
@@ -361,6 +364,7 @@ internal class AccountListTest {
     data class CreateTestModel(
         val accounts: List<Account>,
         val totalAccounts: Int = accounts.size,
+        val totalJointAccounts: Int = accounts.count { it is Account.Joint },
         val expected: Either<AccountList.Error, AccountList>,
     )
 
