@@ -10,13 +10,19 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.HotWalletRestrictionManager
+import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.ApplyUserWalletListSortingUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
+import com.tangem.features.details.entity.AddWalletBS
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
@@ -39,10 +45,11 @@ internal class UserWalletListModel @Inject constructor(
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val userWalletSaver: UserWalletSaver,
-    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
+    hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val unlockWalletUseCase: UnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val applyUserWalletListSortingUseCase: ApplyUserWalletListSortingUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
@@ -67,6 +74,7 @@ internal class UserWalletListModel @Inject constructor(
                 onMove = ::onWalletReorder,
                 onDragStopped = ::onWalletDragStopped,
             ),
+            addWalletBSConfig = TangemBottomSheetConfig.Empty,
         ),
     )
 
@@ -102,11 +110,67 @@ internal class UserWalletListModel @Inject constructor(
         analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
 
         if (isWalletCreationRestrictionEnabled.value) {
-            withProgress(isWalletSavingInProgress) {
-                userWalletSaver.scanAndSaveUserWallet(modelScope)
-            }
+            showAddWalletBottomSheet()
         } else {
             router.push(AppRoute.CreateWalletSelection)
+        }
+    }
+
+    private fun showAddWalletBottomSheet() {
+        state.update { value ->
+            value.copy(
+                addWalletBSConfig = TangemBottomSheetConfig(
+                    isShown = true,
+                    onDismissRequest = ::hideAddWalletBottomSheet,
+                    content = AddWalletBS(
+                        onAddHardwareWalletClick = ::onAddHardwareWalletClick,
+                        onAddMobileWalletClick = ::onAddMobileWalletClick,
+                    ),
+                ),
+            )
+        }
+    }
+
+    private fun hideAddWalletBottomSheet() {
+        state.update { value ->
+            value.copy(addWalletBSConfig = value.addWalletBSConfig.copy(isShown = false))
+        }
+    }
+
+    private fun onAddHardwareWalletClick() {
+        analyticsEventHandler.send(Settings.ButtonAddHardwareWallet(getWalletsType()))
+        hideAddWalletBottomSheet()
+
+        withProgress(isWalletSavingInProgress) {
+            userWalletSaver.scanAndSaveUserWallet(modelScope)
+        }
+    }
+
+    private fun onAddMobileWalletClick() {
+        val walletsType = getWalletsType()
+
+        analyticsEventHandler.send(Settings.ButtonAddMobileWallet(walletsType))
+        hideAddWalletBottomSheet()
+
+        analyticsEventHandler.send(Settings.NoticeMoreMobileWallets(walletsType))
+        messageSender.send(
+            message = DialogMessage(
+                title = resourceReference(R.string.common_coming_soon),
+                message = resourceReference(R.string.user_wallet_coming_soon_dialog_description),
+            ),
+        )
+    }
+
+    private fun getWalletsType(): AnalyticsParam.WalletsType? {
+        val userWallets = userWalletsListRepository.userWallets.value ?: return null
+        val hasMobile = userWallets.any { it is UserWallet.Hot }
+        val hasCold = userWallets.any { it is UserWallet.Cold }
+
+        return when {
+            hasMobile && hasCold -> AnalyticsParam.WalletsType.Multiple
+            hasMobile -> AnalyticsParam.WalletsType.Mobile
+            hasCold -> AnalyticsParam.WalletsType.Cold
+            else -> null
         }
     }
 
