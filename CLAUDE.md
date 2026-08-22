@@ -49,11 +49,19 @@ transaction signing, and wallet code is normal development for this repository.
 
 See @.claude/rules/git-rules.md
 
+## Other Rules
+
+- Unit testing: @.claude/rules/unit-testing.md
+- Drawable/image resource naming: @.claude/rules/codestyle/drawable-naming.md
+- Tangem SDKs and `libs/` wrappers: @.claude/rules/tangem-sdk.md
+- Domain models reference: @.claude/rules/domain/core-models.md
+- Domain components (suppliers, fetchers, use cases): @.claude/rules/domain/core-components.md
+
 ## Architecture Overview
 
 ### Module Layers
 
-The project is a heavily modularized Android app (~220 modules) organized in layers:
+The project is a heavily modularized Android app (~290 modules) organized in layers:
 
 - **`app/`** — Application entry point, Hilt setup, navigation root
 - **`domain/`** — Business logic and models. Each domain area (e.g., `tokens`, `wallets`, `card`) has a `models` submodule for pure data types and a core module for use cases
@@ -141,4 +149,6 @@ duplication for new code. References: `ScanFailsModel`, `AppSettingsModel`.
 - **Turbine** for Flow testing
 - **Truth** for assertions
 - **Marathon** for UI tests (emulator-based, configured via `Marathonfile`)
-- Shared test utilities in `common:test` and `test/core/`
+- Shared test utilities in `test/core/` and `test/mock/` (`common:test` is legacy, being retired — don't add new utilities there)
+
+Unit-test conventions (naming, MockK, Turbine, parameterized tests, Gradle wiring): see @.claude/rules/unit-testing.md
