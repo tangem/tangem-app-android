@@ -463,6 +463,26 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         }
 
         /**
+         * The status was a definite answer even though the balance behind it was not: recording it saves the
+         * entry gate a request it would otherwise have to make.
+         */
+        @Test
+        fun `GIVEN the backend reports ready WHEN the balance cannot be read THEN the record is still written`() =
+            runTest {
+                // Arrange
+                coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+                coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                    walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+                coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
+
+                // Act
+                createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+                // Assert
+                coVerify(exactly = 1) { onboardedStore.markOnboarded(WALLET) }
+            }
+
+        /**
          * An unrecognised status is "not ready, keep polling" by the BFF contract. Overwriting a cached balance
          * with "no account" on the strength of one would lose a real amount.
          */
