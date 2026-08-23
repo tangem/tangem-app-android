@@ -122,9 +122,11 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             PolymarketWalletStatus.READY_TO_TRADE -> whenReady()
         }
 
-        // Only once the status has been turned into a value: an unrecognised one is no answer, so it must not
-        // drop the record any more than it drops the cached value.
-        if (value != null) recordConfirmation(userWalletId = userWalletId, status = status)
+        // Keyed on the status, not on the value: an unrecognised status is no answer and must not drop the
+        // record, but a recognised one is an answer even when the balance behind it could not be read.
+        if (status != PolymarketWalletStatus.UNKNOWN) {
+            recordConfirmation(userWalletId = userWalletId, status = status)
+        }
 
         return value
     }
