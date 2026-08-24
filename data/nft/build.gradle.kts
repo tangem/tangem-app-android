@@ -19,7 +19,6 @@ dependencies {
 
     // region Other libraries
     implementation(deps.arrow.core)
-    implementation(deps.arrow.fx)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
