@@ -559,6 +559,7 @@ internal class TangemPayOrderCardTypeModelTest {
 
     private fun customerInfo(availableBalance: BigDecimal? = BigDecimal("100.00")) = CustomerInfo(
         customerId = "cust_1",
+        paymentAccount = null,
         productInstances = emptyList(),
         cards = emptyList(),
         kycStatus = KycStatus.APPROVED,
