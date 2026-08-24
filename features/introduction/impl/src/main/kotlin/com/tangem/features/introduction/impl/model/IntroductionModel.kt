@@ -67,7 +67,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     override fun onFirstFrameRendered() {
-        if (uiState.value.isVideoReady) return
+        if (attachedSurfaceView == null || uiState.value.isVideoReady) return
         uiState.update { it.copy(isVideoReady = true) }
     }
 
