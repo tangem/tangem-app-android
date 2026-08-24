@@ -810,6 +810,7 @@ internal class TxHistoryInfoMergerTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
+            externalTxId = null,
             fiatCurrency = null,
             toAmount = toAmount,
             toActualAmount = toActualAmount,
