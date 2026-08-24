@@ -8,6 +8,7 @@ import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.core.res.getStringSafe
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.converter.ArchivedAccountConverter
+import com.tangem.data.account.converter.SaveWalletAccountsResponseConverter
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
@@ -140,14 +141,16 @@ internal class DefaultAccountsCRUDRepository(
         )
     }
 
+    /**
+     * The document is written whole, and a row missing from it archives that account on the backend — so every
+     * account of the list goes into the body, joint ones included. Dropping them here would archive the wallet's
+     * joint accounts on any edit of an ordinary one.
+     */
     override suspend fun saveAccounts(accountList: AccountList) {
-        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = accountList.userWalletId)
-
-        val accountDTOs = converter.convertListBack(
-            input = accountList.accounts.filterIsInstance<Account.CryptoPortfolio>(),
+        val syncedResponse = walletAccountsSaver.push(
+            userWalletId = accountList.userWalletId,
+            body = SaveWalletAccountsResponseConverter.convert(value = accountList),
         )
-
-        val syncedResponse = walletAccountsSaver.push(userWalletId = accountList.userWalletId, accounts = accountDTOs)
             ?: error("Failed to push accounts for wallet: ${accountList.userWalletId}")
 
         walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)

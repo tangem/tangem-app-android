@@ -79,7 +79,7 @@ internal fun TransactionCard(
             TransactionCardData(
                 cardState = swapCardState,
                 priceImpact = priceImpact,
-                onChangeTokenClick = onSelectTokenClick,
+                onChangeTokenClick = onSelectTokenClick.takeUnless { swapCardState.isSelectionLocked },
                 modifier = modifier.testTag(cardTag),
             )
         }
@@ -125,7 +125,7 @@ private fun TransactionCardData(
         Box(modifier = Modifier.align(Alignment.BottomEnd)) {
             Token(
                 currencyIconState = cardState.currencyIconState,
-                tokenSymbol = cardState.tokenSymbol,
+                tokenSymbol = cardState.fiatSymbolOverride?.let(::stringReference) ?: cardState.tokenSymbol,
             )
         }
 

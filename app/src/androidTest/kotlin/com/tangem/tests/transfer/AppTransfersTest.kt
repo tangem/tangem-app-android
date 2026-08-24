@@ -9,7 +9,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.scenarios.*
@@ -43,13 +42,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -76,13 +69,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -113,13 +100,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -149,13 +130,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -194,13 +169,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -232,13 +201,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -290,13 +253,7 @@ class AppTransfersTest : BaseTestCase() {
         val assetsBitcoinState = "BitcoinExchangeEnabled"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(bitcoinUtxoScenario)
-                resetWireMockScenarioState(assetsScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -330,13 +287,7 @@ class AppTransfersTest : BaseTestCase() {
         val quotesSolanaState = "Solana"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(solanaBalanceScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -371,16 +322,7 @@ class AppTransfersTest : BaseTestCase() {
         val estimateGasScenario = "eth_estimate_gas"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(feeHistoryScenario)
-                resetWireMockScenarioState(estimateGasScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -424,8 +366,7 @@ class AppTransfersTest : BaseTestCase() {
         val polygonQuery = "pol"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = { resetWireMockScenarioState(storiesScenario) },
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Open 'Main' screen") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -471,13 +412,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -515,14 +450,7 @@ class AppTransfersTest : BaseTestCase() {
         val broadcastErrorState = "BroadcastError"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-                resetWireMockScenarioState(sendRawTransactionScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -564,13 +492,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TwoAccountsSameToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -609,15 +531,7 @@ class AppTransfersTest : BaseTestCase() {
         val unreachable = "Unreachable"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-                resetWireMockScenarioState(feeHistoryScenario)
-                resetWireMockScenarioState(estimateGasScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -660,15 +574,7 @@ class AppTransfersTest : BaseTestCase() {
         val quotesSolanaState = "Solana"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(solanaBalanceScenario)
-                resetWireMockScenarioState(assetsScenario)
-                resetWireMockScenarioState(fromPairsScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -717,13 +623,7 @@ class AppTransfersTest : BaseTestCase() {
         val quotesRippleState = "Ripple"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -755,13 +655,7 @@ class AppTransfersTest : BaseTestCase() {
         val quotesRippleState = "Ripple"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -790,12 +684,7 @@ class AppTransfersTest : BaseTestCase() {
         val quotesXlmState = "XLM"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -826,12 +715,6 @@ class AppTransfersTest : BaseTestCase() {
                 setWireMockScenarioState(storiesScenario, storiesErrorState)
                 // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
                 setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(networksProvidersScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
@@ -867,12 +750,6 @@ class AppTransfersTest : BaseTestCase() {
                 setWireMockScenarioState(storiesScenario, storiesErrorState)
                 // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
                 setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(networksProvidersScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
@@ -905,12 +782,6 @@ class AppTransfersTest : BaseTestCase() {
                 setWireMockScenarioState(storiesScenario, storiesErrorState)
                 // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
                 setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(networksProvidersScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
@@ -943,12 +814,6 @@ class AppTransfersTest : BaseTestCase() {
                 setWireMockScenarioState(storiesScenario, storiesErrorState)
                 // networks_providers configures SDK RPC hosts at launch — must be set before the activity starts.
                 setWireMockScenarioState(networksProvidersScenario, appTransfersNetworksState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(networksProvidersScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
@@ -980,14 +845,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "TangemPayTransferUsdc"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
@@ -1035,13 +893,7 @@ class AppTransfersTest : BaseTestCase() {
         val userTokensState = "EthereumWithSecondToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -1092,13 +944,7 @@ class AppTransfersTest : BaseTestCase() {
         val ethereumWithSecondTokenState = "EthereumWithSecondToken"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(ethCallScenario)
-                resetWireMockScenarioState(ethBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$recipientWithoutEthereumState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = recipientWithoutEthereumState)
@@ -1153,14 +999,7 @@ class AppTransfersTest : BaseTestCase() {
         val quotesSolanaState = "Solana"
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(solanaBalanceScenario)
-                resetWireMockScenarioState(recipientAccountScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
@@ -1204,13 +1043,7 @@ class AppTransfersTest : BaseTestCase() {
             getResourceString(CoreUiR.string.send_notification_invalid_minimum_amount_text).substringBefore("%1")
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(kaspaUtxoScenario)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)

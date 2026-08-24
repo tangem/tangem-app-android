@@ -19,7 +19,7 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PolymarketEventConverterTest {
 
-    private val converter = PolymarketEventConverter()
+    private val converter = PolymarketEventConverter
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

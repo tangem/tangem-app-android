@@ -1,6 +1,6 @@
 package com.tangem.tests.swap
 
-import com.tangem.datasource.api.common.config.Express
+import com.tangem.grow.datasource.config.Express
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.R
@@ -10,7 +10,6 @@ import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.SwapEntryPoint
@@ -92,14 +91,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val networkName = "Solana"
         val currencySymbol = "SOL"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(balanceScenarioName)
-                resetWireMockScenarioState(pairsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
@@ -172,13 +164,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             slippagePercent
         )
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(exchangeQuoteScenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
@@ -269,12 +255,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val pairsFromScenarioName = "polygon_pos_from_pairs"
         val scenarioState = "DexProvider"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(pairsToScenarioName)
-                resetWireMockScenarioState(pairsFromScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$pairsToScenarioName' to state: $scenarioState") {
                 setWireMockScenarioState(scenarioName = pairsToScenarioName, state = scenarioState)
             }
@@ -356,11 +337,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val bannerTitle = getResourceString(R.string.swapping_high_price_impact_title)
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesScenarioState'") {
                 setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesScenarioState)
@@ -440,11 +417,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
         val bannerTitle = getResourceString(R.string.swapping_trade_too_large_title)
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesScenarioState'") {
                 setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesScenarioState)
@@ -525,12 +498,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             rentAmount
         )
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
@@ -594,12 +562,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             rentAmount
         )
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
@@ -644,7 +607,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                         isDisplayed = false
                     )
                 }
-
             }
         }
     }
@@ -664,12 +626,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             rentAmount
         )
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
@@ -733,12 +690,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             rentAmount
         )
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)

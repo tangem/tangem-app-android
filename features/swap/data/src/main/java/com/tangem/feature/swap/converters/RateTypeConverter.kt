@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.converters
 
-import com.tangem.datasource.api.express.models.response.RateType
+import com.tangem.grow.datasource.express.models.response.RateType
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.feature.swap.domain.models.domain.RateType as RateTypeDomain
 

@@ -19,29 +19,34 @@ interface ExpressSyncStateDao {
         SET after_cursor = :afterCursor,
             is_initial_completed = :isInitialCompleted
         WHERE type = :type
-          AND address = :address
+          AND user_wallet_id = :userWalletId
         """,
     )
-    suspend fun updateHistoryCursor(type: String, address: String, afterCursor: String?, isInitialCompleted: Boolean)
+    suspend fun updateHistoryCursor(
+        type: String,
+        userWalletId: String,
+        afterCursor: String?,
+        isInitialCompleted: Boolean,
+    )
 
     @Query(
         """
         UPDATE express_sync_state
         SET delta_cursor = :deltaCursor
         WHERE type = :type
-          AND address = :address
+          AND user_wallet_id = :userWalletId
         """,
     )
-    suspend fun updateDeltaCursor(type: String, address: String, deltaCursor: String)
+    suspend fun updateDeltaCursor(type: String, userWalletId: String, deltaCursor: String)
 
     @Query(
         """
         SELECT *
         FROM express_sync_state
         WHERE type = :type
-          AND address = :address
+          AND user_wallet_id = :userWalletId
         LIMIT 1
         """,
     )
-    fun observe(type: String, address: String): Flow<ExpressSyncStateEntity?>
+    fun observe(type: String, userWalletId: String): Flow<ExpressSyncStateEntity?>
 }

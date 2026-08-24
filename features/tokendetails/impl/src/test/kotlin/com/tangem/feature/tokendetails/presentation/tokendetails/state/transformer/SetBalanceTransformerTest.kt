@@ -12,8 +12,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.staking.YieldBalanceItem
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
@@ -229,6 +234,25 @@ class SetBalanceTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.tokenBalanceTypeUM).isInstanceOf(TokenBalanceTypeUM.Multiple::class.java)
+    }
+
+    @Test
+    fun `GIVEN staking arrives as a contribution WHEN transform THEN balance type is Multiple`() {
+        // GIVEN — toggle-on shape: the typed field is null and the balance is in `contributions`
+        val status = createStatus(
+            loadedValue(
+                stakingBalance = null,
+                contributions = listOf(realStakeKitBalance(amount = BigDecimal("1.5"))),
+            ),
+        )
+        val transformer = createTransformer(status)
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN — reading only the typed field would collapse this back to a Single balance
         val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
         assertThat(content.tokenBalanceTypeUM).isInstanceOf(TokenBalanceTypeUM.Multiple::class.java)
     }
@@ -529,6 +553,7 @@ class SetBalanceTransformerTest {
         stakingBalance: StakingBalance? = null,
         yieldSupplyStatus: YieldSupplyStatus? = null,
         sources: CryptoCurrencyStatus.Sources = CryptoCurrencyStatus.Sources(),
+        contributions: List<BalanceContribution> = emptyList(),
     ): CryptoCurrencyStatus.Loaded = CryptoCurrencyStatus.Loaded(
         amount = amount,
         fiatAmount = fiatAmount,
@@ -540,7 +565,31 @@ class SetBalanceTransformerTest {
         pendingTransactions = emptySet(),
         networkAddress = mockk(relaxed = true),
         sources = sources,
+        contributions = contributions,
     )
+
+    /**
+     * A **real** StakeKit balance for the contributions path. The `mockkStatic` stub above cannot serve it:
+     * `getExtraBalanceOrNull()` answers from `contributions` without ever reaching
+     * `getTotalWithRewardsStakingBalance`, and `totalDeltaCryptoAmount()` is a *member* function, so a mocked
+     * balance would return a mocked `BigDecimal` and the assertion would prove nothing.
+     *
+     * Ethereum keeps its stake outside the network balance, so every item counts and the delta is [amount].
+     */
+    private fun realStakeKitBalance(amount: BigDecimal): StakingBalance.Data.StakeKit =
+        StakingBalance.Data.StakeKit(
+            stakingId = StakingID(integrationId = "integration", address = "0x1"),
+            source = StatusSource.ACTUAL,
+            balance = YieldBalanceItem(
+                items = listOf(
+                    mockk<BalanceItem>(relaxed = true) {
+                        every { this@mockk.amount } returns amount
+                        every { type } returns BalanceType.STAKED
+                    },
+                ),
+                integrationId = "integration",
+            ),
+        )
 
     private fun activeYieldSupplyStatus(): YieldSupplyStatus = YieldSupplyStatus(
         isActive = true,

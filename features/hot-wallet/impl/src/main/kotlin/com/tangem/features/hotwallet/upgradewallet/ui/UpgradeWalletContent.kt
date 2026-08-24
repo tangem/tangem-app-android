@@ -91,7 +91,14 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
                 modifier = Modifier
                     .padding(top = 24.dp),
                 title = stringResourceSafe(R.string.hw_upgrade_general_security_title),
-                description = stringResourceSafe(R.string.hw_upgrade_general_security_description),
+                description = if (state.isCloudBackupRemovalShown) {
+                    stringResourceSafe(
+                        R.string.hw_upgrade_general_security_description_v2,
+                        stringResourceSafe(R.string.hw_cloud_backup_service_name),
+                    )
+                } else {
+                    stringResourceSafe(R.string.hw_upgrade_general_security_description)
+                },
                 iconRes = R.drawable.ic_protect_24,
             )
         }

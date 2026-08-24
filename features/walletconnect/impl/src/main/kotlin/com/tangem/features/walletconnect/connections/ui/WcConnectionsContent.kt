@@ -38,7 +38,6 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TopAppBarButton
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
-import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -52,20 +51,10 @@ import kotlinx.collections.immutable.ImmutableList
 private const val LOCKED_WALLET_ALPHA = 0.5f
 
 @Composable
-internal fun WcConnectionsContent(
-    state: WcConnectionsState,
-    modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-) {
+internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors.background.secondary,
-        snackbarHost = {
-            TangemSnackbarHost(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                hostState = snackbarHostState,
-            )
-        },
         topBar = {
             ConnectionsTopBar(
                 modifier = Modifier.statusBarsPadding(),

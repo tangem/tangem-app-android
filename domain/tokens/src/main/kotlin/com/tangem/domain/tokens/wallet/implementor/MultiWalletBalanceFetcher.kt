@@ -30,6 +30,7 @@ internal class MultiWalletBalanceFetcher(
         ),
         WalletFetchingSource.TangemPay,
         WalletFetchingSource.VirtualAccount,
+        WalletFetchingSource.Prediction,
     )
 
     override suspend fun getCryptoCurrencies(userWallet: UserWallet): Set<CryptoCurrency> {

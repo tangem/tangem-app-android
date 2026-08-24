@@ -124,6 +124,12 @@ object TangemMessageBubble {
 
         /** Subtle info-blue background with info text. */
         Info,
+
+        /** Subtle error-red background with error text. */
+        Error,
+
+        /** Subtle warning-yellow background with warning text. */
+        Warning,
     }
 }
 
@@ -240,6 +246,16 @@ private fun TangemMessageBubble.Variant.tokens(): MessageBubbleTokens {
             background = colors.bg.status.infoSubtle,
             content = colors.text.status.info,
             closeIcon = colors.icon.status.info,
+        )
+        TangemMessageBubble.Variant.Error -> MessageBubbleTokens(
+            background = colors.bg.status.errorSubtle,
+            content = colors.text.status.error,
+            closeIcon = colors.icon.status.error,
+        )
+        TangemMessageBubble.Variant.Warning -> MessageBubbleTokens(
+            background = colors.bg.status.warningSubtle,
+            content = colors.text.status.warning,
+            closeIcon = colors.icon.status.warning,
         )
     }
 }

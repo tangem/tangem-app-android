@@ -5,7 +5,6 @@ import com.tangem.common.constants.TestConstants.REFERRAL_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.*
@@ -54,10 +53,7 @@ class AccountArchivationsTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, userAccountsState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -101,10 +97,7 @@ class AccountArchivationsTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, userAccountsState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -138,11 +131,7 @@ class AccountArchivationsTest : BaseTestCase() {
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, userAccountsState)
                 setWireMockScenarioState(referralScenario, referralActiveState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-                resetWireMockScenarioState(referralScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -176,10 +165,7 @@ class AccountArchivationsTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, userAccountsInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -219,10 +205,7 @@ class AccountArchivationsTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, userAccountsInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -318,10 +301,7 @@ class AccountArchivationsTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, userAccountsInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -355,5 +335,4 @@ class AccountArchivationsTest : BaseTestCase() {
             }
         }
     }
-
 }

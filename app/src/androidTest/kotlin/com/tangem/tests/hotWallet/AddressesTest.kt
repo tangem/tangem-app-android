@@ -10,7 +10,6 @@ import com.tangem.common.constants.TestConstants.SEED_PHRASE_15
 import com.tangem.common.constants.TestConstants.SEED_PHRASE_18
 import com.tangem.common.constants.TestConstants.SEED_PHRASE_21
 import com.tangem.common.constants.TestConstants.SEED_PHRASE_24
-import com.tangem.common.utils.checkServiceHealth
 import com.tangem.common.utils.getAddressesFromApi
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.verifyAddresses
@@ -27,11 +26,15 @@ class AddressesTest : BaseTestCase() {
 
     private fun setupAddressTestHooks(seedKey: String) = setupHooks(
         additionalBeforeAppLaunchSection = {
-            val status = checkServiceHealth()
-            assertNotNull("QA tools service is unreachable ([REDACTED_ENV_URL]", status)
-
+            // Straight to the data, the way the iOS QAToolsClient does it. A preflight /health call proves
+            // nothing — the service can drop between the two requests, and Cloudflare Access can allow one
+            // endpoint and reject the other — while doubling the network cost and the failure timeout.
             apiAddressesJson = getAddressesFromApi(seedKey)
-            assertNotNull("Failed to fetch reference addresses for '$seedKey'", apiAddressesJson)
+            assertNotNull(
+                "Failed to fetch reference addresses for '$seedKey' — qa-tools ([REDACTED_ENV_URL]) " +
+                    "is unreachable or did not return them",
+                apiAddressesJson,
+            )
         },
     )
 

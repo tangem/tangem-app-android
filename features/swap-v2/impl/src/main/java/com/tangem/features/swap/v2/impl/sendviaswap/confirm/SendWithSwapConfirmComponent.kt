@@ -41,7 +41,6 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
-import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.SendWithSwapConfirmModel
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.ui.SendWithSwapConfirmContent
@@ -151,7 +150,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         appComponentContext = appComponentContext.childByContext(child("sendWithSwapConfirmSwapNotifications")),
         params = SwapNotificationsComponent.Params(
             swapNotificationData = SwapNotificationsComponent.Params.SwapNotificationData(
-                expressError = (model.confirmData.quote as? SwapQuoteUM.Error)?.expressError,
+                quote = model.confirmData.quote,
                 fromCryptoCurrency = model.confirmData.fromCryptoCurrencyStatus?.currency,
                 destinationAddress = model.confirmData.enteredDestination.orEmpty(),
                 memo = model.confirmData.enteredMemo,
