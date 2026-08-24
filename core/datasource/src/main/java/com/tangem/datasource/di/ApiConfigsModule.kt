@@ -53,13 +53,6 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(Auth.KEY)
-    fun provideAuthConfig(): ApiConfig {
-        return Auth()
-    }
-
-    @Provides
-    @IntoMap
     @StringKey(PolymarketWeb.KEY)
     fun providePolymarketWebConfig(): ApiConfig {
         return PolymarketWeb()
