@@ -28,6 +28,7 @@ dependencies {
     // region Other libraries
     api(deps.arrow.core)
     api(deps.okHttp)
+    api(deps.androidx.datastore.preferences.core)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.retrofit)
