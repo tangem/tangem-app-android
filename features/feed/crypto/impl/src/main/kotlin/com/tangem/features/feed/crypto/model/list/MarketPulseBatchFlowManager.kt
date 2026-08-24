@@ -11,7 +11,6 @@ import com.tangem.features.feed.crypto.ui.state.MarketPulseItemUM
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -23,7 +22,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -43,14 +44,14 @@ import kotlinx.coroutines.launch
 @Suppress("LongParameterList")
 internal class MarketPulseBatchFlowManager(
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
-    private val currentTrendInterval: Provider<MarketPulseInterval>,
-    private val currentAppCurrency: Provider<AppCurrency>,
-    private val currentCategory: Provider<MarketPulseCategory>,
+    private val currentTrendInterval: () -> MarketPulseInterval,
+    private val currentAppCurrency: () -> AppCurrency,
+    private val currentCategory: () -> MarketPulseCategory,
     private val onItemClick: (CryptoCurrency.RawID) -> Unit,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
     batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
-    private val currentSearchText: Provider<String?> = Provider { null },
+    private val currentSearchText: () -> String? = { null },
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
     private val updateStateJob = JobHolder()
@@ -122,6 +123,22 @@ internal class MarketPulseBatchFlowManager(
             scope = modelScope,
             started = SharingStarted.Eagerly,
             initialValue = false,
+        )
+
+    val initialLoadingError: Flow<Throwable> = batchFlow.state
+        .map { it.status }
+        .distinctUntilChanged()
+        .filterIsInstance<PaginationStatus.InitialLoadingError>()
+        .map { it.throwable }
+
+    /** The source's own result count, which can exceed the number of batches loaded so far. */
+    val totalCount: StateFlow<Int?> = batchFlow.state
+        .map { it.totalCount }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
         )
 
     /** True only once the source is exhausted, so an in-flight search never renders as "not found". */
