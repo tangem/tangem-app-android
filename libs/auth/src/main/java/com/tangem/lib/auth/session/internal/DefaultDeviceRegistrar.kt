@@ -56,7 +56,7 @@ internal class DefaultDeviceRegistrar(
                 // runRegister doesn't short-circuit, and so a failed attempt self-heals on the next
                 // launch's register() call.
                 runSuspendCatching {
-                    appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = false)
+                    appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = false)
                 }.onFailure { e ->
                     TangemLogger.e("Failed to reset device-registration flag before re-register", e)
                     raise(DeviceRegistrationError.PersistenceFailed(e))
