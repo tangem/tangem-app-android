@@ -133,7 +133,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             assertThat(feeExtended!!.feeTokenId).isEqualTo(usdc.id)
             assertThat(feeExtended.transactionFee.normal).isInstanceOf(Fee.Ethereum.TokenCurrency::class.java)
             assertThat(feeExtended.gaslessFeePlan).isEqualTo(plan)
-            assertThat(feeExtended.withdrawGasLimit).isEqualTo(WITHDRAW_GAS)
+            assertThat(feeExtended.withdrawGasLimit).isEqualTo(PADDED_WITHDRAW_GAS)
         }
 
     @Test
@@ -398,6 +398,9 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
 
         val SWAP_AMOUNT: BigDecimal = BigDecimal("20.421312")
         val WITHDRAW_GAS: BigInteger = BigInteger("200000")
+
+        /** [WITHDRAW_GAS] after TokenFeeCalculator's PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT safety margin. */
+        val PADDED_WITHDRAW_GAS: BigInteger = BigInteger("280000")
 
         val INITIAL_FEE = Fee.Ethereum.EIP1559(
             amount = com.tangem.blockchain.common.Amount(
