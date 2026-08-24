@@ -108,7 +108,7 @@ internal class PlacePredictionModelTest {
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
         coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns ADDRESSES
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("100"), allowance = BigDecimal("1000")).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("100"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
         coEvery { getQuoteUseCase(request = any()) } returns createQuote().right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
@@ -656,7 +656,7 @@ internal class PlacePredictionModelTest {
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("1"), allowance = BigDecimal("1000")).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("1"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
         model.onScreenHidden()
 
         // Act
