@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
