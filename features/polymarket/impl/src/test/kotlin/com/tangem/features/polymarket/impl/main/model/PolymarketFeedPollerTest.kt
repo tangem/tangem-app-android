@@ -186,6 +186,40 @@ internal class PolymarketFeedPollerTest {
     }
 
     @Test
+    fun `GIVEN a failed refresh WHEN scrolling keeps stopping THEN the page is not asked again until the interval`() =
+        runTest {
+            // Arrange
+            val poller = pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
+            passPollInterval()
+            failRefresh(batchKey = 0)
+
+            // Act
+            repeat(times = 5) {
+                poller.onScrollIdle()
+                runCurrent()
+            }
+
+            // Assert
+            assertThat(refreshedKeys()).containsExactly(0)
+        }
+
+    @Test
+    fun `GIVEN a failed refresh WHEN the interval since it passes THEN the page is asked again`() = runTest {
+        // Arrange
+        val poller = pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
+        passPollInterval()
+        failRefresh(batchKey = 0)
+
+        // Act
+        advanceTimeBy(POLL_INTERVAL)
+        poller.onScrollIdle()
+        runCurrent()
+
+        // Assert
+        assertThat(refreshedKeys()).containsExactly(0, 0)
+    }
+
+    @Test
     fun `GIVEN two failed refreshes of a visible page WHEN they fail THEN the user is not told anything`() = runTest {
         // Arrange
         pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
