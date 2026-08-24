@@ -6,17 +6,14 @@ import com.tangem.datasource.api.common.config.YieldSupply
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
-import com.tangem.datasource.api.common.config.Auth
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
-import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
@@ -27,7 +24,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.build
-import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -41,8 +37,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
-
-    private const val TIMEOUT_60_SECONDS = 60L
 
     @Provides
     @Singleton
@@ -105,24 +99,6 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemTechMarketsApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechMarketsApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_60_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_60_SECONDS,
-                ),
-                shouldSaveLogs = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
@@ -179,22 +155,6 @@ internal object NetworkModule {
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
                 shouldSaveLogs = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideAuthApi(retrofitApiBuilder: RetrofitApiBuilder): AuthApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = Auth.ID,
-                shouldApplyTimeoutAnnotations = false,
-                // Per-method annotations (`@RequiresDpopProof`, `@RequiresSessionAuth`) gate the hooks
-                // installed here. `/refresh` carries `@RequiresDpopProof` only, so the Authenticator
-                // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
-                // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
-                shouldUseSessionAuth = true,
             ),
         )
     }

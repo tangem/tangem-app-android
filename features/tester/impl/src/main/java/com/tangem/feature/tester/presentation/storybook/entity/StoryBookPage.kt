@@ -36,6 +36,9 @@ internal data object StoryList : StoryBookPage
 
 internal data object ButtonsStory : StoryBookPage
 
+/** Story player showcase. Full-bleed: the player draws its own system bar insets. */
+internal data object StoriesV2Story : StoryBookPage
+
 internal data class TangemBadgeStory(
     val selectedColor: TangemBadgeColor,
     val onColorChange: (TangemBadgeColor) -> Unit,

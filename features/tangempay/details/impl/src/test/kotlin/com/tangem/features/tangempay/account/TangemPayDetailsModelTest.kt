@@ -14,6 +14,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -71,7 +72,7 @@ internal class TangemPayDetailsModelTest {
 
     @BeforeEach
     fun resetCashbackMocks() {
-        clearMocks(tangemPayFeatureToggles, getCashbackSummaryUseCase)
+        clearMocks(analytics, tangemPayFeatureToggles, getCashbackSummaryUseCase)
     }
 
     @Test
@@ -311,6 +312,61 @@ internal class TangemPayDetailsModelTest {
         return tracked
     }
 
+    @Test
+    fun `GIVEN a delivering card WHEN the status re-emits THEN the in-transit banner event is sent once`() = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering)))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an active card WHEN it starts delivering THEN the in-transit banner event is sent`() = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+        }
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the delivery banner WHEN Activate card is tapped THEN the banner button event is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onActivateCardClick(cardId = "card_1")
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.ActivateCardBannerButtonClicked>())
+        }
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
         statusSource: StatusSource = StatusSource.ACTUAL,
@@ -368,6 +424,7 @@ internal class TangemPayDetailsModelTest {
             confirmedAmount = BigDecimal("2.70"),
             totalEarnedAmount = BigDecimal("2.70"),
             currency = "USD",
+            payoutCurrency = "USDC",
             previousPayout = null,
             period = TangemPayCashback.Period(
                 year = 2026,
@@ -383,13 +440,14 @@ internal class TangemPayDetailsModelTest {
         accountError: PaymentAccountStatusValue.Error? = null,
         availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         virtualAccount: VirtualAccountOnramp? = null,
+        cardState: TangemPayCardState = TangemPayCardState.Active,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
         every { depositAddress } returns "address"
         every { this@mockk.virtualAccount } returns virtualAccount
-        every { cards } returns listOf(tangemPayCard())
+        every { cards } returns listOf(tangemPayCard(state = cardState))
         every { balance } returns PaymentAccountStatusValue.Balance(
             fiatBalance = PaymentAccountStatusValue.FiatBalance(
                 availableBalance = BigDecimal.ZERO,

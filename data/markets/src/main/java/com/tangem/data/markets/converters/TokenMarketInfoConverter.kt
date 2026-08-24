@@ -4,7 +4,7 @@ import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
+import com.tangem.store.datasource.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.BuildConfig
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenQuotes
