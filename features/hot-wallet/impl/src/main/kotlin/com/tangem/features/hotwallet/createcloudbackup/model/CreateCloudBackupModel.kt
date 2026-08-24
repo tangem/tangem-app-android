@@ -38,8 +38,9 @@ import com.tangem.features.hotwallet.CreateCloudBackupComponent
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -79,7 +80,7 @@ internal class CreateCloudBackupModel @Inject constructor(
     val uiState: StateFlow<CreateCloudBackupUM>
         field = MutableStateFlow<CreateCloudBackupUM>(CreateCloudBackupUM.Preparing(onBackClick = ::onBack))
 
-    private var authJob: Job? = null
+    private val authJobHolder = JobHolder()
 
     init {
         trackingContextProxy.addHotWalletContext()
@@ -103,10 +104,10 @@ internal class CreateCloudBackupModel @Inject constructor(
     }
 
     private fun authorize() {
-        if (authJob?.isActive == true) return
+        if (authJobHolder.isActive) return
 
         uiState.value = CreateCloudBackupUM.Preparing(onBackClick = ::onBack)
-        authJob = modelScope.launch {
+        modelScope.launch {
             cloudBackupRepository.getAccountInfo(interactive = true).fold(
                 ifLeft = ::onAuthError,
                 ifRight = {
@@ -114,7 +115,7 @@ internal class CreateCloudBackupModel @Inject constructor(
                     analyticsEventHandler.send(WalletSettingsAnalyticEvents.SetCloudPasswordScreen())
                 },
             )
-        }
+        }.saveIn(authJobHolder)
     }
 
     private fun onAuthError(error: CloudBackupError) {
