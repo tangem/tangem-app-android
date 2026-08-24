@@ -3,8 +3,8 @@ package com.tangem.domain.models.account
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.DerivationIndexError
+import com.tangem.domain.models.account.Account.Personal.Error.AccountNameError
+import com.tangem.domain.models.account.Account.Personal.Error.DerivationIndexError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
@@ -28,39 +28,26 @@ sealed interface Account {
         get() = accountId.userWalletId
 
     /**
-     * Marker for accounts that hold a portfolio of crypto currencies: [CryptoPortfolio] and [Joint].
-     * [Payment], [Virtual] and [Prediction] accounts hold no portfolio and are deliberately excluded.
+     * An account that holds a portfolio of crypto currencies: either a [Personal] account of the wallet itself, or a
+     * [Joint] account shared with other participants. [Payment], [Virtual] and [Prediction] hold no portfolio and are
+     * deliberately excluded.
      */
     @Serializable
-    sealed interface Portfolio : Account {
+    sealed interface CryptoPortfolio : Account {
 
         /** Icon representing the account */
         val icon: CryptoPortfolioIcon
 
-        /** Index used for derivation of the account */
+        /**
+         * Index used for derivation of the account.
+         *
+         * The two kinds index in two independent spaces: a [Personal] account in the wallet's own, a [Joint] one in
+         * the participant's owner key space. Matching an index across the kinds means nothing.
+         */
         val derivationIndex: DerivationIndex
 
         /** Set of tokens associated with the account */
         val cryptoCurrencies: List<CryptoCurrency>
-    }
-
-    /**
-     * Represents a crypto portfolio account
-     *
-     * @property accountId        unique identifier of the account
-     * @property accountName      name of the account
-     * @property icon             icon representing the account
-     * @property derivationIndex  index used for derivation of the account
-     * @property cryptoCurrencies set of tokens associated with the account
-     */
-    @Serializable
-    data class CryptoPortfolio private constructor(
-        override val accountId: AccountId,
-        override val accountName: AccountName,
-        override val icon: CryptoPortfolioIcon,
-        override val derivationIndex: DerivationIndex,
-        override val cryptoCurrencies: List<CryptoCurrency>,
-    ) : Portfolio {
 
         /** Indicates if the account is the main account */
         val isMainAccount: Boolean
@@ -74,12 +61,50 @@ sealed interface Account {
         val networksCount: Int
             get() = cryptoCurrencies.map(CryptoCurrency::network).distinct().size
 
+        /**
+         * Returns a copy of the account with [accountName] and [icon] replaced.
+         *
+         * Both subtypes are data classes over the same fields, but only the concrete type can copy itself, so the
+         * parent asks it for the copy instead of narrowing to one of them.
+         */
+        fun withNameAndIcon(accountName: AccountName, icon: CryptoPortfolioIcon): CryptoPortfolio
+
+        /** Returns a copy of the account with [cryptoCurrencies] replaced. */
+        fun withCurrencies(cryptoCurrencies: List<CryptoCurrency>): CryptoPortfolio
+    }
+
+    /**
+     * Represents a crypto portfolio account of the wallet itself
+     *
+     * @property accountId        unique identifier of the account
+     * @property accountName      name of the account
+     * @property icon             icon representing the account
+     * @property derivationIndex  index used for derivation of the account
+     * @property cryptoCurrencies set of tokens associated with the account
+     */
+    @Serializable
+    data class Personal private constructor(
+        override val accountId: AccountId,
+        override val accountName: AccountName,
+        override val icon: CryptoPortfolioIcon,
+        override val derivationIndex: DerivationIndex,
+        override val cryptoCurrencies: List<CryptoCurrency>,
+    ) : CryptoPortfolio {
+
+        override fun withNameAndIcon(accountName: AccountName, icon: CryptoPortfolioIcon): Personal {
+            return copy(accountName = accountName, icon = icon)
+        }
+
+        override fun withCurrencies(cryptoCurrencies: List<CryptoCurrency>): Personal {
+            return copy(cryptoCurrencies = cryptoCurrencies)
+        }
+
         fun copy(
             accountName: AccountName = this.accountName,
             icon: CryptoPortfolioIcon = this.icon,
             cryptoCurrencies: List<CryptoCurrency> = this.cryptoCurrencies,
-        ): CryptoPortfolio {
-            return CryptoPortfolio(
+        ): Personal {
+            return Personal(
                 accountId = this.accountId,
                 accountName = accountName,
                 icon = icon,
@@ -106,7 +131,7 @@ sealed interface Account {
         companion object {
 
             /**
-             * Constructor for creating a [CryptoPortfolio] instance
+             * Constructor for creating a [Personal] instance
              *
              * @param accountId        unique identifier of the account
              * @param name      name of the account
@@ -120,7 +145,7 @@ sealed interface Account {
                 icon: CryptoPortfolioIcon,
                 derivationIndex: Int,
                 cryptoCurrencies: List<CryptoCurrency> = emptyList(),
-            ): Either<Error, CryptoPortfolio> {
+            ): Either<Error, Personal> {
                 return either {
                     val accountName = AccountName(value = name).getOrElse {
                         raise(AccountNameError(cause = it))
@@ -141,7 +166,7 @@ sealed interface Account {
             }
 
             /**
-             * Constructor for creating a [CryptoPortfolio] instance
+             * Constructor for creating a [Personal] instance
              *
              * @param accountId        unique identifier of the account
              * @param accountName      name of the account
@@ -156,8 +181,8 @@ sealed interface Account {
                 icon: CryptoPortfolioIcon,
                 derivationIndex: DerivationIndex,
                 cryptoCurrencies: List<CryptoCurrency> = emptyList(),
-            ): CryptoPortfolio {
-                return CryptoPortfolio(
+            ): Personal {
+                return Personal(
                     accountId = accountId,
                     accountName = accountName,
                     icon = icon,
@@ -175,10 +200,10 @@ sealed interface Account {
             fun createMainAccount(
                 userWalletId: UserWalletId,
                 cryptoCurrencies: List<CryptoCurrency> = emptyList(),
-            ): CryptoPortfolio {
+            ): Personal {
                 val derivationIndex = DerivationIndex.Main
 
-                return CryptoPortfolio(
+                return Personal(
                     accountId = AccountId.forCryptoPortfolio(
                         userWalletId = userWalletId,
                         derivationIndex = derivationIndex,
@@ -244,7 +269,7 @@ sealed interface Account {
      * @property accountName      name of the account, shared by all participants and fixed at creation
      * @property icon             icon representing the account, shared and fixed at creation
      * @property derivationIndex  index of the owner key derivation; an index space independent from
-     * [CryptoPortfolio] accounts
+     * [Personal] accounts
      * @property cryptoCurrencies tokens associated with the account. They are never spendable through the regular
      * send/swap flows: a joint account is a Safe contract, not an EOA — see `AccountList.flattenCurrencies`
      */
@@ -255,7 +280,22 @@ sealed interface Account {
         override val icon: CryptoPortfolioIcon,
         override val derivationIndex: DerivationIndex,
         override val cryptoCurrencies: List<CryptoCurrency>,
-    ) : Portfolio {
+    ) : CryptoPortfolio {
+
+        /**
+         * Joint accounts have no main one: they are equal to each other, and their index belongs to the owner key
+         * space, where the value of the main personal index means nothing.
+         */
+        override val isMainAccount: Boolean
+            get() = false
+
+        override fun withNameAndIcon(accountName: AccountName, icon: CryptoPortfolioIcon): Joint {
+            return copy(accountName = accountName, icon = icon)
+        }
+
+        override fun withCurrencies(cryptoCurrencies: List<CryptoCurrency>): Joint {
+            return copy(cryptoCurrencies = cryptoCurrencies)
+        }
 
         /**
          * Represents possible errors when creating a joint account
@@ -337,4 +377,4 @@ sealed interface Account {
 }
 
 val Account.derivationIndex: DerivationIndex?
-    get() = (this as? Account.Portfolio)?.derivationIndex
+    get() = (this as? Account.CryptoPortfolio)?.derivationIndex

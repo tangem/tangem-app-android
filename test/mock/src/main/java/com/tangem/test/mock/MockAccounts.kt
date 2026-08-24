@@ -33,9 +33,9 @@ object MockAccounts {
         ).getOrNull()!!
     }
 
-    fun createAccounts(count: Int, userWalletId: UserWalletId = this.userWalletId): List<Account.CryptoPortfolio> {
+    fun createAccounts(count: Int, userWalletId: UserWalletId = this.userWalletId): List<Account.Personal> {
         return buildList {
-            add(Account.CryptoPortfolio.createMainAccount(userWalletId))
+            add(Account.Personal.createMainAccount(userWalletId))
 
             repeat(count - 1) {
                 val account = createAccount(derivationIndex = it + 1, userWalletId = userWalletId)
@@ -69,10 +69,10 @@ object MockAccounts {
         icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
         cryptoCurrencies: List<CryptoCurrency> = emptyList(),
         userWalletId: UserWalletId = this.userWalletId,
-    ): Account.CryptoPortfolio {
+    ): Account.Personal {
         val derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!
 
-        return Account.CryptoPortfolio(
+        return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = AccountName(name).getOrNull()!!,
             icon = icon,

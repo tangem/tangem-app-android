@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 
 /**
- * Default implementation of [SingleAccountProducer] that produces a flow of [Account.Portfolio] for
+ * Default implementation of [SingleAccountProducer] that produces a flow of [Account.CryptoPortfolio] for
  * a single account identified by [SingleAccountProducer.Params.accountId].
  *
  * It uses [SingleAccountListSupplier] to get the list of accounts and filters it to find the specific
@@ -35,16 +35,16 @@ internal class DefaultSingleAccountProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountProducer {
 
-    override val fallback: Option<Account.Portfolio>
+    override val fallback: Option<Account.CryptoPortfolio>
         get() = none()
 
-    override fun produce(): Flow<Account.Portfolio> {
+    override fun produce(): Flow<Account.CryptoPortfolio> {
         return singleAccountListSupplier(
             params = SingleAccountListProducer.Params(userWalletId = params.accountId.userWalletId),
         )
             .mapNotNull { accountList ->
                 accountList.accounts
-                    .filterIsInstance<Account.Portfolio>()
+                    .filterIsInstance<Account.CryptoPortfolio>()
                     .firstOrNull { params.accountId == it.accountId }
             }
             .flowOn(dispatchers.default)
