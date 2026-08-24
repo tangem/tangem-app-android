@@ -65,7 +65,7 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
      * alone is not enough for a merged deal, support needs to find the on-chain leg too, and the leg's own hash
      * is what [Explore] already links to.
      */
-    private fun ExpressTx.onChainHashOrNull(): String? = txInfo?.let { it.explorerHash }
+    private fun ExpressTx.onChainHashOrNull(): String? = txInfo?.explorerHash
 
     @Suppress("LongParameterList")
     private fun buildShareText(
