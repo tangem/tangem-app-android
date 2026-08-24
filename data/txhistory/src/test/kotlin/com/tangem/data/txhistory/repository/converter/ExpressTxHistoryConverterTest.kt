@@ -170,6 +170,18 @@ internal class ExpressTxHistoryConverterTest {
         assertThat(onramp.tx.toAsset.amount).isEquivalentAccordingToCompareTo(BigDecimal("0.5"))
     }
 
+    @Test
+    fun `GIVEN onramp entity with external tx id WHEN convert THEN external tx id mapped to domain`() {
+        // Arrange
+        val entity = createOnrampEntity(externalTxId = "ext-2")
+
+        // Act
+        val onramp = onrampConverter.convert(ExpressOnrampConverter.Input(entity, provider = null))
+
+        // Assert
+        assertThat(onramp.tx.externalTxId).isEqualTo("ext-2")
+    }
+
     private fun createExchangeEntity(
         payinHash: String? = "payin",
         payoutHash: String? = "payout",
@@ -221,13 +233,14 @@ internal class ExpressTxHistoryConverterTest {
     private fun createOnrampEntity(
         payoutHash: String? = "payout",
         status: String = "finished",
+        externalTxId: String? = null,
     ) = ExpressOnrampEntity(
         txId = "onramp-1",
         providerId = "provider",
         payoutAddress = "owner",
         status = status,
         failReason = null,
-        externalTxId = null,
+        externalTxId = externalTxId,
         externalTxUrl = null,
         payoutHash = payoutHash,
         createdAt = CREATED_AT,

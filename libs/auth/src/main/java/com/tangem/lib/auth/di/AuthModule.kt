@@ -12,7 +12,7 @@ import com.tangem.core.remote.auth.SessionAuthAuthenticator
 import com.tangem.core.remote.auth.SessionAuthInterceptor
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.attestation.AttestationProvider
