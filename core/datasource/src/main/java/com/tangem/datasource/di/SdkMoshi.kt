@@ -6,8 +6,3 @@ import javax.inject.Qualifier
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
 annotation class SdkMoshi
-
-@Qualifier
-@MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
-annotation class NetworkMoshi
