@@ -22,6 +22,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.CryptoPortfolio
+import com.tangem.domain.models.account.Account.Personal
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -615,7 +616,7 @@ class DefaultAccountsCRUDRepositoryTest {
             // Arrange
             val accountList = AccountList(
                 userWalletId = userWalletId,
-                accounts = listOf(CryptoPortfolio.createMainAccount(userWalletId = userWalletId), jointAccount()),
+                accounts = listOf(Personal.createMainAccount(userWalletId = userWalletId), jointAccount()),
                 totalAccounts = 2,
                 totalArchivedAccounts = 0,
                 totalJointAccounts = 1,
@@ -636,7 +637,7 @@ class DefaultAccountsCRUDRepositoryTest {
                 .containsExactly(WalletAccountDTO.Type.CRYPTO.value, WalletAccountDTO.Type.JOINT.value)
             Truth.assertThat(bodySlot.captured.accounts.map { it.id })
                 .containsExactly(
-                    CryptoPortfolio.createMainAccount(userWalletId = userWalletId).accountId.value,
+                    Personal.createMainAccount(userWalletId = userWalletId).accountId.value,
                     jointAccount().accountId.value,
                 )
         }
