@@ -5,6 +5,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -64,10 +65,10 @@ interface CloudBackupRepository {
 
     /**
      * Downloads the backup file with [fileId] and decrypts it with [password], returning the wallet
-     * secret. Fails with [CloudBackupError.WrongPassword] on a bad password and
-     * [CloudBackupError.InvalidBackupFile] on a malformed/unsupported file.
+     * secret and the wallet name stored in the file. Fails with [CloudBackupError.WrongPassword] on a
+     * bad password and [CloudBackupError.InvalidBackupFile] on a malformed/unsupported file.
      */
-    suspend fun readBackup(fileId: String, password: CharArray): Either<CloudBackupError, CloudBackupSecretData>
+    suspend fun readBackup(fileId: String, password: CharArray): Either<CloudBackupError, RestoredCloudBackup>
 
     /** Deletes the backup file with [fileId]. Deleting an already absent file is a success */
     suspend fun deleteBackup(fileId: String): Either<CloudBackupError, Unit>
