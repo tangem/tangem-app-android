@@ -95,7 +95,7 @@ internal class CryptoFeedTabModel @Inject constructor(
             flow2 = listManager.isInInitialLoadingErrorState,
         ) { items, isInErrorState ->
             when {
-                isInErrorState -> MarketPulseListUM.Error(onRetry = listManager::reload)
+                isInErrorState -> MarketPulseListUM.Error(onRetry = { listManager.reload() })
                 items.isEmpty() -> MarketPulseListUM.Loading
                 else -> MarketPulseListUM.Content(items = items, loadMore = listManager::loadMore)
             }

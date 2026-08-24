@@ -6,7 +6,7 @@ import arrow.core.Some
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

@@ -15,10 +15,12 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.CryptoPortfolio
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
@@ -585,49 +587,69 @@ class DefaultAccountsCRUDRepositoryTest {
         fun `saveAccounts should call API and update store`() = runTest {
             // Arrange
             val accountList = AccountList.empty(userWalletId = userWalletId)
-            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
+            val expectedBody = SaveWalletAccountsResponseConverter.convert(value = accountList)
 
             val accountsResponse = createGetWalletAccountsResponse(userWalletId)
-            accountsResponseStoreFlow.value = accountsResponse
 
-            val converter = mockk<CryptoPortfolioConverter> {
-                every { this@mockk.convertListBack(accounts) } returns accountsResponse.accounts
-            }
-
-            every { convertersContainer.createCryptoPortfolioConverter(userWalletId) } returns converter
-            coEvery { walletAccountsSaver.push(userWalletId, accountsResponse.accounts) } returns accountsResponse
+            coEvery {
+                walletAccountsSaver.push(userWalletId = userWalletId, body = expectedBody)
+            } returns accountsResponse
 
             // Act
             repository.saveAccounts(accountList)
 
             // Assert
-            Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(accountsResponse)
-
             coVerifyOrder {
-                convertersContainer.createCryptoPortfolioConverter(userWalletId)
-                converter.convertListBack(accounts)
-                walletAccountsSaver.push(userWalletId, accountsResponse.accounts)
+                walletAccountsSaver.push(userWalletId = userWalletId, body = expectedBody)
+                walletAccountsSaver.store(userWalletId = userWalletId, response = accountsResponse)
             }
+        }
+
+        /**
+         * The backend archives an account whose row is missing from the written document, so a joint account
+         * must survive an edit of an ordinary one — renaming, sorting or archiving a crypto account all come
+         * through here with the whole list.
+         */
+        @Test
+        fun `GIVEN account list with a joint account WHEN saveAccounts THEN the joint row is pushed too`() = runTest {
+            // Arrange
+            val accountList = AccountList(
+                userWalletId = userWalletId,
+                accounts = listOf(CryptoPortfolio.createMainAccount(userWalletId = userWalletId), jointAccount()),
+                totalAccounts = 2,
+                totalArchivedAccounts = 0,
+                totalJointAccounts = 1,
+            ).getOrNull()!!
+
+            val accountsResponse = createGetWalletAccountsResponse(userWalletId)
+            val bodySlot = slot<SaveWalletAccountsResponse>()
+
+            coEvery {
+                walletAccountsSaver.push(userWalletId = userWalletId, body = capture(bodySlot))
+            } returns accountsResponse
+
+            // Act
+            repository.saveAccounts(accountList)
+
+            // Assert
+            Truth.assertThat(bodySlot.captured.accounts.map { it.type })
+                .containsExactly(WalletAccountDTO.Type.CRYPTO.value, WalletAccountDTO.Type.JOINT.value)
+            Truth.assertThat(bodySlot.captured.accounts.map { it.id })
+                .containsExactly(
+                    CryptoPortfolio.createMainAccount(userWalletId = userWalletId).accountId.value,
+                    jointAccount().accountId.value,
+                )
         }
 
         @Test
         fun `saveAccounts if API request is failed`() = runTest {
             // Arrange
             val accountList = AccountList.empty(userWalletId = userWalletId)
-            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
-
-            val accountsResponse = createGetWalletAccountsResponse(userWalletId)
-            accountsResponseStoreFlow.value = accountsResponse
-
-            val converter = mockk<CryptoPortfolioConverter> {
-                every { this@mockk.convertListBack(accounts) } returns accountsResponse.accounts
-            }
-
-            every { convertersContainer.createCryptoPortfolioConverter(userWalletId) } returns converter
+            val expectedBody = SaveWalletAccountsResponseConverter.convert(value = accountList)
 
             val exception = Exception("Test error")
 
-            coEvery { walletAccountsSaver.push(userWalletId, accountsResponse.accounts) } throws exception
+            coEvery { walletAccountsSaver.push(userWalletId = userWalletId, body = expectedBody) } throws exception
 
             // Act
             val actual = runCatching { repository.saveAccounts(accountList) }.exceptionOrNull()!!
@@ -636,10 +658,21 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(actual).isInstanceOf(exception::class.java)
             Truth.assertThat(actual).hasMessageThat().isEqualTo(exception.message)
 
-            coVerifyOrder {
-                convertersContainer.createCryptoPortfolioConverter(userWalletId)
-                converter.convertListBack(accounts)
-            }
+            coVerify(exactly = 0) { walletAccountsSaver.store(userWalletId = any(), response = any()) }
+        }
+
+        private fun jointAccount(): Account.Joint {
+            return Account.Joint(
+                accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = JOINT_ROW_ID)
+                    .getOrNull()!!,
+                accountName = AccountName.Custom(value = "Family").getOrNull()!!,
+                icon = CryptoPortfolioIcon.ofCustomAccount(
+                    value = CryptoPortfolioIcon.Icon.Star,
+                    color = CryptoPortfolioIcon.Color.Azure,
+                ),
+                derivationIndex = DerivationIndex(value = 1).getOrNull()!!,
+                cryptoCurrencies = emptyList(),
+            )
         }
     }
 
@@ -735,5 +768,9 @@ class DefaultAccountsCRUDRepositoryTest {
                 accountsResponseStore.data
             }
         }
+    }
+
+    private companion object {
+        const val JOINT_ROW_ID = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"
     }
 }
