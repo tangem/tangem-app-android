@@ -43,7 +43,7 @@ internal class TangemPayAdditionalCashbackConverterTest {
     @Test
     fun `GIVEN promo WHEN convert THEN item fields mapped`() {
         // Arrange
-        val promo = additional(id = "1", name = "Groceries increase", description = "+1%", isPermanent = true)
+        val promo = additional(id = "1", name = "Groceries increase", description = "+1%")
 
         // Act
         val result = converter.convert(listOf(promo))
@@ -59,22 +59,39 @@ internal class TangemPayAdditionalCashbackConverterTest {
         )
     }
 
+    @Test
+    fun `GIVEN promo without description WHEN convert THEN description is null`() {
+        // Act
+        val result = converter.convert(listOf(additional(description = null)))
+
+        // Assert
+        assertThat(result.items.single().description).isNull()
+    }
+
+    @Test
+    fun `GIVEN several promos WHEN convert THEN backend order is preserved`() {
+        // Act
+        val result = converter.convert(
+            listOf(additional(id = "high", priority = 99), additional(id = "low", priority = 10)),
+        )
+
+        // Assert
+        assertThat(result.items.map { it.id }).containsExactly("high", "low").inOrder()
+    }
+
     @ParameterizedTest
     @MethodSource("badgeCases")
-    fun `GIVEN permanence and end date WHEN convert THEN badge reflects them`(model: BadgeCase) {
+    fun `GIVEN end date WHEN convert THEN badge reflects it`(model: BadgeCase) {
         // Act
-        val result = converter.convert(listOf(additional(isPermanent = model.isPermanent, endDate = model.endDate)))
+        val result = converter.convert(listOf(additional(endDate = model.endDate)))
 
         // Assert
         assertThat(result.items.single().badge).isEqualTo(model.expected)
     }
 
     private fun badgeCases() = listOf(
-        BadgeCase(isPermanent = true, endDate = null, expected = TangemPayAdditionalCashbackUM.Badge.Permanent),
-        BadgeCase(isPermanent = true, endDate = DATE, expected = TangemPayAdditionalCashbackUM.Badge.Permanent),
-        BadgeCase(isPermanent = false, endDate = null, expected = TangemPayAdditionalCashbackUM.Badge.Permanent),
+        BadgeCase(endDate = null, expected = TangemPayAdditionalCashbackUM.Badge.Permanent),
         BadgeCase(
-            isPermanent = false,
             endDate = DATE,
             expected = TangemPayAdditionalCashbackUM.Badge.Until(
                 resourceReference(R.string.tangempay_cashback_additional_until, wrappedList(FORMATTED_DATE)),
@@ -83,7 +100,6 @@ internal class TangemPayAdditionalCashbackConverterTest {
     )
 
     internal data class BadgeCase(
-        val isPermanent: Boolean,
         val endDate: DateTime?,
         val expected: TangemPayAdditionalCashbackUM.Badge,
     )
@@ -91,15 +107,18 @@ internal class TangemPayAdditionalCashbackConverterTest {
     private fun additional(
         id: String = "id",
         name: String = "name",
-        description: String = "description",
-        isPermanent: Boolean = false,
+        description: String? = "description",
         endDate: DateTime? = null,
+        priority: Int = 0,
     ) = CashbackPromotions.AdditionalCashback(
         id = id,
+        cardType = null,
         name = name,
         description = description,
-        isPermanent = isPermanent,
         endDate = endDate,
+        promoCap = null,
+        minTransactionAmount = null,
+        priority = priority,
     )
 
     private companion object {

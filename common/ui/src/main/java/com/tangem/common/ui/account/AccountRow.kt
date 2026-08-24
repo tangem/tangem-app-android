@@ -5,117 +5,155 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.common.ui.R
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.accounts.AccountRowTestTags
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.domain.models.account.CryptoPortfolioIcon
+
+private val balanceContentSpacing = 4.dp
+private val cacheIconSize = 12.dp
+private val previewPadding = 16.dp
 
 /**
- * Displays a row representing an account with an icon, title, and subtitle.
+ * Design-system v2 (DS3) account row: an account icon with title / subtitle on the leading side and
+ * a fiat balance with an optional price change on the trailing side, plus an optional full-width
+ * slot below the row.
  *
- * The row consists of:
- * - An [AccountIcon] on the left.
- * - A column with the [title] and [subtitle] texts, which can be displayed in normal
- *   or reversed order depending on [isReverse].
+ * A thin, opinionated wrapper over [TangemRow] shared by every account-like row (joint accounts and,
+ * later, crypto accounts). It does not draw its own container background — supply it via [modifier].
  *
- * The layout uses horizontal spacing between the icon and text, and vertical spacing
- * between the title and subtitle.
- *
- * @param title The main text shown in the row, usually representing the account name.
- * @param subtitle The secondary text, typically providing additional details about the account.
- * @param icon The account icon definition, displayed using [AccountIcon].
- * @param isReverse If `true`, the [subtitle] is displayed above the [title].
- * Otherwise, the [title] is displayed above the [subtitle].
+ * @param title              account name shown as the row title.
+ * @param subtitle           secondary line, e.g. token / member counts.
+ * @param icon               account icon.
+ * @param balance            fiat balance, already resolved and masked when the balance is hidden.
+ * @param priceChange        price-change indicator under the balance; `null` hides it.
+ * @param isBalanceFlickering `true` applies the loading blade-brush to the balance and price change.
+ * @param isBalanceFromCache  `true` shows the stale-data icon next to the balance.
+ * @param onClick            row click handler; `null` makes the row non-interactive.
+ * @param extraBottom        optional full-width content rendered below the row.
  */
 @Composable
 fun AccountRow(
     title: TextReference,
     subtitle: TextReference,
-    icon: AccountIconUM.CryptoPortfolio,
+    icon: AccountIconUM,
+    balance: AnnotatedString,
     modifier: Modifier = Modifier,
-    isReverse: Boolean = false,
+    priceChange: TangemPriceChange.State? = null,
+    isBalanceFlickering: Boolean = false,
+    isBalanceFromCache: Boolean = false,
+    onClick: (() -> Unit)? = null,
+    extraBottom: (@Composable () -> Unit)? = null,
+) {
+    TangemRow(
+        modifier = modifier,
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = onClick,
+        startSlot = {
+            AccountIcon(
+                name = title,
+                icon = icon,
+                size = AccountIconSize.Default,
+            )
+        },
+        titleSlot = { TangemRowText(text = title, role = TangemRowTextRole.Title) },
+        subtitleSlot = { TangemRowText(text = subtitle, role = TangemRowTextRole.Subtitle) },
+        valueSlot = {
+            AccountBalance(
+                balance = balance,
+                isBalanceFlickering = isBalanceFlickering,
+                isBalanceFromCache = isBalanceFromCache,
+            )
+        },
+        subvalueSlot = priceChange?.let { state ->
+            { TangemPriceChange(state = state, isFlickering = isBalanceFlickering) }
+        },
+        extraBottomSlot = extraBottom,
+    )
+}
+
+@Composable
+private fun AccountBalance(
+    balance: AnnotatedString,
+    isBalanceFlickering: Boolean,
+    isBalanceFromCache: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(balanceContentSpacing),
     ) {
-        AccountIcon(
-            name = title,
-            icon = icon,
-            size = AccountIconSize.Default,
-            modifier = Modifier.testTag(AccountRowTestTags.ICON),
-        )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
-        ) {
-            if (isReverse) {
-                Subtitle(subtitle)
-                Title(title)
-            } else {
-                Title(title)
-                Subtitle(subtitle)
-            }
+        if (isBalanceFromCache) {
+            Icon(
+                modifier = Modifier.size(cacheIconSize),
+                painter = painterResource(R.drawable.ic_error_sync_24),
+                tint = TangemTheme.colors3.icon.secondary,
+                contentDescription = null,
+            )
         }
+        Text(
+            text = balance,
+            style = TangemTheme.typography3.body.medium.applyBladeBrush(
+                isEnabled = isBalanceFlickering,
+                textColor = TangemTheme.colors3.text.primary,
+            ),
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Title(title: TextReference) {
-    Text(
-        modifier = Modifier.testTag(AccountRowTestTags.TITLE),
-        text = title.resolveReference(),
-        style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.primary1,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
-
-@Composable
-private fun Subtitle(subtitle: TextReference) {
-    Text(
-        modifier = Modifier.testTag(AccountRowTestTags.SUBTITLE),
-        color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.caption2,
-        text = subtitle.resolveReference(),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
-
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun Preview() {
-    TangemThemePreview {
-        Sample()
-    }
-}
-
-@Composable
-private fun Sample() {
-    val name = stringReference("Main account")
-    val info = stringReference("10 tokens in 2 networks")
-    val subtitle = resourceReference(R.string.account_form_name)
-    fun icon(letter: Boolean = false) = AccountIconPreviewData.randomAccountIcon(letter)
-    Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
-    ) {
-        AccountRow(title = name, subtitle = info, icon = icon())
-        AccountRow(title = name, subtitle = subtitle, icon = icon(), isReverse = true)
+private fun AccountRow_Preview() {
+    TangemThemePreviewRedesign {
+        Column(
+            modifier = Modifier
+                .background(TangemTheme.colors3.bg.primary)
+                .padding(previewPadding),
+        ) {
+            AccountRow(
+                title = stringReference("Family savings"),
+                subtitle = stringReference("4 tokens • 5 members"),
+                icon = AccountIconUM.CryptoPortfolio(
+                    value = CryptoPortfolioIcon.Icon.Family,
+                    color = CryptoPortfolioIcon.Color.CandyGrapeFizz,
+                ),
+                balance = AnnotatedString("$1,204.56"),
+                priceChange = TangemPriceChange.State(
+                    value = stringReference("2.08%"),
+                    direction = TangemPriceChange.Direction.Up,
+                ),
+                isBalanceFromCache = true,
+                onClick = {},
+            )
+        }
     }
 }

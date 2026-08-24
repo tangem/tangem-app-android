@@ -25,7 +25,6 @@ dependencies {
 
     // region Tangem dependencies
     implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
     implementation(tangemDeps.hot.core)
     // endregion
 
@@ -35,7 +34,6 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.configToggles)
     implementation(projects.core.local)
     api(projects.core.datasource)
     api(projects.core.utils)
@@ -49,6 +47,7 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.tokens)
     implementation(projects.domain.card)
+    implementation(projects.domain.polymarket)
     runtimeOnly(projects.domain.visa)
     runtimeOnly(projects.domain.wallets)
     // endregion
@@ -59,6 +58,7 @@ dependencies {
 
     // region Project - Features
     api(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
+    implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
     // endregion
 
     // region Project - Common

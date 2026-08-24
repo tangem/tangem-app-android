@@ -3,7 +3,7 @@ package com.tangem.tap.core.security
 import com.tangem.spend.datasource.config.TangemPay
 
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.security.DeviceSecurityInfoProvider
 
 /** In MOCK env reports a clean device; otherwise delegates (DexProtector RTC flags emulators). */

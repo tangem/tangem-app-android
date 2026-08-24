@@ -4,12 +4,13 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayCashbackInfoTilesConverterTest {
@@ -21,37 +22,28 @@ internal class TangemPayCashbackInfoTilesConverterTest {
 
     @ParameterizedTest
     @MethodSource("titleModels")
-    fun `GIVEN plan WHEN convert THEN rate title reflects the plan level`(model: TitleModel) {
+    fun `GIVEN cards WHEN convert THEN rate title reflects the backend rates`(model: TitleModel) {
         // Act
-        val result = converter.convert(twoTiers(), model.plan)
+        val result = converter.convert(model.cards)
 
         // Assert
         assertThat(result.rate.title).isEqualTo(model.expected)
     }
 
-    @Test
-    fun `GIVEN empty tiers WHEN convert THEN plain Cashback title`() {
-        // Act
-        val result = converter.convert(emptyList(), plan(tierId = "plus", name = "Plus"))
-
-        // Assert
-        assertThat(result.rate.title).isEqualTo(resourceReference(R.string.tangempay_cashback_title))
-    }
-
     @ParameterizedTest
     @MethodSource("subtitleModels")
-    fun `GIVEN plan WHEN convert THEN rate subtitle reflects the plan`(model: SubtitleModel) {
+    fun `GIVEN cards WHEN convert THEN rate subtitle lists the card titles`(model: SubtitleModel) {
         // Act
-        val result = converter.convert(twoTiers(), model.plan)
+        val result = converter.convert(model.cards)
 
         // Assert
         assertThat(result.rate.subtitle).isEqualTo(model.expected)
     }
 
     @Test
-    fun `GIVEN any tiers WHEN convert THEN accruals tile is static`() {
+    fun `GIVEN any cards WHEN convert THEN accruals tile is static`() {
         // Act
-        val result = converter.convert(twoTiers(), plan(tierId = "basic", name = "Basic"))
+        val result = converter.convert(twoCards())
 
         // Assert
         assertThat(result.accruals.title).isEqualTo(resourceReference(R.string.tangempay_cashback_accruals_title))
@@ -61,59 +53,49 @@ internal class TangemPayCashbackInfoTilesConverterTest {
 
     private fun titleModels() = listOf(
         TitleModel(
-            plan = plan(tierId = "plus", name = "Plus"),
+            cards = twoCards(),
             expected = resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")),
         ),
         TitleModel(
-            plan = plan(tierId = "gold", name = "Gold"),
-            expected = resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")),
-        ),
-        TitleModel(
-            plan = plan(tierId = "basic", name = "Basic"),
+            cards = listOf(card(cardType = "prestige", title = "Prestige Card", rate = "1.0")),
             expected = resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")),
         ),
         TitleModel(
-            plan = null,
-            expected = resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")),
+            cards = listOf(card(cardType = "prestige", title = "Prestige Card", rate = "1.50")),
+            expected = resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1.5")),
+        ),
+        TitleModel(
+            cards = emptyList(),
+            expected = resourceReference(R.string.tangempay_cashback_title),
         ),
     )
 
     private fun subtitleModels() = listOf(
         SubtitleModel(
-            plan = plan(tierId = "plus", name = "Plus"),
-            expected = resourceReference(R.string.tangempay_cashback_rate_subtitle, wrappedList("Plus")),
+            cards = listOf(card(cardType = "plus", title = "Plus Card", rate = "2.0")),
+            expected = stringReference("Plus Card"),
         ),
+        SubtitleModel(cards = twoCards(), expected = stringReference("Basic Card, Plus Card")),
         SubtitleModel(
-            plan = plan(tierId = "basic", name = "Basic"),
-            expected = resourceReference(R.string.tangempay_cashback_rate_subtitle, wrappedList("Basic")),
+            cards = listOf(card(cardType = "plus", title = "", rate = "2.0")),
+            expected = TextReference.EMPTY,
         ),
-        SubtitleModel(plan = null, expected = TextReference.EMPTY),
+        SubtitleModel(cards = emptyList(), expected = TextReference.EMPTY),
     )
 
-    private fun twoTiers() = listOf(
-        tier(tierId = "basic", rate = 1),
-        tier(tierId = "plus", rate = 2),
+    private fun twoCards() = listOf(
+        card(cardType = "basic", title = "Basic Card", rate = "1.0"),
+        card(cardType = "plus", title = "Plus Card", rate = "2.0"),
     )
 
-    private fun tier(tierId: String, rate: Int? = null) = CashbackTier(
-        tierId = tierId,
-        rate = rate,
-        label = "label",
-        scope = "scope",
+    private fun card(cardType: String, title: String, rate: String) = CashbackCard(
+        cardType = cardType,
+        title = title,
+        rate = BigDecimal(rate),
         minPurchase = null,
-        monthlyCap = null,
     )
 
-    private fun plan(tierId: String, name: String) = TangemPayTariffPlan(
-        id = "plan-$tierId",
-        tierId = tierId,
-        isBasicTier = tierId == "basic",
-        name = name,
-        programName = "program",
-        descriptionItems = emptyList(),
-    )
+    data class TitleModel(val cards: List<CashbackCard>, val expected: TextReference)
 
-    data class TitleModel(val plan: TangemPayTariffPlan?, val expected: TextReference)
-
-    data class SubtitleModel(val plan: TangemPayTariffPlan?, val expected: TextReference)
+    data class SubtitleModel(val cards: List<CashbackCard>, val expected: TextReference)
 }
