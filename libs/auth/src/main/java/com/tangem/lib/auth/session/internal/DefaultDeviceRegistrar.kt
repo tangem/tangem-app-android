@@ -48,6 +48,23 @@ internal class DefaultDeviceRegistrar(
         mutex.withLock { runRegister() }
     }
 
+    override suspend fun reregister(): Either<DeviceRegistrationError, Unit> = withContext(dispatchers.io) {
+        mutex.withLock {
+            either {
+                // The local flag is stale (backend lost the device record). Clear it up front so
+                // runRegister doesn't short-circuit, and so a failed attempt self-heals on the next
+                // launch's register() call.
+                try {
+                    appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = false)
+                } catch (e: Exception) {
+                    TangemLogger.e("Failed to reset device-registration flag before re-register", e)
+                    raise(DeviceRegistrationError.PersistenceFailed(e))
+                }
+                runRegister().bind()
+            }
+        }
+    }
+
     private suspend fun runRegister(): Either<DeviceRegistrationError, Unit> = either {
         val isAlreadyRegistered = appPreferencesStore.getSyncOrDefault(
             key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY,
