@@ -166,7 +166,9 @@ internal class PolymarketMainModel @Inject constructor(
     )
 
     private fun onEventClick(eventId: String) {
-        router.push(PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId))
+        router.push(
+            PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId),
+        )
     }
 
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
