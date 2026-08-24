@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +15,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -27,15 +25,11 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
-import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
-import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
-import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
-import com.tangem.features.feed.ui.v2.state.FeedV2TabUM
+import com.tangem.features.feed.ui.FeedTabRow
+import com.tangem.features.feed.ui.FeedTabUM
 import com.tangem.features.feed.v2.FeedV2Component
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Shtorka 2.0 feed layout: the whole screen scrolls as one — the top blocks collapse away with the
@@ -53,7 +47,7 @@ import kotlinx.collections.immutable.toImmutableList
 @Suppress("LongParameterList")
 @Composable
 internal fun FeedV2Content(
-    tabs: ImmutableList<FeedV2TabUM>,
+    tabs: ImmutableList<FeedTabUM>,
     selectedTabIndex: Int,
     onTabSelect: (Int) -> Unit,
     isExpanded: Boolean,
@@ -116,20 +110,13 @@ internal fun FeedV2Content(
         ) {
             topBlocks(Modifier.fillMaxWidth())
         }
-        TangemTabNavigation(
-            tabs = rememberTabItems(
-                tabs = tabs,
-                selectedTabIndex = selectedTabIndex,
-                onTabClick = { index ->
-                    onTabSelect(index)
-                    onExpandSheet()
-                },
-            ),
-            variant = TangemTabItem.Variant.Transparent,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(FeedV2Component.TabRowHeight),
+        FeedTabRow(
+            tabs = tabs,
+            selectedTabIndex = selectedTabIndex,
+            onTabSelect = { index ->
+                onTabSelect(index)
+                onExpandSheet()
+            },
         )
         AnimatedVisibility(
             visible = isExpanded,
@@ -138,27 +125,5 @@ internal fun FeedV2Content(
         ) {
             tabContent(Modifier.fillMaxSize())
         }
-    }
-}
-
-@Composable
-private fun rememberTabItems(
-    tabs: ImmutableList<FeedV2TabUM>,
-    selectedTabIndex: Int,
-    onTabClick: (Int) -> Unit,
-): ImmutableList<TangemTabItemUM> {
-    val currentOnTabClick by rememberUpdatedState(onTabClick)
-
-    return remember(tabs, selectedTabIndex) {
-        tabs
-            .mapIndexed { index, tab ->
-                TangemTabItemUM.Content(
-                    id = tab.id,
-                    label = tab.title,
-                    isSelected = index == selectedTabIndex,
-                    onClick = { currentOnTabClick(index) },
-                )
-            }
-            .toImmutableList()
     }
 }

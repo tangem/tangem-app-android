@@ -4,9 +4,14 @@ import android.content.Context
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
-import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.config.Auth
+import com.tangem.core.remote.RetrofitApiSpec
+import com.tangem.core.remote.RetrofitFactory
+import com.tangem.core.remote.auth.SessionAuthAuthenticator
+import com.tangem.core.remote.auth.SessionAuthInterceptor
+import com.tangem.core.remote.build
+import com.tangem.core.remote.config.ApiConfig
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.lib.auth.AuthFeatureToggles
@@ -44,6 +49,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoMap
+import dagger.multibindings.StringKey
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import okhttp3.Authenticator
@@ -55,6 +62,29 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object AuthModule {
+
+    @Provides
+    @IntoMap
+    @StringKey(Auth.KEY)
+    fun provideAuthConfig(): ApiConfig {
+        return Auth()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthApi(factory: RetrofitFactory): AuthApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = Auth.ID,
+                shouldApplyTimeoutAnnotations = false,
+                // Per-method annotations (`@RequiresDpopProof`, `@RequiresSessionAuth`) gate the hooks
+                // installed here. `/refresh` carries `@RequiresDpopProof` only, so the Authenticator
+                // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
+                // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
+                shouldUseSessionAuth = true,
+            ),
+        )
+    }
 
     /**
      * Exposes the backend-authentication feature toggle as a plain `Boolean` so that callers
