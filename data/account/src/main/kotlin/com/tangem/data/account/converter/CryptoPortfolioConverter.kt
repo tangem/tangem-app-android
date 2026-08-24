@@ -28,7 +28,7 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
         val tokens = value.tokens ?: error("Tokens should not be null")
         val derivationIndex = value.derivationIndex.toDerivationIndex()
 
-        return Account.CryptoPortfolio(
+        return Account.Personal(
             accountId = value.id.toAccountId(userWallet.walletId),
             accountName = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),

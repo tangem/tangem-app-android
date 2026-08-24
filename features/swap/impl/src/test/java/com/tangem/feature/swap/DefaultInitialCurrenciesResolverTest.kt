@@ -1466,7 +1466,7 @@ internal class DefaultInitialCurrenciesResolverTest {
     private fun createCryptoPortfolioAccountStatus(
         currencies: List<CryptoCurrencyStatus>,
     ): AccountStatus.CryptoPortfolio {
-        val account = Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+        val account = Account.Personal.createMainAccount(userWalletId = userWalletId)
         return AccountStatus.CryptoPortfolio(
             account = account,
             tokenList = TokenList.Ungrouped(
@@ -1499,7 +1499,7 @@ internal class DefaultInitialCurrenciesResolverTest {
                 "Invalid account name for test"
             }
         }
-        val account = Account.CryptoPortfolio(
+        val account = Account.Personal(
             accountId = accountId,
             accountName = accountName,
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
