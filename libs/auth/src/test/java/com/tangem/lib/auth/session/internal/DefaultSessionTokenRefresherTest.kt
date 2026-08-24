@@ -2,6 +2,7 @@ package com.tangem.lib.auth.session.internal
 
 import arrow.core.None
 import arrow.core.Some
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.lib.auth.api.AuthApi
 import com.tangem.lib.auth.api.models.request.AuthApiRequest
@@ -13,11 +14,13 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionRefreshError
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
+import dagger.Lazy
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -47,6 +50,7 @@ class DefaultSessionTokenRefresherTest {
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
     private val attestationProvider: AttestationProvider = mockk()
+    private val deviceRegistrar: DeviceRegistrar = mockk()
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val fixedClock = object : Clock {
@@ -57,7 +61,7 @@ class DefaultSessionTokenRefresherTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
+        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, deviceRegistrar)
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -71,6 +75,7 @@ class DefaultSessionTokenRefresherTest {
             signedRequestPayload = signedRequestPayload,
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
+            deviceRegistrar = Lazy { deviceRegistrar },
             clock = fixedClock,
             dispatchers = dispatchers,
         )
@@ -375,6 +380,55 @@ class DefaultSessionTokenRefresherTest {
         assertThat(result.isRight()).isTrue()
         assertThat(slot.captured.payload.attestationToken).isEqualTo("attest-token")
         coVerify { attestationProvider.getAttestationToken("nonce-decrypted") }
+    }
+
+    @Test
+    fun `authenticate device-not-found re-registers the device and returns the fresh session`() = runTest {
+        // Arrange — no stored tokens, so refresh goes straight to /authenticate, which 404s "Device not found".
+        val reregistered = SessionTokens(
+            accessToken = "reregistered-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "reregistered-rt",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returnsMany listOf(None, Some(reregistered))
+        stubAuthenticateHappyPath()
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.authenticate(any<AuthApiRequest>()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "not found",
+                errorBody = """{"type":"about:blank","detail":"Device not found","status":404,"title":"Not Found"}""",
+            ),
+        ) as ApiResponse<TokenApiResponse>
+        coEvery { deviceRegistrar.reregister() } returns Unit.right()
+
+        // Act
+        val result = refresher.refresh()
+
+        // Assert — re-registration ran and its freshly persisted session satisfies the refresh.
+        assertThat(result.getOrNull()).isEqualTo(reregistered)
+        coVerify(exactly = 1) { deviceRegistrar.reregister() }
+    }
+
+    @Test
+    fun `authenticate 404 for a non-device reason does not re-register`() = runTest {
+        coEvery { store.get() } returns None
+        stubAuthenticateHappyPath()
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.authenticate(any<AuthApiRequest>()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "not found",
+                errorBody = """{"type":"about:blank","detail":"Nonce not found","status":404,"title":"Not Found"}""",
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = refresher.refresh()
+
+        assertThat(result.leftOrNull()).isInstanceOf(SessionRefreshError.Api::class.java)
+        coVerify(exactly = 0) { deviceRegistrar.reregister() }
     }
 
     private fun stubAuthenticateHappyPath() {
