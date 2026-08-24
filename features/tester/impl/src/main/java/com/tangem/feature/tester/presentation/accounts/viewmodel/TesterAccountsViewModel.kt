@@ -207,7 +207,7 @@ internal class TesterAccountsViewModel @Inject constructor(
             while (accountList.canAddMoreCryptoAccounts) {
                 val derivationIndex = DerivationIndex(nextIndex).getOrNull() ?: break
 
-                val newAccount = Account.CryptoPortfolio.invoke(
+                val newAccount = Account.Personal.invoke(
                     accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
                     name = "Account #$nextIndex",
                     icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
