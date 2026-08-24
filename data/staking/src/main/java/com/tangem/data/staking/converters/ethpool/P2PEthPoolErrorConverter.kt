@@ -1,7 +1,7 @@
 package com.tangem.data.staking.converters.ethpool
 
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolErrorDetailsDTO
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolErrorResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolErrorDetailsDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolErrorResponse
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.utils.converter.Converter
 

@@ -28,6 +28,28 @@ internal class PolymarketAuthErrorResolverTest {
     }
 
     @Test
+    fun `GIVEN 400 with the derive-miss body WHEN resolve THEN KeyNotFound`() {
+        val error = ApiResponseError.HttpException(
+            code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+            message = "error",
+            errorBody = """{"error":"Could not derive api key!"}""",
+        )
+        assertThat(resolver.resolve(error)).isEqualTo(PolymarketAuthError.KeyNotFound)
+    }
+
+    @Test
+    fun `GIVEN 400 with any other body WHEN resolve THEN Unknown`() {
+        val error = ApiResponseError.HttpException(
+            code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+            message = "error",
+            errorBody = """{"error":"invalid signature"}""",
+        )
+        assertThat(resolver.resolve(error)).isEqualTo(
+            PolymarketAuthError.Unknown(httpCode = 400, detail = """{"error":"invalid signature"}"""),
+        )
+    }
+
+    @Test
     fun `GIVEN network exception WHEN resolve THEN Network`() {
         assertThat(resolver.resolve(ApiResponseError.NetworkException())).isEqualTo(PolymarketAuthError.Network)
     }

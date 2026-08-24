@@ -714,6 +714,49 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             assertThat(result).hasSize(1)
             assertThat(result[cexProvider]).isNotNull()
         }
+
+        @Test
+        fun `GIVEN restricted quote WHEN findBestQuote THEN loaded state carries restricted flag`() = runTest {
+            // Given
+            val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                isCoin = true,
+                amount = BigDecimal("10"),
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel(isRestricted = true)
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
+                )
+            } returns quoteModel.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(cexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — the quote loads as a regular loaded state (amounts + fee pipeline intact),
+            // restriction is carried as a flag
+            val state = result[cexProvider]
+            assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+            assertThat((state as SwapState.QuotesLoadedState).isRestricted).isTrue()
+        }
     }
 
     /**

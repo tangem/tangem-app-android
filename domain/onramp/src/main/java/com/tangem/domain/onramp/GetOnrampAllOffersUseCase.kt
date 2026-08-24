@@ -60,7 +60,7 @@ class GetOnrampAllOffersUseCase(
         validQuotes: List<OnrampQuote.Data>,
         isGooglePayAvailable: Boolean,
     ): OnrampQuote.Data? {
-        return validQuotes.maxWithOrNull(
+        return validQuotes.filterNot { it.isRestricted }.maxWithOrNull(
             compareOffersByRateSpeedAndPriority(
                 isGooglePayAvailable = isGooglePayAvailable,
                 isSepaPrioritized = false,
@@ -99,6 +99,9 @@ class GetOnrampAllOffersUseCase(
     ): OnrampOffer? {
         return when (quote) {
             is OnrampQuote.Data -> {
+                if (quote.isRestricted) {
+                    return OnrampOffer(quote = quote, rateDif = null, advantages = OnrampOfferAdvantages.Default)
+                }
                 val advantages = if (quote == overallBestRateQuote) {
                     OnrampOfferAdvantages.BestRate
                 } else {
@@ -119,6 +122,7 @@ class GetOnrampAllOffersUseCase(
         isGooglePayAvailable: Boolean,
     ): OnrampQuote? {
         val dataQuotes = validMethodQuotes.filterIsInstance<OnrampQuote.Data>()
+            .let { quotes -> quotes.filterNot { it.isRestricted }.ifEmpty { quotes } }
         val amountErrorQuotes = validMethodQuotes.filterIsInstance<OnrampQuote.AmountError>()
 
         return when {
@@ -155,7 +159,10 @@ class GetOnrampAllOffersUseCase(
     }
 
     private fun sortOffers(methodOffers: List<OnrampOffer>): List<OnrampOffer> {
-        val (availableOffers, unavailableOffers) = methodOffers.partition { it.quote is OnrampQuote.Data }
+        val (availableOffers, unavailableOffers) = methodOffers.partition { offer ->
+            val quote = offer.quote
+            quote is OnrampQuote.Data && !quote.isRestricted
+        }
 
         val sortedAvailableOffers = sortAvailableOffers(availableOffers)
         val sortedUnavailableOffers = sortUnavailableOffers(unavailableOffers)

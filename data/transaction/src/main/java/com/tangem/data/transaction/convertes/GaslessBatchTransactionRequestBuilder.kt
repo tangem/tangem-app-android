@@ -1,7 +1,7 @@
 package com.tangem.data.transaction.convertes
 
-import com.tangem.datasource.api.gasless.models.GaslessBatchTransactionDataDTO
-import com.tangem.datasource.api.gasless.models.GaslessBatchTransactionRequest
+import com.tangem.grow.datasource.gasless.models.GaslessBatchTransactionDataDTO
+import com.tangem.grow.datasource.gasless.models.GaslessBatchTransactionRequest
 import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 

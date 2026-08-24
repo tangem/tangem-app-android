@@ -49,7 +49,26 @@ internal class PaymentChooseNetworkUMConverterTest {
     }
 
     @Test
-    fun `GIVEN status with no currencies WHEN convert THEN it is skipped from its section`() {
+    fun `GIVEN NotIssued status with no currencies WHEN convert THEN it still appears in Fast way`() {
+        // Arrange
+        // The backend need not list the tokens of a network whose contract is not issued yet; the row is what
+        // lets the user issue it, so dropping it would make the network unreachable.
+        val empty = PaymentNetworkStatus.NotIssued(
+            network = network(networkName = "Base", networkRawId = "base"),
+            cryptoCurrencies = emptyList(),
+        )
+        val polygon = available(networkName = "Polygon", networkRawId = "polygon", address = "0xPOLY")
+
+        // Act
+        val result = converter.convert(listOf(polygon, empty))
+
+        // Assert
+        assertThat(result.fastWay.map { it.name }).containsExactly("Polygon", "Base").inOrder()
+        assertThat(result.fastWay.last().tokensLabel).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN Disabled status with no currencies WHEN convert THEN it still appears in Other ways`() {
         // Arrange
         val empty = PaymentNetworkStatus.Disabled(
             network = network(networkName = "Empty", networkRawId = "empty"),
@@ -61,7 +80,24 @@ internal class PaymentChooseNetworkUMConverterTest {
         val result = converter.convert(listOf(empty, tron))
 
         // Assert
-        assertThat(result.otherWays.map { it.name }).containsExactly("TRON")
+        assertThat(result.otherWays.map { it.name }).containsExactly("Empty", "TRON").inOrder()
+    }
+
+    @Test
+    fun `GIVEN Available status with no currencies WHEN convert THEN it is skipped from Fast way`() {
+        // Arrange
+        val empty = PaymentNetworkStatus.Available(
+            network = network(networkName = "Empty", networkRawId = "empty"),
+            depositAddress = "0xEMPTY",
+            cryptoCurrencyStatuses = emptyList(),
+        )
+        val polygon = available(networkName = "Polygon", networkRawId = "polygon", address = "0xPOLY")
+
+        // Act
+        val result = converter.convert(listOf(empty, polygon))
+
+        // Assert
+        assertThat(result.fastWay.map { it.name }).containsExactly("Polygon")
     }
 
     @Test
@@ -122,9 +158,13 @@ internal class PaymentChooseNetworkUMConverterTest {
         return network
     }
 
-    private fun currency(symbol: String): CryptoCurrency.Token {
+    private fun currency(
+        symbol: String,
+        rawCurrencyId: CryptoCurrency.RawID? = CryptoCurrency.RawID(symbol),
+    ): CryptoCurrency.Token {
         val token: CryptoCurrency.Token = mockk()
         every { token.symbol } returns symbol
+        every { token.id } returns mockk { every { this@mockk.rawCurrencyId } returns rawCurrencyId }
         return token
     }
 

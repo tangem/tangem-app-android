@@ -8,5 +8,6 @@ dependencies {
 
     // region Domain models
     api(projects.domain.models)
+    api(tangemDeps.card.core)
     // endregion
 }

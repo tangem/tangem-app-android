@@ -39,4 +39,32 @@ internal class DefaultSwapFeatureTogglesTest {
         // Assert
         assertThat(actual).isFalse()
     }
+
+    @Test
+    fun `GIVEN geo blocking toggle enabled WHEN read isExpressCategoriesGeoBlockingEnabled THEN true`() {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED)
+        } returns true
+
+        // Act
+        val actual = toggles.isExpressCategoriesGeoBlockingEnabled
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN geo blocking toggle disabled WHEN read isExpressCategoriesGeoBlockingEnabled THEN false`() {
+        // Arrange
+        every {
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED)
+        } returns false
+
+        // Act
+        val actual = toggles.isExpressCategoriesGeoBlockingEnabled
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
 }
