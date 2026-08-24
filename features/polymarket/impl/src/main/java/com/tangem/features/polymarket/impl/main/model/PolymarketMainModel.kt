@@ -4,7 +4,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
@@ -43,6 +48,7 @@ import javax.inject.Inject
 internal class PolymarketMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
+    private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase,
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase,
@@ -67,7 +73,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     // Replays the latest action: the first Reload is dispatched while the pagination is still subscribing, and a
     // shared flow without a replay cache drops what it cannot deliver yet.
-    private val actionsFlow = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+    private val actionsFlow = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 1)
 
     private val eventsBatchFlow = getPolymarketEventsBatchFlowUseCase(
         context = PolymarketEventsBatchingContext(actionsFlow = actionsFlow, coroutineScope = modelScope),
@@ -78,9 +84,16 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val categoriesJob = JobHolder()
 
+    private val feedPoller = PolymarketFeedPoller(
+        batchFlow = eventsBatchFlow,
+        actionsFlow = actionsFlow,
+        onStaleData = ::reportStaleData,
+    )
+
     init {
         observeEvents()
         loadCategories()
+        feedPoller.start(modelScope)
     }
 
     fun onBackClick() {
@@ -103,6 +116,19 @@ internal class PolymarketMainModel @Inject constructor(
                 else -> Unit
             }
         }
+    }
+
+    /** The cards currently on screen: the poller refreshes the pages they come from and no others. */
+    fun onVisibleEventsChange(eventIds: Set<String>) {
+        feedPoller.setVisibleEventIds(eventIds)
+    }
+
+    fun onScrollIdle() {
+        feedPoller.onScrollIdle()
+    }
+
+    fun setInForeground(isInForeground: Boolean) {
+        feedPoller.setInForeground(isInForeground)
     }
 
     /** Categories first: without them the feed does not know which category to ask for. */
@@ -134,9 +160,9 @@ internal class PolymarketMainModel @Inject constructor(
 
     private fun reloadEvents() {
         modelScope.launch {
-            actionsFlow.emit(
-                BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = selectedCategoryId)),
-            )
+            val config = PolymarketEventsListConfig(category = selectedCategoryId)
+            feedPoller.onFeedReloaded(config)
+            actionsFlow.emit(BatchAction.Reload(requestParams = config))
         }
     }
 
@@ -160,6 +186,10 @@ internal class PolymarketMainModel @Inject constructor(
             selectedCategoryId = selectedCategoryId,
         ),
     )
+
+    private fun reportStaleData() {
+        messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
+    }
 
     private fun onEventClick(eventId: String) {
         router.push(PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId))
