@@ -9,19 +9,7 @@ package com.tangem.domain.cloudbackup.models
  * @property walletName name of the backed up wallet, as it was at the moment of the backup
  * @property secret     the recovered wallet secret
  */
-class RestoredCloudBackup(
+data class RestoredCloudBackup(
     val walletName: String,
     val secret: CloudBackupSecretData,
-) {
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RestoredCloudBackup) return false
-
-        return walletName == other.walletName && secret == other.secret
-    }
-
-    override fun hashCode(): Int = 31 * walletName.hashCode() + secret.hashCode()
-
-    override fun toString(): String = "RestoredCloudBackup(walletName=$walletName, secret=$secret)"
-}
+)
