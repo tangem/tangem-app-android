@@ -8,6 +8,7 @@ import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetCo
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -28,12 +29,10 @@ import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
-import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
@@ -148,10 +147,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val isCryptoCurrencyCouldHideUseCase: IsCryptoCurrencyCouldHideUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val uiMessageSender: UiMessageSender,
-    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    backupErrorWarningFactory: BackupErrorWarning.Factory,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
+
+    private val backupErrorWarning = backupErrorWarningFactory.create(uiMessageSender)
 
     override fun onSendClick(
         accountId: AccountId,
@@ -203,8 +203,12 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         event?.let { analyticsEventHandler.send(it) }
 
-        if (isTopUpBlockedByBackupError(accountId.userWalletId)) return
+        warnAboutBackupErrorOrProceed(accountId.userWalletId) {
+            openReceive(cryptoCurrencyStatus)
+        }
+    }
 
+    private fun openReceive(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
             if (needShowYieldSupplyWarning(cryptoCurrencyStatus)) {
                 stateHolder.hideBottomSheet()
@@ -348,15 +352,16 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
-        if (isTopUpBlockedByBackupError(accountId.userWalletId)) return
 
-        appRouter.push(
-            AppRoute.Onramp(
-                userWalletId = accountId.userWalletId,
-                currency = cryptoCurrencyStatus.currency,
-                source = OnrampSource.TOKEN_LONG_TAP,
-            ),
-        )
+        warnAboutBackupErrorOrProceed(accountId.userWalletId) {
+            appRouter.push(
+                AppRoute.Onramp(
+                    userWalletId = accountId.userWalletId,
+                    currency = cryptoCurrencyStatus.currency,
+                    source = OnrampSource.TOKEN_LONG_TAP,
+                ),
+            )
+        }
     }
 
     override fun onSwapClick(
@@ -479,13 +484,13 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId, screenType: String) {
-        if (isTopUpBlockedByBackupError(userWalletId)) return
-
-        onMultiWalletActionClick(
-            statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
-            route = AppRoute.BuyCrypto(userWalletId = userWalletId),
-            eventCreator = { MainScreenAnalyticsEvent.ButtonBuy(status = it, screenType = screenType) },
-        )
+        warnAboutBackupErrorOrProceed(userWalletId) {
+            onMultiWalletActionClick(
+                statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
+                route = AppRoute.BuyCrypto(userWalletId = userWalletId),
+                eventCreator = { MainScreenAnalyticsEvent.ButtonBuy(status = it, screenType = screenType) },
+            )
+        }
     }
 
     private fun openExplorer(userWallet: UserWallet) {
@@ -577,24 +582,20 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         return true
     }
 
-    private fun isTopUpBlockedByBackupError(userWalletId: UserWalletId): Boolean {
-        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return false
-        if (!isWalletBackupProblematicUseCase(userWallet)) return false
-
-        stateHolder.hideBottomSheet()
-        uiMessageSender.send(
-            WalletAlertUM.addFundsDisabledForBackupError(
-                onContactSupport = { contactBackupSupport(userWallet) },
-            ),
-        )
-        return true
-    }
-
-    private fun contactBackupSupport(userWallet: UserWallet) {
-        analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main))
-        modelScope.launch {
-            sendBackupProblemEmailUseCase(userWallet.walletId)
+    private fun warnAboutBackupErrorOrProceed(userWalletId: UserWalletId, onProceed: () -> Unit) {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
+        if (userWallet == null) {
+            onProceed()
+            return
         }
+
+        backupErrorWarning.forWallet(
+            scope = modelScope,
+            userWallet = userWallet,
+            onWarningShown = stateHolder::hideBottomSheet,
+            onSupportClick = { analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main)) },
+            onProceed = onProceed,
+        )
     }
 
     private fun isMultiWalletTokensLoaded(): Boolean {
