@@ -471,15 +471,14 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             id = "NoteMigrationNotification",
             variant = TangemMessageBanner.Variant.Default,
             shouldShowGlowRing = true,
-            iconUM = TangemIconUM.Icon(
-                imageVector = Icons.ic_logo_tangem_20,
-                tintReference = { TangemTheme.colors3.icon.primary },
+            iconUM = TangemIconUM.Image(
+                imageRes = R.drawable.img_banner_note_migration_64,
             ),
-            iconSize = 20.dp,
+            iconSize = 64.dp,
             title = resourceReference(R.string.wallet_promo_banner_title),
             subtitle = resourceReference(R.string.wallet_promo_banner_description),
             messageEffect = TangemMessageEffect.Magic,
-            isCentered = false,
+            iconPosition = TangemMessageIconPosition.Trailing,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(R.string.wallet_promo_banner_button_title),
