@@ -2,6 +2,7 @@ package com.tangem.domain.models.account
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import io.mockk.mockk
@@ -24,11 +25,14 @@ internal class PaymentAccountStatusValueMultichainTest {
         availableForWithdrawal = BigDecimal("10"),
     )
 
-    private fun loaded(networks: List<PaymentNetworkStatus>) = PaymentAccountStatusValue.Loaded(
+    private fun loaded(
+        networks: List<PaymentNetworkStatus>,
+        balance: PaymentAccountStatusValue.Balance? = balance(),
+    ) = PaymentAccountStatusValue.Loaded(
         source = StatusSource.ACTUAL,
         customerId = "c1",
         depositAddress = "0xDEPOSIT",
-        balance = balance(),
+        balance = balance,
         cryptoCurrency = primaryCurrency,
         networks = networks,
         cards = emptyList(),
@@ -80,5 +84,31 @@ internal class PaymentAccountStatusValueMultichainTest {
         )
 
         assertThat(loaded.cryptoCurrencyStatuses).containsExactly(s1, s2, s3).inOrder()
+    }
+
+    @Test
+    fun `GIVEN no balance and no networks WHEN read statuses THEN empty and total balance failed`() {
+        val loaded = loaded(networks = emptyList(), balance = null)
+
+        assertThat(loaded.cryptoCurrencyStatus).isNull()
+        assertThat(loaded.cryptoCurrencyStatuses).isEmpty()
+        assertThat(loaded.totalFiatBalance).isEqualTo(TotalFiatBalance.Failed)
+    }
+
+    @Test
+    fun `GIVEN no balance and Available networks WHEN read statuses THEN network statuses are used`() {
+        val networkStatus: CryptoCurrencyStatus = mockk()
+        val loaded = loaded(
+            networks = listOf(
+                PaymentNetworkStatus.Available(
+                    network = mockk(),
+                    depositAddress = "0xDEPOSIT",
+                    cryptoCurrencyStatuses = listOf(networkStatus),
+                ),
+            ),
+            balance = null,
+        )
+
+        assertThat(loaded.cryptoCurrencyStatuses).containsExactly(networkStatus)
     }
 }
