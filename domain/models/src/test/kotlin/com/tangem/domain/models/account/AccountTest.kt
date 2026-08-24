@@ -1,8 +1,9 @@
 package com.tangem.domain.models.account
 
 import com.google.common.truth.Truth
-import com.tangem.domain.models.account.Account.CryptoPortfolio
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.Account.Personal
+import com.tangem.domain.models.account.Account.Personal.Error.AccountNameError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.every
@@ -23,23 +24,23 @@ class AccountTest {
         val userWalletId = UserWalletId("011")
 
         // Act
-        val actual = createCryptoPortfolioStub(userWalletId = userWalletId).userWalletId
+        val actual = createPersonalStub(userWalletId = userWalletId).userWalletId
 
         // Assert
         Truth.assertThat(actual).isEqualTo(userWalletId)
     }
 
     @Test
-    fun `CryptoPortfolio isMainAccount`() {
+    fun `Personal isMainAccount`() {
         // Arrange
         val derivationIndex0 = 0
         val derivationIndex1 = 1
 
         // Act
-        val actual1 = createCryptoPortfolioStub(derivationIndex = derivationIndex0)
+        val actual1 = createPersonalStub(derivationIndex = derivationIndex0)
             .isMainAccount
 
-        val actual2 = createCryptoPortfolioStub(derivationIndex = derivationIndex1)
+        val actual2 = createPersonalStub(derivationIndex = derivationIndex1)
             .isMainAccount
 
         // Assert
@@ -48,16 +49,16 @@ class AccountTest {
     }
 
     @Test
-    fun `CryptoPortfolio tokensCount`() {
+    fun `Personal tokensCount`() {
         // Arrange
         val emptyCurrencies = emptyList<CryptoCurrency>()
         val filledCurrencies = listOf(mockk<CryptoCurrency>())
 
         // Act
-        val actual1 = createCryptoPortfolioStub(currencies = emptyCurrencies)
+        val actual1 = createPersonalStub(currencies = emptyCurrencies)
             .tokensCount
 
-        val actual2 = createCryptoPortfolioStub(currencies = filledCurrencies)
+        val actual2 = createPersonalStub(currencies = filledCurrencies)
             .tokensCount
 
         // Assert
@@ -66,7 +67,7 @@ class AccountTest {
     }
 
     @Test
-    fun `CryptoPortfolio networksCount`() {
+    fun `Personal networksCount`() {
         // Arrange
         val emptyCurrencies = emptyList<CryptoCurrency>()
         val filledCurrencies = listOf(
@@ -76,10 +77,10 @@ class AccountTest {
         )
 
         // Act
-        val actual1 = createCryptoPortfolioStub(currencies = emptyCurrencies)
+        val actual1 = createPersonalStub(currencies = emptyCurrencies)
             .networksCount
 
-        val actual2 = createCryptoPortfolioStub(currencies = filledCurrencies)
+        val actual2 = createPersonalStub(currencies = filledCurrencies)
             .networksCount
 
         // Assert
@@ -89,7 +90,7 @@ class AccountTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class CreateCryptoPortfolio {
+    inner class CreatePersonal {
 
         @Test
         fun `invoke returns AccountNameError`() {
@@ -97,7 +98,7 @@ class AccountTest {
             val name = ""
 
             // Act
-            val actual = CryptoPortfolio.invoke(
+            val actual = Personal.invoke(
                 accountId = mockk(),
                 name = name,
                 icon = mockk(),
@@ -112,10 +113,10 @@ class AccountTest {
         }
 
         @Test
-        fun `invoke returns CryptoPortfolio`() {
+        fun `invoke returns Personal`() {
             // Act
             val derivationIndex = DerivationIndex.Main
-            val actual = CryptoPortfolio(
+            val actual = Personal(
                 accountId = AccountId.forCryptoPortfolio(
                     userWalletId = UserWalletId("011"),
                     derivationIndex = derivationIndex,
@@ -128,7 +129,7 @@ class AccountTest {
                 .getOrNull()!!
 
             // Assert
-            val expected = createCryptoPortfolioStub()
+            val expected = createPersonalStub()
             Truth.assertThat(actual).isEqualTo(expected)
         }
 
@@ -139,10 +140,10 @@ class AccountTest {
             val derivationIndex = DerivationIndex.Main
 
             // Act
-            val actual = CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+            val actual = Personal.createMainAccount(userWalletId = userWalletId)
 
             // Assert
-            val expected = CryptoPortfolio(
+            val expected = Personal(
                 accountId = AccountId.forCryptoPortfolio(
                     userWalletId = userWalletId,
                     derivationIndex = derivationIndex,
@@ -157,20 +158,48 @@ class AccountTest {
         }
     }
 
-    private fun createCryptoPortfolioStub(
+    @Test
+    fun `Joint is never the main account`() {
+        // Arrange
+        val mainDerivationIndex = 0
+
+        // Act
+        val actual = createJointStub(derivationIndex = mainDerivationIndex).isMainAccount
+
+        // Assert
+        Truth.assertThat(actual).isFalse()
+    }
+
+    private fun createPersonalStub(
         userWalletId: UserWalletId = UserWalletId("011"),
         name: String = "Test Account",
         derivationIndex: Int = 0,
         currencies: List<CryptoCurrency> = emptyList(),
-    ): CryptoPortfolio {
+    ): Personal {
         val accountIndex = DerivationIndex(value = derivationIndex).getOrNull()!!
 
-        return CryptoPortfolio.invoke(
+        return Personal.invoke(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = accountIndex),
             name = name,
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
             cryptoCurrencies = currencies,
+        )
+            .getOrNull()!!
+    }
+
+    private fun createJointStub(
+        userWalletId: UserWalletId = UserWalletId("011"),
+        name: String = "Family",
+        derivationIndex: Int = 0,
+    ): Account.Joint {
+        val ownerIndex = DerivationIndex(value = derivationIndex).getOrNull()!!
+
+        return Account.Joint.invoke(
+            accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = ownerIndex),
+            name = name,
+            icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
+            derivationIndex = derivationIndex,
         )
             .getOrNull()!!
     }
