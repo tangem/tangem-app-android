@@ -57,10 +57,6 @@ class ApiConfigTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = mockk(),
             ),
-            News(
-                authProvider = appAuthProvider,
-                appInfoProvider = mockk(),
-            ),
         )
     }
 }
