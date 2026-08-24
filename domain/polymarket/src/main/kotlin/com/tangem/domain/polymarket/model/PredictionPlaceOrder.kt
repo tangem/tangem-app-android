@@ -25,7 +25,7 @@ sealed interface PredictionPlaceOrderError : PolymarketError {
 
     data class Unauthorized(val detail: String?) : PredictionPlaceOrderError
 
-    data class Ambiguous(val detail: String?) : PredictionPlaceOrderError
+    data class NotSent(val detail: String?) : PredictionPlaceOrderError
 
-    data class Unknown(val httpCode: Int?, val detail: String?) : PredictionPlaceOrderError
+    data class Ambiguous(val detail: String?) : PredictionPlaceOrderError
 }
