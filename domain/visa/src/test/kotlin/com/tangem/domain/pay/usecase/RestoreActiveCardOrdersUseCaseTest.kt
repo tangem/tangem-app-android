@@ -12,13 +12,21 @@ import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
+import io.mockk.CapturingSlot
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class RestoreActiveCardOrdersUseCaseTest {
 
     private val orderRepository: CustomerOrderRepository = mockk()
@@ -31,6 +39,11 @@ internal class RestoreActiveCardOrdersUseCaseTest {
         appCoroutineScope = TestAppCoroutineScope(),
     )
     private val userWalletId = UserWalletId("1234567890ABCDEF")
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(orderRepository, issueCardRepository, startTangemPayOrderPollingUseCase)
+    }
 
     @Test
     fun `GIVEN active issue orders WHEN invoke THEN each order is stored and polled`() = runTest {
@@ -53,10 +66,10 @@ internal class RestoreActiveCardOrdersUseCaseTest {
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(userWalletId, first.id) }
         coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(userWalletId, second.id) }
         coVerify(exactly = 1) {
-            startTangemPayOrderPollingUseCase(TangemPayOrderInfo(first.id, first.status), userWalletId, any())
+            startTangemPayOrderPollingUseCase(orderInfo(first), userWalletId, any())
         }
         coVerify(exactly = 1) {
-            startTangemPayOrderPollingUseCase(TangemPayOrderInfo(second.id, second.status), userWalletId, any())
+            startTangemPayOrderPollingUseCase(orderInfo(second), userWalletId, any())
         }
     }
 
@@ -110,32 +123,87 @@ internal class RestoreActiveCardOrdersUseCaseTest {
     }
 
     @Test
-    fun `GIVEN an active activation order WHEN invoke THEN it is polled but not stored as an issue order`() =
-        runTest {
-            // Arrange
-            val activation = order(
-                id = "activation",
-                type = OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
-                status = OrderStatus.PROCESSING,
-            )
-            coEvery {
-                orderRepository.findOrders(userWalletId, types = RESTORED_ORDER_TYPES, statuses = ACTIVE_STATUSES)
-            } returns listOf(activation).right()
+    fun `GIVEN a foreign type leaks through the backend filter WHEN invoke THEN it is dropped`() = runTest {
+        // Arrange
+        val foreign = order(id = "withdraw", type = OrderType.WITHDRAW, status = OrderStatus.PROCESSING)
+        stubFindOrders(foreign)
 
-            // Act
-            val result = useCase(userWalletId)
+        // Act
+        val result = useCase(userWalletId)
 
-            // Assert
-            assertThat(result.isRight()).isTrue()
-            coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
-            coVerify(exactly = 1) {
-                startTangemPayOrderPollingUseCase(
-                    TangemPayOrderInfo(activation.id, activation.status),
-                    userWalletId,
-                    any(),
-                )
-            }
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 0) { issueCardRepository.storeIssueOrderId(any(), any()) }
+        coVerify(exactly = 0) { startTangemPayOrderPollingUseCase(any(), any(), any()) }
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN an active order of a restored type WHEN invoke THEN it is polled and stored only when issuing`(
+        model: RestoredTypeModel,
+    ) = runTest {
+        // Arrange
+        val restored = order(id = "restored", type = model.type, status = OrderStatus.PROCESSING)
+        stubFindOrders(restored)
+
+        // Act
+        val result = useCase(userWalletId)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = if (model.isStoredAsIssueOrder) 1 else 0) {
+            issueCardRepository.storeIssueOrderId(userWalletId, restored.id)
         }
+        coVerify(exactly = 1) {
+            startTangemPayOrderPollingUseCase(orderInfo(restored), userWalletId, any())
+        }
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a restored order WHEN it turns terminal THEN its id is forgotten only when issuing`(
+        model: RestoredTypeModel,
+    ) = runTest {
+        // Arrange
+        val restored = order(id = "restored", type = model.type, status = OrderStatus.PROCESSING)
+        stubFindOrders(restored)
+        val onOrderStateChange = captureOnOrderStateChange()
+
+        // Act
+        useCase(userWalletId)
+        onOrderStateChange.captured.invoke(TangemPayOrderInfo(restored.id, OrderStatus.COMPLETED))
+
+        // Assert
+        coVerify(exactly = if (model.isStoredAsIssueOrder) 1 else 0) {
+            issueCardRepository.removeIssueOrderId(userWalletId, restored.id)
+        }
+    }
+
+    private fun orderInfo(order: Order) = TangemPayOrderInfo(
+        orderId = order.id,
+        orderStatus = order.status,
+        orderStep = order.step,
+        orderType = order.type,
+    )
+
+    private fun stubFindOrders(vararg orders: Order) {
+        coEvery {
+            orderRepository.findOrders(userWalletId, types = RESTORED_ORDER_TYPES, statuses = ACTIVE_STATUSES)
+        } returns orders.toList().right()
+    }
+
+    private fun captureOnOrderStateChange(): CapturingSlot<suspend (TangemPayOrderInfo) -> Unit> {
+        val slot = slot<suspend (TangemPayOrderInfo) -> Unit>()
+        coEvery {
+            startTangemPayOrderPollingUseCase(
+                order = any(),
+                userWalletId = userWalletId,
+                onOrderStateChange = capture(slot),
+                timeout = any(),
+            )
+        } returns true
+        return slot
+    }
 
     private fun order(id: String, type: OrderType, status: OrderStatus): Order = Order(
         id = id,
@@ -153,8 +221,28 @@ internal class RestoreActiveCardOrdersUseCaseTest {
         updatedAt = null,
     )
 
+    private fun provideTestModels() = listOf(
+        RestoredTypeModel(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN, isStoredAsIssueOrder = true),
+        RestoredTypeModel(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, isStoredAsIssueOrder = true),
+        RestoredTypeModel(type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2, isStoredAsIssueOrder = true),
+        RestoredTypeModel(type = OrderType.CARD_ISSUE_PLASTIC_RAIN, isStoredAsIssueOrder = true),
+        RestoredTypeModel(type = OrderType.CARD_REISSUE_PLASTIC_RAIN, isStoredAsIssueOrder = false),
+        RestoredTypeModel(type = OrderType.CARD_ACTIVATION_PLASTIC_RAIN, isStoredAsIssueOrder = false),
+    )
+
+    internal data class RestoredTypeModel(val type: OrderType, val isStoredAsIssueOrder: Boolean) {
+        override fun toString(): String = "$type -> stored as issue order: $isStoredAsIssueOrder"
+    }
+
     private companion object {
-        val RESTORED_ORDER_TYPES = OrderType.issueCardTypes + OrderType.CARD_ACTIVATION_PLASTIC_RAIN
+        val RESTORED_ORDER_TYPES = setOf(
+            OrderType.CARD_ISSUE_VIRTUAL_RAIN,
+            OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
+            OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+            OrderType.CARD_ISSUE_PLASTIC_RAIN,
+            OrderType.CARD_REISSUE_PLASTIC_RAIN,
+            OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
+        )
         val ACTIVE_STATUSES = OrderStatus.activeStatuses
     }
 }
