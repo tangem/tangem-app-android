@@ -26,6 +26,11 @@ internal sealed interface PredictionAccountStatusValueDTO {
     @SerialName("not_onboarded")
     data object NotOnboarded : PredictionAccountStatusValueDTO
 
+    /** The deposit wallet exists but its balance is unreadable on this device. */
+    @Serializable
+    @SerialName("onboarded")
+    data object Onboarded : PredictionAccountStatusValueDTO
+
     /** The deposit wallet is being set up and cannot hold funds yet. */
     @Serializable
     @SerialName("onboarding")
