@@ -5,9 +5,9 @@ import arrow.core.Some
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.auth.RequiresDpopProof
-import com.tangem.datasource.api.auth.RequiresSessionAuth
-import com.tangem.datasource.api.auth.RequiresSessionRefresh
+import com.tangem.lib.auth.api.RequiresDpopProof
+import com.tangem.lib.auth.api.RequiresSessionAuth
+import com.tangem.lib.auth.api.RequiresSessionRefresh
 import com.tangem.lib.auth.dpop.DpopProofFactory
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.SessionRefreshError
