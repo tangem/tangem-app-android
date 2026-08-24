@@ -11,7 +11,7 @@ import com.tangem.data.marketing.store.MarketingCampaignsCacheStore
 import com.tangem.data.marketing.store.MarketingDismissStore
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsCacheEntry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
