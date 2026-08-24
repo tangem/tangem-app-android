@@ -108,16 +108,52 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
-         * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>". Used for express rows
-         * (swap counterparty currency / onramp fiat), e.g. "to: ◎ POL" or "from: 🇸🇪 SEK".
+         * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>", optionally followed by the counterparty
+         * portfolio it settled in ("… in <owner>"). Used for express rows (swap counterparty currency / onramp fiat),
+         * e.g. "to: ◎ POL", "from: 🇸🇪 SEK", or the cross-portfolio "to: ◎ POL in 🟦 Main".
          *
          * @property icon resolved counterparty currency icon, rendered via `CurrencyIcon`. `null` when no icon
          *   is available (e.g. onramp fiat carries no `CryptoCurrency`) — the ticker then renders without a leading icon.
+         * @property owner counterparty portfolio the leg settled in — a different own account (accounts mode) or wallet
+         *   (wallet mode) than the viewed token. `null` when there is nothing to disambiguate: a swap within one
+         *   portfolio, an external address, or a single-wallet own leg — the ticker then renders without the "in …" tail.
          */
         data class Asset(
             val direction: Direction,
             val symbol: String,
             val icon: CurrencyIconState?,
+            val owner: AssetOwner? = null,
+        ) : ContentSubtitle
+
+        /**
+         * The own portfolio a swap leg settled in, shown as the "in <owner>" tail of an [Asset] subtitle. Mirrors the
+         * icon placement of the standalone owner subtitles: [Account] / [PaymentAccount] render the icon before the
+         * name, [Wallet] renders the name before its device icon.
+         */
+        @Immutable
+        sealed interface AssetOwner {
+            data class Account(
+                val name: TextReference,
+                @DrawableRes val iconResId: Int,
+                val iconBackgroundColor: Color,
+            ) : AssetOwner
+
+            data class PaymentAccount(val name: TextReference) : AssetOwner
+
+            data class Wallet(val name: String, val deviceIconUM: DeviceIconUM) : AssetOwner
+        }
+
+        /**
+         * DeFi provider counterparty — renders as "to/from: <provider icon> <name>", e.g. "from: 🟣 Aave".
+         * Unlike [OwnAccount] (a white-tinted monogram in a colored square), [iconResId] is a bundled full-color
+         * provider drawable rendered untinted in a circle.
+         *
+         * @property iconResId full-color provider drawable, e.g. `img_aave_22`
+         */
+        data class Provider(
+            val direction: Direction,
+            val name: TextReference,
+            @DrawableRes val iconResId: Int,
         ) : ContentSubtitle
 
         enum class Direction { TO, FROM }
@@ -130,8 +166,9 @@ sealed interface TransactionItemUM {
      * @property kind            controls leading icon and color tint
      * @property status          drives background/text colors and Failed/Unconfirmed icon override
      * @property label           full pill label text (already composed by converter, e.g. "Staked")
-     * @property amount          optional signed numeric value rendered after [label] (e.g. "950.43");
-     *                           null for kinds that don't carry amount (Vote, Withdraw, Yield mode)
+     * @property amount          optional value rendered after [label] — a signed number (e.g. "950.43") or, for an
+     *                           unlimited approval, a resolved word like "Unlimited"; null for kinds that don't
+     *                           carry amount (Vote, Withdraw, Yield mode)
      * @property currencySymbol  currency symbol rendered after [amount]; null when [amount] is null
      * @property subtitle        optional subtitle (e.g. "to: 33Bd...ga2B" with avatar) for Approve
      */
@@ -140,7 +177,7 @@ sealed interface TransactionItemUM {
         val kind: PillKind,
         val status: Content.Status,
         val label: TextReference,
-        val amount: String?,
+        val amount: TextReference?,
         val currencySymbol: String?,
         val subtitle: PillSubtitle?,
         val timestamp: Long,

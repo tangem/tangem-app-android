@@ -32,10 +32,12 @@ internal fun Form.updateField(field: OrderFormField, transform: FieldUM.() -> Fi
     field.write(this, field.read(this).transform())
 
 internal fun Form.fieldError(field: OrderFormField): OrderFieldError? {
-    val value = field.read(this).value.trim()
+    val fieldUM = field.read(this)
+    val value = fieldUM.value.trim()
     return when {
+        !fieldUM.isEditable -> null
         value.isEmpty() -> OrderFieldError.Required.takeIf { field.isRequired }
-        !field.isContentValid(value) -> OrderFieldError.Invalid
+        !field.isContentValid(value) -> OrderFieldError.NonLatin
         else -> null
     }
 }

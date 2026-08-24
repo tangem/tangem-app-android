@@ -6,6 +6,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
@@ -27,8 +28,8 @@ class MoshiModule {
     @Provides
     @Singleton
     @NetworkMoshi
-    fun provideNetworkMoshi(): Moshi {
-        return Moshi.Builder()
+    fun provideNetworkMoshi(configurers: Set<@JvmSuppressWildcards NetworkMoshiConfigurer>): Moshi {
+        val builder = Moshi.Builder()
             .add(SerializeNullsFactory)
             .add(
                 PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
@@ -84,9 +85,10 @@ class MoshiModule {
                     .withDefaultValue(NFTAsset.Identifier.Unknown),
             )
             .addLast(KotlinJsonAdapterFactory())
-            .addStakeKitEnumFallbackAdapters()
-            .addCoinIndicatorsEnumFallbackAdapters()
-            .build()
+
+        // Enum-fallback (and future) adapters are contributed via @IntoSet so stream modules can register
+        // their own without this central builder depending on them.
+        return configurers.fold(builder) { acc, configurer -> configurer.configure(acc) }.build()
     }
 
     @Provides

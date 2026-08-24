@@ -7,8 +7,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
+import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingParams
 import com.tangem.features.polymarket.impl.onboarding.ui.PolymarketOnboardingScreen
 
 /**
@@ -17,15 +18,17 @@ import com.tangem.features.polymarket.impl.onboarding.ui.PolymarketOnboardingScr
 
  * assisted factory — its model is resolved from the model map by [getOrCreateModel].
  *
- * @param params feature params the gate resolves the entry decision for; the model reads them back out of its
- *  params container, so they must be handed over here.
+ * @param userWalletId the wallet `PolymarketRoute.Entry` settled; the model reads it back out of its params
+ *  container, so it must be handed over here.
  */
 internal class PolymarketOnboardingComponent(
     appComponentContext: AppComponentContext,
-    params: PolymarketComponent.Params,
+    userWalletId: UserWalletId,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: PolymarketOnboardingModel = getOrCreateModel(params = params)
+    private val model: PolymarketOnboardingModel = getOrCreateModel(
+        params = PolymarketOnboardingParams(userWalletId = userWalletId),
+    )
 
     @Composable
     override fun Content(modifier: Modifier) {

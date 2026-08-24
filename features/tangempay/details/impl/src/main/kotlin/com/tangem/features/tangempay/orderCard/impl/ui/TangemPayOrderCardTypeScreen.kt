@@ -12,8 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +31,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -36,12 +41,16 @@ import androidx.compose.ui.util.fastForEachIndexed
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -52,15 +61,21 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_down_24
 import com.tangem.core.ui.res.generated.icons.ic_cloud_12_filled
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
+import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
+import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.Plastic
+import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
+import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
+import com.tangem.utils.StringsSigns.DASH_SIGN
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
 
 private const val CARD_ASPECT_RATIO = 1.585f
+private const val UNAVAILABLE_ROW_ALPHA = 0.4f
 
 @Composable
 internal fun TangemPayOrderCardTypeScreen(state: TangemPayOrderCardTypeUM, modifier: Modifier = Modifier) {
@@ -144,7 +159,11 @@ private fun ColumnScope.OrderTypeBody(
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
-        CardArea(imageUrl = state.cardImageUrl, availableTypes = availableTypes, pagerState = cardPagerState)
+        CardArea(
+            imageUrls = availableTypes.map(state::imageUrlFor),
+            availableTypes = availableTypes,
+            pagerState = cardPagerState,
+        )
     }
     Column(
         modifier = Modifier
@@ -152,7 +171,12 @@ private fun ColumnScope.OrderTypeBody(
             .padding(horizontal = 16.dp)
             .navigationBarsPadding(),
     ) {
-        CardTypeTabs(availableTypes = availableTypes, pagerState = cardPagerState)
+        CardTypeTabs(
+            availableTypes = availableTypes,
+            pagerState = cardPagerState,
+            onTypeClick = state.onTypeClick,
+            onTypeSwipe = state.onTypeSwipe,
+        )
         SpacerH(16.dp)
         DetailsArea(state = state, availableTypes = availableTypes, pagerState = detailsPagerState)
         SpacerH(16.dp)
@@ -164,14 +188,14 @@ private fun ColumnScope.OrderTypeBody(
 @Suppress("MagicNumber")
 @Composable
 private fun CardArea(
-    imageUrl: String?,
+    imageUrls: List<String?>,
     availableTypes: List<OrderCardType>,
     pagerState: PagerState,
     modifier: Modifier = Modifier,
 ) {
     if (availableTypes.size <= 1) {
         CardArtwork(
-            imageUrl = imageUrl,
+            imageUrl = imageUrls.firstOrNull(),
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 48.dp),
@@ -183,8 +207,8 @@ private fun CardArea(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 48.dp),
         pageSpacing = 24.dp,
-    ) {
-        CardArtwork(imageUrl = imageUrl, modifier = Modifier.fillMaxWidth())
+    ) { page ->
+        CardArtwork(imageUrl = imageUrls.getOrNull(page), modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -196,16 +220,16 @@ private fun DetailsArea(
     modifier: Modifier = Modifier,
 ) {
     val heightReserve = remember {
-        TangemPayOrderCardTypeUM.Plastic(
+        Plastic.Available(
             country = "",
             deliveryFee = "",
-            deliveryEtaMaxBusinessDays = 1,
-            feeState = TangemPayOrderCardTypeUM.FeeState.InsufficientFunds,
+            deliveryEta = TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = null, maxBusinessDays = 1),
+            feeState = FeeState.InsufficientFunds,
         )
     }
     Box(modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().alpha(0f).clearAndSetSemantics {}) {
-            PlasticDetails(plastic = heightReserve)
+            PlasticDetails(plastic = heightReserve, isLoading = false)
         }
         HorizontalPager(
             state = pagerState,
@@ -219,16 +243,40 @@ private fun DetailsArea(
 }
 
 @Composable
-private fun CardTypeTabs(availableTypes: List<OrderCardType>, pagerState: PagerState, modifier: Modifier = Modifier) {
+private fun CardTypeTabs(
+    availableTypes: List<OrderCardType>,
+    pagerState: PagerState,
+    onTypeClick: (OrderCardType) -> Unit,
+    onTypeSwipe: (OrderCardType) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val scope = rememberCoroutineScope()
+    var tabDrivenPage by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(pagerState, availableTypes, onTypeSwipe) {
+        snapshotFlow { pagerState.settledPage }
+            .drop(1)
+            .collect { page ->
+                val isTabDriven = tabDrivenPage == page
+                tabDrivenPage = null
+                if (!isTabDriven) availableTypes.getOrNull(page)?.let(onTypeSwipe)
+            }
+    }
+
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         availableTypes.fastForEachIndexed { index, type ->
-            val isSelected = pagerState.currentPage == index
-            TangemButton(
-                variant = if (isSelected) TangemButton.Variant.Material else TangemButton.Variant.Ghost,
-                size = TangemButton.Size.X11,
-                text = resourceReference(type.titleRes()),
-                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+            TangemTabItem(
+                state = TangemTabItemUM.Content(
+                    id = type.name,
+                    label = resourceReference(type.titleRes()),
+                    counter = type.labelSuffixRes()?.let { resourceReference(it) },
+                    isSelected = pagerState.currentPage == index,
+                    onClick = {
+                        onTypeClick(type)
+                        if (pagerState.currentPage != index) tabDrivenPage = index
+                        scope.launch { pagerState.animateScrollToPage(index) }
+                    },
+                ),
             )
         }
     }
@@ -285,7 +333,7 @@ private fun TypeDetails(state: TangemPayOrderCardTypeUM, type: OrderCardType, mo
     Column(modifier = modifier.fillMaxWidth()) {
         when (type) {
             OrderCardType.Virtual -> VirtualDetails(virtual = state.virtual, isLoading = state.isLoading)
-            OrderCardType.Plastic -> state.plastic?.let { PlasticDetails(plastic = it) }
+            OrderCardType.Plastic -> PlasticDetails(plastic = state.plastic, isLoading = state.isLoading)
         }
     }
 }
@@ -304,7 +352,28 @@ private fun VirtualDetails(virtual: TangemPayOrderCardTypeUM.Virtual, isLoading:
 }
 
 @Composable
-private fun PlasticDetails(plastic: TangemPayOrderCardTypeUM.Plastic) {
+private fun PlasticDetails(plastic: Plastic, isLoading: Boolean) {
+    val feeTitle = resourceReference(R.string.tangempay_order_type_delivery_fee)
+    val timeTitle = resourceReference(R.string.tangempay_order_type_delivery_time)
+    DeliverToRow(plastic = plastic, isLoading = isLoading)
+    when {
+        isLoading -> {
+            InfoRow(title = feeTitle, value = null, divider = true)
+            InfoRow(title = timeTitle, value = null)
+        }
+        plastic is Plastic.Available -> {
+            DeliveryFeeRow(plastic = plastic)
+            InfoRow(title = timeTitle, value = plastic.deliveryEta.asTextReference())
+        }
+        else -> {
+            NoDataRow(title = feeTitle, divider = true)
+            NoDataRow(title = timeTitle, divider = false)
+        }
+    }
+}
+
+@Composable
+private fun DeliverToRow(plastic: Plastic, isLoading: Boolean) {
     TangemRow(
         divider = true,
         contentLead = TangemRowContentLead.End,
@@ -314,54 +383,75 @@ private fun PlasticDetails(plastic: TangemPayOrderCardTypeUM.Plastic) {
                 role = TangemRowTextRole.Title,
             )
         },
-        valueSlot = { RowValueText(text = stringReference(plastic.country)) },
-        endSlot = {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                imageVector = Icons.ic_chevron_down_24,
-                tint = TangemTheme.colors3.icon.secondary,
-                contentDescription = null,
+        valueSlot = {
+            if (isLoading) {
+                TangemShimmer(
+                    modifier = Modifier.width(96.dp),
+                    style = TangemTheme.typography3.body.medium,
+                    textAlign = TextAlign.End,
+                )
+            } else {
+                if (plastic is Plastic.Unavailable) {
+                    StatusBadge(
+                        text = resourceReference(R.string.tangempay_order_type_unavailable),
+                        status = TangemBadge.Status.Warning,
+                    )
+                }
+                RowValueText(text = stringReference(plastic.country))
+            }
+        },
+        subvalueSlot = {
+            CaptionText(
+                text = resourceReference(R.string.tangempay_order_type_country_of_residence),
+                color = TangemTheme.colors3.text.tertiary,
             )
         },
     )
+}
+
+@Composable
+private fun DeliveryFeeRow(plastic: Plastic.Available) {
     TangemRow(
         divider = true,
         contentLead = TangemRowContentLead.End,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
             TangemRowText(
                 text = resourceReference(R.string.tangempay_order_type_delivery_fee),
                 role = TangemRowTextRole.Title,
             )
         },
-        subtitleSlot = if (plastic.feeState == TangemPayOrderCardTypeUM.FeeState.InsufficientFunds) {
-            {
-                CaptionText(
+        valueSlot = {
+            when (plastic.feeState) {
+                FeeState.InsufficientFunds -> StatusBadge(
                     text = resourceReference(R.string.tangempay_order_type_not_enough_money),
-                    color = TangemTheme.colors3.text.status.warning,
+                    status = TangemBadge.Status.Warning,
                 )
-            }
-        } else {
-            null
-        },
-        valueSlot = { RowValueText(text = stringReference(plastic.deliveryFee)) },
-        subvalueSlot = if (plastic.feeState == TangemPayOrderCardTypeUM.FeeState.FreeDelivery) {
-            {
-                CaptionText(
+                FeeState.FreeDelivery -> StatusBadge(
                     text = resourceReference(R.string.tangempay_order_type_first_delivery_free),
-                    color = TangemTheme.colors3.text.status.success,
+                    status = TangemBadge.Status.Success,
+                )
+                FeeState.Default -> Unit
+            }
+            plastic.deliveryFee?.let { fee ->
+                RowValueText(
+                    text = stringReference(fee),
+                    textDecoration = TextDecoration.LineThrough.takeIf {
+                        plastic.feeState == FeeState.FreeDelivery
+                    },
                 )
             }
-        } else {
-            null
         },
     )
-    InfoRow(
-        title = resourceReference(R.string.tangempay_order_type_delivery_time),
-        value = pluralReference(
-            id = R.plurals.tangempay_order_type_delivery_eta,
-            count = plastic.deliveryEtaMaxBusinessDays,
-            formatArgs = wrappedList(plastic.deliveryEtaMaxBusinessDays),
-        ),
+}
+
+@Composable
+private fun RowScope.StatusBadge(text: TextReference, status: TangemBadge.Status) {
+    TangemBadge(
+        modifier = Modifier.align(Alignment.CenterVertically),
+        text = text,
+        status = status,
+        size = TangemBadge.Size.X4,
     )
 }
 
@@ -386,13 +476,42 @@ private fun InfoRow(title: TextReference, value: TextReference?, divider: Boolea
 }
 
 @Composable
-private fun RowValueText(text: TextReference) {
+private fun NoDataRow(title: TextReference, divider: Boolean) {
+    TangemRow(
+        divider = divider,
+        contentLead = TangemRowContentLead.End,
+        titleSlot = {
+            TangemRowText(
+                modifier = Modifier.alpha(UNAVAILABLE_ROW_ALPHA),
+                text = title,
+                role = TangemRowTextRole.Title,
+            )
+        },
+        valueSlot = {
+            RowValueText(
+                modifier = Modifier.alpha(UNAVAILABLE_ROW_ALPHA),
+                text = stringReference(DASH_SIGN),
+            )
+        },
+    )
+}
+
+@Composable
+private fun RowValueText(
+    text: TextReference,
+    modifier: Modifier = Modifier,
+    color: Color = TangemTheme.colors3.text.secondary,
+    textDecoration: TextDecoration? = null,
+) {
     Text(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         text = text.resolveReference(),
         style = TangemTheme.typography3.body.medium,
-        color = TangemTheme.colors3.text.secondary,
+        color = color,
         textAlign = TextAlign.End,
+        textDecoration = textDecoration,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -413,10 +532,12 @@ private fun SelectButton(
     modifier: Modifier = Modifier,
 ) {
     val currentType = availableTypes.getOrElse(pagerState.currentPage) { OrderCardType.Virtual }
+    val plastic = state.plastic
     val isEnabled = when (currentType) {
         OrderCardType.Virtual -> !state.isLoading
-        OrderCardType.Plastic ->
-            !state.isLoading && state.plastic?.feeState != TangemPayOrderCardTypeUM.FeeState.InsufficientFunds
+        OrderCardType.Plastic -> !state.isLoading &&
+            plastic is Plastic.Available &&
+            plastic.feeState != FeeState.InsufficientFunds
     }
     val onClick = when (currentType) {
         OrderCardType.Virtual -> state.onSelectVirtual
@@ -441,10 +562,71 @@ private fun ColumnScope.OrderTypeErrorState() {
     )
 }
 
+private fun TangemPayOrderCardTypeUM.DeliveryEta.asTextReference(): TextReference {
+    val minDays = minBusinessDays
+    return if (minDays == null) {
+        pluralReference(
+            id = R.plurals.tangempay_order_type_delivery_eta,
+            count = maxBusinessDays,
+            formatArgs = wrappedList(maxBusinessDays),
+        )
+    } else {
+        resourceReference(
+            id = R.string.tangempay_order_type_delivery_eta_range,
+            formatArgs = wrappedList(minDays, maxBusinessDays),
+        )
+    }
+}
+
 private fun OrderCardType.titleRes(): Int = when (this) {
     OrderCardType.Virtual -> R.string.tangempay_order_type_segment_virtual
     OrderCardType.Plastic -> R.string.tangempay_order_type_segment_plastic
 }
+
+private fun OrderCardType.labelSuffixRes(): Int? = when (this) {
+    OrderCardType.Virtual -> null
+    OrderCardType.Plastic -> R.string.tangempay_order_type_beta
+}
+
+@Suppress("MagicNumber")
+private fun previewPlasticAvailable(
+    country: String = "Afghanistan",
+    deliveryFee: String? = "$10",
+    minBusinessDays: Int? = 3,
+    maxBusinessDays: Int = 5,
+    feeState: FeeState = FeeState.Default,
+) = Plastic.Available(
+    country = country,
+    deliveryFee = deliveryFee,
+    deliveryEta = TangemPayOrderCardTypeUM.DeliveryEta(
+        minBusinessDays = minBusinessDays,
+        maxBusinessDays = maxBusinessDays,
+    ),
+    feeState = feeState,
+)
+
+@Suppress("MagicNumber")
+private fun previewOrderTypeState(
+    isLoading: Boolean = false,
+    isError: Boolean = false,
+    isPlasticEnabled: Boolean = true,
+    cardImageUrl: String? = null,
+    issueFee: String = "$5",
+    plastic: Plastic = previewPlasticAvailable(),
+) = TangemPayOrderCardTypeUM(
+    isLoading = isLoading,
+    isError = isError,
+    availableTypes = availableTypesOf(isPlasticEnabled),
+    cardImageUrl = cardImageUrl,
+    virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = issueFee),
+    plastic = plastic,
+    onBackClick = {},
+    onRetry = {},
+    onSelectVirtual = {},
+    onSelectPlastic = {},
+    onTypeClick = {},
+    onTypeSwipe = {},
+)
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 780)
 @Preview(showBackground = true, widthDp = 360, heightDp = 780, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -471,13 +653,22 @@ private fun TangemPayOrderCardTypeScreenPreview(
     }
 }
 
+@Suppress("MagicNumber")
 private class OrderCardTypePreviewProvider : CollectionPreviewParameterProvider<TangemPayOrderCardTypeUM>(
     collection = listOf(
-        TangemPayOrderCardTypeUM.stub(feeState = TangemPayOrderCardTypeUM.FeeState.Default),
-        TangemPayOrderCardTypeUM.stub(feeState = TangemPayOrderCardTypeUM.FeeState.FreeDelivery),
-        TangemPayOrderCardTypeUM.stub(feeState = TangemPayOrderCardTypeUM.FeeState.InsufficientFunds),
-        TangemPayOrderCardTypeUM.stub(isPlasticAvailable = false),
-        TangemPayOrderCardTypeUM.stub(isLoading = true, isPlasticAvailable = false, issueFee = ""),
-        TangemPayOrderCardTypeUM.stub(isError = true),
+        previewOrderTypeState(),
+        previewOrderTypeState(plastic = previewPlasticAvailable(minBusinessDays = null, maxBusinessDays = 20)),
+        previewOrderTypeState(
+            plastic = previewPlasticAvailable(deliveryFee = null, feeState = FeeState.FreeDelivery),
+        ),
+        previewOrderTypeState(
+            plastic = previewPlasticAvailable(deliveryFee = "$10", feeState = FeeState.FreeDelivery),
+        ),
+        previewOrderTypeState(plastic = previewPlasticAvailable(feeState = FeeState.InsufficientFunds)),
+        previewOrderTypeState(plastic = Plastic.Unavailable(country = "Afghanistan")),
+        previewOrderTypeState(isPlasticEnabled = false),
+        previewOrderTypeState(isLoading = true, issueFee = "", plastic = Plastic.Unavailable(country = "")),
+        previewOrderTypeState(isLoading = true, isPlasticEnabled = false, issueFee = ""),
+        previewOrderTypeState(isError = true),
     ),
 )

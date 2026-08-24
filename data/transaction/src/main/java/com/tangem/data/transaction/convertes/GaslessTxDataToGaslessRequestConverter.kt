@@ -1,12 +1,12 @@
 package com.tangem.data.transaction.convertes
 
 import com.tangem.blockchain.extensions.formatHex
-import com.tangem.datasource.api.gasless.models.FeeData
-import com.tangem.datasource.api.gasless.models.TransactionData
+import com.tangem.grow.datasource.gasless.models.FeeData
+import com.tangem.grow.datasource.gasless.models.TransactionData
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.toHexString
-import com.tangem.datasource.api.gasless.models.GaslessTransactionData as GaslessTransactionDataDTO
+import com.tangem.grow.datasource.gasless.models.GaslessTransactionData as GaslessTransactionDataDTO
 
 /**
  * Converts domain GaslessTransactionData to DTO for API requests.

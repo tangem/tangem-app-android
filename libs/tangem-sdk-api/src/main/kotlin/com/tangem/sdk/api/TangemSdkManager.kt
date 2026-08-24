@@ -122,6 +122,7 @@ interface TangemSdkManager {
         initialMessage: Message? = null,
         accessCode: String? = null,
         @DrawableRes iconScanRes: Int? = null,
+        registerColdWallet: Boolean = true,
     ): CompletionResult<T>
 
     @Suppress("MagicNumber")

@@ -8,18 +8,21 @@ import arrow.core.None
 import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
-import com.tangem.datasource.api.auth.models.response.NonceApiResponse
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
+import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
+import com.tangem.lib.auth.api.models.response.NonceApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
+import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -32,6 +35,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -48,6 +52,7 @@ class DefaultWalletRegistrarTest {
     private val nonceDecryptor: AuthNonceDecryptor = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
+    private val attestationProvider: AttestationProvider = mockk()
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -82,18 +87,23 @@ class DefaultWalletRegistrarTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor)
+        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
+        // The registrar base64url-decodes the nonce before handing it to the signer; the signer
+        // fakes ignore the bytes, so any fixed value works here.
+        every { android.util.Base64.decode(any<String>(), any()) } returns ByteArray(size = 16) { 7 }
+        coEvery { attestationProvider.getAttestationToken(any()) } returns null
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
@@ -123,6 +133,20 @@ class DefaultWalletRegistrarTest {
         assertThat(request.cardSignatureSalt).isNull()
         assertThat(request.walletStatus).isNull()
         assertThat(request.attestationToken).isNull()
+    }
+
+    @Test
+    fun `register attaches attestation token from provider to the wallet request`() = runTest {
+        stubHappyPath() // decryptNonce("abc") returns "decrypted"
+        coEvery { attestationProvider.getAttestationToken("decrypted") } returns "attest-token"
+        val slot = slot<WalletRegistrationRequest>()
+        coEvery { authApi.registerWallet(capture(slot)) } returns tokenSuccess()
+
+        val result = registrar.register(WALLET_ID, mobileSigner)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.attestationToken).isEqualTo("attest-token")
+        coVerify { attestationProvider.getAttestationToken("decrypted") }
     }
 
     @Test
@@ -326,6 +350,105 @@ class DefaultWalletRegistrarTest {
         assertThat(result.isRight()).isTrue()
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
+    }
+
+    @Test
+    fun `register base64url-decodes the nonce and signs over the decoded bytes`() = runTest {
+        stubHappyPath() // decryptNonce("abc") returns "decrypted"
+        coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
+        val decodedNonce = ByteArray(size = 16) { 42 }
+        every {
+            android.util.Base64.decode("decrypted", android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+        } returns decodedNonce
+        val capturedNonceBytes = slot<ByteArray>()
+        val capturingSigner = WalletSigner { nonceBytes ->
+            capturedNonceBytes.captured = nonceBytes
+            WalletSignatureBundle(
+                walletSignature = ByteArray(size = 65) { 1 },
+                walletSignatureSalt = ByteArray(size = 16) { 2 },
+                cardSignature = null,
+                cardSignatureSalt = null,
+                walletStatusByte = null,
+            )
+        }
+
+        val result = registrar.register(WALLET_ID, capturingSigner)
+
+        // The signer must receive the DECODED nonce bytes, not the raw UTF-8 string bytes — this is
+        // the whole point of [REDACTED_TASK_KEY] (regression guard against reverting to nonce.toByteArray()).
+        assertThat(result.isRight()).isTrue()
+        assertThat(capturedNonceBytes.captured).isEqualTo(decodedNonce)
+        verify { android.util.Base64.decode("decrypted", android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP) }
+    }
+
+    @Test
+    fun `unregister posts, persists rotated tokens and removes only that id from the marker`() = runTest {
+        preferencesDataStore.edit {
+            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+        val request = slot<WalletUnregisterRequest>()
+        // Server rotates the session tokens to the wallets that remain bound (WALLET_ID removed).
+        coEvery { authApi.unregisterWallet(capture(request)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "rotated-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "rotated-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf(OTHER_WALLET_ID),
+            ),
+        )
+        val saved = slot<SessionTokens>()
+
+        val result = registrar.unregister(WALLET_ID)
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(request.captured.walletId).isEqualTo(WALLET_ID)
+        // The rotated tokens actually persisted reflect the updated bound-wallet set.
+        coVerify { store.save(capture(saved)) }
+        assertThat(saved.captured.accessToken).isEqualTo("rotated-access")
+        assertThat(saved.captured.walletIds).containsExactly(OTHER_WALLET_ID)
+        assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+    }
+
+    @Test
+    fun `unregister treats 404 NotFound as success and clears the marker without persisting tokens`() = runTest {
+        preferencesDataStore.edit {
+            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "wallet not registered for this device",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.unregister(WALLET_ID)
+
+        // Already not registered server-side — desired end state reached, marker cleared, no tokens.
+        assertThat(result.isRight()).isTrue()
+        assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+        coVerify(exactly = 0) { store.save(any()) }
+    }
+
+    @Test
+    fun `unregister surfaces API error and keeps the marker`() = runTest {
+        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.FORBIDDEN,
+                message = "forbidden",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.unregister(WALLET_ID)
+
+        assertThat(result.leftOrNull()).isInstanceOf(WalletRegistrationError.Api::class.java)
+        coVerify(exactly = 0) { store.save(any()) }
+        assertThat(registeredIds()).contains(WALLET_ID)
     }
 
     private fun stubHappyPath() {

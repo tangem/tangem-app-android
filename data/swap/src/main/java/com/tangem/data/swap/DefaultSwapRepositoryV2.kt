@@ -6,19 +6,21 @@ import arrow.core.toOption
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
 import com.tangem.data.swap.converter.TokenInfoConverter
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
-import com.tangem.datasource.api.express.models.request.LeastTokenInfo
-import com.tangem.datasource.api.express.models.request.PairsRequestBody
-import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
-import com.tangem.datasource.api.express.models.response.RateType
-import com.tangem.datasource.api.express.models.response.SwapPairProvider
-import com.tangem.datasource.api.express.models.response.TxDetails
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.request.ExchangeSentRequestBody
+import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
+import com.tangem.grow.datasource.express.models.request.PairsRequestBody
+import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWithTxDetails
+import com.tangem.grow.datasource.express.models.response.RateType
+import com.tangem.grow.datasource.express.models.response.SwapPairProvider
+import com.tangem.grow.datasource.express.models.response.TxDetails
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -34,7 +36,9 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
+import com.tangem.domain.tokens.operations.BalanceContributionsInput
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
@@ -56,12 +60,18 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+    private val featureTogglesManager: FeatureTogglesManager,
     @NetworkMoshi moshi: Moshi,
 ) : SwapRepositoryV2 {
 
     private val swapDataConverter = SwapDataConverter()
     private val tokenInfoConverter = TokenInfoConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
+
+    private val isExpressCategoriesGeoBlockingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+        )
 
     override suspend fun getPairs(
         primarySwapCurrencyStatus: SwapCurrencyStatus,
@@ -287,6 +297,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             fromTokenAmount = fromTokenAmount,
             allowanceContract = response.allowanceContract,
             quoteId = response.quoteId,
+            isRestricted = response.isRestricted && isExpressCategoriesGeoBlockingEnabled,
         )
     }
 
@@ -491,6 +502,9 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             ).some(),
             maybeQuoteStatus = quoteStatus.toOption(),
             maybeStakingBalance = none(),
+            // MissedDerivation carries no balance, so the factory ignores contributions entirely on this path —
+            // reading TWI_1717_BALANCE_CONTRIBUTIONS here would change nothing
+            contributionsInput = BalanceContributionsInput.Disabled,
         )
     }
 
@@ -532,13 +546,17 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
         if (!isYieldSupplyActive) return this
 
-        return filter { provider ->
-            when (provider.type) {
-                ExpressProviderType.CEX -> true
-                ExpressProviderType.DEX,
-                ExpressProviderType.DEX_BRIDGE,
-                -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
-                ExpressProviderType.ONRAMP -> false
+        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED)) {
+            filterNot { it.type == ExpressProviderType.ONRAMP }
+        } else {
+            filter { provider ->
+                when (provider.type) {
+                    ExpressProviderType.CEX -> true
+                    ExpressProviderType.DEX,
+                    ExpressProviderType.DEX_BRIDGE,
+                    -> provider.providerId in YIELD_ALLOWED_DEX_PROVIDER_IDS
+                    ExpressProviderType.ONRAMP -> false
+                }
             }
         }
     }
@@ -554,6 +572,7 @@ private val MEMO_RESTRICTED_NETWORKS = setOf(
  * DEX providers allowed for token swaps in yield mode.
  * Mirrors iOS ExpressConstants.yieldModuleDEXProviderIds (PR #4998).
  */
+@RemoveWithToggle("TWI_1326_YIELD_MODE_SWAP_ENABLED")
 private val YIELD_ALLOWED_DEX_PROVIDER_IDS = setOf(
     "1inch",
     "li-fi",
