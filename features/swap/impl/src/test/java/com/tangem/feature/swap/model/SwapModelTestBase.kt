@@ -156,6 +156,15 @@ internal abstract class SwapModelTestBase {
             )
         } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
+        // Unstubbed, a relaxed mock would fabricate a nested SwapCurrencyStatus/Account chain instead of
+        // echoing the real fromSwapCurrencyStatus, which can trip Account-type checks (e.g. isTangemPayWithdrawal).
+        every {
+            swapInteractor.extractFromSwapCurrencyFromPair(
+                pair = any(),
+                fromSwapCurrencyStatus = any(),
+                toSwapCurrencyStatus = any(),
+            )
+        } answers { secondArg() }
     }
 
     protected fun createParams(
@@ -296,7 +305,7 @@ internal abstract class SwapModelTestBase {
         wallet: UserWallet = mockk(relaxed = true),
         status: CryptoCurrencyStatus = mockk(relaxed = true),
         currency: CryptoCurrency = mockk(relaxed = true),
-        account: Account = mockk(relaxed = true),
+        account: Account = mockk<Account.CryptoPortfolio>(relaxed = true),
     ): SwapCurrencyStatus = mockk(relaxed = true) {
         every { userWallet } returns wallet
         every { this@mockk.status } returns status
