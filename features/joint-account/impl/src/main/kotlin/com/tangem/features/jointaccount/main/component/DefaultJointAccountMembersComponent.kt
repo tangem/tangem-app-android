@@ -37,14 +37,24 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
         childFactory = ::memberCardChild,
     )
 
+    private val shareSafelySlot = childSlot(
+        source = model.shareSafelyNavigation,
+        serializer = null,
+        handleBackButton = false,
+        key = "shareSafelySlot",
+        childFactory = { _, componentContext -> shareSafelyChild(componentContext) },
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val memberCard by memberCardSlot.subscribeAsState()
+        val shareSafely by shareSafelySlot.subscribeAsState()
 
         JointAccountMembersScreen(state = state, modifier = modifier)
 
         memberCard.child?.instance?.BottomSheet()
+        shareSafely.child?.instance?.BottomSheet()
         state.activation?.confirmation?.let { confirmation ->
             JointAccountActivationConfirmationBS(state = confirmation)
         }
@@ -63,6 +73,12 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
             onDismiss = model.bottomSheetNavigation::dismiss,
         ),
     )
+
+    private fun shareSafelyChild(componentContext: ComponentContext): ComposableBottomSheetComponent =
+        ShareSafelyComponent(
+            appComponentContext = childByContext(componentContext),
+            params = ShareSafelyComponent.Params(onDismiss = model.shareSafelyNavigation::dismiss),
+        )
 
     @AssistedFactory
     interface Factory : JointAccountMembersComponent.Factory {
