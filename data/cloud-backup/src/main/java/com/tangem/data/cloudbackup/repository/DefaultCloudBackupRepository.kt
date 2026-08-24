@@ -331,7 +331,7 @@ internal class DefaultCloudBackupRepository(
         mapOf(
             KEY_IS_TANGEM_BACKUP to "true",
             KEY_WALLET_ID to walletId,
-            KEY_WALLET_NAME to walletName.truncateToUtf8Bytes(DRIVE_PROPERTY_MAX_BYTES - KEY_WALLET_NAME.length),
+            KEY_WALLET_NAME to walletName.truncateToUtf8Bytes(DRIVE_PROPERTY_MAX_BYTES - KEY_WALLET_NAME.utf8Size()),
             KEY_CREATED_AT to createdAtMillis.toString(),
         )
 
@@ -441,17 +441,17 @@ private fun buildBackupFileName(walletName: String, suffix: String, extension: S
     return walletName.truncateToUtf8Bytes(DRIVE_FILE_NAME_MAX_BYTES - tail.utf8Size()) + tail
 }
 
-private fun String.utf8Size(): Int = toByteArray(Charsets.UTF_8).size
+private fun String.utf8Size(): Int = encodeToByteArray().size
 
 /** Cuts the string at a code point boundary so that its UTF-8 form fits into [maxBytes] */
 private fun String.truncateToUtf8Bytes(maxBytes: Int): String {
     if (maxBytes <= 0) return ""
-    val bytes = toByteArray(Charsets.UTF_8)
+    val bytes = encodeToByteArray()
     if (bytes.size <= maxBytes) return this
 
     var end = maxBytes
     while (end > 0 && bytes[end].isUtf8ContinuationByte()) end--
-    return String(bytes, 0, end, Charsets.UTF_8)
+    return bytes.decodeToString(startIndex = 0, endIndex = end)
 }
 
 private fun Byte.isUtf8ContinuationByte(): Boolean = toInt() and UTF8_CONTINUATION_MASK == UTF8_CONTINUATION_MARKER
