@@ -19,7 +19,7 @@ import com.tangem.grow.datasource.onramp.OnrampApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
