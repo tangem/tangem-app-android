@@ -83,8 +83,9 @@ class RunPolymarketOnboardingInteractor(
 
         if (entry.needsDeploy() && !isRegionAllowed()) return
 
-        emit(PolymarketOnboardingProgress.AwaitingSignature)
         val nonce = step { getRelayerNonce(addresses) } ?: return
+
+        emit(PolymarketOnboardingProgress.AwaitingSignature)
         val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
 
         settleWallet(addresses = addresses, entry = entry, signed = signed, credentials = credentials)
