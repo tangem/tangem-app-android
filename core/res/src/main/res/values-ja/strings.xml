@@ -844,7 +844,7 @@
   <string name="hw_cloud_backup_set_password_button">パスワードを設定</string>
   <string name="hw_cloud_backup_set_password_description">%s上のリカバリーフレーズを暗号化するには、パスワードが必要です。</string>
   <string name="hw_cloud_backup_set_password_title">パスワードを設定</string>
-  <string name="hw_cloud_backup_sheet_backup_time">バックアップ日時：%1$s</string>
+  <string name="hw_cloud_backup_sheet_backup_time">バックアップ日時: %1$s</string>
   <string name="hw_cloud_backup_sheet_remove">バックアップを削除</string>
   <string name="hw_cloud_backup_show_password">パスワードを表示</string>
   <string name="hw_cloud_backup_status_action_required">対応が必要です</string>
@@ -2363,6 +2363,11 @@
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、ウォレットに着金したときにアラートを受信できます。</string>
   <string name="user_push_notification_banner_title">取引を見逃さない</string>
+  <string name="user_wallet_add_hardware_description">Tangemカードをスキャンして追加します</string>
+  <string name="user_wallet_add_hardware_title">ハードウェアウォレットを追加</string>
+  <string name="user_wallet_add_mobile_description">このデバイスに新しいウォレットを作成します</string>
+  <string name="user_wallet_add_mobile_title">モバイルウォレットを追加</string>
+  <string name="user_wallet_coming_soon_dialog_description">複数のモバイルウォレットを作成できる機能を開発中です。</string>
   <string name="user_wallet_list_add_button">ウォレットを追加</string>
   <string name="user_wallet_list_delete_hw_prompt">バックアップせずにこのウォレットを削除すると、資金に永久にアクセスできなくなります。</string>
   <string name="user_wallet_list_delete_prompt">このウォレットを忘れてもよろしいですか？</string>
