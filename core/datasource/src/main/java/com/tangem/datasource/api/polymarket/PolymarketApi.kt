@@ -76,6 +76,15 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketWalletStatusResponse>
 
     /**
+     * The same status, looked up by the Tangem wallet id the deposit wallet was bound to on first deploy.
+     * This is the only way to ask about a wallet whose owner address this device has never derived.
+     */
+    @GET("api/predictions/v1/wallet")
+    suspend fun getWalletStatusByWalletId(
+        @Query("walletId") walletId: String,
+    ): ApiResponse<PolymarketWalletStatusResponse>
+
+    /**
      * Initiate deposit-wallet deployment via the relayer (gasless, unsigned). Returns as soon as the
      * relayer accepts the submission; the client then polls [getWalletStatus].
      */

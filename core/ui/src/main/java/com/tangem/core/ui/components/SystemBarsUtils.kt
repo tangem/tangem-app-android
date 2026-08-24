@@ -88,11 +88,11 @@ fun SystemBarsIconsDisposable(darkIcons: Boolean, isNavigationBarContrastEnforce
     val controller = LocalSystemBarsIconsController.current
     val isDarkTheme = LocalIsInDarkTheme.current
 
-    SideEffect {
+    // Claimed and released in the same effect. Claiming from a `SideEffect` instead would count one user per
+    // recomposition against a single release, so the count would never fall back to zero and the icon colours of
+    // whatever screen comes next would keep those of this one.
+    DisposableEffect(controller, darkIcons, isNavigationBarContrastEnforced, isDarkTheme) {
         controller.setIcons(darkIcons, isNavigationBarContrastEnforced)
-    }
-
-    DisposableEffect(isDarkTheme) {
         onDispose {
             controller.restoreIcons(isDarkTheme)
         }

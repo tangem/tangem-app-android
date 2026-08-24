@@ -3,67 +3,51 @@ package com.tangem.domain.polymarket.interactor
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.utils.logging.TangemLogger
 
 /**
- * Decides where a user lands when they open the feature.
+ * Decides where a user lands when they open the feature: the feed, or the screen that owes onboarding.
  *
- * A blocked region forbids trading, not access: a user who already has a deposit wallet keeps read-only
- * access to it, including withdrawal. Only a blocked user without a wallet is turned away.
+ * The region is deliberately not part of this decision — it forbids opening a *new* account, which is a
+ * question for [RunPolymarketOnboardingInteractor], not for opening a screen.
  *
- * The region is read first and a failure stops the resolution, so a network error can never be mistaken for
- * an allowed region. Resolving the wallet state requires the owner address, so [invoke] may open a card
- * session when the wallet has never derived the Polymarket key; [withoutPrompting] stops short of that
- * instead of paying for a session the user never asked for.
+ * A ready backend status is not enough to reach the feed: the L2 credentials that sign CLOB requests are
+ * stored locally, so a reinstall, a new device or a wallet onboarded elsewhere leaves the status ready with
+ * nothing to sign with. Such a user still owes onboarding, which restores the credentials without deploying.
  *
- * A ready backend status alone is not enough to reach the feed: the L2 credentials that sign CLOB requests
- * are stored locally and can be missing even when the backend considers the wallet ready to trade — a
- * reinstall, cleared storage, a new device, a restored backup, or a wallet onboarded on another platform all
- * leave the status ready with nothing usable to sign with. Such a user still owes onboarding, which derives
- * the credentials before it reports itself finished.
- *
- * This is the only thing that decides whether a wallet is onboarded. Both call sites — the gate opening and
- * the user pressing the action button — go through it, so the two can never drift apart on that question.
+ * A wallet the backend has already confirmed resolves from local state alone. [invoke] may open a card session
+ * to derive the owner address; [withoutPrompting] stops short of that instead of paying for a session the user
+ * never asked for.
  */
 class ResolvePolymarketEntryInteractor(
-    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
     private val getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
+    private val polymarketOnboardedStore: PolymarketOnboardedStore,
 ) {
 
-    /**
-     * The full decision. Derives the owner address when it is missing, which opens a card session on Cold and
-     * unlocks the seed on Hot — so this belongs behind an explicit user action, never behind opening a screen.
-     */
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
-            val isBlocked = checkGeoblock().bind()
-            val addresses = deriveAddresses(userWalletId).bind()
-
-            entryFor(addresses = addresses, isBlocked = isBlocked).bind()
+            confirmedEntry(userWalletId)
+                ?: entryFor(addresses = deriveAddresses(userWalletId).bind()).bind()
         }
 
     /**
-     * The decision as far as it can be taken without prompting the user for anything. A wallet whose addresses
-     * this device can already produce resolves in full; one whose addresses it cannot yields
-     * [PolymarketEntry.Undetermined] rather than paying for a card session the user never asked for.
-     *
-     * The region is still read, so a blocked region is known before anything is shown.
+     * The decision as far as it can be taken without prompting the user. A wallet whose addresses this device
+     * cannot already produce yields [PolymarketEntry.Undetermined] rather than opening a card session.
      */
     suspend fun withoutPrompting(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
         either {
-            val isBlocked = checkGeoblock().bind()
+            confirmedEntry(userWalletId)?.let { return@either it }
 
             val addresses = derivePolymarketAddressesUseCase.stored(userWalletId)
             if (addresses == null) {
@@ -71,30 +55,48 @@ class ResolvePolymarketEntryInteractor(
                 return@either PolymarketEntry.Undetermined
             }
 
-            entryFor(addresses = addresses, isBlocked = isBlocked).bind()
+            entryFor(addresses = addresses).bind()
         }
 
-    private suspend fun entryFor(
-        addresses: PolymarketAddresses,
-        isBlocked: Boolean,
-    ): Either<PolymarketOnboardingError, PolymarketEntry> = either {
-        val state = readWalletStatus(addresses).bind()
+    /**
+     * The entry of a wallet already confirmed ready, or `null` when it is not confirmed or has nothing to sign
+     * with — either way the backend has to be asked.
+     */
+    private suspend fun confirmedEntry(userWalletId: UserWalletId): PolymarketEntry? {
+        if (!polymarketOnboardedStore.isOnboarded(userWalletId)) return null
+        if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return null
 
-        val hasCredentials = hasCredentials(addresses)
-        TangemLogger.i("Resolve: credentials found=$hasCredentials")
+        TangemLogger.i("Resolve: $userWalletId is confirmed onboarded")
 
-        val entry = state.toEntry(isBlocked = isBlocked, hasCredentials = hasCredentials)
-        TangemLogger.i("Resolve: entry=$entry")
-        entry
+        return PolymarketEntry.Onboarded
     }
 
-    private suspend fun checkGeoblock(): Either<PolymarketOnboardingError, Boolean> =
-        checkPolymarketGeoblockUseCase().also { result ->
-            result.fold(
-                ifLeft = { error -> TangemLogger.e("Resolve: geoblock check failed: $error") },
-                ifRight = { isBlocked -> TangemLogger.i("Resolve: geoblock isBlocked=$isBlocked") },
-            )
+    private suspend fun entryFor(addresses: PolymarketAddresses): Either<PolymarketOnboardingError, PolymarketEntry> =
+        either {
+            val state = readWalletStatus(addresses).bind()
+
+            recordConfirmation(userWalletId = addresses.userWalletId, status = state.status)
+
+            val hasCredentials = getPolymarketApiCredentialsUseCase(addresses.userWalletId) != null
+            TangemLogger.i("Resolve: credentials found=$hasCredentials")
+
+            val entry = state.toEntry(hasCredentials = hasCredentials)
+            TangemLogger.i("Resolve: entry=$entry")
+            entry
         }
+
+    /**
+     * Only reached while the wallet is not yet confirmed — a confirmed one short-circuits above and never gets
+     * here. The record is therefore also maintained by the wallet-screen refresh, which keeps reading the backend
+     * for wallets this gate has stopped asking about.
+     */
+    private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
+        if (status == PolymarketWalletStatus.READY_TO_TRADE) {
+            polymarketOnboardedStore.markOnboarded(userWalletId)
+        } else {
+            polymarketOnboardedStore.clear(userWalletId)
+        }
+    }
 
     private suspend fun deriveAddresses(
         userWalletId: UserWalletId,
@@ -116,16 +118,10 @@ class ResolvePolymarketEntryInteractor(
             )
         }
 
-    private suspend fun hasCredentials(addresses: PolymarketAddresses): Boolean =
-        getPolymarketApiCredentialsUseCase(addresses.userWalletId) != null
-
-    private fun PolymarketWalletState.toEntry(isBlocked: Boolean, hasCredentials: Boolean): PolymarketEntry = when {
-        isBlocked && !hasDepositWallet() -> PolymarketEntry.RegionBlocked
-        isBlocked -> PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.READ_ONLY)
-        status == PolymarketWalletStatus.READY_TO_TRADE && hasCredentials ->
-            PolymarketEntry.Onboarded(accessMode = PolymarketAccessMode.TRADING)
-        else -> PolymarketEntry.Onboard(status = status)
-    }
-
-    private fun PolymarketWalletState.hasDepositWallet(): Boolean = depositWalletAddress != null
+    private fun PolymarketWalletState.toEntry(hasCredentials: Boolean): PolymarketEntry =
+        if (status == PolymarketWalletStatus.READY_TO_TRADE && hasCredentials) {
+            PolymarketEntry.Onboarded
+        } else {
+            PolymarketEntry.Onboard(status = status)
+        }
 }
