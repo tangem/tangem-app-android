@@ -120,7 +120,10 @@ internal class PolymarketFeedPoller(
         refreshesInFlight.retainAll(keys)
 
         keys.forEach { key ->
-            pageMeta.getOrPut(key) { PageMeta(fetchedAt = timeSource.markNow(), failCount = 0) }
+            pageMeta.getOrPut(key) {
+                val loadedAt = timeSource.markNow()
+                PageMeta(fetchedAt = loadedAt, lastAttemptAt = loadedAt, failCount = 0)
+            }
         }
     }
 
@@ -133,13 +136,18 @@ internal class PolymarketFeedPoller(
 
         val stalePages = visibleBatchKeys(state).filter { key ->
             val meta = pageMeta[key] ?: return@filter false
-            meta.fetchedAt.elapsedNow() >= staleAfter
+
+            // A failed refresh leaves the page stale for good, so staleness alone would let every scroll-idle tick
+            // ask again. The attempt clock is what paces a page that keeps failing.
+            meta.fetchedAt.elapsedNow() >= staleAfter && meta.lastAttemptAt.elapsedNow() >= pollInterval
         }
 
         stalePages.forEach { key ->
             // A page whose refresh is still in flight is skipped rather than queued: the tick that follows the
             // slow one would otherwise stack a second request on the same page.
             if (!refreshesInFlight.add(key)) return@forEach
+
+            pageMeta[key] = pageMeta.getValue(key).copy(lastAttemptAt = timeSource.markNow())
 
             TangemLogger.i("Feed: refreshing page $key")
             actionsFlow.emit(
@@ -166,7 +174,7 @@ internal class PolymarketFeedPoller(
 
         when (result) {
             is BatchUpdateResult.Success -> {
-                pageMeta[key] = PageMeta(fetchedAt = timeSource.markNow(), failCount = 0)
+                pageMeta[key] = meta.copy(fetchedAt = timeSource.markNow(), failCount = 0)
             }
             is BatchUpdateResult.Error -> {
                 val failCount = meta.failCount + 1
@@ -212,9 +220,11 @@ internal class PolymarketFeedPoller(
 
     /**
      * @property fetchedAt when the page last arrived — by load or by refresh; a failed refresh leaves it alone
+     * @property lastAttemptAt when the page was last asked for, successfully or not; paces the retries of a page
+     *  that keeps failing, which staleness alone cannot do
      * @property failCount refreshes of this page that failed in a row
      */
-    private data class PageMeta(val fetchedAt: TimeMark, val failCount: Int)
+    private data class PageMeta(val fetchedAt: TimeMark, val lastAttemptAt: TimeMark, val failCount: Int)
 
     private companion object {
         val POLL_INTERVAL = 20.seconds
