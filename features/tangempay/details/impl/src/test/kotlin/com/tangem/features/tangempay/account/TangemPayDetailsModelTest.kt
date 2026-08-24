@@ -424,6 +424,7 @@ internal class TangemPayDetailsModelTest {
             confirmedAmount = BigDecimal("2.70"),
             totalEarnedAmount = BigDecimal("2.70"),
             currency = "USD",
+            payoutCurrency = "USDC",
             previousPayout = null,
             period = TangemPayCashback.Period(
                 year = 2026,
