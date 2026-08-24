@@ -1008,6 +1008,7 @@
   <string name="joint_account_invite_members_safety_first_point_title">The link is like a key</string>
   <string name="joint_account_invite_members_safety_second_point_subtitle">Every member can approve transactions with the others. Only invite people you trust.</string>
   <string name="joint_account_invite_members_safety_second_point_title">Co-signers can move funds</string>
+  <string name="joint_account_invite_members_safety_sheet_title">Sharing safely</string>
   <string name="joint_account_invite_members_safety_subtitle">Anyone with the link can join and sign. Only share it with people you trust</string>
   <string name="joint_account_invite_members_safety_third_point_subtitle">When someone joins, check their address belongs to the right person — confirm it with them directly.</string>
   <string name="joint_account_invite_members_safety_third_point_title">Check who joined</string>
