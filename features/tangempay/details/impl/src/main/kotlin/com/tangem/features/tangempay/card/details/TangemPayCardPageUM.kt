@@ -20,6 +20,7 @@ internal data class TangemPayCardPageUM(
     val addToWalletBlockState: AddToWalletBlockState? = null,
     val cardState: TangemPayCardState = TangemPayCardState.Active,
     val menuItems: ImmutableList<TangemPayDropDownItemUM>,
+    val delivery: TangemPayCardDeliveryUM? = null,
 ) {
     companion object {
         fun stub(
@@ -30,6 +31,7 @@ internal data class TangemPayCardPageUM(
             cardState: TangemPayCardState = TangemPayCardState.Active,
             dailyLimitState: TangemPayDailyLimitBlockState = TangemPayDailyLimitBlockState.Content.stub(),
             settings: ImmutableList<TangemPayCardPageSetting> = TangemPayCardPageSetting.stubList(),
+            delivery: TangemPayCardDeliveryUM? = null,
         ) = TangemPayCardPageUM(
             addToWalletBlockState = addToWalletBlockState,
             settings = settings,
@@ -37,9 +39,17 @@ internal data class TangemPayCardPageUM(
             cardState = cardState,
             dailyLimitState = dailyLimitState,
             menuItems = persistentListOf(),
+            delivery = delivery,
         )
     }
 }
+
+@Immutable
+internal data class TangemPayCardDeliveryUM(
+    val email: String,
+    val onContactSupportClick: () -> Unit,
+    val onActivateCardClick: () -> Unit,
+)
 
 @Immutable
 internal data class TangemPayCardPageSetting(

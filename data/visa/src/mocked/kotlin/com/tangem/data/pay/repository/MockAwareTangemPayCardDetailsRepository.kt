@@ -7,7 +7,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId

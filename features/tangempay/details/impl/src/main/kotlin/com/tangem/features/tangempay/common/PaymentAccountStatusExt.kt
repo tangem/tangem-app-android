@@ -1,10 +1,6 @@
 package com.tangem.features.tangempay.common
 
 import com.tangem.domain.models.account.*
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal val AccountStatus.Payment.userWalletId: UserWalletId
@@ -51,7 +47,7 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
     }
 
 internal val AccountStatus.Payment.cardMainImageUrl: String?
-    get() = tariffPlan?.plan?.images?.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url
+    get() = tariffPlan?.plan?.mainImageUrl
 
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null
@@ -71,5 +67,27 @@ internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Ba
     else -> null
 }
 
+internal fun AccountStatus.Payment.networksOrNull(): List<PaymentNetworkStatus>? = when (val v = value) {
+    is PaymentAccountStatusValue.Loaded -> v.networks
+    is PaymentAccountStatusValue.Deactivated -> v.networks
+    else -> null
+}
+
 internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
     get() = availableForWithdrawal.signum() > 0
+
+internal fun PaymentAccountStatusValue.canAddFunds(isMultichainEnabled: Boolean): Boolean = when (this) {
+    is PaymentAccountStatusValue.Loaded -> if (isMultichainEnabled) {
+        networks.hasAvailableNetwork()
+    } else {
+        !depositAddress.isNullOrEmpty()
+    }
+    is PaymentAccountStatusValue.Deactivated -> if (isMultichainEnabled) {
+        networks.hasAvailableNetwork()
+    } else {
+        balance.cryptoBalance.depositAddress.isNotEmpty()
+    }
+    else -> false
+}
+
+private fun List<PaymentNetworkStatus>.hasAvailableNetwork(): Boolean = any { it is PaymentNetworkStatus.Available }

@@ -1,7 +1,7 @@
 package com.tangem.domain.polymarket.model
 
 /**
- * The fully-signed 6-approval batch relayed via `POST /wallet/approvals`. All values are exactly the
+ * The fully-signed 13-approval batch relayed via `POST /wallet/approvals`. All values are exactly the
  * ones the owner signed with the card — the BFF forwards them to the relayer as-is.
  */
 data class PolymarketApprovalsBatch(

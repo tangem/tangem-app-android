@@ -38,8 +38,11 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
@@ -83,6 +86,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
         NameAndInfo(
             modifier = Modifier.weight(1f),
             name = state.name,
+            titleBadge = state.titleBadge,
             information = state.information,
             balance = state.balance,
         )
@@ -117,6 +121,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
 @Composable
 private fun NameAndInfo(
     name: TextReference,
+    titleBadge: TangemBadgeUM?,
     information: UserWalletItemUM.Information,
     balance: UserWalletItemUM.Balance,
     modifier: Modifier = Modifier,
@@ -126,13 +131,30 @@ private fun NameAndInfo(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.SpaceEvenly,
     ) {
-        Text(
-            text = name.resolveReference(),
-            style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                modifier = Modifier.weight(weight = 1f, fill = false),
+                text = name.resolveReference(),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            titleBadge?.let { badge ->
+                TangemBadge(
+                    text = badge.text,
+                    variant = badge.variant,
+                    status = badge.status,
+                    size = badge.size,
+                    iconStart = badge.iconStart,
+                    iconEnd = badge.iconEnd,
+                    contentDescription = badge.contentDescription,
+                )
+            }
+        }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -456,6 +478,23 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     icon = AccountIconPreviewData.randomAccountIcon(),
                 ),
                 isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = "user_wallet_5",
+                name = stringReference("Family savings"),
+                titleBadge = TangemBadgeUM(
+                    text = resourceReference(R.string.common_joint),
+                    size = TangemBadge.Size.X4,
+                ),
+                information = UserWalletItemUM.Information.Loaded(stringReference("9 tokens")),
+                balance = UserWalletItemUM.Balance.Loaded(value = "$16.12", isFlickering = false),
+                imageState = UserWalletItemUM.ImageState.Account(
+                    name = stringReference("Family savings"),
+                    icon = AccountIconPreviewData.randomAccountIcon(),
+                ),
+                isEnabled = true,
+                endIcon = UserWalletItemUM.EndIcon.Arrow,
                 onClick = {},
             ),
         )

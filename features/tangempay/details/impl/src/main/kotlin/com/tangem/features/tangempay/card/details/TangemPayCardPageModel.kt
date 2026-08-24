@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -42,15 +43,18 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
@@ -61,10 +65,12 @@ import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.common.ifLoadedOrNull
+import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
 import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -101,6 +107,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val biometricAuthManager: BiometricAuthManager,
     private val settingsManager: SettingsManager,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val onboardingRepository: OnboardingRepository,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
@@ -110,9 +117,14 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val reloadLimitsJobHolder = JobHolder()
     private val viewPinAuthJobHolder = JobHolder()
     private val frozenStateJobHolder = JobHolder()
+    private val deliveryEmailJobHolder = JobHolder()
 
     private val currentStatus = MutableStateFlow(params.initialStatus)
     private val userWalletId = currentStatus.value.userWalletId
+
+    private val deliveryEmail = MutableStateFlow(onboardingRepository.getSavedCustomerInfo(userWalletId)?.email)
+
+    private var isDeliveryDetailsShown = false
 
     val selectedCardId: StateFlow<String>
         field = MutableStateFlow(params.cardId)
@@ -158,8 +170,10 @@ internal class TangemPayCardPageModel @Inject constructor(
             }
             .launchIn(modelScope)
 
-        combine(currentStatus, selectedCardId) { status, selectedId -> status to selectedId }
-            .onEach { (status, selectedId) -> updateSelectedCardUi(status, selectedId) }
+        combine(currentStatus, selectedCardId, deliveryEmail) { status, selectedId, email ->
+            Triple(status, selectedId, email)
+        }
+            .onEach { (status, selectedId, email) -> updateSelectedCardUi(status, selectedId, email) }
             .launchIn(modelScope)
     }
 
@@ -222,6 +236,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                     isEditingNameEnabled = true,
                     shouldShowCardDetailsButtonOnCard = false,
                 ),
+                cardDetailsEventListener = cardDetailsEventListener,
                 onEditNameClick = { router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName(card)) },
             )
         }
@@ -234,24 +249,59 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    private fun updateSelectedCardUi(state: AccountStatus.Payment, selectedId: String) {
+    private fun updateSelectedCardUi(state: AccountStatus.Payment, selectedId: String, email: String?) {
         val status = state.value
         if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
             val card = status.findCardWithId(selectedId) ?: return
             updateGooglePayBannerState(card.frozenState)
+            if (card.state == TangemPayCardState.Delivering) loadDeliveryEmail()
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
                     settings = status.buildSettings(card.frozenState),
                     menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                     cardState = card.state,
+                    delivery = buildDeliveryState(cardState = card.state, email = email),
                 )
             }
+            sendDeliveryDetailsAnalytics(cardState = card.state)
         } else {
             uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
         }
 
         subscribeToCardFrozenState(selectedId)
+    }
+
+    private fun buildDeliveryState(cardState: TangemPayCardState, email: String?): TangemPayCardDeliveryUM? {
+        if (cardState != TangemPayCardState.Delivering) return null
+        return TangemPayCardDeliveryUM(
+            email = email.orEmpty(),
+            onContactSupportClick = ::onContactSupportClicked,
+            onActivateCardClick = ::onClickActivateCard,
+        )
+    }
+
+    private fun sendDeliveryDetailsAnalytics(cardState: TangemPayCardState) {
+        val isShown = cardState == TangemPayCardState.Delivering
+
+        if (isShown == isDeliveryDetailsShown) return
+        isDeliveryDetailsShown = isShown
+
+        if (isShown) analytics.send(TangemPayAnalyticsEvents.Plastic.CardInTransitDetailsShowed())
+    }
+
+    private fun onClickActivateCard() {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.ActivateCardManagementButtonClicked())
+        val card = selectedCard() ?: return
+        router.push(TangemPayCardDetailsInnerRoute.ActivateCard(card = card))
+    }
+
+    private fun loadDeliveryEmail() {
+        if (deliveryEmail.value != null || deliveryEmailJobHolder.isActive) return
+        modelScope.launch {
+            onboardingRepository.getCustomerInfo(userWalletId)
+                .onRight { info -> deliveryEmail.value = info.email.orEmpty() }
+        }.saveIn(deliveryEmailJobHolder)
     }
 
     private fun selectedCard(): TangemPayCard? {
@@ -436,14 +486,15 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onViewPinAuthFailure(failure: BiometricAuthManager.Result.Failure) {
         when (failure.error) {
-            BiometricAuthError.NoDeviceCredential -> {
+            BiometricAuthError.NoBiometricEnrolled,
+            BiometricAuthError.NoDeviceCredential,
+            -> {
                 uiMessageSender.send(
                     message = TangemPayMessagesFactory.createProtectionNotSetMessage(
                         onOpenSettingsClick = settingsManager::openScreenLockSettings,
                     ),
                 )
             }
-            BiometricAuthError.NoBiometricEnrolled,
             BiometricAuthError.HardwareUnavailable,
             BiometricAuthError.NoForegroundActivity,
             BiometricAuthError.Unknown,
@@ -486,7 +537,28 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickReissueCard() {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardClicked())
-        bottomSheetNavigation.activate(TangemPayCardNavigation.ReissueCard(cardId = selectedCardId.value))
+        val card = selectedCard()
+        val navigation = if (card != null && card.cardType == TangemPayCardType.PHYSICAL) {
+            TangemPayCardNavigation.ReissuePlasticCard(
+                userWalletId = userWalletId,
+                sourceProductInstanceId = card.productInstanceId,
+            )
+        } else {
+            TangemPayCardNavigation.ReissueCard(cardId = selectedCardId.value)
+        }
+        bottomSheetNavigation.activate(navigation)
+    }
+
+    fun onReplacePlasticCardConfirmed(sourceProductInstanceId: String, deliveryEtaMaxBusinessDays: Int) {
+        bottomSheetNavigation.dismiss()
+        router.push(
+            TangemPayAccountDetailsInnerRoute.OrderCard(
+                intent = TangemPayOrderCardIntent.ReissuePlastic(
+                    sourceProductInstanceId = sourceProductInstanceId,
+                    deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
+                ),
+            ),
+        )
     }
 
     override fun onDismissReissueCard() {
@@ -532,10 +604,8 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onClickReceive(data: TangemPayTopUpData) {
         bottomSheetNavigation.dismiss()
-        val loaded = currentStatus.value.ifLoadedOrNull { it }
-        val shouldChooseNetwork = loaded != null &&
-            shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, loaded.networks)
-        if (shouldChooseNetwork) {
+        val networks = currentStatus.value.networksOrNull().orEmpty()
+        if (shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, networks)) {
             bottomSheetNavigation.activate(TangemPayCardNavigation.ChooseNetwork(walletId = data.walletId))
         } else {
             val config = TokenReceiveConfig(
@@ -557,11 +627,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 userWalletId = data.walletId,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-                tangemPayInput = AppRoute.Swap.TangemPayInput(
-                    cryptoAmount = data.cryptoBalance,
-                    fiatAmount = data.fiatBalance,
-                    depositAddress = data.depositAddress,
-                ),
+                accountFlow = AccountFlow.TopUp,
             ),
         )
     }
@@ -672,6 +738,16 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onSelectDisabled() {
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(TangemPayCardNavigation.OtherNetworks)
+    }
+
+    /**
+     * Both sheets share the single bottom-sheet slot, so opening "Other networks" replaced the
+     * "Choose network" sheet it was opened from instead of stacking on top of it. Closing it therefore has to
+     * bring that sheet back explicitly — otherwise the user is dropped all the way out to the card screen.
+     */
+    fun onOtherNetworksDismiss() {
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(TangemPayCardNavigation.ChooseNetwork(walletId = userWalletId))
     }
 
     override fun onDismiss() {

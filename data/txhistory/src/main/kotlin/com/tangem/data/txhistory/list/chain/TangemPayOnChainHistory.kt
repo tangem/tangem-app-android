@@ -59,7 +59,7 @@ internal class TangemPayOnChainHistory @AssistedInject constructor(
         val mergedFlow: Flow<List<TxHistoryInfo>> = txHistoryRepository.getExpressHistory(
             userWalletId = userWalletId,
             currency = currency,
-            fromCreatedAtMillis = oldestLoadedTimestamp(batchState),
+            fromOnChainTimestampMillis = oldestLoadedTimestamp(batchState),
         ).map { express ->
             val onChain = batchState.data.asSequence()
                 .flatMap { it.data.asSequence() }

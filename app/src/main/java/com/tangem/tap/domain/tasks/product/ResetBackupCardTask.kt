@@ -25,7 +25,11 @@ internal class ResetBackupCardTask(
 
     override fun run(session: CardSession, callback: CompletionCallback<Boolean>) {
         PreflightReadTask(
-            readMode = PreflightReadMode.FullCardRead,
+            // ReadMasterSecret: the follow-up ResetToFactorySettingsTask decides whether to purge
+            // the master secret based on card.masterSecret loaded during this preflight
+            readMode = PreflightReadMode.FullCardRead(
+                options = setOf(PreflightReadMode.FullCardRead.Option.ReadMasterSecret),
+            ),
             filter = UserWalletIdPreflightReadFilter(expectedUserWalletId = userWalletId),
             secureStorage = session.environment.secureStorage,
         ).run(session) { result ->

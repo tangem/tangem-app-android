@@ -1,7 +1,6 @@
 package com.tangem.tests.balance
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -39,11 +38,7 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
         val scenarioName = "eth_network_balance"
         val scenarioState = "Unreachable"
         val tokenTitle = "Ethereum"
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
             }
@@ -76,11 +71,7 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
         val scenarioName = "quotes_api"
         val scenarioState = "Error"
         val tokenTitle = "Ethereum"
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
             }
@@ -114,11 +105,7 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
         val scenarioState = "CustomTokenAdded"
         val tokenTitle = "Myria"
         val balance = "$3,299.18"
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
             }

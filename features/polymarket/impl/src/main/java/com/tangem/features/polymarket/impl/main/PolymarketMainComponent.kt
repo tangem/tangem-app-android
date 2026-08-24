@@ -8,7 +8,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainParams
 import com.tangem.features.polymarket.impl.main.ui.PolymarketMainScreen
@@ -21,17 +20,15 @@ import com.tangem.features.polymarket.impl.main.ui.PolymarketMainScreen
  *
  * @param userWalletId wallet the feature was opened for; the model reads it back out of its params container,
  *  so it must be handed over here.
- * @param accessMode entry decision the gate already resolved; the model reads it back out of its params
  *  container, so it must be handed over here.
  */
 internal class PolymarketMainComponent(
     appComponentContext: AppComponentContext,
     private val userWalletId: UserWalletId,
-    private val accessMode: PolymarketAccessMode,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: PolymarketMainModel = getOrCreateModel(
-        params = PolymarketMainParams(userWalletId = userWalletId, accessMode = accessMode),
+        params = PolymarketMainParams(userWalletId = userWalletId),
     )
 
     @Composable
@@ -41,6 +38,7 @@ internal class PolymarketMainComponent(
         PolymarketMainScreen(
             state = state,
             onBackClick = model::onBackClick,
+            onLoadMore = model::onLoadMore,
             modifier = modifier,
         )
     }

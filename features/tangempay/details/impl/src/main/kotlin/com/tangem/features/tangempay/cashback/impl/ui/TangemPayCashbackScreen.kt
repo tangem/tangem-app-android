@@ -208,13 +208,15 @@ private fun HeroBlock(state: TangemPayCashbackUM, modifier: Modifier = Modifier)
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
-        Text(
-            text = state.subtitle.resolveReference(),
-            style = TangemTheme.typography3.subheading.medium,
-            color = TangemTheme.colors3.text.secondary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        state.subtitle?.let { subtitle ->
+            Text(
+                text = subtitle.resolveReference(),
+                style = TangemTheme.typography3.subheading.medium,
+                color = TangemTheme.colors3.text.secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 

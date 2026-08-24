@@ -5,7 +5,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.openTangemPayCardRename
@@ -33,12 +32,7 @@ class TangemPayCardRenameTest : BaseTestCase() {
     @DisplayName("Tangem Pay: successful card rename")
     @Test
     fun successfulCardRenameTest() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(renameScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -74,12 +68,7 @@ class TangemPayCardRenameTest : BaseTestCase() {
         val invalidTitle = getResourceString(CoreResR.string.tangempay_card_details_rename_card_invalid_title)
         val invalidMessage = getResourceString(CoreResR.string.tangempay_card_details_rename_card_invalid_description)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(renameScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }
@@ -151,12 +140,7 @@ class TangemPayCardRenameTest : BaseTestCase() {
         val errorTitle = getResourceString(CoreResR.string.tangem_pay_card_details_unable_to_rename_card_title)
         val errorMessage = getResourceString(CoreResR.string.tangempay_card_details_unable_to_rename_card_description)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(renameScenario)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to state: '$eligibilityState'") {
                 setWireMockScenarioState(scenarioName = TANGEM_PAY_ELIGIBILITY_SCENARIO, state = eligibilityState)
             }

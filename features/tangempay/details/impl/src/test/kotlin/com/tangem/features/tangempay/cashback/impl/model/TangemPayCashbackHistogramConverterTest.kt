@@ -41,10 +41,9 @@ internal class TangemPayCashbackHistogramConverterTest {
     }
 
     @Test
-    fun `GIVEN history WHEN convert THEN total sums months and last month highlighted`() {
+    fun `GIVEN all-time total WHEN convert THEN title uses it instead of the months sum`() {
         // Arrange
         val history = CashbackHistory(
-            currency = "USD",
             months = listOf(
                 month(2, BigDecimal("12.02")),
                 month(3, BigDecimal("44.22")),
@@ -53,11 +52,15 @@ internal class TangemPayCashbackHistogramConverterTest {
         )
 
         // Act
-        val actual = converter.convert(history)
+        val actual = converter.convert(
+            history = history,
+            totalEarnedAmount = BigDecimal("132.15"),
+            totalCurrency = "USD",
+        )
 
         // Assert
         val expected = TangemPayCashbackHistogramUM(
-            title = resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("$88.39")),
+            title = resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("$132.15")),
             bars = persistentListOf(
                 bar("Feb", "$12.02", 12.02f, Style.Regular),
                 bar("Mar", "$44.22", 44.22f, Style.Regular),
@@ -68,15 +71,25 @@ internal class TangemPayCashbackHistogramConverterTest {
     }
 
     @Test
-    fun `GIVEN zero amounts WHEN convert THEN empty total and last month still highlighted`() {
+    fun `GIVEN no all-time total WHEN convert THEN title falls back to the months sum`() {
         // Arrange
-        val history = CashbackHistory(
-            currency = "USD",
-            months = listOf(month(5, BigDecimal.ZERO), month(6, BigDecimal.ZERO)),
-        )
+        val history = CashbackHistory(months = listOf(month(2, BigDecimal("12.02")), month(3, BigDecimal("44.22"))))
 
         // Act
-        val actual = converter.convert(history)
+        val actual = converter.convert(history = history, totalEarnedAmount = null, totalCurrency = null)
+
+        // Assert
+        assertThat(actual.title)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_total_earned, wrappedList("$56.24")))
+    }
+
+    @Test
+    fun `GIVEN zero amounts WHEN convert THEN empty total and last month still highlighted`() {
+        // Arrange
+        val history = CashbackHistory(months = listOf(month(5, BigDecimal.ZERO), month(6, BigDecimal.ZERO)))
+
+        // Act
+        val actual = converter.convert(history = history, totalEarnedAmount = BigDecimal.ZERO, totalCurrency = "USD")
 
         // Assert
         assertThat(actual.title)
@@ -88,13 +101,14 @@ internal class TangemPayCashbackHistogramConverterTest {
     @Test
     fun `GIVEN negative last month WHEN convert THEN last bar highlighted negative`() {
         // Arrange
-        val history = CashbackHistory(
-            currency = "USD",
-            months = listOf(month(5, BigDecimal("26.10")), month(6, BigDecimal("-2.15"))),
-        )
+        val history = CashbackHistory(months = listOf(month(5, BigDecimal("26.10")), month(6, BigDecimal("-2.15"))))
 
         // Act
-        val actual = converter.convert(history)
+        val actual = converter.convert(
+            history = history,
+            totalEarnedAmount = BigDecimal("23.95"),
+            totalCurrency = "USD",
+        )
 
         // Assert
         assertThat(actual.title)
@@ -106,6 +120,10 @@ internal class TangemPayCashbackHistogramConverterTest {
     private fun bar(month: String, amount: String, value: Float, style: Style) =
         TangemPayCashbackHistogramUM.Bar(stringReference(month), stringReference(amount), value, style)
 
-    private fun month(month: Int, amount: BigDecimal) =
-        CashbackHistory.MonthlyCashback(year = 2026, month = month, confirmedAmount = amount)
+    private fun month(month: Int, amount: BigDecimal) = CashbackHistory.MonthlyCashback(
+        year = 2026,
+        month = month,
+        confirmedAmount = amount,
+        currency = "USD",
+    )
 }

@@ -1,11 +1,11 @@
 package com.tangem.datasource.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.local.token.DefaultTokenReceiveWarningActionStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.setTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -26,9 +26,10 @@ object TokenReceiveWarningModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): TokenReceiveWarningActionStore {
         return DefaultTokenReceiveWarningActionStore(
-            persistenceStore = DataStoreFactory.create(
+            persistenceStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = setTypes<String>(),

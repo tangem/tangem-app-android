@@ -3,13 +3,14 @@ package com.tangem.lib.auth.session.internal
 import arrow.core.None
 import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.AuthApiRequest
-import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
-import com.tangem.datasource.api.auth.models.response.NonceApiResponse
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.AuthApiRequest
+import com.tangem.lib.auth.api.models.request.RefreshApiRequest
+import com.tangem.lib.auth.api.models.response.NonceApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.SessionRefreshError
@@ -23,6 +24,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
@@ -44,6 +46,7 @@ class DefaultSessionTokenRefresherTest {
     private val nonceDecryptor: AuthNonceDecryptor = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
+    private val attestationProvider: AttestationProvider = mockk()
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val fixedClock = object : Clock {
@@ -54,17 +57,19 @@ class DefaultSessionTokenRefresherTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor)
+        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
+        coEvery { attestationProvider.getAttestationToken(any()) } returns null
         refresher = DefaultSessionTokenRefresher(
             authApi = authApi,
             store = store,
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             clock = fixedClock,
             dispatchers = dispatchers,
@@ -340,6 +345,36 @@ class DefaultSessionTokenRefresherTest {
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { authApi.refresh(any()) }
         coVerify { authApi.authenticate(any()) }
+    }
+
+    @Test
+    fun `authenticate attaches attestation token from provider to the signed payload`() = runTest {
+        val stored = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = fixedClock.now().minus(60),
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().minus(1),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+        stubAuthenticateHappyPath()
+        coEvery { attestationProvider.getAttestationToken("nonce-decrypted") } returns "attest-token"
+        val slot = slot<AuthApiRequest>()
+        coEvery { authApi.authenticate(capture(slot)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "post-auth-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "post-auth-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+
+        val result = refresher.refresh()
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.payload.attestationToken).isEqualTo("attest-token")
+        coVerify { attestationProvider.getAttestationToken("nonce-decrypted") }
     }
 
     private fun stubAuthenticateHappyPath() {

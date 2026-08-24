@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     api(deps.kotlin.coroutines)
+    api(deps.kotlin.serialization)
     api(deps.moshi)
     api(deps.androidx.datastore.core)
     api(deps.androidx.datastore.preferences.core)

@@ -89,6 +89,10 @@ dependencies {
 
     /** Common */
     implementation(projects.common)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.common)
 
     /** Other libraries */
     api(deps.arrow.core)
@@ -109,8 +113,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Test */
-    testImplementation(projects.domain.core)
-    testImplementation(projects.domain.legacy)
-    testImplementation(projects.libs.blockchainSdk)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }

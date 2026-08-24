@@ -7,13 +7,12 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.utils.getWireMockRequestCount
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertEquals
@@ -43,6 +42,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "5"
         val receiveToken = "Bitcoin"
         val balanceAfterText = "5"
+        val withdrawalRowTitle = getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
+        val withdrawalAmountText = "-$${withdrawAmount}.00"
 
         setupHooks(
             additionalBeforeSection = {
@@ -52,15 +53,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -95,9 +88,13 @@ class TangemPayWithdrawTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert pending express withdrawal transaction is displayed") {
+            step("Assert the withdrawal transaction is appended to history") {
                 onTangemPayMainScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { pendingExpressTransaction.assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        scrollToTransactionWithText(withdrawalRowTitle)
+                        transactionRowWithText(withdrawalRowTitle).assertIsDisplayed()
+                        transactionRowWithText(withdrawalAmountText).assertIsDisplayed()
+                    }
                 }
             }
         }
@@ -115,14 +112,9 @@ class TangemPayWithdrawTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, zeroBalanceState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert balance contains '$zeroBalanceText'") {
@@ -164,15 +156,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -212,15 +196,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -262,15 +238,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -320,6 +288,8 @@ class TangemPayWithdrawTest : BaseTestCase() {
         val withdrawAmount = "10"
         val receiveToken = "Bitcoin"
         val zeroBalanceText = "0.00"
+        val withdrawalRowTitle = getResourceString(com.tangem.core.res.R.string.tangem_pay_withdrawal)
+        val withdrawalAmountText = "-$${withdrawAmount}.00"
 
         setupHooks(
             additionalBeforeSection = {
@@ -329,15 +299,7 @@ class TangemPayWithdrawTest : BaseTestCase() {
                 setWireMockScenarioState(exchangeStatusScenario, exchangeStatusState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay withdraw Swap screen") { openTangemPayWithdrawSwapScreen() }
             step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
@@ -372,9 +334,13 @@ class TangemPayWithdrawTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert pending express withdrawal transaction is displayed") {
+            step("Assert the withdrawal transaction is appended to history") {
                 onTangemPayMainScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { pendingExpressTransaction.assertIsDisplayed() }
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        scrollToTransactionWithText(withdrawalRowTitle)
+                        transactionRowWithText(withdrawalRowTitle).assertIsDisplayed()
+                        transactionRowWithText(withdrawalAmountText).assertIsDisplayed()
+                    }
                 }
             }
         }

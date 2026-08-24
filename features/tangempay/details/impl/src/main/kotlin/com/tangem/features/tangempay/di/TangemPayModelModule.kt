@@ -6,6 +6,7 @@ import com.tangem.features.tangempay.account.TangemPayDetailsModel
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsModel
 import com.tangem.features.tangempay.addfunds.va.bank.TangemPayVaBankingDetailsErrorModel
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositModel
+import com.tangem.features.tangempay.card.activation.TangemPayCardActivationModel
 import com.tangem.features.tangempay.card.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.card.details.TangemPayCardPageModel
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletModel
@@ -21,7 +22,9 @@ import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetwor
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardDataModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardSuccessModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardTypeModel
+import com.tangem.features.tangempay.orderCard.impl.model.TangemPayReissuePlasticCardModel
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanModel
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanModel
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryModel
@@ -56,6 +59,11 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayChangePinModel::class)
     fun bindTangemPayChangePinModel(model: TangemPayChangePinModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCardActivationModel::class)
+    fun bindTangemPayCardActivationModel(model: TangemPayCardActivationModel): Model
 
     @Binds
     @IntoMap
@@ -156,4 +164,14 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayOrderCardDataModel::class)
     fun bindTangemPayOrderCardDataModel(model: TangemPayOrderCardDataModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayReissuePlasticCardModel::class)
+    fun bindTangemPayReissuePlasticCardModel(model: TangemPayReissuePlasticCardModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayOrderCardSuccessModel::class)
+    fun bindTangemPayOrderCardSuccessModel(model: TangemPayOrderCardSuccessModel): Model
 }

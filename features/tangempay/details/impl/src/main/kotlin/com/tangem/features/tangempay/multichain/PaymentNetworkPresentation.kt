@@ -30,13 +30,28 @@ internal fun PaymentNetworkStatus.currencies(): List<CryptoCurrency> = when (thi
 }
 
 /**
+ * The subset of [currencies] the user is offered to receive: tokens Tangem has a catalogue entry (raw id) for.
+ *
+ * A payment account may also carry a token that is not in the catalogue — the backend's internal settlement
+ * stablecoin, for one. It has no name or icon to show (it would render as an anonymous placeholder), and the
+ * account is not meant to receive it, so it is hidden from the whole receive flow: the network row's token
+ * label and the Receive sheet alike.
+ */
+internal fun PaymentNetworkStatus.receivableCurrencies(): List<CryptoCurrency> = currencies()
+    .filter { it.id.rawCurrencyId != null }
+
+/**
  * Maps this status to row display data: network identity (id, name, icon) from [PaymentNetworkStatus.network],
- * token label from the contained currencies' symbols. `null` when the status carries no currencies —
- * a network with nothing to receive has no row.
+ * token label from the contained currencies' symbols (empty when there are none).
+ *
+ * `null` only for a [PaymentNetworkStatus.Available] network without currencies — it is issued, yet there is
+ * nothing to receive on it. [PaymentNetworkStatus.NotIssued] and [PaymentNetworkStatus.Disabled] rows are kept
+ * regardless: the backend need not list the tokens of a network whose contract does not exist yet, while the
+ * row itself is still actionable (issue on demand) or informational.
  */
 internal fun PaymentNetworkStatus.toRowData(): PaymentNetworkRowData? {
-    val currencies = currencies()
-    if (currencies.isEmpty()) return null
+    val currencies = receivableCurrencies()
+    if (currencies.isEmpty() && this is PaymentNetworkStatus.Available) return null
     return PaymentNetworkRowData(
         id = network.rawId,
         name = network.name,

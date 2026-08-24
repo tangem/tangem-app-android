@@ -46,6 +46,7 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
@@ -62,7 +63,6 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM
-import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import com.tangem.core.ui.R as CoreUiR
@@ -76,7 +76,6 @@ private const val TOP_FADE_MID_ALPHA = 0.8f
 internal fun TangemPayDetailsScreen(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
-    expressTransactionsComponent: ExpressTransactionsComponent,
     promoBannersBlockComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
@@ -88,8 +87,6 @@ internal fun TangemPayDetailsScreen(
     val rootBackground = TangemTheme.colors3.bg.primary
 
     val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
-    val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
-    val expressTransactionsBottomSheetState = expressState.bottomSheetSlot
 
     Box(
         modifier = modifier
@@ -132,15 +129,6 @@ internal fun TangemPayDetailsScreen(
                         modifier = Modifier.padding(vertical = 12.dp),
                     )
                 }
-                with(expressTransactionsComponent) {
-                    expressTransactionsContent(
-                        state = expressState.transactionsToDisplay,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 12.dp)
-                            .fillMaxWidth(),
-                    )
-                }
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
         }
@@ -152,7 +140,6 @@ internal fun TangemPayDetailsScreen(
             },
         )
     }
-    expressTransactionsBottomSheetState?.content(null)
 }
 
 @Suppress("LongMethod")
@@ -208,6 +195,50 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                     subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
                     contentColor = TangemTheme.colors3.bg.opaque.secondary,
                     leadingContent = {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.icon.primary,
+                        )
+                    },
+                )
+            }
+        }
+        CardsProgressBannerUM.Activating -> {
+            item("activatingBannerBlock") {
+                SpacerH12()
+                TangemMessage(
+                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    title = resourceReference(R.string.tangempay_card_activation_in_progress),
+                    subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+                    contentColor = TangemTheme.colors3.bg.opaque.secondary,
+                    leadingContent = {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.icon.primary,
+                        )
+                    },
+                )
+            }
+        }
+        is CardsProgressBannerUM.Delivering -> {
+            item("deliveringBannerBlock") {
+                SpacerH12()
+                TangemMessageBanner(
+                    title = resourceReference(R.string.tangempay_card_delivery_banner_title),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .testTag(TangemPayTestTags.DELIVERY_BANNER),
+                    showGlowRing = false,
+                    description = resourceReference(R.string.tangempay_card_delivery_banner_description),
+                    secondaryButton = TangemMessageBanner.Button(
+                        text = resourceReference(R.string.tangempay_card_details_activate),
+                        onClick = progressBanner.onActivateClick,
+                    ),
+                    slotStart = {
                         Icon(
                             modifier = Modifier.size(20.dp),
                             imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
@@ -292,7 +323,7 @@ private fun PayDetailsTopBar(
             }
             .statusBarsPadding(),
         title = resourceReference(R.string.tangempay_payment_account),
-        subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
+        subtitle = config.subtitle,
         startContent = {
             TangemButton(
                 iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_arrow_back_28),
@@ -491,7 +522,6 @@ private fun TangemPayDetailsScreenPreview(
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(
                 txHistoryUM = PreviewTangemPayTxHistoryComponent.contentUM,
             ),
-            expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
             promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }
@@ -506,7 +536,6 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
         TangemPayDetailsScreen(
             state = TangemPayDetailsUMProvider().values.first(),
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(txHistoryUM = state),
-            expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
             promoBannersBlockComponent = ComposableContentComponent.EMPTY,
         )
     }

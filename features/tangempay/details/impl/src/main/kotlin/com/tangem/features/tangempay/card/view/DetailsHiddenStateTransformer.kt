@@ -15,6 +15,7 @@ internal class DetailsHiddenStateTransformer(
             isHidden = initialState.isHidden,
             isLoading = initialState.isLoading,
             shouldShowCardDetailsButtonOnCard = shouldShowCardDetailsButtonOnCard,
+            onCopy = { _, _ -> },
         )
     }
 }

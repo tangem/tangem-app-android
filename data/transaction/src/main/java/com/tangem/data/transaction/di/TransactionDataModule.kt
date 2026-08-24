@@ -6,9 +6,9 @@ import com.tangem.data.transaction.error.DefaultFeeErrorResolver
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.datasource.api.gasless.GaslessTxServiceApi
-import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
-import com.tangem.datasource.api.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
+import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
+import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.models.DemoConfig

@@ -1,11 +1,11 @@
 package com.tangem.feature.swap
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
-import com.tangem.datasource.api.surveysparrow.models.CreateSurveySparrowResponseBody
-import com.tangem.datasource.api.surveysparrow.models.SurveySparrowGetAnswerDto
-import com.tangem.datasource.api.surveysparrow.models.SurveySparrowResponseDto
-import com.tangem.datasource.api.surveysparrow.models.SurveySparrowResponsesDto
+import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
+import com.tangem.store.datasource.surveysparrow.models.CreateSurveySparrowResponseBody
+import com.tangem.store.datasource.surveysparrow.models.SurveySparrowGetAnswerDto
+import com.tangem.store.datasource.surveysparrow.models.SurveySparrowResponseDto
+import com.tangem.store.datasource.surveysparrow.models.SurveySparrowResponsesDto
 import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
 import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import io.mockk.Runs

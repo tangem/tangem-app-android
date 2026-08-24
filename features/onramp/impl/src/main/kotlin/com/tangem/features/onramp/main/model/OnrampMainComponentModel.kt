@@ -3,10 +3,13 @@ package com.tangem.features.onramp.main.model
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -23,6 +26,7 @@ import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.model.isRestricted
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -66,6 +70,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
+    private val featureTogglesManager: FeatureTogglesManager,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
@@ -198,7 +203,13 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
-        val route = resolveMarketingDeeplink(deeplink).toContextualRoute(
+        val marketing = resolveMarketingDeeplink(deeplink)
+        if (marketing == MarketingDeeplink.SWAP &&
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED)
+        ) {
+            return false
+        }
+        val route = marketing.toContextualRoute(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
             screenSource = AnalyticsParam.ScreensSources.Buy,
@@ -226,6 +237,11 @@ internal class OnrampMainComponentModel @Inject constructor(
         onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM,
         categoryUM: OnrampOfferCategoryUM,
     ) {
+        if (onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
+            onrampOfferAdvantagesUM == OnrampOfferAdvantagesUM.Restricted
+        ) {
+            return
+        }
         val currentContentState = state.value as? OnrampMainComponentUM.Content ?: return
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.OnBuyClick(
@@ -409,8 +425,12 @@ internal class OnrampMainComponentModel @Inject constructor(
             quotes.all { it is OnrampQuote.AmountError } -> {
                 state.update { amountStateFactory.getSecondaryFieldAmountErrorState(quotes) }
             }
-            quotes.none { it is OnrampQuote.Data } -> {
-                state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
+            quotes.none { it is OnrampQuote.Data && !it.isRestricted } -> {
+                if (quotes.any(OnrampQuote::isRestricted)) {
+                    state.update { amountStateFactory.getSecondaryFieldRestrictedErrorState() }
+                } else {
+                    state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
+                }
             }
             else -> {
                 analyticsEventHandler.sendProviderCalculatedEvent(

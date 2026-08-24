@@ -7,7 +7,7 @@ import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.ReissueCardRequest
-import com.tangem.datasource.local.visa.TangemPayReissueCardStore
+import com.tangem.spend.datasource.pay.store.TangemPayReissueCardStore
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayOrderInfo
@@ -47,6 +47,22 @@ internal class DefaultReissueCardRepository @Inject constructor(
 
             fee
         }
+
+    override suspend fun getPlasticReissueCardFee(
+        userWalletId: UserWalletId,
+    ): Either<VisaApiError, TangemPayReissueCardFee> = either {
+        val response = requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getFee(
+                authHeader = authHeader,
+                type = CARD_REPLACEMENT_PLASTIC_FEE_TYPE,
+            )
+        }.bind()
+
+        TangemPayReissueCardFee(
+            amount = response.result.amount.toBigDecimal(),
+            currencyCode = response.result.currency,
+        )
+    }
 
     override suspend fun reissueCard(
         userWalletId: UserWalletId,
@@ -88,5 +104,6 @@ internal class DefaultReissueCardRepository @Inject constructor(
 
     private companion object {
         const val CARD_REPLACEMENT_FEE_TYPE = "CARD_REPLACEMENT"
+        const val CARD_REPLACEMENT_PLASTIC_FEE_TYPE = "CARD_REPLACEMENT_PLASTIC"
     }
 }

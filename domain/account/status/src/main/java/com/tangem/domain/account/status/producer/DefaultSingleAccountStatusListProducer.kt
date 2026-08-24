@@ -7,6 +7,8 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.account.models.AccountCurrencyId
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.contribution.BalanceContributionProvider
+import com.tangem.domain.account.status.contribution.ContributionResolver
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -15,6 +17,7 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -33,16 +36,21 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer.Companion.selectStakingBalance
+import com.tangem.domain.tokens.TokensFeatureToggles
+import com.tangem.domain.tokens.operations.BalanceContributionsInput
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -81,6 +89,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
@@ -88,6 +98,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val stakingBalanceSupplier: MultiStakingBalanceSupplier,
     private val stakingIdFactory: StakingIdFactory,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val tokensFeatureToggles: TokensFeatureToggles,
+    private val balanceContributionProviders: Set<@JvmSuppressWildcards BalanceContributionProvider>,
 ) : SingleAccountStatusListProducer {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -95,6 +107,10 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         get() = AccountStatus.Payment(this, PaymentAccountStatusValue.Error.Unavailable)
     private val Account.Virtual.errorVirtualAccountStatus: AccountStatus.Virtual
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
+    private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
+        get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
+    private val Account.Joint.errorJointAccountStatus: AccountStatus.Joint
+        get() = AccountStatus.Joint(this, JointAccountStatusValue.Error.Unavailable)
 
     override val fallback: Option<AccountStatusList> = none()
 
@@ -149,10 +165,17 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
             paymentAccountStatusSupplier.invoke(userWalletId = walletId),
             virtualAccountStatusSupplier.invoke(userWalletId = walletId),
-        ) { paymentStatus, virtualStatus ->
+            predictionStatusFlow(userWallet = userWallet),
+        ) { paymentStatus, virtualStatus, predictionValue ->
+            val predictionStatus = AccountStatus.Prediction(
+                account = Account.Prediction(userWalletId = walletId),
+                value = predictionValue,
+            )
+
             mapOf(
                 paymentStatus.accountId to paymentStatus,
                 virtualStatus.accountId to virtualStatus,
+                predictionStatus.accountId to predictionStatus,
             )
         }
 
@@ -172,10 +195,27 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.CryptoPortfolio -> buildCryptoPortfolioStatus(account, currencyStatusMap, accountList)
                     is Account.Payment -> specialStatuses[account.accountId] ?: account.errorPaymentAccountStatus
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
+                    is Account.Prediction ->
+                        specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
+                    // The joint status source arrives with the wallet-screen integration step
+                    is Account.Joint -> account.errorJointAccountStatus
                 }
             }
             buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
         }.collect { accountStatusList -> channel.send(accountStatusList) }
+    }
+
+    /**
+     * Subscribed only for a wallet that can hold the account, and seeded before the join: this flow gates every
+     * account on the screen, so a supplier that goes quiet must cost one loading row rather than all of them.
+     */
+    private fun predictionStatusFlow(userWallet: UserWallet): Flow<PredictionAccountStatusValue> {
+        if (!polymarketFeatureToggles.isPolymarketEnabled || !userWallet.isPredictionAccountSupported) {
+            return flowOf(PredictionAccountStatusValue.Error.Unavailable)
+        }
+
+        return predictionAccountStatusSupplier.invoke(userWalletId = userWallet.walletId)
+            .onStart { emit(PredictionAccountStatusValue.Loading) }
     }
 
     private fun buildCryptoPortfolioStatus(
@@ -211,6 +251,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             totalAccounts = accountList.totalAccounts,
             totalFiatBalance = TotalFiatBalanceCalculator.calculate(balances),
             totalArchivedAccounts = accountList.totalArchivedAccounts,
+            totalJointAccounts = accountList.totalJointAccounts,
             sortType = accountList.sortType,
             groupType = accountList.groupType,
         )
@@ -230,6 +271,9 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val quoteStatusFlow: SharedFlow<Map<CryptoCurrency.RawID, QuoteStatus>> = quoteStatusFlow()
             .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: quoteStatuses emitted size=${it.size}") }
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
+        val contributionResolversFlow: SharedFlow<List<ContributionResolver>> = contributionResolversFlow(userWallet)
+            .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: contributionResolvers emitted size=${it.size}") }
+            .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
 
         return flattenCurrency
             .distinctUntilChanged()
@@ -239,11 +283,13 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     flow = networkStatusFlow,
                     flow2 = stakingBalanceFlow,
                     flow3 = quoteStatusFlow,
-                    transform = { b, c, d -> Box(
+                    flow4 = contributionResolversFlow,
+                    transform = { b, c, d, e -> Box(
                         flattenCurrencyMap = a,
                         networkStatusMap = b,
                         stakingBalanceMap = c,
                         quoteStatusMap = d,
+                        contributionResolvers = e,
                     ) },
                 )
             }
@@ -254,33 +300,57 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                         "currencies=${box.flattenCurrencyMap.size}, " +
                         "networks=${box.networkStatusMap.size}, " +
                         "stakings=${box.stakingBalanceMap.size}, " +
-                        "quotes=${box.quoteStatusMap.size}",
+                        "quotes=${box.quoteStatusMap.size}, " +
+                        "contributors=${box.contributionResolvers.size}",
                 )
             }
-            .map { box ->
-                val flattenCurrencyMap: Map<AccountCurrencyId, CryptoCurrency> = box.flattenCurrencyMap
-                val networkStatusMap: Map<Network.ID, NetworkStatus> = box.networkStatusMap
-                val stakingBalanceMap: Map<StakingID, Set<StakingBalance>> = box.stakingBalanceMap
-                val quoteStatusMap: Map<CryptoCurrency.RawID, QuoteStatus> = box.quoteStatusMap
+            .map { box -> box.toCurrencyStatuses(userWallet) }
+    }
 
-                flattenCurrencyMap.mapValues { (acId: AccountCurrencyId, currency) ->
-                    val (_, id) = acId
-                    val networkStatus: NetworkStatus? = networkStatusMap[currency.network.id]
-                    val quoteStatus: QuoteStatus? = id.rawCurrencyId?.let { rawID -> quoteStatusMap[rawID] }
-                    val stakingBalance: StakingBalance? = findStakingBalance(
-                        networkStatus = networkStatus,
-                        id = id,
-                        wallet = userWallet,
-                        stakingBalanceMap = stakingBalanceMap,
-                    )
-                    CryptoCurrencyStatusFactory.create(
-                        currency = currency,
-                        maybeNetworkStatus = networkStatus.toOption(),
-                        maybeQuoteStatus = quoteStatus.toOption(),
-                        maybeStakingBalance = stakingBalance.toOption(),
-                    )
-                }
+    private fun Box.toCurrencyStatuses(userWallet: UserWallet): Map<AccountCurrencyId, CryptoCurrencyStatus> {
+        return flattenCurrencyMap.mapValues { (acId: AccountCurrencyId, currency) ->
+            val (_, id) = acId
+            val networkStatus: NetworkStatus? = networkStatusMap[currency.network.id]
+            val quoteStatus: QuoteStatus? = id.rawCurrencyId?.let { rawID -> quoteStatusMap[rawID] }
+            // the two paths are mutually exclusive: whichever one is off yields nothing
+            val stakingBalance: StakingBalance? = findStakingBalance(
+                networkStatus = networkStatus,
+                id = id,
+                wallet = userWallet,
+                stakingBalanceMap = stakingBalanceMap,
+            )
+            val contributions = contributionResolvers.mapNotNull { resolver ->
+                resolver.resolve(currency = currency, networkStatus = networkStatus)
             }
+
+            CryptoCurrencyStatusFactory.create(
+                currency = currency,
+                maybeNetworkStatus = networkStatus.toOption(),
+                maybeQuoteStatus = quoteStatus.toOption(),
+                maybeStakingBalance = stakingBalance.toOption(),
+                contributionsInput = if (tokensFeatureToggles.isBalanceContributionsEnabled) {
+                    BalanceContributionsInput.enabled(contributions)
+                } else {
+                    BalanceContributionsInput.Disabled
+                },
+            )
+        }
+    }
+
+    /**
+     * Frames of every registered [BalanceContributionProvider], or nothing at all while the toggle is off — the
+     * legacy staking join stays the only source then, and no provider flow is even collected.
+     */
+    private fun contributionResolversFlow(userWallet: UserWallet): Flow<List<ContributionResolver>> {
+        if (!tokensFeatureToggles.isBalanceContributionsEnabled || balanceContributionProviders.isEmpty()) {
+            return flowOf(emptyList())
+        }
+
+        return combine(
+            balanceContributionProviders.map { provider -> provider.contributions(userWallet) },
+        ) { resolvers ->
+            resolvers.toList()
+        }
     }
 
     private fun networkStatusFlow(walletId: UserWalletId): Flow<Map<Network.ID, NetworkStatus>> =
@@ -289,7 +359,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             .distinctUntilChanged()
 
     private fun stakingFlow(wallet: UserWallet): Flow<Map<StakingID, Set<StakingBalance>>> =
-        if (!wallet.isMultiCurrency) {
+        // with contributions on, staking arrives through StakingContributionProvider — don't subscribe twice
+        if (!wallet.isMultiCurrency || tokensFeatureToggles.isBalanceContributionsEnabled) {
             flowOf(emptyMap())
         } else {
             stakingBalanceSupplier(MultiStakingBalanceProducer.Params(wallet.walletId))
@@ -350,6 +421,14 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
+                is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
+                // The statuses carry
+                // no amount yet — it arrives with the balances step; until then only pre-activation states exist,
+                // and their balance is genuinely zero (the Safe is not deployed)
+                is AccountStatus.Joint -> TotalFiatBalance.Loaded(
+                    amount = SerializedBigDecimal.ZERO,
+                    source = accountStatus.value.source,
+                )
             }
         }
     }
@@ -376,10 +455,13 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     }
                     is Account.Payment -> null
                     is Account.Virtual -> null
+                    is Account.Prediction -> null
+                    is Account.Joint -> null
                 }
             },
             totalAccounts = accountList.totalAccounts,
             totalArchivedAccounts = accountList.totalArchivedAccounts,
+            totalJointAccounts = accountList.totalJointAccounts,
             totalFiatBalance = TotalFiatBalance.Loading,
             sortType = accountList.sortType,
             groupType = accountList.groupType,
@@ -391,6 +473,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val networkStatusMap: Map<Network.ID, NetworkStatus>,
         val stakingBalanceMap: Map<StakingID, Set<StakingBalance>>,
         val quoteStatusMap: Map<CryptoCurrency.RawID, QuoteStatus>,
+        val contributionResolvers: List<ContributionResolver>,
     )
 
     @AssistedFactory

@@ -25,6 +25,7 @@ dependencies {
 
     implementation(projects.core.decompose)
     implementation(projects.core.utils)
+    implementation(projects.core.ui)
 
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.biometric)
@@ -33,5 +34,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
 
     implementation(deps.hilt.android)
+    implementation(deps.androidx.fragment)
+    implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
 }

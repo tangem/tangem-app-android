@@ -24,6 +24,7 @@ import com.tangem.features.tangempay.card.closure.TangemPayCloseCardComponent
 import com.tangem.features.tangempay.card.pin.TangemPayViewPinComponent
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueCardComponent
 import com.tangem.features.tangempay.common.userWalletId
+import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetworkComponent
 import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksComponent
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
@@ -94,6 +95,20 @@ internal class TangemPayCardPageScreenComponent(
                     listener = model,
                     userWalletId = params.initialStatus.userWalletId,
                     cardId = navigation.cardId,
+                ),
+            )
+            is TangemPayCardNavigation.ReissuePlasticCard -> TangemPayReissuePlasticCardComponent(
+                appComponentContext = context,
+                params = TangemPayReissuePlasticCardComponent.Params(
+                    userWalletId = navigation.userWalletId,
+                    sourceProductInstanceId = navigation.sourceProductInstanceId,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onReplaceConfirmed = { deliveryEtaMaxBusinessDays ->
+                        model.onReplacePlasticCardConfirmed(
+                            sourceProductInstanceId = navigation.sourceProductInstanceId,
+                            deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
+                        )
+                    },
                 ),
             )
             is TangemPayCardNavigation.CloseCard -> TangemPayCloseCardComponent(
@@ -168,7 +183,7 @@ internal class TangemPayCardPageScreenComponent(
             is TangemPayCardNavigation.OtherNetworks -> PaymentOtherNetworksComponent(
                 appComponentContext = context,
                 params = PaymentOtherNetworksComponent.Params(
-                    onDismiss = model.bottomSheetNavigation::dismiss,
+                    onDismiss = model::onOtherNetworksDismiss,
                 ),
             )
             is TangemPayCardNavigation.PaymentReceive -> PaymentReceiveComponent(

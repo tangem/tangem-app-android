@@ -305,6 +305,12 @@ private fun getAnnotatedStringForLegalsWithClick(
 
 @Composable
 private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
+    if (state.changeCardsButtonState == ChangeCardsButtonState.HIDDEN) {
+        // No reverse action in a fixed-direction account flow (Tangem Pay top-up/withdraw via swap) —
+        // keep the layout slot but render nothing, matching the existing constraint reference.
+        Spacer(modifier = modifier.size(TangemTheme.dimens.size48))
+        return
+    }
     Box(
         modifier = modifier
             .size(TangemTheme.dimens.size48)
@@ -353,6 +359,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(TangemTheme.dimens.spacing12),
                 )
             }
+            ChangeCardsButtonState.HIDDEN -> Unit
         }
     }
 }

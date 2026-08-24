@@ -68,6 +68,21 @@ internal class CashbackBlockTransformerTest {
         assertThat(widget.subtitle).isNotEqualTo(TextReference.EMPTY)
     }
 
+    @Test
+    fun `GIVEN enabled summary without payout window WHEN transform THEN widget has no subtitle`() {
+        // Arrange
+        val summary = enabledSummary(payoutStart = null, payoutEnd = null)
+        val transformer = createTransformer(summary = summary)
+
+        // Act
+        val block = transformer.transform(contentState()).cashbackBlockState
+
+        // Assert
+        val widget = block as CashbackBlockUM.Widget
+        assertThat(widget.title).isInstanceOf(TextReference.Res::class.java)
+        assertThat(widget.subtitle).isNull()
+    }
+
     @ParameterizedTest
     @MethodSource("provideTestModels")
     fun `GIVEN summary and dismissed flag WHEN transform THEN resolves expected cashback block`(model: BlockCase) {
@@ -124,22 +139,22 @@ internal class CashbackBlockTransformerTest {
         currency: String = "USD",
         year: Int = 2026,
         month: Int = 6,
-        payoutStart: DateTime = DateTime.parse("2026-07-02"),
-        payoutEnd: DateTime = DateTime.parse("2026-07-05"),
+        payoutStart: DateTime? = DateTime.parse("2026-07-02"),
+        payoutEnd: DateTime? = DateTime.parse("2026-07-05"),
     ): CashbackSummary.Enabled = CashbackSummary.Enabled(
         displayMode = CashbackDisplayMode.FULL,
         cashback = TangemPayCashback(
             confirmedAmount = confirmedAmount,
-            pendingAmount = BigDecimal("13.65"),
+            totalEarnedAmount = BigDecimal("132.15"),
             currency = currency,
             payoutCurrency = "USDC",
-            payoutNetwork = "Polygon",
             period = TangemPayCashback.Period(
                 year = year,
                 month = month,
                 payoutStart = payoutStart,
                 payoutEnd = payoutEnd,
             ),
+            previousPayout = null,
         ),
     )
 
@@ -148,6 +163,7 @@ internal class CashbackBlockTransformerTest {
             onBackClick = {},
             onOpenMenu = {},
             items = persistentListOf(),
+            subtitle = TextReference.EMPTY,
         ),
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         balanceBlockState = TangemPayDetailsBalanceBlockState.Content(

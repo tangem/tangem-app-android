@@ -14,6 +14,10 @@ internal interface CardDetailsEventListener {
     val event: Flow<CardDetailsEvent>
 
     fun send(event: CardDetailsEvent)
+
+    companion object {
+        fun default(): CardDetailsEventListener = DefaultCardDetailsEventListener()
+    }
 }
 
 internal sealed interface CardDetailsEvent {

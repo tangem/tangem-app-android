@@ -31,6 +31,9 @@ sealed interface StakingTarget {
     /** Whether this is a strategic partner (shows special badge in UI) */
     val isStrategicPartner: Boolean
 
+    /** Target's own page, when it has one — e.g. the link on the validator row in transaction details */
+    val website: String?
+
     /**
      * StakeKit Validator wrapper
      */
@@ -42,6 +45,7 @@ sealed interface StakingTarget {
         override val isActive: Boolean = delegate.status == Yield.Validator.ValidatorStatus.ACTIVE
         override val image: StakingTargetImage? = delegate.image?.let { StakingTargetImage.Url(it) }
         override val isStrategicPartner: Boolean = delegate.isStrategicPartner
+        override val website: String? = delegate.website
     }
 
     /**
@@ -58,6 +62,9 @@ sealed interface StakingTarget {
         override val isActive: Boolean = true
         override val image = StakingTargetImage.Local(StakingLocalImageType.P2P_VAULT)
         override val isStrategicPartner: Boolean = true
+
+        // The vaults API carries no per-vault page, so a vault target has no link to offer.
+        override val website: String? = null
     }
 }
 

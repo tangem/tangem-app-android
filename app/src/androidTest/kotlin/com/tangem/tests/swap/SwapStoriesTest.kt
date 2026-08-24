@@ -27,9 +27,6 @@ class SwapStoriesTest : BaseTestCase() {
         setupHooks(
             additionalBeforeAppLaunchSection = {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
             }
         ).run {
 
@@ -70,13 +67,9 @@ class SwapStoriesTest : BaseTestCase() {
         val packageName = getTargetContext().packageName
         val tokenName = "Ethereum"
 
-
         setupHooks(
             additionalBeforeAppLaunchSection = {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
             }
         ).run {
 
@@ -119,9 +112,6 @@ class SwapStoriesTest : BaseTestCase() {
         setupHooks(
             additionalBeforeAppLaunchSection = {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
             }
         ).run {
 
@@ -164,7 +154,6 @@ class SwapStoriesTest : BaseTestCase() {
     @DisplayName("Check 'Swap' stories on 'Main' screen")
     @Test
     fun checkSwapStoriesOnMainScreenTest() {
-
         setupHooks().run {
 
             step("Open 'Main Screen'") {

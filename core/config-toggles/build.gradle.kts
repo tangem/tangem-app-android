@@ -84,11 +84,12 @@ dependencies {
     // endregion
 
     // region Core modules
-    implementation(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.core.utils)
     // endregion
 
     // region Tests
     testImplementation(projects.test.core)
     // endregion
+    runtimeOnly(deps.room.runtime)
 }
