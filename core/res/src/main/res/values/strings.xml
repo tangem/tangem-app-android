@@ -753,6 +753,7 @@
   <string name="express_swap_restrictions_title">Regional swap restrictions</string>
   <string name="express_swap_with">Swap with</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
+  <string name="express_transaction_hash">Hash: %1$s</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
   <string name="exсhange_token_description">Swap any asset in your portfolio for this token</string>
