@@ -21,9 +21,10 @@ import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.bottomSheetMessage
-import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStateUseCase
+import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStatusUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
@@ -54,7 +55,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
-    private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
+    private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
@@ -165,11 +166,10 @@ internal class WalletHardwareBackupModel @Inject constructor(
         }
     }
 
-    /** Upgrade reads the local flag only; with the feature off the parameter is omitted */
-    private suspend fun resolveCloudBackupState(): AnalyticsParam.CloudBackupState? = when {
-        !hotWalletFeatureToggles.isGoogleDriveBackupEnabled -> null
-        getCloudBackupStateUseCase(params.userWalletId.stringValue) -> AnalyticsParam.CloudBackupState.Done
-        else -> AnalyticsParam.CloudBackupState.Incomplete
+    private suspend fun resolveCloudBackupState(): AnalyticsParam.CloudBackupState? {
+        if (!hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return null
+
+        return getCloudBackupStatusUseCase(params.userWalletId.stringValue).toAnalyticsState()
     }
 
     private fun onBuyClick() {

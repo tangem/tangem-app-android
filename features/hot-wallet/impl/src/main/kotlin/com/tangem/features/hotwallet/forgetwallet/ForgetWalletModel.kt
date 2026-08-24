@@ -18,6 +18,7 @@ import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.DeleteCloudBackupWithRetryUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.ForgetWalletComponent
@@ -26,6 +27,7 @@ import com.tangem.features.hotwallet.forgetwallet.entity.ForgetWalletUM
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -47,6 +49,7 @@ internal class ForgetWalletModel @Inject constructor(
     private val cloudBackupRepository: CloudBackupRepository,
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
     private val deleteCloudBackupWithRetryUseCase: DeleteCloudBackupWithRetryUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<ForgetWalletComponent.Params>()
@@ -119,9 +122,9 @@ internal class ForgetWalletModel @Inject constructor(
 
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletForgotten())
 
-            if (params.shouldDeleteCloudBackup) {
-                deleteCloudBackup()
-            }
+            val backupDeletion = if (params.shouldDeleteCloudBackup) deleteCloudBackup() else null
+
+            if (!hasUserWallets) signOutFromCloud(after = backupDeletion)
 
             if (hasUserWallets) {
                 router.popTo(AppRoute.Details::class)
@@ -131,12 +134,24 @@ internal class ForgetWalletModel @Inject constructor(
         }
     }
 
-    // appScope so the ~1 min retry window survives this screen being torn down right after forget.
-    private fun deleteCloudBackup() {
+    private fun signOutFromCloud(after: Job?) {
         if (!hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return
 
-        val walletId = params.userWalletId.stringValue
         appScope.launch {
+            after?.join()
+            // the deletion above retries for up to a minute, so a wallet may have been added meanwhile —
+            // signing out would drop the cloud session it has just authorized
+            if (userWalletsListRepository.userWalletsSync().isEmpty()) {
+                cloudBackupRepository.signOut()
+            }
+        }
+    }
+
+    private fun deleteCloudBackup(): Job? {
+        if (!hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return null
+
+        val walletId = params.userWalletId.stringValue
+        return appScope.launch {
             cloudBackupRepository.findBackups().fold(
                 ifLeft = { error ->
                     TangemLogger.e("Unable to find cloud backups on forget: $error")
