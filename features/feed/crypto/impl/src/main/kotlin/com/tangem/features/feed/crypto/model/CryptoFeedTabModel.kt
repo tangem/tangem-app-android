@@ -24,7 +24,6 @@ import com.tangem.features.feed.crypto.ui.state.MarketPulseListUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseUM
 import com.tangem.features.feed.crypto.ui.state.TotalMarketCapUM
 import com.tangem.features.feed.nav.FeedRoute
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -78,9 +77,9 @@ internal class CryptoFeedTabModel @Inject constructor(
 
     private val listManager = MarketPulseBatchFlowManager(
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
-        currentTrendInterval = Provider { selectedInterval.value },
-        currentAppCurrency = Provider { currentAppCurrency.value },
-        currentCategory = Provider { selectedCategory.value },
+        currentTrendInterval = { selectedInterval.value },
+        currentAppCurrency = { currentAppCurrency.value },
+        currentCategory = { selectedCategory.value },
         onItemClick = ::openTokenDetails,
         modelScope = modelScope,
         dispatchers = dispatchers,

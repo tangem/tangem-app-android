@@ -18,6 +18,8 @@ android {
 }
 dependencies {
     /** Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     api(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.navigation)
@@ -50,6 +52,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.visa.models)
     runtimeOnly(projects.domain.card)
     runtimeOnly(projects.domain.tokens)
 

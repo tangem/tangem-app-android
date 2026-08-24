@@ -20,7 +20,7 @@ import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.utils.ConnectTimeout
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.api.utils.WriteTimeout
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker

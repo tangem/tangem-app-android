@@ -110,10 +110,6 @@ internal class DefaultWalletRouter @Inject constructor(
         }
     }
 
-    override fun openStoriesScreen() {
-        router.push(AppRoute.Home())
-    }
-
     override fun openAddFunds(userWalletId: UserWalletId) {
         dialogNavigation.activate(
             configuration = WalletDialogConfig.AddFunds(userWalletId = userWalletId),
@@ -128,10 +124,6 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun openPolymarket(userWalletId: UserWalletId) {
         router.push(AppRoute.Polymarket(userWalletId = userWalletId))
-    }
-
-    override fun isWalletLastScreen(): Boolean {
-        return router.stack.lastOrNull() is AppRoute.Wallet
     }
 
     override fun openNFT(userWallet: UserWallet) {
