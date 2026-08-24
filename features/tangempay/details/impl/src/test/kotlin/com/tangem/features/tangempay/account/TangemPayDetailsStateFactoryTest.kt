@@ -275,6 +275,33 @@ internal class TangemPayDetailsStateFactoryTest {
         assertThat(buttons.withdrawButton.isEnabled).isTrue()
     }
 
+    @Test
+    fun `GIVEN loaded status without balance WHEN getLoadedState THEN balance block is Error with cards kept`() {
+        // Arrange
+        val status = loadedStatus(statusBalance = null)
+
+        // Act
+        val state = factory.getLoadedState(status)
+
+        // Assert
+        assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
+        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+        assertThat(state.balanceBlockState.cardsBlockState?.cards).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN deactivated status without balance WHEN getDeactivatedState THEN balance block is Error`() {
+        // Arrange
+        val status = deactivatedStatus(availableForWithdrawal = BigDecimal.ZERO, statusBalance = null)
+
+        // Act
+        val state = factory.getDeactivatedState(status)
+
+        // Assert
+        assertThat(state.balanceBlockState).isInstanceOf(TangemPayDetailsBalanceBlockState.Error::class.java)
+        assertThat(state.balanceBlockState.actionButtons.map { it.config.isEnabled }).containsExactly(false, false)
+    }
+
     @ParameterizedTest
     @MethodSource("provideProgressBannerCases")
     fun `GIVEN card states WHEN getLoadedState THEN progress banner resolved`(case: ProgressBannerCase) {
@@ -353,13 +380,14 @@ internal class TangemPayDetailsStateFactoryTest {
         statusCards: List<TangemPayCard> = listOf(activeUnfrozenCard),
         availableForWithdrawal: BigDecimal = BigDecimal.TEN,
         statusTariffPlan: TangemPayTariffPlanState? = null,
+        statusBalance: PaymentAccountStatusValue.Balance? = balance(availableForWithdrawal),
         statusDepositAddress: String? = "address",
         statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork),
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { source } returns statusSource
         every { error } returns statusError
         every { cards } returns statusCards
-        every { balance } returns balance(availableForWithdrawal)
+        every { balance } returns statusBalance
         every { tariffPlan } returns statusTariffPlan
         every { depositAddress } returns statusDepositAddress
         every { networks } returns statusNetworks
@@ -367,12 +395,14 @@ internal class TangemPayDetailsStateFactoryTest {
 
     private fun deactivatedStatus(
         availableForWithdrawal: BigDecimal,
+        statusBalance: PaymentAccountStatusValue.Balance? = balance(availableForWithdrawal),
         statusNetworks: List<PaymentNetworkStatus> = listOf(availableNetwork),
-    ): PaymentAccountStatusValue.Deactivated = mockk(relaxed = true) {
-        every { source } returns StatusSource.ACTUAL
-        every { balance } returns balance(availableForWithdrawal)
-        every { networks } returns statusNetworks
-    }
+    ): PaymentAccountStatusValue.Deactivated =
+        mockk(relaxed = true) {
+            every { source } returns StatusSource.ACTUAL
+            every { balance } returns statusBalance
+            every { networks } returns statusNetworks
+        }
 
     private fun balance(availableForWithdrawal: BigDecimal) = PaymentAccountStatusValue.Balance(
         fiatBalance = PaymentAccountStatusValue.FiatBalance(
