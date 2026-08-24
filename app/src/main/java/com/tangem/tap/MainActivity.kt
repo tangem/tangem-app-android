@@ -51,7 +51,9 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
+import com.tangem.domain.wallets.usecase.SendPendingWalletCardsBackupUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.google.auth.GoogleAuthActivityResultBridge
@@ -68,6 +70,7 @@ import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeeplinkSource
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.utils.logging.TangemLogger
@@ -171,6 +174,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     @Inject
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
 
+    @Inject
+    internal lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
+
+    @Inject
+    internal lateinit var sendPendingWalletCardsBackupUseCase: SendPendingWalletCardsBackupUseCase
+
+    @Inject
+    internal lateinit var appScope: AppCoroutineScope
+
     private val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -216,6 +228,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         initContent()
 
         sendStakingUnsubmittedHashes()
+        sendPendingWalletCardsBackups()
         checkGoogleServicesAvailability()
 
         lifecycle.addObserver(WindowObscurationObserver)
@@ -471,6 +484,18 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             sendUnsubmittedHashesUseCase.invoke()
                 .onLeft { TangemLogger.e(it.toString()) }
                 .onRight { TangemLogger.d("Submitting hashes succeeded") }
+        }
+    }
+
+    private fun sendPendingWalletCardsBackups() {
+        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
+
+        // deliberately not lifecycleScope: a drain cut short by the activity being destroyed would leave a
+        // report the backend has already accepted still queued, to be sent again on the next launch
+        appScope.launch {
+            sendPendingWalletCardsBackupUseCase().onLeft { error ->
+                TangemLogger.e("Pending cards backup reports deferred: $error")
+            }
         }
     }
 
