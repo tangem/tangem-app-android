@@ -124,6 +124,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     private var isRatingActivationStarted = false
 
+    /**
+     * One-shot guard for the screen-opened analytics, sent from the [uiState] combine below instead of a dedicated
+     * `.first()` collection of [txHistoryInfo]: that flow is cold and re-triggers its own standalone express-tx
+     * subscription per collector (see `DefaultHistoryTxListManager.txExpressHistoryItemFlow`), so a second collector
+     * would double the load for a tx not yet in the paginated list.
+     */
+    private var isScreenOpenedAnalyticsSent = false
+
     init {
         // One-shot: the portfolio add must not re-run when the UI resubscribes.
         modelScope.launch(dispatchers.default) {
@@ -131,10 +139,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
                 .mapNotNull { it.bridgeRefundTx()?.refundAssetId }
                 .first()
             refundCurrency.value = addRefundTokenToPortfolio(refundAssetId)
-        }
-        // One-shot: the screen-opened analytics must fire once per detail screen instance, not on every resubscribe.
-        modelScope.launch(dispatchers.default) {
-            sendScreenOpenedAnalytics(txHistoryInfo.first())
         }
     }
 
@@ -151,6 +155,10 @@ internal class TxHistoryDetailsModel @Inject constructor(
         val explorerHash = txInfo.explorerHash?.ifBlank { null }
         val idToCopy = txInfo.idToCopy.ifBlank { null }
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
+        if (!isScreenOpenedAnalyticsSent) {
+            isScreenOpenedAnalyticsSent = true
+            sendScreenOpenedAnalytics(txInfo)
+        }
         TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = params.currency,
             onCopyAddress = { address -> onCopyAddress(address, txInfo) },
