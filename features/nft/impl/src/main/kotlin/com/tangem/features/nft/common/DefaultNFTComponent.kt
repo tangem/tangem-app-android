@@ -15,14 +15,12 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
+import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.message.dialog.Dialogs
-import com.tangem.domain.card.IsWalletBackupProblematicUseCase
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
@@ -57,9 +55,10 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     private val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
-    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    backupErrorWarningFactory: BackupErrorWarning.Factory,
 ) : NFTComponent, AppComponentContext by appComponentContext {
+
+    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val stackNavigation = StackNavigation<NFTRoute>()
 
@@ -160,9 +159,11 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         ),
     )
 
-    private fun onReceiveClick(route: NFTRoute.Collections) = componentScope.launch {
-        if (isTopUpBlockedByBackupError(route.userWalletId)) return@launch
+    private fun onReceiveClick(route: NFTRoute.Collections) {
+        warnAboutBackupErrorOrProceed(route.userWalletId) { openReceive(route) }
+    }
 
+    private fun openReceive(route: NFTRoute.Collections) = componentScope.launch {
         portfolioSelectorController.selectAccount(null)
         portfolioFetcher.updateMode(mode = PortfolioFetcher.Mode.Wallet(route.userWalletId))
         val portfolioData = portfolioFetcher.data.first()
@@ -179,16 +180,14 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         }
     }.saveIn(onReceiveClickJob)
 
-    private fun isTopUpBlockedByBackupError(userWalletId: UserWalletId): Boolean {
-        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return false
-        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+    private fun warnAboutBackupErrorOrProceed(userWalletId: UserWalletId, onProceed: () -> Unit) {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
+        if (userWallet == null) {
+            onProceed()
+            return
+        }
 
-        messageSender.send(
-            Dialogs.backupErrorAddFundsDisabled(
-                onContactSupport = { componentScope.launch { sendBackupProblemEmailUseCase(userWalletId) } },
-            ),
-        )
-        return true
+        backupErrorWarning.forWallet(scope = componentScope, userWallet = userWallet, onProceed = onProceed)
     }
 
     private fun getReceiveComponent(
