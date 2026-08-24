@@ -84,6 +84,7 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 confirmedAmount = BigDecimal("22.54"),
                 totalEarnedAmount = BigDecimal("132.15"),
                 currency = "USD",
+                payoutCurrency = "USDC",
                 period = TangemPayCashback.Period(
                     year = 2026,
                     month = 6,
