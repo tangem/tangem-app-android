@@ -1,7 +1,11 @@
 package com.tangem.tap.domain.userWalletList.di
 
 import android.content.Context
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
@@ -14,6 +18,7 @@ import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
@@ -133,6 +138,7 @@ internal object UserWalletsListRepositoryModule {
             .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
             .add(VisaActivationRemoteState.jsonAdapter)
             .add(VisaCardActivationStatus.jsonAdapter)
+            .add(UserWalletIdAdapter())
             .addLast(KotlinJsonAdapterFactory())
             .build()
     }
@@ -154,5 +160,43 @@ internal object UserWalletsListRepositoryModule {
                 name = "user_wallets_storage3",
             ),
         )
+    }
+
+    /**
+     * [UserWalletId] is annotated with kotlinx.serialization, not Moshi, so Moshi has no adapter for it and
+     * falls back to [KotlinJsonAdapterFactory], which requires kotlin-reflect at runtime — absent from release
+     * builds, causing a [kotlin.jvm.KotlinReflectionNotSupportedError]. This adapter serializes the id without
+     * reflection, keeping the same `{"stringValue": "..."}` shape the reflective adapter produced.
+     */
+    private class UserWalletIdAdapter {
+
+        @ToJson
+        fun toJson(writer: JsonWriter, value: UserWalletId?) {
+            if (value == null) {
+                writer.nullValue()
+                return
+            }
+            writer.beginObject()
+            writer.name(STRING_VALUE_KEY).value(value.stringValue)
+            writer.endObject()
+        }
+
+        @FromJson
+        fun fromJson(reader: JsonReader): UserWalletId {
+            var stringValue = ""
+            reader.beginObject()
+            while (reader.hasNext()) {
+                when (reader.nextName()) {
+                    STRING_VALUE_KEY -> stringValue = reader.nextString()
+                    else -> reader.skipValue()
+                }
+            }
+            reader.endObject()
+            return UserWalletId(stringValue = stringValue)
+        }
+
+        private companion object {
+            const val STRING_VALUE_KEY = "stringValue"
+        }
     }
 }
