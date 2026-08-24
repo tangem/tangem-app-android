@@ -42,7 +42,8 @@ private const val SHOW_DETAILS_TIME = 30_000L
  * Owns the UI state of a single TangemPay card-detail block (the flip card with reveal PAN/CVV,
  * freeze badge, display-name editing). Several controllers can be alive at once — e.g. one per card
  * in a swipe pager — so all logic is scoped to [cardId] and reveal/hide is coordinated through the
- * card-scoped [CardDetailsEventListener].
+ * [CardDetailsEventListener] passed by the host: blocks that flip together share one listener, blocks
+ * that must reveal independently get their own via [CardDetailsEventListener.default].
  *
 
  * lifecycle is owned by the host model, which passes a child [scope] and calls [dispose] when the
@@ -55,11 +56,11 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     @Assisted private val card: TangemPayCard,
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val config: Config,
+    @Assisted private val cardDetailsEventListener: CardDetailsEventListener,
     @Assisted private val onEditNameClick: () -> Unit,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
-    private val cardDetailsEventListener: CardDetailsEventListener,
     private val analytics: AnalyticsEventHandler,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
 ) {
@@ -70,13 +71,15 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
         cardNumberEnd = card.lastDigits,
+        cardholderName = card.embossName,
         displayName = card.displayName,
         isEditingNameEnabled = config.isEditingNameEnabled,
         onEditNameClick = onEditNameClick,
         onReveal = ::requestReveal,
-        onCopy = ::copyData,
+        onCopy = { _, _ -> },
         shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
         cardState = card.state,
+        cardType = card.cardType,
         cardImageUrl = card.mainImageUrl,
         cardBackgroundImageUrl = card.backgroundImageUrl,
     )
@@ -117,6 +120,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
                     uiState.update { uiState ->
                         uiState.copy(
                             numberShort = "${StringsSigns.ASTERISK}${card.lastDigits}",
+                            cardholderName = card.embossName,
                             cardFrozenState = card.frozenState,
                             isActionsAvailable = card.state == TangemPayCardState.Active,
                             cardState = card.state,
@@ -161,6 +165,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
                         transformer = DetailsRevealedStateTransformer(
                             details = cardDetails,
                             onClickHide = ::requestHide,
+                            onCopy = ::copyData,
                         ),
                     )
                     launchShowDetailsTimer()
@@ -203,11 +208,14 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     private fun copyData(text: String, type: CardDataType) {
         val event = when (type) {
             CardDataType.Number -> TangemPayAnalyticsEvents.CopyCardNumberClicked()
+            CardDataType.CardholderName -> TangemPayAnalyticsEvents.CopyCardholderNameClicked()
             CardDataType.Expiry -> TangemPayAnalyticsEvents.CopyCardExpiryClicked()
             CardDataType.CVV -> TangemPayAnalyticsEvents.CopyCardCVVClicked()
         }
         analytics.send(event)
-        clipboardManager.setText(text = text.filterNot { it.isWhitespace() }, isSensitive = true)
+
+        val copied = if (type == CardDataType.CardholderName) text else text.filterNot { it.isWhitespace() }
+        clipboardManager.setText(text = copied, isSensitive = true)
     }
 
     /** Per-block configuration that does not depend on live card data. */
@@ -223,6 +231,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
             card: TangemPayCard,
             userWalletId: UserWalletId,
             config: Config,
+            cardDetailsEventListener: CardDetailsEventListener,
             onEditNameClick: () -> Unit,
         ): TangemPayCardDetailsController
     }

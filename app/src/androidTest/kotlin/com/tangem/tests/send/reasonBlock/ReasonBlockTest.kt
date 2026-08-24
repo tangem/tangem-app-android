@@ -2,7 +2,6 @@ package com.tangem.tests.send.reasonBlock
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.openMainScreen
@@ -32,12 +31,7 @@ class ReasonBlockTest : BaseTestCase() {
         val reasonText = getResourceString(R.string.token_button_unavailability_reason_pending_transaction_send)
             .substringBefore("%s")
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(txHistoryScenarioName)
-                resetWireMockScenarioState(walletsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set Wiremock scenario: $txHistoryScenarioName to state $txHistoryState") {
                 setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = txHistoryState)
             }
@@ -80,12 +74,7 @@ class ReasonBlockTest : BaseTestCase() {
         val feeCurrencyName = "Solana"
         val feeCurrencySymbol = "SOL"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(userWalletsScenarioName)
-                resetWireMockScenarioState(solBalanceScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set Wiremock scenario: $userWalletsScenarioName to state $userWalletsState") {
                 setWireMockScenarioState(scenarioName = userWalletsScenarioName, state = userWalletsState)
             }
