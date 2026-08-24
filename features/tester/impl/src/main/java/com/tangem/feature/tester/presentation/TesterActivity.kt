@@ -10,6 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.common.routing.AppRouter
@@ -83,8 +84,12 @@ internal class TesterActivity : ComposeActivity() {
     private fun TesterNavHost() {
         val navController = rememberNavController().also { innerTesterRouter.setNavController(it) }
 
+        // The storybook draws edge-to-edge; its pages apply system bar insets themselves.
+        val backStackEntry by navController.currentBackStackEntryAsState()
+        val isEdgeToEdge = backStackEntry?.destination?.route == TesterScreen.STORY_BOOK.name
+
         NavHost(
-            modifier = Modifier.systemBarsPadding(),
+            modifier = if (isEdgeToEdge) Modifier else Modifier.systemBarsPadding(),
             navController = navController,
             startDestination = TesterScreen.MENU.name,
         ) {

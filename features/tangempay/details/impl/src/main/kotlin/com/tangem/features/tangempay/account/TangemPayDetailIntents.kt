@@ -14,6 +14,7 @@ internal interface TangemPayDetailIntents {
     fun onClickCashback()
     fun onClickCurrentPlan(tariffPlan: TangemPayTariffPlanState)
     fun onCardClick(cardId: String)
+    fun onActivateCardClick(cardId: String)
     fun onAddCardClick(tariffState: TangemPayTariffPlanState?)
     fun onRemoveAccount()
 }

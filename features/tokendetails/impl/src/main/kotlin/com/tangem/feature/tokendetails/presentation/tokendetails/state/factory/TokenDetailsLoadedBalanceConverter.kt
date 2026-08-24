@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
-import com.tangem.common.getTotalWithRewardsStakingBalance
+import com.tangem.common.getExtraBalanceOrNull
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -10,7 +10,6 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
@@ -70,10 +69,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         currentState: TokenDetailsBalanceBlockState,
         status: CryptoCurrencyStatus,
     ): TokenDetailsBalanceBlockState {
-        val stakingCryptoAmount =
-            (status.value.stakingBalance as? StakingBalance.Data)?.getTotalWithRewardsStakingBalance(
-                status.currency.network.rawId,
-            )
+        val stakingCryptoAmount = status.getExtraBalanceOrNull()
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
         val isBalanceSelectorEnabled = !stakingCryptoAmount.isNullOrZero()
         return when (status.value) {

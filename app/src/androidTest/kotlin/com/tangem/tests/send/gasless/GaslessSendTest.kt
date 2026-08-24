@@ -7,7 +7,6 @@ import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.*
@@ -41,12 +40,7 @@ class GaslessSendTest : BaseTestCase() {
             .substringBefore("(")
             .trim()
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open the send flow for '$tokenName' on an existing hot wallet") {
                 openGaslessSendScreenWithHotWallet(
                     seedPhrase = SVS_SEED_PHRASE_12,
@@ -91,12 +85,7 @@ class GaslessSendTest : BaseTestCase() {
     @DisplayName("Gasless: sign and send a stablecoin transaction with the stablecoin fee")
     @Test
     fun checkSignAndSendGaslessTransactionTest() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open the send flow for '$tokenName' on an existing hot wallet") {
                 openGaslessSendScreenWithHotWallet(
                     seedPhrase = SVS_SEED_PHRASE_12,
@@ -137,12 +126,7 @@ class GaslessSendTest : BaseTestCase() {
         val operationTitle = getResourceString(R.string.transaction_history_operation)
         val gaslessFeeTitle = getResourceString(R.string.gasless_transaction_fee)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
             }

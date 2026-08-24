@@ -10,6 +10,7 @@ import java.math.BigDecimal
  * @property toTokenAmount amount of token you want to receive
  * @property fromTokenAmount amount of from-token required (only set for fixed rate quotes)
  * @property allowanceContract whether swap occurs via third token
+ * @property isRestricted token is region-restricted for this provider — quote is displayable but not executable
  */
 data class SwapQuoteModel(
     val provider: ExpressProvider,
@@ -17,4 +18,5 @@ data class SwapQuoteModel(
     val fromTokenAmount: BigDecimal?,
     val allowanceContract: String?,
     val quoteId: String? = null,
+    val isRestricted: Boolean = false,
 )

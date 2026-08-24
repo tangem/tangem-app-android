@@ -36,11 +36,21 @@ fun KNode.isDisplayedSafely(): Boolean {
     }
 }
 
+/**
+ * Asserts that the node is displayed, or that it is *not shown to the user* at all.
+ *
+ * `assertIsNotDisplayed()` alone is the wrong check for the absent case: Compose requires the node to
+ * exist for it, so a UI element that was never composed — the normal shape of "this warning does not
+ * apply" — fails with "no nodes found" instead of passing. Absence therefore accepts either a node that
+ * does not exist or one that exists but is off-screen.
+ */
 fun KNode.assertVisibility(shouldBeDisplayed: Boolean) {
     if (shouldBeDisplayed) {
         assertIsDisplayed()
     } else {
-        assertIsNotDisplayed()
+        runCatching { assertDoesNotExist() }
+            .recoverCatching { assertIsNotDisplayed() }
+            .getOrThrow()
     }
 }
 

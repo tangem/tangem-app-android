@@ -1,6 +1,6 @@
 package com.tangem.tap.di.core.security
 
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.core.security.DefaultDeviceSecurityInfoProvider
 import com.tangem.tap.core.security.MockAwareDeviceSecurityInfoProvider

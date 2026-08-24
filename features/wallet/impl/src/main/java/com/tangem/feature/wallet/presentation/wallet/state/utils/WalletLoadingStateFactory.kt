@@ -16,6 +16,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
@@ -68,6 +69,7 @@ internal class WalletLoadingStateFactory(
             },
             tangemPayMainUM = TangemPayMainUM.Empty,
             virtualAccountMainUM = VirtualAccountMainUM.Empty,
+            polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
         )
     }
 

@@ -46,14 +46,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.loader.TangemLoader
-import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -376,7 +375,7 @@ internal fun TokenRowMarketPriceContent(
 
 private const val PRICE_BLINK_FADE_DURATION_MILLIS = 500
 
-/** Title line: token name, optional pending-transaction loader, ticker (baseline-aligned), badge. */
+/** Title line: token name, optional pending-transaction dots, ticker (baseline-aligned), badge. */
 @Composable
 internal fun TokenRowTitleContent(
     title: TextReference,
@@ -402,10 +401,7 @@ internal fun TokenRowTitleContent(
                 .alignByBaseline(),
         )
         if (hasPending) {
-            TangemLoader(
-                size = TangemLoaderSize.X16,
-                color = TangemTheme.colors3.icon.tertiary,
-            )
+            TokenRowPendingDots()
         }
         if (ticker != null) {
             Text(
@@ -491,7 +487,7 @@ internal fun TokenRowBalanceContent(
             )
         }
         Text(
-            text = fiatBalance.orMaskWithStars(isBalanceHidden).resolveReference(),
+            text = fiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
             style = TangemTheme.typography3.body.medium.applyBladeBrush(
                 isEnabled = isFlickering,
                 textColor = TangemTheme.colors3.text.primary,

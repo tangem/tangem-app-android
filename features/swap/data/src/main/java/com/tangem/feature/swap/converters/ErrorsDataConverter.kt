@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.converters
 
 import com.squareup.moshi.JsonAdapter
-import com.tangem.datasource.api.express.models.response.ExpressError
-import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.grow.datasource.express.models.response.ExpressError
+import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.utils.converter.Converter
