@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.auth
+package com.tangem.lib.auth.api
 
 /**
  * Marks a Retrofit endpoint as needing a DPoP proof header ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449))
