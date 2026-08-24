@@ -30,8 +30,8 @@ abstract class SingleAccountSupplier(
         return invoke(accountId).filterIsInstance()
     }
 
-    /** Convenience filter for callers that only ever handle [Account.Portfolio]. */
-    fun filterPortfolioAccount(accountId: AccountId): Flow<Account.Portfolio> {
+    /** Convenience filter for callers that only ever handle [Account.CryptoPortfolio]. */
+    fun filterPortfolioAccount(accountId: AccountId): Flow<Account.CryptoPortfolio> {
         return invoke(accountId).filterIsInstance()
     }
 }
