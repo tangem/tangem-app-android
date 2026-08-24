@@ -43,13 +43,18 @@ data class AccountList private constructor(
     val groupType: TokensGroupType,
 ) {
 
-    /** Retrieves the main crypto portfolio account from the list of accounts */
-    val mainAccount: Account.CryptoPortfolio
-        get() = accounts.first { it is Account.CryptoPortfolio && it.isMainAccount } as Account.CryptoPortfolio
+    /**
+     * Retrieves the main crypto portfolio account from the list of accounts.
+     *
+     * Always a [Account.Personal] one: a joint account is indexed in the owner key space and reports no main account,
+     * so it can never answer here.
+     */
+    val mainAccount: Account.Personal
+        get() = accounts.first { it is Account.Personal && it.isMainAccount } as Account.Personal
 
     /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
     val canAddMoreCryptoAccounts: Boolean
-        get() = accounts.filterIsInstance<Account.CryptoPortfolio>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
+        get() = accounts.filterIsInstance<Account.Personal>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
 
     /** Returns the number of active accounts in the list */
     val activeAccounts: Int
@@ -115,7 +120,7 @@ data class AccountList private constructor(
     fun flattenCurrencies(): List<CryptoCurrency> {
         return accounts.flatMap { account ->
             when (account) {
-                is Account.CryptoPortfolio -> account.cryptoCurrencies
+                is Account.Personal -> account.cryptoCurrencies
                 is Account.Payment -> emptyList()
                 is Account.Virtual -> emptyList()
                 is Account.Prediction -> emptyList()
@@ -248,7 +253,7 @@ data class AccountList private constructor(
                 Error.ExceedsMaxPredictionAccountsCount
             }
 
-            val cryptoAccounts = accounts.filterIsInstance<Account.CryptoPortfolio>()
+            val cryptoAccounts = accounts.filterIsInstance<Account.Personal>()
             ensure(cryptoAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
 
             val mainAccountsCount = accounts.mainAccountsCount()
@@ -312,7 +317,7 @@ data class AccountList private constructor(
             return AccountList(
                 userWalletId = userWalletId,
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(
+                    Account.Personal.createMainAccount(
                         userWalletId = userWalletId,
                         cryptoCurrencies = cryptoCurrencies,
                     ),

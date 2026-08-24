@@ -10,7 +10,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
+import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus

@@ -147,12 +147,12 @@ internal class JointAccountRowRoutingTest {
         )
     }
 
-    private fun cryptoAccount(): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio.createMainAccount(userWalletId = WALLET_ID)
+    private fun cryptoAccount(): Account.Personal {
+        return Account.Personal.createMainAccount(userWalletId = WALLET_ID)
     }
 
-    private fun secondCryptoAccount(): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio(
+    private fun secondCryptoAccount(): Account.Personal {
+        return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = WALLET_ID, value = SECOND_ROW_ID).getOrNull()!!,
             accountName = AccountName.Custom(value = "Second").getOrNull()!!,
             icon = CryptoPortfolioIcon.ofCustomAccount(
