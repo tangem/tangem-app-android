@@ -16,19 +16,21 @@ internal class TangemPayCashbackDetailsConverter {
 
     fun convert(
         cards: List<CashbackCard>,
-        currency: String?,
+        payoutCurrency: String?,
         accountMonthlyCap: CashbackPromotions.MonthlyCap?,
     ): TangemPayCashbackDetailsUM {
         val rows = buildList {
             addAll(cards.mapNotNull(::cardRow))
             if (cards.isNotEmpty()) {
                 add(resourceReference(R.string.tangempay_cashback_details_eu_excluded))
-                add(
-                    resourceReference(
-                        id = R.string.tangempay_cashback_details_paid_in,
-                        formatArgs = wrappedList(currency?.takeIf(String::isNotBlank) ?: DEFAULT_CURRENCY_CODE),
-                    ),
-                )
+                payoutCurrency?.takeIf(String::isNotBlank)?.let { currency ->
+                    add(
+                        resourceReference(
+                            id = R.string.tangempay_cashback_details_paid_in,
+                            formatArgs = wrappedList(currency),
+                        ),
+                    )
+                }
                 if (accountMonthlyCap != null) {
                     add(
                         resourceReference(
