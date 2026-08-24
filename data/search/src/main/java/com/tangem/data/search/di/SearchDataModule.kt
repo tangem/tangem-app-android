@@ -9,7 +9,7 @@ import com.tangem.data.search.model.SearchHistoryDTO
 import com.tangem.data.search.repository.DefaultSearchRepository
 import com.tangem.data.search.store.DefaultSearchHistoryStore
 import com.tangem.data.search.store.SearchHistoryStore
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
