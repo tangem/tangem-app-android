@@ -17,6 +17,7 @@ import com.tangem.scenarios.checkScanWarningDialog
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.ThirdPartyAppPageObject
+import com.tangem.screens.onContactSupportTypeBottomSheet
 import com.tangem.screens.onCreateWalletStartScreen
 import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onFailedTransactionDialog
@@ -66,6 +67,10 @@ class FeedbackTest : BaseTestCase() {
             step("Click 'Contact support' button") {
                 waitForIdle()
                 onDetailsScreen { contactSupportButton.clickWithAssertion() }
+            }
+            step("Click 'Open mail' option in the contact support chooser") {
+                waitForIdle()
+                onContactSupportTypeBottomSheet { openMailButton.clickWithAssertion() }
             }
             step("Assert 'Gmail' app is open") {
                 ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
@@ -197,6 +202,7 @@ class FeedbackTest : BaseTestCase() {
             }
         }
     }
+
     @AllureId("3960")
     @DisplayName("Send feedback: Failed card scanning on Details screen")
     @Test
