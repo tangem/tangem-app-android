@@ -1,11 +1,13 @@
 package com.tangem.features.tangempay
 
+import com.tangem.domain.models.pay.TangemPayImage
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -45,14 +47,12 @@ internal fun cashback(
     currency: Currency? = Currency.getInstance("USD"),
     isCapTrimmed: Boolean = false,
     exclusionReason: TangemPayTxHistoryItem.Cashback.ExclusionReason? = null,
-    promotionIds: List<String> = emptyList(),
 ): TangemPayTxHistoryItem.Cashback = TangemPayTxHistoryItem.Cashback(
     status = status,
     amount = amount,
     currency = currency,
     isCapTrimmed = isCapTrimmed,
     exclusionReason = exclusionReason,
-    promotionIds = promotionIds,
 )
 
 internal fun paymentTransaction(id: String = "tx_payment_1"): TangemPayTxHistoryItem.Payment =
@@ -123,18 +123,23 @@ internal fun tariffPlanState(
 
 internal fun tangemPayCard(
     id: String = "card_1",
+    productInstanceId: String = "product_1",
     lastDigits: String = "1234",
     frozenState: TangemPayCardFrozenState = TangemPayCardFrozenState.Unfrozen,
     state: TangemPayCardState = TangemPayCardState.Active,
+    embossName: String? = null,
+    images: List<TangemPayImage> = emptyList(),
 ): TangemPayCard = TangemPayCard(
     id = id,
-    productInstanceId = "product_1",
+    productInstanceId = productInstanceId,
     cardStatus = TangemPayCard.Status.ACTIVE,
     hasPinCode = true,
     displayName = null,
     limit = null,
     frozenState = frozenState,
     lastDigits = lastDigits,
-    images = emptyList(),
+    images = images,
     state = state,
+    embossName = embossName,
+    cardType = TangemPayCardType.VIRTUAL,
 )

@@ -8,7 +8,7 @@ import androidx.room.Query
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCountryEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCurrencyEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,7 +24,7 @@ interface ExpressHistoryDao {
     suspend fun upsertOnramps(items: List<ExpressOnrampEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertCountries(items: List<OnrampCountryEntity>)
+    suspend fun upsertCurrencies(items: List<OnrampCurrencyEntity>)
 
     /**
      * All persisted providers keyed by [ExpressProviderEntity.id]
@@ -32,13 +32,16 @@ interface ExpressHistoryDao {
     @Query("SELECT * FROM express_provider")
     fun getProvidersById(): Flow<Map<@MapColumn(columnName = "id") String, ExpressProviderEntity>>
 
-    /** All persisted onramp countries keyed by [OnrampCountryEntity.code]. */
-    @Query("SELECT * FROM onramp_country")
-    fun getCountriesByCode(): Flow<Map<@MapColumn(columnName = "code") String, OnrampCountryEntity>>
+    /** All persisted onramp fiat currencies keyed by [OnrampCurrencyEntity.code]. */
+    @Query("SELECT * FROM onramp_currency")
+    fun getCurrenciesByCode(): Flow<Map<@MapColumn(columnName = "code") String, OnrampCurrencyEntity>>
 
     /**
      * Outgoing swaps: the viewed currency is the swap's `from` side, so the row is looked up by its `from_address`.
      * Join to on-chain by `payin_hash`.
+     *
+     * [fromAddresses] holds every address the currency is watched under — the default one plus the dynamic (UTXO)
+     * addresses already used, so a swap paid from a non-base address is still found.
      *
 
      * loading the whole table; [activeStatuses] keeps in-progress deals visible even outside the window.
@@ -46,7 +49,7 @@ interface ExpressHistoryDao {
     @Query(
         """
         SELECT * FROM express_exchange
-        WHERE from_address = :fromAddress
+        WHERE from_address IN (:fromAddresses)
           AND from_network = :network
           AND from_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -54,7 +57,7 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeOutgoingSwaps(
-        fromAddress: String,
+        fromAddresses: List<String>,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
@@ -63,12 +66,12 @@ interface ExpressHistoryDao {
 
     /**
      * Incoming swaps: the viewed currency is the swap's `to` side, so the row is looked up by its `payout_address`
-     * (where the target assets landed = this currency's address). Join to on-chain by `payout_hash`.
+     * (where the target assets landed = one of this currency's addresses). Join to on-chain by `payout_hash`.
      */
     @Query(
         """
         SELECT * FROM express_exchange
-        WHERE payout_address = :payoutAddress
+        WHERE payout_address IN (:payoutAddresses)
           AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -76,7 +79,7 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeIncomingSwaps(
-        payoutAddress: String,
+        payoutAddresses: List<String>,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
@@ -89,7 +92,7 @@ interface ExpressHistoryDao {
     @Query(
         """
         SELECT * FROM express_onramp
-        WHERE payout_address = :payoutAddress
+        WHERE payout_address IN (:payoutAddresses)
           AND to_network = :network
           AND to_contract_address = :contract
           AND (created_at >= :fromCreatedAtIso OR status IN (:activeStatuses))
@@ -97,10 +100,18 @@ interface ExpressHistoryDao {
         """,
     )
     fun observeIncomingOnramps(
-        payoutAddress: String,
+        payoutAddresses: List<String>,
         network: String,
         contract: String,
         fromCreatedAtIso: String,
         activeStatuses: List<String>,
     ): Flow<List<ExpressOnrampEntity>>
+
+    /** Swap row for [txId], regardless of address/window; `null` if [txId] is not a swap. */
+    @Query("SELECT * FROM express_exchange WHERE tx_id = :txId")
+    fun observeExchangeById(txId: String): Flow<ExpressExchangeEntity?>
+
+    /** Onramp row for [txId], regardless of address/window; `null` if [txId] is not an onramp. */
+    @Query("SELECT * FROM express_onramp WHERE tx_id = :txId")
+    fun observeOnrampById(txId: String): Flow<ExpressOnrampEntity?>
 }

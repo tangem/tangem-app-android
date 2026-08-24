@@ -1,6 +1,6 @@
 package com.tangem.data.staking.utils
 
-import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
+import com.tangem.grow.datasource.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.domain.models.staking.StakingID
 
 /**

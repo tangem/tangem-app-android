@@ -1,8 +1,7 @@
 package com.tangem.feature.tester.presentation.environments.ui
 
 import com.tangem.datasource.api.common.config.TangemTech
-
-import com.tangem.datasource.api.common.config.Express
+import com.tangem.grow.datasource.config.Express
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent

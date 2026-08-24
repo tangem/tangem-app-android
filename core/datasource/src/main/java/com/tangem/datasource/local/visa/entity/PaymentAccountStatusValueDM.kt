@@ -100,6 +100,8 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "last_digits") val lastDigits: String,
         @Json(name = "images") val images: List<ImageDM>,
         @Json(name = "state") val state: String,
+        @Json(name = "emboss_name") val embossName: String?,
+        @Json(name = "card_type") val cardType: String? = null,
     )
 
     @JsonClass(generateAdapter = true)

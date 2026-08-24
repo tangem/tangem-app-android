@@ -46,10 +46,10 @@ internal class DefaultCashbackRepository @Inject constructor(
 
     override suspend fun getCashbackHistory(
         userWalletId: UserWalletId,
-        months: Int,
+        monthsNumber: Int,
     ): Either<VisaApiError, CashbackHistory> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getCashbackHistory(authHeader = authHeader, months = months)
+            tangemPayApi.getCashbackHistory(authHeader = authHeader, monthsNumber = monthsNumber)
         }.map(CashbackHistoryConverter::convert)
     }
 
@@ -59,7 +59,7 @@ internal class DefaultCashbackRepository @Inject constructor(
     ): Either<VisaApiError, TangemPayTxHistoryItem.Cashback?> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getCashbackDetails(authHeader = authHeader, transactionId = transactionId)
-        }.map { PayTransactionCashbackConverter.convert(it.cashback) }
+        }.map { PayTransactionCashbackConverter.convert(it.result?.cashback) }
     }
 
     override suspend fun isDeactivationBannerDismissed(userWalletId: UserWalletId): Boolean {

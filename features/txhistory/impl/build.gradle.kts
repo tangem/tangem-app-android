@@ -27,10 +27,12 @@ dependencies {
 
     /** Common */
     api(projects.common.ui)
+    implementation(projects.common.routing)
     implementation(projects.common)
 
     /** Features api */
     api(projects.features.txhistory.api)
+    implementation(projects.features.tokendetails.api)
     implementation(projects.features.rating.api)
 
     /** Domain */
@@ -72,15 +74,16 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Test */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(projects.domain.express.models)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
+    testImplementation(tangemDeps.blockchain)
 }

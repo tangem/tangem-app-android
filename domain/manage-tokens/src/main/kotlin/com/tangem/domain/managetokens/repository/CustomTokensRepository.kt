@@ -41,7 +41,10 @@ interface CustomTokensRepository {
         currency: ManagedCryptoCurrency.Custom,
     ): CryptoCurrency
 
-    suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network>
+    suspend fun getSupportedNetworks(
+        userWalletId: UserWalletId,
+        allowedNetworkIds: Set<Network.RawID>? = null,
+    ): List<Network>
 
     suspend fun isDerivationPathSupported(
         userWalletId: UserWalletId,

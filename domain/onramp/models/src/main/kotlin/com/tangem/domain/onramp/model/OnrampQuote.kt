@@ -17,6 +17,7 @@ sealed class OnrampQuote {
         val toAmount: OnrampAmount,
         val minFromAmount: OnrampAmount?,
         val maxFromAmount: OnrampAmount?,
+        val isRestricted: Boolean = false,
     ) : OnrampQuote()
 
     data class AmountError(
@@ -35,3 +36,7 @@ sealed class OnrampQuote {
         val error: OnrampError,
     ) : OnrampQuote()
 }
+
+/** Token is region-restricted for this provider — the offer is displayable but must not be executable */
+val OnrampQuote.isRestricted: Boolean
+    get() = this is OnrampQuote.Data && isRestricted
