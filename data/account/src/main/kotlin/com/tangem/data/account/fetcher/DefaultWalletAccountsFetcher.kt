@@ -5,6 +5,7 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.assignTokens
+import com.tangem.data.account.utils.isJoint
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
@@ -24,6 +25,7 @@ import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +58,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val eTagsStore: ETagsStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
@@ -186,7 +189,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 saveETag(userWalletId, apiResponse)
 
-                val response = apiResponse.bind().enrichByAccountId()
+                val response = apiResponse.bind().enrichByAccountId().withoutJointAccountsIfDisabled(userWalletId)
 
                 store(userWalletId = userWalletId, response = response)
 
@@ -209,6 +212,29 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 )
             },
         )
+    }
+
+    /**
+     * Drops joint account records while the joint account feature is off.
+     *
+     * A joint account is a Safe contract shared with other participants, not a key of this wallet, and the features
+     * that read the account list are not told apart yet. So the decision is taken once, here at the boundary: with the
+     * toggle off no joint record reaches the store, and nothing downstream has to ask whether it is looking at one.
+     */
+    private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
+        userWalletId: UserWalletId,
+    ): GetWalletAccountsResponse {
+        if (jointAccountFeatureToggles.isJointAccountCreationEnabled) return this
+
+        val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
+        if (ownAccounts.size == accounts.size) return this
+
+        TangemLogger.i(
+            "Joint account feature is off: dropped ${accounts.size - ownAccounts.size} joint account(s) " +
+                "of $userWalletId from the accounts response",
+        )
+
+        return copy(accounts = ownAccounts)
     }
 
     private suspend fun initializeAccounts(
