@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.news.models.response
+package com.tangem.store.datasource.news.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
