@@ -78,7 +78,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
-        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk(relaxed = true))
+        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
 
         // Act
         val result = model.isTangemPayWithdrawal(fromWithPortfolioAccount)
@@ -96,7 +96,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // cryptoPortfolioAccounts/cryptoCurrencyList.
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val model = createModel(accountFlow = AccountFlow.TopUp)
-            val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk(relaxed = true))
+            val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
 
             // Act
             val result = model.isTangemPayWithdrawal(fromWithPortfolioAccount)
@@ -348,7 +348,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
-        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk(relaxed = true))
+        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
 
         // Act & Assert
         assertThat(model.isTangemPayWithdrawal(fromWithPaymentAccount)).isTrue()
@@ -606,7 +606,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
         val model = createModel(accountFlow = AccountFlow.TopUp)
         val fromWithPaymentAccount = swapCurrencyStatus(account = Account.Payment(userWalletId))
-        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk(relaxed = true))
+        val fromWithPortfolioAccount = swapCurrencyStatus(account = mockk<Account.CryptoPortfolio>(relaxed = true))
 
         // Act & Assert — the TopUp AccountFlow value is ignored; only the FROM slot's Account type matters.
         assertThat(model.isTangemPayWithdrawal(fromWithPaymentAccount)).isTrue()

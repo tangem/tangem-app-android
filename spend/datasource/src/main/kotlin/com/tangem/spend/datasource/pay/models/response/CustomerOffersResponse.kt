@@ -19,6 +19,13 @@ data class CustomerOffersResponse(
         @Json(name = "type") val type: String,
         @Json(name = "fee") val fee: Fee,
         @Json(name = "data") val data: Data,
+        @Json(name = "images") val images: List<Image> = emptyList(),
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Image(
+        @Json(name = "type") val type: String?,
+        @Json(name = "url") val url: String?,
     )
 
     @JsonClass(generateAdapter = true)
