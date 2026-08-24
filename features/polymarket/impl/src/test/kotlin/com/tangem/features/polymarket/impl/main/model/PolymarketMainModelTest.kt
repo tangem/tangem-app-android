@@ -5,15 +5,18 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
@@ -53,14 +56,16 @@ import org.junit.jupiter.api.Test
 internal class PolymarketMainModelTest {
 
     private val router: Router = mockk(relaxed = true)
+    private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
     private val getEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
 
     private val batchState = MutableStateFlow(
-        BatchListState<Int, List<PolymarketEvent>>(data = emptyList(), status = PaginationStatus.InitialLoading),
+        BatchListState<Int, PolymarketEventsBatch>(data = emptyList(), status = PaginationStatus.InitialLoading),
     )
     private val contextSlot = slot<PolymarketEventsBatchingContext>()
-    private val dispatchedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig, Nothing>>()
+    private val dispatchedActions =
+        mutableListOf<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>()
 
     private var model: PolymarketMainModel? = null
 
@@ -115,8 +120,8 @@ internal class PolymarketMainModelTest {
         // Act
         batchState.value = BatchListState(
             data = listOf(
-                Batch(key = 0, data = listOf(createEvent(id = "event-1"))),
-                Batch(key = 1, data = listOf(createEvent(id = "event-2"))),
+                Batch(key = 0, data = batchOf(createEvent(id = "event-1"))),
+                Batch(key = 1, data = batchOf(createEvent(id = "event-2"))),
             ),
             status = PaginationStatus.Paginating(lastResult = successResult(last = false)),
         )
@@ -137,7 +142,7 @@ internal class PolymarketMainModelTest {
 
         // Act
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
             status = PaginationStatus.NextBatchLoading,
         )
         advanceUntilIdle()
@@ -255,7 +260,7 @@ internal class PolymarketMainModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = false)),
         )
         advanceUntilIdle()
@@ -276,7 +281,7 @@ internal class PolymarketMainModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
         )
         advanceUntilIdle()
@@ -297,7 +302,7 @@ internal class PolymarketMainModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
         )
         advanceUntilIdle()
@@ -321,7 +326,7 @@ internal class PolymarketMainModelTest {
         val model = createModel(testScope = this)
         advanceUntilIdle()
         batchState.value = BatchListState(
-            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
             status = PaginationStatus.Paginating(lastResult = successResult(last = true)),
         )
         advanceUntilIdle()
@@ -377,9 +382,9 @@ internal class PolymarketMainModelTest {
                 )
 
             object : PolymarketEventsBatchFlow {
-                override val state: StateFlow<BatchListState<Int, List<PolymarketEvent>>> = batchState
+                override val state: StateFlow<BatchListState<Int, PolymarketEventsBatch>> = batchState
                 override val updateResults:
-                    SharedFlow<Pair<Nothing, BatchUpdateResult<Int, List<PolymarketEvent>>>> =
+                    SharedFlow<Pair<PolymarketEventsUpdateRequest, BatchUpdateResult<Int, PolymarketEventsBatch>>> =
                     MutableSharedFlow()
             }
         }
@@ -391,6 +396,7 @@ internal class PolymarketMainModelTest {
                 ),
             ),
             router = router,
+            messageSender = messageSender,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getPolymarketEventsBatchFlowUseCase = getEventsBatchFlowUseCase,
             getPolymarketCategoriesUseCase = getCategoriesUseCase,
@@ -408,8 +414,13 @@ internal class PolymarketMainModelTest {
         )
     }
 
+    private fun batchOf(vararg events: PolymarketEvent) = PolymarketEventsBatch(
+        events = events.toList(),
+        requestCursor = null,
+    )
+
     private fun successResult(last: Boolean) = BatchFetchResult.Success(
-        data = listOf(createEvent()),
+        data = batchOf(createEvent()),
         empty = false,
         last = last,
     )

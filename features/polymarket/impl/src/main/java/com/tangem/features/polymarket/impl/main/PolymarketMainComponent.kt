@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -31,6 +33,13 @@ internal class PolymarketMainComponent(
         params = PolymarketMainParams(userWalletId = userWalletId),
     )
 
+    init {
+        // Both an app sent to the background and an event opened on top of the feed pause the component, and
+        // neither is a moment to keep refreshing what nobody is looking at.
+        lifecycle.doOnResume { model.setInForeground(isInForeground = true) }
+        lifecycle.doOnPause { model.setInForeground(isInForeground = false) }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -39,6 +48,8 @@ internal class PolymarketMainComponent(
             state = state,
             onBackClick = model::onBackClick,
             onLoadMore = model::onLoadMore,
+            onVisibleEventsChange = model::onVisibleEventsChange,
+            onScrollIdle = model::onScrollIdle,
             modifier = modifier,
         )
     }
