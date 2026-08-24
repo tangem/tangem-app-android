@@ -1,6 +1,6 @@
 package com.tangem.lib.auth.session
 
-import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
+import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
 
 /**
  * Opaque result of [WalletRegistrar.prepare] — the fully assembled, signed wallet-registration

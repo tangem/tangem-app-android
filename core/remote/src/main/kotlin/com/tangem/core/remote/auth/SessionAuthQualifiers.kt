@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.auth.qualifier
+package com.tangem.core.remote.auth
 
 import javax.inject.Qualifier
 

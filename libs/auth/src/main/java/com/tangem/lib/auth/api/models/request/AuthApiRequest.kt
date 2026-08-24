@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.auth.models.request
+package com.tangem.lib.auth.api.models.request
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

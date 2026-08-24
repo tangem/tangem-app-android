@@ -1,24 +1,25 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.lib.auth.api.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
-
-import com.tangem.datasource.BuildConfig
+import com.tangem.core.remote.config.TangemGatewayApiConfig
+import com.tangem.libs.auth.BuildConfig
 
 /**
  * Tangem Auth Service [ApiConfig] — endpoints for device registration, authentication,
- * nonce issuance, refresh token rotation, and JWKS publication.
+ * nonce issuance, refresh token rotation, and JWKS publication. Reuses the shared gateway host
+ * ([TangemGatewayApiConfig]); the auth endpoints carry no config-level headers.
  */
-class Auth : ApiConfig() {
+class Auth : TangemGatewayApiConfig() {
 
     override val id: ApiConfig.ID get() = ID
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
-        createDevEnvironment(),
-        createProdEnvironment(),
+        gatewayEnvironment(ApiEnvironment.DEV),
+        gatewayEnvironment(ApiEnvironment.PROD),
     )
 
     private fun getInitialEnvironment(): ApiEnvironment {
@@ -34,24 +35,9 @@ class Auth : ApiConfig() {
         }
     }
 
-    private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.DEV,
-        baseUrl = DEV_BASE_URL,
-        headers = emptyMap(),
-    )
-
-    private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.PROD,
-        baseUrl = PROD_BASE_URL,
-        headers = emptyMap(),
-    )
-
     companion object {
 
         const val KEY = "Auth"
         val ID = ApiConfig.ID(KEY)
-
-        private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
-        private const val PROD_BASE_URL = "https://api.tangem.org/"
     }
 }
