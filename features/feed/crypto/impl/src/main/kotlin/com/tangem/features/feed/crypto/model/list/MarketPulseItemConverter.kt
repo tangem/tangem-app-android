@@ -39,6 +39,7 @@ internal class MarketPulseItemConverter(
             row = value.toRowState(priceUpdateDirection = null),
             chartData = value.getChartData(),
             chartType = value.getTrendDirection().toChartType(),
+            isUnderMarketCapLimit = value.isUnderMarketCapLimit,
         )
     }
 
@@ -60,6 +61,7 @@ internal class MarketPulseItemConverter(
             row = new.toRowState(priceUpdateDirection = priceUpdateDirection),
             chartData = ifChanged(prev.tokenCharts, new.tokenCharts, prevUI.chartData) { new.getChartData() },
             chartType = new.getTrendDirection().toChartType(),
+            isUnderMarketCapLimit = new.isUnderMarketCapLimit,
         )
     }
 
