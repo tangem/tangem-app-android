@@ -79,6 +79,23 @@ internal class IntroductionModelTest {
     }
 
     @Test
+    fun `GIVEN a replacement surface WHEN the previous one is released THEN the picture stays uncovered`() {
+        // Arrange
+        val model = createModel()
+        model.attachSurface(surfaceView)
+        model.onFirstFrameRendered()
+        model.attachSurface(otherSurfaceView)
+
+        // Act
+        model.detachSurface(surfaceView)
+
+        // Assert
+        assertThat(model.uiState.value.isVideoReady).isTrue()
+        model.onError()
+        assertThat(model.uiState.value.isVideoReady).isTrue()
+    }
+
+    @Test
     fun `GIVEN nothing rendered yet WHEN playback fails THEN shutter lifts to the still frame`() {
         // Arrange
         val model = createModel()
