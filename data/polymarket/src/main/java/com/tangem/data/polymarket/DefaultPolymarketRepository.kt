@@ -11,6 +11,7 @@ import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
 import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
+import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.builder.PolymarketPlaceOrderBodyBuilder
 import com.tangem.data.polymarket.converter.PredictionOrderQuoteConverter
 import com.tangem.data.polymarket.converter.PredictionPlaceOrderConverter
@@ -180,7 +181,14 @@ internal class DefaultPolymarketRepository @Inject constructor(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
         signedOrder: PredictionSignedOrder,
+        isNegRisk: Boolean,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> = withContext(dispatchers.io) {
+        if (!signedOrder.isSignedFor(isNegRisk = isNegRisk)) {
+            return@withContext PredictionPlaceOrderError.NotSent(
+                detail = "Order signed for the ${if (isNegRisk) "standard" else "neg-risk"} exchange",
+            ).left()
+        }
+
         val json = PolymarketPlaceOrderBodyBuilder.build(signedOrder = signedOrder, apiKey = credentials.apiKey)
         val headers = Either
             .catch {
@@ -192,7 +200,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                     body = json,
                 )
             }
-            .mapLeft { PredictionPlaceOrderError.Unknown(httpCode = null, detail = it.message) }
+            .mapLeft { PredictionPlaceOrderError.NotSent(detail = it.message) }
             .getOrElse { return@withContext it.left() }
 
         safeApiCall(
@@ -406,8 +414,17 @@ internal class DefaultPolymarketRepository @Inject constructor(
             PredictionOrderQuoteError.Unknown(httpCode = null, detail = cause.message ?: message)
     }
 
-    private companion object {
+    private fun PredictionSignedOrder.isSignedFor(isNegRisk: Boolean): Boolean {
+        val expected = PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = isNegRisk)
+            .joinToString(separator = "") { byte -> "%02x".format(byte) }
+        val tail = signature.removePrefix(PolymarketContracts.HEX_PREFIX)
+            .lowercase()
+            .drop(n = PolymarketContracts.SIGNATURE_RSV_HEX_LENGTH)
 
+        return tail.startsWith(expected)
+    }
+
+    private companion object {
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"
