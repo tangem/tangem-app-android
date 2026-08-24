@@ -1,9 +1,9 @@
 package com.tangem.feature.tokendetails.deeplink.di
 
-import com.tangem.feature.tokendetails.deeplink.DefaultTokenDetailsDeepLinkActionTrigger
+import com.tangem.feature.tokendetails.deeplink.DefaultExpressDeepLinkTrigger
 import com.tangem.feature.tokendetails.deeplink.DefaultTokenDetailsDeepLinkHandler
-import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionTrigger
+import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import dagger.Binds
 import dagger.Module
@@ -23,13 +23,9 @@ internal interface TokenDetailsDeepLinkModule {
 
     @Binds
     @Singleton
-    fun bindTokenDetailsDeepLinkActionTrigger(
-        impl: DefaultTokenDetailsDeepLinkActionTrigger,
-    ): TokenDetailsDeepLinkActionTrigger
+    fun bindTokenDetailsDeepLinkActionTrigger(impl: DefaultExpressDeepLinkTrigger): TokenDetailsDeepLinkActionTrigger
 
     @Binds
     @Singleton
-    fun bindTokenDetailsDeepLinkActionListener(
-        impl: DefaultTokenDetailsDeepLinkActionTrigger,
-    ): TokenDetailsDeepLinkActionListener
+    fun bindTokenDetailsDeepLinkActionListener(impl: DefaultExpressDeepLinkTrigger): ExpressDeepLinkListener
 }

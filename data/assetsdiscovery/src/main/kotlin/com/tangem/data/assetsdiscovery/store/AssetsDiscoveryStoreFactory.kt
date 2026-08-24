@@ -2,11 +2,11 @@ package com.tangem.data.assetsdiscovery.store
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.domain.models.wallet.UserWalletId
@@ -21,6 +21,7 @@ class AssetsDiscoveryStoreFactory @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
     @ApplicationContext private val context: Context,
     private val appScope: AppCoroutineScope,
+    private val dataStoreFactory: AppDataStoreFactory,
 ) {
 
     private val stores = ConcurrentHashMap<String, AssetsDiscoveryStore>()
@@ -42,7 +43,7 @@ class AssetsDiscoveryStoreFactory @Inject constructor(
         fileName: String,
         types: java.lang.reflect.ParameterizedType,
         defaultValue: T,
-    ): DataStore<T> = DataStoreFactory.create(
+    ): DataStore<T> = dataStoreFactory.create(
         serializer = MoshiDataStoreSerializer(
             moshi = moshi,
             types = types,

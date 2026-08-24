@@ -1,6 +1,6 @@
 package com.tangem.data.onramp.converters
 
-import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
+import com.tangem.grow.datasource.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.domain.onramp.repositories.OnrampFeatureToggles

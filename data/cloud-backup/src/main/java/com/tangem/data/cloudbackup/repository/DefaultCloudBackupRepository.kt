@@ -5,6 +5,8 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.CloudBackupJson
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
@@ -21,14 +23,21 @@ import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.decodeFromStream
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
+import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
@@ -47,7 +56,11 @@ internal class DefaultCloudBackupRepository(
     private val store: CloudBackupStore,
     private val cipher: CloudBackupCipher,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) : CloudBackupRepository {
+
+    override val isCloudBackupEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED)
 
     override suspend fun uploadBackup(
         walletId: String,
@@ -64,7 +77,7 @@ internal class DefaultCloudBackupRepository(
                 createdAtMillis = createdAtMillis,
                 password = password,
             )
-        }
+        } ?: return@withContext Either.Left(CloudBackupError.WriteError())
         withAuthRetry { authInteractive ->
             val auth = authHeader(interactive = authInteractive)
             val existingFiles = findBackupFiles(auth)
@@ -115,10 +128,19 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
-    override suspend fun findBackups(interactive: Boolean): Either<CloudBackupError, List<CloudBackupInfo>> {
+    override suspend fun findBackups(
+        interactive: Boolean,
+        validateContent: Boolean,
+    ): Either<CloudBackupError, List<CloudBackupInfo>> {
         return withContext(dispatchers.io) {
             withAuthRetry(interactive = interactive) { authInteractive ->
-                findBackupFiles(authHeader(interactive = authInteractive)).map { file ->
+                val auth = authHeader(interactive = authInteractive)
+                val files = findBackupFiles(auth)
+                // reuse the header already resolved with the requested interactivity — validation must not
+                // open its own interactive auth (account picker) during a non-interactive listing
+                val supported =
+                    if (validateContent) filterSupported(files, cipher) { downloadContentWith(auth, it) } else files
+                supported.map { file ->
                     CloudBackupInfo(
                         fileId = file.id,
                         walletName = file.appProperties?.get(KEY_WALLET_NAME) ?: file.name.orEmpty(),
@@ -168,29 +190,32 @@ internal class DefaultCloudBackupRepository(
 
     private suspend fun downloadContent(fileId: String): Either<CloudBackupError, String> {
         return withAuthRetry { authInteractive ->
-            val body = ensureNotNull(
-                execute(errorHandler = { CloudBackupError.ReadError(it) }) {
-                    api.downloadFileContent(
-                        authorization = authHeader(interactive = authInteractive),
-                        fileId = fileId,
-                    )
-                },
-            ) { CloudBackupError.BackupNotFound }
-            // .string() streams from the network — read it inside the IO error handling too
-            catchingIo(onError = { CloudBackupError.ReadError(it) }) { body.string() }
+            downloadContentWith(authHeader(interactive = authInteractive), fileId).bind()
         }
     }
 
+    private suspend fun downloadContentWith(auth: String, fileId: String): Either<CloudBackupError, String> = either {
+        val body = ensureNotNull(
+            execute(errorHandler = { CloudBackupError.ReadError(it) }) {
+                api.downloadFileContent(authorization = auth, fileId = fileId)
+            },
+        ) { CloudBackupError.BackupNotFound }
+        // .string() streams from the network — read it inside the IO error handling too
+        catchingIo(onError = { CloudBackupError.ReadError(it) }) { body.string() }
+    }
+
+    /** `null` when the secret cannot be serialized, i.e. the mnemonic is not a BIP39 phrase */
     private fun encryptBackup(
         secret: CloudBackupSecretData,
         walletId: String,
         walletName: String,
         createdAtMillis: Long,
         password: CharArray,
-    ): String {
-        val payload = CloudBackupSecret(mnemonic = secret.mnemonic, passphrase = secret.passphrase)
-        val payloadBytes = CloudBackupJson.encodeToString(payload)
-            .toByteArray(Charsets.UTF_8)
+    ): String? {
+        val payloadBytes = CloudBackupSecret.encode(
+            mnemonic = secret.mnemonic,
+            isPassphraseRequired = secret.isPassphraseRequired,
+        ) ?: return null
         val createdAtIso = Instant.fromEpochSeconds(TimeUnit.MILLISECONDS.toSeconds(createdAtMillis)).toString()
         val fileData = try {
             cipher.encrypt(
@@ -224,11 +249,18 @@ internal class DefaultCloudBackupRepository(
         }
     }
 
+    /**
+     * The stored flag survives turning the feature off, so it is reported only while the feature is on —
+     * otherwise a wallet backed up earlier would keep counting as backed up with the whole cloud backup UI
+     * hidden, and nothing could clear the flag anymore (deletion is gated by the same toggle).
+     */
     override suspend fun isBackedUp(walletId: String): Boolean {
-        return walletId in store.getBackedUpWalletIds().first()
+        return isCloudBackupEnabled && walletId in store.getBackedUpWalletIds().first()
     }
 
     override fun isBackedUpFlow(walletId: String): Flow<Boolean> {
+        if (!isCloudBackupEnabled) return flowOf(false)
+
         return store.getBackedUpWalletIds().map { walletId in it }
     }
 
@@ -358,21 +390,19 @@ internal class DefaultCloudBackupRepository(
             else -> errorHandler(null)
         }
     }
-
-    private companion object {
-        const val BACKUPS_FOLDER_NAME = "Tangem"
-        const val BACKUP_FILE_EXTENSION = "backup.json"
-        const val DRIVE_ROOT = "root"
-
-        const val KEY_IS_TANGEM_BACKUP = "tangemBackup"
-        const val KEY_WALLET_ID = "walletId"
-        const val KEY_WALLET_NAME = "walletName"
-        const val KEY_CREATED_AT = "createdAt"
-
-        const val MIME_TYPE_JSON = "application/json"
-        const val MIME_TYPE_FOLDER = "application/vnd.google-apps.folder"
-    }
 }
+
+private const val BACKUPS_FOLDER_NAME = "Tangem"
+private const val BACKUP_FILE_EXTENSION = "backup.json"
+private const val DRIVE_ROOT = "root"
+
+private const val KEY_IS_TANGEM_BACKUP = "tangemBackup"
+private const val KEY_WALLET_ID = "walletId"
+private const val KEY_WALLET_NAME = "walletName"
+private const val KEY_CREATED_AT = "createdAt"
+
+private const val MIME_TYPE_JSON = "application/json"
+private const val MIME_TYPE_FOLDER = "application/vnd.google-apps.folder"
 
 /**
  * Google Drive permits duplicate file names, so we mimic the OS file-manager behaviour and append an
@@ -389,16 +419,46 @@ internal fun resolveUniqueBackupName(walletName: String, extension: String, exis
         .first { it !in existingNames }
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 private fun Raise<CloudBackupError>.parseSecret(bytes: ByteArray): CloudBackupSecretData {
+    // decoded from the stream, not from `bytes.toString()`, so the mnemonic is never held by a String
+    // covering the whole payload — only the wipeable CharArray the parser hands over survives
     val raw = try {
         runCatching {
-            CloudBackupJson.decodeFromString<CloudBackupSecret>(bytes.toString(Charsets.UTF_8))
+            CloudBackupJson.decodeFromStream<CloudBackupSecret>(ByteArrayInputStream(bytes))
         }.getOrNull()
     } finally {
         bytes.fill(0)
     }
     val secret = ensureNotNull(raw) { CloudBackupError.InvalidBackupFile }
-    return CloudBackupSecretData(mnemonic = secret.mnemonic, passphrase = secret.passphrase)
+    val isPassphraseRequired = secret.isPassphraseRequired
+    if (isPassphraseRequired == null) {
+        secret.mnemonic.fill(' ')
+        raise(CloudBackupError.InvalidBackupFile)
+    }
+    return CloudBackupSecretData(mnemonic = secret.mnemonic, isPassphraseRequired = isPassphraseRequired)
+}
+
+// a transport failure keeps the file (fail-open) — a transient network problem must not hide a valid backup
+private suspend fun filterSupported(
+    files: List<DriveFile>,
+    cipher: CloudBackupCipher,
+    downloadContent: suspend (fileId: String) -> Either<CloudBackupError, String>,
+): List<DriveFile> = coroutineScope {
+    files
+        .map { file -> async { file.takeIf { hasSupportedContent(it.id, cipher, downloadContent) } } }
+        .awaitAll()
+        .filterNotNull()
+}
+
+private suspend fun hasSupportedContent(
+    fileId: String,
+    cipher: CloudBackupCipher,
+    downloadContent: suspend (fileId: String) -> Either<CloudBackupError, String>,
+): Boolean {
+    val content = downloadContent(fileId).getOrElse { return true }
+    val fileData = runCatching { CloudBackupJson.decodeFromString<CloudBackupFileData>(content) }.getOrNull()
+    return fileData != null && cipher.isSupportedFormat(fileData)
 }
 
 private fun CloudBackupCryptoError.toDomainError(): CloudBackupError = when (this) {

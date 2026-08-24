@@ -1,10 +1,14 @@
 package com.tangem.features.txhistory.converter
 
+import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
@@ -12,13 +16,18 @@ import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.WalletInfo
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.tangem.test.mock.MockAccounts
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -30,6 +39,13 @@ internal class ExpressTxToTransactionItemUMConverterTest {
 
     private val txHistoryUiActions: TxHistoryUiActions = mockk(relaxed = true)
     private val coin: CryptoCurrency.Coin = createCoin(symbol = "ETH", decimals = 18)
+
+    private val mockCurrencyFactory = MockCryptoCurrencyFactory()
+    private val ethereum = mockCurrencyFactory.ethereum
+    private val bitcoin = mockCurrencyFactory.bitcoin
+    private val ownAccount: Account.CryptoPortfolio = MockAccounts.createAccount(derivationIndex = 1, name = "Family")
+    private val secondAccount: Account.CryptoPortfolio =
+        MockAccounts.createAccount(derivationIndex = 2, name = "Savings")
 
     private val converter = ExpressTxToTransactionItemUMConverter(
         currency = coin,
@@ -167,20 +183,28 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         val swapped = converter.convert(
             createSwap(status = ExpressExchangeStatus.Finished),
         ) as TransactionItemUM.Content
+        val swapFailed = converter.convert(
+            createSwap(status = ExpressExchangeStatus.TxFailed),
+        ) as TransactionItemUM.Content
 
         assertThat(swapping.title).isEqualTo(resourceReference(R.string.common_swapping))
         assertThat(swapped.title).isEqualTo(resourceReference(R.string.common_swapped))
+        assertThat(swapFailed.title).isEqualTo(resourceReference(R.string.transaction_history_status_swap_failed))
     }
 
     @Test
     fun `GIVEN onramp statuses WHEN convert THEN status-aware title`() {
-        val topUp = converter.convert(createOnramp(status = ExpressOnrampStatus.Sending)) as TransactionItemUM.Content
+        val toppingUp = converter.convert(createOnramp(status = ExpressOnrampStatus.Sending)) as TransactionItemUM.Content
         val toppedUp = converter.convert(
             createOnramp(status = ExpressOnrampStatus.Finished),
         ) as TransactionItemUM.Content
+        val topUpFailed = converter.convert(
+            createOnramp(status = ExpressOnrampStatus.Failed),
+        ) as TransactionItemUM.Content
 
-        assertThat(topUp.title).isEqualTo(resourceReference(R.string.tx_history_onramp_top_up))
+        assertThat(toppingUp.title).isEqualTo(resourceReference(R.string.transaction_history_status_topping_up))
         assertThat(toppedUp.title).isEqualTo(resourceReference(R.string.tx_history_onramp_topped_up))
+        assertThat(topUpFailed.title).isEqualTo(resourceReference(R.string.transaction_history_status_top_up_failed))
     }
 
     @Test
@@ -215,11 +239,168 @@ internal class ExpressTxToTransactionItemUMConverterTest {
 
     // endregion
 
+    // region Owner tail
+
+    @Test
+    fun `GIVEN no lookup WHEN convert THEN subtitle has no owner tail`() {
+        val result = converter.convert(
+            createSwap(status = ExpressExchangeStatus.Finished, fromCurrency = ethereum, toCurrency = bitcoin),
+        ) as TransactionItemUM.Content
+
+        assertThat((result.subtitle as ContentSubtitle.Asset).owner).isNull()
+    }
+
+    @Test
+    fun `GIVEN swap within one own account WHEN convert THEN subtitle has no owner tail`() {
+        // Arrange — from and payout legs both in the same own account: nothing to disambiguate.
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            fromCurrency = ethereum,
+            toCurrency = bitcoin,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            ethereum.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
+        )
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        assertThat((result.subtitle as ContentSubtitle.Asset).owner).isNull()
+    }
+
+    @Test
+    fun `GIVEN outgoing swap to a different own account WHEN convert THEN subtitle names the payout account`() {
+        // Arrange — payout leg owned by a different account than the pay-in leg, accounts mode on.
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = true,
+            fromCurrency = ethereum,
+            toCurrency = bitcoin,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            ethereum.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to secondAccount),
+        )
+
+        // Act — outgoing row shows the TO (payout) counterparty.
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        val owner = (result.subtitle as ContentSubtitle.Asset).owner
+        assertThat(owner).isInstanceOf(ContentSubtitle.AssetOwner.Account::class.java)
+        assertThat((owner as ContentSubtitle.AssetOwner.Account).name)
+            .isEqualTo(secondAccount.accountName.toUM().value)
+    }
+
+    @Test
+    fun `GIVEN incoming swap from a different own account WHEN convert THEN subtitle names the source account`() {
+        // Arrange — incoming row (viewed token is the payout side) shows the FROM (pay-in) counterparty account.
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = false,
+            fromCurrency = ethereum,
+            toCurrency = bitcoin,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            ethereum.network.id.rawId to mapOf(FROM_ADDRESS to secondAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
+        )
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        val owner = (result.subtitle as ContentSubtitle.Asset).owner
+        assertThat(owner).isInstanceOf(ContentSubtitle.AssetOwner.Account::class.java)
+        assertThat((owner as ContentSubtitle.AssetOwner.Account).name)
+            .isEqualTo(secondAccount.accountName.toUM().value)
+    }
+
+    @Test
+    fun `GIVEN accounts mode off with multiple wallets WHEN convert THEN subtitle names the payout wallet`() {
+        // Arrange — payout resolves to an own wallet; more than one wallet, so it is worth naming.
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = true,
+            toCurrency = bitcoin,
+            payoutAddress = PAYOUT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
+            isAccountsModeEnabled = false,
+            walletInfoById = twoWalletInfo(),
+        )
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        val owner = (result.subtitle as ContentSubtitle.Asset).owner
+        assertThat(owner).isInstanceOf(ContentSubtitle.AssetOwner.Wallet::class.java)
+        assertThat((owner as ContentSubtitle.AssetOwner.Wallet).name).isEqualTo("My Wallet")
+    }
+
+    @Test
+    fun `GIVEN accounts mode off with a single wallet WHEN convert THEN subtitle has no owner tail`() {
+        // Arrange — an own-wallet leg with a single wallet has nothing to disambiguate.
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = true,
+            toCurrency = bitcoin,
+            payoutAddress = PAYOUT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount),
+            isAccountsModeEnabled = false,
+        )
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        assertThat((result.subtitle as ContentSubtitle.Asset).owner).isNull()
+    }
+
+    @Test
+    fun `GIVEN send-and-swap to an external address WHEN convert THEN subtitle has no owner tail`() {
+        // Arrange — payout goes to a non-owned address; the external counterparty adds no "in …" tail.
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = true,
+            fromCurrency = ethereum,
+            toCurrency = bitcoin,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = "external-address",
+        )
+        val lookup = lookupOf(ethereum.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount))
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        assertThat((result.subtitle as ContentSubtitle.Asset).owner).isNull()
+    }
+
+    // endregion
+
+    @Suppress("LongParameterList")
     private fun createSwap(
         status: ExpressExchangeStatus,
         isOutgoing: Boolean = true,
         fromAmount: BigDecimal? = BigDecimal("1.5"),
         toAmount: BigDecimal? = BigDecimal("0.001"),
+        fromAddress: String = "from-addr",
+        payoutAddress: String = "payout-addr",
+        fromCurrency: CryptoCurrency? = null,
+        toCurrency: CryptoCurrency? = null,
     ) = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "tx-1",
@@ -228,17 +409,19 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             provider = null,
             payinHash = null,
             payoutHash = null,
-            fromAddress = "from-addr",
-            payoutAddress = "payout-addr",
+            fromAddress = fromAddress,
+            payoutAddress = payoutAddress,
             fromAsset = ExpressTransactionAsset(
                 id = ExpressAssetId(networkId = "eth", contractAddress = "0"),
                 amount = fromAmount,
                 decimals = 18,
+                cryptoCurrency = fromCurrency,
             ),
             toAsset = ExpressTransactionAsset(
                 id = ExpressAssetId(networkId = "btc", contractAddress = "0xt"),
                 amount = toAmount,
                 decimals = 8,
+                cryptoCurrency = toCurrency,
             ),
             externalTxUrl = null,
             externalTxId = null,
@@ -253,6 +436,38 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         isOutgoing = isOutgoing,
         txInfo = null,
     )
+
+    private fun converterWith(lookup: TxHistoryLookupContext) = ExpressTxToTransactionItemUMConverter(
+        currency = coin,
+        txHistoryUiActions = txHistoryUiActions,
+        lookup = lookup,
+    )
+
+    private fun lookupOf(
+        vararg networks: Pair<Network.RawID, Map<String, Account>>,
+        isAccountsModeEnabled: Boolean = true,
+        walletInfoById: Map<UserWalletId, WalletInfo> = singleWalletInfo(),
+    ): TxHistoryLookupContext = TxHistoryLookupContext(
+        ownAccountByNetwork = networks.toMap(),
+        isAccountsModeEnabled = isAccountsModeEnabled,
+        walletInfoById = walletInfoById,
+    )
+
+    private fun singleWalletInfo(): Map<UserWalletId, WalletInfo> = mapOf(
+        MockAccounts.userWalletId to WalletInfo(name = "My Wallet", deviceIconUM = deviceIcon()),
+    )
+
+    private fun twoWalletInfo(): Map<UserWalletId, WalletInfo> = mapOf(
+        MockAccounts.userWalletId to WalletInfo(name = "My Wallet", deviceIconUM = deviceIcon()),
+        UserWalletId("022") to WalletInfo(name = "Second Wallet", deviceIconUM = deviceIcon()),
+    )
+
+    private fun deviceIcon(): DeviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null)
+
+    private companion object {
+        const val FROM_ADDRESS = "0xfromOwnAddress1234"
+        const val PAYOUT_ADDRESS = "bc1qPayoutOwnAddress"
+    }
 
     private fun createOnramp(
         status: ExpressOnrampStatus,
@@ -277,7 +492,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
-            country = null,
+            fiatCurrency = null,
             toAmount = toAmount,
             toActualAmount = null,
         ),

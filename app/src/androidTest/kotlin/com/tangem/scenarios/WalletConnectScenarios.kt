@@ -232,7 +232,13 @@ fun BaseTestCase.createConnectionViaPasteFromClipboardButton() {
     step("Click on 'New connection' button") {
         onWalletConnectScreen { newConnectionButton.performClick() }
     }
+    // Awaited rather than clicked straight away: on a repeated connection the QR screen opens while the
+    // previous session's screen is still tearing down, so the button can be a beat late and the bare
+    // assertion fails ("Paste from clipboard is not displayed") on the second or third session.
     step("Click on 'Paste from clipboard' button") {
+        awaitSuccess {
+            onScanQrScreen { pasteFromClipboardButton.assertIsDisplayed() }
+        }
         onScanQrScreen { pasteFromClipboardButton.clickWithAssertion() }
     }
 }

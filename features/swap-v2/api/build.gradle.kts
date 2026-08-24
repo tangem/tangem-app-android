@@ -10,26 +10,20 @@ android {
 
 dependencies {
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    api(projects.core.decompose)
+    api(projects.core.ui)
 
     api(projects.features.send.api)
+    api(deps.kotlin.coroutines)
 
     /** Common */
-    implementation(projects.common.ui)
 
     /** Domain */
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.express.models)
-    implementation(projects.domain.swap.models)
-    implementation(projects.domain.manageTokens.models)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.appCurrency.models)
+    api(projects.domain.swap.models)
+    api(projects.domain.manageTokens.models)
+    api(projects.domain.models)
 
     /** Compose */
-    implementation(deps.compose.runtime)
 
     /** Other */
-    implementation(deps.kotlin.immutable.collections)
 }

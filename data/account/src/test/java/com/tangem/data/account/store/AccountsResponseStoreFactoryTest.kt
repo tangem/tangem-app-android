@@ -4,15 +4,23 @@ import android.content.Context
 import com.google.common.truth.Truth
 import com.squareup.moshi.Moshi
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.datastore.createAppDataStoreFactory
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountsResponseStoreFactoryTest {
+
+    @TempDir
+    lateinit var tempDir: File
 
     private val context: Context = mockk()
     private val moshi: Moshi = Moshi.Builder().build()
@@ -20,10 +28,18 @@ class AccountsResponseStoreFactoryTest {
         context = context,
         moshi = moshi,
         appScope = TestAppCoroutineScope(),
+        dataStoreFactory = createAppDataStoreFactory(),
     )
 
+    @BeforeEach
+    fun setUp() {
+        // The factory now resolves the store file eagerly via context.dataStoreFile(...), so the file path must resolve.
+        every { context.applicationContext } returns context
+        every { context.filesDir } returns tempDir
+    }
+
     @AfterEach
-    fun setup() {
+    fun tearDown() {
         clearMocks(context)
         factory.clearStores()
     }

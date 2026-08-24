@@ -15,32 +15,45 @@ import kotlinx.collections.immutable.toImmutableList
 internal class TangemPayCashbackDetailsConverter {
 
     fun convert(
-        tiers: List<CashbackTier>,
+        cards: List<CashbackCard>,
         payoutCurrency: String?,
-        monthlyCap: CashbackPromotions.MonthlyCap?,
+        accountMonthlyCap: CashbackPromotions.MonthlyCap?,
     ): TangemPayCashbackDetailsUM {
         val rows = buildList {
-            tiers.forEach { add(tierRow(it)) }
-            if (tiers.isNotEmpty()) {
+            addAll(cards.mapNotNull(::cardRow))
+            if (cards.isNotEmpty()) {
                 add(resourceReference(R.string.tangempay_cashback_details_eu_excluded))
-                if (!payoutCurrency.isNullOrEmpty()) {
-                    add(resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList(payoutCurrency)))
+                payoutCurrency?.takeIf(String::isNotBlank)?.let { currency ->
+                    add(
+                        resourceReference(
+                            id = R.string.tangempay_cashback_details_paid_in,
+                            formatArgs = wrappedList(currency),
+                        ),
+                    )
                 }
-                if (monthlyCap != null) {
-                    add(resourceReference(R.string.tangempay_cashback_details_cap, wrappedList(monthlyCap.formatted())))
+                if (accountMonthlyCap != null) {
+                    add(
+                        resourceReference(
+                            id = R.string.tangempay_cashback_details_cap,
+                            formatArgs = wrappedList(accountMonthlyCap.formatted()),
+                        ),
+                    )
                 }
             }
         }
         return TangemPayCashbackDetailsUM(
-            title = cashbackRateTitle(tiers.mapNotNull { it.rate }),
+            title = cashbackRateTitle(cards),
             rows = rows.toImmutableList(),
         )
     }
 
-    private fun tierRow(tier: CashbackTier): TextReference = resourceReference(
-        id = R.string.tangempay_cashback_details_tier,
-        formatArgs = wrappedList(tier.rate?.toString().orEmpty(), tier.label, tier.minPurchase.orEmpty()),
-    )
+    private fun cardRow(card: CashbackCard): TextReference? {
+        val title = card.title ?: return null
+        return resourceReference(
+            id = R.string.tangempay_cashback_details_tier,
+            formatArgs = wrappedList(card.rate.formatRate(), title, card.minPurchase.orEmpty()),
+        )
+    }
 
     private fun CashbackPromotions.MonthlyCap.formatted(): String {
         val javaCurrency = getJavaCurrencyByCode(currency ?: DEFAULT_CURRENCY_CODE)
