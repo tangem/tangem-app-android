@@ -16,20 +16,15 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
-import com.tangem.core.ui.components.bottomsheets.message.icon
-import com.tangem.core.ui.components.bottomsheets.message.infoBlock
-import com.tangem.core.ui.components.bottomsheets.message.onClick
-import com.tangem.core.ui.components.bottomsheets.message.primaryButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.password.PasswordStrengthEvaluator
+import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.CreateCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWallet
@@ -43,6 +38,8 @@ import com.tangem.features.hotwallet.CreateCloudBackupComponent
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +62,7 @@ internal class CreateCloudBackupModel @Inject constructor(
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
     private val createCloudBackupUseCase: CreateCloudBackupUseCase,
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
+    private val cloudBackupRepository: CloudBackupRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<CreateCloudBackupComponent.Params>()
@@ -80,11 +78,13 @@ internal class CreateCloudBackupModel @Inject constructor(
     private var isConsentChecked = false
 
     val uiState: StateFlow<CreateCloudBackupUM>
-        field = MutableStateFlow<CreateCloudBackupUM>(buildSetPasswordUM())
+        field = MutableStateFlow<CreateCloudBackupUM>(CreateCloudBackupUM.Preparing(onBackClick = ::onBack))
+
+    private val authJobHolder = JobHolder()
 
     init {
         trackingContextProxy.addHotWalletContext()
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.SetCloudPasswordScreen())
+        authorize()
     }
 
     override fun onDestroy() {
@@ -96,10 +96,41 @@ internal class CreateCloudBackupModel @Inject constructor(
 
     fun onBack() {
         when (val state = uiState.value) {
+            is CreateCloudBackupUM.Preparing -> router.pop()
             is CreateCloudBackupUM.SetPassword -> showCancelSetupDialog()
             is CreateCloudBackupUM.ConfirmPassword -> if (!state.isLoading) uiState.value = buildSetPasswordUM()
             is CreateCloudBackupUM.Completed -> Unit
         }
+    }
+
+    private fun authorize() {
+        if (authJobHolder.isActive) return
+
+        uiState.value = CreateCloudBackupUM.Preparing(onBackClick = ::onBack)
+        modelScope.launch {
+            cloudBackupRepository.getAccountInfo(interactive = true).fold(
+                ifLeft = ::onAuthError,
+                ifRight = {
+                    uiState.value = buildSetPasswordUM()
+                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.SetCloudPasswordScreen())
+                },
+            )
+        }.saveIn(authJobHolder)
+    }
+
+    private fun onAuthError(error: CloudBackupError) {
+        if (error == CloudBackupError.AuthCanceled) {
+            router.pop()
+            return
+        }
+        val spec = cloudBackupErrorSpec(error)
+        uiMessageSender.send(
+            cloudBackupErrorSheet(
+                spec = spec,
+                onClosed = { router.pop() },
+                onAction = { if (spec.isRetryable) authorize() else router.pop() },
+            ),
+        )
     }
 
     private fun showCancelSetupDialog() {
@@ -278,38 +309,14 @@ internal class CreateCloudBackupModel @Inject constructor(
     }
 
     private fun onUploadError(error: CloudBackupError) {
-        if (error == CloudBackupError.AuthCanceled) {
-            uiState.value = buildConfirmPasswordUM()
-            return
-        }
+        uiState.value = buildConfirmPasswordUM()
+        if (error == CloudBackupError.AuthCanceled) return
 
         analyticsEventHandler.send(
             WalletSettingsAnalyticEvents.CloudBackupCreationError(errorMessage = error.analyticsMessage()),
         )
-        val isPermissions = error == CloudBackupError.AuthPermissionsMissing || error == CloudBackupError.AuthRequired
-        val titleRes = if (isPermissions) {
-            R.string.hw_cloud_backup_permissions_title
-        } else {
-            R.string.hw_cloud_backup_error_title
-        }
-        val bodyRes = when (error) {
-            CloudBackupError.NetworkError -> R.string.hw_cloud_backup_error_network
-            CloudBackupError.AuthPermissionsMissing,
-            CloudBackupError.AuthRequired,
-            -> R.string.hw_cloud_backup_permissions_description
-            CloudBackupError.CloudUnavailable -> R.string.hw_cloud_backup_error_unavailable
-            else -> R.string.hw_cloud_backup_error_write
-        }
-        val isRetryable = when (error) {
-            CloudBackupError.NetworkError,
-            is CloudBackupError.WriteError,
-            is CloudBackupError.ReadError,
-            is CloudBackupError.Unknown,
-            CloudBackupError.BackupNotFound,
-            -> true
-            else -> false
-        }
-        showErrorSheet(titleRes = titleRes, bodyRes = bodyRes, isRetryable = isRetryable)
+        val spec = cloudBackupErrorSpec(error)
+        uiMessageSender.send(cloudBackupErrorSheet(spec) { if (spec.isRetryable) startBackup() })
     }
 
     private fun showGenericError() {
@@ -318,35 +325,13 @@ internal class CreateCloudBackupModel @Inject constructor(
                 errorMessage = CloudBackupError.Unknown().analyticsMessage(),
             ),
         )
-        showErrorSheet(
+        uiState.value = buildConfirmPasswordUM()
+        val spec = CloudBackupErrorSpec(
             titleRes = R.string.hw_cloud_backup_error_title,
             bodyRes = R.string.hw_cloud_backup_error_write,
             isRetryable = true,
         )
-    }
-
-    private fun showErrorSheet(titleRes: Int, bodyRes: Int, isRetryable: Boolean) {
-        uiState.value = buildConfirmPasswordUM()
-        uiMessageSender.send(
-            bottomSheetMessage {
-                infoBlock {
-                    icon(R.drawable.ic_alert_triangle_20) {
-                        type = MessageBottomSheetUM.Icon.Type.Warning
-                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
-                    }
-                    title = resourceReference(titleRes)
-                    body = resourceReference(bodyRes)
-                }
-                primaryButton {
-                    val buttonRes = if (isRetryable) R.string.hw_cloud_backup_retry else R.string.common_got_it
-                    text = resourceReference(buttonRes)
-                    onClick {
-                        if (isRetryable) startBackup()
-                        closeBs()
-                    }
-                }
-            },
-        )
+        uiMessageSender.send(cloudBackupErrorSheet(spec) { startBackup() })
     }
 
     private fun wipeSecrets() {
