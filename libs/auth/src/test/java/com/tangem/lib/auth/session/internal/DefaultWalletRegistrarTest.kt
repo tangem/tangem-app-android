@@ -15,7 +15,7 @@ import com.tangem.lib.auth.api.models.response.NonceApiResponse
 import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
@@ -179,7 +179,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `register short-circuits without network when walletId already registered`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
@@ -297,7 +297,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `prepare returns null when walletId already registered`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
 
         val result = registrar.prepare(WALLET_ID, mobileSigner)
 
@@ -384,7 +384,7 @@ class DefaultWalletRegistrarTest {
     @Test
     fun `unregister posts, persists rotated tokens and removes only that id from the marker`() = runTest {
         preferencesDataStore.edit {
-            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
         }
         val request = slot<WalletUnregisterRequest>()
         // Server rotates the session tokens to the wallets that remain bound (WALLET_ID removed).
@@ -413,7 +413,7 @@ class DefaultWalletRegistrarTest {
     @Test
     fun `unregister treats 404 NotFound as success and clears the marker without persisting tokens`() = runTest {
         preferencesDataStore.edit {
-            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
         }
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
@@ -434,7 +434,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `unregister surfaces API error and keeps the marker`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
@@ -472,7 +472,7 @@ class DefaultWalletRegistrarTest {
     )
 
     private fun registeredIds(): Set<String> =
-        preferencesDataStore.current()[PreferencesKeys.REGISTERED_WALLET_IDS_KEY].orEmpty()
+        preferencesDataStore.current()[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY].orEmpty()
 
     private fun base64(bytes: ByteArray): String = java.util.Base64.getEncoder().encodeToString(bytes)
 
