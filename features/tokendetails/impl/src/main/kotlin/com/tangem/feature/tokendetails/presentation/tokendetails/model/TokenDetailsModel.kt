@@ -939,7 +939,12 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onExploreClick() {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonExplore(cryptoCurrency.symbol))
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonExplore(
+                token = cryptoCurrency.symbol,
+                source = TokenScreenAnalyticsEvent.ButtonExplore.ExploreActionSource.Token,
+            ),
+        )
         showErrorIfDemoModeOrElse(action = ::openExplorer)
     }
 
