@@ -11,6 +11,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.markets.models)
+    implementation(projects.domain.models)
     // endregion
 
     // region Test
