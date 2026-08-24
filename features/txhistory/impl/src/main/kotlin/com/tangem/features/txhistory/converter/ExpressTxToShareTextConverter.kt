@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.converter.Converter
 
@@ -46,6 +47,7 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
             provider = value.provider,
             // The provider-side id is the one their support desk can look up; the deal id stands in when absent.
             id = value.tx.externalTxId ?: value.txId,
+            onChainHash = value.onChainHashOrNull(),
         )
         is ExpressTx.Onramp -> buildShareText(
             sentAmount = value.tx.fromFiat.formatFiatAmount(),
@@ -53,9 +55,17 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
             receivedAmount = value.tx.toAsset.formatAmount(),
             receivedToAddress = value.tx.payoutAddress,
             provider = value.provider,
-            id = value.txId,
+            id = value.tx.externalTxId ?: value.txId,
+            onChainHash = value.onChainHashOrNull(),
         )
     }
+
+    /**
+     * The matched on-chain leg's hash, kept alongside the express id once a deal is merged — the express id
+     * alone is not enough for a merged deal, support needs to find the on-chain leg too, and the leg's own hash
+     * is what [Explore] already links to.
+     */
+    private fun ExpressTx.onChainHashOrNull(): String? = txInfo?.let { it.explorerHash }
 
     @Suppress("LongParameterList")
     private fun buildShareText(
@@ -65,6 +75,7 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
         receivedToAddress: String,
         provider: ExpressProvider?,
         id: String,
+        onChainHash: String?,
     ): TextReference = joinLines(
         resourceReference(R.string.common_tangem),
         BLANK_LINE,
@@ -76,6 +87,9 @@ internal class ExpressTxToShareTextConverter : Converter<ExpressTx, TextReferenc
         BLANK_LINE,
         provider?.let(::providerLine),
         id.takeIf(String::isNotBlank)?.let { resourceReference(R.string.express_transaction_id, wrappedList(it)) },
+        onChainHash?.takeIf(String::isNotBlank)?.let {
+            resourceReference(R.string.express_transaction_hash, wrappedList(it))
+        },
     )
 
     /** A localized label followed by its raw [suffix]: `Send 0.5 ETH`, `From: 0xAA5C...`. */
