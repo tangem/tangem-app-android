@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,6 +26,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.staking.GetStakingTargetsByAddressUseCase
 import com.tangem.domain.staking.model.StakingTarget
+import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -32,9 +36,14 @@ import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
+import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
+import com.tangem.features.txhistory.analytics.analyticsTitle
+import com.tangem.features.txhistory.analytics.toAnalyticsStatus
+import com.tangem.features.txhistory.analytics.toAnalyticsType
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
 import com.tangem.features.txhistory.converter.ExpressTxToShareTextConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
+import com.tangem.features.txhistory.converter.fiatCode
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -67,6 +76,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val getStakingTargetsByAddressUseCase: GetStakingTargetsByAddressUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
@@ -122,6 +132,10 @@ internal class TxHistoryDetailsModel @Inject constructor(
                 .first()
             refundCurrency.value = addRefundTokenToPortfolio(refundAssetId)
         }
+        // One-shot: the screen-opened analytics must fire once per detail screen instance, not on every resubscribe.
+        modelScope.launch(dispatchers.default) {
+            sendScreenOpenedAnalytics(txHistoryInfo.first())
+        }
     }
 
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
@@ -139,12 +153,12 @@ internal class TxHistoryDetailsModel @Inject constructor(
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
         TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = params.currency,
-            onCopyAddress = ::onCopyAddress,
-            onGoToProvider = urlOpener::openUrl,
-            onCopyTxId = idToCopy?.let { id -> { onCopyTxId(id) } },
+            onCopyAddress = { address -> onCopyAddress(address, txInfo) },
+            onGoToProvider = { url -> onGoToProvider(url, txInfo) },
+            onCopyTxId = idToCopy?.let { id -> { onCopyTxId(id, txInfo) } },
             shareText = shareText,
-            onShare = shareManager::shareText,
-            onExplore = explorerHash?.let { hash -> { explore(hash) } },
+            onShare = { text -> onShare(text, txInfo) },
+            onExplore = explorerHash?.let { hash -> { explore(hash, txInfo) } },
             refundCurrency = refundToken,
             onLearnMoreAboutRefundsClick = ::onLearnMoreAboutRefunds,
             onGoToRefundedTokenClick = params.onOpenTokenDetails,
@@ -197,7 +211,16 @@ internal class TxHistoryDetailsModel @Inject constructor(
         (this as? OnChainTx.BSDK)?.txInfo?.mayCarryStakingTarget() == true
 
     /** Copies a counterparty address to the clipboard — wired into the detail card's copy button via the converter. */
-    private fun onCopyAddress(address: String) {
+    private fun onCopyAddress(address: String, txInfo: TxHistoryInfo) {
+        analyticsEventHandler.send(
+            TokenScreenAnalyticsEvent.ButtonCopyAddress(
+                walletId = params.userWalletId.stringValue,
+                token = params.currency.symbol,
+                blockchain = params.currency.network.name,
+                type = txInfo.toAnalyticsType(),
+                source = TokenScreenAnalyticsEvent.ButtonCopyAddress.CopyAddressActionSource.TransactionDetail,
+            ),
+        )
         clipboardManager.setText(text = address, isSensitive = false)
         uiMessageSender.send(
             SnackbarMessage(
@@ -208,7 +231,15 @@ internal class TxHistoryDetailsModel @Inject constructor(
     }
 
     /** Copies the transaction id to the clipboard — wired into the header menu's "Transaction ID" row. */
-    private fun onCopyTxId(id: String) {
+    private fun onCopyTxId(id: String, txInfo: TxHistoryInfo) {
+        analyticsEventHandler.send(
+            TxHistoryAnalyticsEvent.ButtonCopyTransactionId(
+                walletId = params.userWalletId.stringValue,
+                token = params.currency.symbol,
+                blockchain = params.currency.network.name,
+                type = txInfo.toAnalyticsType(),
+            ),
+        )
         clipboardManager.setText(text = id, isSensitive = false)
         uiMessageSender.send(
             SnackbarMessage(
@@ -218,12 +249,92 @@ internal class TxHistoryDetailsModel @Inject constructor(
         )
     }
 
+    /** Shares the transaction summary — wired into the header menu's "Share" row. */
+    private fun onShare(text: String, txInfo: TxHistoryInfo) {
+        analyticsEventHandler.send(
+            TokenScreenAnalyticsEvent.ButtonShare(
+                walletId = params.userWalletId.stringValue,
+                token = params.currency.symbol,
+                blockchain = params.currency.network.name,
+                type = txInfo.toAnalyticsType(),
+                source = TokenScreenAnalyticsEvent.ButtonShare.ShareActionSource.TransactionDetail,
+            ),
+        )
+        shareManager.shareText(text)
+    }
+
     /** Opens the transaction in the blockchain explorer — wired into the header menu's "Explore" row. */
-    private fun explore(txHash: String) {
+    private fun explore(txHash: String, txInfo: TxHistoryInfo) {
+        analyticsEventHandler.send(
+            TokenScreenAnalyticsEvent.ButtonExplore(
+                token = params.currency.symbol,
+                source = TokenScreenAnalyticsEvent.ButtonExplore.ExploreActionSource.TransactionDetail,
+                blockchain = params.currency.network.name,
+                type = txInfo.toAnalyticsType(),
+                walletId = params.userWalletId.stringValue,
+            ),
+        )
         getExplorerTransactionUrlUseCase(txHash = txHash, currency = params.currency).fold(
             ifLeft = { TangemLogger.e(it.toString()) },
             ifRight = { urlOpener.openUrl(url = it) },
         )
+    }
+
+    /**
+     * Opens a provider link — wired into both the "Go to provider"/"Go to verification" bottom CTA and the provider
+     * info row of an express deal. Restores the pre-redesign "Button - Go To Provider" analytics (see the legacy
+     * `ExpressStatusFactory`/`TokenDetailsSwapTransactionsStateConverter`): Place is KYC while the swap is under
+     * verification, Status otherwise; an onramp has no Place breakdown in the reused event.
+     */
+    private fun onGoToProvider(url: String, txInfo: TxHistoryInfo) {
+        when (txInfo) {
+            is ExpressTx.Swap -> analyticsEventHandler.send(
+                if (txInfo.tx.status == ExpressExchangeStatus.Verifying) {
+                    TokenExchangeAnalyticsEvent.GoToProviderKYC(params.currency.symbol)
+                } else {
+                    TokenExchangeAnalyticsEvent.GoToProviderStatus(params.currency.symbol)
+                },
+            )
+            is ExpressTx.Onramp -> analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
+            else -> Unit
+        }
+        urlOpener.openUrl(url)
+    }
+
+    /**
+     * One-shot "Transaction Detail Screen Opened" (new, [REDACTED_TASK_KEY]) plus the pre-redesign "Swap Status Opened" /
+     * "Onramp Status Opened" (restored — see `TokenExchangeAnalyticsEvent`/`TokenOnrampAnalyticsEvent`, previously sent
+     * only from the legacy `tokendetails` bottom sheet that the new detail screen replaces).
+     */
+    private fun sendScreenOpenedAnalytics(txInfo: TxHistoryInfo) {
+        val type = txInfo.toAnalyticsType()
+        val status = txInfo.toAnalyticsStatus()
+        analyticsEventHandler.send(
+            TxHistoryAnalyticsEvent.TransactionDetailScreenOpened(
+                walletId = params.userWalletId.stringValue,
+                token = params.currency.symbol,
+                blockchain = params.currency.network.name,
+                type = type,
+                status = status,
+                title = analyticsTitle(type = type, status = status),
+            ),
+        )
+        when (txInfo) {
+            is ExpressTx.Swap -> analyticsEventHandler.send(
+                TokenExchangeAnalyticsEvent.CexTxStatusOpened(
+                    token = params.currency.symbol,
+                    provider = txInfo.provider?.name.orEmpty(),
+                ),
+            )
+            is ExpressTx.Onramp -> analyticsEventHandler.send(
+                TokenOnrampAnalyticsEvent.OnrampStatusOpened(
+                    tokenSymbol = params.currency.symbol,
+                    provider = txInfo.provider?.name.orEmpty(),
+                    fiatCurrency = txInfo.tx.fromFiat.fiatCode,
+                ),
+            )
+            else -> Unit
+        }
     }
 
     /** Opens the cross-chain-bridges blog article — wired into the refunded banner's "Learn more" link. */
