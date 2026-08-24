@@ -10,7 +10,7 @@ import com.tangem.lib.auth.api.models.request.RegisterPayload
 import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.lib.auth.attestation.AttestationProvider
@@ -68,7 +68,7 @@ internal class DefaultDeviceRegistrar(
 
     private suspend fun runRegister(): Either<DeviceRegistrationError, Unit> = either {
         val isAlreadyRegistered = appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY,
+            key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY,
             default = false,
         )
         if (isAlreadyRegistered) {
@@ -128,7 +128,7 @@ internal class DefaultDeviceRegistrar(
                     // `false` and the next launch retries cleanly. Worst case: tokens are persisted
                     // without the flag, and the retry mints fresh ones that overwrite them.
                     store.save(tokens)
-                    appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = true)
+                    appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = true)
                 } catch (e: Exception) {
                     TangemLogger.e("Failed to persist device-registration tokens / flag", e)
                     raise(DeviceRegistrationError.PersistenceFailed(e))
@@ -153,7 +153,7 @@ internal class DefaultDeviceRegistrar(
 
     private suspend fun Raise<DeviceRegistrationError>.markRegistered(onFailureLog: String) {
         try {
-            appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = true)
+            appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = true)
         } catch (e: Exception) {
             TangemLogger.e(onFailureLog, e)
             raise(DeviceRegistrationError.PersistenceFailed(e))
