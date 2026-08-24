@@ -59,6 +59,46 @@ class AppsFlyerReferralParamsHandlerTest {
                     shouldStore = true,
                 ),
                 HandleDeepLinkModel(
+                    deepLink = createDeepLink(
+                        deepLinkValue = "tpay_mobileonboard",
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleDeepLinkModel(
+                    deepLink = createDeepLink(
+                        deepLinkValue = "some_other_deep_link_value",
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleDeepLinkModel(
+                    deepLink = createDeepLink(
+                        deepLinkValue = null,
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleDeepLinkModel(
+                    deepLink = createDeepLink(
+                        deepLinkValue = "",
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleDeepLinkModel(
+                    deepLink = createDeepLink(
+                        deepLinkValue = "some_other_deep_link_value",
+                        refcode = "null",
+                        campaign = SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = false,
+                ),
+                HandleDeepLinkModel(
                     deepLink = createDeepLink(deepLinkValue = "some_other_deep_link_value"),
                     shouldStore = false,
                 ),
@@ -86,7 +126,7 @@ class AppsFlyerReferralParamsHandlerTest {
         }
 
         private fun createDeepLink(
-            deepLinkValue: String,
+            deepLinkValue: String?,
             refcode: String? = null,
             campaign: String? = null,
         ): DeepLink {
@@ -128,6 +168,45 @@ class AppsFlyerReferralParamsHandlerTest {
                     shouldStore = true,
                 ),
                 HandleParamsModel(
+                    params = mapOf(
+                        "deep_link_value" to "tpay_mobileonboard",
+                        "deep_link_sub1" to SUCCESS_REFCODE,
+                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleParamsModel(
+                    params = mapOf(
+                        "deep_link_value" to "some_other_deep_link_value",
+                        "deep_link_sub1" to SUCCESS_REFCODE,
+                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleParamsModel(
+                    params = mapOf(
+                        "deep_link_sub1" to SUCCESS_REFCODE,
+                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleParamsModel(
+                    params = mapOf(
+                        "deep_link_value" to "",
+                        "deep_link_sub1" to SUCCESS_REFCODE,
+                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = true,
+                ),
+                HandleParamsModel(
+                    params = mapOf(
+                        "deep_link_value" to "some_other_deep_link_value",
+                        "deep_link_sub1" to "null",
+                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    ),
+                    shouldStore = false,
+                ),
+                HandleParamsModel(
                     params = mapOf("deep_link_value" to "some_other_deep_link_value"),
                     shouldStore = false,
                 ),
@@ -155,6 +234,38 @@ class AppsFlyerReferralParamsHandlerTest {
     }
 
     data class HandleParamsModel(val params: Map<String?, Any?>, val shouldStore: Boolean)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CampaignValidation {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun handle(model: CampaignModel) = runTest {
+            val params = buildMap<String?, Any?> {
+                put("deep_link_value", "referral")
+                put("deep_link_sub1", SUCCESS_REFCODE)
+                model.rawCampaign?.let { put("deep_link_sub2", it) }
+            }
+
+            handler.handle(params = params)
+
+            val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = model.expectedCampaign)
+            coVerify { appsFlyerStore.storeIfAbsent(value = value) }
+        }
+
+        private fun provideTestModels(): List<CampaignModel> {
+            return listOf(
+                CampaignModel(rawCampaign = SUCCESS_CAMPAIGN, expectedCampaign = SUCCESS_CAMPAIGN),
+                CampaignModel(rawCampaign = null, expectedCampaign = null),
+                CampaignModel(rawCampaign = "", expectedCampaign = null),
+                CampaignModel(rawCampaign = " ", expectedCampaign = null),
+                CampaignModel(rawCampaign = "null", expectedCampaign = null),
+            )
+        }
+    }
+
+    data class CampaignModel(val rawCampaign: String?, val expectedCampaign: String?)
 
     @Nested
     inner class NavigationDeeplink {
@@ -195,6 +306,60 @@ class AppsFlyerReferralParamsHandlerTest {
             handler.handleDeeplink(deepLink)
 
             coVerify { appsFlyerStore.storeNavigationDeeplink("referral") }
+        }
+
+        @Test
+        fun `GIVEN referral with valid refcode WHEN handle THEN navigation and conversion stored`() = runTest {
+            handler.handle(
+                params = mapOf(
+                    "deep_link_value" to "referral",
+                    "deep_link_sub1" to SUCCESS_REFCODE,
+                    "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                ),
+            )
+
+            coVerify { appsFlyerStore.storeNavigationDeeplink("referral") }
+            coVerify {
+                appsFlyerStore.storeIfAbsent(
+                    value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN empty value with valid refcode WHEN handle THEN navigation deeplink not stored`() = runTest {
+            handler.handle(
+                params = mapOf(
+                    "deep_link_value" to "",
+                    "deep_link_sub1" to SUCCESS_REFCODE,
+                ),
+            )
+
+            coVerify(inverse = true) { appsFlyerStore.storeNavigationDeeplink(any()) }
+        }
+
+        @Test
+        fun `GIVEN tpay_mobileonboard with valid refcode WHEN handle THEN navigation deeplink stored`() = runTest {
+            handler.handle(
+                params = mapOf(
+                    "deep_link_value" to "tpay_mobileonboard",
+                    "deep_link_sub1" to SUCCESS_REFCODE,
+                ),
+            )
+
+            coVerify { appsFlyerStore.storeNavigationDeeplink("tpay_mobileonboard") }
+        }
+
+        @Test
+        fun `GIVEN unknown value with valid refcode WHEN handle THEN navigation deeplink not stored`() = runTest {
+            handler.handle(
+                params = mapOf(
+                    "deep_link_value" to "some_other_deep_link_value",
+                    "deep_link_sub1" to SUCCESS_REFCODE,
+                ),
+            )
+
+            coVerify(inverse = true) { appsFlyerStore.storeNavigationDeeplink(any()) }
         }
     }
 

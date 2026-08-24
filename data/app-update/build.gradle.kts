@@ -22,6 +22,8 @@ dependencies {
 
     // region DI
     implementation(deps.hilt.android)
+    implementation(deps.androidx.datastore.core)
+    implementation(deps.moshi)
     kapt(deps.hilt.kapt)
     // endregion
 }

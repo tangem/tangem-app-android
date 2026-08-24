@@ -5,7 +5,7 @@ import androidx.room.*
 /**
  * Persisted representation of a single exchange transaction.
  *
- * Mirrors [com.tangem.datasource.api.express.models.response.ExchangeItemResponse].
+ * Mirrors [com.tangem.grow.datasource.express.models.response.ExchangeItemResponse].
  */
 @Entity(
     tableName = "express_exchange",

@@ -26,5 +26,9 @@
     {
         "name": "igra",
         "version": "6.2"
+    },
+    {
+        "name": "electroneum",
+        "version": "6.3"
     }
 ]

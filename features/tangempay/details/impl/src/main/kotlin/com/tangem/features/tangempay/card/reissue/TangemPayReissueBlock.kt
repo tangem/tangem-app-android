@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
@@ -43,7 +43,7 @@ internal fun TangemPayReissueBlock(title: TextReference, modifier: Modifier = Mo
         }
         Text(
             modifier = Modifier.fillMaxWidth(),
-            text = title.resolveReference(),
+            text = title.resolveAnnotatedReference(),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.caption.medium,
             textAlign = TextAlign.Center,

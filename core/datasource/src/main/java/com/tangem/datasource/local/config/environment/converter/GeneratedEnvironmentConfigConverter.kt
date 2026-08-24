@@ -57,6 +57,8 @@ internal object GeneratedEnvironmentConfigConverter {
             surveySparrowToken = GeneratedEnvironmentConfig.SurveySparrow.apiKey,
             surveySparrowSwapRating = createSurveySparrowSwapRating(),
             authServiceKey = GeneratedEnvironmentConfig.authServiceKey,
+            // the JSON key was created with a typo ("otpl"), kept as is to match the deployed configs
+            otlpApiKey = GeneratedEnvironmentConfig.otplApiKey,
         )
     }
 
@@ -104,6 +106,10 @@ internal object GeneratedEnvironmentConfigConverter {
             quickNodeRobinhoodCredentials = QuickNodeCredentials(
                 apiKey = GeneratedEnvironmentConfig.quiknodeRobinhoodApiKey,
                 subdomain = GeneratedEnvironmentConfig.quiknodeRobinhoodSubdomain,
+            ),
+            quickNodeXrpCredentials = QuickNodeCredentials(
+                apiKey = GeneratedEnvironmentConfig.quiknodeXRPLApiKey,
+                subdomain = GeneratedEnvironmentConfig.quiknodeXRPLSubdomain,
             ),
             infuraProjectId = GeneratedEnvironmentConfig.infuraProjectId,
             tronGridApiKey = GeneratedEnvironmentConfig.tronGridApiKey,

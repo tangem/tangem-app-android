@@ -31,7 +31,6 @@ dependencies {
     /** Features api */
     api(projects.features.tangempay.details.api)
     api(projects.features.tokenRecieve.api)
-    api(projects.features.tokendetails.api)
     api(projects.features.promoBanners.api)
     api(projects.features.virtualAccounts.details.api)
 
@@ -42,7 +41,6 @@ dependencies {
     api(projects.domain.visa)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.onramp.models)
     implementation(projects.domain.visa.models)
     runtimeOnly(projects.domain.txhistory)
     runtimeOnly(projects.domain.wallets)
@@ -55,8 +53,6 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.lottie)
-    implementation(deps.lottie.compose)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)

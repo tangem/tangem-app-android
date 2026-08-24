@@ -36,7 +36,9 @@ internal class OnrampOffersStateFactory(
                     is OnrampQuote.AmountError,
                     is OnrampQuote.Error,
                     -> Unit
-                    is OnrampQuote.Data -> {
+                    is OnrampQuote.Data -> if (currentQuote.isRestricted) {
+                        allOffersUM.add(createRestrictedOfferUM(quote = currentQuote, category = block.category))
+                    } else {
                         val advantages = mapOfferAdvantagesDTOtoUM(offer.advantages)
                         val category = mapOfferCategoryDTOtoUM(block.category)
                         allOffersUM.add(
@@ -85,6 +87,24 @@ internal class OnrampOffersStateFactory(
             } else {
                 null
             },
+        )
+    }
+
+    private fun createRestrictedOfferUM(quote: OnrampQuote.Data, category: OnrampOfferCategory): OnrampOfferUM {
+        return OnrampOfferUM(
+            category = mapOfferCategoryDTOtoUM(category),
+            advantages = OnrampOfferAdvantagesUM.Restricted,
+            paymentMethod = quote.paymentMethod,
+            providerId = quote.provider.id,
+            providerName = quote.provider.info.name,
+            rate = quote.toAmount.value.format {
+                crypto(
+                    symbol = quote.toAmount.symbol,
+                    decimals = quote.toAmount.decimals,
+                )
+            },
+            diff = null,
+            onBuyClicked = {},
         )
     }
 

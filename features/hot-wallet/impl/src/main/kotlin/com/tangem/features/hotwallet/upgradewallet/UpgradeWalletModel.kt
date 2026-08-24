@@ -33,6 +33,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.UpgradeWalletComponent
 import com.tangem.features.hotwallet.upgradewallet.entity.UpgradeWalletUM
 import com.tangem.features.onboarding.v2.util.ResetCardsComponent
@@ -65,6 +66,7 @@ internal class UpgradeWalletModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
 
@@ -77,6 +79,7 @@ internal class UpgradeWalletModel @Inject constructor(
                 onBackClick = { router.pop() },
                 onBuyTangemWalletClick = ::onBuyTangemWalletClick,
                 onContinueClick = ::onContinueClick,
+                isCloudBackupRemovalShown = hotWalletFeatureToggles.isGoogleDriveBackupEnabled,
             ),
         )
 

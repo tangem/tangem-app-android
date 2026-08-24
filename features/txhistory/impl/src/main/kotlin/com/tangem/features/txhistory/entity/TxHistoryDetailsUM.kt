@@ -28,12 +28,22 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     /** Shared top bar ("Nav bar"): type icon, status-driven title, date+time. */
     val header: HeaderUM
 
+    /**
+     * App-wide "hide balances" setting. When `true` the card masks its amounts with stars — the single-asset amount and
+     * its fiat line, both exchange legs, and the info rows marked [hideable][InfoRowUM.isValueHideable] (the network
+     * fee). The provider and rate rows are not amounts of the user's funds and stay visible.
+     */
+    val isBalanceHidden: Boolean
+
     /** Single-asset layout: Receive / Send / Transfer */
     data class SingleAsset(
         override val header: HeaderUM,
+        override val isBalanceHidden: Boolean,
         val amountBlock: AmountBlockUM,
         val counterparty: CounterpartyUM?,
         val rows: ImmutableList<InfoRowUM>,
+        /** Warning plaque under the amount block (currently: the unlimited-approval "High Risk" notice). */
+        val statusBanner: StatusBannerUM? = null,
     ) : TxHistoryDetailsUM
 
     /**
@@ -48,6 +58,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      */
     data class TwoAssets(
         override val header: HeaderUM,
+        override val isBalanceHidden: Boolean,
         val from: AssetUM? = null,
         val to: AssetUM? = null,
         val statusBanner: StatusBannerUM? = null,
@@ -56,7 +67,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
     ) : TxHistoryDetailsUM
 
     /**
-     * Express status plaque under the two-asset block. The UI animates between successive emissions.
+     * Warning/status plaque rendered under the amount block. On [TwoAssets] it is the express deal's live status
+     * (animates between successive emissions); on [SingleAsset] it is currently only the static unlimited-approval
+     * "High Risk" notice (no animation between emissions needed there).
      *
      * @property style Visual identity of the status — selects the plaque colors, the trailing glyph and the title
      * motion together. One value per distinct look, so a terminal whose glyph diverges from a plain colour (the grey
@@ -97,8 +110,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * wallet decoration. [isFaded] renders the failed amount (struck through, recolored to tertiary); an in-flight leg is
      * not faded — it carries a `~` estimate sign instead.
      *
-     * [currencyIcon] is `null` when the leg has no icon to show — e.g. the onramp fiat side when its paid-from country
-     * is unknown; the trailing icon slot is then left empty. When the country is known, the fiat leg shows its flag.
+     * [currencyIcon] is `null` when the leg has no icon to show — e.g. the onramp fiat side when its paid fiat currency
+     * is unresolved; the trailing icon slot is then left empty. When resolved, the fiat leg shows its currency icon.
      */
     data class AssetUM(
         val label: TextReference,
@@ -198,12 +211,16 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * provider row); `null` leaves the trailing slot text-only.
      *
      * [onClick] makes the row tappable (e.g. the provider row opens the provider page); `null` makes it non-interactive.
+     *
+     * [isValueHideable] marks the [value] as an amount of the user's own funds (the network fee), so it is masked under
+     * [isBalanceHidden]; a provider name or an exchange rate is not, and stays visible.
      */
     data class InfoRowUM(
         val label: TextReference,
         val value: TextReference,
         @DrawableRes val trailingIconRes: Int? = null,
         val onClick: (() -> Unit)? = null,
+        val isValueHideable: Boolean = false,
     )
 
     /**
@@ -264,13 +281,29 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
     /**
      * One row of the header's overflow context menu: a leading [icon] glyph and a [title] label. [isDestructive]
-     * renders the row in the error color (e.g. a remove action); [onClick] runs the action and is expected to also
-     * dismiss the menu at the call site.
+     * renders the row in the error color (e.g. a remove action); [action] is run on tap and the call site is expected to
+     * also dismiss the menu.
      */
     data class MenuItemUM(
         val icon: ImageVector,
         val title: TextReference,
         val isDestructive: Boolean = false,
-        val onClick: () -> Unit,
-    )
+        val action: Action,
+    ) {
+
+        /** What a [MenuItemUM] does on tap. */
+        @Immutable
+        sealed interface Action {
+
+            /** Runs [onClick] as-is. */
+            data class Direct(val onClick: () -> Unit) : Action
+
+            /**
+             * Shares [text]. Composing the summary is a pure conversion, but turning it into a string needs the
+             * `Resources` only the UI has, so the reference is resolved at composition (as the legacy express share
+             * sheet did) and the resulting string is handed to [onShare].
+             */
+            data class Share(val text: TextReference, val onShare: (String) -> Unit) : Action
+        }
+    }
 }

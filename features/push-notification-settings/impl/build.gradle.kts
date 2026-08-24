@@ -19,7 +19,6 @@ dependencies {
 
     /* Project - Core */
     api(projects.core.analytics)
-    api(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.utils)

@@ -1,6 +1,6 @@
 package com.tangem.tap.network.auth
 
-import com.tangem.datasource.api.auth.ExpressAuthProvider
+import com.tangem.grow.datasource.express.ExpressAuthProvider
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 

@@ -3,18 +3,20 @@ package com.tangem.data.staking
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.api.ethpool.P2PEthPoolApi
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolNetworkDTO
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolVaultsResponse
+import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolNetworkDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.P2PVaultLimitsStore
+import com.tangem.datasource.local.txhistory.db.dao.P2PEthPoolVaultDao
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
+import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -39,20 +41,24 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
     private val tangemTechApi = mockk<TangemTechApi>(relaxed = true)
     private val featureToggles = mockk<StakingFeatureToggles>(relaxed = true)
     private val regionBlockedStore = mockk<P2PEthPoolRegionBlockedStore>(relaxed = true)
+    private val vaultDao = mockk<P2PEthPoolVaultDao>(relaxed = true)
+    private val txHistoryFeatureToggles = mockk<TxHistoryFeatureToggles>(relaxed = true)
 
     private val repository = DefaultP2PEthPoolRepository(
         p2pEthPoolApi = api,
         p2pEthPoolVaultsStore = vaultsStore,
         p2pVaultLimitsStore = limitsStore,
+        p2pEthPoolVaultDao = vaultDao,
         tangemTechApi = tangemTechApi,
         dispatchers = TestingCoroutineDispatcherProvider(),
         stakingFeatureToggles = featureToggles,
+        txHistoryFeatureToggle = txHistoryFeatureToggles,
         p2pEthPoolRegionBlockedStore = regionBlockedStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(api, vaultsStore, limitsStore, tangemTechApi, featureToggles, regionBlockedStore)
+        clearMocks(api, vaultsStore, limitsStore, tangemTechApi, featureToggles, regionBlockedStore, vaultDao)
     }
 
     private fun buildVault(address: String, totalAssets: String) = P2PEthPoolVault(

@@ -15,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -26,12 +27,14 @@ import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Fetcher of wallet balance by [UserWalletId]
@@ -59,7 +62,9 @@ class WalletBalanceFetcher internal constructor(
     private val balanceFetchingOperations: BalanceFetchingOperations,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+    private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
 
@@ -75,8 +80,10 @@ class WalletBalanceFetcher internal constructor(
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         stakingIdFactory: StakingIdFactory,
         virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        polymarketFeatureToggles: PolymarketFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
         userWalletsListRepository = userWalletsListRepository,
@@ -92,7 +99,9 @@ class WalletBalanceFetcher internal constructor(
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        polymarketFeatureToggles = polymarketFeatureToggles,
         dispatchers = dispatchers,
     )
 
@@ -108,7 +117,9 @@ class WalletBalanceFetcher internal constructor(
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        polymarketFeatureToggles: PolymarketFeatureToggles,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -132,7 +143,9 @@ class WalletBalanceFetcher internal constructor(
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        polymarketFeatureToggles = polymarketFeatureToggles,
         dispatchers = dispatchers,
     )
 
@@ -188,6 +201,14 @@ class WalletBalanceFetcher internal constructor(
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
                 balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
                 paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
+            }
+
+            // Prediction fetches its own quote, so unlike TangemPay nothing is pre-fetched here
+            if (
+                fetchingSources.any { it is WalletFetchingSource.Prediction } &&
+                polymarketFeatureToggles.isPolymarketEnabled
+            ) {
+                launch { predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId)) }
             }
 
             // Fetch Virtual account separately for the same reason as TangemPay

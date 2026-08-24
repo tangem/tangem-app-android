@@ -3,29 +3,36 @@ package com.tangem.features.tangempay.orderCard.impl.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.CardDeliveryContext
-import com.tangem.domain.pay.model.CardDeliveryQuote
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.repository.CardDeliveryQuoteRepository
 import com.tangem.domain.pay.repository.CustomerOffersRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
+import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
+import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
+import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -38,15 +45,19 @@ import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
 
+private const val PLASTIC_IMAGE_URL = "https://images.us.paera.com/Physical-main.png"
+private const val EXPECTED_MAX_BUSINESS_DAYS = 4
+
 internal class TangemPayOrderCardTypeModelTest {
 
     private val userWalletId = UserWalletId("123")
     private val usd = Currency.getInstance("USD")
     private val originalLocale = Locale.getDefault()
 
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val customerOffersRepository: CustomerOffersRepository = mockk()
-    private val cardDeliveryQuoteRepository: CardDeliveryQuoteRepository = mockk()
+    private val onboardingRepository: OnboardingRepository = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val featureToggles: TangemPayFeatureToggles = mockk()
 
@@ -55,17 +66,18 @@ internal class TangemPayOrderCardTypeModelTest {
     }
 
     private var model: TangemPayOrderCardTypeModel? = null
+    private var selectedPlasticEta: Int? = null
 
     @BeforeEach
     fun setUp() {
+        clearMocks(analytics)
         Locale.setDefault(Locale.US)
+        selectedPlasticEta = null
         every { featureToggles.isPlasticCardOrderEnabled } returns true
         every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(status)
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            offers(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN, Offer.Type.TANGEM_PAY_PLASTIC_VISA).right()
-        coEvery {
-            cardDeliveryQuoteRepository.getCardDeliveryQuote(userWalletId, CardDeliveryContext.ISSUE)
-        } returns quote().right()
+            listOf(virtualOffer(), plasticOffer()).right()
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns customerInfo().right()
     }
 
     @AfterEach
@@ -76,113 +88,208 @@ internal class TangemPayOrderCardTypeModelTest {
     }
 
     @Test
-    fun `GIVEN fee positive and sufficient balance WHEN model created THEN plastic default state`() = runTest {
+    fun `GIVEN plastic offer and sufficient balance WHEN model created THEN fee and eta come from the offer`() =
+        runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val state = model.state.value
+            assertThat(state.isLoading).isFalse()
+            assertThat(state.isError).isFalse()
+            assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
+            val plastic = state.availablePlastic
+            assertThat(plastic?.feeState).isEqualTo(FeeState.Default)
+            assertThat(plastic?.country).isEqualTo(CountryNames.getDisplayName("US"))
+            assertThat(plastic?.deliveryEta)
+                .isEqualTo(TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = 2, maxBusinessDays = 4))
+            assertThat(plastic?.deliveryFee).contains("$")
+            assertThat(plastic?.deliveryFee).contains("21.69")
+        }
+
+    @Test
+    fun `GIVEN whole delivery fee WHEN model created THEN fee shown without fractional digits`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+            listOf(virtualOffer(), plasticOffer(feeAmount = BigDecimal("10.00"))).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.deliveryFee).isEqualTo("$10")
+    }
+
+    @Test
+    fun `GIVEN plastic offer without min eta WHEN model created THEN only max business days carried`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+            listOf(
+                virtualOffer(),
+                plasticOffer(deliveryEta = Offer.DeliveryEta(minBusinessDays = null, maxBusinessDays = 4)),
+            ).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.deliveryEta)
+            .isEqualTo(TangemPayOrderCardTypeUM.DeliveryEta(minBusinessDays = null, maxBusinessDays = 4))
+    }
+
+    @Test
+    fun `GIVEN zero delivery fee WHEN model created THEN free delivery state`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+            listOf(virtualOffer(), plasticOffer(feeAmount = BigDecimal.ZERO)).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val plastic = model.state.value.availablePlastic
+        assertThat(plastic?.feeState).isEqualTo(FeeState.FreeDelivery)
+        assertThat(plastic?.deliveryFee).isNull()
+    }
+
+    @Test
+    fun `GIVEN fee above the customer balance WHEN model created THEN insufficient funds state`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal("21.68")).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.InsufficientFunds)
+    }
+
+    @Test
+    fun `GIVEN fee equal to the customer balance WHEN model created THEN default state`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal("21.69")).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.Default)
+    }
+
+    @Test
+    fun `GIVEN zero fee and empty balance WHEN model created THEN free delivery wins`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+            listOf(virtualOffer(), plasticOffer(feeAmount = BigDecimal.ZERO)).right()
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal.ZERO).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.FreeDelivery)
+    }
+
+    @Test
+    fun `GIVEN no fiat balance WHEN model created THEN insufficient funds state`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = null).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availablePlastic?.feeState).isEqualTo(FeeState.InsufficientFunds)
+    }
+
+    @Test
+    fun `GIVEN plastic toggle disabled WHEN model created THEN virtual only and no customer info requested`() =
+        runTest {
+            // Arrange
+            every { featureToggles.isPlasticCardOrderEnabled } returns false
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Virtual)
+            coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+        }
+
+    @Test
+    fun `GIVEN no plastic offer WHEN model created THEN plastic is unavailable with the residence country`() =
+        runTest {
+            // Arrange
+            coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(virtualOffer()).right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val state = model.state.value
+            assertThat(state.isError).isFalse()
+            assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
+            assertThat(state.plastic)
+                .isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = CountryNames.getDisplayName("US")))
+        }
+
+    @Test
+    fun `GIVEN plastic offer without delivery eta WHEN model created THEN plastic is unavailable`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+            listOf(virtualOffer(), plasticOffer(deliveryEta = null)).right()
+
         // Act
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
         // Assert
         val state = model.state.value
-        assertThat(state.isLoading).isFalse()
         assertThat(state.isError).isFalse()
         assertThat(state.availableTypes).containsExactly(OrderCardType.Virtual, OrderCardType.Plastic).inOrder()
-        assertThat(state.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.Default)
-        assertThat(state.plastic?.country).isEqualTo("US")
-        assertThat(state.plastic?.deliveryEtaMaxBusinessDays).isEqualTo(20)
-        assertThat(state.plastic?.deliveryFee).contains("$")
-        assertThat(state.plastic?.deliveryFee).contains("10")
+        assertThat(state.plastic)
+            .isEqualTo(TangemPayOrderCardTypeUM.Plastic.Unavailable(country = CountryNames.getDisplayName("US")))
     }
 
     @Test
-    fun `GIVEN delivery fee waived WHEN model created THEN free delivery state`() = runTest {
+    fun `GIVEN available plastic WHEN select plastic THEN max business days passed on`() = runTest {
         // Arrange
-        coEvery {
-            cardDeliveryQuoteRepository.getCardDeliveryQuote(userWalletId, CardDeliveryContext.ISSUE)
-        } returns quote(isWaived = true).right()
-
-        // Act
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
+        // Act
+        model.state.value.onSelectPlastic()
+
         // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.FreeDelivery)
+        assertThat(selectedPlasticEta).isEqualTo(4)
     }
 
     @Test
-    fun `GIVEN fee positive and insufficient balance WHEN model created THEN insufficient funds state`() = runTest {
+    fun `GIVEN unavailable plastic WHEN select plastic THEN selection ignored`() = runTest {
         // Arrange
-        coEvery {
-            cardDeliveryQuoteRepository.getCardDeliveryQuote(userWalletId, CardDeliveryContext.ISSUE)
-        } returns quote(hasSufficientBalance = false).right()
-
-        // Act
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(virtualOffer()).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
-        // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.InsufficientFunds)
-    }
-
-    @Test
-    fun `GIVEN fee waived and insufficient balance WHEN model created THEN free delivery wins`() = runTest {
-        // Arrange
-        coEvery {
-            cardDeliveryQuoteRepository.getCardDeliveryQuote(userWalletId, CardDeliveryContext.ISSUE)
-        } returns quote(isWaived = true, hasSufficientBalance = false).right()
-
         // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
+        model.state.value.onSelectPlastic()
 
         // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.FreeDelivery)
-    }
-
-    @Test
-    fun `GIVEN zero fee and insufficient balance WHEN model created THEN default state`() = runTest {
-        // Arrange
-        coEvery {
-            cardDeliveryQuoteRepository.getCardDeliveryQuote(userWalletId, CardDeliveryContext.ISSUE)
-        } returns quote(feeAmount = BigDecimal.ZERO, hasSufficientBalance = false).right()
-
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.state.value.plastic?.feeState).isEqualTo(TangemPayOrderCardTypeUM.FeeState.Default)
-    }
-
-    @Test
-    fun `GIVEN plastic toggle disabled WHEN model created THEN virtual only and no quote requested`() = runTest {
-        // Arrange
-        every { featureToggles.isPlasticCardOrderEnabled } returns false
-
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Virtual)
-        assertThat(model.state.value.plastic).isNull()
-        coVerify(exactly = 0) { cardDeliveryQuoteRepository.getCardDeliveryQuote(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN no plastic offer WHEN model created THEN virtual only and no quote requested`() = runTest {
-        // Arrange
-        coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            offers(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN).right()
-
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.state.value.isError).isFalse()
-        assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Virtual)
-        assertThat(model.state.value.plastic).isNull()
-        coVerify(exactly = 0) { cardDeliveryQuoteRepository.getCardDeliveryQuote(any(), any()) }
+        assertThat(selectedPlasticEta).isNull()
     }
 
     @Test
@@ -211,11 +318,9 @@ internal class TangemPayOrderCardTypeModelTest {
     }
 
     @Test
-    fun `GIVEN plastic offer present but quote fails WHEN model created THEN error state`() = runTest {
+    fun `GIVEN plastic offer present but customer info fails WHEN model created THEN error state`() = runTest {
         // Arrange
-        coEvery {
-            cardDeliveryQuoteRepository.getCardDeliveryQuote(userWalletId, CardDeliveryContext.ISSUE)
-        } returns VisaApiError.Unspecified.left()
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns VisaApiError.Unspecified.left()
 
         // Act
         val model = createModel(testScope = this)
@@ -225,18 +330,151 @@ internal class TangemPayOrderCardTypeModelTest {
         assertThat(model.state.value.isError).isTrue()
     }
 
+    private val TangemPayOrderCardTypeUM.availablePlastic: TangemPayOrderCardTypeUM.Plastic.Available?
+        get() = plastic as? TangemPayOrderCardTypeUM.Plastic.Available
+
+    @Test
+    fun `GIVEN the order type screen WHEN the model is created THEN the screen opened event is sent`() = runTest {
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardTypeSelectionScreenOpened>())
+        }
+    }
+
+    @Test
+    fun `GIVEN insufficient balance WHEN the plastic page was never shown THEN no not-enough-money event`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal("1.00")).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((model.state.value.plastic as TangemPayOrderCardTypeUM.Plastic.Available).feeState)
+            .isEqualTo(FeeState.InsufficientFunds)
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+        }
+    }
+
+    @Test
+    fun `GIVEN insufficient balance WHEN the plastic page is shown twice THEN one not-enough-money event`() = runTest {
+        // Arrange
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal("1.00")).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onTypeClick(OrderCardType.Plastic)
+        model.state.value.onTypeSwipe(OrderCardType.Virtual)
+        model.state.value.onTypeSwipe(OrderCardType.Plastic)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+        }
+    }
+
+    @Test
+    fun `GIVEN the plastic page shown before loading WHEN insufficient balance loads THEN the event is sent`() =
+        runTest {
+            // Arrange
+            coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+                customerInfo(availableBalance = BigDecimal("1.00")).right()
+            val model = createModel(testScope = this)
+
+            // Act
+            model.state.value.onTypeSwipe(OrderCardType.Plastic)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+            }
+        }
+
+    @Test
+    fun `GIVEN sufficient balance WHEN the plastic page is shown THEN no not-enough-money event`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onTypeClick(OrderCardType.Plastic)
+
+        // Assert
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+        }
+    }
+
+    @Test
+    fun `GIVEN the type pills WHEN each is tapped THEN the matching type clicked event is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onTypeClick(OrderCardType.Virtual)
+        model.state.value.onTypeClick(OrderCardType.Plastic)
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.VirtualTypeClicked>()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.PlasticTypeClicked>()) }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardTypeSwiped>()) }
+    }
+
+    @Test
+    fun `GIVEN a swipe between types WHEN reported THEN the swiped event is sent without a type clicked event`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.state.value.onTypeSwipe(OrderCardType.Plastic)
+
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardTypeSwiped>()) }
+            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.PlasticTypeClicked>()) }
+        }
+
+    @Test
+    fun `GIVEN the select button WHEN tapped on each page THEN the matching select event is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.state.value.onSelectVirtual()
+        model.state.value.onSelectPlastic()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.VirtualSelectClicked>()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.PlasticSelectClicked>()) }
+        assertThat(selectedPlasticEta).isEqualTo(EXPECTED_MAX_BUSINESS_DAYS)
+    }
+
     private fun createModel(testScope: TestScope) = TangemPayOrderCardTypeModel(
         paramsContainer = MutableParamsContainer(
             TangemPayOrderCardTypeComponent.Params(
                 userWalletId = userWalletId,
                 onSelectVirtual = {},
-                onSelectPlastic = {},
+                onSelectPlastic = { selectedPlasticEta = it },
             ),
         ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+        analytics = analytics,
         router = router,
         getCustomerOffers = GetCustomerOffersUseCase(customerOffersRepository),
-        cardDeliveryQuoteRepository = cardDeliveryQuoteRepository,
+        onboardingRepository = onboardingRepository,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
         featureToggles = featureToggles,
     ).also { model = it }
@@ -252,24 +490,86 @@ internal class TangemPayOrderCardTypeModelTest {
         )
     }
 
-    private fun offers(vararg types: Offer.Type): List<Offer> = types.map { type ->
-        Offer(
-            type = type,
-            fee = Offer.Fee(amount = BigDecimal("5.00"), currency = usd),
-            data = Offer.Data(specificationName = "spec", orderType = OrderType.UNKNOWN),
-        )
+    private fun virtualOffer() = Offer(
+        type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN,
+        fee = Offer.Fee(amount = BigDecimal("5.00"), currency = usd),
+        data = Offer.Data(
+            specificationName = "SP_000004",
+            orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+        ),
+    )
+
+    @Test
+    fun `GIVEN the plastic offer carries a MAIN image WHEN loaded THEN the plastic page uses it`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val plastic = model.state.value.plastic as TangemPayOrderCardTypeUM.Plastic.Available
+        assertThat(plastic.offerImageUrl).isEqualTo(PLASTIC_IMAGE_URL)
+        assertThat(model.state.value.imageUrlFor(OrderCardType.Plastic)).isEqualTo(PLASTIC_IMAGE_URL)
     }
 
-    private fun quote(
-        isWaived: Boolean = false,
-        hasSufficientBalance: Boolean = true,
-        feeAmount: BigDecimal = BigDecimal("10.00"),
-    ): CardDeliveryQuote = CardDeliveryQuote(
+    @Test
+    fun `GIVEN the plastic offer has no image WHEN loaded THEN the plastic page falls back to the card image`() =
+        runTest {
+            // Arrange
+            coEvery { customerOffersRepository.getOffers(userWalletId) } returns
+                listOf(virtualOffer(), plasticOffer(mainImageUrl = null)).right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val plastic = model.state.value.plastic as TangemPayOrderCardTypeUM.Plastic.Available
+            assertThat(plastic.offerImageUrl).isNull()
+            assertThat(model.state.value.imageUrlFor(OrderCardType.Plastic))
+                .isEqualTo(model.state.value.cardImageUrl)
+        }
+
+    @Test
+    fun `GIVEN the virtual offer has no image WHEN loaded THEN the virtual page falls back to the card image`() =
+        runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.state.value.virtual.offerImageUrl).isNull()
+            assertThat(model.state.value.imageUrlFor(OrderCardType.Virtual))
+                .isEqualTo(model.state.value.cardImageUrl)
+        }
+
+    private fun plasticOffer(
+        feeAmount: BigDecimal = BigDecimal("21.69"),
+        deliveryEta: Offer.DeliveryEta? = Offer.DeliveryEta(minBusinessDays = 2, maxBusinessDays = 4),
+        mainImageUrl: String? = PLASTIC_IMAGE_URL,
+    ) = Offer(
+        type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
+        fee = Offer.Fee(amount = feeAmount, currency = usd),
+        data = Offer.Data(
+            specificationName = "SP_000008",
+            orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+            deliveryEta = deliveryEta,
+        ),
+        mainImageUrl = mainImageUrl,
+    )
+
+    private fun customerInfo(availableBalance: BigDecimal? = BigDecimal("100.00")) = CustomerInfo(
+        customerId = "cust_1",
+        productInstances = emptyList(),
+        cards = emptyList(),
+        kycStatus = KycStatus.APPROVED,
+        state = CustomerInfo.State.ACTIVE,
+        fiatBalance = availableBalance?.let {
+            PaymentAccountStatusValue.FiatBalance(availableBalance = it, currency = "USD")
+        },
+        cryptoBalance = null,
+        availableForWithdrawal = BigDecimal.ZERO,
+        tariffPlan = null,
         country = "US",
-        isPlasticAvailable = true,
-        isDeliveryFeeWaived = isWaived,
-        deliveryFee = CardDeliveryQuote.DeliveryFee(amount = feeAmount, currency = usd),
-        deliveryEta = CardDeliveryQuote.DeliveryEta(minBusinessDays = 1, maxBusinessDays = 20),
-        hasSufficientBalance = hasSufficientBalance,
+        email = "j.silverhand@gmail.com",
     )
 }

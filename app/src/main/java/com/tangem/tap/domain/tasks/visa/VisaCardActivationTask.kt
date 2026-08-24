@@ -13,10 +13,10 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.common.map
 import com.tangem.common.timemeasure.RealtimeMonotonicTimeSource
 import com.tangem.core.error.ext.tangemError
-import com.tangem.datasource.local.visa.VisaAuthTokenStorage
-import com.tangem.datasource.local.visa.VisaOTPStorage
-import com.tangem.datasource.local.visa.VisaOtpData
-import com.tangem.datasource.local.visa.hasSavedOTP
+import com.tangem.spend.datasource.visa.storage.VisaAuthTokenStorage
+import com.tangem.spend.datasource.visa.storage.VisaOTPStorage
+import com.tangem.spend.datasource.visa.storage.VisaOtpData
+import com.tangem.spend.datasource.visa.storage.hasSavedOTP
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource

@@ -12,6 +12,7 @@ android {
 
 dependencies {
     api(deps.kotlin.serialization.core)
+    implementation(deps.compose.runtime)
 
     /* Project - Core */
     api(projects.core.decompose)

@@ -274,6 +274,51 @@ internal class SwapNotificationsFactoryTest {
         assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.UnableToCoverFeeWarning>()).isEmpty()
     }
 
+    /**
+     * The other half of this gate — "any [SwapNotificationUM.Error] disables the swap button" — is
+     * covered by StateBuilderSwapButtonTest, so these two only pin that a restricted quote produces
+     * such an error and a purchasable one does not.
+     */
+    @Test
+    fun `GIVEN restricted quote WHEN notifications built THEN region restriction error shown first`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX, isRestricted = true)
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = buildSwapFee(),
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.RegionalRestriction>()).hasSize(1)
+        // The factory deliberately prepends it, so it is the first thing the user reads
+        assertThat(notifications.first()).isEqualTo(SwapNotificationUM.Error.RegionalRestriction)
+    }
+
+    @Test
+    fun `GIVEN purchasable quote WHEN notifications built THEN no region restriction error`() {
+        // Arrange
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.CEX, isRestricted = false)
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = buildSwapFee(),
+            feeError = null,
+            appRouter = appRouter,
+        )
+
+        // Assert
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.RegionalRestriction>()).isEmpty()
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -334,6 +379,7 @@ internal class SwapNotificationsFactoryTest {
             feeCurrencyName = "Ethereum",
             feeCurrencySymbol = "ETH",
         ),
+        isRestricted: Boolean = false,
     ): SwapState.QuotesLoadedState {
         val toStatusValue = mockk<CryptoCurrencyStatus.Loaded>(relaxed = true) {
             every { amount } returns BigDecimal("1")
@@ -371,6 +417,7 @@ internal class SwapNotificationsFactoryTest {
             minAdaValue = null,
             swapProvider = buildProvider(providerType),
             txType = txType,
+            isRestricted = isRestricted,
         )
     }
 
