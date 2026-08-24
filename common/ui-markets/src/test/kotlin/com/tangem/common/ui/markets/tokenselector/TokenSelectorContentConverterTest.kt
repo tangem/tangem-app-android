@@ -28,8 +28,8 @@ internal class TokenSelectorContentConverterTest {
     private val eth = currencyFactory.createCoin(Blockchain.Ethereum)
     private val btc = currencyFactory.createCoin(Blockchain.Bitcoin)
 
-    private val mainAccount = Account.CryptoPortfolio.createMainAccount(USER_WALLET_ID)
-    private val secondAccount = Account.CryptoPortfolio(
+    private val mainAccount = Account.Personal.createMainAccount(USER_WALLET_ID)
+    private val secondAccount = Account.Personal(
         accountId = AccountId.forCryptoPortfolio(USER_WALLET_ID, DerivationIndex(value = 1).getOrNull()!!),
         accountName = AccountName("Second").getOrNull()!!,
         icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
