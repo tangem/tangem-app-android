@@ -16,14 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.LinkAnnotation
@@ -35,6 +33,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.core.ui.components.KeepScreenOn
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
@@ -123,15 +122,6 @@ internal fun IntroductionScreen(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun KeepScreenOn() {
-    val view = LocalView.current
-    DisposableEffect(view) {
-        view.keepScreenOn = true
-        onDispose { view.keepScreenOn = false }
     }
 }
 
