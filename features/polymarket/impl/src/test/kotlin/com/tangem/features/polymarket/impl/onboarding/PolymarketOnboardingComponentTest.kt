@@ -12,9 +12,10 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
+import com.tangem.domain.polymarket.model.PolymarketEntry
+import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -26,9 +27,9 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import javax.inject.Provider
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import javax.inject.Provider
 
 /**
  * The gate is reached only for a wallet the entry route already settled, so a model it cannot construct
@@ -54,7 +55,7 @@ internal class PolymarketOnboardingComponentTest {
         // Arrange
         coEvery {
             resolvePolymarketEntryInteractor.withoutPrompting(userWalletId)
-        } returns PolymarketEntry.RegionBlocked.right()
+        } returns PolymarketEntry.Onboard(status = PolymarketWalletStatus.NOT_CREATED).right()
         val paramsContainerSlot = slot<ParamsContainer>()
         val appComponentContext = createAppComponentContext(paramsContainerSlot = paramsContainerSlot)
 
@@ -96,6 +97,7 @@ internal class PolymarketOnboardingComponentTest {
         paramsContainer = paramsContainer,
         router = router,
         urlOpener = urlOpener,
+        messageSender = mockk(relaxed = true),
         resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
         runPolymarketOnboardingInteractor = runPolymarketOnboardingInteractor,
         dispatchers = TestingCoroutineDispatcherProvider(),
