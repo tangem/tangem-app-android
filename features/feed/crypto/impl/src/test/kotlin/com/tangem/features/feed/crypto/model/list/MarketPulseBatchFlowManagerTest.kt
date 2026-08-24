@@ -12,7 +12,6 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
@@ -184,9 +183,9 @@ internal class MarketPulseBatchFlowManagerTest {
         scopes.add(scope)
         return MarketPulseBatchFlowManager(
             getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
-            currentTrendInterval = Provider { MarketPulseInterval.H24 },
-            currentAppCurrency = Provider { AppCurrency.Default },
-            currentCategory = Provider { MarketPulseCategory.MarketCap },
+            currentTrendInterval = { MarketPulseInterval.H24 },
+            currentAppCurrency = { AppCurrency.Default },
+            currentCategory = { MarketPulseCategory.MarketCap },
             onItemClick = {},
             modelScope = scope,
             dispatchers = TestingCoroutineDispatcherProvider(
@@ -201,7 +200,7 @@ internal class MarketPulseBatchFlowManagerTest {
             } else {
                 GetMarketsTokenListFlowUseCase.BatchFlowType.Search
             },
-            currentSearchText = Provider { searchText },
+            currentSearchText = { searchText },
         )
     }
 

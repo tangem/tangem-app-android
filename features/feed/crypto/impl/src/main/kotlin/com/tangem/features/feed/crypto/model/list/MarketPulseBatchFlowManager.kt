@@ -11,7 +11,6 @@ import com.tangem.features.feed.crypto.ui.state.MarketPulseItemUM
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -45,14 +44,14 @@ import kotlinx.coroutines.launch
 @Suppress("LongParameterList")
 internal class MarketPulseBatchFlowManager(
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
-    private val currentTrendInterval: Provider<MarketPulseInterval>,
-    private val currentAppCurrency: Provider<AppCurrency>,
-    private val currentCategory: Provider<MarketPulseCategory>,
+    private val currentTrendInterval: () -> MarketPulseInterval,
+    private val currentAppCurrency: () -> AppCurrency,
+    private val currentCategory: () -> MarketPulseCategory,
     private val onItemClick: (CryptoCurrency.RawID) -> Unit,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
     batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
-    private val currentSearchText: Provider<String?> = Provider { null },
+    private val currentSearchText: () -> String? = { null },
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
     private val updateStateJob = JobHolder()
