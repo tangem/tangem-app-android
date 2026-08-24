@@ -16,6 +16,8 @@ dependencies {
     implementation(projects.features.feed.search.api)
 
     /* Project - Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
