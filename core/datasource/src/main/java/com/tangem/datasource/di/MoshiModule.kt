@@ -18,7 +18,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoSet
 import dev.onenowy.moshipolymorphicadapter.NamePolymorphicAdapterFactory
 import javax.inject.Singleton
 
@@ -90,12 +89,6 @@ class MoshiModule {
         // Enum-fallback (and future) adapters are contributed via @IntoSet so stream modules can register
         // their own without this central builder depending on them.
         return configurers.fold(builder) { acc, configurer -> configurer.configure(acc) }.build()
-    }
-
-    @Provides
-    @IntoSet
-    fun provideCoinIndicatorsEnumFallbackConfigurer(): NetworkMoshiConfigurer {
-        return NetworkMoshiConfigurer { it.addCoinIndicatorsEnumFallbackAdapters() }
     }
 
     @Provides
