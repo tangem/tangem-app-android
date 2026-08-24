@@ -9,7 +9,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
@@ -62,7 +61,7 @@ internal class TangemPayCashbackModel @Inject constructor(
 
     val detailsSheet: StateFlow<TangemPayCashbackDetailsUM>
         field = MutableStateFlow(
-            detailsConverter.convert(cards = emptyList(), currency = null, accountMonthlyCap = null),
+            detailsConverter.convert(cards = emptyList(), payoutCurrency = null, accountMonthlyCap = null),
         )
 
     val accrualsSheet: StateFlow<TangemPayCashbackAccrualsUM>
@@ -102,7 +101,6 @@ internal class TangemPayCashbackModel @Inject constructor(
             val cashbackHistory = if (summary is CashbackSummary.Enabled) loadHistory() else null
             val cards = promotions?.let(cardsConverter::convert).orEmpty()
             val cashback = (summary as? CashbackSummary.Enabled)?.cashback
-            val payoutCurrency = cashback?.currency ?: TangemPayCurrencyFactory.TOKEN_NAME
             val cashbackUM = cashbackConverter.convert(cashback)
 
             uiState.value = TangemPayCashbackScreenUM.Content(
@@ -124,7 +122,7 @@ internal class TangemPayCashbackModel @Inject constructor(
             )
             detailsSheet.value = detailsConverter.convert(
                 cards = cards,
-                currency = payoutCurrency,
+                payoutCurrency = cashback?.payoutCurrency,
                 accountMonthlyCap = promotions?.accountMonthlyCap,
             )
             accrualsSheet.value = accrualsConverter.convert(docsDeferred.await())

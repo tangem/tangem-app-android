@@ -14,11 +14,14 @@ internal data class TangemPayOrderCardTypeUM(
     val onRetry: () -> Unit,
     val onSelectVirtual: () -> Unit,
     val onSelectPlastic: () -> Unit,
+    val onTypeClick: (OrderCardType) -> Unit,
+    val onTypeSwipe: (OrderCardType) -> Unit,
 ) {
 
     @Immutable
     data class Virtual(
         val issueFee: String,
+        val offerImageUrl: String? = null,
     )
 
     @Immutable
@@ -35,6 +38,7 @@ internal data class TangemPayOrderCardTypeUM(
             val deliveryFee: String?,
             val deliveryEta: DeliveryEta,
             val feeState: FeeState,
+            val offerImageUrl: String? = null,
         ) : Plastic
     }
 
@@ -48,6 +52,14 @@ internal data class TangemPayOrderCardTypeUM(
 }
 
 internal enum class OrderCardType { Virtual, Plastic }
+
+internal fun TangemPayOrderCardTypeUM.imageUrlFor(type: OrderCardType): String? = when (type) {
+    OrderCardType.Virtual -> virtual.offerImageUrl
+    OrderCardType.Plastic -> when (val plastic = plastic) {
+        is TangemPayOrderCardTypeUM.Plastic.Available -> plastic.offerImageUrl
+        is TangemPayOrderCardTypeUM.Plastic.Unavailable -> null
+    }
+} ?: cardImageUrl
 
 internal fun availableTypesOf(isPlasticEnabled: Boolean): List<OrderCardType> = if (isPlasticEnabled) {
     listOf(OrderCardType.Virtual, OrderCardType.Plastic)
