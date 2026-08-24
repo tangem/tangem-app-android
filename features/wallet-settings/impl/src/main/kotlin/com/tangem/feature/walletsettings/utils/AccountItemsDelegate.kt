@@ -52,7 +52,7 @@ internal class AccountItemsDelegate @Inject constructor(
 
     fun isAccountsSupported(wallet: UserWallet) = wallet.isAccountsSupported
 
-    fun loadAccount(wallet: UserWallet): Flow<List<WalletSettingsAccountsUM>> {
+    fun loadAccount(wallet: UserWallet, onAddAccountClick: () -> Unit): Flow<List<WalletSettingsAccountsUM>> {
         if (!isAccountsSupported(wallet)) return flowOf(emptyList())
 
         return combine(
@@ -60,8 +60,15 @@ internal class AccountItemsDelegate @Inject constructor(
             flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
             flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
             flow4 = accountListSortingSaver.accountsOrderFlow,
-            transform = ::buildUiList,
-        )
+        ) { accountStatusList, appCurrency, isBalanceHidden, accountsOrder ->
+            buildUiList(
+                accountStatusList = accountStatusList,
+                appCurrency = appCurrency,
+                isBalanceHidden = isBalanceHidden,
+                accountsOrder = accountsOrder,
+                onAddAccountClick = onAddAccountClick,
+            )
+        }
     }
 
     private fun buildUiList(
@@ -69,6 +76,7 @@ internal class AccountItemsDelegate @Inject constructor(
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
         accountsOrder: List<AccountId>?,
+        onAddAccountClick: () -> Unit,
     ): List<WalletSettingsAccountsUM> = buildList {
         fun AccountStatus.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
             val accountItemUM = AccountPortfolioItemUMConverter(
@@ -109,7 +117,7 @@ internal class AccountItemsDelegate @Inject constructor(
                 onAddAccountClick = {
                     if (isAddAccountEnabled) {
                         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAddAccount())
-                        openAddAccount(userWalletId)
+                        onAddAccountClick()
                     } else {
                         canNotAddAccountDialog()
                     }
@@ -149,10 +157,6 @@ internal class AccountItemsDelegate @Inject constructor(
 
     private fun openArchivedAccounts(userWalletId: UserWalletId) {
         router.push(AppRoute.ArchivedAccountList(userWalletId))
-    }
-
-    private fun openAddAccount(userWalletId: UserWalletId) {
-        router.push(AppRoute.CreateAccount(userWalletId))
     }
 
     private fun canNotAddAccountDialog() {
