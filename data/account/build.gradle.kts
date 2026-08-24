@@ -59,6 +59,7 @@ dependencies {
     // region Project - Features
     api(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
     implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
+    implementation(projects.features.jointAccount.api) // JOINT_ACCOUNT_ENABLED
     // endregion
 
     // region Project - Common
