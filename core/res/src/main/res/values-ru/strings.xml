@@ -2295,6 +2295,12 @@
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_push_notification_banner_subtitle">Включите push-уведомления, и мы мгновенно сообщим вам, когда поступят средства.</string>
   <string name="user_push_notification_banner_title">Не пропустите транзакцию</string>
+  <string name="user_wallet_add_hardware_description">Отсканируйте карту Tangem, чтобы добавить его</string>
+  <string name="user_wallet_add_hardware_title">Добавить аппаратный кошелёк</string>
+  <string name="user_wallet_add_mobile_description">Создайте новый кошелёк на этом устройстве</string>
+  <string name="user_wallet_add_mobile_title">Добавить мобильный кошелёк</string>
+  <string name="user_wallet_add_wallet">Добавить кошелек</string>
+  <string name="user_wallet_coming_soon_dialog_description">Мы работаем над возможностью создавать несколько мобильных кошельков.</string>
   <string name="user_wallet_list_add_button">Добавить кошелек</string>
   <string name="user_wallet_list_delete_hw_prompt">Если вы удалите этот кошелёк без резервной копии, вы навсегда потеряете доступ к своим средствам.</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите забыть этот кошелек?</string>
