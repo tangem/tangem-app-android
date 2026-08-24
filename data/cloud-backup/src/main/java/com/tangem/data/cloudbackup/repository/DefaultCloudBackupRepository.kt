@@ -21,6 +21,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
@@ -176,7 +177,7 @@ internal class DefaultCloudBackupRepository(
     override suspend fun readBackup(
         fileId: String,
         password: CharArray,
-    ): Either<CloudBackupError, CloudBackupSecretData> = withContext(dispatchers.io) {
+    ): Either<CloudBackupError, RestoredCloudBackup> = withContext(dispatchers.io) {
         either {
             val content = downloadContent(fileId).getOrElse { raise(it) }
             val fileData = ensureNotNull(
@@ -184,7 +185,7 @@ internal class DefaultCloudBackupRepository(
             ) { CloudBackupError.InvalidBackupFile }
             val payloadBytes = withContext(dispatchers.default) { cipher.decrypt(fileData, password) }
                 .getOrElse { raise(it.toDomainError()) }
-            parseSecret(payloadBytes)
+            RestoredCloudBackup(walletName = fileData.name, secret = parseSecret(payloadBytes))
         }
     }
 
@@ -321,11 +322,16 @@ internal class DefaultCloudBackupRepository(
         return ensureNotNull(file?.id) { CloudBackupError.WriteError() }
     }
 
+    /**
+     * Drive rejects the whole request when a single property exceeds [DRIVE_PROPERTY_MAX_BYTES] (key + value,
+     * UTF-8), so a long wallet name is stored here truncated — it is only the label of the backups list.
+     * The full name always travels inside the file itself ([CloudBackupFileData.name]).
+     */
     private fun backupAppProperties(walletId: String, walletName: String, createdAtMillis: Long): Map<String, String> =
         mapOf(
             KEY_IS_TANGEM_BACKUP to "true",
             KEY_WALLET_ID to walletId,
-            KEY_WALLET_NAME to walletName,
+            KEY_WALLET_NAME to walletName.truncateToUtf8Bytes(DRIVE_PROPERTY_MAX_BYTES - KEY_WALLET_NAME.length),
             KEY_CREATED_AT to createdAtMillis.toString(),
         )
 
@@ -404,20 +410,51 @@ private const val KEY_CREATED_AT = "createdAt"
 private const val MIME_TYPE_JSON = "application/json"
 private const val MIME_TYPE_FOLDER = "application/vnd.google-apps.folder"
 
+/** Drive caps a single custom property at 124 bytes (key + value) and a file name at 255 bytes, UTF-8 */
+private const val DRIVE_PROPERTY_MAX_BYTES = 124
+private const val DRIVE_FILE_NAME_MAX_BYTES = 255
+
+/** A UTF-8 continuation byte matches the `10xxxxxx` pattern */
+private const val UTF8_CONTINUATION_MASK = 0xC0
+private const val UTF8_CONTINUATION_MARKER = 0x80
+
 /**
  * Google Drive permits duplicate file names, so we mimic the OS file-manager behaviour and append an
  * incrementing " (n)" suffix before the extension when "[walletName].[extension]" is already taken.
  * The name is cosmetic (a backup is identified by its `walletId` appProperty), so strict uniqueness
  * across concurrent uploads isn't required.
+ *
+ * A wallet name that doesn't fit into [DRIVE_FILE_NAME_MAX_BYTES] together with the suffix and the
+ * extension is truncated — the full name is kept inside the file.
  */
 internal fun resolveUniqueBackupName(walletName: String, extension: String, existingNames: Set<String>): String {
-    val base = "$walletName.$extension"
+    val base = buildBackupFileName(walletName, suffix = "", extension = extension)
     if (base !in existingNames) return base
 
     return generateSequence(1) { it + 1 }
-        .map { index -> "$walletName ($index).$extension" }
+        .map { index -> buildBackupFileName(walletName, suffix = " ($index)", extension = extension) }
         .first { it !in existingNames }
 }
+
+private fun buildBackupFileName(walletName: String, suffix: String, extension: String): String {
+    val tail = "$suffix.$extension"
+    return walletName.truncateToUtf8Bytes(DRIVE_FILE_NAME_MAX_BYTES - tail.utf8Size()) + tail
+}
+
+private fun String.utf8Size(): Int = toByteArray(Charsets.UTF_8).size
+
+/** Cuts the string at a code point boundary so that its UTF-8 form fits into [maxBytes] */
+private fun String.truncateToUtf8Bytes(maxBytes: Int): String {
+    if (maxBytes <= 0) return ""
+    val bytes = toByteArray(Charsets.UTF_8)
+    if (bytes.size <= maxBytes) return this
+
+    var end = maxBytes
+    while (end > 0 && bytes[end].isUtf8ContinuationByte()) end--
+    return String(bytes, 0, end, Charsets.UTF_8)
+}
+
+private fun Byte.isUtf8ContinuationByte(): Boolean = toInt() and UTF8_CONTINUATION_MASK == UTF8_CONTINUATION_MARKER
 
 @OptIn(ExperimentalSerializationApi::class)
 private fun Raise<CloudBackupError>.parseSecret(bytes: ByteArray): CloudBackupSecretData {
