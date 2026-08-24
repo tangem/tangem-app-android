@@ -8,7 +8,7 @@ import com.tangem.data.networks.repository.DefaultNetworksRepository
 import com.tangem.data.networks.store.DefaultNetworksStatusesStore
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.utils.DefaultNetworksCleaner
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.utils.AppDataStoreFactory
