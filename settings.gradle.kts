@@ -265,6 +265,8 @@ include(":features:onboarding-v2:impl")
 
 include(":features:home:api")
 include(":features:home:impl")
+include(":features:introduction:api")
+include(":features:introduction:impl")
 
 include(":features:referral:api")
 include(":features:referral:data")

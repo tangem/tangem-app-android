@@ -2303,6 +2303,11 @@
   <string name="user_push_notification_agreement_header">Você gostaria de usar notificações push?</string>
   <string name="user_push_notification_banner_subtitle">Ative as notificações push para receber alertas quando os fundos chegarem à sua carteira.</string>
   <string name="user_push_notification_banner_title">Não perca nenhuma transação.</string>
+  <string name="user_wallet_add_hardware_description">Escaneie um cartão Tangem para adicioná-la</string>
+  <string name="user_wallet_add_hardware_title">Adicionar carteira de hardware</string>
+  <string name="user_wallet_add_mobile_description">Crie uma nova carteira neste dispositivo</string>
+  <string name="user_wallet_add_mobile_title">Adicionar carteira móvel</string>
+  <string name="user_wallet_coming_soon_dialog_description">Estamos trabalhando para permitir a criação de mais de uma carteira móvel.</string>
   <string name="user_wallet_list_add_button">Adicionar carteira</string>
   <string name="user_wallet_list_delete_hw_prompt">Se você excluir esta carteira sem fazer um backup, perderá permanentemente o acesso aos seus fundos.</string>
   <string name="user_wallet_list_delete_prompt">Tem certeza de que deseja esquecer esta carteira?</string>
