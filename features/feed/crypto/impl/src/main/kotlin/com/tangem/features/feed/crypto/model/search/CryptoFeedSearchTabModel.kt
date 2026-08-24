@@ -30,7 +30,6 @@ import com.tangem.features.feed.crypto.ui.state.CryptoSearchUM
 import com.tangem.features.feed.crypto.ui.state.MarketSearchUM
 import com.tangem.features.feed.crypto.ui.state.PortfolioSearchUM
 import com.tangem.features.feed.nav.FeedRoute
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -137,14 +136,14 @@ internal class CryptoFeedSearchTabModel @Inject constructor(
     private val listManager = MarketPulseBatchFlowManager(
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
         // search is fixed at the legacy scope: 24h trend, rating order
-        currentTrendInterval = Provider { MarketPulseInterval.H24 },
-        currentAppCurrency = Provider { currentAppCurrency.value },
-        currentCategory = Provider { MarketPulseCategory.MarketCap },
+        currentTrendInterval = { MarketPulseInterval.H24 },
+        currentAppCurrency = { currentAppCurrency.value },
+        currentCategory = { MarketPulseCategory.MarketCap },
         onItemClick = ::openTokenDetails,
         modelScope = modelScope,
         dispatchers = dispatchers,
         batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
-        currentSearchText = Provider { query.value.trim() },
+        currentSearchText = { query.value.trim() },
     )
 
     init {
