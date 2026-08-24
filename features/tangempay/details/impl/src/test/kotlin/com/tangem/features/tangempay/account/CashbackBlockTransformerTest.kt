@@ -147,6 +147,7 @@ internal class CashbackBlockTransformerTest {
             confirmedAmount = confirmedAmount,
             totalEarnedAmount = BigDecimal("132.15"),
             currency = currency,
+            payoutCurrency = "USDC",
             period = TangemPayCashback.Period(
                 year = year,
                 month = month,

@@ -5,6 +5,7 @@ import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
@@ -156,6 +157,8 @@ internal object PolymarketDomainModule {
         deriveApiCredentials: DeriveApiCredentialsUseCase,
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
+        polymarketOnboardedStore: PolymarketOnboardedStore,
+        checkGeoblock: CheckPolymarketGeoblockUseCase,
     ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
@@ -166,5 +169,7 @@ internal object PolymarketDomainModule {
         deriveApiCredentials = deriveApiCredentials,
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
+        polymarketOnboardedStore = polymarketOnboardedStore,
+        checkGeoblock = checkGeoblock,
     )
 }
