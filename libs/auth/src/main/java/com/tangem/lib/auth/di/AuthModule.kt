@@ -44,6 +44,7 @@ import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -186,6 +187,7 @@ internal object AuthModule {
         signedRequestPayload: SignedRequestPayload,
         attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
+        deviceRegistrar: Lazy<DeviceRegistrar>,
         dispatchers: CoroutineDispatcherProvider,
     ): SessionTokenRefresher {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledSessionTokenRefresher
@@ -198,6 +200,7 @@ internal object AuthModule {
             signedRequestPayload = signedRequestPayload,
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
+            deviceRegistrar = deviceRegistrar,
             clock = Clock.System,
             dispatchers = dispatchers,
         )
