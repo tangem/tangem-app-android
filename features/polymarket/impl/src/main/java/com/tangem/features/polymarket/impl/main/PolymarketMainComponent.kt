@@ -38,6 +38,7 @@ internal class PolymarketMainComponent(
         PolymarketMainScreen(
             state = state,
             onBackClick = model::onBackClick,
+            onSearchClick = model::onSearchClick,
             onLoadMore = model::onLoadMore,
             modifier = modifier,
         )
