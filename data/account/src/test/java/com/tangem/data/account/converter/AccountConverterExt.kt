@@ -18,6 +18,7 @@ internal fun createWalletAccountDTO(
     iconColor: String? = null,
     derivationIndex: Int? = null,
     tokens: List<UserTokensResponse.Token>? = emptyList(),
+    type: String? = null,
 ): WalletAccountDTO {
     val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
 
@@ -27,6 +28,7 @@ internal fun createWalletAccountDTO(
         derivationIndex = derivationIndex ?: mainAccount.derivationIndex.value,
         icon = icon ?: mainAccount.icon.value.name,
         iconColor = iconColor ?: mainAccount.icon.color.name,
+        type = type,
         tokens = tokens,
     )
 }
