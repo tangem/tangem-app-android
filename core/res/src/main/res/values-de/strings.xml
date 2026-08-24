@@ -966,7 +966,7 @@
   <string name="hw_upgrade_funds_access_description">Dein Geld bleibt während des gesamten Prozesses sicher und vollständig zugänglich</string>
   <string name="hw_upgrade_funds_access_title">Zugang zu Geldern</string>
   <string name="hw_upgrade_general_security_description">Nach dem Upgrade wird Deine mobile Wallet aus der App entfernt und auf Deine Tangem-Hardware-Wallet gespeichert. Deine Wiederherstellungsphrase bleibt erhalten.</string>
-  <string name="hw_upgrade_general_security_description_v2">Nach dem Upgrade werden Ihre mobile Wallet und die „ %1$s “-Sicherung entfernt und auf Ihrer Tangem-Hardware-Wallet gespeichert. Ihre Wiederherstellungsphrase verbleibt bei Ihnen.</string>
+  <string name="hw_upgrade_general_security_description_v2">Nach dem Upgrade werden Ihre mobile Wallet und die „%1$s“-Sicherung entfernt und auf Ihrer Tangem-Hardware-Wallet gespeichert. Ihre Wiederherstellungsphrase verbleibt bei Ihnen.</string>
   <string name="hw_upgrade_general_security_title">Allgemeine Sicherheit</string>
   <string name="hw_upgrade_key_migration_description">Die privaten Schlüssel werden von der App auf Ihr Tangem-Gerät übertragen.</string>
   <string name="hw_upgrade_key_migration_title">Schlüsselmigration</string>
@@ -2625,6 +2625,11 @@
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
   <string name="user_push_notification_banner_subtitle">Aktiviere Push-Benachrichtigungen und wir benachrichtigen Dich sofort, wenn Gelder eintreffen</string>
   <string name="user_push_notification_banner_title">Verpasse keine Transaktion</string>
+  <string name="user_wallet_add_hardware_description">Scanne eine Tangem-Karte, um sie hinzuzufügen</string>
+  <string name="user_wallet_add_hardware_title">Hardware-Wallet hinzufügen</string>
+  <string name="user_wallet_add_mobile_description">Erstelle eine neue Wallet auf diesem Gerät</string>
+  <string name="user_wallet_add_mobile_title">Mobile Wallet hinzufügen</string>
+  <string name="user_wallet_coming_soon_dialog_description">Wir arbeiten daran, die Erstellung mehrerer mobiler Wallets zu ermöglichen.</string>
   <string name="user_wallet_list_add_button">Neues Wallet hinzufügen</string>
   <string name="user_wallet_list_delete_hw_prompt">Wenn Du diese Wallet ohne vorheriges Backup löschst, verlierst Du dauerhaft den Zugriff auf Dein Guthaben.</string>
   <string name="user_wallet_list_delete_prompt">Möchtest Du diese Wallet wirklich entfernen?</string>
