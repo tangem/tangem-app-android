@@ -66,6 +66,18 @@ internal class PolymarketFeedPoller(
     private var config: PolymarketEventsListConfig? = null
     private var lastStaleDataReport: TimeMark? = null
 
+    /**
+     * Starts the observers and the ticker in [scope], which is expected to be **single-threaded** — the model
+     * hands over its own, running on the main dispatcher.
+     *
+     * That confinement is load-bearing rather than incidental: [pageMeta] and [refreshesInFlight] are touched
+     * both from the coroutines started here and from [onFeedReloaded], which the model calls from its own scope,
+     * and one thread is what keeps them race-free without locks. Moving the observers to a multi-threaded
+     * dispatcher means confining those calls as well.
+     *
+     * Nothing started here is heavy: a tick walks the events of the loaded pages — a few hundred at most — every
+     * [pollInterval] and once the feed comes to a rest.
+     */
     fun start(scope: CoroutineScope) {
         batchFlow.state
             .onEach(::stampLoadedPages)
