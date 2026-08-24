@@ -508,8 +508,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 lastDigits = cardInfo?.lastFourDigits.orEmpty(),
                 images = cardInfo?.images ?: tariffPlan?.plan?.images.orEmpty(),
                 state = cardState,
-                embossName = cardInfo.embossName,
-                cardType = cardInfo.cardType,
+                embossName = cardInfo?.embossName,
+                cardType = cardInfo?.cardType ?: TangemPayCardType.UNDEFINED,
             )
         }
 
@@ -640,13 +640,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun resolveCardState(
-        cardInfo: CustomerInfo.CardInfo,
+        cardInfo: CustomerInfo.CardInfo?,
         productInstance: CustomerInfo.ProductInstance,
         cardId: String,
         userWalletId: UserWalletId,
         isActivating: Boolean,
     ): TangemPayCardState {
-        val isAwaitingActivation = PlasticCardStateResolver.isAwaitingActivation(
+        val isAwaitingActivation = cardInfo != null && PlasticCardStateResolver.isAwaitingActivation(
             cardInfo = cardInfo,
             productInstance = productInstance,
         )
