@@ -523,6 +523,7 @@ include(":domain:promo:models")
 include(":domain:news")
 include(":domain:earn")
 include(":domain:search")
+include(":domain:feed:search")
 // endregion Domain modules
 
 // region Data modules
@@ -574,4 +575,5 @@ include(":data:news")
 include(":data:earn")
 include(":data:search")
 include(":data:joint-account")
+include(":data:feed:search")
 // endregion Data modules
