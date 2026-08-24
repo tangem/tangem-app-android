@@ -19,6 +19,8 @@ interface TangemTechMarketsApi {
         @Query("search") search: String?,
         @Query("timestamp") timestamp: Long?,
         @Query("showNetworks") showNetworks: Boolean? = null,
+        @Query("categoryId") categoryId: String? = null,
+        @Query("sectorId") sectorId: String? = null,
     ): ApiResponse<TokenMarketListResponse>
 
     @GET("v1/coins/{coin_id}")
@@ -57,4 +59,8 @@ interface TangemTechMarketsApi {
         @Query("symbols") symbols: String? = null,
         @Query("indicators") indicators: String? = null,
     ): ApiResponse<GetCoinIndicatorsResponse>
+
+    /** Returns the coin categories tree — each category with its sectors and coin counts */
+    @GET("v1/coins/categories")
+    suspend fun getCoinCategories(): ApiResponse<CoinCategoriesResponse>
 }
