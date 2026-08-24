@@ -3,6 +3,7 @@ package com.tangem.datasource.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.walletconnect.DefaultWalletConnectStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.datasource.utils.AppDataStoreFactory
