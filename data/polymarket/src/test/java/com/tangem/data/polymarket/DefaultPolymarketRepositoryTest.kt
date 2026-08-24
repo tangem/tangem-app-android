@@ -184,7 +184,7 @@ internal class DefaultPolymarketRepositoryTest {
         advanceUntilIdle()
 
         // Assert
-        val events = batchFlow.state.value.data.flatMap { batch -> batch.data }
+        val events = batchFlow.state.value.data.flatMap { batch -> batch.data.events }
         assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
         coVerify(exactly = 1) { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") }
         sourceScope.cancel()

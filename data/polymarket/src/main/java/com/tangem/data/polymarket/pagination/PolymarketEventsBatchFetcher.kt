@@ -1,7 +1,7 @@
 package com.tangem.data.polymarket.pagination
 
 import com.tangem.domain.polymarket.error.PolymarketEmptyFeedException
-import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsPage
 import com.tangem.pagination.BatchFetchResult
@@ -18,6 +18,9 @@ import kotlin.time.Duration.Companion.seconds
  * The stock [com.tangem.pagination.fetcher.CursorBatchFetcher] derives the next cursor from the last item of a
  * page, which this endpoint does not support: the cursor is a keyset token served alongside the events.
  *
+ * Every page keeps the cursor it was requested with, so it can be asked for again — that is what
+ * [PolymarketEventsUpdateFetcher] refreshes it by.
+ *
  * Failures are retried once, silently, after [retryDelay] — the caller keeps its loader up meanwhile, so a single
  * hiccup never surfaces as an error state. An empty **first** page is retried the same way and, if it stays empty,
  * reported as [PolymarketEmptyFeedException]: an empty category looks exactly like a failed load to the user.
@@ -31,14 +34,14 @@ internal class PolymarketEventsBatchFetcher(
     private val retryDelay: Duration = RETRY_DELAY,
     private val fetchPage: suspend (config: PolymarketEventsListConfig, cursor: String?, limit: Int) ->
     PolymarketEventsPage,
-) : BatchFetcher<PolymarketEventsListConfig, List<PolymarketEvent>> {
+) : BatchFetcher<PolymarketEventsListConfig, PolymarketEventsBatch> {
 
     private var lastConfig: PolymarketEventsListConfig? = null
     private var nextCursor: String? = null
 
     override suspend fun fetchFirst(
         requestParams: PolymarketEventsListConfig,
-    ): BatchFetchResult<List<PolymarketEvent>> {
+    ): BatchFetchResult<PolymarketEventsBatch> {
         lastConfig = requestParams
         nextCursor = null
         return fetchWithSilentRetry(config = requestParams, cursor = null, isFirstBatch = true)
@@ -46,8 +49,8 @@ internal class PolymarketEventsBatchFetcher(
 
     override suspend fun fetchNext(
         overrideRequestParams: PolymarketEventsListConfig?,
-        lastResult: BatchFetchResult<List<PolymarketEvent>>,
-    ): BatchFetchResult<List<PolymarketEvent>> {
+        lastResult: BatchFetchResult<PolymarketEventsBatch>,
+    ): BatchFetchResult<PolymarketEventsBatch> {
         val config = overrideRequestParams
             ?: lastConfig
             ?: error("fetchFirst() must be called before fetchNext()")
@@ -70,7 +73,7 @@ internal class PolymarketEventsBatchFetcher(
         config: PolymarketEventsListConfig,
         cursor: String?,
         isFirstBatch: Boolean,
-    ): BatchFetchResult<List<PolymarketEvent>> {
+    ): BatchFetchResult<PolymarketEventsBatch> {
         val firstAttempt = runFetch(config = config, cursor = cursor, isFirstBatch = isFirstBatch)
         if (firstAttempt is BatchFetchResult.Success) return firstAttempt
 
@@ -83,9 +86,9 @@ internal class PolymarketEventsBatchFetcher(
         config: PolymarketEventsListConfig,
         cursor: String?,
         isFirstBatch: Boolean,
-    ): BatchFetchResult<List<PolymarketEvent>> = runSuspendCatching { fetchPage(config, cursor, batchSize) }
+    ): BatchFetchResult<PolymarketEventsBatch> = runSuspendCatching { fetchPage(config, cursor, batchSize) }
         .fold(
-            onSuccess = { page -> toBatchResult(page = page, isFirstBatch = isFirstBatch) },
+            onSuccess = { page -> toBatchResult(page = page, isFirstBatch = isFirstBatch, requestCursor = cursor) },
             // A failed request is the pagination's to report, so the batch turns into a retryable error.
             onFailure = { throwable -> BatchFetchResult.Error(throwable) },
         )
@@ -93,7 +96,8 @@ internal class PolymarketEventsBatchFetcher(
     private fun toBatchResult(
         page: PolymarketEventsPage,
         isFirstBatch: Boolean,
-    ): BatchFetchResult<List<PolymarketEvent>> {
+        requestCursor: String?,
+    ): BatchFetchResult<PolymarketEventsBatch> {
         if (isFirstBatch && page.events.isEmpty()) {
             return BatchFetchResult.Error(PolymarketEmptyFeedException())
         }
@@ -101,7 +105,7 @@ internal class PolymarketEventsBatchFetcher(
         nextCursor = page.cursor
 
         return BatchFetchResult.Success(
-            data = page.events,
+            data = PolymarketEventsBatch(events = page.events, requestCursor = requestCursor),
             empty = page.events.isEmpty(),
             last = !page.hasNext || page.cursor == null,
         )
