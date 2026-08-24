@@ -3,6 +3,7 @@ package com.tangem.datasource.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.yieldsupply.DefaultYieldMarketsStore
