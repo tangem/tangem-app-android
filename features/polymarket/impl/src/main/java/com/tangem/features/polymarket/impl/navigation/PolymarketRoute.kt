@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.navigation
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 
 /**
  * Internal navigation routes for the Polymarket feature stack.
@@ -44,6 +45,20 @@ internal sealed interface PolymarketRoute : Route {
         val userWalletId: UserWalletId,
         val marketId: String? = null,
         val assetId: String? = null,
+    ) : PolymarketRoute
+
+    /**
+     * Place-prediction flow, a step of this stack like the screens around it.
+     *
+     * Carries no access mode: a route cannot know whether trading is allowed — the region is the only
+     * producer of that answer, and the flow reads it itself before it lets an order be placed.
+     */
+    data class PlacePrediction(
+        val userWalletId: UserWalletId,
+        val eventId: String,
+        val marketId: String,
+        val assetId: String,
+        val side: PredictionOrderSide,
     ) : PolymarketRoute
 
     /**
