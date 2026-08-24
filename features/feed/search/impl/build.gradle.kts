@@ -29,7 +29,10 @@ dependencies {
     /* Other */
     implementation(deps.androidx.appCompat)
     implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /* DI */
     implementation(deps.hilt.android)

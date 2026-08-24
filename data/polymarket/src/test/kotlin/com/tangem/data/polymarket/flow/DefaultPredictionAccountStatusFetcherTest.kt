@@ -18,9 +18,12 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
+import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.test.core.ProvideTestModels
@@ -37,6 +40,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -51,10 +55,12 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     private val getBalance: GetPolymarketBalanceInteractor = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val quoteFetcher: SingleQuoteStatusFetcher = mockk(relaxed = true)
+    private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
+    private val polymarketRepository: PolymarketRepository = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, checkGeoblock, quoteFetcher)
+        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, checkGeoblock, quoteFetcher, onboardedStore, polymarketRepository)
         coEvery { quoteFetcher.invoke(any()) } returns Unit.right()
         every { userWallet.isLocked } returns false
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
@@ -69,6 +75,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     fun `GIVEN no stored addresses WHEN invoke THEN it reports not onboarded without deriving`() = runTest {
         // Arrange
         coEvery { deriveAddresses.stored(WALLET) } returns null
+        coEvery { polymarketRepository.getWalletStatusByWalletId(WALLET.stringValue) } returns
+            walletState(PolymarketWalletStatus.NOT_CREATED).right()
         val store = createStore(testScope = this)
 
         // Act
@@ -334,6 +342,189 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         scope = TestAppCoroutineScope(testScope),
     )
 
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OnboardingRecord {
+
+        /**
+         * The entry gate stops asking the backend once a wallet is recorded, so this refresh is the only thing
+         * that can notice the backend changing its mind and drop the record.
+         */
+        @Test
+        fun `GIVEN the backend stops reporting ready WHEN invoke THEN the onboarding record is dropped`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.APPROVALS_FAILED).right()
+
+            // Act
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            coVerify(exactly = 1) { onboardedStore.clear(WALLET) }
+            coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
+        }
+
+        @Test
+        fun `GIVEN the backend reports ready WHEN invoke THEN the onboarding record is kept`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+            coEvery { getBalance.invoke(ADDRESSES) } returns
+                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            coEvery { checkGeoblock.invoke() } returns false.right()
+
+            // Act
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            coVerify(exactly = 1) { onboardedStore.markOnboarded(WALLET) }
+            coVerify(exactly = 0) { onboardedStore.clear(any()) }
+        }
+
+        /** A status that could not be read says nothing about the record, so it must not clear it. */
+        @Test
+        fun `GIVEN the status cannot be read WHEN invoke THEN the record is left alone`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns PolymarketOnboardingError.Unknown.left()
+
+            // Act
+            createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            coVerify(exactly = 0) { onboardedStore.clear(any()) }
+            coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
+        }
+    }
+
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WithoutStoredAddresses {
+
+        /**
+         * A wallet set up on another device: this one never derived its owner address, so the backend can only
+         * be asked by wallet id. Answering "not onboarded" without asking would deny the user their account.
+         */
+        @Test
+        fun `GIVEN no stored address WHEN the backend knows the wallet by id THEN it is onboarded`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns null
+            coEvery { polymarketRepository.getWalletStatusByWalletId(WALLET.stringValue) } returns
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+            val store = createStore(testScope = this)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert — no local credentials, so there is no amount to show, only the account itself
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL))
+            coVerify(exactly = 1) { onboardedStore.markOnboarded(WALLET) }
+            coVerify(exactly = 0) { getWalletStatus.invoke(any()) }
+        }
+
+        @Test
+        fun `GIVEN no stored address AND the backend has no wallet WHEN invoke THEN it is not onboarded`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns null
+            coEvery { polymarketRepository.getWalletStatusByWalletId(WALLET.stringValue) } returns
+                walletState(PolymarketWalletStatus.NOT_CREATED).right()
+            val store = createStore(testScope = this)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionAccountStatusValue.NotOnboarded)
+            coVerify(exactly = 1) { onboardedStore.clear(WALLET) }
+        }
+
+        /** A failed question is not an answer: neither the cached value nor the record may be dropped for it. */
+        @Test
+        fun `GIVEN no stored address WHEN the lookup fails THEN the cached value and the record survive`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns null
+            coEvery { polymarketRepository.getWalletStatusByWalletId(WALLET.stringValue) } returns
+                PolymarketWalletError.Network.left()
+            val store = createStore(testScope = this)
+            store.store(userWalletId = WALLET, value = ACTIVE)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
+            coVerify(exactly = 1) { polymarketRepository.getWalletStatusByWalletId(WALLET.stringValue) }
+            coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
+            coVerify(exactly = 0) { onboardedStore.clear(any()) }
+        }
+
+        /**
+         * The status was a definite answer even though the balance behind it was not: recording it saves the
+         * entry gate a request it would otherwise have to make.
+         */
+        @Test
+        fun `GIVEN the backend reports ready WHEN the balance cannot be read THEN the record is still written`() =
+            runTest {
+                // Arrange
+                coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+                coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                    walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+                coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.RateLimited.left()
+
+                // Act
+                createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+                // Assert
+                coVerify(exactly = 1) { onboardedStore.markOnboarded(WALLET) }
+            }
+
+        /**
+         * An unrecognised status is "not ready, keep polling" by the BFF contract. Overwriting a cached balance
+         * with "no account" on the strength of one would lose a real amount.
+         */
+        @Test
+        fun `GIVEN no stored address WHEN the status is unrecognised THEN the cached value survives`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns null
+            coEvery { polymarketRepository.getWalletStatusByWalletId(WALLET.stringValue) } returns
+                walletState(PolymarketWalletStatus.UNKNOWN).right()
+            val store = createStore(testScope = this)
+            store.store(userWalletId = WALLET, value = ACTIVE)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
+            coVerify(exactly = 0) { onboardedStore.clear(any()) }
+        }
+
+        /** Mid-setup elsewhere is not "no account": the stage must survive the trip through the id lookup. */
+        @Test
+        fun `GIVEN no stored address WHEN the wallet is mid-setup THEN the stage is reported`() = runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns null
+            coEvery { polymarketRepository.getWalletStatusByWalletId(WALLET.stringValue) } returns
+                walletState(PolymarketWalletStatus.DEPLOYED).right()
+            val store = createStore(testScope = this)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+                PredictionAccountStatusValue.Onboarding(
+                    source = StatusSource.ACTUAL,
+                    stage = PredictionAccountStatusValue.Onboarding.Stage.DEPLOYED,
+                ),
+            )
+        }
+    }
+
     private fun createFetcher(store: PredictionAccountStatusStore) = DefaultPredictionAccountStatusFetcher(
         statusStore = store,
         userWalletsListRepository = userWalletsListRepository,
@@ -341,6 +532,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         getPolymarketWalletStatusUseCase = getWalletStatus,
         getPolymarketBalanceInteractor = getBalance,
         checkPolymarketGeoblockUseCase = checkGeoblock,
+        polymarketOnboardedStore = onboardedStore,
+        polymarketRepository = polymarketRepository,
         singleQuoteStatusFetcher = quoteFetcher,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

@@ -43,6 +43,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -53,6 +54,7 @@ import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
@@ -62,13 +64,13 @@ import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.balanceOrNull
-import com.tangem.features.tangempay.common.cardActivationImageUrl
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.multichain.choosenetwork.ChooseNetworkListener
 import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -121,6 +123,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val userWalletId = currentStatus.value.userWalletId
 
     private val deliveryEmail = MutableStateFlow(onboardingRepository.getSavedCustomerInfo(userWalletId)?.email)
+
+    private var isDeliveryDetailsShown = false
 
     val selectedCardId: StateFlow<String>
         field = MutableStateFlow(params.cardId)
@@ -260,6 +264,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                     delivery = buildDeliveryState(cardState = card.state, email = email),
                 )
             }
+            sendDeliveryDetailsAnalytics(cardState = card.state)
         } else {
             uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
         }
@@ -276,14 +281,19 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
+    private fun sendDeliveryDetailsAnalytics(cardState: TangemPayCardState) {
+        val isShown = cardState == TangemPayCardState.Delivering
+
+        if (isShown == isDeliveryDetailsShown) return
+        isDeliveryDetailsShown = isShown
+
+        if (isShown) analytics.send(TangemPayAnalyticsEvents.Plastic.CardInTransitDetailsShowed())
+    }
+
     private fun onClickActivateCard() {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.ActivateCardManagementButtonClicked())
         val card = selectedCard() ?: return
-        router.push(
-            TangemPayCardDetailsInnerRoute.ActivateCard(
-                card = card,
-                cardImageUrl = currentStatus.value.cardActivationImageUrl,
-            ),
-        )
+        router.push(TangemPayCardDetailsInnerRoute.ActivateCard(card = card))
     }
 
     private fun loadDeliveryEmail() {
@@ -527,7 +537,28 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickReissueCard() {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardClicked())
-        bottomSheetNavigation.activate(TangemPayCardNavigation.ReissueCard(cardId = selectedCardId.value))
+        val card = selectedCard()
+        val navigation = if (card != null && card.cardType == TangemPayCardType.PHYSICAL) {
+            TangemPayCardNavigation.ReissuePlasticCard(
+                userWalletId = userWalletId,
+                sourceProductInstanceId = card.productInstanceId,
+            )
+        } else {
+            TangemPayCardNavigation.ReissueCard(cardId = selectedCardId.value)
+        }
+        bottomSheetNavigation.activate(navigation)
+    }
+
+    fun onReplacePlasticCardConfirmed(sourceProductInstanceId: String, deliveryEtaMaxBusinessDays: Int) {
+        bottomSheetNavigation.dismiss()
+        router.push(
+            TangemPayAccountDetailsInnerRoute.OrderCard(
+                intent = TangemPayOrderCardIntent.ReissuePlastic(
+                    sourceProductInstanceId = sourceProductInstanceId,
+                    deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
+                ),
+            ),
+        )
     }
 
     override fun onDismissReissueCard() {

@@ -1,11 +1,12 @@
 package com.tangem.data.pay.converter
 
+import com.tangem.data.pay.util.tangemPayImageOrNull
+import com.tangem.domain.models.pay.TangemPayImage
 import arrow.core.getOrElse
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
@@ -54,7 +55,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         lastDigits = card.lastDigits,
                         images = card.images.map { image ->
                             PaymentAccountStatusValueDM.ImageDM(
-                                type = image.type.name,
+                                type = image.type,
                                 url = image.url,
                             )
                         },
@@ -196,12 +197,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         )
     }
 
-    private fun PaymentAccountStatusValueDM.TangemPayCard.getImages(): List<TangemPayTariffPlan.Image> {
-        return images.map { image ->
-            TangemPayTariffPlan.Image(
-                type = TangemPayTariffPlan.Image.Type.fromString(image.type),
-                url = image.url,
-            )
-        }
+    private fun PaymentAccountStatusValueDM.TangemPayCard.getImages(): List<TangemPayImage> {
+        return images.mapNotNull { image -> tangemPayImageOrNull(image.type, image.url) }
     }
 }

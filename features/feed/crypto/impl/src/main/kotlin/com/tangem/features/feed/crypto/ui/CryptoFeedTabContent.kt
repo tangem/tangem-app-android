@@ -13,18 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,25 +28,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.charts.MarketChartMini
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
-import com.tangem.core.ui.ds2.tokenrow.Shimmer
-import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.crypto.ui.state.CryptoFeedTabUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseCategoryUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseItemUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseListUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseUM
 import kotlinx.collections.immutable.ImmutableList
 
-private const val TOKEN_KEY_PREFIX = "token:"
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
-private const val LOADING_PLACEHOLDER_COUNT = 20
+private val ROW_HORIZONTAL_PADDING = 4.dp
 
 /**
  * Crypto feed tab: promo banners, the Total market cap block, and the Market Pulse markets list
@@ -106,7 +96,7 @@ internal fun CryptoFeedTabContent(
 
     VisibleTokensTracker(
         listState = listState,
-        list = marketPulse.list,
+        isTrackingEnabled = marketPulse.list is MarketPulseListUM.Content,
         onVisibleItemsChange = marketPulse.onVisibleItemsChange,
     )
 
@@ -130,87 +120,18 @@ internal fun CryptoFeedTabContent(
 
 private fun LazyListScope.marketPulseListItems(list: MarketPulseListUM) {
     when (list) {
-        is MarketPulseListUM.Loading -> {
-            items(count = LOADING_PLACEHOLDER_COUNT, key = { "placeholder:$it" }) {
-                TangemTokenRowMarket.Shimmer(modifier = Modifier.padding(horizontal = 4.dp))
+        is MarketPulseListUM.Loading -> marketTokenShimmers(horizontalPadding = ROW_HORIZONTAL_PADDING)
+        is MarketPulseListUM.Error -> item(key = "loadingError") {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                UnableToLoadData(onRetryClick = list.onRetry)
             }
         }
-        is MarketPulseListUM.Error -> {
-            item(key = "loadingError") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    UnableToLoadData(onRetryClick = list.onRetry)
-                }
-            }
-        }
-        is MarketPulseListUM.Content -> {
-            items(items = list.items, key = { TOKEN_KEY_PREFIX + it.id }) { item ->
-                MarketPulseItem(item = item)
-            }
-        }
-    }
-}
-
-/** Reports the token ids currently on screen, so the model can fetch charts for their batches. */
-@Composable
-private fun VisibleTokensTracker(
-    listState: LazyListState,
-    list: MarketPulseListUM,
-    onVisibleItemsChange: (List<String>) -> Unit,
-) {
-    val visibleItems by remember(listState) {
-        derivedStateOf {
-            listState.layoutInfo.visibleItemsInfo.mapNotNull { itemInfo ->
-                (itemInfo.key as? String)
-                    ?.takeIf { it.startsWith(TOKEN_KEY_PREFIX) }
-                    ?.removePrefix(TOKEN_KEY_PREFIX)
-            }
-        }
-    }
-
-    LaunchedEffect(listState.isScrollInProgress, visibleItems, list) {
-        if (list is MarketPulseListUM.Content) {
-            onVisibleItemsChange(visibleItems)
-        } else {
-            onVisibleItemsChange(emptyList())
-        }
-    }
-}
-
-@Composable
-private fun MarketPulseItem(item: MarketPulseItemUM, modifier: Modifier = Modifier) {
-    TangemTokenRowMarket(
-        state = item.row,
-        modifier = modifier.padding(horizontal = 4.dp),
-        chart = {
-            val chartData = item.chartData
-            if (chartData != null) {
-                MarketChartMini(
-                    rawData = chartData,
-                    type = item.chartType,
-                    modifier = Modifier.size(width = 24.dp, height = 32.dp),
-                )
-            } else {
-                ChartShimmer()
-            }
-        },
-    )
-}
-
-@Composable
-private fun ChartShimmer(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.size(width = 24.dp, height = 32.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        TangemShimmer(
-            radius = 4.dp,
-            modifier = Modifier.size(width = 24.dp, height = 12.dp),
-        )
+        is MarketPulseListUM.Content -> marketTokenItems(list.items, horizontalPadding = ROW_HORIZONTAL_PADDING)
     }
 }
 

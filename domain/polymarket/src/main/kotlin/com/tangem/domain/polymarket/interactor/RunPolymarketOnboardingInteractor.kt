@@ -1,13 +1,16 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -46,6 +49,8 @@ class RunPolymarketOnboardingInteractor(
     private val deriveApiCredentials: DeriveApiCredentialsUseCase,
     private val submitApprovals: SubmitApprovalsUseCase,
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase,
+    private val polymarketOnboardedStore: PolymarketOnboardedStore,
+    private val checkGeoblock: CheckPolymarketGeoblockUseCase,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketOnboardingProgress> = flow {
@@ -72,16 +77,39 @@ class RunPolymarketOnboardingInteractor(
 
         if (!entry.owesApprovals() && credentials != null) {
             awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = entry) ?: return
-            primeBalanceCache(addresses, credentials)
-            emit(PolymarketOnboardingProgress.Ready)
+            finish(addresses, credentials)
             return
         }
+
+        if (entry.needsDeploy() && !isRegionAllowed()) return
 
         emit(PolymarketOnboardingProgress.AwaitingSignature)
         val nonce = step { getRelayerNonce(addresses) } ?: return
         val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
 
         settleWallet(addresses = addresses, entry = entry, signed = signed, credentials = credentials)
+    }
+
+    /**
+     * Whether the region permits opening a new account. Read fresh and fail-closed — an unknown region must
+     * not deploy. Existing accounts are untouched by it, so only [needsDeploy] runs are asked.
+     */
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.isRegionAllowed(): Boolean {
+        val isBlocked = checkGeoblock().getOrElse { error ->
+            TangemLogger.e("Onboarding: region check failed, deploy refused: $error")
+            true
+        }
+
+        if (isBlocked) {
+            emit(
+                PolymarketOnboardingProgress.Failed(
+                    error = PolymarketOnboardingError.RegionBlocked,
+                    isRetryable = false,
+                ),
+            )
+        }
+
+        return !isBlocked
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
@@ -112,8 +140,7 @@ class RunPolymarketOnboardingInteractor(
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
-        primeBalanceCache(addresses, activeCredentials)
-        emit(PolymarketOnboardingProgress.Ready)
+        finish(addresses, activeCredentials)
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.awaitStatus(
@@ -164,6 +191,15 @@ class RunPolymarketOnboardingInteractor(
 
             delay(POLL_INTERVAL_MILLIS)
         }
+    }
+
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.finish(
+        addresses: PolymarketAddresses,
+        credentials: PolymarketApiCredentials,
+    ) {
+        polymarketOnboardedStore.markOnboarded(addresses.userWalletId)
+        primeBalanceCache(addresses, credentials)
+        emit(PolymarketOnboardingProgress.Ready)
     }
 
     /** Best-effort refresh of the CLOB's cached balance and allowance; onboarding is complete either way. */
