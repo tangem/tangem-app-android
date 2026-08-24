@@ -9,9 +9,11 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -96,6 +98,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val sendNotificationsUpdateListener: SendNotificationsUpdateListener,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
     private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
+    backupErrorWarningFactory: BackupErrorWarning.Factory,
+    messageSender: UiMessageSender,
     private val swapAmountReduceTrigger: SwapAmountReduceTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
@@ -105,6 +109,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
+
+    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val params: SendWithSwapConfirmComponent.Params = paramsContainer.require()
 
@@ -320,8 +326,16 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod")
     private fun onSendClick() {
+        backupErrorWarning.forAddress(
+            scope = modelScope,
+            address = { confirmData.enteredDestination },
+            onProceed = { sendTransaction(confirmData) },
+        )
+    }
+
+    @Suppress("LongMethod")
+    private fun sendTransaction(confirmData: ConfirmData) {
         val provider = confirmData.quote?.provider ?: return
         modelScope.launch {
             uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(true))
