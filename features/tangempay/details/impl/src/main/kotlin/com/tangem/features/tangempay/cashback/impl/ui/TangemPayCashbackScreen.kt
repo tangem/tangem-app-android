@@ -45,6 +45,9 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
+import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayAdditionalCashbackUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackHistogramUM.Style
@@ -298,13 +301,13 @@ private class TangemPayCashbackScreenUMProvider : CollectionPreviewParameterProv
 
 private fun previewInfoTiles() = TangemPayCashbackInfoTilesUM(
     rate = TangemPayCashbackInfoTilesUM.Tile(
-        iconRes = CoreUiR.drawable.ic_percent_24,
+        icon = Icons.ic_percent_backward_20,
         title = stringReference("Cashback 1%"),
         subtitle = stringReference("With your Basic plan"),
         onClick = {},
     ),
     accruals = TangemPayCashbackInfoTilesUM.Tile(
-        iconRes = CoreUiR.drawable.ic_information_24,
+        icon = Icons.ic_info_20,
         title = stringReference("Accruals"),
         subtitle = stringReference("Limits and exceptions"),
         onClick = {},
