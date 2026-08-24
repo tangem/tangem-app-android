@@ -1,6 +1,7 @@
 package com.tangem.common.ui.markets.action
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.markets.R
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
@@ -13,12 +14,9 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
@@ -44,10 +42,11 @@ class TokenActionsHandler @AssistedInject constructor(
     @Assisted private val onHandleQuickAction: (action: HandledQuickAction, shouldDismiss: Boolean) -> Unit,
     @Assisted private val coroutineScope: CoroutineScope,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
-    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    backupErrorWarningFactory: BackupErrorWarning.Factory,
     private val messageSender: UiMessageSender,
 ) {
+
+    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val disabledActionsInDemoMode = buildSet {
         add(TokenActionsBSContentUM.Action.Sell)
@@ -58,9 +57,18 @@ class TokenActionsHandler @AssistedInject constructor(
         cryptoCurrencyData: CryptoCurrencyData,
         context: TokenActionsContext = TokenActionsContext.Markets,
     ) {
-        if (isTopUpBlockedByBackupError(action, cryptoCurrencyData.userWallet)) return
         if (handleUnavailabilityReason(action, cryptoCurrencyData)) return
 
+        warnAboutBackupErrorOrProceed(action, cryptoCurrencyData.userWallet) {
+            proceed(action, cryptoCurrencyData, context)
+        }
+    }
+
+    private fun proceed(
+        action: TokenActionsBSContentUM.Action,
+        cryptoCurrencyData: CryptoCurrencyData,
+        context: TokenActionsContext,
+    ) {
         onHandleQuickAction(
             HandledQuickAction(
                 action = action,
@@ -117,18 +125,19 @@ class TokenActionsHandler @AssistedInject constructor(
         return true
     }
 
-    private fun isTopUpBlockedByBackupError(action: TokenActionsBSContentUM.Action, userWallet: UserWallet): Boolean {
-        val isBlockedAction = action == TokenActionsBSContentUM.Action.Buy ||
+    private fun warnAboutBackupErrorOrProceed(
+        action: TokenActionsBSContentUM.Action,
+        userWallet: UserWallet,
+        onProceed: () -> Unit,
+    ) {
+        val isTopUpAction = action == TokenActionsBSContentUM.Action.Buy ||
             action == TokenActionsBSContentUM.Action.Receive
-        if (!isBlockedAction) return false
-        if (!isWalletBackupProblematicUseCase(userWallet)) return false
+        if (!isTopUpAction) {
+            onProceed()
+            return
+        }
 
-        messageSender.send(
-            Dialogs.backupErrorAddFundsDisabled(
-                onContactSupport = { coroutineScope.launch { sendBackupProblemEmailUseCase(userWallet.walletId) } },
-            ),
-        )
-        return true
+        backupErrorWarning.forWallet(scope = coroutineScope, userWallet = userWallet, onProceed = onProceed)
     }
 
     private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
