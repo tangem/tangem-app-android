@@ -197,6 +197,7 @@ internal open class TxDetailsConverterTestBase {
         txInfo: OnChainTx? = null,
         provider: ExpressProvider? = null,
         externalTxUrl: String? = null,
+        externalTxId: String? = null,
         fromAddress: String = FROM_ADDRESS,
         payoutAddress: String = PAYOUT_ADDRESS,
         fromCurrency: CryptoCurrency? = null,
@@ -223,7 +224,7 @@ internal open class TxDetailsConverterTestBase {
                 cryptoCurrency = bitcoin,
             ),
             externalTxUrl = externalTxUrl,
-            externalTxId = null,
+            externalTxId = externalTxId,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
             refundAssetId = null,
@@ -240,6 +241,7 @@ internal open class TxDetailsConverterTestBase {
         status: ExpressOnrampStatus,
         txInfo: OnChainTx? = null,
         externalTxUrl: String? = null,
+        externalTxId: String? = null,
         payoutAddress: String = PAYOUT_ADDRESS,
         fiatCurrency: OnrampCurrency? = null,
     ): ExpressTx.Onramp = ExpressTx.Onramp(
@@ -251,6 +253,7 @@ internal open class TxDetailsConverterTestBase {
             payoutHash = null,
             payoutAddress = payoutAddress,
             externalTxUrl = externalTxUrl,
+            externalTxId = externalTxId,
             fromFiat = Amount(
                 currencySymbol = "SEK",
                 value = BigDecimal("100"),
