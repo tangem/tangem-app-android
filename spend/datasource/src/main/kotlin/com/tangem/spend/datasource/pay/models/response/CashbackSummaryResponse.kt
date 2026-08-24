@@ -16,6 +16,7 @@ data class CashbackSummaryResponse(
         @Json(name = "cashback_program_status") val cashbackProgramStatus: String,
         @Json(name = "cashback_display_mode") val cashbackDisplayMode: String,
         @Json(name = "period") val period: Period,
+        @Json(name = "payout_currency") val payoutCurrency: String?,
         @Json(name = "confirmed_amount") val confirmedAmount: BigDecimal,
         @Json(name = "total_earned_amount") val totalEarnedAmount: BigDecimal?,
         @Json(name = "previous_payout_end_date") val previousPayoutEndDate: String?,

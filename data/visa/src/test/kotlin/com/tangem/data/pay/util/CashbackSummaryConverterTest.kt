@@ -97,6 +97,30 @@ internal class CashbackSummaryConverterTest {
             ),
         ),
         ConvertModel(
+            name = "enabled + payout currency -> mapped as is",
+            response = createResponse(payoutCurrency = "USDT"),
+            expected = CashbackSummary.Enabled(
+                displayMode = CashbackDisplayMode.FULL,
+                cashback = expectedCashback(payoutCurrency = "USDT"),
+            ),
+        ),
+        ConvertModel(
+            name = "enabled + no payout currency -> payoutCurrency is null",
+            response = createResponse(payoutCurrency = null),
+            expected = CashbackSummary.Enabled(
+                displayMode = CashbackDisplayMode.FULL,
+                cashback = expectedCashback(payoutCurrency = null),
+            ),
+        ),
+        ConvertModel(
+            name = "enabled + blank payout currency -> payoutCurrency is null",
+            response = createResponse(payoutCurrency = " "),
+            expected = CashbackSummary.Enabled(
+                displayMode = CashbackDisplayMode.FULL,
+                cashback = expectedCashback(payoutCurrency = null),
+            ),
+        ),
+        ConvertModel(
             name = "fraud -> Deactivated",
             response = createResponse(status = "fraud"),
             expected = CashbackSummary.Deactivated,
@@ -147,6 +171,7 @@ internal class CashbackSummaryConverterTest {
             previousPayoutEndDate: String? = "2026-06-05",
             previousPayoutAmount: BigDecimal? = BigDecimal("18.00"),
             currency: String = "USD",
+            payoutCurrency: String? = "USDC",
         ) = CashbackSummaryResponse(
             result = CashbackSummaryResponse.Result(
                 cashbackProgramStatus = status,
@@ -157,6 +182,7 @@ internal class CashbackSummaryConverterTest {
                 previousPayoutEndDate = previousPayoutEndDate,
                 previousPayoutAmount = previousPayoutAmount,
                 currency = currency,
+                payoutCurrency = payoutCurrency,
             ),
         )
 
@@ -169,10 +195,12 @@ internal class CashbackSummaryConverterTest {
             ),
             payoutStart: DateTime? = DateTime.parse("2026-07-02"),
             payoutEnd: DateTime? = DateTime.parse("2026-07-05"),
+            payoutCurrency: String? = "USDC",
         ) = TangemPayCashback(
             confirmedAmount = confirmedAmount,
             totalEarnedAmount = totalEarnedAmount,
             currency = "USD",
+            payoutCurrency = payoutCurrency,
             period = TangemPayCashback.Period(
                 year = 2026,
                 month = 6,
