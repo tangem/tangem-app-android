@@ -15,7 +15,7 @@ import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
