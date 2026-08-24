@@ -109,6 +109,16 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                                 return@launch
                             }
 
+                        analyticsEventHandler.send(
+                            OnrampAnalyticsEvent.SuccessScreenOpened(
+                                providerName = transaction.providerName,
+                                currency = transaction.fromCurrency.code,
+                                tokenSymbol = cryptoCurrency.symbol,
+                                residence = transaction.residency,
+                                paymentMethod = transaction.paymentMethod,
+                            ),
+                        )
+
                         startStatusUpdateTask(transaction)
                     },
                 )
@@ -134,7 +144,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
         val isTerminal = (state.value as? OnrampSuccessComponentUM.Content)?.activeStatus?.isTerminal
-        if (isTerminal == null || isTerminal == false) {
+        if (isTerminal == null || !isTerminal) {
             getOnrampStatusUseCase(userWallet = userWallet, txId = transaction.txId)
                 .fold(
                     ifLeft = { error ->
@@ -148,15 +158,6 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                         showErrorAlert(error)
                     },
                     ifRight = { status ->
-                        analyticsEventHandler.send(
-                            OnrampAnalyticsEvent.SuccessScreenOpened(
-                                providerName = transaction.providerName,
-                                currency = transaction.fromCurrency.code,
-                                tokenSymbol = cryptoCurrency.symbol,
-                                residence = transaction.residency,
-                                paymentMethod = transaction.paymentMethod,
-                            ),
-                        )
                         _state.update {
                             SetOnrampSuccessContentConverter(
                                 cryptoCurrency = cryptoCurrency,
