@@ -18,6 +18,7 @@ import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.DeleteCloudBackupWithRetryUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.ForgetWalletComponent
@@ -48,6 +49,7 @@ internal class ForgetWalletModel @Inject constructor(
     private val cloudBackupRepository: CloudBackupRepository,
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
     private val deleteCloudBackupWithRetryUseCase: DeleteCloudBackupWithRetryUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<ForgetWalletComponent.Params>()
@@ -137,7 +139,11 @@ internal class ForgetWalletModel @Inject constructor(
 
         appScope.launch {
             after?.join()
-            cloudBackupRepository.signOut()
+            // the deletion above retries for up to a minute, so a wallet may have been added meanwhile —
+            // signing out would drop the cloud session it has just authorized
+            if (userWalletsListRepository.userWalletsSync().isEmpty()) {
+                cloudBackupRepository.signOut()
+            }
         }
     }
 
