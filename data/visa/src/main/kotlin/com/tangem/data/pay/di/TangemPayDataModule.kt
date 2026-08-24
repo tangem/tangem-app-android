@@ -15,7 +15,7 @@ import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
@@ -308,13 +308,6 @@ internal interface TangemPayDataModule {
             cashbackRepository: CashbackRepository,
         ): SetCashbackDeactivationDismissedUseCase {
             return SetCashbackDeactivationDismissedUseCase(cashbackRepository)
-        }
-
-        @Provides
-        fun provideCheckOrderConflictUseCase(
-            customerOrderRepository: CustomerOrderRepository,
-        ): CheckOrderConflictUseCase {
-            return CheckOrderConflictUseCase(customerOrderRepository)
         }
 
         @Provides

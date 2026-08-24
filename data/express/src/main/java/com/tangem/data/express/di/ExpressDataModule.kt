@@ -7,7 +7,7 @@ import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.express.error.DefaultExpressErrorResolver
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.ExpressErrorResolver
