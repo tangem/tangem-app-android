@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
