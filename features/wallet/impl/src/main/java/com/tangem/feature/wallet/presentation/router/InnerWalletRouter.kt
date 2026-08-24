@@ -69,12 +69,6 @@ internal interface InnerWalletRouter {
         navigationAction: NavigationAction? = null,
     )
 
-    /** Open stories screen */
-    fun openStoriesScreen()
-
-    /** Is wallet last screen */
-    fun isWalletLastScreen(): Boolean
-
     /** Open NFT collections screen */
     fun openNFT(userWallet: UserWallet)
 
