@@ -1,15 +1,6 @@
 package com.tangem.features.feed.crypto.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -36,11 +27,6 @@ import com.tangem.features.feed.crypto.ui.state.PortfolioSearchUM
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 10
 private const val MARKET_SHIMMER_COUNT = 10
-
-// Figma 11885-669694: every block, row and title sits 16dp from the sheet edge
-private val ContentHorizontalPadding = 16.dp
-private val SectionHeaderVerticalPadding = 16.dp
-private val BetweenSectionsPadding = 24.dp
 
 /**
  * Crypto tab in search mode: the user's matching holdings, then matching market tokens.
@@ -71,8 +57,8 @@ internal fun CryptoSearchContent(
         state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            start = ContentHorizontalPadding,
-            end = ContentHorizontalPadding,
+            start = 16.dp,
+            end = 16.dp,
             top = contentPadding.calculateTopPadding(),
             bottom = bottomPadding,
         ),
@@ -115,7 +101,7 @@ private fun LazyListScope.marketSectionItems(market: MarketSearchUM, hasPortfoli
     }
 
     if (hasPortfolioSection) {
-        item(key = "sectionSpacer") { SpacerH(BetweenSectionsPadding) }
+        item(key = "sectionSpacer") { SpacerH(24.dp) }
     }
     item(key = "marketHeader") {
         SearchSectionHeader(title = stringResourceSafe(R.string.markets_common_title))
@@ -157,7 +143,7 @@ private fun SearchSectionHeader(title: String, modifier: Modifier = Modifier) {
         maxLines = 1,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = SectionHeaderVerticalPadding),
+            .padding(vertical = 16.dp),
     )
 }
 
