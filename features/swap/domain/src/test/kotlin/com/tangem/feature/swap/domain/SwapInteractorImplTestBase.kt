@@ -231,7 +231,7 @@ internal fun buildSwapCurrencyStatus(
         every { walletId } returns userWalletId
     }
 
-    val account = mockk<Account>(relaxed = true) {
+    val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
         every { accountId } returns mockk(relaxed = true)
     }
 
