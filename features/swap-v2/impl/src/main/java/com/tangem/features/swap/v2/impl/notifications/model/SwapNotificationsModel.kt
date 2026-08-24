@@ -14,6 +14,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.resolveAmountErrorCurrency
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
@@ -80,6 +81,7 @@ internal class SwapNotificationsModel @Inject constructor(
         val notifications = buildList {
             addInsufficientFundsNotification()
             addExpressErrorNotification()
+            maybeAddRegionRestrictionError()
             addDestinationTagRequiredNotification()
             addDestinationBackupErrorNotification()
             maybeAddPriceImpactNotification()
@@ -96,7 +98,7 @@ internal class SwapNotificationsModel @Inject constructor(
 
         val fromCurrency = notificationData.fromCryptoCurrency
         val toCurrency = notificationData.toCryptoCurrencyStatus?.currency
-        val provider = notificationData.provider
+        val provider = notificationData.quote?.provider
         if (fromCurrency != null && toCurrency != null && provider != null) {
             if (notifications.any { it is SwapNotificationUM.Warning.HighPriceImpact }) {
                 analyticsEventHandler.send(
@@ -175,8 +177,15 @@ internal class SwapNotificationsModel @Inject constructor(
         }
     }
 
-    fun MutableList<NotificationUM>.addExpressErrorNotification() {
-        val expressError = notificationData.expressError ?: return
+    private fun MutableList<NotificationUM>.maybeAddRegionRestrictionError() {
+        val quote = notificationData.quote as? SwapQuoteUM.Content
+        if (quote?.isRestricted == true) {
+            add(SwapNotificationUM.Error.RegionRestriction)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addExpressErrorNotification() {
+        val expressError = (notificationData.quote as? SwapQuoteUM.Error)?.expressError ?: return
         val fromCryptoCurrency = notificationData.fromCryptoCurrency ?: return
         val toCryptoCurrency = notificationData.toCryptoCurrencyStatus?.currency ?: return
 

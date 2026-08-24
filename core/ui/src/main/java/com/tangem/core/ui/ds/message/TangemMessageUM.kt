@@ -4,6 +4,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -15,10 +16,15 @@ import kotlinx.collections.immutable.persistentListOf
  * @param title          TextReference for the message title.
  * @param subtitle       TextReference for the message subtitle.
  * @param messageEffect  TangemMessageEffect defining the visual effect of the message.
+ * @param variant        Explicit DS3 [TangemMessageBanner.Variant] — this is what picks the banner background.
+ * `null` falls back to deriving it from [messageEffect], which can only ever produce `Solid` or `Error`;
+ * set it explicitly whenever the design calls for `Default`, `Warning`, `Success` or `Info`.
+ * @param shouldShowGlowRing Explicit glow-ring toggle. `null` falls back to deriving it from [messageEffect].
  * @param iconUM         Optional TangemIconUM representing the icon to be displayed in the message.
  * @param iconSize       Dp value defining the size of the icon (default is 28.dp).
  * @param iconPosition   Position of the icon relative to the texts. When [onCloseClick] is set, the icon is
- * always placed at the leading position so it never overlaps the close button.
+ * always placed at the leading position so it never overlaps the close button. `null` keeps each renderer's
+ * own default — trailing for the DS2 `TangemMessage`, leading for the DS3 message-banner mapper.
  * @param isCentered     Boolean indicating whether the icon is centered.
  * @param buttonsUM      ImmutableList of TangemMessageButtonUM representing the buttons in the message.
  * @param onClick        Lambda to be invoked when the message is clicked (optional).
@@ -29,9 +35,11 @@ data class TangemMessageUM(
     val title: TextReference,
     val subtitle: TextReference,
     val messageEffect: TangemMessageEffect = TangemMessageEffect.None,
+    val variant: TangemMessageBanner.Variant? = null,
+    val shouldShowGlowRing: Boolean? = null,
     val iconUM: TangemIconUM? = null,
     val iconSize: Dp = 28.dp,
-    val iconPosition: TangemMessageIconPosition = TangemMessageIconPosition.Trailing,
+    val iconPosition: TangemMessageIconPosition? = null,
     val isCentered: Boolean = false,
     val buttonsUM: ImmutableList<TangemMessageButtonUM> = persistentListOf(),
     val onClick: (() -> Unit)? = null,

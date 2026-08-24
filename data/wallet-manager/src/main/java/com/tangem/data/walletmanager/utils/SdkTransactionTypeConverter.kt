@@ -1,11 +1,13 @@
 package com.tangem.data.walletmanager.utils
 
+import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
@@ -78,7 +80,7 @@ internal class SdkTransactionTypeConverter(
     ): TxInfo.TransactionType {
         return when (methodName) {
             "transfer" -> TxInfo.TransactionType.Transfer
-            "approve" -> TxInfo.TransactionType.Approve
+            "approve" -> decodeApprove(callData)
             "swap" -> TxInfo.TransactionType.Swap
             "buyVoucher",
             "buyVoucherPOL",
@@ -141,6 +143,15 @@ internal class SdkTransactionTypeConverter(
             null -> TxInfo.TransactionType.UnknownOperation
             else -> TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         } ?: TxInfo.TransactionType.Operation(name = methodName?.replaceFirstChar { it.titlecase() }.orEmpty())
+    }
+
+    private fun decodeApprove(callData: String?): TxInfo.TransactionType.Approve? {
+        val data = callData ?: return null
+        val approval = ApprovalERC20TokenCallData(data.hexToBytes()) ?: return null
+        return TxInfo.TransactionType.Approve(
+            amount = approval.amount?.toDomain(),
+            address = approval.spenderAddress,
+        )
     }
 
     private fun getTypeForGaslessMethod(destination: TransactionHistoryItem.DestinationType): TxInfo.TransactionType {

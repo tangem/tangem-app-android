@@ -35,27 +35,29 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     private fun handle(deepLinkValue: String?, deepLinkSub1: String?, deepLinkSub2: String?) {
-        TangemLogger.i("AppsFlyer deeplink received: value=$deepLinkValue")
-        when (AppsFlyerDeeplink.from(deepLinkValue)) {
-            AppsFlyerDeeplink.Referral -> handleReferral(deepLinkSub1, deepLinkSub2)
-            AppsFlyerDeeplink.TangemPayMobileOnboarding ->
-                storeNavigationDeeplink(AppsFlyerDeeplink.TangemPayMobileOnboarding.deepLinkValue)
+        @Suppress("NullableToStringCall")
+        TangemLogger.i("AppsFlyer deeplink received: value=$deepLinkValue, sub1=$deepLinkSub1, sub2=$deepLinkSub2")
+
+        // Referral params are stored for any deep_link_value: a scenario link may also carry a referral code.
+        // Navigation below (and the stories-skip gate reading it) must stay bound to the known deeplink values.
+        storeReferralParams(refcode = deepLinkSub1, campaign = deepLinkSub2)
+
+        when (val deeplink = AppsFlyerDeeplink.from(deepLinkValue)) {
+            AppsFlyerDeeplink.Referral, AppsFlyerDeeplink.TangemPayMobileOnboarding ->
+                storeNavigationDeeplink(deeplink.deepLinkValue)
             null -> TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
         }
     }
 
-    private fun handleReferral(deepLinkSub1: String?, deepLinkSub2: String?) {
+    private fun storeReferralParams(refcode: String?, campaign: String?) {
+        if (!isValidParam(refcode)) return
+
+        val validCampaign = campaign?.takeIf { isValidParam(it) }
+
         @Suppress("NullableToStringCall")
-        TangemLogger.i("refcode=$deepLinkSub1\ncampaign=$deepLinkSub2")
+        TangemLogger.i("Storing referral params: refcode=$refcode, campaign=$validCampaign")
 
-        storeNavigationDeeplink(AppsFlyerDeeplink.Referral.deepLinkValue)
-
-        if (!isValidParam(deepLinkSub1)) {
-            TangemLogger.e("Deeplink conversion data is invalid")
-            return
-        }
-
-        storeConversionData(refcode = deepLinkSub1, campaign = deepLinkSub2)
+        storeConversionData(refcode = refcode, campaign = validCampaign)
     }
 
     @OptIn(ExperimentalContracts::class)

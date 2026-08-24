@@ -1,7 +1,5 @@
 package com.tangem.datasource.di.utils
 
-import com.tangem.datasource.api.common.config.MoonPay
-
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
@@ -10,13 +8,13 @@ import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
-import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
+import com.tangem.core.remote.auth.SessionAuthAuthenticator
+import com.tangem.core.remote.auth.SessionAuthInterceptor
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.ApiEnvironmentConfig
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.utils.ConnectTimeout
@@ -227,7 +225,7 @@ internal class RetrofitApiBuilder @Inject constructor(
     }
 
     private fun OkHttpClient.Builder.addLoggers(apiConfigId: ApiConfig.ID, context: Context): OkHttpClient.Builder {
-        if (apiConfigId in excludedApiForLogging) return this
+        if (apiConfigs[apiConfigId.name]?.isLoggable == false) return this
 
         return if (BuildConfig.LOG_ENABLED) {
             addInterceptor(interceptor = ChuckerInterceptor(context))
@@ -235,14 +233,5 @@ internal class RetrofitApiBuilder @Inject constructor(
         } else {
             this
         }
-    }
-
-    @Suppress("UseEmptyCounterpart")
-    private companion object {
-
-        val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
-            // StakeKit.ID,
-            MoonPay.ID,
-        )
     }
 }
