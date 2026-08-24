@@ -53,8 +53,8 @@ internal class IntroductionModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ScreenOpened())
 
         when (params.launchMode) {
-            // TODO [REDACTED_TASK_KEY]: an NFC tap must start the card scan; the scan entry point arrives with the
-            //  Create wallet bottom sheet.
+            // TODO [REDACTED_TASK_KEY]: start the card scan here and drop the WithCardScan exception in ChildFactory;
+            //  it needs the progress and error states the screen has no design for yet.
             InitScreenLaunchMode.WithCardScan,
             InitScreenLaunchMode.Standard,
             -> Unit
