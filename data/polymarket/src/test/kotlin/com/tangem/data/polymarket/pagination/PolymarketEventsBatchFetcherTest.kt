@@ -30,7 +30,7 @@ internal class PolymarketEventsBatchFetcherTest {
         // Assert
         assertThat(result).isInstanceOf(BatchFetchResult.Success::class.java)
         val success = result as BatchFetchResult.Success
-        assertThat(success.data).containsExactly(event)
+        assertThat(success.data.events).containsExactly(event)
         assertThat(success.last).isFalse()
     }
 
@@ -105,7 +105,7 @@ internal class PolymarketEventsBatchFetcherTest {
         val result = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((result as BatchFetchResult.Success).data).containsExactly(event)
+        assertThat((result as BatchFetchResult.Success).data.events).containsExactly(event)
     }
 
     @Test
@@ -160,6 +160,36 @@ internal class PolymarketEventsBatchFetcherTest {
         val success = second as BatchFetchResult.Success
         assertThat(success.empty).isTrue()
         assertThat(success.last).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the first page WHEN fetchFirst THEN it carries no request cursor`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(pages = listOf(Result.success(page(hasNext = true, cursor = "cursor-1"))))
+
+        // Act
+        val result = fetcher.fetchFirst(config)
+
+        // Assert
+        assertThat((result as BatchFetchResult.Success).data.requestCursor).isNull()
+    }
+
+    @Test
+    fun `GIVEN a next page WHEN fetchNext THEN it carries the cursor it was requested with`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(
+            pages = listOf(
+                Result.success(page(hasNext = true, cursor = "cursor-1")),
+                Result.success(page(hasNext = true, cursor = "cursor-2")),
+            ),
+        )
+        val first = fetcher.fetchFirst(config)
+
+        // Act
+        val second = fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
+
+        // Assert
+        assertThat((second as BatchFetchResult.Success).data.requestCursor).isEqualTo("cursor-1")
     }
 
     private fun page(
