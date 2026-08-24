@@ -3,7 +3,7 @@ package com.tangem.data.promo.di
 import com.squareup.moshi.Moshi
 import com.tangem.data.promo.DefaultPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
