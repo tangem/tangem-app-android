@@ -274,6 +274,41 @@ class DefaultDeviceRegistrarTest {
         assertThat(slot.captured.payload.attestationToken).isNull()
     }
 
+    @Test
+    fun `reregister ignores the stale flag and re-runs registration`() = runTest {
+        // Arrange — the local flag says "registered", but the backend lost the record.
+        preferencesDataStore.edit { it[PreferencesKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        stubHappyPath()
+
+        // Act
+        val result = registrar.reregister()
+
+        // Assert — it did NOT short-circuit on the flag; it hit the network and re-persisted.
+        assertThat(result.isRight()).isTrue()
+        coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
+        coVerify { store.save(any()) }
+        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+    }
+
+    @Test
+    fun `reregister leaves the flag unset when re-registration fails so the next launch retries`() = runTest {
+        preferencesDataStore.edit { it[PreferencesKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.TOO_MANY_REQUESTS,
+                message = "rate-limited",
+                errorBody = null,
+            ),
+        ) as ApiResponse<NonceApiResponse>
+
+        val result = registrar.reregister()
+
+        assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
+        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isEqualTo(false)
+    }
+
     private fun stubHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
