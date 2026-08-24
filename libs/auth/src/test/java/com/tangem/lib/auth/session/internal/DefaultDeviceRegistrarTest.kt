@@ -14,7 +14,7 @@ import com.tangem.lib.auth.api.models.response.NonceApiResponse
 import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
@@ -95,12 +95,12 @@ class DefaultDeviceRegistrarTest {
         coVerify { authApi.requestDeviceNonce(any()) }
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify { store.save(any()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
     }
 
     @Test
     fun `register short-circuits without network when the flag is already set`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
 
         val result = registrar.register()
 
@@ -119,7 +119,7 @@ class DefaultDeviceRegistrarTest {
         assertThat(result.leftOrNull()).isEqualTo(DeviceRegistrationError.DeviceKeyUnavailable)
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
@@ -138,7 +138,7 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
@@ -191,7 +191,7 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
         coVerify(exactly = 0) { store.save(any()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
@@ -215,7 +215,7 @@ class DefaultDeviceRegistrarTest {
 
         // Device is already registered server-side — no error, flag set, but no tokens minted here.
         assertThat(result.isRight()).isTrue()
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
         coVerify(exactly = 0) { store.save(any()) }
     }
 
@@ -228,7 +228,7 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.PersistenceFailed::class.java)
         // Flag must stay unset so the next launch retries cleanly.
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
