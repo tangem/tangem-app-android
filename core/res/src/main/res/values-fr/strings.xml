@@ -1240,6 +1240,13 @@
   <string name="provider_name_support">Assistance %s</string>
   <string name="push_notification_settings_banner_description">Les notifications push sont activées mais ne fonctionneront pas avant que vous les autorisiez</string>
   <string name="push_notification_settings_banner_title">Autoriser les notifications</string>
+  <string name="push_notification_settings_offers_updates_subtitle">Actualités de nos produits, offres exclusives et rappels d\'activité.</string>
+  <string name="push_notification_settings_offers_updates_title">Offres et Actualités</string>
+  <string name="push_notification_settings_price_alerts_subtitle">Recevez des notifications sur les variations de prix des principales cryptomonnaies.</string>
+  <string name="push_notification_settings_price_alerts_title">Alertes de Prix</string>
+  <string name="push_notification_settings_title">Paramètres de Notifications</string>
+  <string name="push_notification_settings_transaction_alerts_subtitle">Alertes en temps réel concernant les transactions, échanges et mises à jour importantes.</string>
+  <string name="push_notification_settings_transaction_alerts_title">Alertes et Transactions</string>
   <string name="push_notification_warning_sheet_button_enable">Activer les notifications</string>
   <string name="push_notification_warning_sheet_description">Vous ne recevrez pas de notifications pour les dépôts, les retraits et les transactions. Vous pouvez les activer à tout moment dans les paramètres du portefeuille.</string>
   <string name="push_notification_warning_sheet_title">Notifications désactivées</string>
@@ -2126,6 +2133,11 @@
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les\nnotifications push?</string>
   <string name="user_push_notification_banner_subtitle">Activez les notifications pour recevoir des alertes lorsque des fonds arrivent dans votre portefeuille.</string>
   <string name="user_push_notification_banner_title">Ne manquez aucune transaction</string>
+  <string name="user_wallet_add_hardware_description">Scannez une carte Tangem pour l’ajouter</string>
+  <string name="user_wallet_add_hardware_title">Ajouter un portefeuille matériel</string>
+  <string name="user_wallet_add_mobile_description">Créez un nouveau portefeuille sur cet appareil</string>
+  <string name="user_wallet_add_mobile_title">Ajouter un portefeuille mobile</string>
+  <string name="user_wallet_coming_soon_dialog_description">Nous travaillons sur la possibilité de créer plusieurs portefeuilles mobiles.</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
   <string name="user_wallet_list_delete_hw_prompt">Si vous supprimez ce portefeuille sans sauvegarde, vous perdrez définitivement l\'accès à vos fonds.</string>
   <string name="user_wallet_list_delete_prompt">Êtes-vous sûr de vouloir supprimer ce portefeuille ?</string>
