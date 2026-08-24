@@ -452,6 +452,106 @@ sealed class TangemPayAnalyticsEvents(
         )
     }
 
+    object Plastic {
+
+        private const val CATEGORY = "Visa Plastic"
+
+        class CardTypeSelectionScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card Type Selection Screen Opened",
+        )
+
+        class VirtualTypeClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Virtual Type Clicked",
+        )
+
+        class PlasticTypeClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Plastic Type Clicked",
+        )
+
+        class CardTypeSwiped : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card Type Swiped",
+        )
+
+        class VirtualSelectClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Virtual Select Clicked",
+        )
+
+        class PlasticSelectClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Plastic Select Clicked",
+        )
+
+        class DeliveryCostNotEnoughMoneyShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Delivery Cost Not Enough Money Showed",
+        )
+
+        class AddressScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Address Screen Opened",
+        )
+
+        class OrderCardClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Order Card Clicked",
+        )
+
+        class CardOrderedSuccessScreenShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card Ordered Success Screen Showed",
+        )
+
+        class CardInTransitBannerShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card In Transit Banner Showed",
+        )
+
+        class ActivateCardBannerButtonClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Activate Card Banner Button Clicked",
+        )
+
+        class CardInTransitDetailsShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card In Transit Details Showed",
+        )
+
+        class ActivateCardManagementButtonClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Activate Card Management Button Clicked",
+        )
+
+        class CardActivationScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card Activation Screen Opened",
+        )
+
+        class CardLast4DigitsEntered : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card Last 4 Digits Entered",
+        )
+
+        class ActivationContinueClicked : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Activation Continue Clicked",
+        )
+
+        class Last4DigitsValidationErrorShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Last 4 Digits Validation Error Showed",
+        )
+
+        class CardActivationSuccess : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Card Activation Success",
+        )
+    }
+
     object Cashback {
 
         private const val CATEGORY = "Visa Cashback"

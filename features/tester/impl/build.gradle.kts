@@ -16,6 +16,7 @@ dependencies {
     implementation(deps.androidx.activity)
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
     implementation(deps.androidx.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
@@ -59,6 +60,7 @@ dependencies {
     api(deps.kotlin.immutable.collections)
     api(deps.kotlin.serialization)
     implementation(deps.arrow.core)
+    implementation(deps.decompose)
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
     implementation(deps.androidx.core.ktx)
@@ -68,6 +70,7 @@ dependencies {
     /** Core modules */
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
@@ -75,6 +78,7 @@ dependencies {
     implementation(projects.grow.datasource)
 
     /** Feature Apis */
+    api(projects.features.storiesV2.api)
     api(projects.features.survey.api)
     api(projects.features.tester.api)
     implementation(projects.features.pushNotifications.api)

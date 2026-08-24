@@ -16,6 +16,8 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -42,6 +44,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
+    private val polymarketRepository: PolymarketRepository,
+    private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
@@ -80,14 +84,28 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
         if (userWallet.isLocked) return null
 
         val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = userWalletId)
-            ?: return PredictionAccountStatusValue.NotOnboarded
+            ?: return resolveWithoutAddresses(userWalletId = userWalletId)
 
         val state = getPolymarketWalletStatusUseCase(addresses = addresses)
             .onLeft { logger.e("Prediction wallet status is unavailable for $userWalletId: $it") }
             .getOrNull()
             ?: return null
 
-        return when (state.status) {
+        return toStatusValue(userWalletId = userWalletId, status = state.status) {
+            active(addresses = addresses)
+        }
+    }
+
+    /**
+     * Shared by both reads so they cannot disagree about a status. [whenReady] supplies the ready state, which
+     * differs by path: the balance needs credentials only the addressed path has.
+     */
+    private suspend fun toStatusValue(
+        userWalletId: UserWalletId,
+        status: PolymarketWalletStatus,
+        whenReady: suspend () -> PredictionAccountStatusValue?,
+    ): PredictionAccountStatusValue? {
+        val value = when (status) {
             PolymarketWalletStatus.NOT_CREATED -> PredictionAccountStatusValue.NotOnboarded
             PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS -> onboarding(
                 PredictionAccountStatusValue.Onboarding.Stage.DEPLOYING,
@@ -101,8 +119,16 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             -> PredictionAccountStatusValue.Error.OnboardingFailed
             // A status this build does not know is "not ready, keep polling" by the BFF contract, not an error
             PolymarketWalletStatus.UNKNOWN -> null
-            PolymarketWalletStatus.READY_TO_TRADE -> active(addresses = addresses)
+            PolymarketWalletStatus.READY_TO_TRADE -> whenReady()
         }
+
+        // Keyed on the status, not on the value: an unrecognised status is no answer and must not drop the
+        // record, but a recognised one is an answer even when the balance behind it could not be read.
+        if (status != PolymarketWalletStatus.UNKNOWN) {
+            recordConfirmation(userWalletId = userWalletId, status = status)
+        }
+
+        return value
     }
 
     /**
@@ -146,6 +172,30 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             },
             ifRight = { isBlocked -> !isBlocked },
         )
+    }
+
+    /** A wallet this device never derived an address for: the backend still knows it by its Tangem wallet id. */
+    private suspend fun resolveWithoutAddresses(userWalletId: UserWalletId): PredictionAccountStatusValue? {
+        val state = polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue)
+            .onLeft { logger.e("Prediction wallet status by id is unavailable for $userWalletId: $it") }
+            .getOrNull()
+            ?: return null
+
+        return toStatusValue(userWalletId = userWalletId, status = state.status) {
+            PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
+        }
+    }
+
+    /**
+     * The only place that re-reads the backend for a wallet the entry gate has stopped asking about, so a wallet
+     * the backend no longer calls ready loses its record here rather than keeping one that outlived the fact.
+     */
+    private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
+        if (status == PolymarketWalletStatus.READY_TO_TRADE) {
+            polymarketOnboardedStore.markOnboarded(userWalletId)
+        } else {
+            polymarketOnboardedStore.clear(userWalletId)
+        }
     }
 
     private fun onboarding(stage: PredictionAccountStatusValue.Onboarding.Stage) =
