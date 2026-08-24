@@ -119,12 +119,13 @@ private fun TxHistoryDetailsOverflowMenu(
                         color = TangemTheme.colors2.border.neutral.quaternary,
                     )
                 }
+                val onAction = item.action.asOnClick()
                 TxHistoryDetailsMenuItem(
                     item = item,
                     onClick = {
                         hapticManager.perform(TangemHapticEffect.OneTime.Click)
                         isMenuExpanded = false
-                        item.onClick()
+                        onAction()
                     },
                 )
             }
@@ -133,7 +134,7 @@ private fun TxHistoryDetailsOverflowMenu(
                     item = TxHistoryDetailsUM.MenuItemUM(
                         icon = Icons.ic_document_24,
                         title = stringReference("Debug"),
-                        onClick = {},
+                        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
                     ),
                     onClick = {
                         hapticManager.perform(TangemHapticEffect.OneTime.Click)
@@ -149,6 +150,21 @@ private fun TxHistoryDetailsOverflowMenu(
         TxHistoryDebugView(model = debugModel, onDismiss = { isDebugViewShown = false })
     }
 }
+
+/**
+ * Tap handler of a menu row. A [Share][TxHistoryDetailsUM.MenuItemUM.Action.Share] row carries its text as a
+ * [TextReference]: it is resolved here, at composition, the same way the legacy express share sheet built its content —
+ * the model has no `Resources` to turn the localized summary into the shared string.
+ */
+@Composable
+@ReadOnlyComposable
+private fun TxHistoryDetailsUM.MenuItemUM.Action.asOnClick(): () -> Unit = when (this) {
+    is TxHistoryDetailsUM.MenuItemUM.Action.Direct -> onClick
+    is TxHistoryDetailsUM.MenuItemUM.Action.Share -> shareOnClick(text.resolveReference(), onShare)
+}
+
+/** Binds [onShare] to the [text] already resolved by the composition, so the row's handler needs no `Resources`. */
+private fun shareOnClick(text: String, onShare: (String) -> Unit): () -> Unit = { onShare(text) }
 
 /**
  * One row of the header's overflow context menu: a leading 24dp glyph and a label, padded to the iOS-style menu metrics
@@ -279,12 +295,12 @@ private fun previewMenu() = persistentListOf(
     TxHistoryDetailsUM.MenuItemUM(
         icon = Icons.ic_copy_24,
         title = stringReference("Transaction ID"),
-        onClick = {},
+        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
     ),
     TxHistoryDetailsUM.MenuItemUM(
         icon = Icons.ic_info_24,
         title = stringReference("Explore"),
-        onClick = {},
+        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
     ),
 )
 

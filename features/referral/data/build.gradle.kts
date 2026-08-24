@@ -18,7 +18,6 @@ dependencies {
 
     /** Data modules */
     implementation(projects.data.common)
-    implementation(deps.androidx.datastore)
 
     /** Domain modules */
     api(projects.domain.common)

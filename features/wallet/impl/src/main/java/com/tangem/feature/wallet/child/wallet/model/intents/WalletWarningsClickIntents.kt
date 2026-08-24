@@ -23,6 +23,7 @@ import com.tangem.domain.hotwallet.CloseHotWalletUpgradeBannerUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -412,7 +413,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         appRouter.push(
             Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
-                nextScreen = null,
+                nextScreen = Earn(preselectedEarnType = PreselectedEarnType.Yield),
                 screenSource = "YieldMainBanner",
                 shouldMarkAsSeenOnClose = false,
             ),

@@ -112,6 +112,18 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetStakingTargetsByAddressUseCase(
+        stakeKitRepository: StakeKitRepository,
+        p2pEthPoolRepository: P2PEthPoolRepository,
+    ): GetStakingTargetsByAddressUseCase {
+        return GetStakingTargetsByAddressUseCase(
+            stakeKitRepository = stakeKitRepository,
+            p2pEthPoolRepository = p2pEthPoolRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideFetchStakingYieldBalanceUseCase(
         singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,

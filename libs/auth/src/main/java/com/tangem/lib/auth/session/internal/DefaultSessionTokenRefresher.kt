@@ -4,12 +4,14 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.AuthApiRequest
-import com.tangem.datasource.api.auth.models.request.AuthenticationPayload
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
-import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.AuthApiRequest
+import com.tangem.lib.auth.api.models.request.AuthenticationPayload
+import com.tangem.lib.auth.api.models.request.NonceApiRequest
+import com.tangem.lib.auth.api.models.request.RefreshApiRequest
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.lib.auth.attestation.AttestationProvider
+import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
@@ -33,6 +35,7 @@ internal class DefaultSessionTokenRefresher(
     private val deviceKeyManager: DeviceKeyManager,
     private val nonceDecryptor: AuthNonceDecryptor,
     private val signedRequestPayload: SignedRequestPayload,
+    private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val clock: Clock,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -156,7 +159,7 @@ internal class DefaultSessionTokenRefresher(
         val payload = AuthenticationPayload(
             devicePublicKey = devicePublicKeyBase64,
             nonce = nonce,
-            attestationToken = null,
+            attestationToken = attestationProvider.getAttestationTokenOrNull(nonce),
             metadata = signedRequestPayload.deviceMetadata,
         )
         val signature = try {

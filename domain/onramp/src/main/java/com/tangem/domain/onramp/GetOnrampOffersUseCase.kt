@@ -42,7 +42,7 @@ class GetOnrampOffersUseCase(
         if (validQuotes.isEmpty()) return emptyList()
 
         val isGooglePayAvailable = settingsRepository.isGooglePayAvailability()
-        val bestRateQuote = validQuotes.maxWithOrNull(
+        val bestRateQuote = validQuotes.filterNot { it.isRestricted }.maxWithOrNull(
             compareOffersByRateSpeedAndPriority(
                 isGooglePayAvailable = isGooglePayAvailable,
                 isSepaPrioritized = true,
@@ -55,24 +55,30 @@ class GetOnrampOffersUseCase(
             OnrampOffer(quote = quote, rateDif = rateDif)
         }
 
-        val recentOffer = findRecentOffer(offers, transactions)
-        val bestRateOffer = findBestRateOffer(offers, isGooglePayAvailable)
-        val fastestOffer = findFastestOffer(offers, isGooglePayAvailable)
+        val purchasableOffers = offers.filterNot { it.quote.isRestricted }
+        // A restricted offer can't be bought, so it never earns a recommendation — but when every
+        // provider is restricted one still stands in, so the offers block isn't left empty
+        val comparableOffers = purchasableOffers.ifEmpty {
+            listOfNotNull(offers.maxWithOrNull(offerComparator(isGooglePayAvailable)))
+        }
 
         return buildOffersBlocks(
-            recentOffer = recentOffer,
-            bestRateOffer = bestRateOffer,
-            fastestOffer = fastestOffer,
+            recentOffer = findRecentOffer(purchasableOffers, transactions),
+            bestRateOffer = findBestRateOffer(comparableOffers, isGooglePayAvailable),
+            fastestOffer = findFastestOffer(comparableOffers, isGooglePayAvailable),
             allQuotes = quotes,
-            isSingleOffer = offers.size == 1,
+            isSingleOffer = comparableOffers.size == 1,
         )
     }
 
-    private fun findRecentOffer(offers: List<OnrampOffer>, transactions: List<OnrampTransaction>): OnrampOffer? {
+    private fun findRecentOffer(
+        purchasableOffers: List<OnrampOffer>,
+        transactions: List<OnrampTransaction>,
+    ): OnrampOffer? {
         if (transactions.isEmpty()) return null
         val matchingPairs = transactions.mapNotNull { transaction ->
             if (!isRecentUsed(transaction.status)) return@mapNotNull null
-            val matchingOffer = offers.find { offer ->
+            val matchingOffer = purchasableOffers.find { offer ->
                 offer.quote.provider.info.name == transaction.providerName &&
                     offer.quote.paymentMethod.name == transaction.paymentMethod
             }
@@ -81,17 +87,17 @@ class GetOnrampOffersUseCase(
         return matchingPairs.maxByOrNull { (_, transaction) -> transaction.timestamp }?.first
     }
 
-    private fun findBestRateOffer(offers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
-        return offers.maxWithOrNull(offerComparator(isGooglePayAvailable))
+    private fun findBestRateOffer(comparableOffers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
+        return comparableOffers.maxWithOrNull(offerComparator(isGooglePayAvailable))
     }
 
-    private fun findFastestOffer(offers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
-        val instantOffers = offers.filter { it.quote.paymentMethod.type.isInstant() }
+    private fun findFastestOffer(comparableOffers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
+        val instantOffers = comparableOffers.filter { it.quote.paymentMethod.type.isInstant() }
 
         return if (instantOffers.isNotEmpty()) {
             instantOffers.maxWithOrNull(fastestOfferComparator(isGooglePayAvailable))
         } else {
-            val offersBySpeed = offers.groupBy { offer ->
+            val offersBySpeed = comparableOffers.groupBy { offer ->
                 offer.quote.paymentMethod.type.getProcessingSpeed().speed
             }
             val fastestSpeed = offersBySpeed.keys.minOrNull() ?: return null

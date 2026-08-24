@@ -2,10 +2,10 @@ package com.tangem.domain.txhistory.list
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Reads the unified transaction history for a currency: the on-chain backbone (BSDK / TangemPay / index-backed
@@ -18,6 +18,11 @@ interface HistoryTxListManager {
     val state: StateFlow<HistoryState>
 
     val historySources: Flow<HistorySources>
+
+    /**
+     * Reactive stream of a single row tracked by its [TxHistoryInfo.txId], for the in-app details sheet.
+     */
+    fun txExpressHistoryItemFlow(txId: String): Flow<TxHistoryInfo>
 
     fun reload()
 
@@ -69,16 +74,3 @@ interface HistoryTxListManager {
         ): HistoryTxListManager
     }
 }
-
-/**
- * Reactive stream of a single row tracked by its [TxHistoryInfo.txId], for the in-app details sheet.
- *
- * Seeded with the tapped [item] so the sheet always has an immediate snapshot, then re-emits the matching row from
- * the live merged list as its status changes. The seed also covers rows not present in [state] yet (e.g. a pending
- * tx surfaced from the currency status), which would otherwise never resolve.
- */
-fun HistoryTxListManager.txHistoryInfoFlow(item: TxHistoryInfo): Flow<TxHistoryInfo> = state
-    .mapNotNull { (it as? HistoryState.Content)?.items }
-    .mapNotNull { list -> list.firstOrNull { it.txId == item.txId } }
-    .onStart { emit(item) }
-    .distinctUntilChanged()

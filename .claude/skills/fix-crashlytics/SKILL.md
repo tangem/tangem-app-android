@@ -1,7 +1,7 @@
 ---
 name: fix-crashlytics
-description: Auto-fix Crashlytics crashes from Jira — find [Crashlytics] tasks, analyze crash, fix code, open a pull request, comment on Jira. Runs on CI without prompts.
-allowed-tools: Read, Grep, Glob, Bash, Edit, Write, Agent, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__searchJiraIssuesUsingJql, mcp__atlassian__getJiraIssue, mcp__atlassian__addCommentToJiraIssue, mcp__firebase__crashlytics_get_issue, mcp__firebase__crashlytics_list_events, mcp__firebase__firebase_get_environment
+description: Auto-fix Crashlytics crashes from Jira — find [Crashlytics] tasks, verify the crash is still reachable on develop (skip duplicates and already-fixed ones), analyze crash, fix code, open a pull request, comment on Jira. Runs on CI without prompts.
+allowed-tools: Read, Grep, Glob, Bash, Edit, Write, Agent, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__searchJiraIssuesUsingJql, mcp__atlassian__getJiraIssue, mcp__atlassian__addCommentToJiraIssue, mcp__firebase__crashlytics_get_issue, mcp__firebase__crashlytics_list_events, mcp__firebase__crashlytics_get_report, mcp__firebase__firebase_get_environment
 argument-hint: [--dry-run] [--since <JQL date expression>]
 ---
 
@@ -96,7 +96,9 @@ Collect all returned issue keys (e.g., `CRASHAND-19`).
 
 If no tasks found, output "No Crashlytics tasks found since <since value>" and stop.
 
-## Phase 2: Filter Out Already-Branched Tasks
+## Phase 2: Filter Out Tickets That Need No Work
+
+### 2a. Filter by Existing Branch
 
 For each ticket key, check if a branch already exists:
 
@@ -114,7 +116,43 @@ For each remaining ticket, check if it was already processed by a previous run:
 - Check if any comment body starts with `**Claude Report**`.
 - If such a comment exists: record status `Skipped (already commented)` and remove from the processing list.
 
-Keep only tickets that passed both filters.
+### 2c. Filter Out Symbol Duplicates
+
+Crashlytics opens a **new** ticket for every alert, so the same defect comes back as a fresh key
+whenever an event arrives from an old build. Before spending work on a ticket, check whether that exact
+crash site was already handled.
+
+The ticket summary carries the crashing symbol: `[Crashlytics] [New Fatal Issue] <fully.qualified.Class.method>`.
+Keep the **full** symbol — `Class.method` alone collides across packages (several modules define a
+`Content`, a `Factory`, a `State`), and a collision here silently skips a live defect.
+
+1. Candidate CRASHAND tickets. Jira text search tokenises on dots, so query by the short form and then
+   **confirm on the full symbol**:
+   - Tool: `mcp__atlassian__searchJiraIssuesUsingJql`
+   - `jql`: `project = "CRASHAND" AND summary ~ "<Class.method>" AND key != <TICKET_KEY> ORDER BY created ASC`
+   - `fields`: `["summary", "status", "resolution"]`
+   - Discard every hit whose summary does not contain the **exact** `<fully.qualified.Class.method>`.
+
+2. For each surviving candidate `<EARLIER_KEY>`, check whether its fix actually landed on `develop`:
+   ```bash
+   git log --oneline origin/develop --grep "<EARLIER_KEY>"
+   ```
+   A non-empty result is the proof — the earlier ticket's commit is on `develop`.
+
+Treat this ticket as a duplicate only when both hold: an earlier ticket carries the exact same symbol
+**and** the command above found its commit on `origin/develop`. Then record
+`Skipped (duplicate of <EARLIER_KEY>)`, comment (unless `--dry-run`), and remove it from the processing
+list.
+
+```
+**Claude Report**
+**Analysis:** Duplicate of <EARLIER_KEY> — the same crash site (`<Class.method>`) was already fixed by <commit sha> ("<commit subject>").
+```
+
+Do **not** skip on a symbol match alone — an earlier ticket with no landed fix means the defect is still
+open, so keep processing. Step 3c2 below is the authoritative check.
+
+Keep only tickets that passed all three filters.
 
 If no tickets remain after filtering, output the summary table and stop.
 
@@ -146,6 +184,25 @@ Extract from the response:
 - **Exception type and message** (from `subtitle` or `exceptions`)
 - **Blame frame**: file name, line number, symbol (method name)
 - **Full stacktrace** (from `exceptions` field in events)
+- **Crashing build**: `version.displayName` (e.g. `6.0 (1789)`) and the git revision the build was made
+  from — `buildStamp.repositories.revision`. **Step 3c2 needs the revision**; if the event carries none,
+  that step cannot run and says so instead of guessing (there is no way to map a version name back to a
+  commit from the report alone).
+- **Crashed thread**: the `threads` entry marked `(crashed)`. A race diagnosis requires evidence of a
+  second thread; a single main-thread stack is not one.
+
+> **Line numbers in the blame frame are unreliable.** R8 mangles them — real reports carry values like
+> `StateBuilder.kt:2` for a method a hundred lines down. Locate the code by the **symbol** (method name)
+> from the blame frame and treat the line number as a hint only.
+
+Then pull the crash's reach, which decides how much this ticket is worth:
+
+- Call `mcp__firebase__crashlytics_get_report` with `report: "topVersions"`, `filter: {"issueId": "<ISSUE_ID>",
+  "intervalStartTime": "<90 days ago, ISO 8601>", "intervalEndTime": "<now, ISO 8601>"}`, `pageSize`: `25`.
+- Record total `eventsCount` and the versions with non-zero counts. Carry both into the Jira comment and
+  the summary table.
+- A single event on a single old build is **not** a reason to skip on its own, but it must be reported —
+  it is what tells a human this is a latent defect rather than a live regression.
 
 Classify the crash by examining the blame frame and full stacktrace:
 
@@ -214,10 +271,69 @@ When the crash is in a Tangem SDK package, do NOT attempt to fix it. Instead, an
 1. Extract the simple class name from the blame frame's `symbol` (e.g., `com.tangem.feature.foo.BarClass.method` -> `BarClass`).
 2. Use `Glob("**/<ClassName>.kt")` to find the file.
 3. If multiple files match, use the full package path from the stacktrace to disambiguate.
-4. `Read` the file. Focus on the method and line number from the blame frame.
+4. `Read` the file. Navigate by the **method name** from the blame frame — the line number is an R8-mangled
+   hint, not an address.
 5. Use `Grep` to understand related types, method signatures, or null-safety context if needed.
 
 If the file cannot be found: skip with `Skipped (file not found)`.
+
+### Step 3c2: Verify the Crash Is Still Reachable on develop
+
+**Do this before writing any fix.** A crash event is a report about the build it came from, not about
+`develop`. Events routinely arrive from builds that are weeks old, so the defect may already be fixed —
+in which case the correct output is a comment, not a pull request.
+
+Analysing the crash against `HEAD` while the event came from an older build also produces *invented* root
+causes: a guard added after that build gets read as if it had been there, and the write-up ends up
+describing a race between a check that did not exist. Read the code **as it was in the crashing build**.
+
+1. Make the crashing revision available (CI clones are shallow):
+   ```bash
+   git cat-file -e <REVISION>^{commit} 2>/dev/null || git fetch --depth=1 origin <REVISION> 2>/dev/null
+   ```
+   If the revision cannot be fetched, note `revision unavailable` and continue with the fix — but say so
+   in the Jira comment instead of asserting a root cause.
+
+2. Diff the whole file between the crashing revision and `develop` — never a grepped window, which hides
+   changes that fall outside it or past the end of a long method:
+   ```bash
+   git diff <REVISION>..origin/develop -- <FILE>
+   ```
+
+3. If the diff is empty, the file is untouched: the crash is reachable. Continue to Step 3d and base the
+   root cause on this code.
+
+4. If the diff is non-empty, decide whether it touched the crash site. Read the hunk headers — `git diff`
+   labels each with its enclosing declaration (`@@ … @@ fun methodName(`) — and check whether the crashing
+   method appears among them. If the hunks are large or the labels ambiguous, extract both versions of the
+   method and compare them directly:
+   ```bash
+   git show <REVISION>:<FILE> > "${TMPDIR:-/tmp}/crash_old.kt"   # then Read both and compare the methods
+   ```
+   Then find what changed it:
+   ```bash
+   git log --oneline <REVISION>..origin/develop -- <FILE>
+   ```
+   - A commit that added a guard, null-check or bounds-check at the crash site → the defect is **already
+     fixed**. Record `Skipped (already fixed in <sha>)`, comment (unless `--dry-run`), and move on.
+   - Unrelated changes → continue to Step 3d, but write the root cause against the **old** code and note
+     in the comment which build the event came from.
+
+Comment body for the already-fixed case:
+
+```
+**Claude Report**
+**Crash location:** <fully.qualified.Class.method>
+**Exception:** <ExceptionType>: <message>
+**Event:** <N> event(s), <versions>; crashing build <version> (<revision>)
+**Analysis:** The event came from build <version>, built from <revision>. The crash site was fixed on develop by <sha> ("<commit subject>"), which landed after that build was cut — the crashing build did not contain the fix.
+**Recommendation:** No code change needed. Close as fixed / duplicate.
+```
+
+Never claim a race, a lifecycle conflict or any other mechanism unless the evidence supports it: a race
+needs a second thread in the report, and a check-then-use race needs that check to exist in the crashing
+build. If the mechanism is unclear, describe what the state was (e.g. "index -1 over an empty list") and
+stop there.
 
 ### Step 3d: Fix the Bug
 
@@ -234,12 +350,38 @@ Apply a **minimal, defensive fix** based on the crash type. Do NOT refactor, add
 | `ClassCastException` | Use `as?` safe cast with fallback. |
 | `ConcurrentModificationException` | Copy collection before iteration: `.toList()`. |
 
+**Fix every occurrence of the same pattern in that file — not just the line from the stacktrace.**
+
+Fixing only the reported line is what produces a stream of near-identical tickets: the next user hits the
+sibling method, Crashlytics files a new alert, and the whole cycle repeats. A real case: the reported
+`getSelectedWalletUM()` was guarded while `getSelectedWallet()` and `getSelectedWalletId()` — directly
+below it, in the same file, indexing the same list the same unchecked way — were left untouched.
+
+After fixing the blame-frame line, grep the file for the same unsafe construct and fix all of them:
+
+| Exception | What to grep for in the file |
+|-----------|------------------------------|
+| `IndexOutOfBoundsException` | `[` indexing on lists/arrays, `.first()`, `.last()`, `.single()` |
+| `NullPointerException` | `!!`, non-null returns derived from nullable state, `lateinit` reads |
+| `ClassCastException` | `as ` hard casts |
+| `IllegalStateException` | `error(`, `require(`, `check(`, `lateinit` reads |
+
+Keep the sibling fixes in the same style as the primary one, so the change reads as one decision.
+
 **Rules:**
-- Only change the file identified in the blame frame.
-- Make the smallest possible change that prevents the crash.
+- Only change the file identified in the blame frame — sibling occurrences **inside that file** are in
+  scope, occurrences in other files are not.
+- Make the smallest change per occurrence that prevents the crash. No refactors, no renames, no cleanup.
 - Use `Edit` tool for precise changes (not `Write` for the whole file).
 - Follow existing code patterns in the file (logging, error handling style).
 - Do NOT add comments explaining the fix — the commit message and Jira comment handle that.
+- If the same pattern also appears in **other** files, do not touch them. Collect the list
+  (`file:line`, max 10) and report it in the Jira comment as follow-up work.
+
+```bash
+# same pattern elsewhere — report only, never edit
+git grep -n "<pattern>" -- '*.kt' | grep -v "<FILE>" | head -10
+```
 
 ### Step 3e: Build Verification
 
@@ -302,8 +444,9 @@ gh pr create --base develop --head bugfix/<TICKET_KEY> \
 ## What
 Defensive fix for a Crashlytics-reported crash: <one-line description of the crash and the guard added>.
 
-**Root cause:** <short description of what caused the crash>
-**Fix:** <short description of the code change>
+**Root cause:** <short description of what caused the crash, as evidenced by the crashing build's code>
+**Fix:** <short description of the code change, including sibling occurrences fixed in the same file>
+**Reach:** <N> event(s) on <versions>; crashing build <version>
 
 EOF
 )"
@@ -331,12 +474,18 @@ If NOT in `--dry-run` mode, call `mcp__atlassian__addCommentToJiraIssue`:
 - `commentBody`:
   ```
   **Claude Report**
-  **Root cause:** <description of what caused the crash>
-  **Fix:** <description of the code change>
+  **Event:** <N> event(s), <versions with non-zero counts>; crashing build <version> (<revision>)
+  **Root cause:** <what caused the crash, stated against the code as it was in the crashing build>
+  **Fix:** <description of the code change, including sibling occurrences fixed in the same file>
   **Branch:** bugfix/<TICKET_KEY>
   **PR:** <PR URL from Step 3f>
   **Affected file:** <relative path to the changed file>
+  **Same pattern elsewhere:** <file:line list from Step 3d, or "none">
   ```
+
+Root cause discipline: describe the state that produced the crash and the code path that reached it.
+Do not name a mechanism the report does not evidence — no "race", "concurrent", "TOCTOU" unless a second
+thread appears in the stacktrace and the interleaving is actually possible in the crashing build's code.
 
 Record status as `Fixed` and store the PR URL for the summary table.
 
@@ -347,17 +496,25 @@ Output the results as a Markdown table:
 ```markdown
 ## Crashlytics Auto-Fix Summary
 
-| Ticket | Crash | File | Status | PR |
-|--------|-------|------|--------|----|
-| CRASHAND-123 | NPE in ClassName.method | ClassName.kt | Fixed | <PR URL> |
-| CRASHAND-124 | IOOB in OtherClass.method | OtherClass.kt | Skipped (branch exists) | — |
-| CRASHAND-125 | ISE in ThirdClass.method | ThirdClass.kt | Failed (build failed) | — |
+| Ticket | Crash | File | Events | Status | PR |
+|--------|-------|------|--------|--------|----|
+| CRASHAND-123 | NPE in ClassName.method | ClassName.kt | 412 on 6.1 (1794) | Fixed | <PR URL> |
+| CRASHAND-124 | IOOB in OtherClass.method | OtherClass.kt | 3 on 6.0 (1789) | Skipped (branch exists) | — |
+| CRASHAND-125 | ISE in ThirdClass.method | ThirdClass.kt | 1 on 6.0 (1789) | Skipped (already fixed in a1b2c3d) | — |
+| CRASHAND-126 | NPE in FourthClass.method | FourthClass.kt | 27 on 6.1 (1791) | Failed (build failed) | — |
 ```
 
-For the `PR` column: the PR URL for `Fixed` tickets, or `—` for skipped/commented/failed tickets (and
-the would-be branch name in `--dry-run`).
+For the `Events` column: total event count over the last 90 days plus the versions carrying them — this
+is what lets a human triage the batch. For the `PR` column: the PR URL for `Fixed` tickets, or `—` for
+skipped/commented/failed tickets (and the would-be branch name in `--dry-run`).
 
 After the table, output totals:
 ```
-**Total:** X tasks found, Y fixed (PRs opened), Z commented (SDK), W skipped, V failed
+**Total:** X tasks found, Y fixed (PRs opened), Z commented (SDK/external), W skipped, V failed
+```
+
+If any ticket was skipped as already-fixed or as a duplicate, add one line naming them — those are the
+tickets a human should close, and they are easy to miss inside the table:
+```
+**Close without a fix:** CRASHAND-125 (fixed in a1b2c3d), CRASHAND-127 (duplicate of CRASHAND-18)
 ```

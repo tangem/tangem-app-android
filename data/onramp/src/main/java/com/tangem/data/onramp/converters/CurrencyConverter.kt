@@ -1,6 +1,6 @@
 package com.tangem.data.onramp.converters
 
-import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
+import com.tangem.grow.datasource.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.utils.converter.TwoWayConverter
 

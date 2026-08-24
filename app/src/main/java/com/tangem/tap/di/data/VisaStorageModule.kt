@@ -1,7 +1,7 @@
 package com.tangem.tap.di.data
 
-import com.tangem.datasource.local.visa.VisaAuthTokenStorage
-import com.tangem.datasource.local.visa.VisaOTPStorage
+import com.tangem.spend.datasource.visa.storage.VisaAuthTokenStorage
+import com.tangem.spend.datasource.visa.storage.VisaOTPStorage
 import com.tangem.tap.data.DefaultVisaAuthTokenStorage
 import com.tangem.tap.data.DefaultVisaOTPStorage
 import dagger.Binds

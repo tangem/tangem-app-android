@@ -1,22 +1,30 @@
 package com.tangem.features.tangempay.account
 
+import android.text.format.DateFormat
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.model.CashbackDisplayMode
+import com.tangem.domain.pay.model.CashbackSummary
+import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
@@ -25,8 +33,15 @@ import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdrawButton
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.unmockkObject
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +52,8 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.joda.time.DateTime
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -50,6 +67,39 @@ internal class TangemPayDetailsModelTest {
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
+    private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase = mockk(relaxed = true)
+
+    @BeforeEach
+    fun resetCashbackMocks() {
+        clearMocks(analytics, tangemPayFeatureToggles, getCashbackSummaryUseCase)
+    }
+
+    @Test
+    fun `GIVEN cashback block loaded WHEN status re-emits THEN block survives`() = runTest {
+        // Arrange
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+        assertThat(model.uiState.value.cashbackBlockState).isNotNull()
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.cashbackBlockState).isNotNull()
+        coVerify(atLeast = 1) { getCashbackSummaryUseCase(any()) }
+        model.onDestroy()
+        unmockkObject(DateTimeFormatters)
+        unmockkStatic(DateFormat::class)
+    }
 
     @ParameterizedTest
     @MethodSource("provideMutedCases")
@@ -219,10 +269,102 @@ internal class TangemPayDetailsModelTest {
         ),
     )
 
+    @Test
+    fun `GIVEN other networks sheet WHEN dismissed THEN choose network is reopened instead of closing the slot`() =
+        runTest {
+            // Arrange
+            // Both sheets share one slot, so "Other networks" replaces its opener; closing it must not drop the
+            // user out to the account screen.
+            val model = createModel(testScope = this)
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
+
+            // Act
+            model.onSelectDisabled()
+            model.onOtherNetworksDismiss()
+
+            // Assert
+            assertThat(openedSheets.filterNotNull()).containsExactly(
+                TangemPayDetailsNavigation.OtherNetworks,
+                TangemPayDetailsNavigation.ChooseNetwork(walletId = userWalletId),
+            ).inOrder()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN deactivated account WHEN add funds clicked THEN add funds sheet opened`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, statusValue = deactivatedStatus(id = "customer-id"))
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+
+        // Act
+        model.onClickAddFunds()
+
+        // Assert
+        assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>()).hasSize(1)
+        model.onDestroy()
+    }
+
     private fun SlotNavigation<TangemPayDetailsNavigation>.trackSlot(): List<TangemPayDetailsNavigation?> {
         val tracked = mutableListOf<TangemPayDetailsNavigation?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
         return tracked
+    }
+
+    @Test
+    fun `GIVEN a delivering card WHEN the status re-emits THEN the in-transit banner event is sent once`() = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering)))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an active card WHEN it starts delivering THEN the in-transit banner event is sent`() = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+        verify(exactly = 0) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+        }
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(cardState = TangemPayCardState.Delivering))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardInTransitBannerShowed>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the delivery banner WHEN Activate card is tapped THEN the banner button event is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onActivateCardClick(cardId = "card_1")
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.ActivateCardBannerButtonClicked>())
+        }
+        model.onDestroy()
     }
 
     private fun createModel(
@@ -264,31 +406,48 @@ internal class TangemPayDetailsModelTest {
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = mockk(relaxed = true),
             sendFeedbackEmailUseCase = mockk(relaxed = true),
-            expressTransactionsEventListener = mockk(relaxed = true),
-            tangemPayFeatureToggles = mockk(relaxed = true),
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
             paymentAccountStatusFetcher = mockk(relaxed = true),
             produceTangemPayInitialDataUseCase = mockk(relaxed = true),
             onboardingRepository = mockk(relaxed = true),
             getCustomerOffers = mockk(relaxed = true),
-            getCashbackSummaryUseCase = mockk(relaxed = true),
+            getCashbackSummaryUseCase = getCashbackSummaryUseCase,
             getCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             setCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             tangemPayCurrencyFactory = mockk(relaxed = true),
         )
     }
 
+    private fun enabledCashbackSummary() = CashbackSummary.Enabled(
+        displayMode = CashbackDisplayMode.FULL,
+        cashback = TangemPayCashback(
+            confirmedAmount = BigDecimal("2.70"),
+            totalEarnedAmount = BigDecimal("2.70"),
+            currency = "USD",
+            payoutCurrency = "USDC",
+            previousPayout = null,
+            period = TangemPayCashback.Period(
+                year = 2026,
+                month = 8,
+                payoutStart = DateTime.parse("2026-09-04"),
+                payoutEnd = DateTime.parse("2026-09-08"),
+            ),
+        ),
+    )
+
     private fun loadedStatus(
         statusSource: StatusSource = StatusSource.ACTUAL,
         accountError: PaymentAccountStatusValue.Error? = null,
         availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         virtualAccount: VirtualAccountOnramp? = null,
+        cardState: TangemPayCardState = TangemPayCardState.Active,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
         every { depositAddress } returns "address"
         every { this@mockk.virtualAccount } returns virtualAccount
-        every { cards } returns listOf(tangemPayCard())
+        every { cards } returns listOf(tangemPayCard(state = cardState))
         every { balance } returns PaymentAccountStatusValue.Balance(
             fiatBalance = PaymentAccountStatusValue.FiatBalance(
                 availableBalance = BigDecimal.ZERO,

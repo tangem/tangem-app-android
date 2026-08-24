@@ -10,6 +10,9 @@ internal sealed class AddExistingWalletRoute : Route {
     object Import : AddExistingWalletRoute()
 
     @Serializable
+    object RestoreCloudBackup : AddExistingWalletRoute()
+
+    @Serializable
     data class BackupCompleted(val userWalletId: UserWalletId) : AddExistingWalletRoute()
 
     @Serializable

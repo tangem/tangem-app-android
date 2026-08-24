@@ -64,6 +64,21 @@ internal class OnrampProviderCalculatedAnalyticsSenderTest {
         verify { analyticsEventHandler wasNot Called }
     }
 
+    @Test
+    fun `GIVEN only restricted quotes WHEN send THEN no event sent`() {
+        // Arrange — nothing purchasable, so there is no provider to report as calculated
+        val quotes = listOf(
+            createQuote(providerName = "RestrictedHigh", rate = BigDecimal("200"), isRestricted = true),
+            createQuote(providerName = "RestrictedLow", rate = BigDecimal("100"), isRestricted = true),
+        )
+
+        // Act
+        analyticsEventHandler.sendProviderCalculatedEvent(quotes = quotes, tokenSymbol = TOKEN_SYMBOL)
+
+        // Assert
+        verify { analyticsEventHandler wasNot Called }
+    }
+
     private fun provideTestModels() = listOf(
         SelectionModel(
             name = "highest-rate quote among several is selected",
@@ -98,13 +113,26 @@ internal class OnrampProviderCalculatedAnalyticsSenderTest {
             ),
             expectedProviderName = "Loaded",
         ),
+        SelectionModel(
+            name = "restricted quote with the best rate is skipped",
+            quotes = listOf(
+                createQuote(providerName = "Restricted", rate = BigDecimal("200"), isRestricted = true),
+                createQuote(providerName = "Purchasable", rate = BigDecimal("100")),
+            ),
+            expectedProviderName = "Purchasable",
+        ),
     )
 
-    private fun createQuote(providerName: String, rate: BigDecimal): OnrampQuote.Data {
+    private fun createQuote(
+        providerName: String,
+        rate: BigDecimal,
+        isRestricted: Boolean = false,
+    ): OnrampQuote.Data {
         return mockk<OnrampQuote.Data> {
             every { provider.info.name } returns providerName
             every { paymentMethod.name } returns PAYMENT_METHOD
             every { toAmount.value } returns rate
+            every { this@mockk.isRestricted } returns isRestricted
         }
     }
 

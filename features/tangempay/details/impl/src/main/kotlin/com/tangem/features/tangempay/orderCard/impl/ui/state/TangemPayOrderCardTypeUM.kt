@@ -9,67 +9,59 @@ internal data class TangemPayOrderCardTypeUM(
     val availableTypes: List<OrderCardType>,
     val cardImageUrl: String?,
     val virtual: Virtual,
-    val plastic: Plastic?,
+    val plastic: Plastic,
     val onBackClick: () -> Unit,
     val onRetry: () -> Unit,
     val onSelectVirtual: () -> Unit,
     val onSelectPlastic: () -> Unit,
+    val onTypeClick: (OrderCardType) -> Unit,
+    val onTypeSwipe: (OrderCardType) -> Unit,
 ) {
 
     @Immutable
     data class Virtual(
         val issueFee: String,
+        val offerImageUrl: String? = null,
     )
 
     @Immutable
-    data class Plastic(
-        val country: String,
-        val deliveryFee: String,
-        val deliveryEtaMaxBusinessDays: Int,
-        val feeState: FeeState,
+    sealed interface Plastic {
+
+        val country: String
+
+        @Immutable
+        data class Unavailable(override val country: String) : Plastic
+
+        @Immutable
+        data class Available(
+            override val country: String,
+            val deliveryFee: String?,
+            val deliveryEta: DeliveryEta,
+            val feeState: FeeState,
+            val offerImageUrl: String? = null,
+        ) : Plastic
+    }
+
+    @Immutable
+    data class DeliveryEta(
+        val minBusinessDays: Int?,
+        val maxBusinessDays: Int,
     )
 
     enum class FeeState { Default, FreeDelivery, InsufficientFunds }
-
-    companion object {
-        @Suppress("MagicNumber")
-        fun stub(
-            isLoading: Boolean = false,
-            isError: Boolean = false,
-            isPlasticAvailable: Boolean = true,
-            cardImageUrl: String? = null,
-            issueFee: String = "$5",
-            country: String = "Afghanistan",
-            deliveryFee: String = "$10",
-            deliveryEtaMaxBusinessDays: Int = 20,
-            feeState: FeeState = FeeState.Default,
-        ) = TangemPayOrderCardTypeUM(
-            isLoading = isLoading,
-            isError = isError,
-            availableTypes = availableTypesOf(isPlasticAvailable),
-            cardImageUrl = cardImageUrl,
-            virtual = Virtual(issueFee = issueFee),
-            plastic = if (isPlasticAvailable) {
-                Plastic(
-                    country = country,
-                    deliveryFee = deliveryFee,
-                    deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
-                    feeState = feeState,
-                )
-            } else {
-                null
-            },
-            onBackClick = {},
-            onRetry = {},
-            onSelectVirtual = {},
-            onSelectPlastic = {},
-        )
-    }
 }
 
 internal enum class OrderCardType { Virtual, Plastic }
 
-internal fun availableTypesOf(isPlasticAvailable: Boolean): List<OrderCardType> = if (isPlasticAvailable) {
+internal fun TangemPayOrderCardTypeUM.imageUrlFor(type: OrderCardType): String? = when (type) {
+    OrderCardType.Virtual -> virtual.offerImageUrl
+    OrderCardType.Plastic -> when (val plastic = plastic) {
+        is TangemPayOrderCardTypeUM.Plastic.Available -> plastic.offerImageUrl
+        is TangemPayOrderCardTypeUM.Plastic.Unavailable -> null
+    }
+} ?: cardImageUrl
+
+internal fun availableTypesOf(isPlasticEnabled: Boolean): List<OrderCardType> = if (isPlasticEnabled) {
     listOf(OrderCardType.Virtual, OrderCardType.Plastic)
 } else {
     listOf(OrderCardType.Virtual)

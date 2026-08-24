@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.CommonExtension
+
 plugins {
     alias(deps.plugins.kotlin.android) apply false
     alias(deps.plugins.kotlin.jvm) apply false
@@ -19,7 +21,7 @@ plugins {
 buildscript {
     configurations.classpath {
         resolutionStrategy {
-            // DAGP 3.16.0 -> kotlin-metadata-jvm:2.2.21 -> kotlin-bom:2.2.21, whose platform
+            // DAGP -> kotlin-metadata-jvm:2.2.21 -> kotlin-bom:2.2.21, whose platform
             // constraints upgrade kotlin-daemon-client to 2.2.21 while kotlin-compiler-runner stays
             // at the project Kotlin version. The version skew breaks incremental compilation via the
             // daemon (NoSuchMethodError on IncrementalCompilationOptions.<init>). Pin daemon-client
@@ -33,8 +35,34 @@ buildscript {
     }
 }
 
+// `-Pdependency.analysis.android.ignored.variants` is passed only by the PR check, which trims the build
+// to two build types (see run_code_quality.yml); the nightly run and a local `buildHealth`
+// analyse every variant and pass nothing. Reusing that flag as the marker for "this is the trimmed run"
+// beats inventing a private switch: the compensation it gates cannot outlive the variant trimming that
+// made it necessary, because there is only one thing to forget instead of two.
+// Presence is what counts, not content. A present-but-empty value means the workflow tried to trim and
+// the list did not survive the trip — DAGP would then quietly analyse everything — so it is left to fail
+// in `verifyDagpIgnoredVariantsProperty` rather than papered over here. Both readers use this one value,
+// so they cannot disagree about what "passed" means.
+val dagpIgnoredVariants: String? = providers
+    .gradleProperty("dependency.analysis.android.ignored.variants")
+    .orNull
+
+val isTrimmedVariantRun = dagpIgnoredVariants != null
+
+// Declaration buckets dropped from the analysis in the trimmed run. Single source of truth: consumed
+// by `ignoreSourceSet` below and checked against the module's real source sets by
+// `verifyDagpIgnoredSourceSets`, because DAGP matches these names literally and a stale one is a
+// silent no-op rather than an error.
+val dagpIgnoredSourceSets = listOf("internal", "external", "release", "mocked")
+
 // Dependency Analysis (DAGP) global configuration.
 dependencyAnalysis {
+    // Every module declares project dependencies through the type-safe accessors enabled by
+    // TYPESAFE_PROJECT_ACCESSORS (`projects.core.utils`). Without this, advice and `fixDependencies`
+    // emit the `project(":core:utils")` string form, which doesn't match anything in the build files.
+    useTypesafeProjectAccessors(true)
+
     structure {
         // Treat co-versioned artifact splits as a single logical dependency, so the plugin doesn't
         // advise "declare the transitive directly" when you depend on one part and use a sibling.
@@ -104,6 +132,37 @@ dependencyAnalysis {
         bundle("coil") {
             includeGroup("io.coil-kt")
         }
+        // Families where the split artifact arrives from a sibling this repo already declares:
+        // huawei-push brings opendevice, the customer.io SDKs bring their shared core, navigation-compose
+        // brings navigation-common/runtime, and reorderable's debug variant is the same module.
+        bundle("huawei") {
+            primary("com.huawei.hms:push")
+            includeGroup("com.huawei.hms")
+        }
+        bundle("customerio") {
+            includeGroup("io.customer.android")
+        }
+        bundle("androidx-navigation") {
+            primary("androidx.navigation:navigation-compose")
+            includeGroup("androidx.navigation")
+        }
+        bundle("reorderable") {
+            primary("sh.calvin.reorderable:reorderable")
+            includeGroup("sh.calvin.reorderable")
+        }
+        // The instrumentation stack is a single co-versioned family: kaspresso pulls espresso, the
+        // androidx.test runner/rules/monitor/core, uiautomator, kakaocup and the allure adapters.
+        // Declaring kaspresso is the entry point — pinning each transitive separately would mean
+        // hand-syncing eleven versions on every kaspresso bump.
+        bundle("kaspresso") {
+            primary("com.kaspersky.android-components:kaspresso")
+            includeGroup("com.kaspersky.android-components")
+            includeGroup("androidx.test")
+            includeGroup("androidx.test.uiautomator")
+            includeGroup("androidx.test.espresso")
+            includeGroup("io.github.kakaocup")
+            includeGroup("io.qameta.allure")
+        }
         // Room is split into runtime/ktx/common/compiler/paging (+ its androidx.sqlite runtime).
         // Declaring room-runtime covers the siblings.
         bundle("room") {
@@ -114,16 +173,48 @@ dependencyAnalysis {
     }
     issues {
         all {
-            // hilt-android / hilt-core get flagged as `api`: Kotlin `internal` @Inject classes (and
-            // public @Inject impls) compile to public bytecode carrying RUNTIME javax.inject annotations,
-            // so DAGP sees javax.inject in the ABI. The Hilt runtime is never genuinely public API — keep
-            // it `implementation` repo-wide.
-            onIncorrectConfiguration {
-                exclude(
-                    "com.google.dagger:hilt-android",
-                    "com.google.dagger:hilt-core",
-                )
+            // Only meaningful in the trimmed run. A dependency declared on `<buildType>Implementation`
+            // for a build type with no analysed variant reads as unused, so those source sets are
+            // dropped from the analysis rather than silenced by coordinate — the artifact stays checked
+            // wherever it is still declared. `mocked` is in the list even though its variant IS analysed
+            // (androidTest and src/mocked hang off it): chucker is the real library in debug and mocked
+            // and a no-op stub elsewhere, so once the stub build types are gone it looks used in every
+            // analysed variant and the plugin advises collapsing the pair into one `implementation`.
+            // Dropping the mocked bucket leaves `debugImplementation(chucker)` as the declaration under
+            // watch. The guard matters because this is a global setting: applied unconditionally it also
+            // blinded the full run, where all five build types are analysed and the twelve declarations
+            // it hides (chucker/chuckerStub in :app and :core:datasource, :features:kyc:impl in :app)
+            // are exactly what the nightly report exists to watch.
+            if (isTrimmedVariantRun) {
+                ignoreSourceSet(*dagpIgnoredSourceSets.toTypedArray())
             }
+            // Default severity is "warn", which is what local runs get: buildHealth/projectHealth only
+            // report. Both CI workflows pass -Pdagp.severity=fail, so advice fails the build there — the
+            // PR check in the modules it analyses, the nightly across the whole graph.
+            onAny { severity(providers.gradleProperty("dagp.severity").getOrElse("warn")) }
+            // Ignores the whole "wrong configuration" category, not only `implementation` -> `api`. The
+            // plugin's filter is `Advice.isChange()` — declared and used, but on a different configuration
+            // than the usage implies, minus the compileOnly and runtimeOnly targets, which route to
+            // `onCompileOnly` / `onRuntimeOnly` (that is why the material and mlkit exclusions below still
+            // work). Four kinds of advice ride on this one line:
+            //  1. `implementation` -> `api`: raised across the whole feature graph, so acting on it would
+            //     promote nearly every `implementation` there to `api` — the opposite of the api/impl
+            //     split modularization exists for, and every ABI change would cascade to all consumers.
+            //  2. `api` -> `implementation`: raised for domain modules whose public API is generic
+            //     (`Flow<Lce<…>>`, `EitherFlow<…>`); demoting the `api` breaks the consumers compiling
+            //     against those types.
+            //     The exact mechanism behind 1 and 2 was never pinned down — the reason to silence them is
+            //     that both were systematic and unusable, not a theory about how the plugin reads ABIs.
+            //  3. `<buildType>Implementation` -> `implementation`: the variant-collapse advice. Once a
+            //     dependency is used in every analysed variant, DAGP merges the declaration onto the base
+            //     configuration — that is the chucker pair once the stub build types leave the analysis.
+            //  4. `implementation` -> a variant-scoped configuration: the mirror image, e.g. googlePlay
+            //     review, declared plainly in :app but referenced only from app/src/google.
+            // Cases 1 and 2 are what the 17 per-module exclusions this rule replaced were about; 3 and 4
+            // come with the category. Narrowing it back to "only -> api" resurrects all four at once and
+            // fails the PR check. To re-enable one case, exclude the coordinate under this handler rather
+            // than re-scoping the severity.
+            onIncorrectConfiguration { severity("ignore") }
             // dagger-compiler is always pulled by hilt-compiler (declared via kapt(deps.hilt.kapt));
             // no need to declare the annotation processor separately.
             // :test:core is the documented single entry point for the unit-test stack — it re-exports
@@ -156,69 +247,149 @@ dependencyAnalysis {
                     "com.squareup.wire:wire-runtime",
                     "jakarta.inject:jakarta.inject-api",
                 )
+                // The lifecycle artifacts reach these modules from androidx.activity/fragment rather
+                // than from a declared androidx.lifecycle member, so the bundle cannot absorb them.
+                // Declaring them is worse than silencing: they resolve to 2.9.4 while the catalog's
+                // androidxLifecycle is 2.5.1, so a direct declaration would quietly upgrade the module.
+                exclude(
+                    "androidx.lifecycle:lifecycle-viewmodel",
+                    "androidx.lifecycle:lifecycle-viewmodel-compose",
+                    "androidx.lifecycle:lifecycle-viewmodel-savedstate",
+                )
+                // datastore-preferences-core arrives through core:datasource rather than through the
+                // datastore-core these modules declare, so the androidx-datastore bundle misses it.
+                exclude("androidx.datastore:datastore-preferences-core")
+                // core:ui exports haze as `api` and puts HazeState in the signatures of public DS
+                // components (TangemPagerIndicator, Fade, TangemModalHost). Every module that renders
+                // one of those ends up referencing haze in bytecode without importing it, so the advice
+                // would reappear for each new screen that uses a bottom sheet.
+                exclude("dev.chrisbanes.haze:haze")
+                // :core:datasource is the data layer's single entry point and deliberately re-exports
+                // these two as `api` (see its build file). Every data module reaches RetrofitFactory and
+                // the local stores through it; declaring them in ~35 modules would duplicate the facade.
+                exclude(":core:local", ":core:remote")
             }
         }
-        // In :libs:auth these are injected only into `internal` classes (DI modules / Default* impls).
-        // DAGP advises `api` because Kotlin `internal` compiles to public bytecode (and Hilt's
-        // generated `_Factory` classes expose the constructor types publicly) — a false positive, not
-        // a real ABI leak. Keep them `implementation`. Scoped to this module so genuine api advice in
-        // other modules still surfaces.
-        project(":libs:auth") {
-            onIncorrectConfiguration {
+        // Everything excluded here is reachable only at runtime, so DAGP cannot see a reference and
+        // reports it unused. Keeping the list explicit means any *new* unused-dependency advice is a
+        // real regression rather than known noise.
+        project(":app") {
+            onUnusedDependencies {
+                // Feature `impl` modules are wired in per build type purely so Hilt picks up their
+                // @Module bindings; dropping them removes the feature from the built app at runtime.
+                exclude(":features:kyc:impl")
+                // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
+                // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
                 exclude(
-                    "com.squareup.moshi:moshi",
-                    ":core:config-toggles",
-                    ":core:datasource",
-                    ":core:utils",
+                    "androidx.camera:camera-lifecycle",
+                    "androidx.camera:camera-view",
+                )
+                // Guava's listenablefuture stub exists solely to resolve the duplicate-class conflict
+                // between guava and the standalone ListenableFuture artifact.
+                exclude("com.google.guava:listenablefuture")
+                // OAID collection is a drop-in runtime add-on for the AppsFlyer SDK; it has no API.
+                exclude("com.appsflyer:oaid")
+                // Moshi adapters are registered reflectively when building the Moshi instance.
+                exclude("com.squareup.moshi:moshi-adapters")
+                // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown
+                // artifacts, so these unexcluded declarations are what supply that driver at runtime.
+                // Nothing here references reown by type — dropping them crashes the app on start.
+                exclude(
+                    "com.reown:android-core",
+                    "com.reown:walletkit",
+                )
+                // agcp brings the AGConnect runtime the huawei flavor reads through
+                // AGConnectOptionsBuilder in HuaweiPushNotificationsTokenProvider.
+                exclude("com.huawei.agconnect:agcp")
+                // The androidx JUnit runner is instrumentation infrastructure, never imported.
+                exclude("androidx.test.ext:junit")
+            }
+            // Declaring junit4 directly breaks resolution: the main runtime classpath pins it to
+            // strictly 4.12, and AGP's consistent resolution then rejects the 4.13.2 the catalog
+            // carries. It arrives transitively through espresso/kaspresso at the pinned version.
+            onUsedTransitiveDependencies {
+                exclude("junit:junit")
+                // Deep transitives of libraries :app already declares — cardview via the legacy
+                // material widgets, coroutines-play-services via the Play libraries. Neither is a
+                // dependency anyone chose, and neither belongs to a family a bundle could group.
+                exclude(
+                    "androidx.cardview:cardview",
+                    "org.jetbrains.kotlinx:kotlinx-coroutines-play-services",
                 )
             }
         }
-        // Same Kotlin-`internal`-compiles-to-public false positive: these are used only inside
-        // `internal` classes / DI modules / method bodies (verified), not in the public ABI.
-        project(":libs:blockchain-sdk") {
-            onIncorrectConfiguration {
+        // Same CameraX runtime split as in :app.
+        project(":features:qr-scanning:impl") {
+            onUnusedDependencies {
                 exclude(
-                    "androidx.datastore:datastore-preferences",
-                    "com.squareup.moshi:moshi",
-                    ":core:analytics",
-                    ":core:utils",
+                    "androidx.camera:camera-lifecycle",
+                    "com.google.guava:listenablefuture",
+                )
+            }
+            // DAGP wants mlkit barcode-scanning demoted to runtimeOnly and the Play-services-backed
+            // artifact declared instead. MLKitBarcodeAnalyzer imports BarcodeScanning directly, and
+            // swapping the provider would move barcode detection from the bundled model to one
+            // delivered by Play Services — which the huawei flavor does not have. Keep it compile-scoped.
+            onRuntimeOnly {
+                exclude("com.google.mlkit:barcode-scanning")
+            }
+            onUsedTransitiveDependencies {
+                // Internals of the bundled ML Kit barcode scanner. play-services-mlkit-barcode-scanning
+                // is the Play-services-backed alternative to the declared bundled artifact — declaring
+                // it is the provider swap refused above, and the other three are its own transitives.
+                exclude(
+                    "com.google.android.gms:play-services-mlkit-barcode-scanning",
+                    "com.google.android.gms:play-services-tasks",
+                    "com.google.mlkit:barcode-scanning-common",
+                    "com.google.mlkit:vision-common",
                 )
             }
         }
-        // config-toggles is used only inside the `internal` DefaultCardSdkFeatureToggles (the public
-        // CardSdkFeatureToggles interface is empty) — internal→public false positive.
-        project(":libs:tangem-sdk-api") {
-            onIncorrectConfiguration {
-                exclude(":core:config-toggles")
+        // detekt-rules compiles against the Detekt API, which exposes kotlin-compiler-embeddable types.
+        // The advised 2.0.21 is Gradle's embedded Kotlin, not the project's — declaring it would put a
+        // second, older Kotlin compiler in the catalog next to kotlin = 2.1.10.
+        project(":plugins:detekt-rules") {
+            onUsedTransitiveDependencies {
+                exclude("org.jetbrains.kotlin:kotlin-compiler-embeddable")
             }
         }
-        // web3j leaks into the ABI only via incidentally-public generated contract wrappers
-        // (ERC20/TangemPaymentAccount/…), not the module's intended public API (VisaContractInfoProvider
-        // / VisaContractInfo) — keep it `implementation` (see PR review), so silence the `api` advice.
+        // :libs:visa uses no Android APIs, but its `packaging { resources { excludes += "/META-INF/*" } }`
+        // resolves the duplicate META-INF entries web3j ships. A JVM module has no packaging block, so
+        // the conflict would move to every consumer.
         project(":libs:visa") {
-            onIncorrectConfiguration {
-                exclude("org.web3j:core")
+            onModuleStructure {
+                severity("ignore")
             }
         }
-        // datasource/utils are used only inside the `internal` DI module + Amplitude impl (the public
-        // ABTestsManager interface doesn't expose them) — internal→public false positive.
-        project(":core:ab-tests") {
-            onIncorrectConfiguration {
-                exclude(":core:datasource", ":core:utils")
+        // :features:hot-wallet:impl is the only path that pulls the cloud-backup modules into the app
+        // graph, and data:cloud-backup contributes CloudBackupDataModule's Hilt bindings. Nothing
+        // references them by type, so DAGP calls them unused — dropping them would remove the bindings.
+        project(":features:hot-wallet:impl") {
+            onUnusedDependencies {
+                exclude(":data:cloud-backup", ":domain:cloud-backup")
             }
         }
-        // datasource is used only inside `internal` DI modules + LocalTogglesStorage (the public
-        // FeatureTogglesManager API doesn't expose it) — internal→public false positive.
-        project(":core:config-toggles") {
-            onIncorrectConfiguration {
-                exclude(":core:datasource")
+        // material is pulled in through XML themes (styles.xml inherits MaterialComponents), which DAGP
+        // cannot see — the same resource-only usage already excluded for :core:ui below.
+        project(":features:staking:impl") {
+            onUnusedDependencies {
+                exclude("com.google.android.material:material")
             }
         }
-        // moshi-polymorphic-adapter is used only in @Provides bodies / as annotation args, never in a
-        // public signature — internal→public false positive, keep it `implementation`.
-        project(":core:datasource") {
-            onIncorrectConfiguration {
-                exclude("dev.onenowy.moshipolymorphicadapter:moshi-polymorphic-adapter")
+        // :test:core deliberately re-exports the unit-test stack as `api` — it is the documented single
+        // entry point for test modules (testImplementation(projects.test.core)). It never uses turbine
+        // itself, so DAGP calls it unused; removing it would break every module relying on the re-export.
+        project(":test:core") {
+            onUnusedDependencies {
+                exclude("app.cash.turbine:turbine")
+            }
+        }
+        // core:ui declares ComposableContentComponent, the supertype every feature Component implements.
+        // It reaches this module through :features:survey:api, so DAGP sees no direct reference and calls
+        // it unused — but kapt needs the supertype on the classpath to generate the Hilt stubs.
+        project(":features:survey:impl") {
+            onUnusedDependencies {
+                exclude(":core:ui")
             }
         }
         // material is consumed only via resources (styles.xml inherits MaterialComponents themes), which
@@ -235,81 +406,6 @@ dependencyAnalysis {
         project(":domain:card") {
             onUnusedDependencies {
                 exclude(":core:error")
-            }
-        }
-        // core:utils is deliberately re-exported as api from the ubiquitous domain:models module so the
-        // many consumers that use TangemLogger / utils through it keep compiling. Demoting it to
-        // implementation would cascade across the whole repo, so silence the incorrect-config advice.
-        project(":domain:models") {
-            onIncorrectConfiguration {
-                exclude(":core:utils")
-            }
-        }
-        // :domain:models is kept as api because domain:markets:models exposes CryptoCurrency.RawID (a
-        // domain:models type) in its public data classes (TokenMarket/RawMarketToken/TokenMarketParams).
-        // DAGP misses this nested-type ABI leak and advises implementation; that advice is a false negative.
-        project(":domain:markets:models") {
-            onIncorrectConfiguration {
-                exclude(":domain:models")
-            }
-        }
-        // :domain:core is kept as api in :domain:legacy and :domain:express because their public APIs
-        // (RampStateManager, ExpressServiceFetcher#getInitializationStatus) return Flow<Lce<...>> where Lce
-        // is a domain:core type. DAGP doesn't trace the generic type argument into the ABI and advises
-        // implementation; that advice is a false negative.
-        project(":domain:legacy") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        project(":domain:express") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        // :domain:core kept as api in :domain:onramp — public use cases (GetOnrampCurrenciesUseCase etc.)
-        // return EitherFlow<...> (a domain:core alias). DAGP doesn't trace the alias/generic into the ABI.
-        project(":domain:onramp") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        // arrow-core kept as api in :domain:onboarding — WasTwinsOnboardingShownUseCase#invoke returns
-        // Flow<Either<...>> (arrow.core.Either in the public ABI). DAGP advises implementation here (false
-        // negative on the generic type argument).
-        project(":domain:onboarding") {
-            onIncorrectConfiguration {
-                exclude("io.arrow-kt:arrow-core")
-            }
-        }
-        // :domain:core kept as api in :domain:wallets — GetUserWalletUseCase#invokeFlow returns
-        // EitherFlow<...> (a domain:core alias). DAGP false-negative on the alias/generic.
-        project(":domain:wallets") {
-            onIncorrectConfiguration {
-                exclude(":domain:core")
-            }
-        }
-        // :domain:models kept as api in :domain:yield-supply:models — YieldMarketToken (public data
-        // class) exposes SerializedBigDecimal (a domain:models type) in public fields. DAGP misses it.
-        project(":domain:yield-supply:models") {
-            onIncorrectConfiguration {
-                exclude(":domain:models")
-            }
-        }
-        // :common is deliberately re-exported as api from common:ui (a ubiquitous UI dependency) so the
-        // many feature modules that use TangemBlogUrlBuilder / common types through it keep compiling.
-        // Demoting it to implementation would cascade across the feature graph.
-        project(":common:ui") {
-            onIncorrectConfiguration {
-                exclude(":common")
-            }
-        }
-        // libs:crypto is deliberately re-exported as api from the ubiquitous :common module so the many
-        // feature modules that use BlockchainUtils / crypto helpers through it keep compiling. Demoting
-        // it to implementation would cascade across the feature graph.
-        project(":common") {
-            onIncorrectConfiguration {
-                exclude(":libs:crypto")
             }
         }
     }
@@ -330,6 +426,57 @@ val unitTest by tasks.registering {
     description = "Run unit tests for debug/googleDebug variant and all JVM modules"
 }
 
+/**
+ * Fails if a name in [dagpIgnoredSourceSets] is not a real Android source set of this module.
+ *
+ * DAGP resolves `ignoreSourceSet` against `CommonExtension.sourceSets` by exact string, so a typo or a
+ * build type renamed in `BuildType` is not an error there — the entry silently stops matching and the
+ * declarations it was meant to drop come back as unused-dependency advice. Runs only where the list is
+ * actually applied: validating it on an ordinary build would put a new way to fail into every assemble,
+ * test and IDE sync for no gain. Pure-JVM modules have no Android extension and return early.
+ */
+fun Project.verifyDagpIgnoredSourceSets() {
+    if (!isTrimmedVariantRun) return
+    val sourceSets = extensions.findByType(CommonExtension::class.java)?.sourceSets?.names ?: return
+    val unknown = dagpIgnoredSourceSets.filterNot { it in sourceSets }
+    if (unknown.isEmpty()) return
+
+    error(
+        "Dependency analysis ignores source sets that do not exist in $path: ${unknown.joinToString()}. " +
+            "Run `./gradlew $path:sourceSets` for the names this module has. Build types come from " +
+            "BuildType.kt in plugins/configuration; renaming one means updating `dagpIgnoredSourceSets` " +
+            "here and IGNORED_VARIANTS in .github/workflows/run_code_quality.yml together.",
+    )
+}
+
+/**
+ * Fails if the CI-supplied variant list is malformed. No-op locally, where the property is absent.
+ *
+ * `Flags.androidIgnoredVariants()` splits the value on ',' without trimming, so a stray space after a
+ * comma matches nothing and that variant is analysed after all — silently, and in the direction that
+ * produces advice rather than hiding it. Only the shape is checked, never the exact contents: which
+ * variants CI pays to analyse is a cost decision that is allowed to change without touching this file.
+ */
+fun Project.verifyDagpIgnoredVariantsProperty() {
+    val raw = dagpIgnoredVariants ?: return
+    val android = extensions.findByType(CommonExtension::class.java) ?: return
+
+    val buildTypes = android.buildTypes.names.toList()
+    // Library variants are bare build types; only :app is flavored, where they are <flavor><BuildType>.
+    val known = buildTypes + android.productFlavors.names.flatMap { flavor ->
+        buildTypes.map { flavor + it.replaceFirstChar(Char::uppercaseChar) }
+    }
+    val problems = raw.split(",").filterNot { it.isNotBlank() && it == it.trim() && it in known }
+    if (problems.isEmpty()) return
+
+    error(
+        "-Pdependency.analysis.android.ignored.variants has entries that match no variant of $path: " +
+            "${problems.joinToString { "\"$it\"" }}. Known: ${known.sorted().joinToString()}. Blank " +
+            "entries and stray whitespace count — the value is split on ',' and compared literally. " +
+            "It is set by IGNORED_VARIANTS in .github/workflows/run_code_quality.yml.",
+    )
+}
+
 subprojects {
     // Dependency Analysis (DAGP) registers `projectHealth`/`reason` on each module. In 3.x the
     // root application no longer auto-applies to subprojects, so apply it here. Reusing the plugin
@@ -338,8 +485,14 @@ subprojects {
 
     // App module
     plugins.withId("com.android.application") {
+        // Both checks run in `afterEvaluate` because the build types they compare against are created
+        // by the `configuration` convention plugin, after AGP itself is applied.
         afterEvaluate {
             unitTest.configure { dependsOn(tasks.named("testGoogleDebugUnitTest")) }
+            verifyDagpIgnoredSourceSets()
+            // :app is the only flavored module, so it is the only one that can validate the
+            // <flavor><BuildType> spellings the workflow passes.
+            verifyDagpIgnoredVariantsProperty()
         }
     }
 
@@ -347,6 +500,7 @@ subprojects {
     plugins.withId("com.android.library") {
         afterEvaluate {
             unitTest.configure { dependsOn(tasks.named("testDebugUnitTest")) }
+            verifyDagpIgnoredSourceSets()
         }
     }
 

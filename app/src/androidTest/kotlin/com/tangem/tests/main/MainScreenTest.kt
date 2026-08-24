@@ -5,7 +5,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeVertical
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -23,7 +22,6 @@ class MainScreenTest : BaseTestCase() {
     @DisplayName("Main: check 'Organize tokens' button with multiple tokens no accounts")
     @Test
     fun checkOrganizeTokensButtonWithMultipleTokensNoAccountsTest() {
-
         setupHooks().run {
 
             step("Open 'Main Screen'") {
@@ -44,11 +42,7 @@ class MainScreenTest : BaseTestCase() {
     fun checkOrganizeTokensButtonWithSingleTokenNoAccountsTest() {
         val scenarioState = "Cardano"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
@@ -72,11 +66,7 @@ class MainScreenTest : BaseTestCase() {
     fun checkOrganizeTokensButtonWithSingleTokenMultiAccountsTest() {
         val scenarioState = "TwoAccountsSingleTokenEach"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
@@ -106,11 +96,7 @@ class MainScreenTest : BaseTestCase() {
     fun checkOrganizeTokensButtonWithMultipleTokensMultiAccountsTest() {
         val scenarioState = "TwoAccountsMixed"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
                 setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)

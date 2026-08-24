@@ -24,7 +24,7 @@ internal class MarketingDeeplinkTest {
         // tangem:// swap/buy -> contextual
         ResolveModel(link = "tangem://swap", expected = MarketingDeeplink.SWAP),
         ResolveModel(link = "tangem://buy", expected = MarketingDeeplink.BUY),
-        ResolveModel(link = "tangem://swap?foo=bar", expected = MarketingDeeplink.SWAP),
+        ResolveModel(link = "tangem://swap?from_token_id=ethereum", expected = MarketingDeeplink.SWAP),
         ResolveModel(link = "tangem://buy/extra", expected = MarketingDeeplink.BUY),
         ResolveModel(link = "TANGEM://swap", expected = MarketingDeeplink.SWAP),
         // tangem:// other hosts -> external
