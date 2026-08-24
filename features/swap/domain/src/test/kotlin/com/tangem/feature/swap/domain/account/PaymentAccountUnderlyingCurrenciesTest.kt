@@ -82,7 +82,8 @@ internal class PaymentAccountUnderlyingCurrenciesTest {
         assertThat(result).isEmpty()
     }
 
-    private fun paymentCurrencyStatus() =
+    private fun paymentCurrencyStatus() = requireNotNull(
         (MockAccounts.createPaymentAccountStatus(userWalletId = walletId).value as PaymentAccountStatusValue.Loaded)
-            .cryptoCurrencyStatus
+            .cryptoCurrencyStatus,
+    )
 }
