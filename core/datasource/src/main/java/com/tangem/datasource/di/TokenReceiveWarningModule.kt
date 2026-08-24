@@ -3,6 +3,7 @@ package com.tangem.datasource.di
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.token.DefaultTokenReceiveWarningActionStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
 import com.tangem.datasource.utils.AppDataStoreFactory

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.grow.datasource.express.models.response.Asset
 import com.tangem.datasource.local.token.DefaultExpressAssetsStore
 import com.tangem.datasource.local.token.ExpressAssetsStore
