@@ -21,6 +21,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardModel
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardNavigation
 import com.tangem.features.tangempay.orderCard.impl.navigation.TangemPayOrderCardInnerRoute
@@ -46,7 +47,7 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
         key = "tangemPayOrderCardInnerStack",
         source = stackNavigation,
         serializer = TangemPayOrderCardInnerRoute.serializer(),
-        initialConfiguration = TangemPayOrderCardInnerRoute.Type,
+        initialConfiguration = initialRoute(params.intent),
         childFactory = ::screenChild,
     )
 
@@ -68,6 +69,14 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
         bottomSheet.child?.instance?.BottomSheet()
     }
 
+    private fun initialRoute(intent: TangemPayOrderCardIntent): TangemPayOrderCardInnerRoute = when (intent) {
+        TangemPayOrderCardIntent.Issue -> TangemPayOrderCardInnerRoute.Type
+        is TangemPayOrderCardIntent.ReissuePlastic -> TangemPayOrderCardInnerRoute.Data(
+            deliveryEtaMaxBusinessDays = intent.deliveryEtaMaxBusinessDays,
+            intent = intent,
+        )
+    }
+
     private fun screenChild(
         config: TangemPayOrderCardInnerRoute,
         componentContext: ComponentContext,
@@ -79,7 +88,10 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
                 onSelectVirtual = model::onSelectVirtual,
                 onSelectPlastic = { deliveryEtaMaxBusinessDays ->
                     stackNavigation.pushNew(
-                        TangemPayOrderCardInnerRoute.Data(deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays),
+                        TangemPayOrderCardInnerRoute.Data(
+                            deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
+                            intent = TangemPayOrderCardIntent.Issue,
+                        ),
                     )
                 },
             ),
@@ -88,6 +100,7 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayOrderCardDataComponent.Params(
                 userWalletId = params.userWalletId,
+                intent = config.intent,
                 onOrderAccepted = { email, orderedProductInstanceId ->
                     stackNavigation.pushNew(
                         TangemPayOrderCardInnerRoute.Success(

@@ -76,6 +76,7 @@ internal class AccountListTest {
             accounts = accounts,
             totalAccounts = accounts.size,
             totalArchivedAccounts = 0,
+            totalJointAccounts = 2,
         )
 
         // Assert
@@ -93,10 +94,92 @@ internal class AccountListTest {
             accounts = accounts,
             totalAccounts = accounts.size,
             totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
         )
 
         // Assert
         Truth.assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN more joint rows than the counter WHEN create THEN the list is refused`() {
+        // Arrange
+        val accounts = listOf(
+            Account.CryptoPortfolio.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(derivationIndex = 0),
+            MockAccounts.createJointAccount(derivationIndex = 1),
+        )
+
+        // Act
+        val actual = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        )
+
+        // Assert
+        Truth.assertThat(actual.leftOrNull()).isEqualTo(AccountList.Error.TotalJointAccountsLessThanActive)
+    }
+
+    @Test
+    fun `GIVEN archived joint accounts WHEN create THEN the counter may exceed the rows`() {
+        // Arrange
+        val accounts = listOf(
+            Account.CryptoPortfolio.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(derivationIndex = 0),
+        )
+
+        // Act
+        val actual = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 5,
+        )
+
+        // Assert
+        Truth.assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a joint account WHEN added THEN it counts against the joint counter alone`() {
+        // Arrange
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = listOf(Account.CryptoPortfolio.createMainAccount(userWalletId)),
+            totalAccounts = 1,
+            totalArchivedAccounts = 0,
+        ).getOrNull()!!
+
+        // Act
+        val actual = (accountList + MockAccounts.createJointAccount(derivationIndex = 0)).getOrNull()!!
+
+        // Assert
+        Truth.assertThat(actual.totalJointAccounts).isEqualTo(1)
+        Truth.assertThat(actual.totalAccounts).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN a joint account in the list WHEN removed THEN the joint counter follows it`() {
+        // Arrange
+        val joint = MockAccounts.createJointAccount(derivationIndex = 0)
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = listOf(Account.CryptoPortfolio.createMainAccount(userWalletId), joint),
+            totalAccounts = 1,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        ).getOrNull()!!
+
+        // Act
+        val actual = (accountList - joint).getOrNull()!!
+
+        // Assert
+        Truth.assertThat(actual.totalJointAccounts).isEqualTo(0)
+        Truth.assertThat(actual.totalAccounts).isEqualTo(1)
     }
 
     @Test
@@ -112,6 +195,7 @@ internal class AccountListTest {
             accounts = accounts,
             totalAccounts = accounts.size,
             totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
         ).getOrNull()!!
 
         // Act
@@ -175,6 +259,7 @@ internal class AccountListTest {
                 accounts = model.accounts,
                 totalAccounts = model.totalAccounts,
                 totalArchivedAccounts = 0,
+                totalJointAccounts = model.totalJointAccounts,
             )
 
             // Assert
@@ -241,6 +326,26 @@ internal class AccountListTest {
                 totalAccounts = 1,
                 expected = AccountList.Error.TotalAccountsLessThanActive.left(),
             ),
+            // The backend counts joint accounts separately, in `totalJointAccounts`, so a wallet with one crypto
+            // and one joint account arrives as `totalAccounts = 1` with two rows. Comparing the counter with the
+            // whole list rejected such a wallet outright and left the producer retrying the same failure forever
+            run {
+                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val jointAccount = MockAccounts.createJointAccount(derivationIndex = 0)
+
+                CreateTestModel(
+                    accounts = listOf(mainAccount, jointAccount),
+                    totalAccounts = 1,
+                    totalJointAccounts = 1,
+                    expected = AccountList(
+                        userWalletId = userWalletId,
+                        accounts = listOf(mainAccount, jointAccount),
+                        totalAccounts = 1,
+                        totalArchivedAccounts = 0,
+                        totalJointAccounts = 1,
+                    ),
+                )
+            },
             createAccountList(activeAccounts = 1).let {
                 CreateTestModel(
                     accounts = it.accounts,
@@ -259,6 +364,7 @@ internal class AccountListTest {
     data class CreateTestModel(
         val accounts: List<Account>,
         val totalAccounts: Int = accounts.size,
+        val totalJointAccounts: Int = accounts.count { it is Account.Joint },
         val expected: Either<AccountList.Error, AccountList>,
     )
 

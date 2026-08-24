@@ -11,23 +11,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.search.ui.state.FeedSearchUM
+import com.tangem.features.feed.ui.FeedTabRow
+import com.tangem.features.feed.ui.FeedTabUM
+import kotlinx.collections.immutable.ImmutableList
 
 /**
- * Search results below the host's pinned search bar. The screen renders no search field of its
- * own — the query arrives through the shared search bar state.
+ * Shown while the query is blank. There is no tab row in this state — searching has not started, so
+ * there is no scope to pick.
  */
 @Composable
-internal fun FeedSearchContent(state: FeedSearchUM, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+internal fun FeedSearchPlaceholder(contentPadding: PaddingValues, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(top = contentPadding.calculateTopPadding())
             .padding(horizontal = 16.dp),
     ) {
-        // TODO: [TWI-1608] real search results; placeholder echoes the shared query until then
+        // TODO: [TWI-1608] Suggested + Popular; recent searches are a separate task
         Text(
-            text = if (state.query.isEmpty()) "Start typing to search" else "Searching for “${state.query}”…",
+            text = "Start typing to search",
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
@@ -35,5 +37,30 @@ internal fun FeedSearchContent(state: FeedSearchUM, contentPadding: PaddingValue
                 .fillMaxWidth()
                 .padding(top = 32.dp),
         )
+    }
+}
+
+/**
+ * Search results: the feed's tab row over the selected tab's own list. The row is the same set and
+ * order as the feed home's and does not shrink when a tab finds nothing.
+ *
+ * @param tabContent the selected tab page, provided by the search screen's pager
+ */
+@Composable
+internal fun FeedSearchTabsContent(
+    tabs: ImmutableList<FeedTabUM>,
+    selectedTabIndex: Int,
+    onTabSelect: (Int) -> Unit,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+    tabContent: @Composable (Modifier) -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(top = contentPadding.calculateTopPadding()),
+    ) {
+        FeedTabRow(tabs = tabs, selectedTabIndex = selectedTabIndex, onTabSelect = onTabSelect)
+        tabContent(Modifier.fillMaxSize())
     }
 }

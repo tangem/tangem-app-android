@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -12,10 +13,13 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessage
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayImage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CardActivationOrder
 import com.tangem.domain.pay.usecase.ActivatePlasticCardUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.details.impl.R
@@ -43,6 +47,7 @@ import com.tangem.core.ui.R as CoreUiR
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayCardActivationModelTest {
 
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val activatePlasticCard: ActivatePlasticCardUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
@@ -52,7 +57,7 @@ internal class TangemPayCardActivationModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, activatePlasticCard, paymentAccountStatusFetcher, uiMessageSender)
+        clearMocks(analytics, router, activatePlasticCard, paymentAccountStatusFetcher, uiMessageSender)
     }
 
     @AfterEach
@@ -73,6 +78,37 @@ internal class TangemPayCardActivationModelTest {
         assertThat(state.isContinueEnabled).isFalse()
         assertThat(state.isHintError).isFalse()
         assertThat(state.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a card with an activation image WHEN opened THEN that image is shown`() = runTest {
+        // Arrange
+        val card = tangemPayCard(
+            images = listOf(
+                TangemPayImage(type = "MAIN", url = MAIN_IMAGE_URL),
+                TangemPayImage(type = "ACTIVATION", url = ACTIVATION_IMAGE_URL),
+            ),
+        )
+
+        // Act
+        val model = createModel(testScope = this, card = card)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().cardImageUrl).isEqualTo(ACTIVATION_IMAGE_URL)
+    }
+
+    @Test
+    fun `GIVEN a card without an activation image WHEN opened THEN no image is shown`() = runTest {
+        // Arrange
+        val card = tangemPayCard(images = listOf(TangemPayImage(type = "MAIN", url = MAIN_IMAGE_URL)))
+
+        // Act
+        val model = createModel(testScope = this, card = card)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state().cardImageUrl).isNull()
     }
 
     @Test
@@ -349,15 +385,105 @@ internal class TangemPayCardActivationModelTest {
 
     private fun TangemPayCardActivationModel.state() = uiState.value
 
-    private fun createModel(testScope: TestScope) = TangemPayCardActivationModel(
+    @Test
+    fun `GIVEN the activation screen WHEN the model is created THEN the screen opened event is sent`() = runTest {
+        // Act
+        createModel(testScope = this)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardActivationScreenOpened>())
+        }
+    }
+
+    @Test
+    fun `GIVEN a partial input WHEN the fourth digit is typed THEN the digits entered event is sent once`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+
+        // Act
+        model.uiState.value.onLastDigitsChange("1")
+        model.uiState.value.onLastDigitsChange("12")
+        model.uiState.value.onLastDigitsChange("123")
+        model.uiState.value.onLastDigitsChange("1234")
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardLast4DigitsEntered>()) }
+    }
+
+    @Test
+    fun `GIVEN four digits entered WHEN more characters are typed THEN the digits entered event is not repeated`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            model.uiState.value.onLastDigitsChange("1234")
+
+            // Act
+            model.uiState.value.onLastDigitsChange("12345")
+            model.uiState.value.onLastDigitsChange("1234a")
+
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardLast4DigitsEntered>()) }
+        }
+
+    @Test
+    fun `GIVEN the correct last digits WHEN submitted THEN continue clicked and success events are sent`() = runTest {
+        // Arrange
+        coEvery { activatePlasticCard(any(), any(), any()) } returns Unit.right()
+        val model = createModel(testScope = this)
+        model.uiState.value.onLastDigitsChange("1234")
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.ActivationContinueClicked>()) }
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardActivationSuccess>()) }
+    }
+
+    @Test
+    fun `GIVEN wrong last digits WHEN submitted THEN the validation error event is sent and no success`() = runTest {
+        // Arrange
+        coEvery { activatePlasticCard(any(), any(), any()) } returns
+            VisaApiError.CardActivationInvalidCardData.left()
+        val model = createModel(testScope = this)
+        model.uiState.value.onLastDigitsChange("1234")
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.Last4DigitsValidationErrorShowed>())
+        }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.CardActivationSuccess>()) }
+    }
+
+    @Test
+    fun `GIVEN fewer than four digits WHEN Continue clicked THEN no continue clicked event is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        model.uiState.value.onLastDigitsChange("123")
+
+        // Act
+        model.uiState.value.onContinueClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.ActivationContinueClicked>()) }
+    }
+
+    private fun createModel(
+        testScope: TestScope,
+        card: TangemPayCard = tangemPayCard(id = CARD_ID, productInstanceId = PRODUCT_INSTANCE_ID),
+    ) = TangemPayCardActivationModel(
         paramsContainer = MutableParamsContainer(
-            TangemPayCardActivationComponent.Params(
-                card = tangemPayCard(id = CARD_ID, productInstanceId = PRODUCT_INSTANCE_ID),
-                userWalletId = WALLET_ID,
-                cardImageUrl = null,
-            ),
+            TangemPayCardActivationComponent.Params(card = card, userWalletId = WALLET_ID),
         ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+        analytics = analytics,
         router = router,
         activatePlasticCardUseCase = activatePlasticCard,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
@@ -379,5 +505,7 @@ internal class TangemPayCardActivationModelTest {
         val WALLET_ID = UserWalletId("1234567890ABCDEF")
         const val CARD_ID = "card-1"
         const val PRODUCT_INSTANCE_ID = "pi-1"
+        const val MAIN_IMAGE_URL = "https://tangem.com/card-main.png"
+        const val ACTIVATION_IMAGE_URL = "https://tangem.com/card-activation.png"
     }
 }
