@@ -38,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -68,15 +70,21 @@ internal fun TangemPayCardActivationScreen(state: TangemPayCardActivationUM, mod
         topBar = {
             TangemTopNavigation(
                 modifier = Modifier.testTag(TangemPayTestTags.CARD_ACTIVATION_TOP_BAR),
-                title = resourceReference(R.string.tangempay_card_details_activate),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 blurBackground = false,
-                onClose = state.onCloseClick,
+                endButton = { TangemButton.Close(onClick = state.onCloseClick) },
+                contentColumn = {
+                    TangemNavigationText(
+                        text = resourceReference(R.string.tangempay_card_details_activate),
+                        role = TangemNavigationText.Role.Title,
+                        color = TangemTheme.colors3.text.staticDark.primary,
+                    )
+                },
             )
         },
     ) { contentPadding ->
         val numberStyle = TangemTheme.typography3.display.medium.copy(
-            color = TangemTheme.colors3.text.primary,
+            color = TangemTheme.colors3.text.staticDark.primary,
             fontFeatureSettings = TABULAR_FIGURES_FEATURE,
         )
         ActivationContentLayout(
@@ -136,8 +144,8 @@ private fun ActivationContentLayout(
 private fun CardNumberField(state: TangemPayCardActivationUM, numberStyle: TextStyle, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    val enteredColor = TangemTheme.colors3.text.primary
-    val maskColor = TangemTheme.colors3.text.tertiary
+    val enteredColor = TangemTheme.colors3.text.staticDark.primary
+    val maskColor = TangemTheme.colors3.text.staticDark.tertiary
     val visualTransformation = remember(enteredColor, maskColor) {
         LastDigitsVisualTransformation(enteredColor = enteredColor, maskColor = maskColor)
     }
@@ -204,16 +212,16 @@ private fun CardNumberDecoration(
         val leadingPlaceable = measurables[1].measure(Constraints())
         val gap = NumberGroupGap.roundToPx()
         val groupWidth = (leadingPlaceable.width - gap * (LEADING_GROUPS_COUNT - 1)) / LEADING_GROUPS_COUNT
-        val editablePlaceable = measurables[2].measure(Constraints.fixedWidth(groupWidth))
+        val editablePlaceable = measurables[2].measure(Constraints())
 
-        val editableX = (constraints.maxWidth - editablePlaceable.width) / 2
+        val editableX = (constraints.maxWidth - groupWidth) / 2
         val editableY = NumberInsetTop.roundToPx()
         val leadingX = editableX - gap - leadingPlaceable.width
         val leadingY = editableY + (editablePlaceable.height - leadingPlaceable.height) / 2
 
         layout(constraints.maxWidth, CardHeight.roundToPx()) {
             cardPlaceable.place(
-                x = editableX + editablePlaceable.width + NumberInsetEnd.roundToPx() - cardPlaceable.width,
+                x = editableX + groupWidth + NumberInsetEnd.roundToPx() - cardPlaceable.width,
                 y = editableY - NumberInsetTop.roundToPx(),
             )
             leadingPlaceable.place(x = leadingX, y = leadingY)
@@ -233,7 +241,7 @@ private fun LeadingGroups(numberStyle: TextStyle, modifier: Modifier = Modifier)
             Text(
                 text = MASK_DIGIT.repeat(CARD_ACTIVATION_LAST_DIGITS_LENGTH),
                 style = numberStyle,
-                color = TangemTheme.colors3.text.tertiary,
+                color = TangemTheme.colors3.text.staticDark.tertiary,
             )
         }
     }

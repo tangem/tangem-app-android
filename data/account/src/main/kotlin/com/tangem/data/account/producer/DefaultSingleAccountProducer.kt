@@ -16,11 +16,13 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 
 /**
- * Default implementation of [SingleAccountProducer] that produces a flow of [Account.CryptoPortfolio]
- * for a single account identified by [SingleAccountProducer.Params.accountId].
+ * Default implementation of [SingleAccountProducer] that produces a flow of [Account.Portfolio] for
+ * a single account identified by [SingleAccountProducer.Params.accountId].
  *
- * It uses [SingleAccountListSupplier] to get the list of accounts and filters it to find the
- * specific account.
+ * It uses [SingleAccountListSupplier] to get the list of accounts and filters it to find the specific
+ * portfolio-holding account ([Account.CryptoPortfolio] or [Account.Joint]). [Account.Payment],
+ * [Account.Virtual] and [Account.Prediction] accounts are deliberately excluded — they hold no
+ * portfolio and have no use for this producer.
  *
  * @property params Parameters containing the account ID for which the portfolio is produced.
  * @property singleAccountListSupplier Supplier to get the list of accounts.
@@ -33,17 +35,17 @@ internal class DefaultSingleAccountProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountProducer {
 
-    override val fallback: Option<Account>
+    override val fallback: Option<Account.Portfolio>
         get() = none()
 
-    override fun produce(): Flow<Account> {
+    override fun produce(): Flow<Account.Portfolio> {
         return singleAccountListSupplier(
             params = SingleAccountListProducer.Params(userWalletId = params.accountId.userWalletId),
         )
             .mapNotNull { accountList ->
-                accountList.accounts.firstOrNull {
-                    it is Account.CryptoPortfolio && params.accountId == it.accountId
-                } as? Account.CryptoPortfolio
+                accountList.accounts
+                    .filterIsInstance<Account.Portfolio>()
+                    .firstOrNull { params.accountId == it.accountId }
             }
             .flowOn(dispatchers.default)
     }

@@ -160,7 +160,7 @@ private fun progressBannerTitleOrNull(cardState: TangemPayCardState): TextRefere
             resourceReference(R.string.tangempay_card_page_closing_banner_description),
         )
         TangemPayCardState.Activating -> combinedReference(
-            resourceReference(R.string.tangempay_card_activation_in_progress),
+            resourceReference(R.string.tangempay_card_page_activating_banner_title),
             stringReference(". "),
             resourceReference(R.string.tangempay_reissue_card_in_progress_description),
         )

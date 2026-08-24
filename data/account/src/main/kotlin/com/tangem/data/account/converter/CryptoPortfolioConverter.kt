@@ -26,21 +26,18 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
 
     override fun convert(value: WalletAccountDTO): Account.CryptoPortfolio {
         val tokens = value.tokens ?: error("Tokens should not be null")
+        val derivationIndex = value.derivationIndex.toDerivationIndex()
 
         return Account.CryptoPortfolio(
             accountId = value.id.toAccountId(userWallet.walletId),
             accountName = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),
-            derivationIndex = value.derivationIndex.toDerivationIndex(),
-            cryptoCurrencies = if (tokens.isNotEmpty()) {
-                responseCryptoCurrenciesFactory.createCurrencies(
-                    tokens = tokens,
-                    userWallet = userWallet,
-                    accountIndex = value.derivationIndex.toDerivationIndex(),
-                )
-            } else {
-                emptyList()
-            },
+            derivationIndex = derivationIndex,
+            cryptoCurrencies = responseCryptoCurrenciesFactory.createAccountCurrencies(
+                tokens = tokens,
+                userWallet = userWallet,
+                accountIndex = derivationIndex,
+            ),
         )
     }
 
@@ -51,9 +48,10 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
             derivationIndex = value.derivationIndex.value,
             icon = value.icon.value.name,
             iconColor = value.icon.color.name,
-            tokens = value.cryptoCurrencies.map {
-                userTokensResponseFactory.createResponseToken(currency = it, accountId = value.accountId)
-            },
+            tokens = userTokensResponseFactory.createAccountTokens(
+                currencies = value.cryptoCurrencies,
+                accountId = value.accountId,
+            ),
         )
     }
 

@@ -47,13 +47,7 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
     }
 
 internal val AccountStatus.Payment.cardMainImageUrl: String?
-    get() = tariffPlanImageUrl(TangemPayTariffPlan.Image.Type.MAIN)
-
-internal val AccountStatus.Payment.cardActivationImageUrl: String?
-    get() = tariffPlanImageUrl(TangemPayTariffPlan.Image.Type.ACTIVATION) ?: cardMainImageUrl
-
-private fun AccountStatus.Payment.tariffPlanImageUrl(type: TangemPayTariffPlan.Image.Type): String? =
-    tariffPlan?.plan?.images?.firstOrNull { it.type == type }?.url
+    get() = tariffPlan?.plan?.mainImageUrl
 
 internal val PaymentAccountStatusValue.Loaded.isFresh: Boolean
     get() = source.isActual() && error == null

@@ -20,7 +20,13 @@ typealias AccountCurrencyId = Pair<AccountId, CryptoCurrency.ID>
  *
  * @property userWalletId  the user wallet id associated with the account list
  * @property accounts      a list of accounts belonging to the user wallet
- * @property totalAccounts the total number of accounts (including archived ones)
+ * @property totalAccounts the backend's counter of the wallet's **crypto** accounts, archived ones included.
+ * Joint accounts have their own parallel counter ([totalJointAccounts]) and are not in this one, and the special
+ * accounts (payment, virtual, prediction) are injected by the app rather than counted by the backend at all — so
+ * this number must never be compared against the length of [accounts]
+ * @property totalJointAccounts the backend's counter of the wallet's joint accounts, archived ones included
+ * (`totalJointAccounts` of `GET /accounts`). Zero for a wallet that has none, and for a list assembled without
+ * joint rows at all
  * @property sortType      the sorting type applied to the accounts
  * @property groupType     the grouping type applied to the accounts
  *
@@ -32,6 +38,7 @@ data class AccountList private constructor(
     val accounts: List<Account>,
     val totalAccounts: Int,
     val totalArchivedAccounts: Int,
+    val totalJointAccounts: Int,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
 ) {
@@ -59,12 +66,16 @@ data class AccountList private constructor(
     operator fun plus(other: Account): Either<Error, AccountList> {
         val isNewAccount = this.accounts.none { it.accountId == other.accountId }
         val accounts = this.accounts.addOrReplace(other) { it.accountId == other.accountId }
+        // Each counter follows the rows it counts: a joint account belongs to its own, and adding one must not
+        // inflate the crypto counter — nor leave the joint one behind the list it now describes
+        val isNewJointAccount = isNewAccount && other is Account.Joint
 
         return invoke(
             userWalletId = this.userWalletId,
             accounts = accounts,
-            totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
+            totalAccounts = this.totalAccounts + if (isNewAccount && other !is Account.Joint) 1 else 0,
             totalArchivedAccounts = this.totalArchivedAccounts,
+            totalJointAccounts = this.totalJointAccounts + if (isNewJointAccount) 1 else 0,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -83,11 +94,14 @@ data class AccountList private constructor(
             removeIf { it.accountId == other.accountId }
         }
 
+        val wasJointAccount = isExistingAccount && other is Account.Joint
+
         return invoke(
             userWalletId = this.userWalletId,
             accounts = accounts,
-            totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
+            totalAccounts = this.totalAccounts - if (isExistingAccount && other !is Account.Joint) 1 else 0,
             totalArchivedAccounts = this.totalArchivedAccounts,
+            totalJointAccounts = this.totalJointAccounts - if (wasJointAccount) 1 else 0,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -187,6 +201,11 @@ data class AccountList private constructor(
         data object TotalAccountsLessThanActive : Error {
             override fun toString(): String = "$tag: Total accounts cannot be less than active accounts"
         }
+
+        @Serializable
+        data object TotalJointAccountsLessThanActive : Error {
+            override fun toString(): String = "$tag: Total joint accounts cannot be less than active ones"
+        }
     }
 
     companion object {
@@ -206,11 +225,13 @@ data class AccountList private constructor(
          * @param accounts      a set of accounts belonging to the user wallet
          * @param totalAccounts the total number of accounts
          */
+        @Suppress("LongParameterList")
         operator fun invoke(
             userWalletId: UserWalletId,
             accounts: List<Account>,
             totalAccounts: Int,
             totalArchivedAccounts: Int,
+            totalJointAccounts: Int = 0,
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
         ): Either<Error, AccountList> = either {
@@ -253,8 +274,17 @@ data class AccountList private constructor(
                 Error.DuplicateAccountNames
             }
 
-            ensure(totalAccounts >= accounts.size) {
+            // Against the crypto accounts only, because that is what the counter counts: it comes from
+            // `wallet.totalAccounts`, while joint rows are counted by `totalJointAccounts` and the special
+            // accounts are added client-side. Comparing it with the whole list rejected every wallet that has a
+            // joint account — the list refused to be built and the producer above retried the same failure forever
+            ensure(totalAccounts >= cryptoAccounts.size) {
                 Error.TotalAccountsLessThanActive
+            }
+
+            // The joint counter is policed the same way, against the joint rows alone
+            ensure(totalJointAccounts >= accounts.count { it is Account.Joint }) {
+                Error.TotalJointAccountsLessThanActive
             }
 
             AccountList(
@@ -262,6 +292,7 @@ data class AccountList private constructor(
                 accounts = accounts,
                 totalAccounts = totalAccounts,
                 totalArchivedAccounts = totalArchivedAccounts,
+                totalJointAccounts = totalJointAccounts,
                 sortType = sortType,
                 groupType = groupType,
             )
@@ -288,6 +319,7 @@ data class AccountList private constructor(
                 ),
                 totalAccounts = 1,
                 totalArchivedAccounts = 0,
+                totalJointAccounts = 0,
                 sortType = sortType,
                 groupType = groupType,
             )

@@ -4,11 +4,11 @@ import android.util.Base64
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
-import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
-import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.NonceApiRequest
+import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
+import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -99,8 +99,22 @@ internal class DefaultWalletRegistrar(
                         }
                         is ApiResponse.Error -> {
                             val authError = errorConverter.convert(response.cause)
-                            TangemLogger.e("/wallet/unregister request failed: $authError")
-                            raise(WalletRegistrationError.Api(authError))
+                            if (authError is AuthError.NotFound) {
+                                // Wallet is already not registered server-side (e.g. unregistered
+                                // elsewhere). The desired end state is reached, so clear the local
+                                // marker and treat it as success — idempotent, mirroring how register
+                                // treats a 409 Conflict.
+                                TangemLogger.i("Wallet already not registered server-side (404) — clearing marker")
+                                try {
+                                    markUnregistered(walletId)
+                                } catch (e: Exception) {
+                                    TangemLogger.e("Failed to clear marker after unregister 404", e)
+                                    raise(WalletRegistrationError.PersistenceFailed(e))
+                                }
+                            } else {
+                                TangemLogger.e("/wallet/unregister request failed: $authError")
+                                raise(WalletRegistrationError.Api(authError))
+                            }
                         }
                     }
                 }

@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,13 +9,17 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.IssuePlasticCardUseCase
+import com.tangem.domain.pay.usecase.ReissuePlasticCardUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardDataComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.FieldUM
@@ -33,14 +38,17 @@ import javax.inject.Inject
 
 private const val TAG = "TangemPayOrderCardDataModel"
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayOrderCardDataModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val onboardingRepository: OnboardingRepository,
     private val issuePlasticCard: IssuePlasticCardUseCase,
+    private val reissuePlasticCard: ReissuePlasticCardUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -52,6 +60,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         field = MutableStateFlow<TangemPayOrderCardDataScreenUM>(createLoadingState())
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.AddressScreenOpened())
         loadData()
     }
 
@@ -66,13 +75,13 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         onRetry = ::loadData,
     )
 
-    private fun createFormState(country: String, email: String, mask: String) = Form(
+    private fun createFormState(country: String, email: String, mask: String, embossName: FieldUM) = Form(
         onBackClick = ::onBackClick,
         onCloseClick = params.onClose,
         country = country,
         email = email,
         phoneMask = mask,
-        embossName = emptyField(OrderFormField.EmbossName),
+        embossName = embossName,
         firstName = emptyField(OrderFormField.FirstName),
         lastName = emptyField(OrderFormField.LastName),
         region = emptyField(OrderFormField.Region),
@@ -92,6 +101,20 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         onOrderClick = ::onOrderClick,
     )
 
+    private fun embossNameField(info: CustomerInfo?): FieldUM {
+        val intent = params.intent
+        if (intent !is TangemPayOrderCardIntent.ReissuePlastic) return emptyField(OrderFormField.EmbossName)
+
+        return FieldUM(
+            value = info?.sourceCardEmbossName(intent.sourceProductInstanceId).orEmpty(),
+            error = null,
+            isRequired = OrderFormField.EmbossName.isRequired,
+            isEditable = false,
+            onValueChange = {},
+            onFocusChange = {},
+        )
+    }
+
     private fun emptyField(field: OrderFormField) = FieldUM(
         value = "",
         error = null,
@@ -108,7 +131,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
             val email = info?.email.orEmpty()
             val country = CountryNames.getDisplayName(info?.country)
             state.value = if (email.isNotBlank() && country.isNotBlank()) {
-                createFormState(country = country, email = email, mask = mask)
+                createFormState(country = country, email = email, mask = mask, embossName = embossNameField(info))
             } else {
                 createErrorState()
             }
@@ -144,6 +167,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         val form = state.value as? Form ?: return
         if (!form.isOrderEnabled || form.isSubmitting) return
 
+        analytics.send(TangemPayAnalyticsEvents.Plastic.OrderCardClicked())
         submitOrder(
             order = form.toPlasticCardOrder(),
             email = form.email,
@@ -154,11 +178,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     private fun submitOrder(order: PlasticCardOrder, email: String, idempotencyKey: String) {
         setSubmitting(isSubmitting = true)
         modelScope.launch {
-            issuePlasticCard(
-                userWalletId = params.userWalletId,
-                plasticCardOrder = order,
-                idempotencyKey = idempotencyKey,
-            ).fold(
+            submit(order = order, idempotencyKey = idempotencyKey).fold(
                 ifLeft = { error ->
                     setSubmitting(isSubmitting = false)
                     TangemLogger.withTag(TAG).e("Plastic card order was not accepted: $error")
@@ -174,21 +194,47 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         }.saveIn(submitJobHolder)
     }
 
+    private suspend fun submit(order: PlasticCardOrder, idempotencyKey: String) = when (val intent = params.intent) {
+        TangemPayOrderCardIntent.Issue -> issuePlasticCard(
+            userWalletId = params.userWalletId,
+            plasticCardOrder = order,
+            idempotencyKey = idempotencyKey,
+        )
+        is TangemPayOrderCardIntent.ReissuePlastic -> reissuePlasticCard(
+            userWalletId = params.userWalletId,
+            sourceProductInstanceId = intent.sourceProductInstanceId,
+            plasticCardOrder = order,
+            idempotencyKey = idempotencyKey,
+        )
+    }
+
     private fun createSubmitFailedMessage(error: VisaApiError, onRetry: () -> Unit): BottomSheetMessage {
         return when (error) {
-            VisaApiError.CardIssueInvalidShippingAddress -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueInvalidShippingAddress,
+            VisaApiError.CardReissuePlasticInvalidShippingAddress,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_invalid_address),
             )
-            VisaApiError.CardIssueInsufficientBalance -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueInsufficientBalance,
+            VisaApiError.CardReissuePlasticInsufficientBalance,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_insufficient_balance),
                 onCloseClick = params.onClose,
             )
-            VisaApiError.CardIssueActiveOrderExists -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueActiveOrderExists,
+            VisaApiError.CardReissuePlasticActiveOrderExists,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_active_order),
                 onCloseClick = params.onClose,
             )
-            VisaApiError.CardIssueOfferNotAvailable -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+            VisaApiError.CardIssueOfferNotAvailable,
+            VisaApiError.CardReissuePlasticNotAvailable,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_offer_unavailable),
+                onCloseClick = params.onClose,
+            )
+            VisaApiError.CardReissuePlasticInvalidSourceCard -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+                title = resourceReference(R.string.tangempay_order_card_error_invalid_source_card),
                 onCloseClick = params.onClose,
             )
             else -> TangemPayMessagesFactory.createOrderFailedMessage(onRetry.takeIf { error.isRetryable() })
@@ -214,6 +260,13 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         }
     }
 }
+
+private fun CustomerInfo.sourceCardEmbossName(productInstanceId: String): String? =
+    productInstances.firstOrNull { it.id == productInstanceId }
+        ?.cardId
+        ?.ifBlank { null }
+        ?.let { cardId -> cards.firstOrNull { it.cardId == cardId } }
+        ?.embossName
 
 private fun Form.toPlasticCardOrder() = PlasticCardOrder(
     embossName = embossName.value.trim(),

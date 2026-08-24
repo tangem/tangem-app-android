@@ -31,7 +31,7 @@ internal class TangemPayCashbackDetailsConverterTest {
         // Act
         val result = converter.convert(
             cards = listOf(card(rate = "1.0", title = "Basic Card", min = "$30")),
-            currency = "USD",
+            payoutCurrency = "USDC",
             accountMonthlyCap = cap("300"),
         )
 
@@ -40,7 +40,7 @@ internal class TangemPayCashbackDetailsConverterTest {
         assertThat(result.rows).containsExactly(
             resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic Card", "$30")),
             resourceReference(R.string.tangempay_cashback_details_eu_excluded),
-            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USD")),
+            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDC")),
             resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$300")),
         ).inOrder()
     }
@@ -53,7 +53,7 @@ internal class TangemPayCashbackDetailsConverterTest {
                 card(rate = "1.0", title = "Basic Card", min = "$30"),
                 card(rate = "2.0", title = "Plus Card", min = "$30"),
             ),
-            currency = "USD",
+            payoutCurrency = "USDC",
             accountMonthlyCap = cap("300"),
         )
 
@@ -64,17 +64,17 @@ internal class TangemPayCashbackDetailsConverterTest {
             resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic Card", "$30")),
             resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("2", "Plus Card", "$30")),
             resourceReference(R.string.tangempay_cashback_details_eu_excluded),
-            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USD")),
+            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDC")),
             resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$300")),
         ).inOrder()
     }
 
     @Test
-    fun `GIVEN no currency and no cap WHEN convert THEN paid-in falls back to USD and cap row is dropped`() {
+    fun `GIVEN no payout currency and no cap WHEN convert THEN paid-in and cap rows are dropped`() {
         // Act
         val result = converter.convert(
             cards = listOf(card(rate = "1.0", title = "Basic Card", min = "$30")),
-            currency = null,
+            payoutCurrency = null,
             accountMonthlyCap = null,
         )
 
@@ -82,7 +82,40 @@ internal class TangemPayCashbackDetailsConverterTest {
         assertThat(result.rows).containsExactly(
             resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic Card", "$30")),
             resourceReference(R.string.tangempay_cashback_details_eu_excluded),
-            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USD")),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN blank payout currency WHEN convert THEN paid-in row is dropped`() {
+        // Act
+        val result = converter.convert(
+            cards = listOf(card(rate = "1.0", title = "Basic Card", min = "$30")),
+            payoutCurrency = " ",
+            accountMonthlyCap = null,
+        )
+
+        // Assert
+        assertThat(result.rows).containsExactly(
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic Card", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN payout currency differs from the cap currency WHEN convert THEN paid-in uses the payout one`() {
+        // Act
+        val result = converter.convert(
+            cards = listOf(card(rate = "1.0", title = "Basic Card", min = "$30")),
+            payoutCurrency = "USDT",
+            accountMonthlyCap = cap("300", currency = "USD"),
+        )
+
+        // Assert
+        assertThat(result.rows).containsExactly(
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic Card", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDT")),
+            resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$300")),
         ).inOrder()
     }
 
@@ -91,7 +124,7 @@ internal class TangemPayCashbackDetailsConverterTest {
         // Act
         val result = converter.convert(
             cards = listOf(card(rate = "1.50", title = "Prestige Card", min = null)),
-            currency = "USD",
+            payoutCurrency = "USDC",
             accountMonthlyCap = null,
         )
 
@@ -109,7 +142,7 @@ internal class TangemPayCashbackDetailsConverterTest {
                 card(rate = "1.0", title = null, min = "$30"),
                 card(rate = "2.0", title = "Plus Card", min = "$30"),
             ),
-            currency = "USD",
+            payoutCurrency = "USDC",
             accountMonthlyCap = null,
         )
 
@@ -117,14 +150,14 @@ internal class TangemPayCashbackDetailsConverterTest {
         assertThat(result.rows).containsExactly(
             resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("2", "Plus Card", "$30")),
             resourceReference(R.string.tangempay_cashback_details_eu_excluded),
-            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USD")),
+            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDC")),
         ).inOrder()
     }
 
     @Test
     fun `GIVEN no cards WHEN convert THEN plain Cashback title and empty rows`() {
         // Act
-        val result = converter.convert(cards = emptyList(), currency = "USD", accountMonthlyCap = cap("300"))
+        val result = converter.convert(cards = emptyList(), payoutCurrency = "USDC", accountMonthlyCap = cap("300"))
 
         // Assert
         assertThat(result.title).isEqualTo(resourceReference(R.string.tangempay_cashback_title))

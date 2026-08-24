@@ -8,11 +8,11 @@ import arrow.core.None
 import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
-import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
-import com.tangem.datasource.api.auth.models.response.NonceApiResponse
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
+import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
+import com.tangem.lib.auth.api.models.response.NonceApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -408,6 +408,28 @@ class DefaultWalletRegistrarTest {
         assertThat(saved.captured.accessToken).isEqualTo("rotated-access")
         assertThat(saved.captured.walletIds).containsExactly(OTHER_WALLET_ID)
         assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+    }
+
+    @Test
+    fun `unregister treats 404 NotFound as success and clears the marker without persisting tokens`() = runTest {
+        preferencesDataStore.edit {
+            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "wallet not registered for this device",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        val result = registrar.unregister(WALLET_ID)
+
+        // Already not registered server-side — desired end state reached, marker cleared, no tokens.
+        assertThat(result.isRight()).isTrue()
+        assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+        coVerify(exactly = 0) { store.save(any()) }
     }
 
     @Test

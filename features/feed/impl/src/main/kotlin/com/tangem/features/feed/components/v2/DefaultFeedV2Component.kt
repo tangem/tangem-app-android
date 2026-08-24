@@ -37,7 +37,7 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
-import com.tangem.features.feed.nav.FeedTabContributor
+import com.tangem.features.feed.nav.FeedTabSet
 import com.tangem.features.feed.ui.v2.FeedSearchBarHeader
 import com.tangem.features.feed.v2.FeedV2Component
 import dagger.assisted.Assisted
@@ -51,7 +51,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Suppress("UnusedPrivateProperty") @Assisted params: Unit,
     private val screenFactories: Map<Class<*>, @JvmSuppressWildcards Provider<FeedScreenFactory>>,
-    private val tabContributors: Set<@JvmSuppressWildcards FeedTabContributor>,
+    private val tabSet: FeedTabSet,
     private val searchBarController: DefaultFeedSearchBarController,
 ) : FeedV2Component, AppComponentContext by context {
 
@@ -77,7 +77,11 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
             searchBarController.activationRequests.collect(::onSearchActivationRequest)
         }
         stack.subscribe(lifecycle) { stackState ->
-            searchBarController.setActive(isActive = stackState.active.configuration is FeedRoute.Search)
+            // presence on the stack, not "is active": tapping a search result pushes a screen on top of
+            // search, and deactivation drops the query — the user would come back to an empty search
+            searchBarController.setActive(
+                isActive = stackState.items.any { it.configuration is FeedRoute.Search },
+            )
         }
         lifecycle.doOnDestroy { searchBarController.setActive(isActive = false) }
     }
@@ -154,7 +158,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         val childContext = childByContext(componentContext = factoryContext, router = feedRouter)
 
         return when (route) {
-            is FeedHomeRoute -> FeedHomeComponent(context = childContext, tabContributors = tabContributors)
+            is FeedHomeRoute -> FeedHomeComponent(context = childContext, tabSet = tabSet)
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
                 .get()
                 .create(context = childContext, route = route)

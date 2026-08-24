@@ -67,6 +67,7 @@ import com.tangem.feature.tester.presentation.storybook.page.pagerindicator.Tang
 import com.tangem.feature.tester.presentation.storybook.page.placeholder.PlaceholderStory
 import com.tangem.feature.tester.presentation.storybook.page.progress.ProgressIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.TangemSearchFieldStory
+import com.tangem.feature.tester.presentation.storybook.page.storiesv2.StoriesV2Story
 import com.tangem.feature.tester.presentation.storybook.page.tab.TangemTabStory
 import com.tangem.feature.tester.presentation.storybook.page.tabs.TangemSegmentedPickerStory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.TangemTokenRowStory
@@ -85,11 +86,14 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
     ) { storyState ->
         // The tester NavHost is edge-to-edge on the storybook route; every page except the
         // edge-to-edge ones (which manage insets themselves) keeps the usual system bars padding.
-        val isEdgeToEdgePage = storyState is TangemShtorkaStory || storyState is TangemModalStory
+        val isEdgeToEdgePage = storyState is TangemShtorkaStory ||
+            storyState is TangemModalStory ||
+            storyState is StoriesV2Story
         val insetsModifier = if (isEdgeToEdgePage) Modifier else Modifier.systemBarsPadding()
         Box(modifier = insetsModifier) {
             when (storyState) {
                 StoryList -> StoryBookListScreen(state = state)
+                StoriesV2Story -> StoriesV2Story()
                 is NorthernLightsStory -> NorthernLightsStory(state = storyState)
                 ButtonsStory -> ButtonsStory()
                 is TangemBadgeStory -> TangemBadgeStory(state = storyState)

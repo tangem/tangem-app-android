@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.domain.models.account.mainImageUrl
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
@@ -312,7 +313,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private fun TangemPayTariffPlan.toPlanUM() = TangemPaySelectPlanUM.PlanUM(
         name = stringReference(name),
-        imageUrl = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url,
+        imageUrl = mainImageUrl,
         points = descriptionItems
             .filter { it.section == TangemPayTariffPlan.Section.ONBOARDING_RELATED }
             .sortedBy { it.order }

@@ -41,6 +41,7 @@ sealed class PredictionAccountStatusValue {
             is Onboarding,
             is Error,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
+            is Onboarded -> TotalFiatBalance.Failed
             is Active -> {
                 val amount = fiatBalance ?: return TotalFiatBalance.Failed
                 TotalFiatBalance.Loaded(amount = amount, source = source)
@@ -55,6 +56,7 @@ sealed class PredictionAccountStatusValue {
     fun copySealed(source: StatusSource): PredictionAccountStatusValue {
         return when (this) {
             is Onboarding -> copy(source = source)
+            is Onboarded -> copy(source = source)
             is Active -> copy(source = source)
             is Loading,
             is NotOnboarded,
@@ -74,6 +76,14 @@ sealed class PredictionAccountStatusValue {
     data object NotOnboarded : PredictionAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
     }
+
+    /**
+     * The deposit wallet exists, but reading its collateral needs the locally derived L2 credentials, which a
+     * wallet set up elsewhere does not have here. The amount is unknown rather than zero, so the wallet total
+     * reports [TotalFiatBalance.Failed] instead of settling on a number that omits it.
+     */
+    @Serializable
+    data class Onboarded(override val source: StatusSource) : PredictionAccountStatusValue()
 
     /**
      * Represents a state where the prediction deposit wallet is being set up and cannot hold funds yet.

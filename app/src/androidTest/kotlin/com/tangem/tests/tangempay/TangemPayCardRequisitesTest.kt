@@ -88,9 +88,10 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
             step("Assert Add to wallet guide is displayed") {
                 flakySafely { onTangemPayAddToWalletGuideScreen { container.assertIsDisplayed() } }
             }
-            // Both card faces stay in the tree (SubcomposeLayout) — the hidden face is laid out at zero size.
-            step("Assert guide card number is not displayed") {
-                onTangemPayAddToWalletGuideScreen { numberValue.assertIsNotDisplayed() }
+            // The card block keeps both faces in the tree (SubcomposeLayout flip) and only clears the
+            // detail values, so the number node is present but blank until "Show details" is tapped.
+            step("Assert guide card number is not revealed") {
+                onTangemPayAddToWalletGuideScreen { numberValue.assertTextEquals("") }
             }
             step("Assert guide 'Show details' button is displayed") {
                 onTangemPayAddToWalletGuideScreen { showDetailsButton.assertIsDisplayed() }

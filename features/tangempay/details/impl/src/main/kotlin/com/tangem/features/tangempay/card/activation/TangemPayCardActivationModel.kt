@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.card.activation
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,10 +9,12 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.pay.activationImageUrl
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CARD_ACTIVATION_LAST_DIGITS_LENGTH
 import com.tangem.domain.pay.model.CardActivationOrder
 import com.tangem.domain.pay.usecase.ActivatePlasticCardUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -27,11 +30,13 @@ import java.util.UUID
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayCardActivationModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val activatePlasticCardUseCase: ActivatePlasticCardUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
@@ -52,7 +57,7 @@ internal class TangemPayCardActivationModel @Inject constructor(
         field = MutableStateFlow(
             TangemPayCardActivationUM(
                 lastDigits = "",
-                cardImageUrl = params.cardImageUrl,
+                cardImageUrl = params.card.activationImageUrl,
                 hint = resourceReference(R.string.tangempay_card_activation_description),
                 isHintError = false,
                 isLoading = false,
@@ -62,11 +67,20 @@ internal class TangemPayCardActivationModel @Inject constructor(
             ),
         )
 
+    init {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.CardActivationScreenOpened())
+    }
+
     private fun onLastDigitsChange(input: String) {
         if (uiState.value.isLoading) return
 
+        val previousDigits = uiState.value.lastDigits
         val digits = input.filter(Char::isDigit).take(CARD_ACTIVATION_LAST_DIGITS_LENGTH)
-        if (digits != uiState.value.lastDigits) submitIdempotencyKey = null
+        if (digits != previousDigits) submitIdempotencyKey = null
+
+        val isJustCompleted = digits.length == CARD_ACTIVATION_LAST_DIGITS_LENGTH &&
+            previousDigits.length < CARD_ACTIVATION_LAST_DIGITS_LENGTH
+        if (isJustCompleted) analytics.send(TangemPayAnalyticsEvents.Plastic.CardLast4DigitsEntered())
 
         uiState.update { state ->
             state.copy(
@@ -80,6 +94,8 @@ internal class TangemPayCardActivationModel @Inject constructor(
     private fun onContinueClick() {
         val state = uiState.value
         if (!state.isContinueEnabled || state.isLoading) return
+
+        analytics.send(TangemPayAnalyticsEvents.Plastic.ActivationContinueClicked())
 
         uiState.update { current ->
             current.copy(
@@ -100,7 +116,10 @@ internal class TangemPayCardActivationModel @Inject constructor(
                 ),
                 idempotencyKey = idempotencyKey,
             )
-                .onRight { router.pop() }
+                .onRight {
+                    analytics.send(TangemPayAnalyticsEvents.Plastic.CardActivationSuccess())
+                    router.pop()
+                }
                 .onLeft { error -> onSubmitFailed(error) }
         }.saveIn(submitJobHolder)
     }
@@ -146,6 +165,7 @@ internal class TangemPayCardActivationModel @Inject constructor(
     }
 
     private fun showInlineError(message: TextReference) {
+        analytics.send(TangemPayAnalyticsEvents.Plastic.Last4DigitsValidationErrorShowed())
         uiState.update { current ->
             current.copy(lastDigits = "", hint = message, isHintError = true)
         }
