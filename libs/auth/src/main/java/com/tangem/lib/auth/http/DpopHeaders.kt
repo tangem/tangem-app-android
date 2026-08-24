@@ -1,8 +1,8 @@
 package com.tangem.lib.auth.http
 
-import com.tangem.datasource.api.auth.RequiresDpopProof
-import com.tangem.datasource.api.auth.RequiresSessionAuth
-import com.tangem.datasource.api.auth.RequiresSessionRefresh
+import com.tangem.lib.auth.api.RequiresDpopProof
+import com.tangem.lib.auth.api.RequiresSessionAuth
+import com.tangem.lib.auth.api.RequiresSessionRefresh
 import okhttp3.Request
 import retrofit2.Invocation
 

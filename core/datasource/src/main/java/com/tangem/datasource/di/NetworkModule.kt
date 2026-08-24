@@ -6,10 +6,8 @@ import com.tangem.datasource.api.common.config.YieldSupply
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
-import com.tangem.datasource.api.common.config.Auth
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.managers.ApiConfigsManager
@@ -157,22 +155,6 @@ internal object NetworkModule {
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
                 shouldSaveLogs = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideAuthApi(retrofitApiBuilder: RetrofitApiBuilder): AuthApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = Auth.ID,
-                shouldApplyTimeoutAnnotations = false,
-                // Per-method annotations (`@RequiresDpopProof`, `@RequiresSessionAuth`) gate the hooks
-                // installed here. `/refresh` carries `@RequiresDpopProof` only, so the Authenticator
-                // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
-                // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
-                shouldUseSessionAuth = true,
             ),
         )
     }

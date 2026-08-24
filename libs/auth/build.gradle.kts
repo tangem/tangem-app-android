@@ -4,6 +4,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -28,6 +29,7 @@ dependencies {
     api(deps.arrow.core)
     api(deps.okHttp)
     implementation(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     implementation(deps.retrofit)
     // endregion
 
@@ -44,6 +46,7 @@ dependencies {
     // region Core modules
     implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
+    implementation(projects.core.remote)
     implementation(projects.core.utils)
     // endregion
 
