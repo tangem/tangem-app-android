@@ -225,6 +225,23 @@ internal class RunPolymarketOnboardingInteractorTest {
     }
 
     @Test
+    fun `GIVEN the nonce read fails WHEN collected THEN fails without announcing a signature`() = runTest {
+        // Arrange
+        coEvery { getWalletStatus(ADDRESSES) } returns walletState(PolymarketWalletStatus.NOT_CREATED).right()
+        coEvery { getRelayerNonce(ADDRESSES) } returns PolymarketOnboardingError.Network.left()
+
+        // Act & Assert
+        useCase(USER_WALLET_ID).test {
+            assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+            assertThat(awaitItem()).isEqualTo(
+                PolymarketOnboardingProgress.Failed(error = PolymarketOnboardingError.Network, isRetryable = true),
+            )
+            awaitComplete()
+        }
+        coVerify(exactly = 0) { signOnboardingDigests(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN the wallet is onboarded and credentials are stored WHEN collected THEN Ready without a tap`() =
         runTest {
             // Arrange

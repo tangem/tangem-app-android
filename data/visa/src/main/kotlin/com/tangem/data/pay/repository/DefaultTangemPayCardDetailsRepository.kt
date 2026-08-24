@@ -26,6 +26,7 @@ import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
@@ -324,6 +325,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 Status.CANCELED -> OrderStatus.CANCELED
             },
             orderStep = OrderStep.fromString(result.step),
+            orderType = OrderType.fromString(result.type ?: result.data.type),
         )
     }
 

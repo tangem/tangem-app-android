@@ -17,9 +17,11 @@ import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.CreateCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWallet
@@ -45,6 +47,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -66,6 +69,7 @@ internal class CreateCloudBackupModelTest {
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase = mockk(relaxed = true)
     private val createCloudBackupUseCase: CreateCloudBackupUseCase = mockk()
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
+    private val cloudBackupRepository: CloudBackupRepository = mockk()
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -98,6 +102,7 @@ internal class CreateCloudBackupModelTest {
         every { getUserWalletUseCase(walletId) } returns hotWallet.right()
         every { hotWalletId.authType } returns HotWalletId.AuthType.Password
         coEvery { exportSeedPhraseUseCase.invoke(hotWalletId) } returns privateInfo.right()
+        coEvery { cloudBackupRepository.getAccountInfo(any()) } returns ACCOUNT.right()
 
         // Mirrors the accessor: unlocking prompts the user and caches the result, which is then held
         coEvery { getHotWalletContextualUnlockUseCase(hotWalletId) } answers { heldUnlock.right() }
@@ -399,6 +404,209 @@ internal class CreateCloudBackupModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN model created WHEN authorization succeeds THEN Preparing is shown before SetPassword`() = runTest {
+        // Arrange
+        val model = createModel(this)
+
+        // Act
+        val initialState = model.uiState.value
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(initialState).isInstanceOf(CreateCloudBackupUM.Preparing::class.java)
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.SetPassword::class.java)
+        coVerify(exactly = 1) { cloudBackupRepository.getAccountInfo(interactive = true) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN authorization fails WHEN model created THEN SetCloudPasswordScreen is not sent`() = runTest {
+        // Arrange
+        coEvery { cloudBackupRepository.getAccountInfo(any()) } returns CloudBackupError.NetworkError.left()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) {
+            analyticsEventHandler.send(any<WalletSettingsAnalyticEvents.SetCloudPasswordScreen>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN authorization succeeds WHEN model created THEN SetCloudPasswordScreen is sent once`() = runTest {
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(any<WalletSettingsAnalyticEvents.SetCloudPasswordScreen>())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN authorization in flight WHEN authorize triggered again THEN the second attempt is ignored`() = runTest {
+        // Arrange
+        coEvery { cloudBackupRepository.getAccountInfo(any()) } returns CloudBackupError.NetworkError.left()
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+        val model = createModel(this)
+        advanceUntilIdle()
+        coEvery { cloudBackupRepository.getAccountInfo(any()) } coAnswers {
+            delay(timeMillis = 1_000)
+            ACCOUNT.right()
+        }
+
+        // Act
+        val retry = sentMessages.filterIsInstance<BottomSheetMessage>().last().messageBottomSheetUM
+        val retryClick = retry.elements.filterIsInstance<MessageBottomSheetUM.Button>().first().onClick
+        retryClick?.invoke(retry.closeScope)
+        retryClick?.invoke(retry.closeScope)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { cloudBackupRepository.getAccountInfo(interactive = true) }
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.SetPassword::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN authorization canceled WHEN model created THEN pops without error sheet`() = runTest {
+        // Arrange
+        coEvery { cloudBackupRepository.getAccountInfo(any()) } returns CloudBackupError.AuthCanceled.left()
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.pop() }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        coVerify(exactly = 0) { createCloudBackupUseCase(any(), any(), any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN permissions missing on authorization WHEN got-it clicked THEN pops`() = runTest {
+        // Arrange
+        coEvery { cloudBackupRepository.getAccountInfo(any()) } returns
+            CloudBackupError.AuthPermissionsMissing.left()
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+        sheet.messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.Button>()
+            .first()
+            .onClick
+            ?.invoke(sheet.messageBottomSheetUM.closeScope)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.Preparing::class.java)
+        verify(exactly = 1) { router.pop() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN network error on authorization WHEN retry clicked THEN authorization repeated AND SetPassword shown`() =
+        runTest {
+            // Arrange
+            coEvery { cloudBackupRepository.getAccountInfo(any()) } returnsMany listOf(
+                CloudBackupError.NetworkError.left(),
+                ACCOUNT.right(),
+            )
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+            sheet.messageBottomSheetUM.elements
+                .filterIsInstance<MessageBottomSheetUM.Button>()
+                .first()
+                .onClick
+                ?.invoke(sheet.messageBottomSheetUM.closeScope)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { cloudBackupRepository.getAccountInfo(interactive = true) }
+            assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.SetPassword::class.java)
+            verify(exactly = 0) { router.pop() }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN network error on authorization WHEN error sheet dismissed THEN pops instead of staying on loader`() =
+        runTest {
+            // Arrange
+            coEvery { cloudBackupRepository.getAccountInfo(any()) } returns CloudBackupError.NetworkError.left()
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+            sheet.messageBottomSheetUM.onDismissRequest()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.pop() }
+            coVerify(exactly = 1) { cloudBackupRepository.getAccountInfo(interactive = true) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN network error on authorization WHEN retry clicked THEN sheet dismissal does not pop`() = runTest {
+        // Arrange
+        coEvery { cloudBackupRepository.getAccountInfo(any()) } returnsMany listOf(
+            CloudBackupError.NetworkError.left(),
+            ACCOUNT.right(),
+        )
+        val sentMessages = mutableListOf<UiMessage>()
+        every { uiMessageSender.send(capture(sentMessages)) } just Runs
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        val sheet = sentMessages.filterIsInstance<BottomSheetMessage>().last()
+        sheet.messageBottomSheetUM.elements
+            .filterIsInstance<MessageBottomSheetUM.Button>()
+            .first()
+            .onClick
+            ?.invoke(sheet.messageBottomSheetUM.closeScope)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.SetPassword::class.java)
+        verify(exactly = 0) { router.pop() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN Preparing step WHEN back clicked THEN pops without cancel dialog`() = runTest {
+        // Arrange
+        val model = createModel(this)
+
+        // Act
+        (model.uiState.value as CreateCloudBackupUM.Preparing).onBackClick()
+
+        // Assert
+        verify(exactly = 1) { router.pop() }
+        verify(exactly = 0) { uiMessageSender.send(any<DialogMessage>()) }
+        model.onDestroy()
+    }
+
     private fun driveToConfirmAndSubmit(model: CreateCloudBackupModel) {
         (model.uiState.value as CreateCloudBackupUM.SetPassword).onPasswordChange(STRONG_PASSWORD)
         (model.uiState.value as CreateCloudBackupUM.SetPassword).onContinueClick()
@@ -422,6 +630,7 @@ internal class CreateCloudBackupModelTest {
             clearHotWalletContextualUnlockUseCase = clearHotWalletContextualUnlockUseCase,
             createCloudBackupUseCase = createCloudBackupUseCase,
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
+            cloudBackupRepository = cloudBackupRepository,
         )
     }
 
@@ -441,5 +650,6 @@ internal class CreateCloudBackupModelTest {
         const val STRONG_PASSWORD = "Str0ng!Pass"
         const val MEDIUM_PASSWORD = "abcdefgH"
         const val WEAK_PASSWORD = "weak"
+        val ACCOUNT = CloudBackupAccount(email = "user@gmail.com", displayName = null, photoUrl = null)
     }
 }

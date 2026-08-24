@@ -588,6 +588,11 @@
   <string name="custom_token_validation_error_not_found">Note that tokens can be created by anyone. Be aware of adding scam tokens, they can cost nothing.</string>
   <string name="custom_token_validation_error_not_found_description">Be aware of adding scam tokens, they can cost nothing</string>
   <string name="custom_token_validation_error_not_found_title">Note that tokens can be created by anyone</string>
+  <string name="details_add_wallet_selector_add_hardware_wallet_description">Scan a Tangem card to add it</string>
+  <string name="details_add_wallet_selector_add_hardware_wallet_title">Add hardware wallet</string>
+  <string name="details_add_wallet_selector_add_mobile_wallet_description">Create a new wallet on this device</string>
+  <string name="details_add_wallet_selector_add_mobile_wallet_title">Add mobile wallet</string>
+  <string name="details_add_wallet_selector_coming_soon_description">We\'re working on the ability to create more than one mobile wallet.</string>
   <string name="details_buy_wallet">Buy Tangem Wallet</string>
   <string name="details_chat">Chat</string>
   <string name="details_manage_security_access_code">Access code</string>
