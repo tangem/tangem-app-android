@@ -22,6 +22,7 @@ import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -54,9 +55,9 @@ internal class DefaultDeviceRegistrar(
                 // The local flag is stale (backend lost the device record). Clear it up front so
                 // runRegister doesn't short-circuit, and so a failed attempt self-heals on the next
                 // launch's register() call.
-                try {
+                runSuspendCatching {
                     appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = false)
-                } catch (e: Exception) {
+                }.onFailure { e ->
                     TangemLogger.e("Failed to reset device-registration flag before re-register", e)
                     raise(DeviceRegistrationError.PersistenceFailed(e))
                 }
