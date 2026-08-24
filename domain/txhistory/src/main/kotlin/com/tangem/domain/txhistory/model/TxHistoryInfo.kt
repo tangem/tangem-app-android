@@ -85,15 +85,16 @@ val TxHistoryInfo.explorerHash: String?
     }
 
 /**
- * Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express deal id
- * otherwise. An [ExpressTx] enriched with its on-chain leg copies the leg's hash — once a blockchain tx backs
- * the deal, that hash is the id the user can look up anywhere.
+ * Human-meaningful transaction id to copy/display: the on-chain hash for an [OnChainTx], the express side's own
+ * id otherwise — regardless of whether the deal is already matched to an on-chain leg. Support looks up an
+ * express deal (and every on-chain leg tied to it) by this id, so a merged row must keep exposing it rather than
+ * falling back to the matched leg's hash.
  */
 val TxHistoryInfo.idToCopy: String
     get() = when (this) {
         is OnChainTx.BSDK -> txInfo.txHash
         is OnChainTx.TangemPay -> explorerHash ?: txId
-        is ExpressTx -> txInfo?.idToCopy?.takeIf(String::isNotBlank) ?: txId
+        is ExpressTx -> externalTxId?.takeIf(String::isNotBlank) ?: txId
     }
 
 /**
@@ -127,6 +128,13 @@ sealed interface ExpressTx : TxHistoryInfo {
      */
     val externalTxUrl: String?
 
+    /**
+     * Provider-side id of this deal; `null` when the provider supplies none. This is the id support looks
+     * up an express deal by (and, through it, every on-chain leg tied to the deal) — it must be surfaced for
+     * copy/share even once the deal is matched to its on-chain leg.
+     */
+    val externalTxId: String?
+
     /** Whether the deal reached a final state. Delegates to the wrapped model's typed status. */
     val isTerminal: Boolean
 
@@ -143,6 +151,7 @@ sealed interface ExpressTx : TxHistoryInfo {
         override val matchHash: String? get() = if (isOutgoing) tx.payinHash else tx.payoutHash
         override val provider: ExpressProvider? get() = tx.provider
         override val externalTxUrl: String? get() = tx.externalTxUrl
+        override val externalTxId: String? get() = tx.externalTxId
         override val isTerminal: Boolean get() = tx.status.isTerminal
     }
 
@@ -155,6 +164,7 @@ sealed interface ExpressTx : TxHistoryInfo {
         override val matchHash: String? get() = tx.payoutHash
         override val provider: ExpressProvider? get() = tx.provider
         override val externalTxUrl: String? get() = tx.externalTxUrl
+        override val externalTxId: String? get() = tx.externalTxId
         override val isTerminal: Boolean get() = tx.status.isTerminal
     }
 }
