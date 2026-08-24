@@ -19,7 +19,7 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
         return SaveWalletAccountsResponse(
             accounts = value.accounts.mapNotNull { account ->
                 when (account) {
-                    is Account.CryptoPortfolio -> account.toDTO(
+                    is Account.Personal -> account.toDTO(
                         icon = account.icon,
                         derivationIndex = account.derivationIndex,
                         type = WalletAccountDTO.Type.CRYPTO,
