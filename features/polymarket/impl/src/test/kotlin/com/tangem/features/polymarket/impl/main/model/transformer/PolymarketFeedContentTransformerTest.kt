@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
@@ -68,7 +69,7 @@ internal class PolymarketFeedContentTransformerTest {
         fun transformFooterLoader(model: FooterLoaderModel) {
             // Arrange
             val state = PolymarketEventsBatchListState(
-                data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+                data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
                 status = model.status,
             )
 
@@ -84,7 +85,7 @@ internal class PolymarketFeedContentTransformerTest {
             FooterLoaderModel(status = PaginationStatus.NextBatchLoading, expected = true),
             FooterLoaderModel(
                 status = PaginationStatus.Paginating(
-                    lastResult = BatchFetchResult.Success(data = listOf(createEvent()), empty = false, last = false),
+                    lastResult = BatchFetchResult.Success(data = batchOf(createEvent()), empty = false, last = false),
                 ),
                 expected = false,
             ),
@@ -97,8 +98,8 @@ internal class PolymarketFeedContentTransformerTest {
         // Arrange
         val state = PolymarketEventsBatchListState(
             data = listOf(
-                Batch(key = 0, data = listOf(createEvent(id = "event-1"), createEvent(id = "event-2"))),
-                Batch(key = 1, data = listOf(createEvent(id = "event-3"))),
+                Batch(key = 0, data = batchOf(createEvent(id = "event-1"), createEvent(id = "event-2"))),
+                Batch(key = 1, data = batchOf(createEvent(id = "event-3"))),
             ),
             status = PaginationStatus.EndOfPagination,
         )
@@ -117,8 +118,8 @@ internal class PolymarketFeedContentTransformerTest {
         // Arrange
         val state = PolymarketEventsBatchListState(
             data = listOf(
-                Batch(key = 0, data = listOf(createEvent(id = "event-1"), createEvent(id = "event-2"))),
-                Batch(key = 1, data = listOf(createEvent(id = "event-2"), createEvent(id = "event-3"))),
+                Batch(key = 0, data = batchOf(createEvent(id = "event-1"), createEvent(id = "event-2"))),
+                Batch(key = 1, data = batchOf(createEvent(id = "event-2"), createEvent(id = "event-3"))),
             ),
             status = PaginationStatus.EndOfPagination,
         )
@@ -159,16 +160,21 @@ internal class PolymarketFeedContentTransformerTest {
         assertThat(reloadClicks).isEqualTo(1)
     }
 
-    internal data class InitialLoadingModel(val status: PaginationStatus<List<PolymarketEvent>>)
+    internal data class InitialLoadingModel(val status: PaginationStatus<PolymarketEventsBatch>)
 
     internal data class FooterLoaderModel(
-        val status: PaginationStatus<List<PolymarketEvent>>,
+        val status: PaginationStatus<PolymarketEventsBatch>,
         val expected: Boolean,
     )
 
     private fun initialLoadingErrorState() = PolymarketEventsBatchListState(
         data = emptyList(),
         status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
+    )
+
+    private fun batchOf(vararg events: PolymarketEvent) = PolymarketEventsBatch(
+        events = events.toList(),
+        requestCursor = null,
     )
 
     private fun createEvent(id: String = "event-1"): PolymarketEvent = PolymarketEvent(
