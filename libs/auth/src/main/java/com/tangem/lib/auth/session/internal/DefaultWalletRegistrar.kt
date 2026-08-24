@@ -11,7 +11,7 @@ import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
 import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
@@ -234,7 +234,7 @@ internal class DefaultWalletRegistrar(
     }
 
     private suspend fun registeredWalletIds(): Set<String> = appPreferencesStore.getSyncOrDefault(
-        key = PreferencesKeys.REGISTERED_WALLET_IDS_KEY,
+        key = AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY,
         default = emptySet(),
     )
 
@@ -242,15 +242,15 @@ internal class DefaultWalletRegistrar(
         // Atomic read-modify-write inside a single DataStore transaction — DataStore serialises
         // these, so concurrent registrations of different wallets can't lose set entries.
         appPreferencesStore.editData { preferences ->
-            val current = preferences.getOrDefault(PreferencesKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
-            preferences[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = current + walletId
+            val current = preferences.getOrDefault(AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
+            preferences[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = current + walletId
         }
     }
 
     private suspend fun markUnregistered(walletId: String) {
         appPreferencesStore.editData { preferences ->
-            val current = preferences.getOrDefault(PreferencesKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
-            preferences[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = current - walletId
+            val current = preferences.getOrDefault(AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
+            preferences[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = current - walletId
         }
     }
 }

@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatusUM
@@ -97,11 +97,11 @@ internal class BackendAuthStatusViewModel @Inject constructor(
             "${authEnv.environment.name} (${authEnv.baseUrl})"
         }.getOrDefault("unavailable")
         val isRegistered = appPreferencesStore.getSyncOrDefault(
-            PreferencesKeys.IS_DEVICE_REGISTERED_KEY,
+            AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY,
             default = false,
         )
         val registeredWalletIds = appPreferencesStore.getSyncOrDefault(
-            PreferencesKeys.REGISTERED_WALLET_IDS_KEY,
+            AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY,
             default = emptySet(),
         )
         val tokens = sessionTokensStore.get().getOrNull()
@@ -175,7 +175,7 @@ internal class BackendAuthStatusViewModel @Inject constructor(
     }.toImmutableList()
 
     /**
-     * One row per locally-registered wallet ([PreferencesKeys.REGISTERED_WALLET_IDS_KEY]), each with a
+     * One row per locally-registered wallet ([AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY]), each with a
      * cross action that unregisters it from the auth service.
      */
     private fun buildRegisteredWalletRows(walletIds: Set<String>): ImmutableList<StatusRow> = buildList {
@@ -252,7 +252,7 @@ internal class BackendAuthStatusViewModel @Inject constructor(
     /** Clears tokens and the registration flag so the next launch re-registers (no `pm clear`). */
     private suspend fun resetRegistration(): String {
         sessionTokensStore.clear()
-        appPreferencesStore.store(PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = false)
+        appPreferencesStore.store(AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = false)
         return "done"
     }
 
