@@ -100,6 +100,10 @@ internal class PolymarketMainModel @Inject constructor(
         router.pop()
     }
 
+    fun onSearchClick() {
+        router.push(PolymarketRoute.Search(userWalletId = params.userWalletId))
+    }
+
     /**
      * Requests the next page once the feed is scrolled close enough to its end. Ignored while a page is already
      * on its way, and while the feed is empty or broken — those are driven by [reload] instead.
