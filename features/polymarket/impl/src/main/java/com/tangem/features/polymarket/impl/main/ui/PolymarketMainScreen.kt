@@ -32,6 +32,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +63,10 @@ import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.time.Duration.Companion.milliseconds
 
 // Feed layout: the scrolling header is item 0, the tab band — when there are categories — is item 1.
 private const val TAB_BAND_INDEX = 1
@@ -71,6 +76,9 @@ private const val KEY_STATUS = "status"
 
 /** How many items before the end of the feed the next page starts loading. */
 private const val LOAD_MORE_THRESHOLD = 5
+
+/** How long the feed has to stand still before it counts as "the user stopped scrolling". */
+private val ScrollIdleDebounce = 500.milliseconds
 
 /** Fixed height of the category tab band: 40dp pills + 8dp vertical padding. */
 private val TabBandHeight = 56.dp
@@ -87,6 +95,8 @@ internal fun PolymarketMainScreen(
     state: PolymarketMainUM,
     onBackClick: () -> Unit,
     onLoadMore: () -> Unit,
+    onVisibleEventsChange: (Set<String>) -> Unit,
+    onScrollIdle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -104,6 +114,8 @@ internal fun PolymarketMainScreen(
     }
 
     LoadMoreEffect(listState = listState, onLoadMore = onLoadMore)
+    VisibleEventsEffect(listState = listState, onVisibleEventsChange = onVisibleEventsChange)
+    ScrollIdleEffect(listState = listState, onScrollIdle = onScrollIdle)
 
     TangemTopBarScaffold(
         modifier = modifier,
@@ -243,6 +255,46 @@ private fun LoadMoreEffect(listState: LazyListState, onLoadMore: () -> Unit) {
 
     LaunchedEffect(shouldLoadMore) {
         if (shouldLoadMore) currentOnLoadMore()
+    }
+}
+
+/**
+ * Reports which event cards are on screen, so the feed refreshes the pages behind them and no others.
+ *
+ * The non-event items of the feed carry keys of their own; they are dropped here rather than left for the model
+ * to recognise.
+ */
+@Composable
+private fun VisibleEventsEffect(listState: LazyListState, onVisibleEventsChange: (Set<String>) -> Unit) {
+    val currentOnVisibleEventsChanged by rememberUpdatedState(onVisibleEventsChange)
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo
+                .mapNotNull { it.key as? String }
+                .filterNotTo(mutableSetOf()) { it == KEY_HEADER || it == KEY_TAB_BAND || it == KEY_STATUS }
+        }
+            .distinctUntilChanged()
+            .collect { visibleEventIds -> currentOnVisibleEventsChanged(visibleEventIds) }
+    }
+}
+
+/**
+ * Reports that the feed came to a rest, which is the moment worth checking whether what it now shows is still
+ * fresh. A scroll that resumes before [ScrollIdleDebounce] is over cancels the pending report.
+ */
+@Composable
+private fun ScrollIdleEffect(listState: LazyListState, onScrollIdle: () -> Unit) {
+    val currentOnScrollIdle by rememberUpdatedState(onScrollIdle)
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }
+            .collectLatest { isScrollInProgress ->
+                if (isScrollInProgress) return@collectLatest
+
+                delay(ScrollIdleDebounce)
+                currentOnScrollIdle()
+            }
     }
 }
 
@@ -412,6 +464,8 @@ private fun PolymarketMainScreenContentPreview() {
             ),
             onBackClick = {},
             onLoadMore = {},
+            onVisibleEventsChange = {},
+            onScrollIdle = {},
         )
     }
 }

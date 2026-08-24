@@ -1,7 +1,7 @@
 package com.tangem.features.polymarket.impl.search.model.transformer
 
 import com.tangem.domain.polymarket.model.PolymarketEvent
-import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchListState
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
 import com.tangem.pagination.PaginationStatus
@@ -21,7 +21,7 @@ import kotlinx.collections.immutable.toImmutableList
  * @property onReloadClick retries the current query from its first page
  */
 internal class PolymarketSearchContentTransformer(
-    private val batchListState: PolymarketEventsBatchListState,
+    private val batchListState: PolymarketSearchBatchListState,
     private val isQueryActive: Boolean,
     private val eventUMConverter: PolymarketEventUMConverter,
     private val onReloadClick: () -> Unit,
