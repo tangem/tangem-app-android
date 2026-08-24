@@ -351,7 +351,6 @@ class GetWalletAccountsResponseExtTest {
         @Test
         fun `GIVEN joint record with derivation 0 WHEN assignTokens THEN orphan tokens go to the crypto account`() {
             // Arrange
-            val mainAccountId = "957B88B12730E646E0F33D3618B77DFA579E8231E3C59C7104BE7165611C8027"
             val orphanToken = createUserToken(accountIndex = 3, accountId = null)
             val mainAccount = createWalletAccountDTO(derivationIndex = 0)
             val jointAccount = createWalletAccountDTO(
@@ -368,7 +367,7 @@ class GetWalletAccountsResponseExtTest {
 
             // Assert
             val expected = listOf(
-                mainAccount.copy(tokens = listOf(orphanToken.copy(accountId = mainAccountId))),
+                mainAccount.copy(tokens = listOf(orphanToken.copy(accountId = mainAccount.id))),
                 jointAccount,
             )
 
