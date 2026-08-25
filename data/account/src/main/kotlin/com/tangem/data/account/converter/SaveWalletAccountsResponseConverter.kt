@@ -5,7 +5,6 @@ import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.utils.converter.Converter
 
 /**
@@ -21,12 +20,12 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
                 when (account) {
                     is Account.Personal -> account.toDTO(
                         icon = account.icon,
-                        derivationIndex = account.derivationIndex,
+                        derivationIndex = account.derivationIndex.value,
                         type = WalletAccountDTO.Type.CRYPTO,
                     )
                     is Account.Joint -> account.toDTO(
                         icon = account.icon,
-                        derivationIndex = account.derivationIndex,
+                        derivationIndex = account.ownerKeyIndex.value,
                         type = WalletAccountDTO.Type.JOINT,
                     )
                     // The special accounts are the app's own: the backend neither stores nor counts them
@@ -42,13 +41,13 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
      */
     private fun Account.toDTO(
         icon: CryptoPortfolioIcon,
-        derivationIndex: DerivationIndex,
+        derivationIndex: Int,
         type: WalletAccountDTO.Type,
     ): SaveWalletAccountsResponse.AccountDTO {
         return SaveWalletAccountsResponse.AccountDTO(
             id = accountId.value,
             name = AccountNameConverter.convert(value = accountName),
-            derivationIndex = derivationIndex.value,
+            derivationIndex = derivationIndex,
             icon = icon.value.name,
             iconColor = icon.color.name,
             type = type.value,
