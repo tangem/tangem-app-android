@@ -230,8 +230,9 @@ internal object AccountCryptoCurrencyStatusFinder {
             // currency only in the account with specific derivation index or in the main account
             else -> {
                 val account = accountStatuses.firstOrNull { account ->
-                    val cryptoPortfolio = account as? AccountStatus.CryptoPortfolio ?: return@firstOrNull false
-                    cryptoPortfolio.account.derivationIndex.value == possibleAccountIndex
+                    val personal = (account as? AccountStatus.CryptoPortfolio)?.account as? Account.Personal
+                        ?: return@firstOrNull false
+                    personal.derivationIndex.value == possibleAccountIndex
                 }
                 listOfNotNull(account, mainAccount)
             }
@@ -244,8 +245,8 @@ internal object AccountCryptoCurrencyStatusFinder {
         if (possibleAccountIndexes.isEmpty()) return accountStatuses
 
         val filteredStatuses = accountStatuses.filter { accountStatus ->
-            val cryptoPortfolio = accountStatus.account as? Account.CryptoPortfolio ?: return@filter false
-            cryptoPortfolio.derivationIndex.value in possibleAccountIndexes
+            val personal = accountStatus.account as? Account.Personal ?: return@filter false
+            personal.derivationIndex.value in possibleAccountIndexes
         }
 
         return filteredStatuses + listOf(mainAccount)
@@ -269,8 +270,8 @@ internal object AccountCryptoCurrencyStatusFinder {
             // currency only in the account with specific derivation index or in the main account
             else -> {
                 val account = accounts.firstOrNull { account ->
-                    val cryptoPortfolio = account as? Account.CryptoPortfolio ?: return@firstOrNull false
-                    cryptoPortfolio.derivationIndex.value == possibleAccountIndex
+                    val personal = account as? Account.Personal ?: return@firstOrNull false
+                    personal.derivationIndex.value == possibleAccountIndex
                 }
                 listOfNotNull(account, mainAccount)
             }
