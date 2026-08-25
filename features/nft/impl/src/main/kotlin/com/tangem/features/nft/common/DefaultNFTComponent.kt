@@ -15,14 +15,11 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
-import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
@@ -54,11 +51,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
-    backupErrorWarningFactory: BackupErrorWarning.Factory,
 ) : NFTComponent, AppComponentContext by appComponentContext {
-
-    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val stackNavigation = StackNavigation<NFTRoute>()
 
@@ -159,11 +152,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         ),
     )
 
-    private fun onReceiveClick(route: NFTRoute.Collections) {
-        warnAboutBackupErrorOrProceed(route.userWalletId) { openReceive(route) }
-    }
-
-    private fun openReceive(route: NFTRoute.Collections) = componentScope.launch {
+    private fun onReceiveClick(route: NFTRoute.Collections) = componentScope.launch {
         portfolioSelectorController.selectAccount(null)
         portfolioFetcher.updateMode(mode = PortfolioFetcher.Mode.Wallet(route.userWalletId))
         val portfolioData = portfolioFetcher.data.first()
@@ -179,16 +168,6 @@ internal class DefaultNFTComponent @AssistedInject constructor(
             innerRouter.push(NFTRoute.Receive(accountId = selectedAccountId))
         }
     }.saveIn(onReceiveClickJob)
-
-    private fun warnAboutBackupErrorOrProceed(userWalletId: UserWalletId, onProceed: () -> Unit) {
-        val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
-        if (userWallet == null) {
-            onProceed()
-            return
-        }
-
-        backupErrorWarning.forWallet(scope = componentScope, userWallet = userWallet, onProceed = onProceed)
-    }
 
     private fun getReceiveComponent(
         factoryContext: AppComponentContext,
