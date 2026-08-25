@@ -119,7 +119,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
 
         val token = createUserToken(accountIndex = 0)
         val defaultResponse = UserTokensResponse(
@@ -176,7 +176,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         }
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
 
         val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
@@ -227,7 +227,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
         val defaultResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
             sort = UserTokensResponse.SortType.BALANCE,
@@ -268,7 +268,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
         val defaultResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
             sort = UserTokensResponse.SortType.BALANCE,
@@ -318,7 +318,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         )
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
         val accountsDTO = createWalletAccountDTO(userWalletId = userWalletId)
         every { cryptoPortfolioConverter.convertListBack(accounts) } returns listOf(accountsDTO)
 

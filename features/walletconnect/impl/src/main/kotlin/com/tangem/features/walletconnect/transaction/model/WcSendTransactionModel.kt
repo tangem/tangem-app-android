@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.domain.models.account.derivationIndex
 import arrow.core.Either
 import arrow.core.Option
 import arrow.core.none
@@ -443,7 +444,7 @@ internal class WcSendTransactionModel @Inject constructor(
                     rawRequest = useCase.rawSdkRequest,
                     network = useCase.network,
                     securityStatus = securityStatusState.value.toCheckDAppResult(),
-                    accountDerivation = useCase.session.account.derivationIndex.value,
+                    accountDerivation = useCase.session.account.derivationIndex?.value,
                 )
                 analytics.send(event)
                 showSuccessSignMessage()
@@ -483,7 +484,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 network = useCase.network,
                 emulationStatus = emulationStatus,
                 securityStatus = securityCheck.toCheckDAppResult(),
-                accountDerivation = useCase.session.account.derivationIndex.value,
+                accountDerivation = useCase.session.account.derivationIndex?.value,
             ),
         )
 

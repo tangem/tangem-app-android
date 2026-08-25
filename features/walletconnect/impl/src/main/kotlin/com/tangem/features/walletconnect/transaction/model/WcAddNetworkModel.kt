@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.domain.models.account.derivationIndex
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.dapp.CheckDAppResult
@@ -137,7 +138,7 @@ internal class WcAddNetworkModel @Inject constructor(
                 network = useCase.network,
                 emulationStatus = null,
                 securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
-                accountDerivation = useCase.session.account.derivationIndex.value,
+                accountDerivation = useCase.session.account.derivationIndex?.value,
             ),
         )
 
