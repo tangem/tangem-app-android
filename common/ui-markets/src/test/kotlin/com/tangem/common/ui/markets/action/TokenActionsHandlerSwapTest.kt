@@ -34,11 +34,8 @@ internal class TokenActionsHandlerSwapTest {
         onHandleQuickAction = { _, _ -> },
         coroutineScope = CoroutineScope(UnconfinedTestDispatcher()),
         isDemoCardUseCase = mockk(relaxed = true),
-        backupErrorWarningFactory = mockk {
-            every { create(any()) } returns mockk {
-                every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
-                every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
-            }
+        backupErrorWarning = mockk {
+            every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
         },
         messageSender = mockk(relaxed = true),
     )
