@@ -15,6 +15,7 @@ import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHand
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -70,6 +71,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val yieldDeepLink: YieldDeepLinkHandler.Factory,
     private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
     private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
+    private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
     private val urlOpener: UrlOpener,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
@@ -254,6 +256,11 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.PayAppMain.host -> tangemPayMainDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
             DeepLinkRoute.Campaigns.host -> promoCampaignsDeepLink.create(queryParams)
+            DeepLinkRoute.JointAccount.host -> jointAccountDeepLink.create(
+                coroutineScope = coroutineScope,
+                queryParams = queryParams,
+                isFromOnNewIntent = isFromOnNewIntent,
+            )
             else -> {
                 TangemLogger.i(
                     """
