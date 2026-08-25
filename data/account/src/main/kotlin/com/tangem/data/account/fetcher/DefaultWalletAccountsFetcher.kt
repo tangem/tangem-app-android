@@ -214,13 +214,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         )
     }
 
-    /**
-     * Drops joint account records while the joint account feature is off.
-     *
-     * A joint account is a Safe contract shared with other participants, not a key of this wallet, and the features
-     * that read the account list are not told apart yet. So the decision is taken once, here at the boundary: with the
-     * toggle off no joint record reaches the store, and nothing downstream has to ask whether it is looking at one.
-     */
+    /** With the toggle off no joint record reaches the store, so nothing downstream has to tell the two kinds apart */
     private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
         userWalletId: UserWalletId,
     ): GetWalletAccountsResponse {
