@@ -356,7 +356,10 @@ internal class WalletBackupModel @Inject constructor(
                         type = MessageBottomSheetUM.Icon.Type.Warning
                         backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
-                    title = resourceReference(R.string.hw_cloud_backup_no_access_title)
+                    title = resourceReference(
+                        id = R.string.hw_cloud_backup_access_unavailable_title,
+                        formatArgs = wrappedList(serviceName),
+                    )
                     body = resourceReference(R.string.hw_cloud_backup_no_access_description)
                 }
                 secondaryButton {
@@ -519,20 +522,24 @@ internal class WalletBackupModel @Inject constructor(
     private fun showCloudErrorDialog(error: CloudBackupError) {
         if (error == CloudBackupError.AuthCanceled) return
 
-        val (titleRes, messageRes) = when {
+        val (title, message) = when {
             error == CloudBackupError.NetworkError ->
-                R.string.common_error to R.string.hw_cloud_backup_error_network
+                resourceReference(R.string.common_error) to
+                    resourceReference(R.string.hw_cloud_backup_error_network)
             error == CloudBackupError.CloudUnavailable ->
-                R.string.common_error to R.string.hw_cloud_backup_error_unavailable
+                resourceReference(R.string.common_error) to
+                    resourceReference(R.string.hw_cloud_backup_error_unavailable)
             isAccessError(error) ->
-                R.string.hw_cloud_backup_permissions_title to R.string.hw_cloud_backup_permissions_description
+                resourceReference(R.string.hw_cloud_backup_permissions_title_v2, wrappedList(serviceName)) to
+                    resourceReference(R.string.hw_cloud_backup_permissions_description_v2, wrappedList(serviceName))
             else ->
-                R.string.common_error to R.string.common_unknown_error
+                resourceReference(R.string.common_error) to
+                    resourceReference(R.string.common_unknown_error)
         }
         uiMessageSender.send(
             DialogMessage(
-                title = resourceReference(titleRes),
-                message = resourceReference(messageRes),
+                title = title,
+                message = message,
                 firstAction = EventMessageAction(
                     title = resourceReference(R.string.common_ok),
                     onClick = {},
