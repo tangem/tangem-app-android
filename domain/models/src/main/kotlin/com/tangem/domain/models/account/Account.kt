@@ -38,12 +38,7 @@ sealed interface Account {
         /** Icon representing the account */
         val icon: CryptoPortfolioIcon
 
-        /**
-         * Index used for derivation of the account.
-         *
-         * The two kinds index in two independent spaces: a [Personal] account in the wallet's own, a [Joint] one in
-         * the participant's owner key space. Matching an index across the kinds means nothing.
-         */
+        /** Index used for derivation of the account */
         val derivationIndex: DerivationIndex
 
         /** Set of tokens associated with the account */
@@ -62,15 +57,16 @@ sealed interface Account {
             get() = cryptoCurrencies.map(CryptoCurrency::network).distinct().size
 
         /**
-         * Returns a copy of the account with [accountName] and [icon] replaced.
+         * Returns a copy of the account with the given fields replaced, whichever kind it is.
          *
-         * Both subtypes are data classes over the same fields, but only the concrete type can copy itself, so the
-         * parent asks it for the copy instead of narrowing to one of them.
+         * Only a concrete type can copy itself, so the parent dispatches to the one at hand instead of making callers
+         * narrow to it.
          */
-        fun withNameAndIcon(accountName: AccountName, icon: CryptoPortfolioIcon): CryptoPortfolio
-
-        /** Returns a copy of the account with [cryptoCurrencies] replaced. */
-        fun withCurrencies(cryptoCurrencies: List<CryptoCurrency>): CryptoPortfolio
+        fun copySealed(
+            accountName: AccountName = this.accountName,
+            icon: CryptoPortfolioIcon = this.icon,
+            cryptoCurrencies: List<CryptoCurrency> = this.cryptoCurrencies,
+        ): CryptoPortfolio
     }
 
     /**
@@ -91,12 +87,12 @@ sealed interface Account {
         override val cryptoCurrencies: List<CryptoCurrency>,
     ) : CryptoPortfolio {
 
-        override fun withNameAndIcon(accountName: AccountName, icon: CryptoPortfolioIcon): Personal {
-            return copy(accountName = accountName, icon = icon)
-        }
-
-        override fun withCurrencies(cryptoCurrencies: List<CryptoCurrency>): Personal {
-            return copy(cryptoCurrencies = cryptoCurrencies)
+        override fun copySealed(
+            accountName: AccountName,
+            icon: CryptoPortfolioIcon,
+            cryptoCurrencies: List<CryptoCurrency>,
+        ): Personal {
+            return copy(accountName = accountName, icon = icon, cryptoCurrencies = cryptoCurrencies)
         }
 
         fun copy(
@@ -289,12 +285,12 @@ sealed interface Account {
         override val isMainAccount: Boolean
             get() = false
 
-        override fun withNameAndIcon(accountName: AccountName, icon: CryptoPortfolioIcon): Joint {
-            return copy(accountName = accountName, icon = icon)
-        }
-
-        override fun withCurrencies(cryptoCurrencies: List<CryptoCurrency>): Joint {
-            return copy(cryptoCurrencies = cryptoCurrencies)
+        override fun copySealed(
+            accountName: AccountName,
+            icon: CryptoPortfolioIcon,
+            cryptoCurrencies: List<CryptoCurrency>,
+        ): Joint {
+            return copy(accountName = accountName, icon = icon, cryptoCurrencies = cryptoCurrencies)
         }
 
         /**
