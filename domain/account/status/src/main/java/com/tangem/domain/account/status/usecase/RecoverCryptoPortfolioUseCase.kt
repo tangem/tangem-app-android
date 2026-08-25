@@ -94,7 +94,7 @@ class RecoverCryptoPortfolioUseCase(
             }
     }
 
-    private fun ArchivedAccount.recover(): Account.CryptoPortfolio {
+    private fun ArchivedAccount.recover(): Account.Personal {
         return Account.Personal(
             accountId = this.accountId,
             accountName = this.name,
