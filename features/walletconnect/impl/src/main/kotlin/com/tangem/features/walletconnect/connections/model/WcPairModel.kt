@@ -192,7 +192,7 @@ internal class WcPairModel @Inject constructor(
                 isAccountMode = isAccountMode,
             )
             selectorController.isEnabled.value = { _, account ->
-                proposalAccountNetwork.contains(account.account.accountId)
+                account.account is Account.Personal && proposalAccountNetwork.contains(account.account.accountId)
             }
             proposalNetwork = foundNetwork
             additionallyEnabledNetworks = proposalNetwork.available
