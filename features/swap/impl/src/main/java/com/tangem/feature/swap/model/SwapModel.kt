@@ -21,7 +21,7 @@ import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -160,7 +160,7 @@ internal class SwapModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    private val backupErrorWarning: BackupErrorWarning,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -1486,7 +1486,7 @@ internal class SwapModel @Inject constructor(
             return
         }
 
-        backupErrorWarning.forWallet(
+        backupErrorWarningSender.forWallet(
             scope = modelScope,
             userWallet = receivingUserWallet,
             onProceed = ::performSwap,
