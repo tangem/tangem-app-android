@@ -128,7 +128,7 @@ class CryptoPortfolioConverterTest {
 
     data class ConvertModel(
         val value: WalletAccountDTO,
-        val expected: Result<Account.CryptoPortfolio>,
+        val expected: Result<Account.Personal>,
     )
 
     @Nested
@@ -157,7 +157,7 @@ class CryptoPortfolioConverterTest {
     }
 
     data class ConvertBackModel(
-        val value: Account.CryptoPortfolio,
+        val value: Account.Personal,
         val expected: WalletAccountDTO,
     )
 }
