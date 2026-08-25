@@ -36,8 +36,8 @@ internal class PolymarketMainComponent(
     init {
         // Both an app sent to the background and an event opened on top of the feed pause the component, and
         // neither is a moment to keep refreshing what nobody is looking at.
-        lifecycle.doOnResume { model.setInForeground(isInForeground = true) }
-        lifecycle.doOnPause { model.setInForeground(isInForeground = false) }
+        lifecycle.doOnResume { model.onResume() }
+        lifecycle.doOnPause { model.onPause() }
     }
 
     @Composable
