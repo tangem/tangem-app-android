@@ -48,6 +48,7 @@ import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
@@ -55,6 +56,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
@@ -207,6 +209,32 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
         unmockkObject(DateTimeFormatters)
         unmockkStatic(DateFormat::class)
+    }
+
+    @Test
+    fun `GIVEN cashback error block shown WHEN reload tapped THEN progress shown while request in flight`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
+        val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
+        advanceUntilIdle()
+        val errorBlock = model.uiState.value.cashbackBlockState as CashbackBlockUM.Error
+
+        // Act
+        coEvery { getCashbackSummaryUseCase(any()) } coAnswers {
+            delay(timeMillis = 100)
+            mockk<VisaApiError>(relaxed = true).left()
+        }
+        errorBlock.onReload()
+        runCurrent()
+
+        // Assert
+        val reloadingBlock = model.uiState.value.cashbackBlockState as CashbackBlockUM.Error
+        assertThat(reloadingBlock.isReloading).isTrue()
+        advanceUntilIdle()
+        val settledBlock = model.uiState.value.cashbackBlockState as CashbackBlockUM.Error
+        assertThat(settledBlock.isReloading).isFalse()
+        model.onDestroy()
     }
 
     @Test
