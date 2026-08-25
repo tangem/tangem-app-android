@@ -3,19 +3,18 @@ package com.tangem.datasource.api.common.config
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
+import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.header.RequestHeader
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.utils.AuthenticationHeader
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
 /** YieldSupply [ApiConfig] */
 class YieldSupply(
     private val environmentConfig: EnvironmentConfig,
-    private val authProvider: AuthProvider,
+    private val cardAuthHeader: CardAuthHeaderProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
@@ -72,7 +71,7 @@ class YieldSupply(
             getApiKey(apiEnvironment)
         })
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
-        putAll(from = AuthenticationHeader(authProvider).values)
+        putAll(from = cardAuthHeader.get().values)
     }
 
     private fun getApiKey(apiEnvironment: ApiEnvironment): String {
