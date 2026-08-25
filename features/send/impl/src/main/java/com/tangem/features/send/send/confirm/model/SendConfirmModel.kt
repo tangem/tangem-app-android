@@ -15,7 +15,6 @@ import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -107,8 +106,7 @@ internal class SendConfirmModel @Inject constructor(
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val alertFactory: SendConfirmAlertFactory,
-    backupErrorWarningFactory: BackupErrorWarning.Factory,
-    messageSender: UiMessageSender,
+    private val backupErrorWarning: BackupErrorWarning,
     private val sendAnalyticHelper: SendAnalyticHelper,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
@@ -122,8 +120,6 @@ internal class SendConfirmModel @Inject constructor(
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
-
-    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
 

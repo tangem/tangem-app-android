@@ -10,7 +10,6 @@ import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -85,8 +84,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val alertFactory: SendConfirmAlertFactory,
-    backupErrorWarningFactory: BackupErrorWarning.Factory,
-    messageSender: UiMessageSender,
+    private val backupErrorWarning: BackupErrorWarning,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -95,8 +93,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), NFTSendConfirmClickIntents, SendNotificationsComponent.ModelCallback, FeeSelectorModelCallback {
-
-    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val params: NFTSendConfirmComponent.Params = paramsContainer.require()
 
