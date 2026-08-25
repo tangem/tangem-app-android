@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketDerivationError
@@ -42,6 +43,7 @@ internal class ResolvePolymarketEntryInteractorTest {
         getPolymarketWalletStatusUseCase = getWalletStatus,
         getPolymarketApiCredentialsUseCase = getApiCredentials,
         polymarketOnboardedStore = onboardedStore,
+        recordPolymarketConfirmation = RecordPolymarketConfirmationUseCase(onboardedStore = onboardedStore),
     )
 
     private val userWalletId = UserWalletId("011")
@@ -252,11 +254,31 @@ internal class ResolvePolymarketEntryInteractorTest {
         }
 
         /**
-         * Without this the record would outlive the fact: a wallet the backend stops calling ready could never
-         * re-run onboarding, because the gate would keep answering from the stale record.
+         * Without this the record would outlive the fact: a wallet the backend no longer has could never re-run
+         * onboarding, because the gate would keep answering from the stale record.
          */
         @Test
-        fun `GIVEN the backend stops reporting ready WHEN resolved THEN the record is dropped`() = runTest {
+        fun `GIVEN the backend no longer has the wallet WHEN resolved THEN the record is dropped`() = runTest {
+            // Arrange
+            coEvery { onboardedStore.isOnboarded(userWalletId) } returns true
+            coEvery { getApiCredentials(any()) } returns null
+            coEvery { deriveAddresses(userWalletId) } returns addresses.right()
+            coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
+                depositWalletAddress = addresses.depositWalletAddress,
+                status = PolymarketWalletStatus.NOT_CREATED,
+            ).right()
+
+            // Act
+            useCase(userWalletId)
+
+            // Assert
+            coVerify(exactly = 1) { onboardedStore.clear(userWalletId) }
+            coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
+        }
+
+        /** A failed setup is not the backend withdrawing a wallet, so a confirmation already given stands. */
+        @Test
+        fun `GIVEN the setup failed WHEN resolved THEN the record survives`() = runTest {
             // Arrange
             coEvery { onboardedStore.isOnboarded(userWalletId) } returns true
             coEvery { getApiCredentials(any()) } returns null
@@ -270,7 +292,7 @@ internal class ResolvePolymarketEntryInteractorTest {
             useCase(userWalletId)
 
             // Assert
-            coVerify(exactly = 1) { onboardedStore.clear(userWalletId) }
+            coVerify(exactly = 0) { onboardedStore.clear(any()) }
             coVerify(exactly = 0) { onboardedStore.markOnboarded(any()) }
         }
     }
