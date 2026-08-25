@@ -67,6 +67,8 @@ internal class CreateCloudBackupModel @Inject constructor(
 
     private val params = paramsContainer.require<CreateCloudBackupComponent.Params>()
 
+    private val serviceName = resourceReference(R.string.hw_cloud_backup_service_name)
+
     // Authoritative secret storage, kept until a successful upload so a failed one can be retried without
     // re-entering the password. Zeroing is best-effort only: the text field hands the value over as an
     // immutable String, so a copy the app cannot wipe already exists — this just bounds the lifetime of
@@ -123,7 +125,7 @@ internal class CreateCloudBackupModel @Inject constructor(
             router.pop()
             return
         }
-        val spec = cloudBackupErrorSpec(error)
+        val spec = cloudBackupErrorSpec(error, serviceName)
         uiMessageSender.send(
             cloudBackupErrorSheet(
                 spec = spec,
@@ -315,7 +317,7 @@ internal class CreateCloudBackupModel @Inject constructor(
         analyticsEventHandler.send(
             WalletSettingsAnalyticEvents.CloudBackupCreationError(errorMessage = error.analyticsMessage()),
         )
-        val spec = cloudBackupErrorSpec(error)
+        val spec = cloudBackupErrorSpec(error, serviceName)
         uiMessageSender.send(cloudBackupErrorSheet(spec) { if (spec.isRetryable) startBackup() })
     }
 
@@ -327,8 +329,8 @@ internal class CreateCloudBackupModel @Inject constructor(
         )
         uiState.value = buildConfirmPasswordUM()
         val spec = CloudBackupErrorSpec(
-            titleRes = R.string.hw_cloud_backup_error_title,
-            bodyRes = R.string.hw_cloud_backup_error_write,
+            title = resourceReference(R.string.hw_cloud_backup_error_title),
+            body = resourceReference(R.string.hw_cloud_backup_error_write),
             isRetryable = true,
         )
         uiMessageSender.send(cloudBackupErrorSheet(spec) { startBackup() })
