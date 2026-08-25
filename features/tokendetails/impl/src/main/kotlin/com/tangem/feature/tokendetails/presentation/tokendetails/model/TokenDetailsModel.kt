@@ -16,7 +16,7 @@ import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -147,7 +147,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val fetchStakingOptionsUseCase: FetchStakingOptionsUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val backupErrorWarning: BackupErrorWarning,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val associateAssetUseCase: AssociateAssetUseCase,
     private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
     private val openTrustlineUseCase: OpenTrustlineUseCase,
@@ -1257,7 +1257,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun warnAboutBackupErrorOrProceed(onProceed: () -> Unit) {
-        backupErrorWarning.forWallet(scope = modelScope, userWallet = userWallet, onProceed = onProceed)
+        backupErrorWarningSender.forWallet(scope = modelScope, userWallet = userWallet, onProceed = onProceed)
     }
 
     private fun openStaking() {
