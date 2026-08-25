@@ -1,10 +1,10 @@
-package com.tangem.datasource.api.news
+package com.tangem.store.datasource.news
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.news.models.response.NewsCategoriesResponse
-import com.tangem.datasource.api.news.models.response.NewsDetailsResponse
-import com.tangem.datasource.api.news.models.response.NewsListResponse
-import com.tangem.datasource.api.news.models.response.NewsTrendingResponse
+import com.tangem.store.datasource.news.models.response.NewsCategoriesResponse
+import com.tangem.store.datasource.news.models.response.NewsDetailsResponse
+import com.tangem.store.datasource.news.models.response.NewsListResponse
+import com.tangem.store.datasource.news.models.response.NewsTrendingResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
