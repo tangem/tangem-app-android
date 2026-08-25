@@ -281,11 +281,25 @@ internal class TangemPayDetailsModel @Inject constructor(
                 // A failed refresh must not wipe already shown cashback data — the error block
                 // replaces the widget only while there is nothing successful to show ([REDACTED_TASK_KEY])
                 if (cashbackTransformer is CashbackBlockTransformer) return@onLeft
-                val transformer = CashbackErrorBlockTransformer(onReload = ::fetchCashbackBlock)
+                val transformer = CashbackErrorBlockTransformer(
+                    onReload = ::onReloadCashbackBlock,
+                    isReloading = false,
+                )
                 cashbackTransformer = transformer
                 uiState.update(transformer)
             }
         }.saveIn(cashbackBlockJobHolder)
+    }
+
+    private fun onReloadCashbackBlock() {
+        if (cashbackBlockJobHolder.isActive) return
+        val transformer = CashbackErrorBlockTransformer(
+            onReload = ::onReloadCashbackBlock,
+            isReloading = true,
+        )
+        cashbackTransformer = transformer
+        uiState.update(transformer)
+        fetchCashbackBlock()
     }
 
     private fun sendCashbackBlockAnalytics(summary: CashbackSummary, isDeactivationDismissed: Boolean) {
