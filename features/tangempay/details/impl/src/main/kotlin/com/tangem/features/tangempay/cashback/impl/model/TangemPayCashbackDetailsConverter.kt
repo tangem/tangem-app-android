@@ -42,7 +42,7 @@ internal class TangemPayCashbackDetailsConverter {
             }
         }
         return TangemPayCashbackDetailsUM(
-            title = cashbackRateTitle(cards),
+            title = CashbackRateTitles(cards = cards).title,
             rows = rows.toImmutableList(),
         )
     }
