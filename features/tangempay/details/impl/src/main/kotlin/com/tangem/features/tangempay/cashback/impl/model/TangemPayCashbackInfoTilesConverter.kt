@@ -1,9 +1,7 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
@@ -15,11 +13,12 @@ internal class TangemPayCashbackInfoTilesConverter(
 ) {
 
     fun convert(cards: List<CashbackCard>): TangemPayCashbackInfoTilesUM {
+        val titles = CashbackRateTitles(cards = cards)
         return TangemPayCashbackInfoTilesUM(
             rate = TangemPayCashbackInfoTilesUM.Tile(
                 icon = Icons.ic_percent_backward_20,
-                title = cashbackRateTitle(cards),
-                subtitle = cards.subtitle(),
+                title = titles.title,
+                subtitle = titles.subtitle,
                 onClick = onRateClick,
             ),
             accruals = TangemPayCashbackInfoTilesUM.Tile(
@@ -29,10 +28,5 @@ internal class TangemPayCashbackInfoTilesConverter(
                 onClick = onAccrualsClick,
             ),
         )
-    }
-
-    private fun List<CashbackCard>.subtitle(): TextReference {
-        val titles = mapNotNull { it.title?.takeIf(String::isNotBlank) }
-        return if (titles.isEmpty()) TextReference.EMPTY else stringReference(titles.joinToString())
     }
 }
