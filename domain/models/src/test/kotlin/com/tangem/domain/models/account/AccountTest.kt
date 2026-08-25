@@ -1,5 +1,6 @@
 package com.tangem.domain.models.account
 
+import arrow.core.left
 import com.google.common.truth.Truth
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.Personal
@@ -159,15 +160,25 @@ class AccountTest {
     }
 
     @Test
-    fun `Joint is never the main account`() {
+    fun `GIVEN negative owner key index WHEN Joint invoke THEN returns OwnerKeyIndexError`() {
         // Arrange
-        val mainDerivationIndex = 0
+        val userWalletId = UserWalletId("011")
+        val accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = "1".padStart(64, '0'))
+            .getOrNull()!!
 
         // Act
-        val actual = createJointStub(derivationIndex = mainDerivationIndex).isMainAccount
+        val actual = Account.Joint(
+            accountId = accountId,
+            name = "Family",
+            icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+            ownerKeyIndex = -1,
+        )
 
         // Assert
-        Truth.assertThat(actual).isFalse()
+        val expected = Account.Joint.Error.OwnerKeyIndexError(
+            cause = OwnerKeyIndex.Error.NegativeOwnerKeyIndex(ownerKeyIndex = -1),
+        ).left()
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     private fun createPersonalStub(
@@ -184,22 +195,6 @@ class AccountTest {
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
             cryptoCurrencies = currencies,
-        )
-            .getOrNull()!!
-    }
-
-    private fun createJointStub(
-        userWalletId: UserWalletId = UserWalletId("011"),
-        name: String = "Family",
-        derivationIndex: Int = 0,
-    ): Account.Joint {
-        val ownerIndex = DerivationIndex(value = derivationIndex).getOrNull()!!
-
-        return Account.Joint.invoke(
-            accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = ownerIndex),
-            name = name,
-            icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
-            derivationIndex = derivationIndex,
         )
             .getOrNull()!!
     }

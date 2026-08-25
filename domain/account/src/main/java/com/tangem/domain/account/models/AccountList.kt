@@ -331,7 +331,7 @@ data class AccountList private constructor(
         }
 
         private fun List<Account>.mainAccountsCount(): Int {
-            return count { (it as? Account.CryptoPortfolio)?.isMainAccount == true }
+            return count { (it as? Account.Personal)?.isMainAccount == true }
         }
     }
 }
