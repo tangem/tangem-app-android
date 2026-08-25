@@ -19,6 +19,7 @@ dependencies {
     api(deps.retrofit)
     api(deps.jodatime)
     api(deps.androidx.datastore)
+    api(deps.kotlin.coroutines)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     implementation(deps.hilt.android)
