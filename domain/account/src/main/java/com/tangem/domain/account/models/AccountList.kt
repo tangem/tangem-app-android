@@ -43,12 +43,7 @@ data class AccountList private constructor(
     val groupType: TokensGroupType,
 ) {
 
-    /**
-     * Retrieves the main crypto portfolio account from the list of accounts.
-     *
-     * Always a [Account.Personal] one: a joint account is indexed in the owner key space and reports no main account,
-     * so it can never answer here.
-     */
+    /** Retrieves the main crypto portfolio account from the list of accounts */
     val mainAccount: Account.Personal
         get() = accounts.first { it is Account.Personal && it.isMainAccount } as Account.Personal
 
