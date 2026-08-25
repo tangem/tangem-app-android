@@ -3,7 +3,7 @@ package com.tangem.features.polymarket.impl.search.model.transformer
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
-import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchListState
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
@@ -30,7 +30,7 @@ internal class PolymarketSearchContentTransformerTest {
     }
 
     private fun transform(
-        state: PolymarketEventsBatchListState,
+        state: PolymarketSearchBatchListState,
         isQueryActive: Boolean = true,
     ): PolymarketSearchUM = PolymarketSearchContentTransformer(
         batchListState = state,
@@ -42,7 +42,7 @@ internal class PolymarketSearchContentTransformerTest {
     @Test
     fun `GIVEN an inactive query WHEN transform THEN the prompt hides whatever the pagination holds`() {
         // Arrange
-        val state = PolymarketEventsBatchListState(
+        val state = PolymarketSearchBatchListState(
             data = listOf(Batch(key = 0, data = listOf(createEvent()))),
             status = PaginationStatus.EndOfPagination,
         )
@@ -62,7 +62,7 @@ internal class PolymarketSearchContentTransformerTest {
         @ProvideTestModels
         fun transformLoading(model: LoadingModel) {
             // Act
-            val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = model.status))
+            val actual = transform(PolymarketSearchBatchListState(data = emptyList(), status = model.status))
 
             // Assert
             assertThat(actual.content).isEqualTo(PolymarketSearchUM.ContentUM.Loading)
@@ -77,7 +77,7 @@ internal class PolymarketSearchContentTransformerTest {
     @Test
     fun `GIVEN loaded pages WHEN transform THEN their events are shown in order`() {
         // Arrange
-        val state = PolymarketEventsBatchListState(
+        val state = PolymarketSearchBatchListState(
             data = listOf(
                 Batch(key = 0, data = listOf(createEvent(id = "event-1"), createEvent(id = "event-2"))),
                 Batch(key = 1, data = listOf(createEvent(id = "event-3"))),
@@ -97,7 +97,7 @@ internal class PolymarketSearchContentTransformerTest {
     @Test
     fun `GIVEN the same event on two pages WHEN transform THEN it is shown once`() {
         // Arrange
-        val state = PolymarketEventsBatchListState(
+        val state = PolymarketSearchBatchListState(
             data = listOf(
                 Batch(key = 0, data = listOf(createEvent(id = "event-1"), createEvent(id = "event-2"))),
                 Batch(key = 1, data = listOf(createEvent(id = "event-2"), createEvent(id = "event-3"))),
@@ -117,7 +117,7 @@ internal class PolymarketSearchContentTransformerTest {
     @Test
     fun `GIVEN the next page on its way WHEN transform THEN the footer loader is shown`() {
         // Arrange
-        val state = PolymarketEventsBatchListState(
+        val state = PolymarketSearchBatchListState(
             data = listOf(Batch(key = 0, data = listOf(createEvent()))),
             status = PaginationStatus.NextBatchLoading,
         )
@@ -133,7 +133,7 @@ internal class PolymarketSearchContentTransformerTest {
     fun `GIVEN nothing matched WHEN transform THEN the nothing-found prompt is shown`() {
         // Act
         val actual = transform(
-            PolymarketEventsBatchListState(data = emptyList(), status = PaginationStatus.EndOfPagination),
+            PolymarketSearchBatchListState(data = emptyList(), status = PaginationStatus.EndOfPagination),
         )
 
         // Assert
@@ -143,7 +143,7 @@ internal class PolymarketSearchContentTransformerTest {
     @Test
     fun `GIVEN a failed first page WHEN the prompt is clicked THEN the reload is delegated`() {
         // Arrange
-        val state = PolymarketEventsBatchListState(
+        val state = PolymarketSearchBatchListState(
             data = emptyList(),
             status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
         )
@@ -158,7 +158,7 @@ internal class PolymarketSearchContentTransformerTest {
     @Test
     fun `GIVEN previous state WHEN transform THEN its query is kept`() {
         // Act
-        val actual = transform(PolymarketEventsBatchListState(data = emptyList(), status = PaginationStatus.None))
+        val actual = transform(PolymarketSearchBatchListState(data = emptyList(), status = PaginationStatus.None))
 
         // Assert
         assertThat(actual.query).isEqualTo(PREV_STATE.query)
