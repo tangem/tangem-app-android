@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
@@ -93,6 +94,9 @@ internal abstract class SendModelTestBase {
     protected val listenToQrScanningUseCase: ListenToQrScanningUseCase = mockk(relaxed = true)
     protected val parseQrCodeUseCase: ParseQrCodeUseCase = mockk(relaxed = true)
     protected val sendConfirmAlertFactory: SendConfirmAlertFactory = mockk(relaxed = true)
+    protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
+        every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
+    }
     protected val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase = mockk(relaxed = true)
     protected val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk(relaxed = true)
     protected val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
@@ -234,6 +238,7 @@ internal abstract class SendModelTestBase {
             notificationsUpdateTrigger = notificationsUpdateTrigger,
             notificationsUpdateListener = notificationsUpdateListener,
             alertFactory = sendConfirmAlertFactory,
+            backupErrorWarningSender = backupErrorWarningSender,
             sendAnalyticHelper = sendAnalyticHelper,
             urlOpener = urlOpener,
             shareManager = shareManager,
