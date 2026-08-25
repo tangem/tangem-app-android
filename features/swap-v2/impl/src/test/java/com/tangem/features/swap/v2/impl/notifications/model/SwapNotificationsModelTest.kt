@@ -150,7 +150,7 @@ internal class SwapNotificationsModelTest {
             swapNotificationData = SwapNotificationsComponent.Params.SwapNotificationData(
                 quote = quote,
                 fromCryptoCurrency = fromCurrency,
-                // Empty address keeps the memo / backup-problem notifications out of the way
+                // Empty address keeps the memo notification out of the way
                 destinationAddress = "",
                 toCryptoCurrencyStatus = toCryptoCurrency?.let {
                     CryptoCurrencyStatus(currency = it, value = mockk(relaxed = true))
@@ -163,8 +163,6 @@ internal class SwapNotificationsModelTest {
             swapNotificationsUpdateTrigger = updateTrigger,
             swapAmountUpdateTrigger = mockk(relaxed = true),
             isMemoRequiredUseCase = mockk(relaxed = true),
-            getBackupProblematicWalletForAddressUseCase = mockk(relaxed = true),
-            sendBackupProblemEmailUseCase = mockk(relaxed = true),
             analyticsEventHandler = analyticsEventHandler,
             paramsContainer = MutableParamsContainer(value = params),
         )
