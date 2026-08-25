@@ -261,8 +261,7 @@ private fun FeedList(
 
 private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM) {
     when (content) {
-        // Filling the viewport keeps the feed longer than the screen while it has no cards of its own: a shorter
-        // list cannot stay scrolled, and the header the user had pushed away would spring back.
+        // A list shorter than the screen cannot stay scrolled, and the header pushed away would spring back.
         is PolymarketMainUM.ContentUM.Loading -> item(key = KEY_STATUS) {
             PolymarketLoadingState(modifier = Modifier.fillParentMaxHeight())
         }
@@ -296,12 +295,6 @@ private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM) {
     }
 }
 
-/**
- * Reports which event cards are on screen, so the feed refreshes the pages behind them and no others.
- *
- * The non-event items of the feed carry keys of their own; they are dropped here rather than left for the model
- * to recognise.
- */
 @Composable
 private fun VisibleEventsEffect(listState: LazyListState, onVisibleEventsChange: (Set<String>) -> Unit) {
     val currentOnVisibleEventsChanged by rememberUpdatedState(onVisibleEventsChange)
@@ -317,16 +310,11 @@ private fun VisibleEventsEffect(listState: LazyListState, onVisibleEventsChange:
     }
 }
 
-/**
- * Reports that the feed came to a rest, together with where it stands. A scroll that resumes before
- * [ScrollIdleDebounce] is over cancels the pending report, so a flick reports once rather than per fling.
- */
 @Composable
 private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?, onScrollIdle: (Int, Int) -> Unit) {
     val currentOnScrollIdle by rememberUpdatedState(onScrollIdle)
 
-    // Keyed by the category as well: a report still pending when the tab changes belongs to the tab that is gone,
-    // and applying it would file one category's position under another.
+    // Keyed by the category too: a report still pending when the tab changes belongs to the tab that is gone.
     LaunchedEffect(listState, selectedCategoryId) {
         snapshotFlow { listState.isScrollInProgress }
             .collectLatest { isScrollInProgress ->
@@ -339,12 +327,8 @@ private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?,
 }
 
 /**
- * Puts the list where the switched-to category expects it.
- *
- * A category visited before comes back with the place it was left at. A new one has none — but if the header was
- * already scrolled away, it stays away: the tab band is docked back under the toolbar rather than letting the feed
- * jump to the top. Waits for the items to be laid out, since scrolling to an index the list does not hold yet
- * silently clamps to whatever is there.
+ * A category with no place to come back to keeps the header away by docking the tab band instead of jumping to
+ * the top. Waits for the items to be laid out: scrolling to an index the list does not hold yet silently clamps.
  */
 @Composable
 private fun CategorySwitchEffect(
@@ -361,7 +345,6 @@ private fun CategorySwitchEffect(
         if (selectedCategoryId == appliedCategoryId) return@LaunchedEffect
         appliedCategoryId = selectedCategoryId
 
-        // Both values come from the same state as the category, so they are the ones that belong to this switch.
         val target = pendingScrollPosition
             ?: PolymarketFeedScrollPosition(index = TAB_BAND_INDEX, offset = 0).takeIf { isTabBandPinned }
             ?: return@LaunchedEffect
