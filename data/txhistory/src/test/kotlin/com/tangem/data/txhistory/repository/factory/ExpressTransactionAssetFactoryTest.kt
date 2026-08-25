@@ -1,14 +1,16 @@
 package com.tangem.data.txhistory.repository.factory
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.store.datasource.txhistory.db.entity.express.TokenInfoEntity
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -39,31 +41,25 @@ internal class ExpressTransactionAssetFactoryTest {
         clearMocks(tokenInfoRepository, multiAccountListSupplier, userWalletsListRepository)
         every { multiAccountListSupplier.invoke() } returns flowOf(emptyList())
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
-        coEvery { tokenInfoRepository.getCached(any()) } returns emptyList()
+        coEvery { tokenInfoRepository.getCachedTokens(any(), any()) } returns emptyMap()
     }
 
     @Test
     fun `GIVEN token only in cache WHEN create THEN builds token from cache`() = runTest {
         // Arrange
-        coEvery { tokenInfoRepository.getCached(any()) } returns listOf(
-            TokenInfoEntity(
-                networkId = "ethereum",
-                contractAddress = TOKEN_CONTRACT,
-                coinId = "tether",
-                name = "Tether",
-                symbol = "USDT",
-                decimals = 6,
-                updatedAt = 0,
-            ),
+        val id = ExpressAsset.ID(networkId = "ethereum", contractAddress = TOKEN_CONTRACT)
+        val cachedToken = MockCryptoCurrencyFactory().createToken(
+            blockchain = Blockchain.Ethereum,
+            id = "tether",
+            contractAddress = TOKEN_CONTRACT,
         )
+        coEvery { tokenInfoRepository.getCachedTokens(userWallet.walletId, any()) } returns mapOf(id to cachedToken)
 
         // Act
         val result = factory.create(userWallet.walletId, listOf(coinToTokenSwap()), emptyList(), emptyList())
 
         // Assert
-        val token = result[ExpressAsset.ID(networkId = "ethereum", contractAddress = TOKEN_CONTRACT)]
-        assertThat(token).isInstanceOf(CryptoCurrency.Token::class.java)
-        assertThat((token as CryptoCurrency.Token).symbol).isEqualTo("USDT")
+        assertThat(result[id]).isEqualTo(cachedToken)
     }
 
     @Test
