@@ -31,16 +31,21 @@ import kotlinx.collections.immutable.toImmutableList
  *
  * Top bar menu entry:
  * - [CashbackSummary.Enabled] with [CashbackDisplayMode.ALT_BLOCK] (EU/EEA) -> "Cashback in %month%"
- *   item inserted above "Terms and fees"; otherwise the entry is removed. A menu without the
- *   "Terms and fees" anchor (e.g. the deactivated account menu) never receives the entry.
+ *   item inserted below the "Current plan" entry (above "Terms and fees" while the plan entry is
+ *   absent); otherwise the entry is removed. A menu with neither anchor (e.g. the deactivated
+ *   account menu) never receives the entry.
  */
 internal class CashbackBlockTransformer(
     private val summary: CashbackSummary,
     private val isDeactivationDismissed: Boolean,
     private val dateFormatter: TangemPayCashbackDateFormatter,
     private val onClick: () -> Unit,
+    private val onMenuItemClick: () -> Unit,
     private val onGotIt: () -> Unit,
 ) : Transformer<TangemPayDetailsUM> {
+
+    val isAltBlockMode: Boolean
+        get() = (summary as? CashbackSummary.Enabled)?.displayMode == CashbackDisplayMode.ALT_BLOCK
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
         val block: CashbackBlockUM? = when (summary) {
@@ -94,26 +99,40 @@ internal class CashbackBlockTransformer(
         val month = dateFormatter.formatMonth(enabled.cashback.period.year, enabled.cashback.period.month)
         return TangemPayDropDownItemUM(
             title = resourceReference(R.string.tangempay_cashback_menu_item_title, wrappedList(month)),
-            onClick = onClick,
+            onClick = onMenuItemClick,
             icon = TangemIconUM.Icon(
                 imageVector = Icons.ic_percent_backward_20,
                 tintReference = { TangemTheme.colors3.icon.primary },
             ),
         )
     }
+}
 
-    private fun ImmutableList<TangemPayDropDownItemUM>.withCashbackMenuItem(
-        menuItem: TangemPayDropDownItemUM?,
-    ): ImmutableList<TangemPayDropDownItemUM> {
-        val cleared = filterNot { it.isTitledWith(R.string.tangempay_cashback_menu_item_title) }
-        val anchorIndex = cleared.indexOfFirst { it.isTitledWith(R.string.tangem_pay_terms_limits) }
-        return if (menuItem == null || anchorIndex < 0) {
-            cleared.toImmutableList()
-        } else {
-            cleared.toMutableList()
-                .apply { add(anchorIndex, menuItem) }
-                .toImmutableList()
-        }
+/**
+ * Removes any cashback entry (the regular "Cashback in %month%" one and the error/loading
+ * "Cashback" one) and, when [menuItem] is not `null`, inserts it below the "Current plan" entry.
+ * While the plan entry is absent (tariff plan not loaded or the toggle is off), the entry goes
+ * above "Terms and fees" instead. A menu with neither anchor never receives the entry.
+ */
+internal fun ImmutableList<TangemPayDropDownItemUM>.withCashbackMenuItem(
+    menuItem: TangemPayDropDownItemUM?,
+): ImmutableList<TangemPayDropDownItemUM> {
+    val cleared = filterNot { item ->
+        item.isTitledWith(R.string.tangempay_cashback_menu_item_title) ||
+            item.isTitledWith(R.string.tangempay_cashback_title)
+    }
+    val currentPlanIndex = cleared.indexOfFirst { it.isTitledWith(R.string.tangempay_current_plan_title) }
+    val insertionIndex = if (currentPlanIndex >= 0) {
+        currentPlanIndex + 1
+    } else {
+        cleared.indexOfFirst { it.isTitledWith(R.string.tangem_pay_terms_limits) }
+    }
+    return if (menuItem == null || insertionIndex < 0) {
+        cleared.toImmutableList()
+    } else {
+        cleared.toMutableList()
+            .apply { add(insertionIndex, menuItem) }
+            .toImmutableList()
     }
 }
 
