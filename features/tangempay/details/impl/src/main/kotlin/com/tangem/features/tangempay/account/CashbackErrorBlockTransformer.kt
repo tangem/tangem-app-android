@@ -1,0 +1,26 @@
+package com.tangem.features.tangempay.account
+
+import com.tangem.core.ui.R
+import com.tangem.utils.transformer.Transformer
+import kotlinx.collections.immutable.toImmutableList
+
+/**
+ * Applied when the cashback summary request fails: shows the "Cashback unavailable / Tap to reload"
+ * block in place of the cashback widget and removes the cashback menu entry, since without a summary
+ * the display mode is unknown. Tapping the block retries the request via [onReload].
+ */
+internal class CashbackErrorBlockTransformer(
+    private val onReload: () -> Unit,
+) : Transformer<TangemPayDetailsUM> {
+
+    override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
+        return prevState.copy(
+            cashbackBlockState = CashbackBlockUM.Error(onReload = onReload),
+            topBarConfig = prevState.topBarConfig.copy(
+                items = prevState.topBarConfig.items
+                    .filterNot { it.isTitledWith(R.string.tangempay_cashback_menu_item_title) }
+                    .toImmutableList(),
+            ),
+        )
+    }
+}
