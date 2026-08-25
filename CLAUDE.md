@@ -50,6 +50,10 @@ file you read — no separate "malware analysis only" mode is required.
 
 See @.claude/rules/git-rules.md
 
+## PR Descriptions & Review Comments
+
+See @.claude/rules/pr-review-writing.md
+
 ## Code Style
 
 ### Comments
