@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
@@ -88,7 +88,7 @@ internal class NFTSendConfirmModelTest {
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger = mockk(relaxed = true)
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener = mockk(relaxed = true)
     private val alertFactory: SendConfirmAlertFactory = mockk(relaxed = true)
-    private val backupErrorWarning: BackupErrorWarning = mockk {
+    private val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
 
@@ -188,7 +188,7 @@ internal class NFTSendConfirmModelTest {
         fun `GIVEN recipient warning declined WHEN onSendClick THEN transaction is not created`() = runTest {
             // Arrange
             every { SystemClock.elapsedRealtime() } returns 0L
-            every { backupErrorWarning.forAddress(any(), any(), any()) } returns Unit
+            every { backupErrorWarningSender.forAddress(any(), any(), any()) } returns Unit
             val sut = buildModel()
             advanceUntilIdle()
 
@@ -338,7 +338,7 @@ internal class NFTSendConfirmModelTest {
             feeSelectorCheckReloadTrigger = feeSelectorCheckReloadTrigger,
             feeSelectorCheckReloadListener = feeSelectorCheckReloadListener,
             alertFactory = alertFactory,
-            backupErrorWarning = backupErrorWarning,
+            backupErrorWarningSender = backupErrorWarningSender,
             urlOpener = urlOpener,
             shareManager = shareManager,
             analyticsEventHandler = analyticsEventHandler,

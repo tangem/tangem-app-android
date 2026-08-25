@@ -18,14 +18,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class BackupErrorWarningTest {
+internal class BackupErrorWarningSenderTest {
 
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase = mockk()
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase = mockk()
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
 
-    private val warning = BackupErrorWarning(
+    private val warning = BackupErrorWarningSender(
         messageSender = messageSender,
         isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
         getBackupProblematicWalletForAddressUseCase = getBackupProblematicWalletForAddressUseCase,
