@@ -4,7 +4,6 @@ import androidx.room.withTransaction
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntities
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntity
-import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.express.TangemExpressApi
@@ -21,6 +20,7 @@ import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
