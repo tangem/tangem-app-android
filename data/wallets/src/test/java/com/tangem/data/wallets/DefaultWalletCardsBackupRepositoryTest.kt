@@ -29,6 +29,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultWalletCardsBackupRepositoryTest {
@@ -138,6 +140,27 @@ internal class DefaultWalletCardsBackupRepositoryTest {
     inner class SendPendingWalletCards {
 
         @Test
+        fun `GIVEN a report is already queued WHEN saveWalletCards THEN the older one is sent first`() = runTest {
+            // Arrange
+            coEvery {
+                tangemTechApi.saveWalletCards(any(), any())
+            } returns ApiResponse.Error(cause = ApiResponseError.NetworkException()).cast()
+            repository.saveWalletCards(UserWalletId(stringValue = WALLET_IDS[0]), emptyList(), usedSeed = false)
+            clearMocks(tangemTechApi)
+
+            val sent = mutableListOf<String>()
+            coEvery { tangemTechApi.saveWalletCards(capture(sent), any()) } returns ApiResponse.Success(Unit)
+
+            // Act
+            repository.saveWalletCards(UserWalletId(stringValue = WALLET_IDS[1]), emptyList(), usedSeed = false)
+
+            // Assert
+            assertThat(sent).containsExactly(WALLET_IDS[0], WALLET_IDS[1]).inOrder()
+            assertThat(pendingStore.getAll()).isEmpty()
+        }
+
+
+        @Test
         fun `GIVEN nothing queued WHEN sendPendingWalletCards THEN the api is not called`() = runTest {
             // Act
             val actual = repository.sendPendingWalletCards()
@@ -178,6 +201,39 @@ internal class DefaultWalletCardsBackupRepositoryTest {
             assertThat(pendingStore.getAll().map { it.walletId })
                 .containsExactly(WALLET_IDS[1], WALLET_IDS[2]).inOrder()
             coVerify(exactly = 0) { tangemTechApi.saveWalletCards(WALLET_IDS[2], any()) }
+        }
+
+        @ParameterizedTest(name = "{0}")
+        @ValueSource(strings = ["INTERNAL_SERVER_ERROR", "SERVICE_UNAVAILABLE", "TOO_MANY_REQUESTS", "REQUEST_TIMEOUT"])
+        fun `GIVEN the backend is failing WHEN sendPendingWalletCards THEN the queue is kept`(code: String) =
+            runTest {
+                // Arrange
+                queueReports(WALLET_IDS)
+                val cause = httpError(HttpException.Code.valueOf(code))
+                coEvery { tangemTechApi.saveWalletCards(any(), any()) } returns ApiResponse.Error(cause).cast()
+
+                // Act
+                val actual = repository.sendPendingWalletCards()
+
+                // Assert
+                assertThat(actual).isEqualTo(WalletCardsBackupError.Unexpected(cause = cause).left())
+                assertThat(pendingStore.getAll().map { it.walletId }).containsExactlyElementsIn(WALLET_IDS).inOrder()
+                coVerify(exactly = 1) { tangemTechApi.saveWalletCards(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN an unreadable response WHEN sendPendingWalletCards THEN the report is kept`() = runTest {
+            // Arrange
+            queueReports(WALLET_IDS)
+            val cause = ApiResponseError.UnknownException(cause = IllegalStateException("malformed"))
+            coEvery { tangemTechApi.saveWalletCards(any(), any()) } returns ApiResponse.Error(cause).cast()
+
+            // Act
+            val actual = repository.sendPendingWalletCards()
+
+            // Assert
+            assertThat(actual).isEqualTo(WalletCardsBackupError.Unexpected(cause = cause).left())
+            assertThat(pendingStore.getAll().map { it.walletId }).containsExactlyElementsIn(WALLET_IDS).inOrder()
         }
 
         @Test
