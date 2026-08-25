@@ -10,11 +10,14 @@ import kotlinx.collections.immutable.ImmutableList
  * @property categories category tabs, shown above [content] and kept visible while the events of the selected
  *  category reload or fail. Empty when the backend could not serve them — the feed then runs unfiltered.
  * @property content the events area, which changes independently of [categories]
+ * @property pendingScrollPosition where the list should be put once the events of a returned-to category are laid
+ *  out; `null` when there is nothing to restore. Cleared as soon as the screen has applied it.
  */
 @Immutable
 internal data class PolymarketMainUM(
     val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
+    val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
 ) {
 
     @Immutable
@@ -40,6 +43,15 @@ internal data class PolymarketMainUM(
         data class Error(val onReloadClick: () -> Unit) : ContentUM
     }
 }
+
+/**
+ * A place in the feed's list: which item is first on screen and how far it is scrolled past.
+ *
+ * @property index index of the first visible item
+ * @property offset how many pixels of that item are scrolled past the top
+ */
+@Immutable
+internal data class PolymarketFeedScrollPosition(val index: Int, val offset: Int)
 
 /**
  * A single category tab of the Discovery feed.

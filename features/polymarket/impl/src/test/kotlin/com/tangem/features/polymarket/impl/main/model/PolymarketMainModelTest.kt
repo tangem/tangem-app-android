@@ -21,6 +21,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
@@ -62,9 +63,17 @@ internal class PolymarketMainModelTest {
     private val batchState = MutableStateFlow(
         BatchListState<Int, PolymarketEventsBatch>(data = emptyList(), status = PaginationStatus.InitialLoading),
     )
+    // One state per pagination the model creates. The first feed keeps [batchState] so the tests that drive a
+    // single category read the same flow the model does.
+    private val statePerFeed = mutableListOf<MutableStateFlow<BatchListState<Int, PolymarketEventsBatch>>>()
+
     private val contextSlot = slot<PolymarketEventsBatchingContext>()
     private val dispatchedActions =
         mutableListOf<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>()
+
+    // One entry per pagination the model creates — a feed per category, in the order the categories were opened.
+    private val actionsPerFeed =
+        mutableListOf<MutableList<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>>()
 
     private var model: PolymarketMainModel? = null
 
@@ -73,6 +82,8 @@ internal class PolymarketMainModelTest {
         model?.onDestroy()
         model = null
         dispatchedActions.clear()
+        actionsPerFeed.clear()
+        statePerFeed.clear()
     }
 
     @Test
@@ -253,6 +264,125 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN a category visited before WHEN it is selected again THEN its feed is not reloaded`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.uiState.value.categories.single { it.id == 2 }.onClick()
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        model.uiState.value.categories.single { it.id == 1 }.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).isEmpty()
+        assertThat(actionsPerFeed).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN two categories with pages of their own WHEN switching back THEN that category's events are shown`() =
+        runTest {
+            // Arrange
+            coEvery { getCategoriesUseCase() } returns categories().right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            statePerFeed[0].value = loadedState(eventId = "event-of-first")
+
+            model.uiState.value.categories.single { it.id == 2 }.onClick()
+            advanceUntilIdle()
+            statePerFeed[1].value = loadedState(eventId = "event-of-second")
+            advanceUntilIdle()
+            assertThat(shownEventIds(model)).containsExactly("event-of-second")
+
+            // Act
+            model.uiState.value.categories.single { it.id == 1 }.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(shownEventIds(model)).containsExactly("event-of-first")
+        }
+
+    @Test
+    fun `GIVEN the categories keep failing WHEN reload tapped THEN the feed is requested again anyway`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = emptyList(),
+            status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        (model.uiState.value.content as PolymarketMainUM.ContentUM.Error).onReloadClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)),
+        )
+    }
+
+    @Test
+    fun `GIVEN a scrolled category WHEN it is returned to THEN the list is put back where it was left`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScrollIdle(index = 7, offset = 24)
+
+        // Act
+        model.uiState.value.categories.single { it.id == 2 }.onClick()
+        advanceUntilIdle()
+        model.uiState.value.categories.single { it.id == 1 }.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.pendingScrollPosition)
+            .isEqualTo(PolymarketFeedScrollPosition(index = 7, offset = 24))
+    }
+
+    @Test
+    fun `GIVEN a restored position WHEN the screen reports it applied THEN it is not offered again`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScrollIdle(index = 7, offset = 24)
+        model.uiState.value.categories.single { it.id == 2 }.onClick()
+        advanceUntilIdle()
+        model.uiState.value.categories.single { it.id == 1 }.onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.onScrollPositionRestore()
+
+        // Assert
+        assertThat(model.uiState.value.pendingScrollPosition).isNull()
+    }
+
+    @Test
+    fun `GIVEN a category never opened WHEN it is selected THEN there is nothing to put back`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScrollIdle(index = 7, offset = 24)
+
+        // Act
+        model.uiState.value.categories.single { it.id == 2 }.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.pendingScrollPosition).isNull()
+    }
+
+    @Test
     fun `GIVEN more pages ahead WHEN scrolled near the end THEN the next page is requested`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returns categories().right()
@@ -372,9 +502,16 @@ internal class PolymarketMainModelTest {
 
     private fun createModel(testScope: TestScope): PolymarketMainModel {
         every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
+            val feedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig,
+                PolymarketEventsUpdateRequest>>()
+            actionsPerFeed += feedActions
+
             // The model owns the actions flow; collecting it here is what makes the dispatched actions assertable.
             contextSlot.captured.actionsFlow
-                .onEach { dispatchedActions += it }
+                .onEach {
+                    dispatchedActions += it
+                    feedActions += it
+                }
                 // Unconfined so an action lands in [dispatchedActions] as soon as the model emits it.
                 .launchIn(
                     CoroutineScope(
@@ -383,8 +520,20 @@ internal class PolymarketMainModelTest {
                     ),
                 )
 
+            val feedState = if (statePerFeed.isEmpty()) {
+                batchState
+            } else {
+                MutableStateFlow(
+                    BatchListState<Int, PolymarketEventsBatch>(
+                        data = emptyList(),
+                        status = PaginationStatus.InitialLoading,
+                    ),
+                )
+            }
+            statePerFeed += feedState
+
             object : PolymarketEventsBatchFlow {
-                override val state: StateFlow<BatchListState<Int, PolymarketEventsBatch>> = batchState
+                override val state: StateFlow<BatchListState<Int, PolymarketEventsBatch>> = feedState
                 override val updateResults:
                     SharedFlow<Pair<PolymarketEventsUpdateRequest, BatchUpdateResult<Int, PolymarketEventsBatch>>> =
                     MutableSharedFlow()
@@ -415,6 +564,14 @@ internal class PolymarketMainModelTest {
             single = testDispatcher,
         )
     }
+
+    private fun loadedState(eventId: String) = BatchListState(
+        data = listOf(Batch(key = 0, data = batchOf(createEvent(id = eventId)))),
+        status = PaginationStatus.EndOfPagination,
+    )
+
+    private fun shownEventIds(model: PolymarketMainModel): List<String> =
+        (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).events.map { it.id }
 
     private fun batchOf(vararg events: PolymarketEvent) = PolymarketEventsBatch(
         events = events.toList(),

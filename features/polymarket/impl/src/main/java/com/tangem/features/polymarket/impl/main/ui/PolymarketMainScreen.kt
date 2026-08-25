@@ -27,7 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -55,6 +57,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import kotlinx.collections.immutable.ImmutableList
@@ -62,6 +65,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlin.time.Duration.Companion.milliseconds
 
 // Feed layout: the scrolling header is item 0, the tab band — when there are categories — is item 1.
@@ -91,7 +95,8 @@ internal fun PolymarketMainScreen(
     onSearchClick: () -> Unit,
     onLoadMore: () -> Unit,
     onVisibleEventsChange: (Set<String>) -> Unit,
-    onScrollIdle: () -> Unit,
+    onScrollIdle: (index: Int, offset: Int) -> Unit,
+    onScrollPositionRestore: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -108,9 +113,22 @@ internal fun PolymarketMainScreen(
         derivedStateOf { hasCategories && listState.isTabBandPinned() }
     }
 
+    val selectedCategoryId = state.categories.firstOrNull { it.isSelected }?.id
+
     PolymarketLoadMoreEffect(listState = listState, onLoadMore = onLoadMore)
     VisibleEventsEffect(listState = listState, onVisibleEventsChange = onVisibleEventsChange)
-    ScrollIdleEffect(listState = listState, onScrollIdle = onScrollIdle)
+    ScrollIdleEffect(
+        listState = listState,
+        selectedCategoryId = selectedCategoryId,
+        onScrollIdle = onScrollIdle,
+    )
+    CategorySwitchEffect(
+        listState = listState,
+        selectedCategoryId = selectedCategoryId,
+        pendingScrollPosition = state.pendingScrollPosition,
+        isTabBandPinned = isTabBandPinned,
+        onScrollPositionRestore = onScrollPositionRestore,
+    )
 
     // The feature lives inside a modal — a separate window whose LocalHazeState belongs to the root
     // window, where haze cannot sample from here. A local provider keeps the source and the glass of
@@ -243,14 +261,18 @@ private fun FeedList(
 
 private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM) {
     when (content) {
+        // Filling the viewport keeps the feed longer than the screen while it has no cards of its own: a shorter
+        // list cannot stay scrolled, and the header the user had pushed away would spring back.
         is PolymarketMainUM.ContentUM.Loading -> item(key = KEY_STATUS) {
-            PolymarketLoadingState()
+            PolymarketLoadingState(modifier = Modifier.fillParentMaxHeight())
         }
         is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
-            PolymarketReloadPrompt(
-                text = resourceReference(R.string.prediction_main_events_load_error),
-                onReloadClick = content.onReloadClick,
-            )
+            Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.Center) {
+                PolymarketReloadPrompt(
+                    text = resourceReference(R.string.prediction_main_events_load_error),
+                    onReloadClick = content.onReloadClick,
+                )
+            }
         }
         is PolymarketMainUM.ContentUM.Content -> {
             items(
@@ -296,21 +318,58 @@ private fun VisibleEventsEffect(listState: LazyListState, onVisibleEventsChange:
 }
 
 /**
- * Reports that the feed came to a rest, which is the moment worth checking whether what it now shows is still
- * fresh. A scroll that resumes before [ScrollIdleDebounce] is over cancels the pending report.
+ * Reports that the feed came to a rest, together with where it stands. A scroll that resumes before
+ * [ScrollIdleDebounce] is over cancels the pending report, so a flick reports once rather than per fling.
  */
 @Composable
-private fun ScrollIdleEffect(listState: LazyListState, onScrollIdle: () -> Unit) {
+private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?, onScrollIdle: (Int, Int) -> Unit) {
     val currentOnScrollIdle by rememberUpdatedState(onScrollIdle)
 
-    LaunchedEffect(listState) {
+    // Keyed by the category as well: a report still pending when the tab changes belongs to the tab that is gone,
+    // and applying it would file one category's position under another.
+    LaunchedEffect(listState, selectedCategoryId) {
         snapshotFlow { listState.isScrollInProgress }
             .collectLatest { isScrollInProgress ->
                 if (isScrollInProgress) return@collectLatest
 
                 delay(ScrollIdleDebounce)
-                currentOnScrollIdle()
+                currentOnScrollIdle(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
             }
+    }
+}
+
+/**
+ * Puts the list where the switched-to category expects it.
+ *
+ * A category visited before comes back with the place it was left at. A new one has none — but if the header was
+ * already scrolled away, it stays away: the tab band is docked back under the toolbar rather than letting the feed
+ * jump to the top. Waits for the items to be laid out, since scrolling to an index the list does not hold yet
+ * silently clamps to whatever is there.
+ */
+@Composable
+private fun CategorySwitchEffect(
+    listState: LazyListState,
+    selectedCategoryId: Int?,
+    pendingScrollPosition: PolymarketFeedScrollPosition?,
+    isTabBandPinned: Boolean,
+    onScrollPositionRestore: () -> Unit,
+) {
+    val currentOnScrollPositionRestore by rememberUpdatedState(onScrollPositionRestore)
+    var appliedCategoryId by remember { mutableStateOf(selectedCategoryId) }
+
+    LaunchedEffect(selectedCategoryId) {
+        if (selectedCategoryId == appliedCategoryId) return@LaunchedEffect
+        appliedCategoryId = selectedCategoryId
+
+        // Both values come from the same state as the category, so they are the ones that belong to this switch.
+        val target = pendingScrollPosition
+            ?: PolymarketFeedScrollPosition(index = TAB_BAND_INDEX, offset = 0).takeIf { isTabBandPinned }
+            ?: return@LaunchedEffect
+
+        snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > target.index }
+        listState.scrollToItem(index = target.index, scrollOffset = target.offset)
+
+        if (pendingScrollPosition != null) currentOnScrollPositionRestore()
     }
 }
 
@@ -414,7 +473,8 @@ private fun PolymarketMainScreenContentPreview() {
             onSearchClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
-            onScrollIdle = {},
+            onScrollIdle = { _, _ -> },
+            onScrollPositionRestore = {},
         )
     }
 }
