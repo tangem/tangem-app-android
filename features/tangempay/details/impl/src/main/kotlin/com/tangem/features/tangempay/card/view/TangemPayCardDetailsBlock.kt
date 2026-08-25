@@ -239,7 +239,7 @@ private fun TangemPayCardBackground(
             placeholder = painterResource(R.drawable.img_tangem_pay_card_placeholder),
             error = painterResource(R.drawable.img_tangem_pay_card_placeholder),
             fallback = painterResource(R.drawable.img_tangem_pay_card_placeholder),
-            contentScale = ContentScale.FillBounds,
+            contentScale = ContentScale.Crop,
             contentDescription = null,
         )
         if (isFrozen || freezeProgress > 0f) {
