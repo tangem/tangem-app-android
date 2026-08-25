@@ -148,10 +148,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val uiMessageSender: UiMessageSender,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    backupErrorWarningFactory: BackupErrorWarning.Factory,
+    private val backupErrorWarning: BackupErrorWarning,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
-
-    private val backupErrorWarning = backupErrorWarningFactory.create(uiMessageSender)
 
     override fun onSendClick(
         accountId: AccountId,
