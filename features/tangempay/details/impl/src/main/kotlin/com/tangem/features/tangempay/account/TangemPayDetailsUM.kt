@@ -30,6 +30,10 @@ internal sealed interface CashbackBlockUM {
     data class DeactivatedBanner(
         val onGotIt: () -> Unit,
     ) : CashbackBlockUM
+
+    data class Error(
+        val onReload: () -> Unit,
+    ) : CashbackBlockUM
 }
 
 internal enum class TangemPayAction { AddFunds, Withdraw }
