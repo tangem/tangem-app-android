@@ -12,6 +12,7 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -33,6 +34,7 @@ class ResolvePolymarketEntryInteractor(
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
     private val getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
+    private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketEntry> =
@@ -75,7 +77,7 @@ class ResolvePolymarketEntryInteractor(
         either {
             val state = readWalletStatus(addresses).bind()
 
-            recordConfirmation(userWalletId = addresses.userWalletId, status = state.status)
+            recordPolymarketConfirmation(userWalletId = addresses.userWalletId, status = state.status)
 
             val hasCredentials = getPolymarketApiCredentialsUseCase(addresses.userWalletId) != null
             TangemLogger.i("Resolve: credentials found=$hasCredentials")
@@ -84,19 +86,6 @@ class ResolvePolymarketEntryInteractor(
             TangemLogger.i("Resolve: entry=$entry")
             entry
         }
-
-    /**
-     * Only reached while the wallet is not yet confirmed — a confirmed one short-circuits above and never gets
-     * here. The record is therefore also maintained by the wallet-screen refresh, which keeps reading the backend
-     * for wallets this gate has stopped asking about.
-     */
-    private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
-        if (status == PolymarketWalletStatus.READY_TO_TRADE) {
-            polymarketOnboardedStore.markOnboarded(userWalletId)
-        } else {
-            polymarketOnboardedStore.clear(userWalletId)
-        }
-    }
 
     private suspend fun deriveAddresses(
         userWalletId: UserWalletId,
