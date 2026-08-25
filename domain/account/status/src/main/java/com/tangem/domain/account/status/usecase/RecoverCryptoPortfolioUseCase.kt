@@ -122,10 +122,7 @@ class RecoverCryptoPortfolioUseCase(
                 .let(AccountName::invoke).getOrNull()
                 ?: raise(Error.DataOperationFailed(message = "Failed to generate indexed account name"))
 
-            val renamedAccount = recoveredAccount.withNameAndIcon(
-                accountName = indexedName,
-                icon = recoveredAccount.icon,
-            )
+            val renamedAccount = recoveredAccount.copySealed(accountName = indexedName)
 
             // recursively try to add the account with the new name
             add(accountList = accountList, recoveredAccount = renamedAccount)
