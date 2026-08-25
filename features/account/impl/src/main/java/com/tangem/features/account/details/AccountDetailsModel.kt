@@ -67,8 +67,7 @@ internal class AccountDetailsModel @Inject constructor(
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.AccountSettingsScreenOpened())
 
         when (params.account) {
-            is Account.Personal -> singleAccountSupplier.filterCryptoPortfolioAccount(accountId)
-                .filterIsInstance<Account.Personal>()
+            is Account.Personal -> singleAccountSupplier.filterPersonalAccount(accountId)
                 .map { account -> buildPersonalUI(account) }
             is Account.Joint -> singleAccountStatusSupplier(SingleAccountStatusProducer.Params(accountId))
                 .filterIsInstance<AccountStatus.Joint>()

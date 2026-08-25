@@ -104,8 +104,9 @@ internal class WalletSettingsModel @Inject constructor(
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
 
-    val isJointAccountCreationEnabled: Boolean
-        get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
+    private val isJointAccountEnabled: Boolean
+        get() = jointAccountFeatureToggles.isJointAccountEnabled
+
     private val walletCardItemDelegate = walletCardItemDelegateFactory.create(
         dialogNavigation = dialogNavigation,
         onUpgradeHotWalletClick = ::onUpgradeWalletClick,
@@ -452,7 +453,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onAddAccountClick() {
-        if (isJointAccountCreationEnabled) {
+        if (isJointAccountEnabled) {
             bottomSheetNavigation.activate(WalletSettingsBSConfig.AddAccountType)
         } else {
             openCreateCryptoAccount()
