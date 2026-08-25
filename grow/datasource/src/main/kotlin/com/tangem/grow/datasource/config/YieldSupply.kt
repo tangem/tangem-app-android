@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.grow.datasource.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
@@ -6,14 +6,13 @@ import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.header.RequestHeader
 
-import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.grow.datasource.BuildConfig
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
 /** YieldSupply [ApiConfig] */
 class YieldSupply(
-    private val environmentConfig: EnvironmentConfig,
+    private val growEnvironmentConfig: GrowEnvironmentConfig,
     private val cardAuthHeader: CardAuthHeaderProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
@@ -83,8 +82,8 @@ class YieldSupply(
             ApiEnvironment.STAGE,
             ApiEnvironment.STAGE_2,
             ApiEnvironment.STAGE_3,
-            -> environmentConfig.yieldModuleApiKeyDev
-            ApiEnvironment.PROD -> environmentConfig.yieldModuleApiKey
+            -> growEnvironmentConfig.yieldModuleApiKeyDev
+            ApiEnvironment.PROD -> growEnvironmentConfig.yieldModuleApiKey
         } ?: error("No tangem tech api config provided")
     }
 
