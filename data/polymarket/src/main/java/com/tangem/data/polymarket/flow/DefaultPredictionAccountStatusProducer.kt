@@ -7,6 +7,7 @@ import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
+import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -49,7 +50,7 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
     }
 
     private fun collateralRate(): Flow<CollateralRate> {
-        return singleQuoteStatusSupplier(SingleQuoteStatusProducer.Params(rawCurrencyId = COLLATERAL_CURRENCY_ID))
+        return singleQuoteStatusSupplier(SingleQuoteStatusProducer.Params(rawCurrencyId = PredictionCollateral.RAW_ID))
             .map { quote ->
                 when (val value = quote.value) {
                     is QuoteStatus.Data -> CollateralRate.Known(value.fiatRate)
