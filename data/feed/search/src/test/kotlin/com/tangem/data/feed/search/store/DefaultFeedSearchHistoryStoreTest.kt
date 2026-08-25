@@ -3,6 +3,8 @@ package com.tangem.data.feed.search.store
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.feed.search.model.FeedSearchHistoryDTO
 import com.tangem.data.feed.search.model.ItemDTO
+import com.tangem.data.feed.search.model.ItemKind
+import com.tangem.data.feed.search.model.MarketTokenDTO
 import com.tangem.data.feed.search.model.QueryDTO
 import com.tangem.domain.feed.search.repository.FeedSearchHistoryRepository.Companion.MAX_HISTORY_SIZE
 import com.tangem.test.core.datastore.MockStateDataStore
@@ -102,15 +104,14 @@ internal class DefaultFeedSearchHistoryStoreTest {
         assertThat(store.getItems().first()).isEmpty()
     }
 
-    private fun marketToken(id: String, timestamp: Long) = ItemDTO.MarketToken(
+    private fun marketToken(id: String, timestamp: Long) = ItemDTO(
+        kind = ItemKind.MARKET_TOKEN,
         id = id,
-        name = id,
-        symbol = id.take(n = 3).uppercase(),
-        imageUrl = null,
-        currentPrice = "1",
-        h24Percent = null,
-        weekPercent = null,
-        monthPercent = null,
         timestamp = timestamp,
+        marketToken = MarketTokenDTO(
+            name = id,
+            symbol = id.take(n = 3).uppercase(),
+            currentPrice = "1",
+        ),
     )
 }
