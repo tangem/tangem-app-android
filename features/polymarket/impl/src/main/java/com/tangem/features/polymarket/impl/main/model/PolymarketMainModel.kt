@@ -76,8 +76,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
 
-    // A feed per category, created on its first visit and kept for as long as the screen lives: coming back to a
-    // tab then costs nothing, which is the whole point of not reloading on a switch.
+    // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
     private val feeds = mutableMapOf<Int?, PolymarketCategoryFeed>()
 
     private val activeFeed = MutableStateFlow<PolymarketCategoryFeed?>(value = null)
@@ -121,15 +120,10 @@ internal class PolymarketMainModel @Inject constructor(
         }
     }
 
-    /** The cards currently on screen: the poller refreshes the pages they come from and no others. */
     fun onVisibleEventsChange(eventIds: Set<String>) {
         activeFeed.value?.poller?.setVisibleEventIds(eventIds)
     }
 
-    /**
-     * The feed came to a rest. Worth two things at once: checking whether what is now on screen is still fresh,
-     * and remembering where the list stands so returning to this tab puts it back.
-     */
     fun onScrollIdle(index: Int, offset: Int) {
         val feed = activeFeed.value ?: return
 
@@ -137,7 +131,6 @@ internal class PolymarketMainModel @Inject constructor(
         feed.poller.onScrollIdle()
     }
 
-    /** The screen has put the list back where it was; the same restore must not be applied twice. */
     fun onScrollPositionRestore() {
         uiState.update { it.copy(pendingScrollPosition = null) }
     }
@@ -175,11 +168,8 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     /**
-     * Puts the feed of [categoryId] in front of the user. A category visited before comes back with its pages and
-     * the place the list was left at; a new one starts loading its first page.
-     *
      * @param reloadVisited request the first page even for a feed that was visited — the retry path arrives here
-     *  with the very feed that failed, and it is asking for exactly that.
+     *  with the very feed that failed, and that is what it is asking for.
      */
     private fun selectFeed(categoryId: Int?, reloadVisited: Boolean = false) {
         activeFeed.value?.poller?.pause()
@@ -192,7 +182,6 @@ internal class PolymarketMainModel @Inject constructor(
         uiState.update { it.copy(pendingScrollPosition = feed.scrollPosition) }
 
         if (visited == null || reloadVisited) reloadEvents(feed = feed)
-        // The pages of a visited feed are as old as the time spent away, so its first tick is due right now.
         if (isScreenResumed) feed.poller.resume()
     }
 
