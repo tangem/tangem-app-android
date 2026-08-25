@@ -22,7 +22,7 @@ internal class WalletAccountsApi @Inject constructor(
 ) {
 
     private val isJointAccountsEnabled: Boolean
-        get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
+        get() = jointAccountFeatureToggles.isJointAccountEnabled
 
     private val version: String
         get() = if (isJointAccountsEnabled) JOINT_AWARE_VERSION else LEGACY_VERSION
