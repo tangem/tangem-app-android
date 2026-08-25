@@ -20,7 +20,7 @@ import javax.inject.Inject
  * alert's "Continue" action, while "Contact support" abandons the action for the mail flow.
  */
 @ModelScoped
-class BackupErrorWarning @Inject constructor(
+class BackupErrorWarningSender @Inject constructor(
     private val messageSender: UiMessageSender,
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,

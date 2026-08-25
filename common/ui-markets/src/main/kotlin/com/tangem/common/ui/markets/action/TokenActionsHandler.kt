@@ -1,7 +1,7 @@
 package com.tangem.common.ui.markets.action
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.markets.R
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
@@ -42,7 +42,7 @@ class TokenActionsHandler @AssistedInject constructor(
     @Assisted private val onHandleQuickAction: (action: HandledQuickAction, shouldDismiss: Boolean) -> Unit,
     @Assisted private val coroutineScope: CoroutineScope,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val backupErrorWarning: BackupErrorWarning,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val messageSender: UiMessageSender,
 ) {
 
@@ -135,7 +135,7 @@ class TokenActionsHandler @AssistedInject constructor(
             return
         }
 
-        backupErrorWarning.forWallet(scope = coroutineScope, userWallet = userWallet, onProceed = onProceed)
+        backupErrorWarningSender.forWallet(scope = coroutineScope, userWallet = userWallet, onProceed = onProceed)
     }
 
     private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
