@@ -160,7 +160,7 @@ internal class SwapModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    backupErrorWarningFactory: BackupErrorWarning.Factory,
+    private val backupErrorWarning: BackupErrorWarning,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -184,8 +184,6 @@ internal class SwapModel @Inject constructor(
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
 ) : Model() {
-
-    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val params = paramsContainer.require<SwapComponent.Params>()
 
