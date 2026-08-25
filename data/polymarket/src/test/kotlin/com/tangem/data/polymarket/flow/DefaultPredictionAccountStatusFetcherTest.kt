@@ -7,6 +7,7 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -150,7 +151,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN no credentials on this device WHEN invoke THEN the setup is reported as unfinished`() = runTest {
+    fun `GIVEN the collateral cannot be read WHEN invoke THEN the account is reported as onboarded`() = runTest {
         // Arrange
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
@@ -161,12 +162,23 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
-        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
-            PredictionAccountStatusValue.Onboarding(
-                source = StatusSource.ACTUAL,
-                stage = PredictionAccountStatusValue.Onboarding.Stage.DEPLOYED,
-            ),
-        )
+        assertThat(store.getSyncOrNull(WALLET))
+            .isEqualTo(PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL))
+    }
+
+    @Test
+    fun `GIVEN an unreadable collateral WHEN invoke THEN the wallet total is not given a zero`() = runTest {
+        // Arrange — the resolver answers KeyNotFound for any 404, so this is not only the missing-key case
+        coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+        coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+        coEvery { getBalance.invoke(ADDRESSES) } returns PolymarketAuthError.KeyNotFound.left()
+        val store = createStore(testScope = this)
+
+        // Act
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET)?.totalFiatBalance).isEqualTo(TotalFiatBalance.Failed)
     }
 
     @Test
