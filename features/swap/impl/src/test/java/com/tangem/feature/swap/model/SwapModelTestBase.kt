@@ -2,7 +2,7 @@ package com.tangem.feature.swap.model
 
 import arrow.core.right
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -113,7 +113,7 @@ internal abstract class SwapModelTestBase {
     protected val calculateAmountUseCase: CalculateAmountUseCase = mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
-    protected val backupErrorWarning: BackupErrorWarning = mockk {
+    protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
 
@@ -234,7 +234,7 @@ internal abstract class SwapModelTestBase {
         calculateAmountUseCase = calculateAmountUseCase,
         isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
-        backupErrorWarning = backupErrorWarning,
+        backupErrorWarningSender = backupErrorWarningSender,
     )
 
     // region builders
