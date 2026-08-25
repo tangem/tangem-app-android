@@ -169,7 +169,7 @@ internal class SavedSwapTransactionListConverter(
         val accounts = accountList?.accounts ?: return null
 
         return accounts.asSequence()
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
             .firstOrNull { it.derivationIndex == derivationIndex }
             ?: accounts.firstOrNull { it is Account.Payment }.takeIf { derivationIndex == null }
     }
