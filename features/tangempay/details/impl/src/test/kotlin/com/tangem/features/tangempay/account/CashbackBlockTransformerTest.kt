@@ -20,6 +20,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -36,6 +37,7 @@ internal class CashbackBlockTransformerTest {
     private val defaultLocale = Locale.getDefault()
 
     private val onClick: () -> Unit = {}
+    private val onMenuItemClick: () -> Unit = {}
     private val onGotIt: () -> Unit = {}
     private val dateFormatter = TangemPayCashbackDateFormatter()
 
@@ -103,7 +105,7 @@ internal class CashbackBlockTransformerTest {
     }
 
     @Test
-    fun `GIVEN enabled alt_block summary WHEN transform THEN cashback menu item inserted above terms`() {
+    fun `GIVEN enabled alt_block summary WHEN transform THEN cashback menu item inserted below current plan`() {
         // Arrange
         val summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
         val transformer = createTransformer(summary = summary)
@@ -117,10 +119,37 @@ internal class CashbackBlockTransformerTest {
 
         // Assert
         val cashbackIndex = items.indexOfFirst { it.title == expectedTitle }
+        val planIndex = items.indexOfFirst { it.title == resourceReference(R.string.tangempay_current_plan_title) }
+        assertThat(planIndex).isAtLeast(0)
+        assertThat(cashbackIndex).isEqualTo(planIndex + 1)
+        assertThat(items[cashbackIndex].subtitle).isNull()
+        assertThat(items[cashbackIndex].onClick).isSameInstanceAs(onMenuItemClick)
+    }
+
+    @Test
+    fun `GIVEN menu without current plan WHEN transform THEN cashback menu item inserted above terms`() {
+        // Arrange
+        val transformer = createTransformer(summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK))
+        val stateWithoutPlan = contentState().let { state ->
+            state.copy(
+                topBarConfig = state.topBarConfig.copy(
+                    items = state.topBarConfig.items
+                        .filterNot { it.title == resourceReference(R.string.tangempay_current_plan_title) }
+                        .toImmutableList(),
+                ),
+            )
+        }
+
+        // Act
+        val items = transformer.transform(stateWithoutPlan).topBarConfig.items
+
+        // Assert
+        val cashbackIndex = items.indexOfFirst {
+            (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_menu_item_title
+        }
         val termsIndex = items.indexOfFirst { it.title == resourceReference(R.string.tangem_pay_terms_limits) }
         assertThat(cashbackIndex).isAtLeast(0)
         assertThat(termsIndex).isEqualTo(cashbackIndex + 1)
-        assertThat(items[cashbackIndex].subtitle).isNull()
     }
 
     @Test
@@ -234,6 +263,7 @@ internal class CashbackBlockTransformerTest {
         isDeactivationDismissed = isDismissed,
         dateFormatter = dateFormatter,
         onClick = onClick,
+        onMenuItemClick = onMenuItemClick,
         onGotIt = onGotIt,
     )
 
@@ -268,6 +298,7 @@ internal class CashbackBlockTransformerTest {
             onOpenMenu = {},
             items = persistentListOf(
                 menuItem(R.string.tangempay_current_plan_title),
+                menuItem(R.string.tangempay_visa_benefits),
                 menuItem(R.string.tangem_pay_terms_limits),
                 menuItem(R.string.tangempay_pay_support),
             ),
