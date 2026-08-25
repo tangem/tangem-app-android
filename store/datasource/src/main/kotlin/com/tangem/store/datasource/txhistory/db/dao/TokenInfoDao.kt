@@ -30,4 +30,8 @@ interface TokenInfoDao {
         contractAddresses: Collection<String>,
         minUpdatedAt: Long = 0,
     ): List<TokenInfoEntity>
+
+    /** Every cached token for [networkId], regardless of contract address. */
+    @Query("SELECT * FROM token_info WHERE network_id = :networkId")
+    suspend fun getAllForNetwork(networkId: String): List<TokenInfoEntity>
 }
