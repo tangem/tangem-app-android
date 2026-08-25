@@ -28,6 +28,7 @@ dependencies {
     // region Other libraries
     api(deps.arrow.core)
     api(deps.okHttp)
+    api(deps.androidx.datastore.preferences.core)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.retrofit)
@@ -45,7 +46,7 @@ dependencies {
 
     // region Core modules
     implementation(projects.core.configToggles)
-    implementation(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.core.remote)
     implementation(projects.core.utils)
     // endregion
