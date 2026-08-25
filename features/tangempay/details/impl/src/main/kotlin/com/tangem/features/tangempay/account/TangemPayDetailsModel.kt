@@ -55,6 +55,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -130,7 +131,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private var shownTiersBanner: TangemPayTiersBannerType? = null
     private var shownCashbackBlock: CashbackBlockAnalyticsType? = null
-    private var cashbackTransformer: CashbackBlockTransformer? = null
+    private var cashbackTransformer: Transformer<TangemPayDetailsUM>? = null
     private var isDeliveryBannerShown = false
 
     private val isInitialRouteHandled = MutableStateFlow(false)
@@ -274,6 +275,13 @@ internal class TangemPayDetailsModel @Inject constructor(
                     onClick = ::onClickCashback,
                     onGotIt = ::onDismissCashbackDeactivation,
                 )
+                cashbackTransformer = transformer
+                uiState.update(transformer)
+            }.onLeft {
+                // A failed refresh must not wipe already shown cashback data — the error block
+                // replaces the widget only while there is nothing successful to show ([REDACTED_TASK_KEY])
+                if (cashbackTransformer is CashbackBlockTransformer) return@onLeft
+                val transformer = CashbackErrorBlockTransformer(onReload = ::fetchCashbackBlock)
                 cashbackTransformer = transformer
                 uiState.update(transformer)
             }
