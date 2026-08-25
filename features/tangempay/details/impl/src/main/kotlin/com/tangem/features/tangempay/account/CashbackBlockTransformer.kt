@@ -1,21 +1,37 @@
 package com.tangem.features.tangempay.account
 
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.defaultAmount
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_percent_backward_20
+import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
+import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.utils.transformer.Transformer
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Resolves the Payment account cashback block from a [CashbackSummary]:
- * - [CashbackSummary.Enabled] -> tappable [CashbackBlockUM.Widget];
+ * Resolves all Payment account cashback UI from a [CashbackSummary] in one place.
+ *
+ * Cashback block:
+ * - [CashbackSummary.Enabled] with [CashbackDisplayMode.FULL] -> tappable [CashbackBlockUM.Widget];
  * - [CashbackSummary.Deactivated] (unless dismissed) -> [CashbackBlockUM.DeactivatedBanner];
  * - otherwise -> hidden (`null`).
+ *
+ * Top bar menu entry:
+ * - [CashbackSummary.Enabled] with [CashbackDisplayMode.ALT_BLOCK] (EU/EEA) -> "Cashback in %month%"
+ *   item inserted above "Terms and fees"; otherwise the entry is removed. A menu without the
+ *   "Terms and fees" anchor (e.g. the deactivated account menu) never receives the entry.
  */
 internal class CashbackBlockTransformer(
     private val summary: CashbackSummary,
@@ -27,7 +43,10 @@ internal class CashbackBlockTransformer(
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
         val block: CashbackBlockUM? = when (summary) {
-            is CashbackSummary.Enabled -> buildWidget(summary)
+            is CashbackSummary.Enabled -> when (summary.displayMode) {
+                CashbackDisplayMode.FULL -> buildWidget(summary)
+                CashbackDisplayMode.ALT_BLOCK -> null
+            }
             CashbackSummary.Deactivated -> if (isDeactivationDismissed) {
                 null
             } else {
@@ -37,7 +56,15 @@ internal class CashbackBlockTransformer(
             CashbackSummary.Unknown,
             -> null
         }
-        return prevState.copy(cashbackBlockState = block)
+        val menuItem = (summary as? CashbackSummary.Enabled)
+            ?.takeIf { it.displayMode == CashbackDisplayMode.ALT_BLOCK }
+            ?.let(::buildMenuItem)
+        return prevState.copy(
+            cashbackBlockState = block,
+            topBarConfig = prevState.topBarConfig.copy(
+                items = prevState.topBarConfig.items.withCashbackMenuItem(menuItem),
+            ),
+        )
     }
 
     private fun buildWidget(enabled: CashbackSummary.Enabled): CashbackBlockUM.Widget {
@@ -53,5 +80,35 @@ internal class CashbackBlockTransformer(
             subtitle = window?.let { resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(it)) },
             onClick = onClick,
         )
+    }
+
+    private fun buildMenuItem(enabled: CashbackSummary.Enabled): TangemPayDropDownItemUM {
+        val month = dateFormatter.formatMonth(enabled.cashback.period.year, enabled.cashback.period.month)
+        return TangemPayDropDownItemUM(
+            title = resourceReference(R.string.tangempay_cashback_menu_item_title, wrappedList(month)),
+            onClick = onClick,
+            icon = TangemIconUM.Icon(
+                imageVector = Icons.ic_percent_backward_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+        )
+    }
+
+    private fun ImmutableList<TangemPayDropDownItemUM>.withCashbackMenuItem(
+        menuItem: TangemPayDropDownItemUM?,
+    ): ImmutableList<TangemPayDropDownItemUM> {
+        val cleared = filterNot { it.isTitledWith(R.string.tangempay_cashback_menu_item_title) }
+        val anchorIndex = cleared.indexOfFirst { it.isTitledWith(R.string.tangem_pay_terms_limits) }
+        return if (menuItem == null || anchorIndex < 0) {
+            cleared.toImmutableList()
+        } else {
+            cleared.toMutableList()
+                .apply { add(anchorIndex, menuItem) }
+                .toImmutableList()
+        }
+    }
+
+    private fun TangemPayDropDownItemUM.isTitledWith(resId: Int): Boolean {
+        return (title as? TextReference.Res)?.id == resId
     }
 }
