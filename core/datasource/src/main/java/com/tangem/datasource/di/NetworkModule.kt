@@ -1,7 +1,6 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.api.common.config.TangemTech
-import com.tangem.datasource.api.common.config.YieldSupply
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
@@ -19,7 +18,6 @@ import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.build
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
@@ -65,18 +63,6 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
                 apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = true,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideYieldSupplyApi(retrofitApiBuilder: RetrofitApiBuilder): YieldSupplyApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = YieldSupply.ID,
                 shouldApplyTimeoutAnnotations = true,
                 shouldUseSessionAuth = false,
             ),
