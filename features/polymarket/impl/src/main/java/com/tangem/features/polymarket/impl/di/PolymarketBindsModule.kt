@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -102,11 +103,21 @@ internal object PolymarketDomainUseCasesModule {
         getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
         polymarketOnboardedStore: PolymarketOnboardedStore,
+        recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     ): ResolvePolymarketEntryInteractor = ResolvePolymarketEntryInteractor(
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase = getPolymarketApiCredentialsUseCase,
         polymarketOnboardedStore = polymarketOnboardedStore,
+        recordPolymarketConfirmation = recordPolymarketConfirmation,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRecordPolymarketConfirmationUseCase(
+        polymarketOnboardedStore: PolymarketOnboardedStore,
+    ): RecordPolymarketConfirmationUseCase = RecordPolymarketConfirmationUseCase(
+        onboardedStore = polymarketOnboardedStore,
     )
 
     @Provides
