@@ -1,11 +1,11 @@
 package com.tangem.features.feed.earn.model.state
 
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.features.feed.earn.model.filters.state.EarnFilterChipsFactory
 import com.tangem.features.feed.earn.ui.state.EarnBestOpportunitiesUM
 import com.tangem.features.feed.earn.ui.state.EarnFeedTabUM
 import com.tangem.features.feed.earn.ui.state.EarnListUM
 import com.tangem.utils.transformer.Transformer
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -25,7 +25,7 @@ internal class EarnStateController @Inject constructor() {
         return EarnFeedTabUM(
             mostlyUsed = EarnListUM.Loading,
             bestOpportunities = EarnBestOpportunitiesUM.Loading,
-            filters = persistentListOf(),
+            filters = EarnFilterChipsFactory.LOADING,
             onSliderScroll = {},
         )
     }

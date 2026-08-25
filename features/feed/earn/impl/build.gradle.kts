@@ -13,6 +13,7 @@ android {
 dependencies {
     /* Project - API */
     implementation(projects.features.feed.api)
+    implementation(projects.features.promoBanners.api)
     implementation(projects.features.commonFeatures.api)
 
     /* Project - Domain */
@@ -35,6 +36,7 @@ dependencies {
     implementation(projects.common.ui)
 
     /* Project - Libs */
+    implementation(projects.libs.blockchainSdk)
     implementation(tangemDeps.blockchain)
 
     /* Compose */
@@ -43,6 +45,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
+    implementation(deps.lifecycle.compose)
 
     /* Other */
     implementation(deps.androidx.appCompat)
@@ -51,6 +54,7 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /* DI */
     implementation(deps.hilt.android)
