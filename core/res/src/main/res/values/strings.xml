@@ -1520,6 +1520,7 @@
   </plurals>
   <string name="prediction_event_probability">Probability</string>
   <string name="prediction_event_total_volume">Total volume:</string>
+  <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
   <string name="prediction_main_subtitle">USDC on Polygon network</string>
