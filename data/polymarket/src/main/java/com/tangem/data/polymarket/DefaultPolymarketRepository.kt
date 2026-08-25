@@ -14,6 +14,7 @@ import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.pagination.PolymarketEventsBatchFetcher
+import com.tangem.data.polymarket.pagination.PolymarketEventsUpdateFetcher
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.PolymarketApi
@@ -84,6 +85,10 @@ internal class DefaultPolymarketRepository @Inject constructor(
             context = context,
             generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
             batchFetcher = PolymarketEventsBatchFetcher(
+                batchSize = batchSize,
+                fetchPage = ::fetchEventsPage,
+            ),
+            updateFetcher = PolymarketEventsUpdateFetcher(
                 batchSize = batchSize,
                 fetchPage = ::fetchEventsPage,
             ),
