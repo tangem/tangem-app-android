@@ -16,6 +16,7 @@ import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -44,14 +45,12 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
@@ -148,8 +147,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val fetchStakingOptionsUseCase: FetchStakingOptionsUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
-    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val associateAssetUseCase: AssociateAssetUseCase,
     private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
     private val openTrustlineUseCase: OpenTrustlineUseCase,
@@ -614,17 +612,17 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
-        if (isTopUpBlockedByBackupError()) return
-
         val status = cryptoCurrencyStatus ?: return
-        modelScope.launch {
-            appRouter.push(
-                AppRoute.Onramp(
-                    userWalletId = userWallet.walletId,
-                    currency = status.currency,
-                    source = OnrampSource.TOKEN_DETAILS,
-                ),
-            )
+        warnAboutBackupErrorOrProceed {
+            modelScope.launch {
+                appRouter.push(
+                    AppRoute.Onramp(
+                        userWalletId = userWallet.walletId,
+                        currency = status.currency,
+                        source = OnrampSource.TOKEN_DETAILS,
+                    ),
+                )
+            }
         }
     }
 
@@ -637,14 +635,16 @@ internal class TokenDetailsModel @Inject constructor(
                 value = amount.toInt().toString(),
             ),
         )
-        appRouter.push(
-            AppRoute.Onramp(
-                source = OnrampSource.TOKEN_DETAILS,
-                userWalletId = userWalletId,
-                currency = cryptoCurrency,
-                initialFiatAmount = amount,
-            ),
-        )
+        warnAboutBackupErrorOrProceed {
+            appRouter.push(
+                AppRoute.Onramp(
+                    source = OnrampSource.TOKEN_DETAILS,
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrency,
+                    initialFiatAmount = amount,
+                ),
+            )
+        }
     }
 
     private fun onQuickTopUpOtherClick() {
@@ -656,13 +656,15 @@ internal class TokenDetailsModel @Inject constructor(
                 derivationIndex = getAccountIndexOrNull(),
             ),
         )
-        appRouter.push(
-            AppRoute.Onramp(
-                source = OnrampSource.TOKEN_DETAILS,
-                userWalletId = userWalletId,
-                currency = cryptoCurrency,
-            ),
-        )
+        warnAboutBackupErrorOrProceed {
+            appRouter.push(
+                AppRoute.Onramp(
+                    source = OnrampSource.TOKEN_DETAILS,
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrency,
+                ),
+            )
+        }
     }
 
     override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) {
@@ -742,18 +744,18 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
-        if (isTopUpBlockedByBackupError()) return
-
-        modelScope.launch {
-            if (needShowYieldSupplyWarning()) {
-                bottomSheetNavigation.activate(
-                    configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
-                        cryptoCurrency = cryptoCurrency,
-                        tokenAction = TokenAction.Receive,
-                    ),
-                )
-            } else {
-                navigateToReceive()
+        warnAboutBackupErrorOrProceed {
+            modelScope.launch {
+                if (needShowYieldSupplyWarning()) {
+                    bottomSheetNavigation.activate(
+                        configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
+                            cryptoCurrency = cryptoCurrency,
+                            tokenAction = TokenAction.Receive,
+                        ),
+                    )
+                } else {
+                    navigateToReceive()
+                }
             }
         }
     }
@@ -1254,17 +1256,8 @@ internal class TokenDetailsModel @Inject constructor(
         return true
     }
 
-    private fun isTopUpBlockedByBackupError(): Boolean {
-        if (!isWalletBackupProblematicUseCase(userWallet)) return false
-
-        dialogFactory.showBackupError(onContactSupport = ::contactBackupSupport)
-        return true
-    }
-
-    private fun contactBackupSupport() {
-        modelScope.launch {
-            sendBackupProblemEmailUseCase(userWallet.walletId)
-        }
+    private fun warnAboutBackupErrorOrProceed(onProceed: () -> Unit) {
+        backupErrorWarningSender.forWallet(scope = modelScope, userWallet = userWallet, onProceed = onProceed)
     }
 
     private fun openStaking() {
