@@ -39,9 +39,8 @@ internal class JointAccountConverter @AssistedInject constructor(
             cryptoCurrencies = responseCryptoCurrenciesFactory.createAccountCurrencies(
                 tokens = value.tokens,
                 userWallet = userWallet,
-                // TODO: [REDACTED_JIRA] — the currencies of a joint account will get a
-                //  network of their own here: the money sits at the Safe address, which no derivation path leads to, so
-                //  a path built from the owner index is a placeholder. Until then the wire format stays as it is
+                // TODO: [REDACTED_JIRA] — joint currencies get a network of their own here;
+                //  the owner index in the path is a placeholder until then
                 accountIndex = value.derivationIndex.toDerivationIndex(),
             ),
         )

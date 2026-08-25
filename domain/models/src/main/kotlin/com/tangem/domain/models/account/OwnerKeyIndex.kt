@@ -7,10 +7,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * The index of the participant's owner key of a joint account: the last node of `m/44'/60'/888888'/0/{index}`.
- *
- * Not a [DerivationIndex]. That one indexes the wallet's own accounts, names a main one and is substituted into the
- * account node of a currency path; none of it applies to an owner key. The two spaces are independent, and equal
- * values in them mean nothing.
+ * Not a [DerivationIndex] — that one indexes the wallet's own accounts and names a main one.
  *
  * @property value the integer value of the index
  */

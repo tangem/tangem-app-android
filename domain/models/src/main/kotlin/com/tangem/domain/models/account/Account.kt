@@ -27,11 +27,7 @@ sealed interface Account {
     val userWalletId: UserWalletId
         get() = accountId.userWalletId
 
-    /**
-     * An account that holds a portfolio of crypto currencies: either a [Personal] account of the wallet itself, or a
-     * [Joint] account shared with other participants. [Payment], [Virtual] and [Prediction] hold no portfolio and are
-     * deliberately excluded.
-     */
+    /** An account that holds a portfolio of crypto currencies: a [Personal] one of the wallet or a [Joint] one */
     @Serializable
     sealed interface CryptoPortfolio : Account {
 
@@ -49,17 +45,17 @@ sealed interface Account {
         val networksCount: Int
             get() = cryptoCurrencies.map(CryptoCurrency::network).distinct().size
 
-        /**
-         * Returns a copy of the account with the given fields replaced, whichever kind it is.
-         *
-         * Only a concrete type can copy itself, so the parent dispatches to the one at hand instead of making callers
-         * narrow to it.
-         */
+        /** Returns a copy of the account with the given fields replaced, whichever kind it is */
         fun copySealed(
             accountName: AccountName = this.accountName,
             icon: CryptoPortfolioIcon = this.icon,
             cryptoCurrencies: List<CryptoCurrency> = this.cryptoCurrencies,
-        ): CryptoPortfolio
+        ): CryptoPortfolio {
+            return when (this) {
+                is Personal -> copy(accountName = accountName, icon = icon, cryptoCurrencies = cryptoCurrencies)
+                is Joint -> copy(accountName = accountName, icon = icon, cryptoCurrencies = cryptoCurrencies)
+            }
+        }
     }
 
     /**
@@ -83,14 +79,6 @@ sealed interface Account {
         /** Indicates if the account is the main account */
         val isMainAccount: Boolean
             get() = derivationIndex.isMain
-
-        override fun copySealed(
-            accountName: AccountName,
-            icon: CryptoPortfolioIcon,
-            cryptoCurrencies: List<CryptoCurrency>,
-        ): Personal {
-            return copy(accountName = accountName, icon = icon, cryptoCurrencies = cryptoCurrencies)
-        }
 
         fun copy(
             accountName: AccountName = this.accountName,
@@ -275,12 +263,18 @@ sealed interface Account {
         override val cryptoCurrencies: List<CryptoCurrency>,
     ) : CryptoPortfolio {
 
-        override fun copySealed(
-            accountName: AccountName,
-            icon: CryptoPortfolioIcon,
-            cryptoCurrencies: List<CryptoCurrency>,
+        fun copy(
+            accountName: AccountName = this.accountName,
+            icon: CryptoPortfolioIcon = this.icon,
+            cryptoCurrencies: List<CryptoCurrency> = this.cryptoCurrencies,
         ): Joint {
-            return copy(accountName = accountName, icon = icon, cryptoCurrencies = cryptoCurrencies)
+            return Joint(
+                accountId = this.accountId,
+                accountName = accountName,
+                icon = icon,
+                ownerKeyIndex = this.ownerKeyIndex,
+                cryptoCurrencies = cryptoCurrencies,
+            )
         }
 
         /**
@@ -365,6 +359,5 @@ sealed interface Account {
 val Account.derivationIndex: DerivationIndex?
     get() = (this as? Account.Personal)?.derivationIndex
 
-/** Whether the account is the main one of its wallet. Only a [Account.Personal] account can be, so any other kind is `false`. */
 val Account.isMainAccount: Boolean
     get() = (this as? Account.Personal)?.isMainAccount == true
