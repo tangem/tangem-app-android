@@ -22,8 +22,8 @@ internal class DefaultFeedSearchHistoryStore(
 
     override suspend fun saveItem(item: ItemDTO) {
         dataStore.updateData { current ->
-            // variants are independent namespaces: a token and an article may share an id
-            val withoutSame = current.items.filterNot { it::class == item::class && it.id == item.id }
+            // kinds are independent namespaces: a token and an article may share an id
+            val withoutSame = current.items.filterNot { it.kind == item.kind && it.id == item.id }
 
             current.copy(items = withoutSame.prependAndCap(item))
         }
