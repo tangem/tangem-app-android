@@ -23,7 +23,6 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.WcAnalyticEvents
@@ -277,12 +276,13 @@ internal class WcPairModel @Inject constructor(
             .firstOrNull()
             ?: return
         val (wallet, account) = selectedPortfolio
+        val personal = account.account as? Account.Personal ?: return
 
         modelScope.launch {
             analytics.send(
                 WcAnalyticEvents.PairButtonConnect(
                     dAppName = sessionProposal.dAppMetaData.name,
-                    accountDerivation = account.account.derivationIndex?.value,
+                    accountDerivation = personal.derivationIndex.value,
                 ),
             )
         }
@@ -290,7 +290,7 @@ internal class WcPairModel @Inject constructor(
             WcSessionApprove(
                 wallet = wallet,
                 network = enabledAvailableNetworks + proposalNetwork.required,
-                account = account.account,
+                account = personal,
             ),
         )
     }
