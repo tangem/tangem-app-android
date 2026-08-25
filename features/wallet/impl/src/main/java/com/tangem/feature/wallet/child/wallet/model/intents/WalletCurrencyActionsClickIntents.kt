@@ -8,7 +8,7 @@ import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetCo
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -148,7 +148,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val uiMessageSender: UiMessageSender,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val backupErrorWarning: BackupErrorWarning,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -587,7 +587,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             return
         }
 
-        backupErrorWarning.forWallet(
+        backupErrorWarningSender.forWallet(
             scope = modelScope,
             userWallet = userWallet,
             onWarningShown = stateHolder::hideBottomSheet,

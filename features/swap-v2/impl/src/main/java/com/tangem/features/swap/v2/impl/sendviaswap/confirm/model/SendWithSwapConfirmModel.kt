@@ -9,7 +9,7 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -97,7 +97,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val sendNotificationsUpdateListener: SendNotificationsUpdateListener,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
     private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
-    private val backupErrorWarning: BackupErrorWarning,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val swapAmountReduceTrigger: SwapAmountReduceTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
@@ -323,7 +323,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     }
 
     private fun onSendClick() {
-        backupErrorWarning.forAddress(
+        backupErrorWarningSender.forAddress(
             scope = modelScope,
             address = { confirmData.enteredDestination },
             onProceed = { sendTransaction(confirmData) },
