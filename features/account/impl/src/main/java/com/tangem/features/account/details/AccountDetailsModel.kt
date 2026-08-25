@@ -58,8 +58,8 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun onEditAccountClick(account: Account.CryptoPortfolio) {
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonEdit())
         val personal = account as? Account.Personal ?: return
+        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonEdit())
         router.push(AppRoute.EditAccount(personal))
     }
 
