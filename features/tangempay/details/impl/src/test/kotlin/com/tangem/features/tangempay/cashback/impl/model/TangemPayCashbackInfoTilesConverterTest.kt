@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -32,7 +31,7 @@ internal class TangemPayCashbackInfoTilesConverterTest {
 
     @ParameterizedTest
     @MethodSource("subtitleModels")
-    fun `GIVEN cards WHEN convert THEN rate subtitle lists the card titles`(model: SubtitleModel) {
+    fun `GIVEN cards WHEN convert THEN rate subtitle names the top rate card`(model: SubtitleModel) {
         // Act
         val result = converter.convert(model.cards)
 
@@ -73,9 +72,12 @@ internal class TangemPayCashbackInfoTilesConverterTest {
     private fun subtitleModels() = listOf(
         SubtitleModel(
             cards = listOf(card(cardType = "plus", title = "Plus Card", rate = "2.0")),
-            expected = stringReference("Plus Card"),
+            expected = resourceReference(R.string.tangempay_cashback_rate_subtitle, wrappedList("Plus Card")),
         ),
-        SubtitleModel(cards = twoCards(), expected = stringReference("Basic Card, Plus Card")),
+        SubtitleModel(
+            cards = twoCards(),
+            expected = resourceReference(R.string.tangempay_cashback_rate_subtitle, wrappedList("Plus Card")),
+        ),
         SubtitleModel(
             cards = listOf(card(cardType = "plus", title = "", rate = "2.0")),
             expected = TextReference.EMPTY,

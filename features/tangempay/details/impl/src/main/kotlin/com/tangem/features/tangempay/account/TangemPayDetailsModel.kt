@@ -130,6 +130,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private var shownTiersBanner: TangemPayTiersBannerType? = null
     private var shownCashbackBlock: CashbackBlockAnalyticsType? = null
+    private var cashbackTransformer: CashbackBlockTransformer? = null
     private var isDeliveryBannerShown = false
 
     private val isInitialRouteHandled = MutableStateFlow(false)
@@ -150,9 +151,9 @@ internal class TangemPayDetailsModel @Inject constructor(
                     }
                     is PaymentAccountStatusValue.Loaded -> {
                         fetchCashbackBlock()
-                        uiState.update { prevState ->
-                            stateFactory.getLoadedState(state)
-                                .copy(cashbackBlockState = prevState.cashbackBlockState)
+                        uiState.update {
+                            val freshState = stateFactory.getLoadedState(state)
+                            cashbackTransformer?.transform(freshState) ?: freshState
                         }
                         sendDeliveryBannerAnalytics()
                         handleInitialRoute()
@@ -266,15 +267,15 @@ internal class TangemPayDetailsModel @Inject constructor(
             getCashbackSummaryUseCase(userWalletId).onRight { summary ->
                 val isDismissed = getCashbackDeactivationDismissedUseCase(userWalletId)
                 sendCashbackBlockAnalytics(summary = summary, isDeactivationDismissed = isDismissed)
-                uiState.update(
-                    transformer = CashbackBlockTransformer(
-                        summary = summary,
-                        isDeactivationDismissed = isDismissed,
-                        dateFormatter = cashbackDateFormatter,
-                        onClick = ::onClickCashback,
-                        onGotIt = ::onDismissCashbackDeactivation,
-                    ),
+                val transformer = CashbackBlockTransformer(
+                    summary = summary,
+                    isDeactivationDismissed = isDismissed,
+                    dateFormatter = cashbackDateFormatter,
+                    onClick = ::onClickCashback,
+                    onGotIt = ::onDismissCashbackDeactivation,
                 )
+                cashbackTransformer = transformer
+                uiState.update(transformer)
             }
         }.saveIn(cashbackBlockJobHolder)
     }
@@ -311,6 +312,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.Cashback.DeactivationBannerGotItClicked())
         modelScope.launch {
             setCashbackDeactivationDismissedUseCase(userWalletId)
+            cashbackTransformer = null
             uiState.update { it.copy(cashbackBlockState = null) }
         }.saveIn(cashbackBlockJobHolder)
     }
