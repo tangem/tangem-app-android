@@ -1,7 +1,6 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.api.common.config.TangemTech
-import com.tangem.datasource.api.common.config.News
 import com.tangem.datasource.api.common.config.YieldSupply
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
@@ -14,7 +13,6 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
-import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
@@ -91,18 +89,6 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
                 apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = News.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
