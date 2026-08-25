@@ -77,7 +77,7 @@ class DefaultWalletAccountsFetcherTest {
 
     @BeforeEach
     fun setUpEach() {
-        every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns false
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
     }
 
     @AfterEach
@@ -108,7 +108,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `GIVEN toggle is off WHEN fetch THEN joint records do not reach the store`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns false
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
 
             val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
 
@@ -122,7 +122,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `GIVEN toggle is on WHEN fetch THEN joint records reach the store`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns true
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
 
             val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
 
