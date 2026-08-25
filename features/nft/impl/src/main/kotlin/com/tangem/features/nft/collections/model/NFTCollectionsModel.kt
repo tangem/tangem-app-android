@@ -1,6 +1,6 @@
 package com.tangem.features.nft.collections.model
 
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -36,7 +36,7 @@ internal class NFTCollectionsModel @Inject constructor(
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val backupErrorWarning: BackupErrorWarning,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -78,7 +78,7 @@ internal class NFTCollectionsModel @Inject constructor(
             return
         }
 
-        backupErrorWarning.forWallet(
+        backupErrorWarningSender.forWallet(
             scope = modelScope,
             userWallet = userWallet,
             onProceed = params.onReceiveClick,
