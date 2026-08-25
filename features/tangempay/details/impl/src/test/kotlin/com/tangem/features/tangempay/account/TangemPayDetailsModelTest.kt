@@ -151,6 +151,65 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN summary fails WHEN model created THEN cashback error block shown`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
+
+        // Act
+        val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Error::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN cashback error block shown WHEN status re-emits THEN error block survives`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Error::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN cashback error block shown WHEN reload tapped THEN summary refetched and widget shown`() = runTest {
+        // Arrange
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
+        val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
+        advanceUntilIdle()
+        val errorBlock = model.uiState.value.cashbackBlockState as CashbackBlockUM.Error
+
+        // Act
+        coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
+        errorBlock.onReload()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Widget::class.java)
+        coVerify(atLeast = 2) { getCashbackSummaryUseCase(any()) }
+        model.onDestroy()
+        unmockkObject(DateTimeFormatters)
+        unmockkStatic(DateFormat::class)
+    }
+
+    @Test
     fun `GIVEN full summary WHEN model created THEN cashback menu item absent`() = runTest {
         // Arrange
         mockkStatic(DateFormat::class)
