@@ -46,9 +46,7 @@ dependencies {
 
     // region Project - Domain
     api(projects.domain.appCurrency.models)
-    api(projects.domain.card)
     api(projects.domain.demo)
-    api(projects.domain.feedback)
     api(projects.domain.models)
     api(projects.domain.offramp)
     api(projects.domain.tokens)
