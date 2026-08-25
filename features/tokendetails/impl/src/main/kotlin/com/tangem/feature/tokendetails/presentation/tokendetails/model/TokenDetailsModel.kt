@@ -147,7 +147,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val fetchStakingOptionsUseCase: FetchStakingOptionsUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    backupErrorWarningFactory: BackupErrorWarning.Factory,
+    private val backupErrorWarning: BackupErrorWarning,
     private val associateAssetUseCase: AssociateAssetUseCase,
     private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
     private val openTrustlineUseCase: OpenTrustlineUseCase,
@@ -193,8 +193,6 @@ internal class TokenDetailsModel @Inject constructor(
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
-
-    private val backupErrorWarning = backupErrorWarningFactory.create(uiMessageSender)
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
     private val userWalletId: UserWalletId = params.userWalletId
