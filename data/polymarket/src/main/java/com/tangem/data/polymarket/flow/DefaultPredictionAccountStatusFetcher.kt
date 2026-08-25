@@ -16,9 +16,9 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
-import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -45,7 +45,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
     private val polymarketRepository: PolymarketRepository,
-    private val polymarketOnboardedStore: PolymarketOnboardedStore,
+    private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
@@ -122,11 +122,9 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             PolymarketWalletStatus.READY_TO_TRADE -> whenReady()
         }
 
-        // Keyed on the status, not on the value: an unrecognised status is no answer and must not drop the
-        // record, but a recognised one is an answer even when the balance behind it could not be read.
-        if (status != PolymarketWalletStatus.UNKNOWN) {
-            recordConfirmation(userWalletId = userWalletId, status = status)
-        }
+        // Keyed on the status, not on the value: a recognised status is an answer about the account even when
+        // the balance behind it could not be read.
+        recordPolymarketConfirmation(userWalletId = userWalletId, status = status)
 
         return value
     }
@@ -184,18 +182,6 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
 
         return toStatusValue(userWalletId = userWalletId, status = state.status) {
             PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
-        }
-    }
-
-    /**
-     * The only place that re-reads the backend for a wallet the entry gate has stopped asking about, so a wallet
-     * the backend no longer calls ready loses its record here rather than keeping one that outlived the fact.
-     */
-    private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
-        if (status == PolymarketWalletStatus.READY_TO_TRADE) {
-            polymarketOnboardedStore.markOnboarded(userWalletId)
-        } else {
-            polymarketOnboardedStore.clear(userWalletId)
         }
     }
 
