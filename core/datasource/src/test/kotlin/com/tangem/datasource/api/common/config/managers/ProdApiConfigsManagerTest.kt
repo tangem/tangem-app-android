@@ -87,10 +87,6 @@ internal class ProdApiConfigsManagerTest {
                 authProvider = appAuthProvider,
                 appInfoProvider = appInfoProvider,
             ),
-            News(
-                authProvider = appAuthProvider,
-                appInfoProvider = appInfoProvider,
-            ),
             PolymarketWeb(),
             PolymarketRelayer(),
             PolymarketClob(),
@@ -103,7 +99,6 @@ internal class ProdApiConfigsManagerTest {
     private fun provideTestModels() = listOf(
         createYieldSupplyModel(),
         createTangemTechModel(),
-        createNewsModel(),
         createPolymarketWebModel(),
         createPolymarketRelayerModel(),
         createPolymarketClobModel(),
@@ -172,38 +167,6 @@ internal class ProdApiConfigsManagerTest {
                     "api-key" to ProviderSuspend { YIELD_MODULE_KEY },
                     "card_id" to ProviderSuspend { APP_CARD_ID },
                     "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "android" },
-                    "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
-                    "timezone" to ProviderSuspend {
-                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
-                    },
-                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
-                ),
-            ),
-        )
-    }
-
-    private fun createNewsModel(): TestModel {
-        val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
-            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
-            DEBUG_BUILD_TYPE,
-            -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
-            INTERNAL_BUILD_TYPE,
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD to "https://api.tangem.org/"
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-        }
-        return TestModel(
-            id = News.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = baseUrl,
-                headers = mapOf(
-                    "api-key" to ProviderSuspend { TANGEM_API_KEY },
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "android" },
                     "system_version" to ProviderSuspend { "Android 16" },
