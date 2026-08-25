@@ -198,7 +198,7 @@ internal class ChooseTokenListItemConverter(
     private fun AccountStatus.CryptoPortfolio.filterForDisplay(): AccountStatus.CryptoPortfolio {
         val filteredTokenList = filterTokenList(tokenList, this)
         return copy(
-            account = account.withCurrencies(
+            account = account.copySealed(
                 cryptoCurrencies = filteredTokenList.flattenCurrencies().map { it.currency },
             ),
             tokenList = filteredTokenList,
