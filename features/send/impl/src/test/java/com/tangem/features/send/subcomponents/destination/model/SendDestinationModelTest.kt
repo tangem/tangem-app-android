@@ -14,13 +14,11 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
-import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.*
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.Network
@@ -92,10 +90,7 @@ internal class SendDestinationModelTest {
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk(relaxed = true)
-    private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase =
-        mockk(relaxed = true)
     private val sendDestinationAlertFactory: SendDestinationAlertFactory = mockk(relaxed = true)
-    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk(relaxed = true)
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase = mockk(relaxed = true)
@@ -126,7 +121,6 @@ internal class SendDestinationModelTest {
         coEvery { isMemoRequiredUseCase(any(), any()) } returns false
         every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns flowOf(emptyList())
         every { contactSelectionListener.resultFlow } returns MutableSharedFlow()
-        coEvery { getBackupProblematicWalletForAddressUseCase(any()) } returns null
         every { cryptoCurrency.network.rawId } returns networkRawId
     }
 
@@ -160,39 +154,8 @@ internal class SendDestinationModelTest {
                         match<SendDestinationAnalyticEvents.AddressEntered> { it.isValid },
                     )
                 }
-                verify(exactly = 0) { sendDestinationAlertFactory.showRecipientBackupErrorAlert(any()) }
                 // InputField is not an auto-next source → no auto-advance even for a valid address
                 verify(exactly = 0) { callback.onNextClick(CommonSendRoute.Destination(false)) }
-            }
-
-        @Test
-        fun `GIVEN valid backup-problematic address WHEN address entered THEN show recipient backup error alert`() =
-            runTest {
-                // Arrange
-                coEvery {
-                    validateWalletAddressUseCase(
-                        any(),
-                        any(),
-                        any(),
-                        any<List<CryptoCurrencyAddress>>(),
-                        any()
-                    )
-                } returns
-                    AddressValidation.Success.Valid.right()
-                coEvery { getBackupProblematicWalletForAddressUseCase(any()) } returns testUserWalletId
-                val sut = buildModel()
-                advanceUntilIdle()
-
-                // Act
-                sut.onRecipientAddressValueChange("problematicAddr", EnterAddressSource.InputField)
-                advanceUntilIdle()
-
-                // Assert
-                verify(exactly = 1) { sendDestinationAlertFactory.showRecipientBackupErrorAlert(any()) }
-                // backup override flips the (format-valid) result to error → analytics reports it as invalid
-                verify(exactly = 1) {
-                    analyticsEventHandler.send(match<SendDestinationAnalyticEvents.AddressEntered> { !it.isValid })
-                }
             }
 
         @Test
@@ -820,9 +783,7 @@ internal class SendDestinationModelTest {
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             analyticsEventHandler = analyticsEventHandler,
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
-            getBackupProblematicWalletForAddressUseCase = getBackupProblematicWalletForAddressUseCase,
             sendDestinationAlertFactory = sendDestinationAlertFactory,
-            sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
             addressBookSendAnalytics = addressBookSendAnalytics,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
             isAddressBookCompatibleUseCase = isAddressBookCompatibleUseCase,
