@@ -132,15 +132,16 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * The balance read needs the L2 credentials this device holds. A wallet deployed elsewhere has none here, and
-     * that is not an error — its setup is simply unfinished on this device, which is what the deployed stage says.
+     * A missing key is not an unfinished setup: the backend has just called the wallet ready, so what is unknown is
+     * the collateral, not the account. The resolver also answers `KeyNotFound` for any `404` from the CLOB — all the
+     * more reason to withhold the wallet total here rather than contribute a zero to it.
      */
     private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusValue? {
         return getPolymarketBalanceInteractor(addresses = addresses).fold(
             ifLeft = { error ->
                 when (error) {
-                    is PolymarketAuthError.KeyNotFound -> onboarding(
-                        PredictionAccountStatusValue.Onboarding.Stage.DEPLOYED,
+                    is PolymarketAuthError.KeyNotFound -> PredictionAccountStatusValue.Onboarded(
+                        source = StatusSource.ACTUAL,
                     )
                     // Throttled, offline or rejected: the balance is unknown, not zero
                     else -> {
