@@ -129,7 +129,7 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN alt_block cashback loaded WHEN status re-emits THEN menu item survives`() = runTest {
+    fun `GIVEN alt_block cashback loaded WHEN refresh fails THEN menu entry turns into error state`() = runTest {
         // Arrange
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
@@ -147,7 +147,120 @@ internal class TangemPayDetailsModelTest {
 
         // Assert
         val menuTitleIds = model.uiState.value.topBarConfig.items.mapNotNull { (it.title as? TextReference.Res)?.id }
+        assertThat(menuTitleIds).contains(R.string.tangempay_cashback_title)
+        assertThat(menuTitleIds).doesNotContain(R.string.tangempay_cashback_menu_item_title)
+        assertThat(model.uiState.value.cashbackBlockState).isNull()
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.ButtonErrorStateShowed>()) }
+        model.onDestroy()
+        unmockkStatic(DateFormat::class)
+    }
+
+    @Test
+    fun `GIVEN full widget shown WHEN refresh fails THEN widget survives`() = runTest {
+        // Arrange
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+
+        // Act
+        coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
+        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Widget::class.java)
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerErrorStateShowed>()) }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.ButtonErrorStateShowed>()) }
+        model.onDestroy()
+        unmockkObject(DateTimeFormatters)
+        unmockkStatic(DateFormat::class)
+    }
+
+    @Test
+    fun `GIVEN menu error entry WHEN reload tapped THEN loading entry shown and summary refetched`() = runTest {
+        // Arrange
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns
+            enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+        coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
+        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+        advanceUntilIdle()
+        val errorEntry = model.uiState.value.topBarConfig.items.first {
+            (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_title
+        }
+
+        // Act
+        coEvery { getCashbackSummaryUseCase(any()) } coAnswers {
+            delay(timeMillis = 100)
+            enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
+        }
+        errorEntry.onClick()
+        runCurrent()
+
+        // Assert
+        val loadingEntry = model.uiState.value.topBarConfig.items.first {
+            (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_title
+        }
+        assertThat(loadingEntry.isEnabled).isFalse()
+        advanceUntilIdle()
+        val menuTitleIds = model.uiState.value.topBarConfig.items.mapNotNull { (it.title as? TextReference.Res)?.id }
         assertThat(menuTitleIds).contains(R.string.tangempay_cashback_menu_item_title)
+        assertThat(menuTitleIds).doesNotContain(R.string.tangempay_cashback_title)
+        model.onDestroy()
+        unmockkStatic(DateFormat::class)
+    }
+
+    @Test
+    fun `GIVEN alt_block summary WHEN model created THEN button in settings showed sent instead of banner`() = runTest {
+        // Arrange
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns
+            enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
+
+        // Act
+        val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.ButtonInSettingsShowed>()) }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerShowed>()) }
+        model.onDestroy()
+        unmockkStatic(DateFormat::class)
+    }
+
+    @Test
+    fun `GIVEN alt_block summary WHEN menu item clicked THEN button in settings clicked sent`() = runTest {
+        // Arrange
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns
+            enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
+        val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
+        advanceUntilIdle()
+        val menuItem = model.uiState.value.topBarConfig.items.first {
+            (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_menu_item_title
+        }
+
+        // Act
+        menuItem.onClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.ButtonInSettingsClicked>()) }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerClicked>()) }
         model.onDestroy()
         unmockkStatic(DateFormat::class)
     }
@@ -164,6 +277,24 @@ internal class TangemPayDetailsModelTest {
 
         // Assert
         assertThat(model.uiState.value.cashbackBlockState).isInstanceOf(CashbackBlockUM.Error::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN summary fails WHEN model created THEN banner error state showed sent once`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+
+        // Act
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+        statusFlow.value = paymentStatus(loadedStatus(availableForWithdrawal = BigDecimal.TEN))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerErrorStateShowed>()) }
         model.onDestroy()
     }
 
