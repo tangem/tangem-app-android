@@ -26,7 +26,6 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
@@ -55,14 +54,12 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     private val getWalletStatus: GetPolymarketWalletStatusUseCase = mockk()
     private val getBalance: GetPolymarketBalanceInteractor = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
-    private val quoteFetcher: SingleQuoteStatusFetcher = mockk(relaxed = true)
     private val recordConfirmation: RecordPolymarketConfirmationUseCase = mockk(relaxUnitFun = true)
     private val polymarketRepository: PolymarketRepository = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, checkGeoblock, quoteFetcher, recordConfirmation, polymarketRepository)
-        coEvery { quoteFetcher.invoke(any()) } returns Unit.right()
+        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, checkGeoblock, recordConfirmation, polymarketRepository)
         every { userWallet.isLocked } returns false
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
         every { userWallet.walletId } returns WALLET
@@ -105,31 +102,28 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN a ready wallet WHEN invoke THEN the balance is stored and the collateral quote is refreshed`() =
-        runTest {
-            // Arrange
-            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
-            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
-                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
-            coEvery { getBalance.invoke(ADDRESSES) } returns
-                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
-            coEvery { checkGeoblock.invoke() } returns false.right()
-            val store = createStore(testScope = this)
+    fun `GIVEN a ready wallet WHEN invoke THEN the balance is stored`() = runTest {
+        // Arrange
+        coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+        coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+        coEvery { getBalance.invoke(ADDRESSES) } returns
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+        coEvery { checkGeoblock.invoke() } returns false.right()
+        val store = createStore(testScope = this)
 
-            // Act
-            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+        // Act
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
-            // Assert — the rate itself is not stored, it belongs to the currency the user may switch at any time
-            assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
-                PredictionAccountStatusValue.Active(
-                    source = StatusSource.ACTUAL,
-                    balance = BigDecimal("40"),
-                    fiatRate = null,
-                    isTradingAllowed = true,
-                ),
-            )
-            coVerify(exactly = 1) { quoteFetcher.invoke(any()) }
-        }
+        // Assert — the rate itself is not stored, it belongs to the currency the user may switch at any time
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+            PredictionAccountStatusValue.Active(
+                source = StatusSource.ACTUAL,
+                balance = BigDecimal("40"),
+                fiatRate = null,
+                isTradingAllowed = true,
+            ),
+        )
+    }
 
     @Test
     fun `GIVEN a blocked region WHEN invoke THEN the balance is kept and trading is not allowed`() = runTest {
@@ -296,24 +290,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         // Assert
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
         coVerify(exactly = 0) { deriveAddresses.stored(any()) }
-    }
-
-    /**
-     * The cached balance still has to be priced. Without the quote the producer reports loading, which contributes
-     * zero to the wallet total — the collateral would read as nothing until some other subsystem fetched the rate.
-     */
-    @Test
-    fun `GIVEN a path that reads nothing WHEN invoke THEN the collateral quote is still refreshed`() = runTest {
-        // Arrange
-        val store = createStore(testScope = this)
-        store.store(userWalletId = WALLET, value = ACTIVE)
-        every { userWallet.isLocked } returns true
-
-        // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
-
-        // Assert
-        coVerify(exactly = 1) { quoteFetcher.invoke(any()) }
     }
 
     @Test
@@ -555,7 +531,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         checkPolymarketGeoblockUseCase = checkGeoblock,
         recordPolymarketConfirmation = recordConfirmation,
         polymarketRepository = polymarketRepository,
-        singleQuoteStatusFetcher = quoteFetcher,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
