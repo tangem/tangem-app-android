@@ -85,6 +85,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val categoriesJob = JobHolder()
 
     private val feedPoller = PolymarketFeedPoller(
+        scope = modelScope,
         batchFlow = eventsBatchFlow,
         actionsFlow = actionsFlow,
         onStaleData = ::reportStaleData,
@@ -93,7 +94,7 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         observeEvents()
         loadCategories()
-        feedPoller.start(modelScope)
+        feedPoller.start()
     }
 
     fun onBackClick() {
@@ -131,8 +132,12 @@ internal class PolymarketMainModel @Inject constructor(
         feedPoller.onScrollIdle()
     }
 
-    fun setInForeground(isInForeground: Boolean) {
-        feedPoller.setInForeground(isInForeground)
+    fun onResume() {
+        feedPoller.resume()
+    }
+
+    fun onPause() {
+        feedPoller.pause()
     }
 
     /** Categories first: without them the feed does not know which category to ask for. */
