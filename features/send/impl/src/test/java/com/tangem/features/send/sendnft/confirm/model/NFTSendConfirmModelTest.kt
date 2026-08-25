@@ -91,9 +91,7 @@ internal class NFTSendConfirmModelTest {
     private val backupErrorWarning: BackupErrorWarning = mockk {
         every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
-    private val backupErrorWarningFactory: BackupErrorWarning.Factory = mockk {
-        every { create(any()) } returns backupErrorWarning
-    }
+
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
@@ -340,8 +338,7 @@ internal class NFTSendConfirmModelTest {
             feeSelectorCheckReloadTrigger = feeSelectorCheckReloadTrigger,
             feeSelectorCheckReloadListener = feeSelectorCheckReloadListener,
             alertFactory = alertFactory,
-            backupErrorWarningFactory = backupErrorWarningFactory,
-            messageSender = mockk(relaxed = true),
+            backupErrorWarning = backupErrorWarning,
             urlOpener = urlOpener,
             shareManager = shareManager,
             analyticsEventHandler = analyticsEventHandler,
