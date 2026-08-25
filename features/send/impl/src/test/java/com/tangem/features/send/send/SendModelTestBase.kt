@@ -94,10 +94,8 @@ internal abstract class SendModelTestBase {
     protected val listenToQrScanningUseCase: ListenToQrScanningUseCase = mockk(relaxed = true)
     protected val parseQrCodeUseCase: ParseQrCodeUseCase = mockk(relaxed = true)
     protected val sendConfirmAlertFactory: SendConfirmAlertFactory = mockk(relaxed = true)
-    protected val backupErrorWarningFactory: BackupErrorWarning.Factory = mockk {
-        every { create(any()) } returns mockk {
-            every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
-        }
+    protected val backupErrorWarning: BackupErrorWarning = mockk {
+        every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
     protected val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase = mockk(relaxed = true)
     protected val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk(relaxed = true)
@@ -240,8 +238,7 @@ internal abstract class SendModelTestBase {
             notificationsUpdateTrigger = notificationsUpdateTrigger,
             notificationsUpdateListener = notificationsUpdateListener,
             alertFactory = sendConfirmAlertFactory,
-            backupErrorWarningFactory = backupErrorWarningFactory,
-            messageSender = mockk(relaxed = true),
+            backupErrorWarning = backupErrorWarning,
             sendAnalyticHelper = sendAnalyticHelper,
             urlOpener = urlOpener,
             shareManager = shareManager,

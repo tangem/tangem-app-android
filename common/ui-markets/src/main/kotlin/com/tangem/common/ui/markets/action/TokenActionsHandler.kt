@@ -42,11 +42,9 @@ class TokenActionsHandler @AssistedInject constructor(
     @Assisted private val onHandleQuickAction: (action: HandledQuickAction, shouldDismiss: Boolean) -> Unit,
     @Assisted private val coroutineScope: CoroutineScope,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    backupErrorWarningFactory: BackupErrorWarning.Factory,
+    private val backupErrorWarning: BackupErrorWarning,
     private val messageSender: UiMessageSender,
 ) {
-
-    private val backupErrorWarning = backupErrorWarningFactory.create(messageSender)
 
     private val disabledActionsInDemoMode = buildSet {
         add(TokenActionsBSContentUM.Action.Sell)
