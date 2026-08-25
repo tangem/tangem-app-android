@@ -1,5 +1,6 @@
 package com.tangem.features.nft.collections.model
 
+import com.tangem.common.ui.backup.BackupErrorWarning
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +14,7 @@ import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.nft.RefreshAllNFTUseCase
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.nft.collections.NFTCollectionsComponent
 import com.tangem.features.nft.collections.entity.NFTCollectionsStateUM
 import com.tangem.features.nft.collections.entity.NFTCollectionsUM
@@ -33,6 +35,8 @@ internal class NFTCollectionsModel @Inject constructor(
     private val fetchNFTCollectionAssetsUseCase: FetchNFTCollectionAssetsUseCase,
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val backupErrorWarning: BackupErrorWarning,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -49,7 +53,7 @@ internal class NFTCollectionsModel @Inject constructor(
                     onQueryChange = { },
                     onActiveChange = { },
                 ),
-                onReceiveClick = params.onReceiveClick,
+                onReceiveClick = ::onReceiveClick,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -67,6 +71,20 @@ internal class NFTCollectionsModel @Inject constructor(
         subscribeToNFTCollections()
     }
 
+    private fun onReceiveClick() {
+        val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
+        if (userWallet == null) {
+            params.onReceiveClick()
+            return
+        }
+
+        backupErrorWarning.forWallet(
+            scope = modelScope,
+            userWallet = userWallet,
+            onProceed = params.onReceiveClick,
+        )
+    }
+
     private fun subscribeToNFTCollections() {
         combine(
             flow = getNFTCollectionsUseCase(params.userWalletId),
@@ -81,9 +99,7 @@ internal class NFTCollectionsModel @Inject constructor(
                     nftCollections = emptyList(),
                     isAccountMode = isAccountMode,
                     walletNFTCollections = nftCollections.copy(collections = filteredNFTs),
-                    onReceiveClick = {
-                        params.onReceiveClick()
-                    },
+                    onReceiveClick = ::onReceiveClick,
                     onRetryClick = ::onRefresh,
                     onExpandCollectionClick = ::onExpandCollectionClick,
                     onRetryAssetsClick = ::onRetryAssetsClick,

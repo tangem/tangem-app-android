@@ -113,10 +113,8 @@ internal abstract class SwapModelTestBase {
     protected val calculateAmountUseCase: CalculateAmountUseCase = mockk(relaxed = true)
     protected val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
-    protected val backupErrorWarningFactory: BackupErrorWarning.Factory = mockk {
-        every { create(any()) } returns mockk {
-            every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
-        }
+    protected val backupErrorWarning: BackupErrorWarning = mockk {
+        every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
 
     private val chooseTokenBridgeFactory: ChooseTokenBridge.Factory = mockk(relaxed = true)
@@ -236,7 +234,7 @@ internal abstract class SwapModelTestBase {
         calculateAmountUseCase = calculateAmountUseCase,
         isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
-        backupErrorWarningFactory = backupErrorWarningFactory,
+        backupErrorWarning = backupErrorWarning,
     )
 
     // region builders

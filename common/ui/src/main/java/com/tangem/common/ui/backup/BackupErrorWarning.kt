@@ -1,5 +1,6 @@
 package com.tangem.common.ui.backup
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
@@ -9,22 +10,18 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Warns that funds are about to reach a wallet with an incomplete backup — such a wallet should be reset
  * rather than topped up. Adding funds is not blocked: `onProceed` runs either right away or from the
  * alert's "Continue" action, while "Contact support" abandons the action for the mail flow.
- *
- * The message sender is assisted because components take it from their `AppComponentContext` rather
- * than from the DI graph.
  */
-class BackupErrorWarning @AssistedInject constructor(
-    @Assisted private val messageSender: UiMessageSender,
+@ModelScoped
+class BackupErrorWarning @Inject constructor(
+    private val messageSender: UiMessageSender,
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
@@ -126,10 +123,5 @@ class BackupErrorWarning @AssistedInject constructor(
                 },
             ),
         )
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(messageSender: UiMessageSender): BackupErrorWarning
     }
 }
