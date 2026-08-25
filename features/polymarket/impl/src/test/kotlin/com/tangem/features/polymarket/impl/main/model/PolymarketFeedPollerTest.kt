@@ -93,7 +93,7 @@ internal class PolymarketFeedPollerTest {
     fun `GIVEN the screen in the background WHEN the poll interval passes THEN nothing is requested`() = runTest {
         // Arrange
         val poller = pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
-        poller.setInForeground(isInForeground = false)
+        poller.pause()
         runCurrent()
 
         // Act
@@ -107,13 +107,13 @@ internal class PolymarketFeedPollerTest {
     fun `GIVEN a page gone stale in the background WHEN the screen returns THEN it is refreshed at once`() = runTest {
         // Arrange
         val poller = pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
-        poller.setInForeground(isInForeground = false)
+        poller.pause()
         runCurrent()
         advanceTimeBy(STALE_AFTER * 2)
         runCurrent()
 
         // Act
-        poller.setInForeground(isInForeground = true)
+        poller.resume()
         runCurrent()
 
         // Assert
@@ -328,7 +328,7 @@ internal class PolymarketFeedPollerTest {
     fun `GIVEN an empty feed WHEN the tick fires THEN nothing is requested`() = runTest {
         // Arrange
         val poller = startPoller()
-        poller.setInForeground(isInForeground = true)
+        poller.resume()
         poller.setVisibleEventIds(setOf("event-1"))
         runCurrent()
 
@@ -341,12 +341,13 @@ internal class PolymarketFeedPollerTest {
 
     private fun TestScope.startPoller(): PolymarketFeedPoller {
         val poller = PolymarketFeedPoller(
+            scope = backgroundScope,
             batchFlow = batchFlow,
             actionsFlow = actionsFlow,
             onStaleData = { staleDataReports++ },
             timeSource = testScheduler.timeSource,
         )
-        poller.start(backgroundScope)
+        poller.start()
         poller.onFeedReloaded(CONFIG)
         return poller
     }
@@ -358,7 +359,7 @@ internal class PolymarketFeedPollerTest {
     ): PolymarketFeedPoller {
         val poller = startPoller()
 
-        poller.setInForeground(isInForeground = true)
+        poller.resume()
         poller.setVisibleEventIds(visibleEventIds)
         batchState.value = PolymarketEventsBatchListState(
             data = pages.toList(),

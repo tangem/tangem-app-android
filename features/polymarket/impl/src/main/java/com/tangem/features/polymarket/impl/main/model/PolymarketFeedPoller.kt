@@ -9,12 +9,12 @@ import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.exception.OperationWIthTheSameIdInProgress
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -31,14 +31,15 @@ import kotlin.time.TimeSource
  * shows live probabilities and volumes without the user pulling anything. Only visible pages are refreshed: the
  * feed can hold many loaded pages, and the ones scrolled away change nothing on the screen.
  *
- * The ticker runs only while the screen is in the foreground — an app in the background and an open event sheet
- * both stop it — and the first tick after it comes back is immediate rather than a period late. Scrolling to a rest
- * ticks too: staleness is checked per page, so a tick over pages loaded seconds ago requests nothing.
+ * The ticker runs between [resume] and [pause] — an app in the background and an open event sheet both pause it —
+ * and the first tick after it comes back is immediate rather than a period late. Scrolling to a rest ticks too:
+ * staleness is checked per page, so a tick over pages loaded seconds ago requests nothing.
  *
  * A failed refresh is silent by design: the page keeps its previous data, its [PageMeta.fetchedAt] does not move,
  * and the next tick tries again. Only after [reportAfterFailures] failures in a row on a page the user is looking at
  * does [onStaleData] fire, at most once per [reportCooldown] — by then the data is about a minute old.
  *
+ * @param scope the scope the observers and the ticker run in; see [start] for what it is expected to be
  * @param batchFlow pagination of the feed: the pages to refresh and the results of the refreshes
  * @param actionsFlow the flow the pagination takes its actions from
  * @param onStaleData reports that visible data has been failing to refresh for long enough to tell the user
@@ -46,6 +47,7 @@ import kotlin.time.TimeSource
  */
 @Suppress("LongParameterList")
 internal class PolymarketFeedPoller(
+    private val scope: CoroutineScope,
     private val batchFlow: PolymarketEventsBatchFlow,
     private val actionsFlow: MutableSharedFlow<PolymarketEventsBatchAction>,
     private val onStaleData: () -> Unit,
@@ -56,29 +58,28 @@ internal class PolymarketFeedPoller(
     private val reportCooldown: Duration = REPORT_COOLDOWN,
 ) {
 
-    private val inForeground = MutableStateFlow(value = false)
-    private val visibleEventIds = MutableStateFlow(value = emptySet<String>())
-    private val immediateTicks = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val tickerJob = JobHolder()
 
     private val pageMeta = mutableMapOf<Int, PageMeta>()
     private val refreshesInFlight = mutableSetOf<Int>()
 
+    private var visibleEventIds: Set<String> = emptySet()
     private var config: PolymarketEventsListConfig? = null
     private var lastStaleDataReport: TimeMark? = null
 
     /**
-     * Starts the observers and the ticker in [scope], which is expected to be **single-threaded** — the model
-     * hands over its own, running on the main dispatcher.
+     * Starts watching the pagination. The ticker itself runs only between [resume] and [pause].
      *
-     * That confinement is load-bearing rather than incidental: [pageMeta] and [refreshesInFlight] are touched
-     * both from the coroutines started here and from [onFeedReloaded], which the model calls from its own scope,
-     * and one thread is what keeps them race-free without locks. Moving the observers to a multi-threaded
-     * dispatcher means confining those calls as well.
+     * Everything here runs in [scope], which is expected to be **single-threaded** — the model hands over its own,
+     * running on the main dispatcher. That confinement is load-bearing rather than incidental: [pageMeta] and
+     * [refreshesInFlight] are touched both from the coroutines started here and from [onFeedReloaded] and
+     * [setVisibleEventIds], which the screen and the model call from their own, and one thread is what keeps them
+     * race-free without locks. Moving to a multi-threaded dispatcher means confining those calls as well.
      *
      * Nothing started here is heavy: a tick walks the events of the loaded pages — a few hundred at most — every
      * [pollInterval] and once the feed comes to a rest.
      */
-    fun start(scope: CoroutineScope) {
+    fun start() {
         batchFlow.state
             .onEach(::stampLoadedPages)
             .launchIn(scope)
@@ -86,23 +87,23 @@ internal class PolymarketFeedPoller(
         batchFlow.updateResults
             .onEach { (request, result) -> applyRefreshResult(request = request, result = result) }
             .launchIn(scope)
+    }
 
+    /** The feed is in front of the user: check at once, then keep checking every [pollInterval]. */
+    fun resume() {
         scope.launch {
-            // Restarting the ticker on every foreground change gives the return its immediate tick for free.
-            inForeground.collectLatest { isInForeground ->
-                if (!isInForeground) return@collectLatest
+            tick()
 
+            while (true) {
+                delay(pollInterval)
                 tick()
-                while (true) {
-                    delay(pollInterval)
-                    tick()
-                }
             }
-        }
+        }.saveIn(tickerJob)
+    }
 
-        scope.launch {
-            immediateTicks.collect { tick() }
-        }
+    /** Nobody is looking — the app went to the background, or an event opened on top of the feed. */
+    fun pause() {
+        tickerJob.cancel()
     }
 
     /** The feed is loading its first page anew, so what was known about the previous pages no longer holds. */
@@ -113,16 +114,14 @@ internal class PolymarketFeedPoller(
     }
 
     fun setVisibleEventIds(eventIds: Set<String>) {
-        visibleEventIds.value = eventIds
-    }
-
-    fun setInForeground(isInForeground: Boolean) {
-        inForeground.value = isInForeground
+        this.visibleEventIds = eventIds
     }
 
     /** The user stopped scrolling: whatever is under their eyes now is worth a check ahead of the schedule. */
     fun onScrollIdle() {
-        immediateTicks.tryEmit(Unit)
+        if (!tickerJob.isActive) return
+
+        scope.launch { tick() }
     }
 
     private fun stampLoadedPages(state: PolymarketEventsBatchListState) {
@@ -140,8 +139,6 @@ internal class PolymarketFeedPoller(
     }
 
     private suspend fun tick() {
-        if (!inForeground.value) return
-
         val config = config ?: return
         val state = batchFlow.state.value
         if (state.data.isEmpty()) return
@@ -216,7 +213,7 @@ internal class PolymarketFeedPoller(
      * renders by — so a duplicate never marks a page the user cannot see as visible.
      */
     private fun visibleBatchKeys(state: PolymarketEventsBatchListState): Set<Int> {
-        val visibleIds = visibleEventIds.value
+        val visibleIds = visibleEventIds
         if (visibleIds.isEmpty()) return emptySet()
 
         val seenIds = mutableSetOf<String>()
