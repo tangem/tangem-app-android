@@ -1,6 +1,5 @@
 package com.tangem.data.feed.search.model
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -12,23 +11,32 @@ internal data class FeedSearchHistoryDTO(
 @Serializable
 internal data class QueryDTO(val text: String, val timestamp: Long)
 
+/**
+ * Flat rather than a sealed hierarchy on purpose. A polymorphic [kind] the running version does not
+ * know would fail to decode, and DataStore answers a decoding failure anywhere in the file by
+ * replacing all of it with the default — so one unknown item would also delete every recent query.
+ * This shape decodes an unknown [kind] without complaint; the converter drops it instead.
+ */
 @Serializable
-internal sealed interface ItemDTO {
+internal data class ItemDTO(
+    val kind: String,
+    val id: String,
+    val timestamp: Long,
+    val marketToken: MarketTokenDTO? = null,
+)
 
-    val id: String
-    val timestamp: Long
+@Serializable
+internal data class MarketTokenDTO(
+    val name: String,
+    val symbol: String,
+    val imageUrl: String? = null,
+    val currentPrice: String,
+    val h24Percent: String? = null,
+    val weekPercent: String? = null,
+    val monthPercent: String? = null,
+)
 
-    @Serializable
-    @SerialName("market_token")
-    data class MarketToken(
-        override val id: String,
-        val name: String,
-        val symbol: String,
-        val imageUrl: String?,
-        val currentPrice: String,
-        val h24Percent: String?,
-        val weekPercent: String?,
-        val monthPercent: String?,
-        override val timestamp: Long,
-    ) : ItemDTO
+internal object ItemKind {
+
+    const val MARKET_TOKEN = "market_token"
 }
