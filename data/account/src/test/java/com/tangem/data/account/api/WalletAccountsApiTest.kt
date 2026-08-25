@@ -159,6 +159,6 @@ internal class WalletAccountsApiTest {
     }
 
     private fun toggle(enabled: Boolean) {
-        every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns enabled
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns enabled
     }
 }
