@@ -34,4 +34,6 @@ object DeeplinkConst {
     const val FROM_USER_ACCOUNT_ID_KEY = "from_user_account_id"
     const val TO_USER_WALLET_ID_KEY = "to_user_wallet_id"
     const val TO_USER_ACCOUNT_ID_KEY = "to_user_account_id"
+    const val ACCOUNT_ID_KEY = "account_id"
+    const val ENTRY_KEY = "entry"
 }
