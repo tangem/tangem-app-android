@@ -444,6 +444,14 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun provideSendPendingWalletCardsBackupUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+    ): SendPendingWalletCardsBackupUseCase {
+        return SendPendingWalletCardsBackupUseCase(walletCardsBackupRepository = walletCardsBackupRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetWalletBackupIntegrityUseCase(
         walletCardsBackupRepository: WalletCardsBackupRepository,
         isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
