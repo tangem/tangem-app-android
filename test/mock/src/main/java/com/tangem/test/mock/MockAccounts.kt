@@ -3,6 +3,7 @@ package com.tangem.test.mock
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.*
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -46,19 +47,19 @@ object MockAccounts {
     }
 
     fun createJointAccount(
-        derivationIndex: Int = 0,
-        name: String = "Joint #$derivationIndex",
+        ownerKeyIndex: Int = 0,
+        name: String = "Joint #$ownerKeyIndex",
         icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
         cryptoCurrencies: List<CryptoCurrency> = emptyList(),
         userWalletId: UserWalletId = this.userWalletId,
     ): Account.Joint {
-        val backendId = derivationIndex.toString(radix = 16).padStart(length = 64, padChar = '0')
+        val backendId = ownerKeyIndex.toString(radix = 16).padStart(length = 64, padChar = '0')
 
         return Account.Joint(
             accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = backendId).getOrNull()!!,
             accountName = AccountName(name).getOrNull()!!,
             icon = icon,
-            derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!,
+            ownerKeyIndex = OwnerKeyIndex(ownerKeyIndex).getOrNull()!!,
             cryptoCurrencies = cryptoCurrencies,
         )
     }
