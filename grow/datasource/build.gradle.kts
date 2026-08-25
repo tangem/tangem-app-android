@@ -18,6 +18,7 @@ dependencies {
     ksp(deps.moshi.kotlin.codegen)
     api(deps.retrofit)
     api(deps.jodatime)
+    api(deps.androidx.datastore)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     implementation(deps.hilt.android)
@@ -25,6 +26,7 @@ dependencies {
 
     implementation(tangemDeps.card.core)
 
+    api(projects.core.local)
     api(projects.core.remote)
     api(projects.core.utils)
     api(projects.domain.models)
