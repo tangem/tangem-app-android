@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.common.ui.backup.BackupErrorWarning
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -84,7 +84,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val alertFactory: SendConfirmAlertFactory,
-    private val backupErrorWarning: BackupErrorWarning,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -170,7 +170,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     override fun onSendClick() {
-        backupErrorWarning.forAddress(
+        backupErrorWarningSender.forAddress(
             scope = modelScope,
             address = { confirmData.enteredDestination },
             onProceed = ::startSending,
