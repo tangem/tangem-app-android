@@ -6,6 +6,8 @@ data class TokenMarketListConfig(
     val priceChangeInterval: Interval,
     val order: Order,
     val shouldNetworks: Boolean? = null,
+    val categoryId: String? = null,
+    val sectorId: String? = null,
 ) {
 
     enum class Order {
