@@ -22,6 +22,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -36,6 +37,7 @@ import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -55,6 +57,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase,
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
         if (userWallet is UserWallet.Hot) {
@@ -62,6 +65,22 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         } else {
             flowOf(AssetsDiscoveryProgress.Idle)
         }
+
+    /**
+     * The [snapshot] handed to [create] is taken when the screen subscribes and goes stale while the screen
+     * stays alive: finishing activation (setting an access code, backing the wallet up) mutates the stored
+     * wallet without recreating the subscriber. Only the finalize-activation gate reads the re-fetched
+     * wallet — it is the one that depends on [UserWallet.Hot.hotWalletId] and [UserWallet.Hot.backedUp],
+     * both of which the activation flow changes in place.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun freshWalletWithBackupFlow(snapshot: UserWallet): Flow<Pair<UserWallet, Boolean>> {
+        return getUserWalletUseCase.invokeFlow(snapshot.walletId)
+            .map { it.getOrNull() ?: snapshot }
+            .distinctUntilChanged()
+            .flatMapLatest { wallet -> isWalletBackedUpUseCase.flow(wallet).map { wallet to it } }
+            .distinctUntilChanged()
+    }
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
@@ -75,8 +94,10 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             flow3 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
             flow4 = assetsDiscoveryProgressFlow(userWallet),
             flow5 = getAppUpdateStateUseCase.getBannerStateFlow(),
-            flow6 = isWalletBackedUpUseCase.flow(userWallet).distinctUntilChanged(),
-        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped, discoveryProgress, appUpdateState, isWalletBackedUp ->
+            flow6 = freshWalletWithBackupFlow(userWallet),
+        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped, discoveryProgress, appUpdateState, activationState ->
+            val (activationWallet, isWalletBackedUp) = activationState
+
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
 
@@ -99,7 +120,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
                 if (!isAddFundsBannerShown) {
                     addFinishWalletActivationNotification(
-                        userWallet = userWallet,
+                        userWallet = activationWallet,
                         isBackupExists = isWalletBackedUp,
                         totalFiatBalance = totalFiatBalance,
                         clickIntents = clickIntents,
