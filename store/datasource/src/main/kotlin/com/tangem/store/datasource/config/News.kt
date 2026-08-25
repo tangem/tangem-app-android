@@ -7,7 +7,6 @@ import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.core.remote.header.RequestHeader
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.store.datasource.BuildConfig
-import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
@@ -41,7 +40,7 @@ class News(
     }
 
     private fun createHeaders(environment: ApiEnvironment): Map<String, ProviderSuspend<String>> = buildMap {
-        putAll(apiKeyHeader.forEnvironment(Provider { environment }).values)
+        putAll(apiKeyHeader.forEnvironment(environment).values)
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
     }
 
