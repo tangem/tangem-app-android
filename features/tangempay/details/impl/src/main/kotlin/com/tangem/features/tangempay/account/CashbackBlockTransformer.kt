@@ -107,8 +107,8 @@ internal class CashbackBlockTransformer(
                 .toImmutableList()
         }
     }
+}
 
-    private fun TangemPayDropDownItemUM.isTitledWith(resId: Int): Boolean {
-        return (title as? TextReference.Res)?.id == resId
-    }
+internal fun TangemPayDropDownItemUM.isTitledWith(resId: Int): Boolean {
+    return (title as? TextReference.Res)?.id == resId
 }
