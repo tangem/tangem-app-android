@@ -1,7 +1,8 @@
 package com.tangem.data.feed.search.repository
 
-import com.tangem.data.feed.search.converter.ItemDTOToRecentFeedSearchItemConverter
+import com.tangem.data.feed.search.converter.toDomain
 import com.tangem.data.feed.search.converter.toDTO
+import com.tangem.data.feed.search.model.ItemDTO
 import com.tangem.data.feed.search.model.QueryDTO
 import com.tangem.data.feed.search.store.FeedSearchHistoryStore
 import com.tangem.domain.feed.search.model.RecentFeedSearchItem
@@ -17,11 +18,9 @@ internal class DefaultFeedSearchHistoryRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FeedSearchHistoryRepository {
 
-    private val itemConverter = ItemDTOToRecentFeedSearchItemConverter()
-
     override fun getRecentItems(): Flow<List<RecentFeedSearchItem>> {
         return store.getItems()
-            .map(itemConverter::convertList)
+            .map { items -> items.mapNotNull(ItemDTO::toDomain) }
             .flowOn(dispatchers.io)
     }
 
