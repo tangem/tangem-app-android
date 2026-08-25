@@ -1,6 +1,7 @@
 package com.tangem.data.walletconnect.sign
 
 import arrow.core.left
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.SignStateConverter.toPreSign
@@ -84,7 +85,7 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
                         network = context.network,
                         errorCode = error.code(),
                         errorMessage = errorMessage,
-                        accountDerivation = context.session.account.derivationIndex.value,
+                        accountDerivation = context.session.account.derivationIndex?.value,
                     )
                     analytics.send(event)
                 }

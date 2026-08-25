@@ -27,6 +27,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -244,7 +245,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
             accountsResponseStoreFlow.value = response
 
-            val cryptoPortfolio = mockk<CryptoPortfolio>()
+            val cryptoPortfolio = mockk<Personal>()
 
             every { cryptoPortfolioConverter.convert(accountDTO) } returns cryptoPortfolio
 
@@ -671,7 +672,7 @@ class DefaultAccountsCRUDRepositoryTest {
                     value = CryptoPortfolioIcon.Icon.Star,
                     color = CryptoPortfolioIcon.Color.Azure,
                 ),
-                derivationIndex = DerivationIndex(value = 1).getOrNull()!!,
+                ownerKeyIndex = OwnerKeyIndex(value = 1).getOrNull()!!,
                 cryptoCurrencies = emptyList(),
             )
         }

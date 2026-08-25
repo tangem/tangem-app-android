@@ -66,8 +66,8 @@ internal class AccountListTest {
         // Arrange
         val accounts = listOf(
             Account.Personal.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0, name = "Family"),
-            MockAccounts.createJointAccount(derivationIndex = 1, name = "Family"),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0, name = "Family"),
+            MockAccounts.createJointAccount(ownerKeyIndex = 1, name = "Family"),
         )
 
         // Act
@@ -86,7 +86,7 @@ internal class AccountListTest {
     @Test
     fun `GIVEN full crypto limit and a joint WHEN create THEN joint does not consume the limit`() {
         // Arrange
-        val accounts = createAccounts(count = 20) + MockAccounts.createJointAccount(derivationIndex = 0)
+        val accounts = createAccounts(count = 20) + MockAccounts.createJointAccount(ownerKeyIndex = 0)
 
         // Act
         val actual = AccountList(
@@ -106,8 +106,8 @@ internal class AccountListTest {
         // Arrange
         val accounts = listOf(
             Account.Personal.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0),
-            MockAccounts.createJointAccount(derivationIndex = 1),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0),
+            MockAccounts.createJointAccount(ownerKeyIndex = 1),
         )
 
         // Act
@@ -128,7 +128,7 @@ internal class AccountListTest {
         // Arrange
         val accounts = listOf(
             Account.Personal.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0),
         )
 
         // Act
@@ -155,7 +155,7 @@ internal class AccountListTest {
         ).getOrNull()!!
 
         // Act
-        val actual = (accountList + MockAccounts.createJointAccount(derivationIndex = 0)).getOrNull()!!
+        val actual = (accountList + MockAccounts.createJointAccount(ownerKeyIndex = 0)).getOrNull()!!
 
         // Assert
         Truth.assertThat(actual.totalJointAccounts).isEqualTo(1)
@@ -165,7 +165,7 @@ internal class AccountListTest {
     @Test
     fun `GIVEN a joint account in the list WHEN removed THEN the joint counter follows it`() {
         // Arrange
-        val joint = MockAccounts.createJointAccount(derivationIndex = 0)
+        val joint = MockAccounts.createJointAccount(ownerKeyIndex = 0)
         val accountList = AccountList(
             userWalletId = userWalletId,
             accounts = listOf(Account.Personal.createMainAccount(userWalletId), joint),
@@ -188,7 +188,7 @@ internal class AccountListTest {
         val jointCurrency = mockk<CryptoCurrency>()
         val accounts = listOf(
             Account.Personal.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0, cryptoCurrencies = listOf(jointCurrency)),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0, cryptoCurrencies = listOf(jointCurrency)),
         )
         val accountList = AccountList(
             userWalletId = userWalletId,
@@ -331,7 +331,7 @@ internal class AccountListTest {
             // whole list rejected such a wallet outright and left the producer retrying the same failure forever
             run {
                 val mainAccount = Account.Personal.createMainAccount(userWalletId)
-                val jointAccount = MockAccounts.createJointAccount(derivationIndex = 0)
+                val jointAccount = MockAccounts.createJointAccount(ownerKeyIndex = 0)
 
                 CreateTestModel(
                     accounts = listOf(mainAccount, jointAccount),

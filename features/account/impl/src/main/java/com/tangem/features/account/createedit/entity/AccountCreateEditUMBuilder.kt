@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.features.account.AccountCreateEditComponent
 import kotlinx.collections.immutable.toImmutableList
 
@@ -37,7 +38,8 @@ internal class AccountCreateEditUMBuilder(
             is AccountCreateEditComponent.Params.Edit -> AccountCreateEditUM.Account(
                 name = params.account.accountName.toUM(),
                 portfolioIcon = CryptoPortfolioIconConverter.convert(params.account.icon),
-                derivationInfo = createAccountDerivationInfo(index = params.account.derivationIndex.value),
+                derivationInfo = params.account.derivationIndex?.value?.let(::createAccountDerivationInfo)
+                    ?: AccountCreateEditUM.DerivationInfo.Empty,
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = onNameChange,
             )
