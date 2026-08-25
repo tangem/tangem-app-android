@@ -48,13 +48,14 @@ internal fun RestoreCloudBackupContent(state: RestoreCloudBackupUM, modifier: Mo
     ) {
         val isEnterPassword = state is RestoreCloudBackupUM.EnterPassword
         TangemTopAppBar(
-            title = stringResourceSafe(
-                if (isEnterPassword) {
-                    R.string.hw_cloud_backup_restore_password_navtitle
-                } else {
-                    R.string.hw_cloud_backup_restore_navtitle
-                },
-            ),
+            title = if (isEnterPassword) {
+                stringResourceSafe(R.string.hw_cloud_backup_restore_password_navtitle)
+            } else {
+                stringResourceSafe(
+                    R.string.hw_cloud_backup_restore_navtitle_v2,
+                    stringResourceSafe(R.string.hw_cloud_backup_service_name),
+                )
+            },
             subtitle = if (isEnterPassword) null else state.accountEmail,
             titleAlignment = Alignment.CenterHorizontally,
             startButton = TopAppBarButtonUM.Back(onBackClicked = state.onBack),
