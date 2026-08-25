@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
@@ -10,19 +11,18 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
@@ -42,13 +42,11 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val queryParams: Map<String, String>,
     @Assisted private val isFromOnNewIntent: Boolean,
     private val appRouter: AppRouter,
-    private val selectWalletUseCase: SelectWalletUseCase,
+    private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val tokenDetailsDeepLinkActionTrigger: TokenDetailsDeepLinkActionTrigger,
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val singleAccountListFetcher: SingleAccountListFetcher,
@@ -64,29 +62,18 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         val type = NotificationType.getType(queryParams[TYPE_KEY])
         val transactionId = queryParams[TRANSACTION_ID_KEY]
         val walletId = queryParams[WALLET_ID_KEY]
+        val accountId = queryParams[ACCOUNT_ID_KEY]
 
         scope.launch {
             val userWalletId = walletId?.let(::UserWalletId)
-            val selectedUserWallet = getSelectedWalletSyncUseCase().getOrNull()
-            val userWallet = if (userWalletId != null) {
-                getUserWalletUseCase(userWalletId).getOrNull()
-            } else {
-                selectedUserWallet
-            }
-            // If wallet to select is null or locked, ignore deeplink
-            if (userWallet == null || userWallet.isLocked) {
-                TangemLogger.e("Error on getting user wallet")
-                return@launch
-            }
-            if (userWalletId != null && selectedUserWallet?.walletId != userWalletId) {
-                val isSelectionFailed = selectWalletUseCase(userWalletId).getOrNull() == null
-                if (isSelectionFailed) {
-                    TangemLogger.e("Error on selecting user wallet")
-                    return@launch
-                }
-            }
+            val userWallet = resolveAndSelectUserWalletUseCase(userWalletId) ?: return@launch
 
-            val cryptoCurrency = resolveCryptoCurrency(userWallet, networkId, tokenId)
+            val cryptoCurrency = resolveCryptoCurrency(
+                userWallet = userWallet,
+                networkId = networkId,
+                tokenId = tokenId,
+                accountId = accountId,
+            )
 
             if (cryptoCurrency == null) {
                 TangemLogger.e(
@@ -122,6 +109,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     -> tokenDetailsDeepLinkActionTrigger.trigger(transactionId)
                     NotificationType.Promo,
                     NotificationType.IncomeTransactions,
+                    NotificationType.JointMembers,
+                    NotificationType.JointOverview,
+                    NotificationType.JointTxSent,
                     NotificationType.Unknown,
                     -> Unit
                 }
@@ -140,6 +130,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         userWallet: UserWallet,
         networkId: String?,
         tokenId: String?,
+        accountId: String?,
     ): CryptoCurrency? {
         if (userWallet.isMultiCurrency && (networkId.isNullOrBlank() || tokenId.isNullOrBlank())) return null
 
@@ -148,6 +139,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             userWallet = userWallet,
             networkId = networkId,
             tokenId = tokenId,
+            accountId = accountId,
             awaitOnMiss = wasRefreshed,
         )
     }
@@ -189,6 +181,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         userWallet: UserWallet,
         networkId: String?,
         tokenId: String?,
+        accountId: String?,
         awaitOnMiss: Boolean,
     ): CryptoCurrency? {
         if (!userWallet.isMultiCurrency) {
@@ -199,20 +192,34 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         val derivationPath = queryParams[DERIVATION_PATH_KEY]
         val matches = { currency: CryptoCurrency -> currency.matches(networkId, tokenId, derivationPath) }
 
-        return singleAccountListSupplier.getSyncOrNull(userWallet.walletId)?.flattenCurrencies()?.firstOrNull(matches)
+        val cachedCurrencies = singleAccountListSupplier.getSyncOrNull(userWallet.walletId)?.currenciesFor(accountId)
+        return cachedCurrencies?.firstOrNull(matches)
             // getSyncOrNull returns the stale SharedFlow replay just after a fetch; wait for the refreshed list.
             // Only when a refresh actually ran and succeeded — otherwise a missing token would block for the full
             // timeout before the fall-through redirect.
-            ?: if (awaitOnMiss) awaitCryptoCurrency(userWallet.walletId, matches) else null
+            ?: if (awaitOnMiss) awaitCryptoCurrency(userWallet.walletId, accountId, matches) else null
     }
 
     private suspend fun awaitCryptoCurrency(
         userWalletId: UserWalletId,
+        accountId: String?,
         matches: (CryptoCurrency) -> Boolean,
     ): CryptoCurrency? = withTimeoutOrNull(TOKEN_APPEARANCE_TIMEOUT_MILLIS) {
         singleAccountListSupplier(userWalletId)
-            .mapNotNull { accountList -> accountList.flattenCurrencies().firstOrNull(matches) }
+            .mapNotNull { accountList -> accountList.currenciesFor(accountId).firstOrNull(matches) }
             .firstOrNull()
+    }
+
+    /**
+     * [AccountList.flattenCurrencies] deliberately excludes [Account.Joint] (its currencies must never reach the
+     * regular send/swap/staking flows). A joint-account push always carries [accountId], so when present we look up
+     * that specific account directly instead, bypassing the exclusion for this read-only deeplink resolution.
+     */
+    private fun AccountList.currenciesFor(accountId: String?): List<CryptoCurrency> {
+        if (accountId.isNullOrBlank()) return flattenCurrencies()
+        return (accounts.firstOrNull { it.accountId.value == accountId } as? Account.CryptoPortfolio)
+            ?.cryptoCurrencies
+            .orEmpty()
     }
 
     private fun CryptoCurrency.matches(networkId: String?, tokenId: String?, derivationPath: String?): Boolean {
