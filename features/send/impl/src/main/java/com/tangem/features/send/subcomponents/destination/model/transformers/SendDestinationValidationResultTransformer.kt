@@ -60,7 +60,6 @@ internal class SendDestinationValidationResultTransformer(
             AddressValidation.Error.InvalidAddress,
             -> R.string.send_recipient_address_error
             AddressValidation.Error.AddressInWallet -> R.string.send_error_address_same_as_wallet
-            AddressValidation.Error.RecipientWalletBackupError -> R.string.warning_backup_error_add_funds_message
         }
     }.leftOrNull()
 
