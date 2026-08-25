@@ -33,6 +33,7 @@ internal sealed interface CashbackBlockUM {
 
     data class Error(
         val onReload: () -> Unit,
+        val isReloading: Boolean,
     ) : CashbackBlockUM
 }
 
