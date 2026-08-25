@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -104,6 +105,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
         rotateCardY = rotateCardY,
         zAxisDistance = zAxisDistance,
         shouldShowDetails = shouldShowDetails,
+        flipProgress = rotateCardY / 180f,
         backgroundImageUrl = state.cardBackgroundImageUrl,
         modifier = modifier,
         front = { TangemPayCardDetailsHiddenBlock(state = state) },
@@ -261,6 +263,7 @@ private fun CardBgWrapper(
     rotateCardY: Float,
     zAxisDistance: Float,
     shouldShowDetails: Boolean,
+    flipProgress: Float,
     backgroundImageUrl: String?,
     modifier: Modifier = Modifier,
     back: @Composable () -> Unit,
@@ -281,9 +284,10 @@ private fun CardBgWrapper(
             )
             .background(CardBackgroundColor),
     ) {
-        EqualHeightCardSides(
+        CardSidesLayout(
             modifier = Modifier.fillMaxWidth(),
             placeBackOnTop = shouldShowDetails,
+            flipProgress = flipProgress,
             front = {
                 Box(
                     modifier = Modifier
@@ -319,15 +323,16 @@ private fun CardBgWrapper(
 }
 
 @Composable
-private fun EqualHeightCardSides(
+private fun CardSidesLayout(
     placeBackOnTop: Boolean,
+    flipProgress: Float,
     modifier: Modifier = Modifier,
     back: @Composable () -> Unit,
     front: @Composable () -> Unit,
 ) {
     SubcomposeLayout(modifier) { constraints ->
         val width = constraints.maxWidth
-        val minHeight = if (width == Constraints.Infinity) {
+        val frontHeight = if (width == Constraints.Infinity) {
             0
         } else {
             (width * CARD_HEIGHT_RATIO / CARD_WIDTH_RATIO).roundToInt()
@@ -336,7 +341,8 @@ private fun EqualHeightCardSides(
         val naturalConstraints = constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity)
         val backNaturalHeight = subcompose(CardSide.BackMeasure, back)
             .maxOfOrNull { it.measure(naturalConstraints).height } ?: 0
-        val finalHeight = maxOf(minHeight, backNaturalHeight)
+        val backHeight = maxOf(frontHeight, backNaturalHeight)
+        val finalHeight = lerp(frontHeight, backHeight, flipProgress.coerceIn(0f, 1f))
         val sizeConstraints = constraints.copy(minHeight = finalHeight, maxHeight = finalHeight)
         val frontPlaceables = subcompose(CardSide.Front, front).map { it.measure(sizeConstraints) }
         val backPlaceables = subcompose(CardSide.Back, back).map { it.measure(sizeConstraints) }
