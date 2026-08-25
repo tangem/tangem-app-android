@@ -48,7 +48,7 @@ class UpdateCryptoPortfolioUseCase(
             .firstOrNull { it.accountId == accountId } as? Account.CryptoPortfolio
             ?: raise(Error.DataOperationFailed(message = "Account not found: $accountId"))
 
-        val updatedAccount = account.withNameAndIcon(
+        val updatedAccount = account.copySealed(
             accountName = accountName ?: account.accountName,
             icon = icon ?: account.icon,
         )
