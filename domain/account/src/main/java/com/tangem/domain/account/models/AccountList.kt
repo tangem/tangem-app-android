@@ -133,7 +133,7 @@ data class AccountList private constructor(
 
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
         accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
             .forEach { account ->
                 account.cryptoCurrencies.forEach { currency ->
                     val key = account.accountId to currency.id
@@ -253,8 +253,8 @@ data class AccountList private constructor(
                 Error.ExceedsMaxPredictionAccountsCount
             }
 
-            val cryptoAccounts = accounts.filterIsInstance<Account.Personal>()
-            ensure(cryptoAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
+            val personalAccounts = accounts.filterIsInstance<Account.Personal>()
+            ensure(personalAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
 
             val mainAccountsCount = accounts.mainAccountsCount()
             ensure(mainAccountsCount == MAX_MAIN_ACCOUNTS_COUNT) {
@@ -279,11 +279,11 @@ data class AccountList private constructor(
                 Error.DuplicateAccountNames
             }
 
-            // Against the crypto accounts only, because that is what the counter counts: it comes from
+            // Against the personal accounts only, because that is what the counter counts: it comes from
             // `wallet.totalAccounts`, while joint rows are counted by `totalJointAccounts` and the special
             // accounts are added client-side. Comparing it with the whole list rejected every wallet that has a
             // joint account — the list refused to be built and the producer above retried the same failure forever
-            ensure(totalAccounts >= cryptoAccounts.size) {
+            ensure(totalAccounts >= personalAccounts.size) {
                 Error.TotalAccountsLessThanActive
             }
 
