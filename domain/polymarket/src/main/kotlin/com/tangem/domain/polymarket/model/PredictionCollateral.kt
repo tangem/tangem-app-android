@@ -1,4 +1,4 @@
-package com.tangem.data.polymarket.flow
+package com.tangem.domain.polymarket.model
 
 import com.tangem.domain.models.currency.CryptoCurrency
 
@@ -9,4 +9,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
  * pegged to it, so the app's USDC quote is the rate to convert it into the selected fiat currency. The identifier
  * is the network-agnostic one the quote service uses, the same the payment account prices its balance with.
  */
-internal val COLLATERAL_CURRENCY_ID = CryptoCurrency.RawID(value = "usd-coin")
+object PredictionCollateral {
+
+    val RAW_ID = CryptoCurrency.RawID(value = "usd-coin")
+}
