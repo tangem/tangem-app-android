@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 internal class CashbackErrorBlockTransformerTest {
 
     private val onReload: () -> Unit = {}
-    private val transformer = CashbackErrorBlockTransformer(onReload = onReload)
+    private val transformer = CashbackErrorBlockTransformer(onReload = onReload, isReloading = false)
 
     @Test
     fun `GIVEN state with cashback menu item WHEN transform THEN error block set and menu item removed`() {
@@ -25,7 +25,7 @@ internal class CashbackErrorBlockTransformerTest {
         val result = transformer.transform(state)
 
         // Assert
-        assertThat(result.cashbackBlockState).isEqualTo(CashbackBlockUM.Error(onReload = onReload))
+        assertThat(result.cashbackBlockState).isEqualTo(CashbackBlockUM.Error(onReload = onReload, isReloading = false))
         val menuTitleIds = result.topBarConfig.items.mapNotNull { (it.title as? TextReference.Res)?.id }
         assertThat(menuTitleIds).containsExactly(
             R.string.tangempay_current_plan_title,
@@ -43,7 +43,7 @@ internal class CashbackErrorBlockTransformerTest {
         val result = transformer.transform(state)
 
         // Assert
-        assertThat(result.cashbackBlockState).isEqualTo(CashbackBlockUM.Error(onReload = onReload))
+        assertThat(result.cashbackBlockState).isEqualTo(CashbackBlockUM.Error(onReload = onReload, isReloading = false))
         assertThat(result.topBarConfig.items).isEqualTo(state.topBarConfig.items)
     }
 
