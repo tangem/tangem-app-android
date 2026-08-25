@@ -6,6 +6,7 @@ import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.TangemApiKeyHeader
+import com.tangem.utils.Provider
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -30,7 +31,9 @@ internal object ApiConfigsModule {
 
     @Provides
     fun provideTangemApiKeyHeaderProvider(authProvider: AuthProvider): TangemApiKeyHeaderProvider {
-        return TangemApiKeyHeaderProvider { environment -> TangemApiKeyHeader(authProvider, environment) }
+        return TangemApiKeyHeaderProvider { environment ->
+            TangemApiKeyHeader(authProvider, Provider { environment })
+        }
     }
 
     @Provides

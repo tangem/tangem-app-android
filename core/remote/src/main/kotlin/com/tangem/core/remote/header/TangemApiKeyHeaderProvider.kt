@@ -1,7 +1,6 @@
 package com.tangem.core.remote.header
 
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.utils.Provider
 
 /**
  * Supplies the auth-backed `api-key` [RequestHeader] for a given API environment.
@@ -12,5 +11,5 @@ import com.tangem.utils.Provider
  */
 fun interface TangemApiKeyHeaderProvider {
 
-    fun forEnvironment(environment: Provider<ApiEnvironment>): RequestHeader
+    fun forEnvironment(environment: ApiEnvironment): RequestHeader
 }
