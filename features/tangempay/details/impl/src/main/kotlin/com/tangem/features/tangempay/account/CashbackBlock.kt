@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
@@ -57,10 +59,11 @@ private fun WidgetRow(state: CashbackBlockUM.Widget, modifier: Modifier = Modifi
         subtitle = state.subtitle,
         onClick = state.onClick,
         startIcon = {
+            val colors = TangemTheme.colors3
             CircledIcon(
                 imageVector = Icons.ic_percent_backward_20,
-                iconTint = TangemTheme.colors3.icon.status.info,
-                background = TangemTheme.colors3.bg.status.infoSubtle,
+                iconTint = if (state.isNegative) colors.icon.status.error else colors.icon.status.info,
+                background = if (state.isNegative) colors.bg.status.errorSubtle else colors.bg.status.infoSubtle,
                 size = 40.dp,
             )
         },
@@ -138,7 +141,15 @@ private fun CashbackRow(
         TangemRow(
             verticalAlignment = TangemRowVerticalAlignment.Center,
             titleSlot = title,
-            subtitleSlot = subtitle?.let { { TangemRowText(text = it, role = TangemRowTextRole.Subtitle) } },
+            subtitleSlot = subtitle?.let {
+                {
+                    TangemRowText(
+                        text = it,
+                        role = TangemRowTextRole.Subtitle,
+                        maxLines = 5,
+                    )
+                }
+            },
             startSlot = startIcon,
             endSlot = endIcon,
             onClick = onClick,
@@ -199,56 +210,35 @@ private fun CircledIcon(
 }
 
 // region preview
-
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun CashbackBlockWidgetPreview() {
-    TangemThemePreviewRedesign {
-        CashbackBlock(
-            state = CashbackBlockUM.Widget(
-                title = stringReference("$32.15 cashback in June"),
-                subtitle = stringReference("Will be deposited on July 2–5"),
-                onClick = {},
+private class CashbackBlockStateProvider : PreviewParameterProvider<CashbackBlockUM> {
+    override val values = sequenceOf(
+        CashbackBlockUM.Widget(
+            title = stringReference("$32.15 cashback in June"),
+            subtitle = stringReference("Will be deposited on July 2–5"),
+            isNegative = false,
+            onClick = {},
+        ),
+        CashbackBlockUM.Widget(
+            title = stringReference("-$2.15 cashback in August"),
+            subtitle = stringReference(
+                "We received a refund for a purchase for which cashback had previously been awarded",
             ),
-            modifier = Modifier
-                .background(TangemTheme.colors3.bg.primary)
-                .padding(16.dp)
-                .fillMaxWidth(),
-        )
-    }
+            isNegative = true,
+            onClick = {},
+        ),
+        CashbackBlockUM.Error(onReload = {}, isReloading = false),
+        CashbackBlockUM.Error(onReload = {}, isReloading = true),
+        CashbackBlockUM.DeactivatedBanner(onGotIt = {}),
+    )
 }
 
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun CashbackBlockErrorPreview() {
-    TangemThemePreviewRedesign {
-        Column(
-            modifier = Modifier
-                .background(TangemTheme.colors3.bg.primary)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            CashbackBlock(
-                state = CashbackBlockUM.Error(onReload = {}, isReloading = false),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            CashbackBlock(
-                state = CashbackBlockUM.Error(onReload = {}, isReloading = true),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun CashbackBlockDeactivatedBannerPreview() {
+private fun CashbackBlockPreview(@PreviewParameter(CashbackBlockStateProvider::class) state: CashbackBlockUM) {
     TangemThemePreviewRedesign {
         CashbackBlock(
-            state = CashbackBlockUM.DeactivatedBanner(onGotIt = {}),
+            state = state,
             modifier = Modifier
                 .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp)

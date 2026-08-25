@@ -88,6 +88,20 @@ internal class CashbackBlockTransformerTest {
         assertThat(widget.subtitle).isNull()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideAmountModels")
+    fun `GIVEN confirmed amount WHEN transform THEN widget negative state follows the sign`(model: AmountCase) {
+        // Arrange
+        val transformer = createTransformer(summary = enabledSummary(confirmedAmount = model.amount))
+
+        // Act
+        val widget = transformer.transform(contentState()).cashbackBlockState as CashbackBlockUM.Widget
+
+        // Assert
+        assertThat(widget.isNegative).isEqualTo(model.expectedNegative)
+        assertThat(widget.subtitle).isEqualTo(model.expectedSubtitle)
+    }
+
     @Test
     fun `GIVEN enabled alt_block summary WHEN transform THEN cashback menu item inserted above terms`() {
         // Arrange
@@ -185,6 +199,33 @@ internal class CashbackBlockTransformerTest {
         ),
     )
 
+    private fun provideAmountModels(): List<AmountCase> = listOf(
+        AmountCase(
+            description = "negative -> refund subtitle",
+            amount = BigDecimal("-2.15"),
+            expectedNegative = true,
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_refund_banner),
+        ),
+        AmountCase(
+            description = "zero -> deposit window subtitle",
+            amount = BigDecimal.ZERO,
+            expectedNegative = false,
+            expectedSubtitle = resourceReference(
+                id = R.string.tangempay_cashback_deposited_on,
+                formatArgs = wrappedList("July 1 – 5"),
+            ),
+        ),
+        AmountCase(
+            description = "positive -> deposit window subtitle",
+            amount = BigDecimal("32.15"),
+            expectedNegative = false,
+            expectedSubtitle = resourceReference(
+                id = R.string.tangempay_cashback_deposited_on,
+                formatArgs = wrappedList("July 1 – 5"),
+            ),
+        ),
+    )
+
     private fun createTransformer(
         summary: CashbackSummary,
         isDismissed: Boolean = false,
@@ -251,6 +292,15 @@ internal class CashbackBlockTransformerTest {
         onClick = {},
         icon = TangemIconUM.Empty,
     )
+
+    internal class AmountCase(
+        val amount: BigDecimal,
+        val expectedNegative: Boolean,
+        val expectedSubtitle: TextReference,
+        private val description: String,
+    ) {
+        override fun toString(): String = description
+    }
 
     internal class BlockCase(
         val summary: CashbackSummary,
