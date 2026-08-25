@@ -9,10 +9,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ModelsEntryPoint
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -43,6 +46,7 @@ import javax.inject.Provider
 internal class PolymarketMainComponentTest {
 
     private val router: Router = mockk(relaxed = true)
+    private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
 
@@ -53,12 +57,13 @@ internal class PolymarketMainComponentTest {
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
         every { getPolymarketEventsBatchFlowUseCase(any(), any()) } returns object : PolymarketEventsBatchFlow {
             override val state = MutableStateFlow(
-                BatchListState<Int, List<PolymarketEvent>>(
+                BatchListState<Int, PolymarketEventsBatch>(
                     data = emptyList(),
                     status = PaginationStatus.InitialLoading,
                 ),
             )
-            override val updateResults = MutableSharedFlow<Pair<Nothing, BatchUpdateResult<Int, List<PolymarketEvent>>>>()
+            override val updateResults =
+                MutableSharedFlow<Pair<PolymarketEventsUpdateRequest, BatchUpdateResult<Int, PolymarketEventsBatch>>>()
         }
     }
 
@@ -109,6 +114,7 @@ internal class PolymarketMainComponentTest {
     private fun createModel(paramsContainer: ParamsContainer) = PolymarketMainModel(
         paramsContainer = paramsContainer,
         router = router,
+        messageSender = messageSender,
         dispatchers = TestingCoroutineDispatcherProvider(),
         getPolymarketEventsBatchFlowUseCase = getPolymarketEventsBatchFlowUseCase,
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
