@@ -38,15 +38,8 @@ sealed interface Account {
         /** Icon representing the account */
         val icon: CryptoPortfolioIcon
 
-        /** Index used for derivation of the account */
-        val derivationIndex: DerivationIndex
-
         /** Set of tokens associated with the account */
         val cryptoCurrencies: List<CryptoCurrency>
-
-        /** Indicates if the account is the main account */
-        val isMainAccount: Boolean
-            get() = derivationIndex.isMain
 
         /** Number of tokens in the account */
         val tokensCount: Int
@@ -83,9 +76,13 @@ sealed interface Account {
         override val accountId: AccountId,
         override val accountName: AccountName,
         override val icon: CryptoPortfolioIcon,
-        override val derivationIndex: DerivationIndex,
+        val derivationIndex: DerivationIndex,
         override val cryptoCurrencies: List<CryptoCurrency>,
     ) : CryptoPortfolio {
+
+        /** Indicates if the account is the main account */
+        val isMainAccount: Boolean
+            get() = derivationIndex.isMain
 
         override fun copySealed(
             accountName: AccountName,
@@ -264,7 +261,7 @@ sealed interface Account {
      * @property accountId        unique identifier of the account, computed and returned by the backend
      * @property accountName      name of the account, shared by all participants and fixed at creation
      * @property icon             icon representing the account, shared and fixed at creation
-     * @property derivationIndex  index of the owner key derivation; an index space independent from
+     * @property ownerKeyIndex    index of the owner key derivation; an index space independent from
      * [Personal] accounts
      * @property cryptoCurrencies tokens associated with the account. They are never spendable through the regular
      * send/swap flows: a joint account is a Safe contract, not an EOA — see `AccountList.flattenCurrencies`
@@ -274,16 +271,9 @@ sealed interface Account {
         override val accountId: AccountId,
         override val accountName: AccountName,
         override val icon: CryptoPortfolioIcon,
-        override val derivationIndex: DerivationIndex,
+        val ownerKeyIndex: OwnerKeyIndex,
         override val cryptoCurrencies: List<CryptoCurrency>,
     ) : CryptoPortfolio {
-
-        /**
-         * Joint accounts have no main one: they are equal to each other, and their index belongs to the owner key
-         * space, where the value of the main personal index means nothing.
-         */
-        override val isMainAccount: Boolean
-            get() = false
 
         override fun copySealed(
             accountName: AccountName,
@@ -303,9 +293,9 @@ sealed interface Account {
             @Serializable
             data class AccountNameError(val cause: AccountName.Error) : Error
 
-            /** Error indicating that the derivation index is invalid */
+            /** Error indicating that the owner key index is invalid */
             @Serializable
-            data class DerivationIndexError(val cause: DerivationIndex.Error) : Error
+            data class OwnerKeyIndexError(val cause: OwnerKeyIndex.Error) : Error
         }
 
         companion object {
@@ -316,29 +306,29 @@ sealed interface Account {
              * @param accountId        unique identifier of the account
              * @param name             name of the account
              * @param icon             icon representing the account
-             * @param derivationIndex  index of the owner key derivation
+             * @param ownerKeyIndex    index of the owner key derivation
              * @param cryptoCurrencies tokens associated with the account
              */
             operator fun invoke(
                 accountId: AccountId,
                 name: String,
                 icon: CryptoPortfolioIcon,
-                derivationIndex: Int,
+                ownerKeyIndex: Int,
                 cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): Either<Error, Joint> = either {
                 val accountName = AccountName(value = name).getOrElse {
                     raise(Error.AccountNameError(cause = it))
                 }
 
-                val index = DerivationIndex(value = derivationIndex).getOrElse {
-                    raise(Error.DerivationIndexError(cause = it))
+                val index = OwnerKeyIndex(value = ownerKeyIndex).getOrElse {
+                    raise(Error.OwnerKeyIndexError(cause = it))
                 }
 
                 invoke(
                     accountId = accountId,
                     accountName = accountName,
                     icon = icon,
-                    derivationIndex = index,
+                    ownerKeyIndex = index,
                     cryptoCurrencies = cryptoCurrencies,
                 )
             }
@@ -349,7 +339,7 @@ sealed interface Account {
              * @param accountId        unique identifier of the account
              * @param accountName      name of the account
              * @param icon             icon representing the account
-             * @param derivationIndex  index of the owner key derivation
+             * @param ownerKeyIndex    index of the owner key derivation
              * @param cryptoCurrencies tokens associated with the account
              */
             @Suppress("LongParameterList")
@@ -357,14 +347,14 @@ sealed interface Account {
                 accountId: AccountId,
                 accountName: AccountName,
                 icon: CryptoPortfolioIcon,
-                derivationIndex: DerivationIndex,
+                ownerKeyIndex: OwnerKeyIndex,
                 cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): Joint {
                 return Joint(
                     accountId = accountId,
                     accountName = accountName,
                     icon = icon,
-                    derivationIndex = derivationIndex,
+                    ownerKeyIndex = ownerKeyIndex,
                     cryptoCurrencies = cryptoCurrencies,
                 )
             }
@@ -373,4 +363,8 @@ sealed interface Account {
 }
 
 val Account.derivationIndex: DerivationIndex?
-    get() = (this as? Account.CryptoPortfolio)?.derivationIndex
+    get() = (this as? Account.Personal)?.derivationIndex
+
+/** Whether the account is the main one of its wallet. Only a [Account.Personal] account can be, so any other kind is `false`. */
+val Account.isMainAccount: Boolean
+    get() = (this as? Account.Personal)?.isMainAccount == true
