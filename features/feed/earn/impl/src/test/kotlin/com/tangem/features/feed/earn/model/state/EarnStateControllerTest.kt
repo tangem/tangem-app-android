@@ -1,12 +1,12 @@
 package com.tangem.features.feed.earn.model.state
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.features.feed.earn.model.filters.state.EarnFilterChipsFactory
 import com.tangem.features.feed.earn.model.state.transformers.UpdateBestOpportunitiesStateTransformer
 import com.tangem.features.feed.earn.model.state.transformers.UpdateOpportunitiesStateLoadingTransformer
 import com.tangem.features.feed.earn.ui.state.EarnBestOpportunitiesUM
 import com.tangem.features.feed.earn.ui.state.EarnFeedTabUM
 import com.tangem.features.feed.earn.ui.state.EarnListUM
-import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 
 internal class EarnStateControllerTest {
@@ -23,7 +23,7 @@ internal class EarnStateControllerTest {
             EarnFeedTabUM(
                 mostlyUsed = EarnListUM.Loading,
                 bestOpportunities = EarnBestOpportunitiesUM.Loading,
-                filters = persistentListOf(),
+                filters = EarnFilterChipsFactory.LOADING,
                 onSliderScroll = actual.onSliderScroll,
             ),
         )
