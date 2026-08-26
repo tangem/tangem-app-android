@@ -157,7 +157,8 @@ internal class TesterAccountsViewModel @Inject constructor(
     private fun clearETag() {
         viewModelScope.launch {
             val userWalletId = getUserWallet()?.walletId ?: return@launch
-            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccountsV1)
+            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccountsV2)
         }
     }
 
