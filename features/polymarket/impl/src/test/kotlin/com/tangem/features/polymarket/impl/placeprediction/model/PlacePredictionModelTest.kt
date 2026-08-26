@@ -130,7 +130,7 @@ internal class PlacePredictionModelTest {
                     assetId = ASSET_ID,
                     side = PredictionOrderSide.BUY,
                     amount = BigDecimal("10"),
-                    slippagePercent = BigDecimal("0.25"),
+                    slippagePercent = BigDecimal("3"),
                 ),
             )
         }
@@ -298,6 +298,157 @@ internal class PlacePredictionModelTest {
         }
 
     @Test
+    fun `GIVEN no liquidity WHEN quote loaded THEN figures are not shown AND button disabled`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote)
+            .isEqualTo(QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY))
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN below min order size WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN quote reports a live market WHEN interval elapses THEN it re-quotes on the fast cadence`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns createQuote(isLive = true).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        advanceTimeBy(delayTimeMillis = LIVE_QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+        // Assert
+        coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount below one cent WHEN entered THEN quote is Empty AND no request made`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "0.001")
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+
+        // Assert
+        coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN quote loaded WHEN read THEN headline is the expectation AND floor is the guarantee`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        val quote = model.uiState.value.quote as QuoteUM.Content
+        assertThat(quote.expectedShares).isEqualTo(BigDecimal("23.8"))
+        assertThat(quote.guaranteedShares).isEqualTo(BigDecimal("23.2"))
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN liquidity disappears WHEN next tick arrives THEN button is gated on the latest quote`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().right(),
+            createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
+
+        // Act
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Unavailable::class.java)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance below the total WHEN quote loaded THEN a blocking notification explains why`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns createQuote(total = BigDecimal("120")).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "100")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.InsufficientBalance)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the screen is hidden WHEN interval elapses THEN no quote is requested`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        model.onScreenHidden()
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `WHEN next clicked THEN summary pushed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -364,9 +515,13 @@ internal class PlacePredictionModelTest {
         )
     }
 
-    private fun createQuote(total: BigDecimal = BigDecimal("10.4")): PredictionOrderQuote = PredictionOrderQuote(
-        status = PredictionQuoteStatus.FULL,
-        shares = BigDecimal("23.8"),
+    private fun createQuote(
+        total: BigDecimal = BigDecimal("10.4"),
+        status: PredictionQuoteStatus = PredictionQuoteStatus.FULL,
+        isLive: Boolean = false,
+    ): PredictionOrderQuote = PredictionOrderQuote(
+        status = status,
+        shares = BigDecimal("23.2"),
         notional = BigDecimal("10"),
         expectedExecutionAmount = BigDecimal("23.8"),
         averagePrice = BigDecimal("0.42"),
@@ -380,7 +535,7 @@ internal class PlacePredictionModelTest {
         builderCode = "0xbuilder",
         minOrderSize = BigDecimal("5"),
         tickSize = BigDecimal("0.001"),
-        isLive = true,
+        isLive = isLive,
     )
 
     private fun createEvent(): PolymarketEvent = PolymarketEvent(

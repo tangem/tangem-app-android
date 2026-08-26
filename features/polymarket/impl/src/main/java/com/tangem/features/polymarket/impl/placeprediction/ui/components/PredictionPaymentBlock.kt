@@ -17,38 +17,20 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import java.math.BigDecimal
 
 /** What the order is paid from and what it pays out, as read on the summary screen. */
 @Composable
 internal fun PredictionPaymentBlock(
     amountValue: String,
-    toWin: BigDecimal?,
+    payout: PayoutUM?,
     payment: PaymentSourceUM,
     modifier: Modifier = Modifier,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary) {
         Column(modifier = Modifier.padding(all = 16.dp), verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
-            TangemRow(
-                includeInnerPaddings = false,
-                titleSlot = {
-                    Text(
-                        text = stringResourceSafe(R.string.prediction_place_summary_from),
-                        style = TangemTheme.typography3.caption.medium,
-                        color = TangemTheme.colors3.text.secondary,
-                    )
-                },
-                valueSlot = {
-                    Text(
-                        text = stringResourceSafe(
-                            R.string.common_balance,
-                            payment.balance?.formatPolymarketMoney() ?: DASH_SIGN,
-                        ),
-                        style = TangemTheme.typography3.caption.medium,
-                        color = TangemTheme.colors3.text.secondary,
-                    )
-                },
-            )
+            SourceHeaderRow(balance = payment.balance)
             TangemBadge(
                 text = stringReference(stringResourceSafe(R.string.prediction_place_summary_account)),
                 status = TangemBadge.Status.Info,
@@ -70,13 +52,25 @@ internal fun PredictionPaymentBlock(
                         color = TangemTheme.colors3.text.secondary,
                     )
                 },
-                extraBottomSlot = toWin?.let {
+                subvalueSlot = payout?.let {
+                    {
+                        Text(
+                            text = stringResourceSafe(
+                                R.string.prediction_place_at_least,
+                                it.guaranteed.formatPolymarketMoney(),
+                            ),
+                            style = TangemTheme.typography3.caption.medium,
+                            color = TangemTheme.colors3.text.secondary,
+                        )
+                    }
+                },
+                extraBottomSlot = payout?.let {
                     {
                         TangemBadge(
                             text = stringReference(
                                 value = stringResourceSafe(
                                     R.string.prediction_place_to_win,
-                                    it.formatPolymarketMoney(),
+                                    it.expected.formatPolymarketMoney(),
                                 ),
                             ),
                             status = TangemBadge.Status.Info,
@@ -87,4 +81,25 @@ internal fun PredictionPaymentBlock(
             )
         }
     }
+}
+
+@Composable
+private fun SourceHeaderRow(balance: BigDecimal?) {
+    TangemRow(
+        includeInnerPaddings = false,
+        titleSlot = {
+            Text(
+                text = stringResourceSafe(R.string.prediction_place_summary_from),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        },
+        valueSlot = {
+            Text(
+                text = stringResourceSafe(R.string.common_balance, balance?.formatPolymarketMoney() ?: DASH_SIGN),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        },
+    )
 }
