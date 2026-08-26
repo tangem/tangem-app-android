@@ -61,7 +61,6 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
     )
 }
 
-/** A balance nobody has read yet accuses the user of nothing, so an unknown one names no shortfall. */
 private fun amountError(entered: BigDecimal?, required: BigDecimal?, balance: BigDecimal?): AmountErrorUM? = when {
     balance == null || entered == null -> null
     entered > balance -> AmountErrorUM.NotEnoughForBet
