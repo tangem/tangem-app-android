@@ -32,6 +32,7 @@ import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.formatAnnotatedWithLinks
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -147,13 +148,18 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
     PlanDetails(
         title = plan.name,
         points = plan.points,
+        onPointLinkClick = state.onPointLinkClick,
     )
 
     Spacer(modifier = Modifier.weight(1f))
 }
 
 @Composable
-private fun ColumnScope.PlanDetails(title: TextReference, points: ImmutableList<TangemPaySelectPlanUM.PointUM>) {
+private fun PlanDetails(
+    title: TextReference,
+    points: ImmutableList<TangemPaySelectPlanUM.PointUM>,
+    onPointLinkClick: (url: String) -> Unit,
+) {
     Text(
         modifier = Modifier
             .fillMaxWidth()
@@ -170,12 +176,16 @@ private fun ColumnScope.PlanDetails(title: TextReference, points: ImmutableList<
             .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        points.fastForEach { point -> PlanPoint(point = point) }
+        points.fastForEach { point -> PlanPoint(point = point, onLinkClick = onPointLinkClick) }
     }
 }
 
 @Composable
-private fun PlanPoint(point: TangemPaySelectPlanUM.PointUM, modifier: Modifier = Modifier) {
+private fun PlanPoint(
+    point: TangemPaySelectPlanUM.PointUM,
+    onLinkClick: (url: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -189,13 +199,19 @@ private fun PlanPoint(point: TangemPaySelectPlanUM.PointUM, modifier: Modifier =
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = point.title.resolveReference(),
+                text = formatAnnotatedWithLinks(
+                    rawString = point.title.resolveReference(),
+                    onLinkClick = onLinkClick,
+                ),
                 style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.primary,
             )
             point.body?.let { body ->
                 Text(
-                    text = body.resolveReference(),
+                    text = formatAnnotatedWithLinks(
+                        rawString = body.resolveReference(),
+                        onLinkClick = onLinkClick,
+                    ),
                     style = TangemTheme.typography3.subheading.medium,
                     color = TangemTheme.colors3.text.secondary,
                 )
@@ -217,6 +233,7 @@ private fun ColumnScope.ConfirmContent(state: TangemPaySelectPlanUM, content: Ta
     PlanDetails(
         title = content.title,
         points = content.points,
+        onPointLinkClick = state.onPointLinkClick,
     )
     Spacer(modifier = Modifier.size(24.dp))
 }
@@ -327,8 +344,8 @@ private fun previewState(isConfirm: Boolean) = TangemPaySelectPlanUM(
             imageUrl = null,
             points = persistentListOf(
                 TangemPaySelectPlanUM.PointUM(
-                    title = stringReference("2 airport lounge pass a year"),
-                    body = stringReference("Travel insurance and other benefits"),
+                    title = stringReference("2 airport [lounge pass](https://tangem.com) a year"),
+                    body = stringReference("Airport perks and other [Visa benefits](https://tangem.com)"),
                 ),
                 TangemPaySelectPlanUM.PointUM(stringReference("$50.000 daily spending limit"), null),
                 TangemPaySelectPlanUM.PointUM(stringReference("$29.99 / month"), null),
@@ -339,6 +356,7 @@ private fun previewState(isConfirm: Boolean) = TangemPaySelectPlanUM(
     onPlanSelected = {},
     onBackClick = {},
     onCloseClick = {},
+    onPointLinkClick = {},
     content = if (isConfirm) {
         TangemPaySelectPlanUM.Content.Confirm(
             title = stringReference("We will issue Visa Plus for you"),
