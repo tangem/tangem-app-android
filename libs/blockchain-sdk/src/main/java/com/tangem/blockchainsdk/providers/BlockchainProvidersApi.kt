@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
  * Serves the blockchain RPC providers configuration. Owned by the Blockchain SDK, which is the sole
  * consumer of this endpoint; served from the shared Tangem gateway.
  */
-interface BlockchainProvidersApi {
+internal interface BlockchainProvidersApi {
 
     @ReadTimeout(duration = 5, unit = TimeUnit.SECONDS)
     @GET("v1/networks/providers")
