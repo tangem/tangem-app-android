@@ -1,5 +1,6 @@
 package com.tangem.data.account.fetcher
 
+import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
@@ -16,7 +17,6 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -37,7 +37,7 @@ import javax.inject.Singleton
 /**
  * Default implementation of [WalletAccountsFetcher] and [WalletAccountsSaver]
  *
- * @property tangemTechApi                   API for network requests
+ * @property walletAccountsApi               the accounts document, from the version this build may speak
  * @property accountsResponseStoreFactory    factory to create [AccountsResponseStore]
  * @property userTokensSaver                 saves user tokens to the database
  * @property fetchWalletAccountsErrorHandler handles errors during fetching wallet accounts
@@ -50,7 +50,7 @@ import javax.inject.Singleton
 @Suppress("LongParameterList")
 @Singleton
 internal class DefaultWalletAccountsFetcher @Inject constructor(
-    private val tangemTechApi: TangemTechApi,
+    private val walletAccountsApi: WalletAccountsApi,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val userTokensSaver: UserTokensSaver,
     private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler,
@@ -135,7 +135,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 val resolvedETag = eTag ?: getETagForPush(userWalletId)
 
                 val apiResponse = withContext(dispatchers.io) {
-                    tangemTechApi.saveWalletAccounts(
+                    walletAccountsApi.saveAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = resolvedETag,
                         body = body,
@@ -181,7 +181,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         return safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
-                    tangemTechApi.getWalletAccounts(
+                    walletAccountsApi.getAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = getETag(userWalletId),
                     )
@@ -255,7 +255,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         val isFailed = push(userWalletId = userWalletId, accounts = response.accounts) == null
         if (isFailed) {
             // Clear ETags if push failed to avoid different state in the cache and API
-            eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
+            eTagsStore.clear(userWalletId, walletAccountsApi.eTagKey)
         }
 
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
@@ -280,14 +280,14 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     }
 
     private suspend fun getETag(userWalletId: UserWalletId): String? {
-        return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+        return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = walletAccountsApi.eTagKey)
     }
 
     private suspend fun saveETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
         val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
 
         if (eTag != null) {
-            eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
+            eTagsStore.store(userWalletId = userWalletId, key = walletAccountsApi.eTagKey, value = eTag)
         }
     }
 
