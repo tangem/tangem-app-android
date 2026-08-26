@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.introduction.IntroductionComponent
@@ -20,11 +22,21 @@ internal class DefaultIntroductionComponent @AssistedInject constructor(
 
     private val model: IntroductionModel = getOrCreateModel(params)
 
+    init {
+        lifecycle.doOnResume { model.setVideoRunning(isRunning = true) }
+        lifecycle.doOnPause { model.setVideoRunning(isRunning = false) }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        IntroductionScreen(state = state, modifier = modifier)
+        IntroductionScreen(
+            state = state,
+            onSurfaceAvailable = model::attachSurface,
+            onSurfaceRelease = model::detachSurface,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory
