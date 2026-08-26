@@ -20,7 +20,7 @@ dependencies {
 
     /* Core */
     implementation(projects.core.analytics)
-    implementation(projects.core.datasource)
+    implementation(projects.store.datasource)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
