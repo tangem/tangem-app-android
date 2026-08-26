@@ -33,7 +33,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.common.PolymarketLegalLine
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionDetailsBlock
@@ -93,7 +93,7 @@ internal fun PlacePredictionSummaryContent(
         ) {
             PredictionPaymentBlock(
                 amountValue = state.amountValue,
-                toWin = (state.quote as? QuoteUM.Content)?.toWin,
+                payout = state.quote.payout(),
                 payment = state.payment,
             )
             PredictionMarketBlock(state = state.market)
