@@ -44,6 +44,10 @@ internal data class PlacePredictionUM(
 
 internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("0.25")
 
+/** The sum to quote, or `null` while what the user typed is not one yet. */
+internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
+    amountValue.toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
+
 /**
  * @property outcomePriceCents the outcome's price as a caption, `null` when the backend states none. A price
  *  nobody reported is not a price of zero, and the screen has nothing to show in its place.
