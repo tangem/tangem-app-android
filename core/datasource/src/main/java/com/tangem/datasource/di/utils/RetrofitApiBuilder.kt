@@ -17,9 +17,9 @@ import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
-import com.tangem.datasource.api.utils.ConnectTimeout
-import com.tangem.datasource.api.utils.ReadTimeout
-import com.tangem.datasource.api.utils.WriteTimeout
+import com.tangem.core.remote.ConnectTimeout
+import com.tangem.core.remote.ReadTimeout
+import com.tangem.core.remote.WriteTimeout
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore

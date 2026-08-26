@@ -36,7 +36,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import com.tangem.utils.transformer.update as transformerUpdate
 
-private const val SHOW_DETAILS_TIME = 30_000L
+private const val SHOW_DETAILS_TIME = 40_000L
 
 /**
  * Owns the UI state of a single TangemPay card-detail block (the flip card with reveal PAN/CVV,
@@ -191,6 +191,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
 
     private fun hideCardDetails() {
         revealCardDetailsJobHolder.cancel()
+        showCardDetailsTimerJobHolder.cancel()
         uiState.transformerUpdate(
             transformer = DetailsHiddenStateTransformer(
                 stateFactory = stateFactory,

@@ -229,6 +229,67 @@ internal class CoinIndicatorsExtTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ShouldHideBadge {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun shouldHideBadge(model: HideBadgeModel) {
+            // Arrange
+            val indicators = coinIndicators(readings = model.readings)
+
+            // Act
+            val actual = indicators.shouldHideBadge()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedHidden)
+        }
+
+        private fun provideTestModels() = listOf(
+            HideBadgeModel(
+                description = "no readings at all leaves nothing to interpret",
+                readings = emptyList(),
+                expectedHidden = true,
+            ),
+            HideBadgeModel(
+                description = "every reading unavailable leaves nothing to interpret",
+                readings = Type.entries.map { reading(it, Timeframe.DAY, Signal.NOT_AVAILABLE) },
+                expectedHidden = true,
+            ),
+            HideBadgeModel(
+                description = "one INSUFFICIENT_DATA reading among unavailable ones still counts as data",
+                readings = listOf(
+                    reading(Type.RSI, Timeframe.DAY, Signal.INSUFFICIENT_DATA),
+                    reading(Type.MACD, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                ),
+                expectedHidden = false,
+            ),
+            HideBadgeModel(
+                description = "a NEUTRAL reading counts as data",
+                readings = listOf(reading(Type.GALAXY_SCORE, Timeframe.DAY, Signal.NEUTRAL)),
+                expectedHidden = false,
+            ),
+            HideBadgeModel(
+                description = "readings of any timeframe count, so a WEEK signal alone keeps the badge",
+                readings = listOf(
+                    reading(Type.RSI, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.RSI, Timeframe.WEEK, Signal.POSITIVE),
+                ),
+                expectedHidden = false,
+            ),
+        )
+    }
+
+    internal data class HideBadgeModel(
+        val description: String,
+        val readings: List<Reading>,
+        val expectedHidden: Boolean,
+    ) {
+        override fun toString(): String = description
+    }
+
     internal data class ScoreModel(
         val description: String,
         val readings: List<Reading>,
