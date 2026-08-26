@@ -10,15 +10,33 @@ private const val TX_HISTORY_PAGING_DEFAULT_LIMIT = 20
 @Suppress("TooManyFunctions")
 interface TangemPayApi {
 
+    /**
+     * Deprecated on the backend in favour of `v1/transactions`, which also carries per-transaction
+     * cashback. Used while the cashback toggle is off because the new endpoint is still being rolled out.
+     */
     @GET("v1/customer/transactions")
+    suspend fun getTangemPayTxHistoryLegacy(
+        @Header("Authorization") authHeader: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
+    ): ApiResponse<TangemPayTxHistoryResponse>
+
+    @GET("v1/transactions")
     suspend fun getTangemPayTxHistory(
         @Header("Authorization") authHeader: String,
         @Query("cursor") cursor: String?,
         @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
     ): ApiResponse<TangemPayTxHistoryResponse>
 
+    /** Deprecated on the backend in favour of `v1/transactions/{transaction_id}`, see [getTangemPayTxHistoryLegacy]. */
     @GET("v1/customer/transactions/{transaction_id}")
-    suspend fun getCustomerTransaction(
+    suspend fun getTransactionLegacy(
+        @Header("Authorization") authHeader: String,
+        @Path("transaction_id") transactionId: String,
+    ): ApiResponse<TangemPayTransactionResponse>
+
+    @GET("v1/transactions/{transaction_id}")
+    suspend fun getTransaction(
         @Header("Authorization") authHeader: String,
         @Path("transaction_id") transactionId: String,
     ): ApiResponse<TangemPayTransactionResponse>
