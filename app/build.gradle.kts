@@ -253,6 +253,7 @@ dependencies {
     implementation(projects.data.news)
     implementation(projects.data.earn)
     implementation(projects.data.search)
+    implementation(projects.data.feed.search)
 
     implementation(projects.common.ui)
 
