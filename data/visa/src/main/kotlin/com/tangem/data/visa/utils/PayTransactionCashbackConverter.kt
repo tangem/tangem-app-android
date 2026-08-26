@@ -5,6 +5,7 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
 import com.tangem.utils.converter.Converter
+import java.math.BigDecimal
 import java.util.Currency
 
 internal object PayTransactionCashbackConverter : Converter<TransactionCashbackResponse?, Cashback?> {
@@ -14,11 +15,29 @@ internal object PayTransactionCashbackConverter : Converter<TransactionCashbackR
         return Cashback(
             status = convertStatus(value.status),
             amount = value.amount,
-            currency = value.currency?.let { runCatching { Currency.getInstance(it) }.getOrNull() },
+            currency = value.currency?.toCurrencyOrNull(),
             isCapTrimmed = value.isCapTrimmed == true,
             exclusionReason = value.exclusionReason?.let(::convertExclusionReason),
         )
     }
+
+    /**
+     * Converts the flat cashback fields of the transaction endpoints (`cashback`, `cashback_status`,
+     * `cashback_currency_code`). Unlike the cashback-details endpoint, they carry no cap or
+     * exclusion data.
+     */
+    fun convertSpendCashback(status: String?, amount: BigDecimal?, currencyCode: String?): Cashback? {
+        status ?: return null
+        return Cashback(
+            status = convertStatus(status),
+            amount = amount,
+            currency = currencyCode?.toCurrencyOrNull(),
+            isCapTrimmed = false,
+            exclusionReason = null,
+        )
+    }
+
+    private fun String.toCurrencyOrNull(): Currency? = runCatching { Currency.getInstance(this) }.getOrNull()
 
     private fun convertStatus(status: String): Status = when (status.lowercase()) {
         "estimated" -> Status.ESTIMATED
