@@ -2,6 +2,9 @@ package com.tangem.data.account.fetcher
 
 import arrow.core.right
 import com.google.common.truth.Truth
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher.FetchResult
@@ -11,15 +14,12 @@ import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.ETAG_HEADER
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
-import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.getEmittedValues
@@ -36,7 +36,7 @@ import org.junit.jupiter.api.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultWalletAccountsFetcherTest {
 
-    private val tangemTechApi: TangemTechApi = mockk()
+    private val walletAccountsApi: WalletAccountsApi = mockk()
 
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory = mockk()
     private val accountsResponseStore: AccountsResponseStore = mockk()
@@ -50,7 +50,7 @@ class DefaultWalletAccountsFetcherTest {
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
 
     private val fetcher: DefaultWalletAccountsFetcher = DefaultWalletAccountsFetcher(
-        tangemTechApi = tangemTechApi,
+        walletAccountsApi = walletAccountsApi,
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         userTokensSaver = userTokensSaver,
         fetchWalletAccountsErrorHandler = fetchWalletAccountsErrorHandler,
@@ -63,6 +63,7 @@ class DefaultWalletAccountsFetcherTest {
 
     private val userWalletId = UserWalletId("011")
     private val eTag = "etag"
+    private val eTagKey = ETagsStore.Key.WalletAccounts
     private val migratedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
 
     @BeforeAll
@@ -71,7 +72,7 @@ class DefaultWalletAccountsFetcherTest {
         every { accountsResponseStore.data } returns accountsResponseStoreFlow
 
         coEvery { tokensMigration.migrate(userWalletId) } returns migratedAccountsResponse.right()
-        coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
+        coEvery { eTagsStore.getSyncOrNull(userWalletId, eTagKey) } returns eTag
     }
 
     @BeforeEach
@@ -82,7 +83,7 @@ class DefaultWalletAccountsFetcherTest {
     @AfterEach
     fun tearDown() {
         clearMocks(
-            tangemTechApi,
+            walletAccountsApi,
             userTokensSaver,
             fetchWalletAccountsErrorHandler,
         )
@@ -140,7 +141,7 @@ class DefaultWalletAccountsFetcherTest {
             val response = createGetWalletAccountsResponse(userWalletId).copy(accounts = accounts)
 
             coEvery {
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
             } returns ApiResponse.Success(data = response, headers = mapOf(ETAG_HEADER to listOf(eTag)))
 
             val transform = slot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
@@ -184,13 +185,13 @@ class DefaultWalletAccountsFetcherTest {
             )
 
             coEvery {
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
             } returns apiResponse
 
             coEvery { accountsResponseStore.updateData(any()) } returns accountsResponse
 
             coEvery {
-                tangemTechApi.saveWalletAccounts(
+                walletAccountsApi.saveAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
                     body = SaveWalletAccountsResponse(updatedAccountsResponse.accounts),
@@ -204,9 +205,9 @@ class DefaultWalletAccountsFetcherTest {
             coVerifyOrder {
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.data
-                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
-                eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = newETag)
+                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = eTagKey)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                eTagsStore.store(userWalletId = userWalletId, key = eTagKey, value = newETag)
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.updateData(any())
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
@@ -242,7 +243,7 @@ class DefaultWalletAccountsFetcherTest {
             accountsResponseStoreFlow.value = savedAccountsResponse
 
             coEvery {
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
             } returns apiResponse
 
             coEvery { accountsResponseStore.updateData(any()) } returns accountsResponse
@@ -254,9 +255,9 @@ class DefaultWalletAccountsFetcherTest {
             coVerifyOrder {
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.data
-                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
-                eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = newETag)
+                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = eTagKey)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                eTagsStore.store(userWalletId = userWalletId, key = eTagKey, value = newETag)
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.updateData(any())
                 tokensMigration.migrate(userWalletId)
@@ -271,7 +272,7 @@ class DefaultWalletAccountsFetcherTest {
                     storeWalletAccounts = any(),
                 )
 
-                tangemTechApi.saveWalletAccounts(walletId = any(), eTag = any(), body = any())
+                walletAccountsApi.saveAccounts(walletId = any(), eTag = any(), body = any())
                 userTokensSaver.push(any(), any())
             }
         }
@@ -285,7 +286,7 @@ class DefaultWalletAccountsFetcherTest {
             accountsResponseStoreFlow.value = savedAccountsResponse
 
             coEvery {
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
             } returns apiError as ApiResponse<GetWalletAccountsResponse>
 
             coEvery {
@@ -305,8 +306,8 @@ class DefaultWalletAccountsFetcherTest {
             coVerifyOrder {
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.data
-                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = eTagKey)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
 
                 fetchWalletAccountsErrorHandler.handle(
                     error = apiError.cause,
@@ -320,7 +321,7 @@ class DefaultWalletAccountsFetcherTest {
 
             coVerify(inverse = true) {
                 eTagsStore.store(userWalletId = any(), key = any(), value = any())
-                tangemTechApi.saveWalletAccounts(walletId = any(), eTag = any(), body = any())
+                walletAccountsApi.saveAccounts(walletId = any(), eTag = any(), body = any())
                 userTokensSaver.push(userWalletId = any(), response = any())
             }
         }
@@ -350,7 +351,7 @@ class DefaultWalletAccountsFetcherTest {
             accountsResponseStoreFlow.value = savedAccountsResponse
 
             coEvery {
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
             } returns getResponse as ApiResponse<GetWalletAccountsResponse>
 
             coEvery {
@@ -371,7 +372,7 @@ class DefaultWalletAccountsFetcherTest {
 
             val saveResponse = ApiResponse.Error(ApiResponseError.TimeoutException())
             coEvery {
-                tangemTechApi.saveWalletAccounts(
+                walletAccountsApi.saveAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
                     body = SaveWalletAccountsResponse(savedAccountsResponse.accounts),
@@ -385,9 +386,9 @@ class DefaultWalletAccountsFetcherTest {
             coVerify {
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.data
-                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
-                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
-                eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
+                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = eTagKey)
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                eTagsStore.store(userWalletId = userWalletId, key = eTagKey, value = eTag)
                 accountsResponseStore.updateData(any())
                 fetchWalletAccountsErrorHandler.handle(
                     error = getResponse.cause,
@@ -397,13 +398,13 @@ class DefaultWalletAccountsFetcherTest {
                     storeWalletAccounts = any(),
                 )
                 defaultWalletAccountsResponseFactory.create(userWalletId = userWalletId, userTokensResponse = null)
-                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
-                tangemTechApi.saveWalletAccounts(
+                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = eTagKey)
+                walletAccountsApi.saveAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
                     body = SaveWalletAccountsResponse(savedAccountsResponse.accounts),
                 )
-                eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
+                eTagsStore.clear(userWalletId, eTagKey)
                 userTokensSaver.push(
                     userWalletId = userWalletId,
                     response = savedAccountsResponse.toUserTokensResponse(),
@@ -486,7 +487,7 @@ class DefaultWalletAccountsFetcherTest {
             val saveResponse = SaveWalletAccountsResponse(getResponse.accounts)
 
             coEvery {
-                tangemTechApi.saveWalletAccounts(
+                walletAccountsApi.saveAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
                     body = saveResponse,
@@ -498,7 +499,7 @@ class DefaultWalletAccountsFetcherTest {
 
             // Assert
             coVerify {
-                tangemTechApi.saveWalletAccounts(
+                walletAccountsApi.saveAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
                     body = saveResponse,
@@ -520,7 +521,7 @@ class DefaultWalletAccountsFetcherTest {
             )
             val saveApiResponse = ApiResponse.Error(apiError)
             coEvery {
-                tangemTechApi.saveWalletAccounts(
+                walletAccountsApi.saveAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
                     body = response,
