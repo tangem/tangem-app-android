@@ -35,6 +35,8 @@ internal object PlacePredictionPreviewIntents : PlacePredictionIntents {
     override fun onSlippageClick() = Unit
     override fun onAddFundsClick() = Unit
     override fun onQuoteRetryClick() = Unit
+    override fun onPolymarketTermsClick() = Unit
+    override fun onTangemTermsClick() = Unit
     override fun onNextClick() = Unit
     override fun onPlaceClick() = Unit
     override fun onBackClick() = Unit
