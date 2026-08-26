@@ -26,12 +26,12 @@ import com.tangem.features.polymarket.impl.common.USD_SYMBOL
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
-import java.math.BigDecimal
+import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 
 @Composable
 internal fun PredictionAmountBlock(
     amountValue: String,
-    toWin: BigDecimal?,
+    payout: PayoutUM?,
     payment: PaymentSourceUM,
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
@@ -39,11 +39,7 @@ internal fun PredictionAmountBlock(
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary) {
         Column {
-            AmountSection(
-                amountValue = amountValue,
-                toWin = toWin,
-                onAmountChange = onAmountChange,
-            )
+            AmountSection(amountValue = amountValue, payout = payout, onAmountChange = onAmountChange)
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 color = TangemTheme.colors3.border.secondary,
@@ -80,7 +76,7 @@ internal fun PredictionAmountBlock(
 }
 
 @Composable
-private fun AmountSection(amountValue: String, toWin: BigDecimal?, onAmountChange: (String) -> Unit) {
+private fun AmountSection(amountValue: String, payout: PayoutUM?, onAmountChange: (String) -> Unit) {
     Column(
         modifier = Modifier.padding(all = 16.dp),
         verticalArrangement = Arrangement.spacedBy(space = 4.dp),
@@ -111,13 +107,24 @@ private fun AmountSection(amountValue: String, toWin: BigDecimal?, onAmountChang
                 },
             ),
         )
-        if (toWin != null) {
+        if (payout != null) {
             TangemBadge(
                 text = stringReference(
-                    stringResourceSafe(R.string.prediction_place_to_win, toWin.formatPolymarketMoney()),
+                    value = stringResourceSafe(
+                        R.string.prediction_place_to_win,
+                        payout.expected.formatPolymarketMoney(),
+                    ),
                 ),
                 status = TangemBadge.Status.Info,
                 size = TangemBadge.Size.X6,
+            )
+            Text(
+                text = stringResourceSafe(
+                    R.string.prediction_place_at_least,
+                    payout.guaranteed.formatPolymarketMoney(),
+                ),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }
