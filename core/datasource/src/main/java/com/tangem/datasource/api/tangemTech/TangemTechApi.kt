@@ -11,6 +11,7 @@ import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1Request
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
@@ -195,20 +196,39 @@ interface TangemTechApi {
 
     // region account
     @GET("/v1/wallets/{walletId}/accounts")
-    suspend fun getWalletAccounts(
+    suspend fun getWalletAccountsV1(
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletAccountsResponse>
 
     @PUT("/v1/wallets/{walletId}/accounts")
-    suspend fun saveWalletAccounts(
+    suspend fun saveWalletAccountsV1(
+        @Path("walletId") walletId: String,
+        @Header("If-Match") eTag: String,
+        @Body body: SaveWalletAccountsV1Request,
+    ): ApiResponse<GetWalletAccountsResponse>
+
+    @GET("/v1/wallets/{walletId}/accounts/archived")
+    suspend fun getWalletArchivedAccountsV1(
+        @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetWalletArchivedAccountsResponse>
+
+    @GET("/api/v2/wallets/{walletId}/accounts")
+    suspend fun getWalletAccountsV2(
+        @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetWalletAccountsResponse>
+
+    @PUT("/api/v2/wallets/{walletId}/accounts")
+    suspend fun saveWalletAccountsV2(
         @Path("walletId") walletId: String,
         @Header("If-Match") eTag: String,
         @Body body: SaveWalletAccountsResponse,
     ): ApiResponse<GetWalletAccountsResponse>
 
-    @GET("/v1/wallets/{walletId}/accounts/archived")
-    suspend fun getWalletArchivedAccounts(
+    @GET("/api/v2/wallets/{walletId}/accounts/archived")
+    suspend fun getWalletArchivedAccountsV2(
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletArchivedAccountsResponse>
