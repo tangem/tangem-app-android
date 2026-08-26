@@ -6,7 +6,8 @@ import com.tangem.domain.pay.model.OrderType
 /**
  * Deterministic order selection:
  * 1. filter by [type];
- * 2. if a card is in scope, filter by `cardId` (or `productInstanceId` when `cardId` is missing);
+ * 2. scope: [selectActive]/[selectLatest] match by `cardId` (or `productInstanceId` when `cardId` is
+ *    missing); [selectActiveBySource] matches reissue orders by `sourceProductInstanceId` instead;
  * 3. pick the latest by `updatedAt` (lexicographic ISO-8601 compare).
  *
  * Returns `null` when no order matches.
@@ -24,6 +25,15 @@ object OrderResolver {
             .filter { it.isActive }
             .filter { it.type == type }
             .filter { matchesCard(it, cardId, productInstanceId) }
+            .maxByOrNull { it.updatedAt.orEmpty() }
+    }
+
+    fun selectActiveBySource(orders: List<Order>, type: OrderType, sourceProductInstanceId: String): Order? {
+        return orders
+            .asSequence()
+            .filter { it.isActive }
+            .filter { it.type == type }
+            .filter { it.sourceProductInstanceId == sourceProductInstanceId }
             .maxByOrNull { it.updatedAt.orEmpty() }
     }
 
