@@ -6,6 +6,7 @@ import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.converter.TwoWayConverter
@@ -25,18 +26,22 @@ internal class JointAccountConverter @AssistedInject constructor(
 ) : TwoWayConverter<WalletAccountDTO, Account.Joint> {
 
     override fun convert(value: WalletAccountDTO): Account.Joint {
-        val derivationIndex = value.derivationIndex.toDerivationIndex()
+        val ownerKeyIndex = OwnerKeyIndex(value.derivationIndex).getOrElse {
+            error("Unable to create OwnerKeyIndex from value: ${value.derivationIndex}. Cause: $it")
+        }
 
         return Account.Joint(
             accountId = value.id.toJointAccountId(userWallet.walletId),
             accountName = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),
-            derivationIndex = derivationIndex,
+            ownerKeyIndex = ownerKeyIndex,
             // A joint account may legitimately carry no tokens at all: it is created empty
             cryptoCurrencies = responseCryptoCurrenciesFactory.createAccountCurrencies(
                 tokens = value.tokens,
                 userWallet = userWallet,
-                accountIndex = derivationIndex,
+                // TODO: [REDACTED_JIRA] — joint currencies get a network of their own here;
+                //  the owner index in the path is a placeholder until then
+                accountIndex = value.derivationIndex.toDerivationIndex(),
             ),
         )
     }
@@ -45,7 +50,7 @@ internal class JointAccountConverter @AssistedInject constructor(
         return WalletAccountDTO(
             id = value.accountId.value,
             name = AccountNameConverter.convert(value = value.accountName),
-            derivationIndex = value.derivationIndex.value,
+            derivationIndex = value.ownerKeyIndex.value,
             icon = value.icon.value.name,
             iconColor = value.icon.color.name,
             type = WalletAccountDTO.Type.JOINT.value,

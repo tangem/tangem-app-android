@@ -22,10 +22,12 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.CryptoPortfolio
+import com.tangem.domain.models.account.Account.Personal
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -243,7 +245,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
             accountsResponseStoreFlow.value = response
 
-            val cryptoPortfolio = mockk<CryptoPortfolio>()
+            val cryptoPortfolio = mockk<Personal>()
 
             every { cryptoPortfolioConverter.convert(accountDTO) } returns cryptoPortfolio
 
@@ -615,7 +617,7 @@ class DefaultAccountsCRUDRepositoryTest {
             // Arrange
             val accountList = AccountList(
                 userWalletId = userWalletId,
-                accounts = listOf(CryptoPortfolio.createMainAccount(userWalletId = userWalletId), jointAccount()),
+                accounts = listOf(Personal.createMainAccount(userWalletId = userWalletId), jointAccount()),
                 totalAccounts = 2,
                 totalArchivedAccounts = 0,
                 totalJointAccounts = 1,
@@ -636,7 +638,7 @@ class DefaultAccountsCRUDRepositoryTest {
                 .containsExactly(WalletAccountDTO.Type.CRYPTO.value, WalletAccountDTO.Type.JOINT.value)
             Truth.assertThat(bodySlot.captured.accounts.map { it.id })
                 .containsExactly(
-                    CryptoPortfolio.createMainAccount(userWalletId = userWalletId).accountId.value,
+                    Personal.createMainAccount(userWalletId = userWalletId).accountId.value,
                     jointAccount().accountId.value,
                 )
         }
@@ -670,7 +672,7 @@ class DefaultAccountsCRUDRepositoryTest {
                     value = CryptoPortfolioIcon.Icon.Star,
                     color = CryptoPortfolioIcon.Color.Azure,
                 ),
-                derivationIndex = DerivationIndex(value = 1).getOrNull()!!,
+                ownerKeyIndex = OwnerKeyIndex(value = 1).getOrNull()!!,
                 cryptoCurrencies = emptyList(),
             )
         }
