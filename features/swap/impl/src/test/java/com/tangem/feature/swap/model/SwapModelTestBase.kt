@@ -143,7 +143,7 @@ internal abstract class SwapModelTestBase {
         every { getBalanceHidingSettingsUseCase.invoke() } returns emptyFlow()
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
         coEvery { shouldShowStoriesInteractor.invokeSync(any()) } returns false
-        // Match regardless of `applyAccountTopUpFromPriority` (driven by the account-swap-flow toggle) —
+        // Match regardless of `isAccountFlowEnabled` (driven by the account-swap-flow toggle) —
         // relying on the trailing defaults here would silently only cover the toggle-OFF (false) call.
         coEvery {
             initialCurrenciesResolver.invoke(
@@ -152,7 +152,7 @@ internal abstract class SwapModelTestBase {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                applyAccountTopUpFromPriority = any(),
+                isAccountFlowEnabled = any(),
             )
         } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
