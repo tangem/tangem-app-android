@@ -42,8 +42,7 @@ interface ETagsStore {
 
     /** Enumeration of possible keys for storing ETag values */
     enum class Key {
-        WalletAccountsV1,
-        WalletAccountsV2,
+        WalletAccounts,
         UserTokens,
         AddressBook,
     }
