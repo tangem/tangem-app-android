@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
@@ -14,6 +15,7 @@ import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
@@ -38,6 +40,14 @@ internal object PolymarketDomainModule {
         polymarketRepository: PolymarketRepository,
     ): GetPolymarketEventsBatchFlowUseCase {
         return GetPolymarketEventsBatchFlowUseCase(polymarketRepository = polymarketRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketCollateralCurrencyUseCase(
+        collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
+    ): GetPolymarketCollateralCurrencyUseCase {
+        return GetPolymarketCollateralCurrencyUseCase(collateralCurrencyFactory = collateralCurrencyFactory)
     }
 
     @Provides
