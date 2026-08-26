@@ -1,6 +1,7 @@
 package com.tangem.features.send.sendnft
 
 import androidx.activity.compose.BackHandler
+import com.tangem.domain.models.account.derivationIndex
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier

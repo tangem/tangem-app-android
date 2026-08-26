@@ -44,12 +44,12 @@ data class AccountList private constructor(
 ) {
 
     /** Retrieves the main crypto portfolio account from the list of accounts */
-    val mainAccount: Account.CryptoPortfolio
-        get() = accounts.first { it is Account.CryptoPortfolio && it.isMainAccount } as Account.CryptoPortfolio
+    val mainAccount: Account.Personal
+        get() = accounts.first { it is Account.Personal && it.isMainAccount } as Account.Personal
 
     /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
     val canAddMoreCryptoAccounts: Boolean
-        get() = accounts.filterIsInstance<Account.CryptoPortfolio>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
+        get() = accounts.filterIsInstance<Account.Personal>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
 
     /** Returns the number of active accounts in the list */
     val activeAccounts: Int
@@ -115,7 +115,7 @@ data class AccountList private constructor(
     fun flattenCurrencies(): List<CryptoCurrency> {
         return accounts.flatMap { account ->
             when (account) {
-                is Account.CryptoPortfolio -> account.cryptoCurrencies
+                is Account.Personal -> account.cryptoCurrencies
                 is Account.Payment -> emptyList()
                 is Account.Virtual -> emptyList()
                 is Account.Prediction -> emptyList()
@@ -128,7 +128,7 @@ data class AccountList private constructor(
 
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
         accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
             .forEach { account ->
                 account.cryptoCurrencies.forEach { currency ->
                     val key = account.accountId to currency.id
@@ -248,8 +248,8 @@ data class AccountList private constructor(
                 Error.ExceedsMaxPredictionAccountsCount
             }
 
-            val cryptoAccounts = accounts.filterIsInstance<Account.CryptoPortfolio>()
-            ensure(cryptoAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
+            val personalAccounts = accounts.filterIsInstance<Account.Personal>()
+            ensure(personalAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
 
             val mainAccountsCount = accounts.mainAccountsCount()
             ensure(mainAccountsCount == MAX_MAIN_ACCOUNTS_COUNT) {
@@ -274,11 +274,11 @@ data class AccountList private constructor(
                 Error.DuplicateAccountNames
             }
 
-            // Against the crypto accounts only, because that is what the counter counts: it comes from
+            // Against the personal accounts only, because that is what the counter counts: it comes from
             // `wallet.totalAccounts`, while joint rows are counted by `totalJointAccounts` and the special
             // accounts are added client-side. Comparing it with the whole list rejected every wallet that has a
             // joint account — the list refused to be built and the producer above retried the same failure forever
-            ensure(totalAccounts >= cryptoAccounts.size) {
+            ensure(totalAccounts >= personalAccounts.size) {
                 Error.TotalAccountsLessThanActive
             }
 
@@ -312,7 +312,7 @@ data class AccountList private constructor(
             return AccountList(
                 userWalletId = userWalletId,
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(
+                    Account.Personal.createMainAccount(
                         userWalletId = userWalletId,
                         cryptoCurrencies = cryptoCurrencies,
                     ),
@@ -326,7 +326,7 @@ data class AccountList private constructor(
         }
 
         private fun List<Account>.mainAccountsCount(): Int {
-            return count { (it as? Account.CryptoPortfolio)?.isMainAccount == true }
+            return count { (it as? Account.Personal)?.isMainAccount == true }
         }
     }
 }

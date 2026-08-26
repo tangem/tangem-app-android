@@ -153,7 +153,7 @@ internal class ResolveOwnerTest {
         val POLYGON = Network.RawID(value = "polygon")
 
         val USER_WALLET_ID = MockAccounts.userWalletId
-        val CRYPTO_ACCOUNT = Account.CryptoPortfolio.createMainAccount(USER_WALLET_ID)
+        val CRYPTO_ACCOUNT = Account.Personal.createMainAccount(USER_WALLET_ID)
         val SECONDARY_ACCOUNT = MockAccounts.createAccount(derivationIndex = 1, userWalletId = USER_WALLET_ID)
         val PAYMENT_ACCOUNT = Account.Payment(USER_WALLET_ID)
         val WALLET_INFO = WalletInfo(
