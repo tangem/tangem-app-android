@@ -23,7 +23,6 @@ class AmountVisualTransformation(
     private val currencyCode: String? = null,
     private val decimalFormat: DecimalFormat = DecimalFormat(),
     private val symbolColor: Color = Color.Unspecified,
-    /** What an empty field shows in place of the formatted value; defaults to a zero with the format's decimals. */
     private val emptyValueText: String? = null,
 ) : VisualTransformation {
 

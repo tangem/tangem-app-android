@@ -41,7 +41,6 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
     )
 }
 
-/** A price nobody reported is not a price of zero, so the outcome stands on its own. */
 private fun MarketHeaderUM.outcomeLabel(): String =
     outcomePriceCents?.let { cents -> "$outcomeTitle $cents$PRICE_CENTS_SIGN" } ?: outcomeTitle
 
