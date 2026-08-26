@@ -9,6 +9,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketDepositBlockchain
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PredictionCollateral
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,14 +42,14 @@ internal class DefaultPolymarketCollateralCurrencyFactory @Inject constructor() 
         return CryptoCurrency.Token(
             id = getTokenId(
                 network = network,
-                rawTokenId = PolymarketCollateralCurrencyFactory.TOKEN_ID,
+                rawTokenId = PredictionCollateral.RAW_ID,
                 contractAddress = PolymarketContracts.COLLATERAL,
             ),
             network = network,
             name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
             symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
             decimals = PolymarketContracts.COLLATERAL_DECIMALS,
-            iconUrl = getTokenIconUrlFromDefaultHost(PolymarketCollateralCurrencyFactory.TOKEN_ID),
+            iconUrl = getTokenIconUrlFromDefaultHost(PredictionCollateral.RAW_ID),
             isCustom = false,
             contractAddress = PolymarketContracts.COLLATERAL,
         )
