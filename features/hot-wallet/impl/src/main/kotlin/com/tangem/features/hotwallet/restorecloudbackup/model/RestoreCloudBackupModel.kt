@@ -196,7 +196,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
                     showError(error)
                 }
             },
-            ifRight = { secret -> onSecretRestored(secret, name = backup.walletName) },
+            ifRight = { restored -> onSecretRestored(restored.secret, name = restored.walletName) },
         )
     }
 

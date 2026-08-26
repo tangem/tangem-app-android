@@ -5,6 +5,8 @@ import com.google.common.truth.Truth
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
+import com.tangem.datasource.utils.AuthenticationHeader
+import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.ApiEnvironment
@@ -80,11 +82,12 @@ internal class ProdApiConfigsManagerTest {
         val configs = listOf(
             YieldSupply(
                 environmentConfig = environmentConfig,
-                authProvider = appAuthProvider,
+                cardAuthHeader = { AuthenticationHeader(appAuthProvider) },
                 appInfoProvider = appInfoProvider,
             ),
             TangemTech(
-                authProvider = appAuthProvider,
+                apiKeyHeader = { environment -> TangemApiKeyHeader(appAuthProvider, environment) },
+                cardAuthHeader = { AuthenticationHeader(appAuthProvider) },
                 appInfoProvider = appInfoProvider,
             ),
             PolymarketWeb(),
