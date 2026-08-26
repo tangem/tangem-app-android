@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.config.providers.models
+package com.tangem.blockchainsdk.providers.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

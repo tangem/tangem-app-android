@@ -1,6 +1,6 @@
-package com.tangem.datasource.local.config.providers
+package com.tangem.blockchainsdk.providers
 
-import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.blockchainsdk.providers.models.ProviderModel
 
 /**
  * Blockchain providers storage
