@@ -17,6 +17,7 @@ import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.utils.extensions.isNegative
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -81,11 +82,15 @@ internal class CashbackBlockTransformer(
         }
         val month = dateFormatter.formatMonth(cashback.period.year, cashback.period.month)
         val isNegative = cashback.confirmedAmount.isNegative()
-        val subtitle = if (isNegative) {
-            resourceReference(R.string.tangempay_cashback_refund_banner)
-        } else {
-            val window = dateFormatter.formatWindow(cashback.period.payoutStart, cashback.period.payoutEnd)
-            window?.let { resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(it)) }
+        val subtitle = when {
+            isNegative -> resourceReference(R.string.tangempay_cashback_refund_banner)
+            cashback.confirmedAmount.isZero() -> resourceReference(
+                R.string.tangempay_cashback_widget_empty_description,
+            )
+            else -> {
+                val window = dateFormatter.formatWindow(cashback.period.payoutStart, cashback.period.payoutEnd)
+                window?.let { resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(it)) }
+            }
         }
         return CashbackBlockUM.Widget(
             title = resourceReference(R.string.tangempay_cashback_widget_title, wrappedList(amount, month)),
