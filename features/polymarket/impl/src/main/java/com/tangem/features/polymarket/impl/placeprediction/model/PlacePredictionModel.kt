@@ -53,16 +53,10 @@ import java.math.BigDecimal
 import javax.inject.Inject
 
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
-internal const val QUOTE_POLL_INTERVAL_MILLIS = 10_000L
 
-/**
- * The only owner of the place-prediction state: every step renders a slice of [uiState] and writes back through
- * [PlacePredictionIntents].
- *
- * The quote is re-requested on an interval rather than fetched once, because the number it carries is the sum that
- * is actually debited, and the book moves. The loop stops as soon as a submission starts, so what is signed is what
- * was shown.
- */
+internal const val LIVE_QUOTE_POLL_INTERVAL_MILLIS = 3_000L
+internal const val QUOTE_POLL_INTERVAL_MILLIS = 15_000L
+
 @Suppress("LongParameterList")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
@@ -88,6 +82,8 @@ internal class PlacePredictionModel @Inject constructor(
 
     private val quoteJobHolder = JobHolder()
 
+    private var isMarketLive = false
+
     init {
         uiState.update(SetPaymentCurrencyTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
         loadMarket()
@@ -112,6 +108,18 @@ internal class PlacePredictionModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    /**
+     * The flow polls a live market every few seconds, so it must not keep doing that off-screen: the loop is
+     * suspended with the screen and resumed with it, rather than living as long as the model.
+     */
+    fun onScreenShown() {
+        restartQuoteLoop(withDebounce = false)
+    }
+
+    fun onScreenHidden() {
+        quoteJobHolder.cancel()
     }
 
     override fun onAmountChange(value: String) {
@@ -253,10 +261,12 @@ internal class PlacePredictionModel @Inject constructor(
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
-                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)
     }
+
+    private fun pollInterval(): Long = if (isMarketLive) LIVE_QUOTE_POLL_INTERVAL_MILLIS else QUOTE_POLL_INTERVAL_MILLIS
 
     private suspend fun requestQuote() {
         val state = uiState.value
@@ -277,6 +287,7 @@ internal class PlacePredictionModel @Inject constructor(
             )
         }
 
+        result.onRight { isMarketLive = it.isLive }
         if (uiState.value.submit is SubmitUM.Idle) {
             uiState.update(SetQuoteResultTransformer(result = result))
         }
