@@ -4,6 +4,8 @@ import android.content.res.Resources
 import arrow.core.None
 import arrow.core.toOption
 import com.google.common.truth.Truth
+import com.tangem.core.local.datastore.RuntimeStateStore
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.converter.*
 import com.tangem.data.account.store.AccountsResponseStore
@@ -11,24 +13,15 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
-import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.Account.CryptoPortfolio
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.account.Account.Personal
-import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -78,7 +71,7 @@ class DefaultAccountsCRUDRepositoryTest {
     )
 
     private val userWalletId = UserWalletId("011")
-    private val archivedETagKey = "${userWalletId.stringValue}:${ETagsStore.Key.WalletAccountsV2}"
+    private val archivedETagKey = userWalletId.stringValue
 
     @BeforeAll
     fun setup() {
@@ -92,7 +85,6 @@ class DefaultAccountsCRUDRepositoryTest {
     @BeforeEach
     fun setupEach() {
         every { archivedAccountsStoreFactory.create(userWalletId) } returns archivedAccountsStore
-        every { walletAccountsApi.eTagKey } returns ETagsStore.Key.WalletAccountsV2
     }
 
     @AfterEach
@@ -518,29 +510,6 @@ class DefaultAccountsCRUDRepositoryTest {
     inner class FetchArchivedAccounts {
 
         private val accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex.Main)
-
-        @Test
-        fun `GIVEN eTag stored for another version WHEN fetchArchivedAccounts THEN validator is not offered`() =
-            runTest {
-                // Arrange
-                every { walletAccountsApi.eTagKey } returns ETagsStore.Key.WalletAccountsV1
-
-                val apiResponse = mockk<GetWalletArchivedAccountsResponse> {
-                    every { this@mockk.accounts } returns emptyList()
-                }
-
-                coEvery { archivedAccountsETagStore.getSyncOrNull() } returns mapOf(archivedETagKey to "etag123")
-                coEvery {
-                    walletAccountsApi.getArchivedAccounts(userWalletId.stringValue, null)
-                } returns ApiResponse.Success(apiResponse)
-
-                // Act
-                repository.fetchArchivedAccounts(userWalletId)
-
-                // Assert
-                coVerify(exactly = 1) { walletAccountsApi.getArchivedAccounts(userWalletId.stringValue, null) }
-                coVerify(exactly = 0) { walletAccountsApi.getArchivedAccounts(userWalletId.stringValue, "etag123") }
-            }
 
         @Test
         fun `fetchArchivedAccounts should store archived accounts in store`() = runTest {
