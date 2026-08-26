@@ -80,7 +80,7 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         val state by model.uiState.collectAsStateWithLifecycle()
 
         if (state.query.isBlank()) {
-            FeedSearchPlaceholder(contentPadding = contentPadding, modifier = modifier)
+            FeedSearchPlaceholder(recent = state.recent, contentPadding = contentPadding, modifier = modifier)
             return
         }
 

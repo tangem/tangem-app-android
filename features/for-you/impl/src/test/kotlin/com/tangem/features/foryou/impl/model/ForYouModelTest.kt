@@ -41,6 +41,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.*
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
@@ -55,6 +56,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.createLoadedValue
 import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
@@ -1138,20 +1140,13 @@ internal class ForYouModelTest {
     private fun loadedValue(
         fiatAmount: BigDecimal,
         source: StatusSource = StatusSource.ACTUAL,
-    ): CryptoCurrencyStatus.Loaded = mockk {
-        every { amount } returns BigDecimal.ONE
-        every { this@mockk.fiatAmount } returns fiatAmount
-        every { isError } returns false
-        every { sources } returns CryptoCurrencyStatus.Sources(
-            networkSource = source,
-            quoteSource = source,
-            stakingBalanceSource = source,
-        )
-        every { yieldSupplyStatus } returns null
-        every { stakingBalance } returns null
-        // The staking accessor reads contributions before the typed field, so a strict mock must answer it.
-        every { contributions } returns emptyList()
-    }
+        staking: StakingBalance? = null,
+    ): CryptoCurrencyStatus.Loaded = createLoadedValue(
+        amount = BigDecimal.ONE,
+        fiatAmount = fiatAmount,
+        staking = staking,
+        source = source,
+    )
 
     private fun createCoin(
         rawCurrencyId: String,

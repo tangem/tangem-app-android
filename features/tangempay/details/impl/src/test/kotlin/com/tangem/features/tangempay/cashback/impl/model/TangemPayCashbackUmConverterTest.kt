@@ -94,7 +94,7 @@ internal class TangemPayCashbackUmConverterTest {
     }
 
     @Test
-    fun `GIVEN negative amount WHEN convert THEN earned title and refund error banner`() {
+    fun `GIVEN negative amount WHEN convert THEN no deposit subtitle and refund error banner`() {
         // Arrange
         val cashback = createCashback(confirmedAmount = BigDecimal("-22.54"))
 
@@ -107,7 +107,7 @@ internal class TangemPayCashbackUmConverterTest {
                 R.string.tangempay_cashback_earned_title,
                 wrappedList("-$22.54", arrayItemReference(R.array.common_month_in, index = 5)),
             ),
-            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
+            subtitle = null,
             isEmpty = false,
             banner = TangemPayCashbackUM.Banner(
                 text = resourceReference(R.string.tangempay_cashback_refund_banner),
