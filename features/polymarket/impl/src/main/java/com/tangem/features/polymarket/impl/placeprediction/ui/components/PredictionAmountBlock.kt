@@ -6,6 +6,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,14 +37,14 @@ import com.tangem.features.polymarket.impl.common.USD_CODE
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
-import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 @Composable
 internal fun PredictionAmountBlock(
     amountValue: String,
-    toWin: BigDecimal?,
+    payout: PayoutUM?,
     amountError: AmountErrorUM?,
     payment: PaymentSourceUM,
     onAmountChange: (String) -> Unit,
@@ -54,7 +55,7 @@ internal fun PredictionAmountBlock(
         Column {
             AmountSection(
                 amountValue = amountValue,
-                toWin = toWin,
+                payout = payout,
                 amountError = amountError,
                 onAmountChange = onAmountChange,
             )
@@ -100,7 +101,7 @@ internal fun PredictionAmountBlock(
 @Composable
 private fun AmountSection(
     amountValue: String,
-    toWin: BigDecimal?,
+    payout: PayoutUM?,
     amountError: AmountErrorUM?,
     onAmountChange: (String) -> Unit,
 ) {
@@ -145,14 +146,14 @@ private fun AmountSection(
                 emptyValueText = EMPTY_AMOUNT_HINT,
             ),
         )
-        AmountCaptionSlot(amountError = amountError, toWin = toWin)
+        AmountCaptionSlot(amountError = amountError, payout = payout)
     }
 }
 
 @Composable
-private fun AmountCaptionSlot(amountError: AmountErrorUM?, toWin: BigDecimal?) {
+private fun AmountCaptionSlot(amountError: AmountErrorUM?, payout: PayoutUM?) {
     AnimatedContent(
-        targetState = amountCaption(amountError = amountError, toWin = toWin),
+        targetState = amountCaption(amountError = amountError, payout = payout),
         transitionSpec = { fadeIn() togetherWith fadeOut() using null },
         contentAlignment = Alignment.Center,
         label = "amountCaption",
@@ -165,14 +166,30 @@ private fun AmountCaptionSlot(amountError: AmountErrorUM?, toWin: BigDecimal?) {
                 color = TangemTheme.colors3.text.status.error,
                 textAlign = TextAlign.Center,
             )
-            is AmountCaption.ToWin -> TangemBadge(
+            is AmountCaption.ToWin -> Column(
                 modifier = Modifier.padding(top = CAPTION_GAP),
-                text = stringReference(
-                    stringResourceSafe(R.string.prediction_place_to_win, caption.amount.formatPolymarketMoney()),
-                ),
-                status = TangemBadge.Status.Info,
-                size = TangemBadge.Size.X6,
-            )
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(space = 4.dp),
+            ) {
+                TangemBadge(
+                    text = stringReference(
+                        stringResourceSafe(
+                            R.string.prediction_place_to_win,
+                            caption.payout.expected.formatPolymarketMoney(),
+                        ),
+                    ),
+                    status = TangemBadge.Status.Info,
+                    size = TangemBadge.Size.X6,
+                )
+                Text(
+                    text = stringResourceSafe(
+                        R.string.prediction_place_at_least,
+                        caption.payout.guaranteed.formatPolymarketMoney(),
+                    ),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
+                )
+            }
             null -> Unit
         }
     }
@@ -182,12 +199,12 @@ private sealed interface AmountCaption {
 
     data class Shortfall(val error: AmountErrorUM) : AmountCaption
 
-    data class ToWin(val amount: BigDecimal) : AmountCaption
+    data class ToWin(val payout: PayoutUM) : AmountCaption
 }
 
-private fun amountCaption(amountError: AmountErrorUM?, toWin: BigDecimal?): AmountCaption? = when {
+private fun amountCaption(amountError: AmountErrorUM?, payout: PayoutUM?): AmountCaption? = when {
     amountError != null -> AmountCaption.Shortfall(error = amountError)
-    toWin != null -> AmountCaption.ToWin(amount = toWin)
+    payout != null -> AmountCaption.ToWin(payout = payout)
     else -> null
 }
 
