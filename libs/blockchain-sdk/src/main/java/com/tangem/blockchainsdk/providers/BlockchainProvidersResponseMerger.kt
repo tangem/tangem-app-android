@@ -4,7 +4,7 @@ import androidx.core.util.PatternsCompat
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.blockchainsdk.providers.models.ProviderModel
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
