@@ -1,9 +1,9 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
-import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
@@ -195,12 +195,26 @@ interface TangemTechApi {
     // endregion
 
     // region account
-    @GET("/v1/wallets/{walletId}/accounts")
-    suspend fun getWalletAccountsV1(
+    /**
+     * The accounts endpoints exist in two versions with the same document shape: legacy `v1` and `api/v2`, which
+     * carries the type of every record. [version] is that path prefix — `v1` or `api/v2` — chosen by the caller.
+     */
+    @GET("/{version}/wallets/{walletId}/accounts")
+    suspend fun getWalletAccounts(
+        @Path(value = "version", encoded = true) version: String,
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletAccountsResponse>
 
+    @PUT("/{version}/wallets/{walletId}/accounts")
+    suspend fun saveWalletAccounts(
+        @Path(value = "version", encoded = true) version: String,
+        @Path("walletId") walletId: String,
+        @Header("If-Match") eTag: String,
+        @Body body: SaveWalletAccountsResponse,
+    ): ApiResponse<GetWalletAccountsResponse>
+
+    /** `v1` accepts no record type, so its body is a separate shape; goes away with `v1` itself. */
     @PUT("/v1/wallets/{walletId}/accounts")
     suspend fun saveWalletAccountsV1(
         @Path("walletId") walletId: String,
@@ -208,27 +222,9 @@ interface TangemTechApi {
         @Body body: SaveWalletAccountsV1Request,
     ): ApiResponse<GetWalletAccountsResponse>
 
-    @GET("/v1/wallets/{walletId}/accounts/archived")
-    suspend fun getWalletArchivedAccountsV1(
-        @Path("walletId") walletId: String,
-        @Header("If-None-Match") eTag: String? = null,
-    ): ApiResponse<GetWalletArchivedAccountsResponse>
-
-    @GET("/api/v2/wallets/{walletId}/accounts")
-    suspend fun getWalletAccountsV2(
-        @Path("walletId") walletId: String,
-        @Header("If-None-Match") eTag: String? = null,
-    ): ApiResponse<GetWalletAccountsResponse>
-
-    @PUT("/api/v2/wallets/{walletId}/accounts")
-    suspend fun saveWalletAccountsV2(
-        @Path("walletId") walletId: String,
-        @Header("If-Match") eTag: String,
-        @Body body: SaveWalletAccountsResponse,
-    ): ApiResponse<GetWalletAccountsResponse>
-
-    @GET("/api/v2/wallets/{walletId}/accounts/archived")
-    suspend fun getWalletArchivedAccountsV2(
+    @GET("/{version}/wallets/{walletId}/accounts/archived")
+    suspend fun getWalletArchivedAccounts(
+        @Path(value = "version", encoded = true) version: String,
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletArchivedAccountsResponse>

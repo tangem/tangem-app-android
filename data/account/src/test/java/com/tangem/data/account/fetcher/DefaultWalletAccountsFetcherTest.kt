@@ -2,6 +2,8 @@ package com.tangem.data.account.fetcher
 
 import arrow.core.right
 import com.google.common.truth.Truth
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
@@ -12,14 +14,12 @@ import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
-import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.getEmittedValues
@@ -63,7 +63,7 @@ class DefaultWalletAccountsFetcherTest {
 
     private val userWalletId = UserWalletId("011")
     private val eTag = "etag"
-    private val eTagKey = ETagsStore.Key.WalletAccountsV2
+    private val eTagKey = ETagsStore.Key.WalletAccounts
     private val migratedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
 
     @BeforeAll
@@ -77,7 +77,6 @@ class DefaultWalletAccountsFetcherTest {
 
     @BeforeEach
     fun setUpEach() {
-        every { walletAccountsApi.eTagKey } returns eTagKey
         every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns false
     }
 
