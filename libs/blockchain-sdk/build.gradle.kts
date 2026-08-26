@@ -55,6 +55,10 @@ dependencies {
     implementation(projects.core.utils)
     // endregion
 
+    // region Store modules
+    implementation(projects.store.datasource.api)
+    // endregion
+
     // region Domain models
     api(projects.domain.models)
     // endregion
