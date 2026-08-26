@@ -20,8 +20,15 @@ internal class DefaultFeedSearchBarController @Inject constructor() : FeedSearch
     val activationRequests: SharedFlow<Boolean>
         field = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
 
+    override val submits: SharedFlow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     override fun onQueryChange(query: String) {
         state.update { it.copy(query = query) }
+    }
+
+    override fun onSubmit() {
+        submits.tryEmit(Unit)
     }
 
     override fun onActiveChange(isActive: Boolean) {
