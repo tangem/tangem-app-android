@@ -7,6 +7,8 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -55,6 +57,8 @@ internal class PlacePredictionModelTest {
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk(relaxed = true)
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val getEventUseCase: GetPolymarketEventUseCase = mockk()
     private val deriveAddressesUseCase: DerivePolymarketAddressesUseCase = mockk()
     private val getBalanceInteractor: GetPolymarketBalanceInteractor = mockk()
@@ -74,6 +78,8 @@ internal class PlacePredictionModelTest {
             getBalanceInteractor,
             getQuoteUseCase,
             checkGeoblockUseCase,
+            getWalletMetaInfoUseCase,
+            sendFeedbackEmailUseCase,
         )
 
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
@@ -273,6 +279,25 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN submission started WHEN it fails technically THEN submit returns to Idle AND dialog sent`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onPlaceClick()
+            clearMocks(messageSender)
+
+            // Act
+            model.showPlaceFailure()
+
+            // Assert — the placeholder dialog of onPlaceClick is cleared above, so this is the failure one
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            verify(exactly = 1) { messageSender.send(any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `WHEN next clicked THEN summary pushed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -316,6 +341,8 @@ internal class PlacePredictionModelTest {
             ),
             router = router,
             urlOpener = urlOpener,
+            getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
+            sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             messageSender = messageSender,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getPolymarketEventUseCase = getEventUseCase,
