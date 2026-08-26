@@ -28,10 +28,14 @@ data class SaveWalletAccountsV1Request(
 
     companion object {
 
+        /**
+         * Only `crypto` records survive: `v1` knows no other kind, so a joint record — or a type this build has never
+         * heard of — must not reach it.
+         */
         fun of(body: SaveWalletAccountsResponse): SaveWalletAccountsV1Request {
             return SaveWalletAccountsV1Request(
                 accounts = body.accounts
-                    .filterNot { account -> account.type == WalletAccountDTO.Type.JOINT.value }
+                    .filter { account -> account.type == WalletAccountDTO.Type.CRYPTO.value }
                     .map { account ->
                         AccountDTO(
                             id = account.id,
