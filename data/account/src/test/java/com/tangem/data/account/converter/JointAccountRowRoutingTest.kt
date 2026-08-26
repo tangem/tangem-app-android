@@ -10,6 +10,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
@@ -147,12 +148,12 @@ internal class JointAccountRowRoutingTest {
         )
     }
 
-    private fun cryptoAccount(): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio.createMainAccount(userWalletId = WALLET_ID)
+    private fun cryptoAccount(): Account.Personal {
+        return Account.Personal.createMainAccount(userWalletId = WALLET_ID)
     }
 
-    private fun secondCryptoAccount(): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio(
+    private fun secondCryptoAccount(): Account.Personal {
+        return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = WALLET_ID, value = SECOND_ROW_ID).getOrNull()!!,
             accountName = AccountName.Custom(value = "Second").getOrNull()!!,
             icon = CryptoPortfolioIcon.ofCustomAccount(
@@ -171,7 +172,7 @@ internal class JointAccountRowRoutingTest {
                 value = CryptoPortfolioIcon.Icon.Star,
                 color = CryptoPortfolioIcon.Color.Azure,
             ),
-            derivationIndex = DerivationIndex(value = 1).getOrNull()!!,
+            ownerKeyIndex = OwnerKeyIndex(value = 1).getOrNull()!!,
             cryptoCurrencies = emptyList(),
         )
     }
