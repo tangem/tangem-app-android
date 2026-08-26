@@ -1,18 +1,28 @@
 package com.tangem.grow.datasource.di
 
+import android.content.Context
+import androidx.datastore.dataStoreFile
+import com.squareup.moshi.Moshi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.header.CardAuthHeaderProvider
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
+import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.listTypes
 import com.tangem.grow.datasource.config.Express
 import com.tangem.grow.datasource.config.GaslessTxService
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import com.tangem.grow.datasource.config.MoonPay
 import com.tangem.grow.datasource.config.P2PEthPool
 import com.tangem.grow.datasource.config.StakeKit
+import com.tangem.grow.datasource.config.YieldSupply
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
+import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
@@ -22,10 +32,15 @@ import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.grow.datasource.onramp.OnrampApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.addStakeKitEnumFallbackAdapters
+import com.tangem.grow.datasource.yield.local.DefaultYieldMarketsStore
+import com.tangem.grow.datasource.yield.local.YieldMarketsStore
+import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dagger.multibindings.IntoSet
@@ -163,6 +178,54 @@ internal object GrowDatasourceModule {
     @IntoSet
     fun provideStakeKitEnumFallbackConfigurer(): NetworkMoshiConfigurer {
         return NetworkMoshiConfigurer { it.addStakeKitEnumFallbackAdapters() }
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(YieldSupply.KEY)
+    fun provideYieldSupplyConfig(
+        growEnvironmentConfig: GrowEnvironmentConfig,
+        cardAuthHeaderProvider: CardAuthHeaderProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
+        return YieldSupply(
+            growEnvironmentConfig = growEnvironmentConfig,
+            cardAuthHeader = cardAuthHeaderProvider,
+            appInfoProvider = appInfoProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyApi(factory: RetrofitFactory): YieldSupplyApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = YieldSupply.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldMarketsStore(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): YieldMarketsStore {
+        return DefaultYieldMarketsStore(
+            persistenceStore = dataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = listTypes<YieldSupplyMarketTokenDto>(),
+                    defaultValue = emptyList(),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
+                scope = appScope,
+            ),
+        )
     }
 
     @Provides

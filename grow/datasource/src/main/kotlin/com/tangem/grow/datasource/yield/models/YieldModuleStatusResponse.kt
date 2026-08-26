@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.tangemTech.models
+package com.tangem.grow.datasource.yield.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

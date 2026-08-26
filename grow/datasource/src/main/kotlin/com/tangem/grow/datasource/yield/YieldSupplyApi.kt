@@ -1,11 +1,11 @@
-package com.tangem.datasource.api.tangemTech
+package com.tangem.grow.datasource.yield
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.tangemTech.models.YieldMarketsResponse
-import com.tangem.datasource.api.tangemTech.models.YieldModuleStatusResponse
-import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody
-import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
-import com.tangem.datasource.api.tangemTech.models.YieldTokenChartResponse
+import com.tangem.grow.datasource.yield.models.YieldMarketsResponse
+import com.tangem.grow.datasource.yield.models.YieldModuleStatusResponse
+import com.tangem.grow.datasource.yield.models.YieldSupplyChangeTokenStatusBody
+import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
+import com.tangem.grow.datasource.yield.models.YieldTokenChartResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
