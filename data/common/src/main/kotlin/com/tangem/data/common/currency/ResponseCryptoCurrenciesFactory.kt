@@ -39,20 +39,24 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             .toList()
     }
 
+    fun createCurrencies(
+        tokens: List<UserTokensResponse.Token>,
+        userWallet: UserWallet,
+        derivationPath: Network.DerivationPath,
+    ): List<CryptoCurrency> {
+        return tokens
+            .asSequence()
+            .mapNotNull { createCurrency(it, userWallet, derivationPath) }
+            .distinctBy(CryptoCurrency::id)
+            .toList()
+    }
+
     fun createCurrency(
         responseToken: UserTokensResponse.Token,
         userWallet: UserWallet,
         accountIndex: DerivationIndex,
     ): CryptoCurrency? {
-        var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
-        if (blockchain == null || blockchain == Blockchain.Unknown) {
-            TangemLogger.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
-            return null
-        }
-
-        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isTestCard()) {
-            blockchain = blockchain.getTestnetVersion() ?: blockchain
-        }
+        val blockchain = resolveBlockchain(responseToken, userWallet) ?: return null
 
         val network = networkFactory.create(
             blockchain = blockchain,
@@ -69,15 +73,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         userWallet: UserWallet,
         network: Network,
     ): CryptoCurrency? {
-        var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
-        if (blockchain == null || blockchain == Blockchain.Unknown) {
-            TangemLogger.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
-            return null
-        }
-
-        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isTestCard()) {
-            blockchain = blockchain.getTestnetVersion() ?: blockchain
-        }
+        val blockchain = resolveBlockchain(responseToken, userWallet) ?: return null
 
         val sdkToken = createSdkToken(responseToken)
         return if (sdkToken == null) {
@@ -85,6 +81,35 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         } else {
             createToken(blockchain, sdkToken, network)
         }
+    }
+
+    /** The currency of [responseToken] on the network at [derivationPath], whatever path the token itself names. */
+    private fun createCurrency(
+        responseToken: UserTokensResponse.Token,
+        userWallet: UserWallet,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency? {
+        val blockchain = resolveBlockchain(responseToken, userWallet) ?: return null
+
+        val network = networkFactory.create(
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+            userWallet = userWallet,
+        ) ?: return null
+
+        return createCurrency(responseToken = responseToken, userWallet = userWallet, network = network)
+    }
+
+    private fun resolveBlockchain(responseToken: UserTokensResponse.Token, userWallet: UserWallet): Blockchain? {
+        val blockchain = Blockchain.fromNetworkId(responseToken.networkId)
+        if (blockchain == null || blockchain == Blockchain.Unknown) {
+            TangemLogger.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
+            return null
+        }
+
+        val isTestCard = userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isTestCard()
+
+        return if (isTestCard) blockchain.getTestnetVersion() ?: blockchain else blockchain
     }
 
     private fun createSdkToken(token: UserTokensResponse.Token): SdkToken? {
