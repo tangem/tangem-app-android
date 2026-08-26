@@ -7,8 +7,14 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.R
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -61,6 +67,8 @@ internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val urlOpener: UrlOpener,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
@@ -138,6 +146,36 @@ internal class PlacePredictionModel @Inject constructor(
                 onDismissRequest = { uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle)) },
             ),
         )
+    }
+
+    /**
+     * A submission that never reached the book: the same order can still be placed, so this is a dialog over
+     * the summary rather than a result screen, and it returns the flow to [SubmitUM.Idle].
+     */
+    fun showPlaceFailure() {
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
+
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.prediction_place_error_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_support),
+                        onClick = ::onSupportClick,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun onSupportClick() {
+        modelScope.launch {
+            val metaInfo = getWalletMetaInfoUseCase(userWalletId = params.userWalletId).getOrNull() ?: return@launch
+
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
+        }
     }
 
     private fun showComingLater(part: String) {
