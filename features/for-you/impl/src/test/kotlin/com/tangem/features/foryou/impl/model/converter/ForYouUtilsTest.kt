@@ -214,14 +214,33 @@ internal class ForYouUtilsTest {
         private fun provideTestModels() = listOf(
             // No entry for the symbol at all → no badge
             BadgeModel(coinIndicators = null, expected = null),
-            // Entry present but without readings → score 0 → Neutral (summary shows "Neutral outlook" too)
-            BadgeModel(coinIndicators = createIndicators(), expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue),
-            // Only non-actionable signals → score 0 → Neutral, matching the summary's "Neutral outlook"
+            // Entry present but without a single reading → nothing to interpret → no badge
+            BadgeModel(coinIndicators = createIndicators(), expected = null),
+            // Every reading unavailable (stablecoin, or no fresh data) → no badge rather than a misleading "Neutral"
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NOT_AVAILABLE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_AVAILABLE),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NOT_AVAILABLE),
+                ),
+                expected = null,
+            ),
+            // One INSUFFICIENT_DATA reading among unavailable ones is still data → badge stays, scoring 0
+            // → Neutral, matching the summary's "Neutral outlook"
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.INSUFFICIENT_DATA, Timeframe.DAY),
                     createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_AVAILABLE),
                     createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NOT_AVAILABLE),
+                ),
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+            // Hiding is decided over every reading, not the selected timeframe: a WEEK signal keeps the
+            // badge for DAY, where the only reading is unavailable → score 0 → Neutral
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NOT_AVAILABLE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.WEEK),
                 ),
                 expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
             ),
