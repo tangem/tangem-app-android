@@ -34,6 +34,8 @@ sealed interface PredictionOrderValidationError : PolymarketError {
 
     data class MissingBuilderCode(val builder: String) : PredictionOrderValidationError
 
+    data class BuilderCodeMismatch(val signed: String, val quoted: String) : PredictionOrderValidationError
+
     data class SignatureNotWrapped(val length: Int) : PredictionOrderValidationError
 
     data class StaleQuote(val ageMillis: Long) : PredictionOrderValidationError
