@@ -1937,7 +1937,7 @@
   <string name="tangem_pay_status_pending">В процессе</string>
   <string name="tangem_pay_status_reversed">Возврат</string>
   <string name="tangem_pay_terms_fees_limits">Тарифы и полные условия</string>
-  <string name="tangem_pay_terms_limits">Тарифы и лимиты</string>
+  <string name="tangem_pay_terms_limits">Полные условия</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк отклонил транзакцию</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Ниже мин.суммы</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Достигнут лимит</string>
@@ -2188,7 +2188,7 @@
   <string name="tangempay_other_networks_header">Другие сети</string>
   <string name="tangempay_other_networks_subtitle">А затем обменяйте на платёжный счёт по курсу 1:1 без комиссии</string>
   <string name="tangempay_other_networks_title">Отправьте USDT / USDC в любой сети на ваш Tangem Wallet</string>
-  <string name="tangempay_pay_support">Поддержка Pay</string>
+  <string name="tangempay_pay_support">Поддержка</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Cессия истекла</string>
   <string name="tangempay_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
