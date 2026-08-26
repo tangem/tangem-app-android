@@ -30,7 +30,7 @@ dependencies {
     // endregion
 
     // region Other libraries
-    api(deps.retrofit)
+    implementation(deps.retrofit)
     implementation(deps.moshi)
     implementation(deps.moshi.adapters)
     ksp(deps.moshi.kotlin.codegen)
