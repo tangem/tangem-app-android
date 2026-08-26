@@ -1,15 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction.entity
 
 import androidx.compose.runtime.Immutable
-import java.math.BigDecimal
 
-/**
- * Notifications the flow can raise.
- *
- * [isBlocking] is what decides whether a notification stops the order: a warning that should not stop it
- * declares itself non-blocking, instead of being special-cased at the button. The button also needs a
- * priced quote, an idle submission and a sufficient balance — see `recomputeGate`.
- */
 @Immutable
 internal sealed interface PredictionNotificationUM {
 
@@ -20,15 +12,14 @@ internal sealed interface PredictionNotificationUM {
     }
 
     data object NoLiquidity : PredictionNotificationUM {
-        override val isBlocking = false
+        override val isBlocking = true
     }
 
-    /** The balance does not cover what the order would debit, fees included. */
     data object InsufficientBalance : PredictionNotificationUM {
         override val isBlocking = true
     }
 
-    data class BelowMinOrderSize(val minOrderSize: BigDecimal) : PredictionNotificationUM {
+    data object BelowMinOrderSize : PredictionNotificationUM {
         override val isBlocking = true
     }
 
