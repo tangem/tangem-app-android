@@ -159,8 +159,14 @@ internal class DefaultAccountsCRUDRepository(
     override suspend fun saveAccount(account: Account.CryptoPortfolio) {
         val store = getAccountsResponseStore(userWalletId = account.userWalletId)
 
-        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = account.userWalletId)
-        val newAccountDTO = converter.convertBack(value = account)
+        val newAccountDTO = when (account) {
+            is Account.Personal -> convertersContainer
+                .createCryptoPortfolioConverter(userWalletId = account.userWalletId)
+                .convertBack(value = account)
+            is Account.Joint -> convertersContainer
+                .createJointAccountConverter(userWalletId = account.userWalletId)
+                .convertBack(value = account)
+        }
 
         store.updateData { response ->
             response ?: return@updateData response
