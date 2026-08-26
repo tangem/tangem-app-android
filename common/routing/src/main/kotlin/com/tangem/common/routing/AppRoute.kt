@@ -513,7 +513,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class EditAccount(
-        val account: Account.CryptoPortfolio,
+        val account: Account.Personal,
     ) : AppRoute(path = "/edit_account/${account.accountId.value}")
 
     @Serializable

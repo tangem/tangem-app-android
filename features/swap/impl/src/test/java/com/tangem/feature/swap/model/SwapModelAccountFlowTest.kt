@@ -907,7 +907,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val from = SwapCurrencyStatus(
             userWallet = wallet,
             status = sourceStatus,
-            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            account = Account.Personal.createMainAccount(userWalletId),
         )
         val to = SwapCurrencyStatus(userWallet = wallet, status = anchoredToStatus, account = paymentAccount)
         coEvery {
