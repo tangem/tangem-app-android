@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.placeprediction.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -25,7 +26,7 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
             previewState(amountValue = "4000", quote = previewQuote(status = PredictionQuoteStatus.PARTIAL)),
             previewState(
                 amountValue = "4000",
-                quote = previewQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
+                quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
             ),
         )
 }
@@ -72,7 +73,7 @@ private fun previewState(
     ),
     payment = PaymentSourceUM(tokenSymbol = "USDC", balance = balance, hasSufficientBalance = false),
     amountValue = amountValue,
-    slippage = SlippageUM(percent = BigDecimal("0.25"), isDefault = true),
+    slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
     quote = quote,
     tradingPermission = tradingPermission,
     notifications = persistentListOf(),
@@ -82,8 +83,8 @@ private fun previewState(
 
 private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.FULL): QuoteUM.Content = QuoteUM.Content(
     status = status,
-    shares = BigDecimal("4705.88"),
-    toWin = BigDecimal("4705.88"),
+    expectedShares = BigDecimal("4705.88"),
+    guaranteedShares = BigDecimal("4612.54"),
     feeTotal = BigDecimal("1.4"),
     total = BigDecimal("4001.4"),
     minOrderSize = BigDecimal("5"),
