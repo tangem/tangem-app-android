@@ -17,11 +17,6 @@ internal class SetQuoteResultTransformer(
     private val receivedAtMillis: Long,
 ) : Transformer<PlacePredictionUM> {
 
-    /**
-     * A submission owns the state once it starts, so a quote arriving after that is dropped here rather
-     * than at each call site: what freezes the slice is this refusal, and it must not depend on every
-     * future caller remembering to check.
-     */
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         if (prevState.submit !is SubmitUM.Idle) return prevState
 

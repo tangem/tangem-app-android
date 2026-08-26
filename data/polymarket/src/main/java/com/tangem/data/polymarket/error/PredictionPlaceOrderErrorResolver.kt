@@ -18,7 +18,15 @@ internal class PredictionPlaceOrderErrorResolver @Inject constructor() {
 
     private fun ApiResponseError.HttpException.toPlaceOrderError(): PredictionPlaceOrderError = when {
         code == Code.UNAUTHORIZED -> PredictionPlaceOrderError.Unauthorized(detail = errorBody)
+        isNoMatchForFillAndKill() -> PredictionPlaceOrderError.NoLiquidity(detail = errorBody)
         code == Code.BAD_REQUEST -> PredictionPlaceOrderError.Rejected(detail = errorBody)
         else -> PredictionPlaceOrderError.Ambiguous(detail = errorBody)
+    }
+
+    private fun ApiResponseError.HttpException.isNoMatchForFillAndKill(): Boolean =
+        code == Code.BAD_REQUEST && errorBody?.contains(other = NO_MATCH_MARKER, ignoreCase = true) == true
+
+    private companion object {
+        const val NO_MATCH_MARKER = "no orders found to match"
     }
 }

@@ -600,6 +600,31 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN the exchange found no match WHEN place clicked THEN the flow ends on the no-liquidity result`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { placeOrderUseCase(any(), any()) } returns
+                PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
+            assertThat((model.uiState.value.submit as SubmitUM.Result).result)
+                .isInstanceOf(PlaceResultUM.NotFilled::class.java)
+            verify { router.replaceAll(PlacePredictionRoute.Status) }
+            verify(exactly = 0) { messageSender.send(any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN no answer from the exchange WHEN place clicked THEN the outcome is submitted and not retried`() =
         runTest {
             // Arrange
@@ -718,7 +743,7 @@ internal class PlacePredictionModelTest {
         advanceUntilIdle()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+        coEvery { placeOrderUseCase(any(), any()) } coAnswers {
             // Act — tapped while the order is on its way to the exchange
             model.onCloseClick()
             model.onBackClick()

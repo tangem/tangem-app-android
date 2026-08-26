@@ -57,6 +57,25 @@ internal class PredictionPlaceOrderErrorResolverTest {
             expected = PredictionPlaceOrderError.Rejected(detail = "min size"),
         ),
         ResolveModel(
+            name = "a fill-and-kill order that found no match is a market without liquidity",
+            error = ApiResponseError.HttpException(code = Code.BAD_REQUEST, message = null, errorBody = FAK_NO_MATCH),
+            expected = PredictionPlaceOrderError.NoLiquidity(detail = FAK_NO_MATCH),
+        ),
+        ResolveModel(
+            name = "the same body on a 401 is still about our credentials",
+            error = ApiResponseError.HttpException(code = Code.UNAUTHORIZED, message = null, errorBody = FAK_NO_MATCH),
+            expected = PredictionPlaceOrderError.Unauthorized(detail = FAK_NO_MATCH),
+        ),
+        ResolveModel(
+            name = "the same body on a 5xx is no verdict, so the outcome stays unknown",
+            error = ApiResponseError.HttpException(
+                code = Code.INTERNAL_SERVER_ERROR,
+                message = null,
+                errorBody = FAK_NO_MATCH,
+            ),
+            expected = PredictionPlaceOrderError.Ambiguous(detail = FAK_NO_MATCH),
+        ),
+        ResolveModel(
             name = "a 5xx is no verdict on the order, so its outcome is unknown",
             error = ApiResponseError.HttpException(code = Code.INTERNAL_SERVER_ERROR, message = null, errorBody = "x"),
             expected = PredictionPlaceOrderError.Ambiguous(detail = "x"),
@@ -67,4 +86,9 @@ internal class PredictionPlaceOrderErrorResolverTest {
             expected = PredictionPlaceOrderError.Ambiguous(detail = "boom"),
         ),
     )
+
+    private companion object {
+        const val FAK_NO_MATCH = "{\"error\":\"no orders found to match with FAK order. FAK orders are " +
+            "partially filled or killed if no match is found.\",\"orderID\":\"0x310aecad\"}"
+    }
 }

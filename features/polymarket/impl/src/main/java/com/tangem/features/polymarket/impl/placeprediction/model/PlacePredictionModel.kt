@@ -253,16 +253,27 @@ internal class PlacePredictionModel @Inject constructor(
         if (isCancelled) {
             returnToIdle()
         } else {
-            showPlaceFailure(reason = "Signing failed: $failure")
+            showPlaceFailure(reason = failure.toReason())
         }
     }
 
+    private fun PredictionOrderFailure.toReason(): String = when (this) {
+        is PredictionOrderFailure.Draft -> "Order could not be drafted: $error"
+        is PredictionOrderFailure.Invalid -> "Order failed its own checks: $error"
+        is PredictionOrderFailure.Signing -> "Signing failed: $error"
+    }
+
     private fun onPlaceError(error: PredictionPlaceOrderError) {
-        if (error is PredictionPlaceOrderError.Ambiguous) {
-            logger.e("Order outcome unknown, reporting it as submitted: $error")
-            showResult(result = PlaceResultUM.Submitted(placedAt = System.currentTimeMillis()))
-        } else {
-            showPlaceFailure(reason = "Order refused: $error")
+        when (error) {
+            is PredictionPlaceOrderError.Ambiguous -> {
+                logger.e("Order outcome unknown, reporting it as submitted: $error")
+                showResult(result = PlaceResultUM.Submitted(placedAt = System.currentTimeMillis()))
+            }
+            is PredictionPlaceOrderError.NoLiquidity -> {
+                logger.e("The exchange found no match for the order: $error")
+                showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
+            }
+            else -> showPlaceFailure(reason = "Order refused: $error")
         }
     }
 
@@ -294,11 +305,6 @@ internal class PlacePredictionModel @Inject constructor(
         )
     }
 
-    /**
-     * The quote loop stops as soon as the state leaves [SubmitUM.Idle], and coming back has to start it
-     * again: the frozen quote is only signable for so long, and without a fresh one the next attempt would
-     * fail the age check with nothing on screen explaining why.
-     */
     private fun returnToIdle() {
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
 
@@ -343,10 +349,6 @@ internal class PlacePredictionModel @Inject constructor(
         router.pop()
     }
 
-    /**
-     * True while an order is being signed or sent. Leaving then would cancel the request mid-flight and
-     * throw away an outcome nobody can ask for again — the collateral would be gone with nothing on screen.
-     */
     fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }
 
     private fun loadMarket() {
