@@ -13,6 +13,9 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.feed.search.model.RecentFeedSearchItem
+import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
+import com.tangem.domain.feed.search.usecase.SaveRecentFeedSearchItemUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenListBatchFlow
 import com.tangem.domain.markets.TokenListBatchingContext
@@ -35,6 +38,7 @@ import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.feed.crypto.CryptoFeedSearchTabComponent
 import com.tangem.features.feed.crypto.ui.state.MarketSearchUM
 import com.tangem.features.feed.crypto.ui.state.PortfolioSearchUM
+import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
@@ -42,6 +46,7 @@ import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -78,6 +83,8 @@ internal class CryptoFeedSearchTabModelTest {
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
     private val walletIconUMConverter: WalletIconUMConverter = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val saveRecentFeedSearchItemUseCase: SaveRecentFeedSearchItemUseCase = mockk(relaxed = true)
+    private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
 
     private val actions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
@@ -95,6 +102,8 @@ internal class CryptoFeedSearchTabModelTest {
             getSearchResultsUseCase,
             router,
             analyticsEventHandler,
+            saveRecentFeedSearchItemUseCase,
+            saveFeedSearchQueryUseCase,
         )
         actions.clear()
         batchState.value = BatchListState(data = emptyList(), status = PaginationStatus.None)
@@ -260,6 +269,33 @@ internal class CryptoFeedSearchTabModelTest {
                 AppRoute.CurrencyDetails(userWalletId = entry.userWalletId, currency = entry.currencyStatus.currency),
             )
         }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a market row WHEN it is clicked THEN the token and the query are written to search history`() = runTest {
+        // Arrange
+        val query = MutableStateFlow("")
+        val model = createModel(testScope = this, query = query)
+        model.becomeVisible()
+        query.value = "btc"
+        advanceUntilIdle()
+        emitMarkets(tokenMarket("btc"))
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value.market as MarketSearchUM.Content).items.first().row.onClick?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            saveRecentFeedSearchItemUseCase(
+                match<RecentFeedSearchItem> { it is RecentFeedSearchItem.MarketToken && it.id == "btc" },
+            )
+        }
+        coVerify(exactly = 1) { saveFeedSearchQueryUseCase("btc") }
+        verify { router.push(route = any<FeedRoute.MarketsTokenDetails>(), onComplete = any()) }
 
         model.onDestroy()
     }
@@ -437,6 +473,8 @@ internal class CryptoFeedSearchTabModelTest {
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = walletIconUMConverter,
             analyticsEventHandler = analyticsEventHandler,
+            saveRecentFeedSearchItemUseCase = saveRecentFeedSearchItemUseCase,
+            saveFeedSearchQueryUseCase = saveFeedSearchQueryUseCase,
             router = router,
         )
     }
