@@ -1,6 +1,7 @@
 package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
@@ -370,7 +371,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
+                // An NFC launch stays on the legacy screen, which is the only one that auto-starts the card
+                // scan. Routing it to the redesign would consume the tag and do nothing.
+                val isRedesign = introductionFeatureToggles.isIntroductionRedesignEnabled &&
+                    route.launchMode != InitScreenLaunchMode.WithCardScan
+                if (isRedesign) {
                     createComponentChild(
                         context = context,
                         params = IntroductionComponent.Params(route.launchMode),
