@@ -315,7 +315,7 @@ internal class CashbackBlockTransformerTest {
         ),
         isBalanceHidden = false,
         errorNotificationConfig = null,
-        accountDeactivatedNotificationConfig = null,
+        accountDeactivatedBannerState = null,
     )
 
     private fun menuItem(titleRes: Int): TangemPayDropDownItemUM = TangemPayDropDownItemUM(
