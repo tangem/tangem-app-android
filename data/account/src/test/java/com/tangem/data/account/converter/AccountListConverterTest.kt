@@ -13,7 +13,10 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -23,19 +26,14 @@ class AccountListConverterTest {
         every { walletId } returns UserWalletId("011")
     }
     private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
-    private val jointAccountConverter = mockk<JointAccountConverter>()
 
-    // Stubbed where they are declared: the converter resolves both factories in its constructor
+    // Stubbed where it is declared: the converter resolves the factory in its constructor
     private val cryptoPortfolioConverterFactory = mockk<CryptoPortfolioConverter.Factory> {
         every { create(userWallet) } returns cryptoPortfolioConverter
-    }
-    private val jointAccountConverterFactory = mockk<JointAccountConverter.Factory> {
-        every { create(userWallet) } returns jointAccountConverter
     }
     private val converter = AccountListConverter(
         userWallet = userWallet,
         cryptoPortfolioConverterFactory = cryptoPortfolioConverterFactory,
-        jointAccountConverterFactory = jointAccountConverterFactory,
     )
 
     @BeforeEach

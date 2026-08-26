@@ -39,22 +39,4 @@ internal class JointAccountOwnerDerivationTest {
         // Assert
         assertThat(actual).isEqualTo(Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/7"))
     }
-
-    @Test
-    fun `GIVEN owner key path WHEN isJointAccountOwnerDerivationPath THEN true`() {
-        // Act
-        val actual = isJointAccountOwnerDerivationPath(rawPath = "m/44'/60'/888888'/0/19")
-
-        // Assert
-        assertThat(actual).isTrue()
-    }
-
-    @Test
-    fun `GIVEN path of a wallet's own account WHEN isJointAccountOwnerDerivationPath THEN false`() {
-        // Act
-        val actual = isJointAccountOwnerDerivationPath(rawPath = "m/44'/60'/0'/0/0")
-
-        // Assert
-        assertThat(actual).isFalse()
-    }
 }
