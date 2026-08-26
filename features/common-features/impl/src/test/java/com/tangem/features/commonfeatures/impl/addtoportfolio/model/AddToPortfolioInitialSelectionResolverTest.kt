@@ -6,6 +6,7 @@ import com.google.common.truth.Truth
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -660,7 +661,9 @@ class AddToPortfolioInitialSelectionResolverTest {
     ): AvailableToAddAccount = mockk {
         every { this@mockk.isAvailableToAdd } returns isAvailableToAdd
         every { this@mockk.availableToAddNetworks } returns availableToAddNetworks
-        every { account.account.derivationIndex } returns derivationIndex
+        every { account.account } returns mockk<Account.Personal> {
+            every { this@mockk.derivationIndex } returns derivationIndex
+        }
     }
 
     private fun userWallet(walletId: UserWalletId): UserWallet = mockk {
