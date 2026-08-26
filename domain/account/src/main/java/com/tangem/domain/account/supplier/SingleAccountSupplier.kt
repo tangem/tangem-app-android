@@ -29,9 +29,4 @@ abstract class SingleAccountSupplier(
     fun filterCryptoPortfolioAccount(accountId: AccountId): Flow<Account.CryptoPortfolio> {
         return invoke(accountId).filterIsInstance()
     }
-
-    /** Convenience filter for callers that only ever handle [Account.Portfolio]. */
-    fun filterPortfolioAccount(accountId: AccountId): Flow<Account.Portfolio> {
-        return invoke(accountId).filterIsInstance()
-    }
 }
