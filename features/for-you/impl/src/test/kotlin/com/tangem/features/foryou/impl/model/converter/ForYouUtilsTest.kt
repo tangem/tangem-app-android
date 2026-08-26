@@ -6,13 +6,18 @@ import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.markets.CoinIndicators
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -303,6 +308,75 @@ internal class ForYouUtilsTest {
     }
 
     @Nested
+    inner class AvailableAccountIds {
+
+        @Test
+        fun `GIVEN wallet with non-portfolio accounts WHEN availableAccountIds THEN only crypto portfolios returned`() {
+            // Arrange — the selector renders a row only for crypto portfolios, so only their ids may be offered
+            val portfolio = MockAccounts.createAccount(derivationIndex = 1)
+            val statuses = mapOf(
+                WALLET_ID to createAccountStatusList(
+                    cryptoPortfolioStatus(portfolio),
+                    paymentStatus(),
+                    predictionStatus(),
+                ),
+            )
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).containsExactly(portfolio.accountId)
+        }
+
+        @Test
+        fun `GIVEN several wallets WHEN availableAccountIds THEN portfolios of every wallet are collected`() {
+            // Arrange
+            val onFirst = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET_ID)
+            val onSecond = MockAccounts.createAccount(derivationIndex = 1, userWalletId = OTHER_WALLET_ID)
+            val statuses = mapOf(
+                WALLET_ID to createAccountStatusList(cryptoPortfolioStatus(onFirst)),
+                OTHER_WALLET_ID to createAccountStatusList(cryptoPortfolioStatus(onSecond), predictionStatus()),
+            )
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).containsExactly(onFirst.accountId, onSecond.accountId)
+        }
+
+        @Test
+        fun `GIVEN only non-portfolio accounts WHEN availableAccountIds THEN result is empty`() {
+            // Arrange — nothing selectable, so the caller must not seed a selection at all
+            val statuses = mapOf(WALLET_ID to createAccountStatusList(paymentStatus(), predictionStatus()))
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).isEmpty()
+        }
+
+        private fun createAccountStatusList(vararg statuses: AccountStatus): AccountStatusList = mockk {
+            every { accountStatuses } returns statuses.toList()
+        }
+
+        private fun cryptoPortfolioStatus(account: Account.CryptoPortfolio): AccountStatus.CryptoPortfolio = mockk {
+            every { this@mockk.account } returns account
+            every { accountId } returns account.accountId
+        }
+
+        private fun paymentStatus(): AccountStatus.Payment = mockk {
+            every { account } returns mockk<Account.Payment> { every { accountId } returns mockk() }
+        }
+
+        private fun predictionStatus(): AccountStatus.Prediction = mockk {
+            every { account } returns mockk<Account.Prediction> { every { accountId } returns mockk() }
+        }
+    }
+
+    @Nested
     inner class ForYouPeriodFromId {
 
         @Test
@@ -361,6 +435,12 @@ internal class ForYouUtilsTest {
         signal = signal,
         updatedAt = null,
     )
+
+    private companion object {
+        /** UserWalletId parses its value as hex, so the ids must be valid hex strings. */
+        val WALLET_ID = UserWalletId("01")
+        val OTHER_WALLET_ID = UserWalletId("02")
+    }
 }
 
 private typealias Signal = CoinIndicators.Reading.Signal
