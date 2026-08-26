@@ -631,7 +631,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert — the screen must never have to decide whether a 200 was a refusal
@@ -650,7 +649,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert — the exchange may well have taken the order, so nothing may offer to send it again
