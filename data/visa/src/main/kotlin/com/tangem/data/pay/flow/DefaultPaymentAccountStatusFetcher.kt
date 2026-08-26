@@ -646,6 +646,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
         isActivating: Boolean,
     ): TangemPayCardState {
+        val hintedState = getCardState(cardId = cardId, userWalletId = userWalletId)
+        if (hintedState != TangemPayCardState.Active) return hintedState
+
         val isAwaitingActivation = cardInfo != null && PlasticCardStateResolver.isAwaitingActivation(
             cardInfo = cardInfo,
             productInstance = productInstance,
@@ -653,7 +656,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return when {
             isAwaitingActivation && isActivating -> TangemPayCardState.Activating
             isAwaitingActivation -> TangemPayCardState.Delivering
-            else -> getCardState(cardId = cardId, userWalletId = userWalletId)
+            else -> TangemPayCardState.Active
         }
     }
 
