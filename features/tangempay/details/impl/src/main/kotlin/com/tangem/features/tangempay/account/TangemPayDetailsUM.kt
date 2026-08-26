@@ -24,11 +24,17 @@ internal sealed interface CashbackBlockUM {
     data class Widget(
         val title: TextReference,
         val subtitle: TextReference?,
+        val isNegative: Boolean,
         val onClick: () -> Unit,
     ) : CashbackBlockUM
 
     data class DeactivatedBanner(
         val onGotIt: () -> Unit,
+    ) : CashbackBlockUM
+
+    data class Error(
+        val onReload: () -> Unit,
+        val isReloading: Boolean,
     ) : CashbackBlockUM
 }
 
