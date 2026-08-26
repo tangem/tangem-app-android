@@ -1864,7 +1864,7 @@
   <string name="tangem_pay_status_pending">Pendente</string>
   <string name="tangem_pay_status_reversed">Revertido</string>
   <string name="tangem_pay_terms_fees_limits">Termos, taxas e limites</string>
-  <string name="tangem_pay_terms_limits">Termos e Limites</string>
+  <string name="tangem_pay_terms_limits">Termos de serviço</string>
   <string name="tangem_pay_transaction_declined_notification_text">O banco rejeitou esta solicitação de transação.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Transação mínima</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">O limite mensal foi atingido.</string>
@@ -2113,7 +2113,7 @@
   <string name="tangempay_other_networks_header">Outras redes</string>
   <string name="tangempay_other_networks_subtitle">Em seguida, transfira para uma conta de pagamento com taxa de câmbio de 1:1 e sem tarifas.</string>
   <string name="tangempay_other_networks_title">Envie USDT/USDC de qualquer blockchain para sua carteira Tangem.</string>
-  <string name="tangempay_pay_support">Suporte de Pay</string>
+  <string name="tangempay_pay_support">Suporte</string>
   <string name="tangempay_payment_account">Conta de pagamento</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sessão expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN inválido: evite sequências ou repetições.</string>
