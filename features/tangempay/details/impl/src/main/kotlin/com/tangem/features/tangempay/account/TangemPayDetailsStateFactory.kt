@@ -67,7 +67,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             errorNotificationConfig = null,
-            accountDeactivatedNotificationConfig = null,
+            accountDeactivatedBannerState = null,
             cashbackBlockState = null,
         )
     }
@@ -128,7 +128,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             errorNotificationConfig = errorNotification ?: tiersNotification,
-            accountDeactivatedNotificationConfig = null,
+            accountDeactivatedBannerState = null,
             cashbackBlockState = null,
         )
     }
@@ -182,7 +182,7 @@ internal class TangemPayDetailsStateFactory(
     fun getDeactivatedState(status: PaymentAccountStatusValue.Deactivated): TangemPayDetailsUM {
         val balance = status.balance
         val hasWithdrawableBalance: Boolean = balance?.hasWithdrawableAmount == true
-        val accountDeactivatedNotification = notificationFactory.createAccountDeactivatedConfig()
+        val accountDeactivatedBanner = notificationFactory.createAccountDeactivatedBannerState()
         val fiatBalance = balance?.fiatBalance
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
@@ -204,7 +204,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             errorNotificationConfig = null,
-            accountDeactivatedNotificationConfig = accountDeactivatedNotification,
+            accountDeactivatedBannerState = accountDeactivatedBanner,
             cashbackBlockState = null,
         )
     }
@@ -249,7 +249,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             errorNotificationConfig = notification,
-            accountDeactivatedNotificationConfig = null,
+            accountDeactivatedBannerState = null,
             cashbackBlockState = null,
         )
     }
