@@ -19,6 +19,10 @@ internal interface PlacePredictionIntents {
 
     fun onPlaceClick()
 
+    fun onPolymarketTermsClick()
+
+    fun onTangemTermsClick()
+
     fun onBackClick()
 
     fun onCloseClick()
