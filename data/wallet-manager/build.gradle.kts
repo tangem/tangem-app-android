@@ -41,6 +41,7 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.transaction)
     implementation(projects.domain.card)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
     // endregion
