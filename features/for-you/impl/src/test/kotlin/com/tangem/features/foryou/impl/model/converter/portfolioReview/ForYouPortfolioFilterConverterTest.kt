@@ -55,7 +55,7 @@ internal class ForYouPortfolioFilterConverterTest {
             // Nothing picked yet — also treated as unfiltered.
             ConvertModel(
                 portfolio = createSelectedPortfolio(totalAccountsCount = 1),
-                expected = allAccountsChip(),
+                expected = noneAccountsChip(),
             ),
             // A single account out of many — the chip names it.
             ConvertModel(
@@ -166,6 +166,12 @@ internal class ForYouPortfolioFilterConverterTest {
     private fun allAccountsChip() = TangemFilterItemUM.Inactive(
         id = ForYouPortfolioFilterConverter.ID,
         label = resourceReference(R.string.common_all_accounts),
+        onClick = onClick,
+    )
+
+    private fun noneAccountsChip() = TangemFilterItemUM.Inactive(
+        id = ForYouPortfolioFilterConverter.ID,
+        label = resourceReference(R.string.common_select_account),
         onClick = onClick,
     )
 
