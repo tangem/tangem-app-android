@@ -31,7 +31,6 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -89,9 +88,7 @@ internal fun PlacePredictionStatusContent(
         ) {
             ResultHeadline(result = result)
             ResultBanner(result = result)
-            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
-                PredictionMarketBlock(state = market)
-            }
+            PredictionMarketBlock(state = market)
             Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
         }
     }

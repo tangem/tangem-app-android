@@ -19,6 +19,7 @@ import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
@@ -31,6 +32,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPaymentCurrencyTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSlippageTransformer
@@ -72,6 +74,7 @@ internal class PlacePredictionModel @Inject constructor(
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
+    private val getPolymarketCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val getPredictionOrderQuoteUseCase: GetPredictionOrderQuoteUseCase,
@@ -86,6 +89,7 @@ internal class PlacePredictionModel @Inject constructor(
     private val quoteJobHolder = JobHolder()
 
     init {
+        uiState.update(SetPaymentCurrencyTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
         loadMarket()
         loadBalance()
         loadTradingAllowance()
@@ -236,7 +240,7 @@ internal class PlacePredictionModel @Inject constructor(
 
             if (balance == null) logger.e("Spending power could not be read; the screen keeps it unknown")
 
-            uiState.update(SetBalanceTransformer(balance = balance?.balance, tokenSymbol = COLLATERAL_SYMBOL))
+            uiState.update(SetBalanceTransformer(balance = balance?.balance))
         }
     }
 
@@ -281,7 +285,5 @@ internal class PlacePredictionModel @Inject constructor(
     private companion object {
 
         val logger = TangemLogger.withTag(tag = "PlacePredictionModel")
-
-        const val COLLATERAL_SYMBOL = "USDC"
     }
 }

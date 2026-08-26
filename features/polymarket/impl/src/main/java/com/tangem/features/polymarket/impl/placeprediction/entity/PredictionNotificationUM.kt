@@ -15,17 +15,17 @@ internal sealed interface PredictionNotificationUM {
 
     val isBlocking: Boolean
 
+    /** A deposit still in flight. It blocks nothing itself — the balance it is heading for already does. */
+    data object AwaitingFunds : PredictionNotificationUM {
+        override val isBlocking = false
+    }
+
     data object PartialFill : PredictionNotificationUM {
         override val isBlocking = false
     }
 
     data object NoLiquidity : PredictionNotificationUM {
         override val isBlocking = false
-    }
-
-    /** The balance does not cover what the order would debit, fees included. */
-    data object InsufficientBalance : PredictionNotificationUM {
-        override val isBlocking = true
     }
 
     data class BelowMinOrderSize(val minOrderSize: BigDecimal) : PredictionNotificationUM {

@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -9,8 +10,8 @@ import java.math.BigDecimal
 /**
  * State of the whole place-prediction flow. Every step renders a slice of it; nothing else holds state.
  *
- * [notifications], [PaymentSourceUM.hasSufficientBalance] and [isPrimaryButtonEnabled] are derived — they are
- * never assigned directly, only produced by
+ * [notifications], [amountError], [PaymentSourceUM.hasSufficientBalance] and [isPrimaryButtonEnabled] are
+ * derived — never assigned directly, only produced by
  * [com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate].
  */
 @Immutable
@@ -22,6 +23,7 @@ internal data class PlacePredictionUM(
     val quote: QuoteUM,
     val tradingPermission: TradingPermissionUM,
     val notifications: ImmutableList<PredictionNotificationUM>,
+    val amountError: AmountErrorUM? = null,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
 ) {
@@ -30,7 +32,12 @@ internal data class PlacePredictionUM(
 
         fun initial(): PlacePredictionUM = PlacePredictionUM(
             market = MarketHeaderUM(title = "", imageUrl = null, outcomeTitle = "", outcomePriceCents = null),
-            payment = PaymentSourceUM(tokenSymbol = "", balance = null, hasSufficientBalance = false),
+            payment = PaymentSourceUM(
+                tokenSymbol = "",
+                iconState = null,
+                balance = null,
+                hasSufficientBalance = false,
+            ),
             amountValue = "",
             slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
             quote = QuoteUM.Empty,
@@ -65,9 +72,13 @@ internal data class MarketHeaderUM(
  *  the exchange did not answer for is not a balance of zero: reading it as one would tell the user their
  *  money is gone and refuse the order in the same breath.
  */
+/** Which half of what an order debits the balance fails to cover: the bet itself, or the fees on top of it. */
+internal enum class AmountErrorUM { NotEnoughForBet, NotEnoughForFees }
+
 @Immutable
 internal data class PaymentSourceUM(
     val tokenSymbol: String,
+    val iconState: CurrencyIconState?,
     val balance: BigDecimal?,
     val hasSufficientBalance: Boolean,
 )
