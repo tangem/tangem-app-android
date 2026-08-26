@@ -35,6 +35,7 @@
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_archiving">Archiving...</string>
+  <string name="account_details_joint_pending_description">The account is still being populated with members.</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
   <string name="account_edit_success_message">Account saved</string>
