@@ -148,6 +148,73 @@ internal class ForYouSelectedPortfolioConverterTest {
     }
 
     @Nested
+    inner class TokenLessAccounts {
+
+        @Test
+        fun `GIVEN picked account holds no tokens WHEN convert THEN it still counts as selected`() {
+            // Arrange — nothing in the currency list can reveal this account, so the selection must carry it
+            val empty = createAccount(statuses = emptyList())
+
+            // Act
+            val result = convert(accounts = listOf(empty))
+
+            // Assert
+            assertThat(result.accountCryptoCurrencyStatuses).isEmpty()
+            assertThat(result.selectedAccounts).containsExactly(empty.account)
+        }
+
+        @Test
+        fun `GIVEN picked account holds no tokens WHEN convert THEN total is a resolved zero`() {
+            // Arrange — an empty account has a genuine zero balance, not a failure to load one
+            val empty = createAccount(statuses = emptyList())
+
+            // Act
+            val result = convert(accounts = listOf(empty))
+
+            // Assert
+            assertThat(result.totalFiatBalance).isEqualTo(
+                TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+            )
+        }
+
+        @Test
+        fun `GIVEN a token-less and a funded account picked WHEN convert THEN both count and only funds are summed`() {
+            // Arrange
+            val empty = createAccount(statuses = emptyList(), derivationIndex = 1)
+            val funded = createAccount(
+                statuses = listOf(createStatus(createCoin("eth"), createLoadedValue(fiatAmount = BigDecimal("100")))),
+                derivationIndex = 2,
+            )
+
+            // Act
+            val result = convert(accounts = listOf(empty, funded))
+
+            // Assert
+            assertThat(result.selectedAccounts).containsExactly(empty.account, funded.account)
+            assertThat(result.totalFiatBalance).isEqualTo(
+                TotalFiatBalance.Loaded(amount = BigDecimal("100"), source = StatusSource.ACTUAL),
+            )
+        }
+
+        @Test
+        fun `GIVEN token-less account not picked WHEN convert THEN it is counted in the total only`() {
+            // Arrange — totalAccountsCount spans every available account, selected or not
+            val picked = createAccount(
+                statuses = listOf(createStatus(createCoin("eth"), createLoadedValue(fiatAmount = BigDecimal("100")))),
+                derivationIndex = 1,
+            )
+            val empty = createAccount(statuses = emptyList(), derivationIndex = 2)
+
+            // Act
+            val result = convert(accounts = listOf(picked, empty), selected = listOf(picked))
+
+            // Assert
+            assertThat(result.selectedAccounts).containsExactly(picked.account)
+            assertThat(result.totalAccountsCount).isEqualTo(2)
+        }
+    }
+
+    @Nested
     inner class Selection {
 
         @Test
@@ -167,6 +234,7 @@ internal class ForYouSelectedPortfolioConverterTest {
 
             // Assert
             assertThat(result.totalAccountsCount).isEqualTo(2)
+            assertThat(result.selectedAccounts).containsExactly(selected.account)
             assertThat(result.accountCryptoCurrencyStatuses.map { it.status.currency.id.value })
                 .containsExactly("coin-eth")
             assertThat(result.totalFiatBalance).isEqualTo(
