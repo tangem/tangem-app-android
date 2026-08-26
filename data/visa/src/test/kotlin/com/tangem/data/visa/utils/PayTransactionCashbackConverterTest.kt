@@ -5,6 +5,7 @@ import com.tangem.spend.datasource.pay.models.response.TransactionCashbackRespon
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -23,6 +24,69 @@ internal class PayTransactionCashbackConverterTest {
         // Assert
         assertThat(actual).isEqualTo(model.expected)
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertSpendCashback {
+
+        @ParameterizedTest
+        @MethodSource("provideTestModels")
+        fun convertSpendCashback(model: SpendCashbackModel) {
+            // Act
+            val actual = PayTransactionCashbackConverter.convertSpendCashback(
+                status = model.status,
+                amount = model.amount,
+                currencyCode = model.currencyCode,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            // No status — cashback is absent for the transaction.
+            SpendCashbackModel(status = null, expected = null),
+            SpendCashbackModel(
+                status = "confirmed",
+                amount = BigDecimal("3.00"),
+                currencyCode = "EUR",
+                expected = cashback(
+                    status = Status.CONFIRMED,
+                    amount = BigDecimal("3.00"),
+                    currency = Currency.getInstance("EUR"),
+                ),
+            ),
+            SpendCashbackModel(
+                status = "estimated",
+                expected = cashback(status = Status.ESTIMATED),
+            ),
+            // Awaiting calculation — amount and currency are null (not "0.00").
+            SpendCashbackModel(
+                status = "awaiting_calculation",
+                amount = null,
+                currencyCode = null,
+                expected = cashback(status = Status.AWAITING_CALCULATION, amount = null, currency = null),
+            ),
+            // Unknown status string maps to UNKNOWN rather than throwing.
+            SpendCashbackModel(
+                status = "brand_new_status",
+                expected = cashback(status = Status.UNKNOWN),
+            ),
+            // Invalid ISO code degrades to null currency instead of throwing.
+            SpendCashbackModel(
+                status = "confirmed",
+                currencyCode = "NOT_A_CODE",
+                expected = cashback(status = Status.CONFIRMED, currency = null),
+            ),
+        )
+    }
+
+    data class SpendCashbackModel(
+        val status: String?,
+        val amount: BigDecimal? = BigDecimal("1.00"),
+        val currencyCode: String? = "USD",
+        val expected: TangemPayTxHistoryItem.Cashback?,
+    )
 
     data class ConvertModel(
         val dto: TransactionCashbackResponse?,

@@ -1,19 +1,14 @@
 package com.tangem.features.polymarket.impl.placeprediction.status
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.res.TangemTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
+import com.tangem.features.polymarket.impl.placeprediction.ui.PlacePredictionStatusContent
 
 internal class PlacePredictionStatusComponent(
     appComponentContext: AppComponentContext,
@@ -23,15 +18,13 @@ internal class PlacePredictionStatusComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val result = (state.submit as? SubmitUM.Result)?.result ?: return
 
-        Column(
-            modifier = modifier.background(TangemTheme.colors3.bg.tertiary),
-            verticalArrangement = Arrangement.spacedBy(space = 4.dp),
-        ) {
-            Text(text = "Result: ${state.submit}")
-            Button(onClick = model::onCloseClick) {
-                Text(text = "To main")
-            }
-        }
+        PlacePredictionStatusContent(
+            result = result,
+            market = state.market,
+            intents = model,
+            modifier = modifier,
+        )
     }
 }

@@ -1,6 +1,7 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
@@ -58,8 +59,13 @@ internal class DefaultReissueCardRepository @Inject constructor(
             )
         }.bind()
 
+        val amount = catch(
+            block = { response.result.amount.toBigDecimal() },
+            catch = { raise(VisaApiError.Unspecified) },
+        )
+
         TangemPayReissueCardFee(
-            amount = response.result.amount.toBigDecimal(),
+            amount = amount,
             currencyCode = response.result.currency,
         )
     }
