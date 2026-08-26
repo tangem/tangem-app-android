@@ -36,7 +36,7 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
             ),
             accounts = value.accounts.mapNotNull { account ->
                 when (account) {
-                    is Account.CryptoPortfolio -> cryptoPortfolioConverter.convertBack(account)
+                    is Account.Personal -> cryptoPortfolioConverter.convertBack(account)
                     is Account.Joint -> jointAccountConverter.convertBack(account)
                     else -> null
                 }
