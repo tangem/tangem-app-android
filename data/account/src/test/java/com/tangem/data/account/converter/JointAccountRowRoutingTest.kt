@@ -1,16 +1,13 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.account.OwnerKeyIndex
+import com.tangem.domain.models.account.*
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
@@ -22,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest
 
 /**
  * Routing of the `/accounts` rows by their `type`: a joint account of the wallet is a row of the very same
- * document as the crypto accounts, distinguished only by that field.
+ * document as the crypto accounts, distinguished only by that field — inside [CryptoPortfolioConverter].
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointAccountRowRoutingTest {
@@ -30,31 +27,27 @@ internal class JointAccountRowRoutingTest {
     private val userWallet: UserWallet = mockk {
         every { walletId } returns WALLET_ID
     }
-    private val cryptoPortfolioConverter: CryptoPortfolioConverter = mockk()
-    private val jointAccountConverter: JointAccountConverter = mockk()
-
-    // Stubbed where they are declared: the converter resolves both factories in its constructor
-    private val cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory = mockk {
-        every { create(userWallet) } returns cryptoPortfolioConverter
+    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory = mockk {
+        every { createCurrencies(tokens = any(), userWallet = any(), accountIndex = any<DerivationIndex>()) } returns emptyList()
+        every {
+            createCurrencies(tokens = any(), userWallet = any(), derivationPath = any<Network.DerivationPath.Joint>())
+        } returns emptyList()
     }
-    private val jointAccountConverterFactory: JointAccountConverter.Factory = mockk {
-        every { create(userWallet) } returns jointAccountConverter
+    private val rowConverter = CryptoPortfolioConverter(
+        userWallet = userWallet,
+        responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+        userTokensResponseFactory = mockk(),
+    )
+
+    // Stubbed where it is declared: the converter resolves the factory in its constructor
+    private val cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory = mockk {
+        every { create(userWallet) } returns rowConverter
     }
 
     private val listConverter = AccountListConverter(
         userWallet = userWallet,
         cryptoPortfolioConverterFactory = cryptoPortfolioConverterFactory,
-        jointAccountConverterFactory = jointAccountConverterFactory,
     )
-
-    init {
-        every { jointAccountConverter.convert(any()) } returns jointAccount()
-        every { cryptoPortfolioConverter.convert(any()) } answers {
-            val dto = firstArg<WalletAccountDTO>()
-
-            if (dto.id == SECOND_ROW_ID) secondCryptoAccount() else cryptoAccount()
-        }
-    }
 
     @ParameterizedTest
     @ProvideTestModels
@@ -88,7 +81,7 @@ internal class JointAccountRowRoutingTest {
         val actual = listConverter.convert(value = response)
 
         // Assert
-        // The crypto converter refuses a row without tokens, and the producer turns that refusal into an endless
+        // The personal branch refuses a row without tokens, and the producer turns that refusal into an endless
         // retry — a value the backend adds later must not cost the user the whole account list
         assertThat(actual.accounts.map { it.accountId.value })
             .containsExactly(cryptoAccount().accountId.value, SECOND_ROW_ID)
@@ -150,18 +143,6 @@ internal class JointAccountRowRoutingTest {
 
     private fun cryptoAccount(): Account.Personal {
         return Account.Personal.createMainAccount(userWalletId = WALLET_ID)
-    }
-
-    private fun secondCryptoAccount(): Account.Personal {
-        return Account.Personal(
-            accountId = AccountId.forCryptoPortfolio(userWalletId = WALLET_ID, value = SECOND_ROW_ID).getOrNull()!!,
-            accountName = AccountName.Custom(value = "Second").getOrNull()!!,
-            icon = CryptoPortfolioIcon.ofCustomAccount(
-                value = CryptoPortfolioIcon.Icon.Star,
-                color = CryptoPortfolioIcon.Color.Azure,
-            ),
-            derivationIndex = DerivationIndex(value = 1).getOrNull()!!,
-        )
     }
 
     private fun jointAccount(): Account.Joint {
