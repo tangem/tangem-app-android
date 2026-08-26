@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.utils
+package com.tangem.core.remote
 
 import java.util.concurrent.TimeUnit
 
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-internal annotation class ConnectTimeout(val duration: Int, val unit: TimeUnit)
+annotation class ConnectTimeout(val duration: Int, val unit: TimeUnit)
 
 /**
  * Set read timeout of request
@@ -24,7 +24,7 @@ internal annotation class ConnectTimeout(val duration: Int, val unit: TimeUnit)
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-internal annotation class ReadTimeout(val duration: Int, val unit: TimeUnit)
+annotation class ReadTimeout(val duration: Int, val unit: TimeUnit)
 
 /**
  * Set write timeout of request
@@ -36,4 +36,4 @@ internal annotation class ReadTimeout(val duration: Int, val unit: TimeUnit)
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-internal annotation class WriteTimeout(val duration: Int, val unit: TimeUnit)
+annotation class WriteTimeout(val duration: Int, val unit: TimeUnit)
