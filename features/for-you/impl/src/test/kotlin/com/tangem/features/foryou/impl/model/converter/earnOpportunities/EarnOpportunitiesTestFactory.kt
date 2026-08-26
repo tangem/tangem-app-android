@@ -248,7 +248,6 @@ internal fun createAccountStatusList(vararg statuses: AccountStatus): AccountSta
     every { userWalletId } returns MockAccounts.userWalletId
 }
 
-/** Builds the selected-portfolio aggregate consumed by the earn/review converters. */
 internal fun createSelectedPortfolio(
     vararg accounts: AccountStatus.CryptoPortfolio,
     totalAccountsCount: Int = accounts.size,
@@ -265,6 +264,7 @@ internal fun createSelectedPortfolio(
     }
     return ForYouSelectedPortfolio(
         accountCryptoCurrencyStatuses = accountCryptoCurrencyStatuses,
+        selectedAccounts = accounts.map { it.account },
         totalAccountsCount = totalAccountsCount,
         totalFiatBalance = totalFiatBalance,
     )
