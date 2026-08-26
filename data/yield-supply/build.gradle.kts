@@ -32,6 +32,7 @@ dependencies {
     // region Core
     api(projects.core.analytics)
     api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
     // endregion
