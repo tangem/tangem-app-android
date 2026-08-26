@@ -72,7 +72,6 @@ internal data class MarketHeaderUM(
  *  the exchange did not answer for is not a balance of zero: reading it as one would tell the user their
  *  money is gone and refuse the order in the same breath.
  */
-/** Which half of what an order debits the balance fails to cover: the bet itself, or the fees on top of it. */
 internal enum class AmountErrorUM { NotEnoughForBet, NotEnoughForFees }
 
 @Immutable
