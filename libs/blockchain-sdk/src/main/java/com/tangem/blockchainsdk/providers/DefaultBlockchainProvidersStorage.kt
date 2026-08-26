@@ -1,7 +1,7 @@
-package com.tangem.datasource.local.config.providers
+package com.tangem.blockchainsdk.providers
 
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.blockchainsdk.providers.models.ProviderModel
 import com.tangem.core.local.datastore.RuntimeStateStore
 
 /**
