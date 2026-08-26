@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Project - Common */
+    implementation(projects.common)
     api(projects.common.ui)
     implementation(projects.common.uiMarkets)
     implementation(projects.common.routing)
@@ -90,6 +91,7 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.androidx.annotation)
+    testImplementation(deps.kotlin.datetime)
     testImplementation(tangemDeps.blockchain)
     testImplementation(tangemDeps.card.core)
 }
