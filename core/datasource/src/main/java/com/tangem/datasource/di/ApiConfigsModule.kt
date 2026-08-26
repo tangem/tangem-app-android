@@ -5,7 +5,6 @@ import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.AuthenticationHeader
 import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.utils.info.AppInfoProvider
@@ -45,21 +44,6 @@ internal object ApiConfigsModule {
     @Provides
     fun provideCardAuthHeaderProvider(authProvider: AuthProvider): CardAuthHeaderProvider {
         return CardAuthHeaderProvider { AuthenticationHeader(authProvider) }
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(YieldSupply.KEY)
-    fun provideYieldSupplyConfig(
-        environmentConfig: EnvironmentConfig,
-        cardAuthHeaderProvider: CardAuthHeaderProvider,
-        appInfoProvider: AppInfoProvider,
-    ): ApiConfig {
-        return YieldSupply(
-            environmentConfig = environmentConfig,
-            cardAuthHeader = cardAuthHeaderProvider,
-            appInfoProvider = appInfoProvider,
-        )
     }
 
     @Provides

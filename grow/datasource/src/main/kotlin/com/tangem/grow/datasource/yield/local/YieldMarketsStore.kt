@@ -1,6 +1,6 @@
-package com.tangem.datasource.local.yieldsupply
+package com.tangem.grow.datasource.yield.local
 
-import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
+import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
 import kotlinx.coroutines.flow.Flow
 
 interface YieldMarketsStore {
