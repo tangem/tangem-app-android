@@ -9,7 +9,11 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -19,6 +23,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
@@ -27,17 +32,18 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
-import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -271,8 +277,7 @@ internal class PlacePredictionModelTest {
         // Assert
         assertThat(model.uiState.value.payment.balance).isNull()
         assertThat(model.uiState.value.payment.tokenSymbol).isEqualTo("USDC")
-        assertThat(model.uiState.value.notifications)
-            .doesNotContain(PredictionNotificationUM.InsufficientBalance)
+        assertThat(model.uiState.value.amountError).isNull()
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
         model.onDestroy()
@@ -346,11 +351,16 @@ internal class PlacePredictionModelTest {
             messageSender = messageSender,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getPolymarketEventUseCase = getEventUseCase,
+            getPolymarketCollateralCurrencyUseCase = getCollateralCurrencyUseCase,
             derivePolymarketAddressesUseCase = deriveAddressesUseCase,
             getPolymarketBalanceInteractor = getBalanceInteractor,
             getPredictionOrderQuoteUseCase = getQuoteUseCase,
             checkPolymarketGeoblockUseCase = checkGeoblockUseCase,
         ).also { model = it }
+    }
+
+    private val getCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase = mockk {
+        every { this@mockk.invoke() } returns createCollateralCurrency()
     }
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
@@ -361,6 +371,39 @@ internal class PlacePredictionModelTest {
             io = testDispatcher,
             default = testDispatcher,
             single = testDispatcher,
+        )
+    }
+
+    private fun createCollateralCurrency(): CryptoCurrency.Token {
+        val network = Network(
+            id = Network.ID(value = NETWORK_RAW_ID, derivationPath = Network.DerivationPath.None),
+            name = "Polygon",
+            currencySymbol = "POL",
+            derivationPath = Network.DerivationPath.None,
+            isTestnet = false,
+            standardType = Network.StandardType.Unspecified(name = "Polygon"),
+            hasFiatFeeRate = true,
+            canHandleTokens = true,
+            transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = Network.NameResolvingType.NONE,
+        )
+
+        return CryptoCurrency.Token(
+            id = CryptoCurrency.ID(
+                prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+                body = CryptoCurrency.ID.Body.NetworkId(rawId = NETWORK_RAW_ID),
+                suffix = CryptoCurrency.ID.Suffix.RawID(
+                    rawId = PredictionCollateral.RAW_ID.value,
+                    contractAddress = PolymarketContracts.COLLATERAL,
+                ),
+            ),
+            network = network,
+            name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
+            symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
+            decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+            iconUrl = null,
+            isCustom = false,
+            contractAddress = PolymarketContracts.COLLATERAL,
         )
     }
 
@@ -432,6 +475,7 @@ internal class PlacePredictionModelTest {
         const val EVENT_ID = "event-1"
         const val MARKET_ID = "market-1"
         const val ASSET_ID = "asset-1"
+        const val NETWORK_RAW_ID = "polygon-ecosystem-token"
         val USER_WALLET_ID = UserWalletId("011")
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
     }
