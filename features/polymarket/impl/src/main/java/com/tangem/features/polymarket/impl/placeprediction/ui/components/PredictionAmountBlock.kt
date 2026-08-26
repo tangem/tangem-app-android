@@ -153,9 +153,7 @@ private fun AmountSection(
 private fun AmountCaptionSlot(amountError: AmountErrorUM?, toWin: BigDecimal?) {
     AnimatedContent(
         targetState = amountCaption(amountError = amountError, toWin = toWin),
-        // The column animates its own height, so the swap only crossfades — otherwise both would resize at once.
         transitionSpec = { fadeIn() togetherWith fadeOut() using null },
-        // Left-aligned, the width difference between the two captions would read as a slide.
         contentAlignment = Alignment.Center,
         label = "amountCaption",
     ) { caption ->
@@ -180,7 +178,6 @@ private fun AmountCaptionSlot(amountError: AmountErrorUM?, toWin: BigDecimal?) {
     }
 }
 
-/** What sits under the amount: at most one of them, so the swap is a single animated slot. */
 private sealed interface AmountCaption {
 
     data class Shortfall(val error: AmountErrorUM) : AmountCaption
@@ -200,8 +197,6 @@ private const val EMPTY_AMOUNT_HINT = "0"
 
 private val CAPTION_GAP = 12.dp
 
-// The transformation glues the prefix onto the amount, so the gap lives in the symbol — non-breaking, to
-// survive the field resizing.
 private const val AMOUNT_SYMBOL = "$\u00A0"
 
 private fun AmountErrorUM.textRes(): Int = when (this) {
