@@ -41,10 +41,10 @@ class ReissuePlasticCardUseCase(
             catch = { handleError(it) },
         )
 
-        val conflictingOrder = OrderResolver.selectActive(
+        val conflictingOrder = OrderResolver.selectActiveBySource(
             orders = activeOrders,
             type = OrderType.CARD_REISSUE_PLASTIC_RAIN,
-            productInstanceId = sourceProductInstanceId,
+            sourceProductInstanceId = sourceProductInstanceId,
         )
         if (conflictingOrder != null) raise(VisaApiError.CardReissuePlasticActiveOrderExists)
 
