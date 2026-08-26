@@ -98,7 +98,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
                 val added = tempAddedTokens.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId)
                 val removed = tempRemovedTokens.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId)
 
-                val account = singleAccountSupplier.filterPortfolioAccount(mode.accountId).firstOrNull()
+                val account = singleAccountSupplier.filterCryptoPortfolioAccount(mode.accountId).firstOrNull()
                     ?: return IllegalStateException("Account not found").left()
 
                 (account.cryptoCurrencies + added - removed).any { currency ->
