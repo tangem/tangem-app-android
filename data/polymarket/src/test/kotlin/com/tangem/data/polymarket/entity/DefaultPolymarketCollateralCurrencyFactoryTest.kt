@@ -8,6 +8,7 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketDepositBlockchain
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PredictionCollateral
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -44,7 +45,7 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
         // Arrange
         val expected = CryptoCurrencyFactory(excludedBlockchains).createToken(
             network = requireNotNull(expectedNetwork),
-            rawId = PolymarketCollateralCurrencyFactory.TOKEN_ID,
+            rawId = PredictionCollateral.RAW_ID,
             name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
             symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
             decimals = PolymarketContracts.COLLATERAL_DECIMALS,

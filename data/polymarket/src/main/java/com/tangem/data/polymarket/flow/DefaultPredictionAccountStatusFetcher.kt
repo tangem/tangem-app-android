@@ -19,7 +19,6 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
-import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -48,19 +47,11 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
-    private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusFetcher {
 
     override suspend fun invoke(params: PredictionAccountStatusFetcher.Params): Either<Throwable, Unit> {
         return Either.catchOn(dispatchers.default) {
-            // Unconditionally: a cached balance needs the rate as much as a freshly read one, and every path that
-            // returns early below leaves that balance in place. Without the quote the producer keeps reporting
-            // loading, which contributes zero, so the collateral would silently read as nothing.
-            singleQuoteStatusFetcher(
-                SingleQuoteStatusFetcher.Params(rawCurrencyId = COLLATERAL_CURRENCY_ID, appCurrencyId = null),
-            )
-
             val value = resolve(userWalletId = params.userWalletId)
 
             if (value == null) {
