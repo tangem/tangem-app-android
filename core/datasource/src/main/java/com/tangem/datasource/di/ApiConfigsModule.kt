@@ -1,12 +1,13 @@
 package com.tangem.datasource.di
 
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.utils.AuthenticationHeader
 import com.tangem.datasource.utils.TangemApiKeyHeader
-import com.tangem.utils.Provider
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -22,9 +23,14 @@ internal object ApiConfigsModule {
     @Provides
     @IntoMap
     @StringKey(TangemTech.KEY)
-    fun provideTangemTechConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
+    fun provideTangemTechConfig(
+        apiKeyHeaderProvider: TangemApiKeyHeaderProvider,
+        cardAuthHeaderProvider: CardAuthHeaderProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
         return TangemTech(
-            authProvider = authProvider,
+            apiKeyHeader = apiKeyHeaderProvider,
+            cardAuthHeader = cardAuthHeaderProvider,
             appInfoProvider = appInfoProvider,
         )
     }
@@ -32,8 +38,13 @@ internal object ApiConfigsModule {
     @Provides
     fun provideTangemApiKeyHeaderProvider(authProvider: AuthProvider): TangemApiKeyHeaderProvider {
         return TangemApiKeyHeaderProvider { environment ->
-            TangemApiKeyHeader(authProvider, Provider { environment })
+            TangemApiKeyHeader(authProvider, environment)
         }
+    }
+
+    @Provides
+    fun provideCardAuthHeaderProvider(authProvider: AuthProvider): CardAuthHeaderProvider {
+        return CardAuthHeaderProvider { AuthenticationHeader(authProvider) }
     }
 
     @Provides
@@ -41,12 +52,12 @@ internal object ApiConfigsModule {
     @StringKey(YieldSupply.KEY)
     fun provideYieldSupplyConfig(
         environmentConfig: EnvironmentConfig,
-        authProvider: AuthProvider,
+        cardAuthHeaderProvider: CardAuthHeaderProvider,
         appInfoProvider: AppInfoProvider,
     ): ApiConfig {
         return YieldSupply(
             environmentConfig = environmentConfig,
-            authProvider = authProvider,
+            cardAuthHeader = cardAuthHeaderProvider,
             appInfoProvider = appInfoProvider,
         )
     }
