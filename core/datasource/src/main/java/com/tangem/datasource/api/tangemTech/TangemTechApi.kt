@@ -15,10 +15,7 @@ import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1R
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
-import com.tangem.datasource.api.utils.ReadTimeout
-import com.tangem.datasource.local.config.providers.models.ProviderModel
 import retrofit2.http.*
-import java.util.concurrent.TimeUnit
 
 /**
  * Interface of Tangem Tech API
@@ -94,10 +91,6 @@ interface TangemTechApi {
     suspend fun createUserNetworkAccount(
         @Body body: CreateUserNetworkAccountBody,
     ): ApiResponse<CreateUserNetworkAccountResponse>
-
-    @ReadTimeout(duration = 5, unit = TimeUnit.SECONDS)
-    @GET("v1/networks/providers")
-    suspend fun getBlockchainProviders(): Map<String, List<ProviderModel>>
 
     @GET("v1/seedphrase-notification/{wallet_id}")
     suspend fun getSeedPhraseNotificationStatus(
