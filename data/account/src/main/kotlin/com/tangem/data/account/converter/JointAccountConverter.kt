@@ -6,6 +6,7 @@ import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -39,9 +40,7 @@ internal class JointAccountConverter @AssistedInject constructor(
             cryptoCurrencies = responseCryptoCurrenciesFactory.createAccountCurrencies(
                 tokens = value.tokens,
                 userWallet = userWallet,
-                // TODO: [REDACTED_JIRA] — joint currencies get a network of their own here;
-                //  the owner index in the path is a placeholder until then
-                accountIndex = value.derivationIndex.toDerivationIndex(),
+                derivationPath = ownerKeyIndex.toNetworkDerivationPath(),
             ),
         )
     }
