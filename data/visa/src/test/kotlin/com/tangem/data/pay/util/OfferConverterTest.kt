@@ -208,6 +208,24 @@ internal class OfferConverterTest {
     }
 
     @Test
+    fun `GIVEN a fee currency that is not a valid ISO code WHEN convert THEN falls back to USD instead of throwing`() {
+        // Act
+        val actual = OfferConverter.convert(createResponseOffer(currency = "USDC"))
+
+        // Assert
+        assertThat(actual.fee.currency).isEqualTo(Currency.getInstance("USD"))
+    }
+
+    @Test
+    fun `GIVEN a valid non-USD fee currency WHEN convert THEN it is preserved`() {
+        // Act
+        val actual = OfferConverter.convert(createResponseOffer(currency = "EUR"))
+
+        // Assert
+        assertThat(actual.fee.currency).isEqualTo(Currency.getInstance("EUR"))
+    }
+
+    @Test
     fun `GIVEN a MAIN image without a url WHEN convert THEN mainImageUrl is null`() {
         // Act
         val actual = OfferConverter.convert(
