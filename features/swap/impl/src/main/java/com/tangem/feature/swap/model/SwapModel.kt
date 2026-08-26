@@ -1848,7 +1848,7 @@ internal class SwapModel @Inject constructor(
         val swapCurrency = swapCurrencyStatus.currency
 
         when (swapCurrencyStatus.account) {
-            is Account.CryptoPortfolio -> getAccountCurrencyStatusUseCase(
+            is Account.Personal -> getAccountCurrencyStatusUseCase(
                 userWalletId = swapCurrencyStatus.userWalletId,
                 currency = swapCurrency,
             ).map { (_, status) -> status }

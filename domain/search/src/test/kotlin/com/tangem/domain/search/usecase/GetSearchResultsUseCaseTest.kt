@@ -369,11 +369,11 @@ internal class GetSearchResultsUseCaseTest {
     }
 
     private fun mainAccount(walletId: UserWalletId): Account.CryptoPortfolio =
-        Account.CryptoPortfolio.createMainAccount(userWalletId = walletId)
+        Account.Personal.createMainAccount(userWalletId = walletId)
 
-    private fun secondaryAccount(walletId: UserWalletId, derivationIndex: Int): Account.CryptoPortfolio {
+    private fun secondaryAccount(walletId: UserWalletId, derivationIndex: Int): Account.Personal {
         val index = DerivationIndex(derivationIndex).getOrNull()!!
-        return Account.CryptoPortfolio(
+        return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = walletId, derivationIndex = index),
             accountName = AccountName("Account #$derivationIndex").getOrNull()!!,
             icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),

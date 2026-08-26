@@ -353,7 +353,7 @@ internal class SwapNotificationsFactoryTest {
         return SwapCurrencyStatus(
             userWallet = userWallet,
             status = CryptoCurrencyStatus(currency = currency, value = statusValue),
-            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            account = Account.Personal.createMainAccount(userWalletId),
         )
     }
 
@@ -392,7 +392,7 @@ internal class SwapNotificationsFactoryTest {
         val toSwapCurrencyStatus = SwapCurrencyStatus(
             userWallet = userWallet,
             status = CryptoCurrencyStatus(currency = toCurrency, value = toStatusValue),
-            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            account = Account.Personal.createMainAccount(userWalletId),
         )
         return SwapState.QuotesLoadedState(
             fromTokenInfo = TokenSwapInfo(

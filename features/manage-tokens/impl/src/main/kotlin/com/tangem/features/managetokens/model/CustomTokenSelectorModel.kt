@@ -20,6 +20,7 @@ import com.tangem.domain.managetokens.GetManageTokensAllowedNetworksUseCase
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
@@ -214,8 +215,10 @@ internal class CustomTokenSelectorModel @Inject constructor(
                     }
                 }
                 ?.let { accountNode ->
-                    fun AccountStatus.CryptoPortfolio.sameNodeAndNotMain() = !this.account.isMainAccount &&
-                        this.account.derivationIndex.value.toLong() == accountNode
+                    fun AccountStatus.CryptoPortfolio.sameNodeAndNotMain(): Boolean {
+                        val personal = this.account as? Account.Personal ?: return false
+                        return !personal.isMainAccount && personal.derivationIndex.value.toLong() == accountNode
+                    }
 
                     val accounts = singleAccountStatusListSupplier(mode.userWalletId)
                         .first().accountStatuses.filterCryptoPortfolio()
