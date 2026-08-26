@@ -1,52 +1,19 @@
 package com.tangem.datasource.di
 
-import android.content.Context
-import androidx.datastore.dataStoreFile
-import com.squareup.moshi.Moshi
-import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.yieldsupply.DefaultYieldMarketsStore
-import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostStatusStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
-import com.tangem.datasource.utils.AppDataStoreFactory
-import com.tangem.datasource.utils.MoshiDataStoreSerializer
-import com.tangem.datasource.utils.listTypes
-import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object YieldSupplyModule {
-
-    @Provides
-    @Singleton
-    fun provideYieldMarketsStore(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appScope: AppCoroutineScope,
-        dataStoreFactory: AppDataStoreFactory,
-    ): YieldMarketsStore {
-        return DefaultYieldMarketsStore(
-            persistenceStore = dataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = listTypes<YieldSupplyMarketTokenDto>(),
-                    defaultValue = emptyList(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
-                scope = appScope,
-            ),
-        )
-    }
 
     @Provides
     @Singleton
