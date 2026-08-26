@@ -5,6 +5,9 @@ import arrow.core.Option
 import arrow.core.raise.option
 import arrow.core.toOption
 import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.core.local.datastore.RuntimeStateStore
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.core.res.getStringSafe
 import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
@@ -17,12 +20,9 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
-import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
@@ -96,7 +96,7 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun fetchArchivedAccounts(userWalletId: UserWalletId) {
-        val eTag = archivedAccountsETagStore.getSyncOrNull()?.get(key = archivedETagKey(userWalletId))
+        val eTag = archivedAccountsETagStore.getSyncOrNull()?.get(key = userWalletId.stringValue)
         val store = getArchivedAccountsStore(userWalletId = userWalletId)
 
         val response = safeApiCall(
@@ -228,12 +228,8 @@ internal class DefaultAccountsCRUDRepository(
         val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
 
         archivedAccountsETagStore.update {
-            it + (archivedETagKey(userWalletId) to eTag)
+            it + (userWalletId.stringValue to eTag)
         }
-    }
-
-    private fun archivedETagKey(userWalletId: UserWalletId): String {
-        return "${userWalletId.stringValue}:${walletAccountsApi.eTagKey}"
     }
 
     private suspend fun getAccountsResponseSync(userWalletId: UserWalletId): GetWalletAccountsResponse? {
