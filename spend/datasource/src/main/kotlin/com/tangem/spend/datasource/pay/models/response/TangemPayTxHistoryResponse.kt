@@ -22,7 +22,6 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "collateral") val collateral: Collateral? = null,
         @Json(name = "payment") val payment: Payment? = null,
         @Json(name = "fee") val fee: Fee? = null,
-        @Json(name = "cashback") val cashback: TransactionCashbackResponse? = null,
     )
 
     @JsonClass(generateAdapter = true)
@@ -51,6 +50,9 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "declined_reason") val declinedReason: String? = null,
         @Json(name = "authorized_at") val authorizedAt: DateTime,
         @Json(name = "posted_at") val postedAt: DateTime?,
+        @Json(name = "cashback") val cashback: BigDecimal? = null,
+        @Json(name = "cashback_status") val cashbackStatus: String? = null,
+        @Json(name = "cashback_currency_code") val cashbackCurrencyCode: String? = null,
     )
 
     @JsonClass(generateAdapter = true)
