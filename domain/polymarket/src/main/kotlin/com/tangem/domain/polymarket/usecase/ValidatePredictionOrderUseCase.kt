@@ -33,8 +33,9 @@ class ValidatePredictionOrderUseCase {
         ensureIdentity(order = order, draft = draft, depositWalletAddress = depositWalletAddress)
         ensureTimestamp(order = order, nowMillis = nowMillis)
 
-        ensure(signedOrder.signature.length > BARE_SIGNATURE_HEX_LENGTH) {
-            PredictionOrderValidationError.SignatureNotWrapped(length = signedOrder.signature.length)
+        val signatureLength = signedOrder.signature.removePrefix(HEX_PREFIX).length
+        ensure(signatureLength > BARE_SIGNATURE_HEX_LENGTH) {
+            PredictionOrderValidationError.SignatureNotWrapped(length = signatureLength)
         }
 
         val age = nowMillis - quoteReceivedAtMillis
@@ -63,7 +64,7 @@ class ValidatePredictionOrderUseCase {
                 signedTakerAmount = order.takerAmount,
             )
         }
-        ensure(order.tokenId == BigInteger(draft.tokenId)) {
+        ensure(order.tokenId == draft.tokenId.toBigIntegerOrNull()) {
             PredictionOrderValidationError.MarketMismatch(
                 expectedTokenId = draft.tokenId,
                 isNegRiskExpected = draft.isNegRisk,
@@ -82,9 +83,10 @@ class ValidatePredictionOrderUseCase {
         }
         val toleratedCollateral = BigDecimal(shares).multiply(draft.worstCasePrice)
         val signedCollateral = BigDecimal(collateral)
+        val slack = quantizationSlack(draft = draft)
         val isWithinTolerance = when (draft.side) {
-            PredictionOrderSide.BUY -> signedCollateral <= toleratedCollateral + ROUNDING_SLACK
-            PredictionOrderSide.SELL -> signedCollateral >= toleratedCollateral - ROUNDING_SLACK
+            PredictionOrderSide.BUY -> signedCollateral <= toleratedCollateral + slack
+            PredictionOrderSide.SELL -> signedCollateral >= toleratedCollateral - slack
         }
 
         ensure(isWithinTolerance) {
@@ -93,6 +95,16 @@ class ValidatePredictionOrderUseCase {
                 tolerated = draft.worstCasePrice,
             )
         }
+    }
+
+    private fun quantizationSlack(draft: PredictionOrderDraft): BigDecimal {
+        val quantum = BigDecimal(draft.takerAmountQuantum)
+        val quantumInCollateral = when (draft.side) {
+            PredictionOrderSide.BUY -> quantum.multiply(draft.worstCasePrice)
+            PredictionOrderSide.SELL -> quantum
+        }
+
+        return quantumInCollateral.setScale(0, RoundingMode.CEILING)
     }
 
     private fun ValidationRaise.ensureIdentity(
@@ -112,8 +124,11 @@ class ValidatePredictionOrderUseCase {
         ensure(order.side == draft.side) {
             PredictionOrderValidationError.SideMismatch(signed = order.side, quoted = draft.side)
         }
-        ensure(order.builder == draft.builderCode && order.builder.isNotBlank()) {
+        ensure(order.builder.isNotBlank()) {
             PredictionOrderValidationError.MissingBuilderCode(builder = order.builder)
+        }
+        ensure(order.builder == draft.builderCode) {
+            PredictionOrderValidationError.BuilderCodeMismatch(signed = order.builder, quoted = draft.builderCode)
         }
     }
 
@@ -134,13 +149,13 @@ class ValidatePredictionOrderUseCase {
 
         const val MILLIS_THRESHOLD = 1_000_000_000_000L
 
+        const val HEX_PREFIX = "0x"
+
         const val BARE_SIGNATURE_HEX_LENGTH = 130
 
         const val MAX_QUOTE_AGE_MILLIS = 60_000L
 
         const val PRICE_SCALE = 8
-
-        val ROUNDING_SLACK: BigDecimal = BigDecimal.ONE
     }
 }
 
