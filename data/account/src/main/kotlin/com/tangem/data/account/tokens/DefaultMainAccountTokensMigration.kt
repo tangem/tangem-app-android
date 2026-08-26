@@ -230,8 +230,7 @@ internal class DefaultMainAccountTokensMigration(
             response = userTokensResponse,
             onFailSend = {
                 coroutineScope.launch {
-                    eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccountsV1)
-                    eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccountsV2)
+                    eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
                 }
                 val exception = IllegalStateException("Failed to push updated tokens after migration")
                 TangemLogger.e("Error", exception)
