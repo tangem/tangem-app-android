@@ -33,6 +33,7 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.jointaccount.derivation.isJointAccountOwnerDerivationPath
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -87,6 +88,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         extraTokens: Set<CryptoCurrency.Token>,
         xpub: String?,
     ): UpdateWalletManagerResult {
+        if (network.derivationPath is Network.DerivationPath.Joint) {
+            TangemLogger.w(
+                "No keys to derive for a joint network, its balance is read by the Safe address: ${network.id}",
+            )
+            return UpdateWalletManagerResult.Unreachable()
+        }
         val userWallet = getUserWallet(userWalletId) ?: run {
             TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
             return UpdateWalletManagerResult.Unreachable()
@@ -402,6 +409,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
+        if (derivationPath != null && isJointAccountOwnerDerivationPath(derivationPath)) {
+            TangemLogger.w(
+                "No wallet manager at a joint account owner path, the account is a Safe contract: $blockchain",
+            )
+            return null
+        }
         getWmInitializationMutex(userWalletId, blockchain, derivationPath).withLock {
             val userWallet = getUserWallet(userWalletId) ?: run {
                 TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
