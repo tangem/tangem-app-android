@@ -1,7 +1,6 @@
 package com.tangem.data.account.api
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
@@ -13,12 +12,9 @@ import javax.inject.Inject
 /**
  * The accounts endpoints in the version this build is allowed to speak.
  *
- * `v1` knows only the wallet's own accounts and no record type; `/api/v2` carries the type of every record and knows
+ * `v1` knows only the wallet's own accounts and no record type; `api/v2` carries the type of every record and knows
  * about joint ones. The joint feature toggle picks the version here, in one place: with it off every call goes to
- * `v1` with the body exactly as it was before joint accounts existed, with it on — to `/api/v2`.
- *
- * The versions do not share a validator: [eTagKey] is versioned, because an `ETag` stored for one version would
- * answer `304 Not Modified` for the other and leave a document of the wrong shape looking fresh.
+ * `v1` with the body exactly as it was before joint accounts existed, with it on — to `api/v2`.
  */
 internal class WalletAccountsApi @Inject constructor(
     private val tangemTechApi: TangemTechApi,
@@ -28,15 +24,11 @@ internal class WalletAccountsApi @Inject constructor(
     private val isJointAccountsEnabled: Boolean
         get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
 
-    val eTagKey: ETagsStore.Key
-        get() = if (isJointAccountsEnabled) ETagsStore.Key.WalletAccountsV2 else ETagsStore.Key.WalletAccountsV1
+    private val version: String
+        get() = if (isJointAccountsEnabled) JOINT_AWARE_VERSION else LEGACY_VERSION
 
     suspend fun getAccounts(walletId: String, eTag: String?): ApiResponse<GetWalletAccountsResponse> {
-        return if (isJointAccountsEnabled) {
-            tangemTechApi.getWalletAccountsV2(walletId = walletId, eTag = eTag)
-        } else {
-            tangemTechApi.getWalletAccountsV1(walletId = walletId, eTag = eTag)
-        }
+        return tangemTechApi.getWalletAccounts(version = version, walletId = walletId, eTag = eTag)
     }
 
     suspend fun saveAccounts(
@@ -45,7 +37,7 @@ internal class WalletAccountsApi @Inject constructor(
         body: SaveWalletAccountsResponse,
     ): ApiResponse<GetWalletAccountsResponse> {
         return if (isJointAccountsEnabled) {
-            tangemTechApi.saveWalletAccountsV2(walletId = walletId, eTag = eTag, body = body)
+            tangemTechApi.saveWalletAccounts(version = version, walletId = walletId, eTag = eTag, body = body)
         } else {
             tangemTechApi.saveWalletAccountsV1(
                 walletId = walletId,
@@ -56,10 +48,11 @@ internal class WalletAccountsApi @Inject constructor(
     }
 
     suspend fun getArchivedAccounts(walletId: String, eTag: String?): ApiResponse<GetWalletArchivedAccountsResponse> {
-        return if (isJointAccountsEnabled) {
-            tangemTechApi.getWalletArchivedAccountsV2(walletId = walletId, eTag = eTag)
-        } else {
-            tangemTechApi.getWalletArchivedAccountsV1(walletId = walletId, eTag = eTag)
-        }
+        return tangemTechApi.getWalletArchivedAccounts(version = version, walletId = walletId, eTag = eTag)
+    }
+
+    private companion object {
+        const val LEGACY_VERSION = "v1"
+        const val JOINT_AWARE_VERSION = "api/v2"
     }
 }

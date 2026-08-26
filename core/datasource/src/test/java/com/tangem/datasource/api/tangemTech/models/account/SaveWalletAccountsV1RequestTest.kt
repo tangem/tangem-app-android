@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 internal class SaveWalletAccountsV1RequestTest {
 
     @Test
-    fun `GIVEN body with a personal and a joint row WHEN of THEN only the personal row survives without a type`() {
+    fun `GIVEN body with typed rows WHEN of THEN every row is kept without its type`() {
         // Arrange
         val personal = SaveWalletAccountsResponse.AccountDTO(
             id = "A".repeat(64),
@@ -27,6 +27,13 @@ internal class SaveWalletAccountsV1RequestTest {
                 SaveWalletAccountsV1Request.AccountDTO(
                     id = personal.id,
                     name = null,
+                    derivationIndex = 0,
+                    icon = "Wallet",
+                    iconColor = "DullLavender",
+                ),
+                SaveWalletAccountsV1Request.AccountDTO(
+                    id = joint.id,
+                    name = "Family",
                     derivationIndex = 0,
                     icon = "Wallet",
                     iconColor = "DullLavender",
