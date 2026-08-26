@@ -2,6 +2,7 @@ package com.tangem.features.feed.search.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 internal sealed class FeedSearchAnalyticsEvent(
     event: String,
@@ -16,4 +17,20 @@ internal sealed class FeedSearchAnalyticsEvent(
     )
 
     class SearchStarted : FeedSearchAnalyticsEvent(event = "Search Started")
+
+    data class HintClicked(
+        private val hint: String,
+    ) : FeedSearchAnalyticsEvent(
+        event = "Hint Clicked",
+        params = mapOf("Text" to hint),
+    )
+
+    data class RecentItemClicked(
+        private val tokenSymbol: String,
+    ) : FeedSearchAnalyticsEvent(
+        event = "Recent Item Clicked",
+        params = mapOf(TOKEN_PARAM to tokenSymbol),
+    )
+
+    class ButtonClearHistoryClick : FeedSearchAnalyticsEvent(event = "Button - Clear History")
 }

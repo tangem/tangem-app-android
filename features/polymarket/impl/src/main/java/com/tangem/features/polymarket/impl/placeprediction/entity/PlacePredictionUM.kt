@@ -6,13 +6,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
-/**
- * State of the whole place-prediction flow. Every step renders a slice of it; nothing else holds state.
- *
- * [notifications], [PaymentSourceUM.hasSufficientBalance] and [isPrimaryButtonEnabled] are derived — they are
- * never assigned directly, only produced by
- * [com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate].
- */
 @Immutable
 internal data class PlacePredictionUM(
     val market: MarketHeaderUM,
@@ -42,16 +35,19 @@ internal data class PlacePredictionUM(
     }
 }
 
-internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("0.25")
-
-/** The sum to quote, or `null` while what the user typed is not one yet. */
-internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
-    amountValue.toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
+internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("3")
 
 /**
- * @property outcomePriceCents the outcome's price as a caption, `null` when the backend states none. A price
- *  nobody reported is not a price of zero, and the screen has nothing to show in its place.
+ * The sum to quote, or `null` while what the user typed is not one yet.
+ *
+ * Anything below a cent is not one: the BFF normalises amounts onto a 2-decimal grid, so a finer figure
+ * becomes zero there and comes back as a `400` rather than a quote.
  */
+internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
+    amountValue.toBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT }
+
+private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
+
 @Immutable
 internal data class MarketHeaderUM(
     val title: String,
@@ -60,11 +56,6 @@ internal data class MarketHeaderUM(
     val outcomePriceCents: Int?,
 )
 
-/**
- * @property balance the spending power the order is paid from, `null` while it has not been read. A balance
- *  the exchange did not answer for is not a balance of zero: reading it as one would tell the user their
- *  money is gone and refuse the order in the same breath.
- */
 @Immutable
 internal data class PaymentSourceUM(
     val tokenSymbol: String,
@@ -72,11 +63,6 @@ internal data class PaymentSourceUM(
     val hasSufficientBalance: Boolean,
 )
 
-/**
- * Whether the region allows placing an order. The flow reads this itself, so until the answer arrives it is
- * neither of the two: [Unknown] keeps the button shut without claiming the user is restricted, which a
- * plain `false` could not express and which the screen would otherwise announce as a restriction.
- */
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
 @Immutable
@@ -91,17 +77,25 @@ internal sealed interface QuoteUM {
 
     data class Content(
         val status: PredictionQuoteStatus,
-        val shares: BigDecimal,
-        val toWin: BigDecimal,
+        val expectedShares: BigDecimal,
+        val guaranteedShares: BigDecimal,
         val feeTotal: BigDecimal,
         val total: BigDecimal,
         val minOrderSize: BigDecimal,
     ) : QuoteUM
 
+    data class Unavailable(val status: PredictionQuoteStatus) : QuoteUM
+
     data class Error(val reason: QuoteErrorUM) : QuoteUM
 }
 
 internal enum class QuoteErrorUM { Network, Unknown }
+
+@Immutable
+internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecimal)
+
+internal fun QuoteUM.payout(): PayoutUM? = (this as? QuoteUM.Content)
+    ?.let { PayoutUM(expected = it.expectedShares, guaranteed = it.guaranteedShares) }
 
 @Immutable
 internal sealed interface SubmitUM {

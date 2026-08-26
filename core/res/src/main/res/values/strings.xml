@@ -762,6 +762,8 @@
   <string name="fee_selector_choose_token_description">Choose which token to use to pay\nthe network fee. %s</string>
   <string name="fee_selector_choose_token_title">Choose token</string>
   <string name="feed_market_and_news">Market &amp; News</string>
+  <string name="feed_search_recent_title">Recent</string>
+  <string name="feed_search_recent_clear">Clear</string>
   <string name="feed_search_show_all_user_assets">Show All</string>
   <string name="feed_search_show_less_user_assets">Show less</string>
   <string name="feed_tab_crypto">Crypto</string>

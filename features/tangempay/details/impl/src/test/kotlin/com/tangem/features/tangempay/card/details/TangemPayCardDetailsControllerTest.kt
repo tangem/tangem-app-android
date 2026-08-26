@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.Test
 
-private const val SHOW_DETAILS_TIME = 30_000L
+private const val SHOW_DETAILS_TIME = 40_000L
 
 internal class TangemPayCardDetailsControllerTest {
 
@@ -152,6 +152,23 @@ internal class TangemPayCardDetailsControllerTest {
         runCurrent()
 
         assertThat(controller.uiState.value.isHidden).isTrue()
+    }
+
+    @Test
+    fun `GIVEN revealed WHEN show timeout has not elapsed THEN details stay revealed`() = runTest {
+        // Arrange
+        coEvery { repository.revealCardDetails(userWalletId, cardId) } returns details.right()
+        val controller = createController(scope = backgroundScope)
+        runCurrent()
+        eventListener.send(CardDetailsEvent.Show(cardId))
+        runCurrent()
+
+        // Act
+        advanceTimeBy(SHOW_DETAILS_TIME - 1)
+        runCurrent()
+
+        // Assert
+        assertThat(controller.uiState.value.isHidden).isFalse()
     }
 
     @Test
