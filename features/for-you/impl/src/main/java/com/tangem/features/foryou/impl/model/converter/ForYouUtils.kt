@@ -10,6 +10,7 @@ import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.totalSentimentScore
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -83,8 +84,16 @@ internal fun forYouSentimentBadge(
     )
 }
 
+/**
+ * Ids of the accounts the portfolio selector can actually offer: the crypto-portfolio ones.
+ *
+ * A wallet's statuses also carry `Payment` / `Virtual` / `Prediction` / `Joint` accounts, and the selector
+ * renders no row for those. Seeding the selection with an id that has no row would strand it there forever —
+ * nothing could ever uncheck it, so the selection could never become empty and the Apply button could never
+ * disable.
+ */
 internal fun Map<UserWalletId, AccountStatusList>.availableAccountIds(): Set<AccountId> = values
-    .flatMap { statusList -> statusList.accountStatuses.map { it.accountId } }
+    .flatMap { statusList -> statusList.accountStatuses.filterCryptoPortfolio().map { it.accountId } }
     .toSet()
 
 /**
