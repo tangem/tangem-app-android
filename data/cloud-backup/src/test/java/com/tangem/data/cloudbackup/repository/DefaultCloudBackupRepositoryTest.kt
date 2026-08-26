@@ -17,6 +17,7 @@ import com.tangem.data.cloudbackup.datasource.GoogleDriveTokenProvider
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -107,7 +108,11 @@ internal class DefaultCloudBackupRepositoryTest {
         val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false).right())
+        val expected = RestoredCloudBackup(
+            walletName = fileData.name,
+            secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false),
+        )
+        assertThat(actual).isEqualTo(expected.right())
         coVerify(exactly = 1) { tokenProvider.invalidate() }
         coVerify(exactly = 2) { api.downloadFileContent(any(), any(), any()) }
     }
@@ -141,6 +146,21 @@ internal class DefaultCloudBackupRepositoryTest {
 
         // Assert
         assertThat(requestedInteractive).containsExactly(true, false).inOrder()
+    }
+
+    @Test
+    fun `GIVEN long name in the file WHEN readBackup THEN full name is taken from the file content`() = runTest {
+        // Arrange
+        val longName = "Кошелёк ".repeat(n = 40)
+        val content = CloudBackupJson.encodeToString(fileData.copy(name = longName))
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns successResponse(content)
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
+
+        // Act
+        val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
+
+        // Assert
+        assertThat(actual.getOrNull()?.walletName).isEqualTo(longName)
     }
 
     @Test
@@ -419,6 +439,72 @@ internal class DefaultCloudBackupRepositoryTest {
     fun `GIVEN a different name taken WHEN resolveUniqueBackupName THEN unaffected`() {
         assertThat(resolveUniqueBackupName("Other", "backup.json", setOf("Wallet.backup.json")))
             .isEqualTo("Other.backup.json")
+    }
+
+    @Test
+    fun `GIVEN name longer than the limit WHEN resolveUniqueBackupName THEN name fits into 255 bytes`() {
+        // Arrange
+        val walletName = "W".repeat(n = 300)
+
+        // Act
+        val actual = resolveUniqueBackupName(walletName, "backup.json", emptySet())
+
+        // Assert
+        assertThat(actual).isEqualTo("W".repeat(n = 243) + ".backup.json")
+        assertThat(actual.toByteArray(Charsets.UTF_8)).hasLength(255)
+    }
+
+    @Test
+    fun `GIVEN multibyte name longer than the limit WHEN resolveUniqueBackupName THEN cut between characters`() {
+        // Arrange
+        val walletName = "Ж".repeat(n = 300)
+
+        // Act
+        val actual = resolveUniqueBackupName(walletName, "backup.json", emptySet())
+
+        // Assert
+        assertThat(actual).isEqualTo("Ж".repeat(n = 121) + ".backup.json")
+        assertThat(actual.toByteArray(Charsets.UTF_8).size).isAtMost(255)
+    }
+
+    @Test
+    fun `GIVEN truncated name taken WHEN resolveUniqueBackupName THEN increment also fits into 255 bytes`() {
+        // Arrange
+        val walletName = "W".repeat(n = 300)
+        val existing = setOf(resolveUniqueBackupName(walletName, "backup.json", emptySet()))
+
+        // Act
+        val actual = resolveUniqueBackupName(walletName, "backup.json", existing)
+
+        // Assert
+        assertThat(actual).isEqualTo("W".repeat(n = 239) + " (1).backup.json")
+        assertThat(actual.toByteArray(Charsets.UTF_8)).hasLength(255)
+    }
+
+    @Test
+    fun `GIVEN long wallet name WHEN uploadBackup THEN name appProperty fits into the Drive limit`() = runTest {
+        // Arrange
+        val walletName = "Ж".repeat(n = 300)
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(DriveFileListResponse(files = emptyList()))
+        val created = mutableListOf<DriveFileMetadata>()
+        coEvery { api.createFile(any(), capture(created), any()) } returns Response.success(DriveFile(id = "id"))
+        coEvery {
+            api.uploadFileContent(any(), any(), any(), any(), any())
+        } returns Response.success(DriveFile(id = "id"))
+
+        // Act
+        repository.uploadBackup(
+            walletId = "w1",
+            walletName = walletName,
+            createdAtMillis = 0L,
+            secret = secret,
+            password = "p".toCharArray(),
+        )
+
+        // Assert
+        val storedName = created.single { it.mimeType != FOLDER_MIME_TYPE }.appProperties?.get("walletName")
+        assertThat(storedName).isEqualTo("Ж".repeat(n = 57))
+        assertThat(("walletName" + storedName).toByteArray(Charsets.UTF_8).size).isAtMost(124)
     }
 
     @Test

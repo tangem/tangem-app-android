@@ -16,6 +16,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -203,11 +204,11 @@ class WalletBalanceFetcher internal constructor(
                 paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
             }
 
-            // Prediction fetches its own quote, so unlike TangemPay nothing is pre-fetched here
             if (
                 fetchingSources.any { it is WalletFetchingSource.Prediction } &&
                 polymarketFeatureToggles.isPolymarketEnabled
             ) {
+                launch { balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(PredictionCollateral.RAW_ID)) }
                 launch { predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId)) }
             }
 
