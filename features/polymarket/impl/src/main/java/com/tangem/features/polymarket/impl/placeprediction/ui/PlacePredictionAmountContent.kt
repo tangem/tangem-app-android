@@ -114,7 +114,6 @@ internal fun PlacePredictionAmountContent(
 private fun SlippageRow(slippage: SlippageUM, onClick: () -> Unit) {
     TangemSurface(color = TangemTheme.colors3.bg.secondary) {
         TangemRow(
-            // The slots default to top alignment, which only reads level while both sides are plain one-line text.
             verticalAlignment = TangemRowVerticalAlignment.Center,
             titleSlot = {
                 Row(

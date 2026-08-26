@@ -15,7 +15,6 @@ internal sealed interface PredictionNotificationUM {
 
     val isBlocking: Boolean
 
-    /** A deposit still in flight. It blocks nothing itself — the balance it is heading for already does. */
     data object AwaitingFunds : PredictionNotificationUM {
         override val isBlocking = false
     }
