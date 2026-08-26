@@ -11,6 +11,9 @@ fun BigDecimal.isZero(): Boolean = this.compareTo(BigDecimal.ZERO) == 0
 /** Checks if [this] is positive */
 fun BigDecimal.isPositive(): Boolean = this.signum() == 1
 
+/** Checks if [this] is negative */
+fun BigDecimal.isNegative(): Boolean = this.signum() == -1
+
 /** Removes trailing zeros and returns plain [String] */
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
 
