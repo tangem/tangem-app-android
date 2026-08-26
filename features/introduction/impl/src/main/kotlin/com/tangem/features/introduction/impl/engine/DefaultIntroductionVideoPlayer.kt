@@ -21,6 +21,11 @@ internal class DefaultIntroductionVideoPlayer(
 
     private var isPrepared = false
 
+    private var attachedSurfaceView: SurfaceView? = null
+
+    override val isSurfaceAttached: Boolean
+        get() = attachedSurfaceView != null
+
     init {
         // Copies make the wrap an ordinary transition with the next period already buffered;
         // REPEAT_MODE_ONE re-seeks the single period instead and stalls on slower decoders.
@@ -30,6 +35,7 @@ internal class DefaultIntroductionVideoPlayer(
     }
 
     override fun attachSurface(surfaceView: SurfaceView) {
+        attachedSurfaceView = surfaceView
         player.setVideoSurfaceView(surfaceView)
         // With no surface set, media3 configures the codec against a placeholder one and reports a first
         // frame that nothing can paint.
@@ -42,6 +48,9 @@ internal class DefaultIntroductionVideoPlayer(
     override fun detachSurface(surfaceView: SurfaceView) {
         // The unqualified clearVideoSurface() blocks for up to two seconds and can drop someone else's surface.
         player.clearVideoSurfaceView(surfaceView)
+        // A replacement can be attached before this one is released, and it keeps the picture.
+        if (attachedSurfaceView !== surfaceView) return
+        attachedSurfaceView = null
     }
 
     override fun setRunning(isRunning: Boolean) {
@@ -49,6 +58,7 @@ internal class DefaultIntroductionVideoPlayer(
     }
 
     override fun release() {
+        attachedSurfaceView = null
         player.removeListener(playerListener)
         player.release()
     }
