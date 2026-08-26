@@ -39,10 +39,11 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             .toList()
     }
 
+    /** The currencies of a joint account: every token sits on the network at the owner key path [derivationPath]. */
     fun createCurrencies(
         tokens: List<UserTokensResponse.Token>,
         userWallet: UserWallet,
-        derivationPath: Network.DerivationPath,
+        derivationPath: Network.DerivationPath.Joint,
     ): List<CryptoCurrency> {
         return tokens
             .asSequence()
@@ -83,11 +84,10 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         }
     }
 
-    /** The currency of [responseToken] on the network at [derivationPath], whatever path the token itself names. */
     private fun createCurrency(
         responseToken: UserTokensResponse.Token,
         userWallet: UserWallet,
-        derivationPath: Network.DerivationPath,
+        derivationPath: Network.DerivationPath.Joint,
     ): CryptoCurrency? {
         val blockchain = resolveBlockchain(responseToken, userWallet) ?: return null
 
