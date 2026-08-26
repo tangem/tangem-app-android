@@ -100,6 +100,93 @@ internal class ValidatePredictionOrderUseCaseTest {
         )
     }
 
+    @Test
+    fun `GIVEN shares the quote truncated to its own scale WHEN validated THEN the order passes`() {
+        // Arrange
+        val input = truncatedSharesInput()
+
+        // Act
+        val actual = validate(input)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a buy priced past what the quote scale explains WHEN validated THEN it is refused`() {
+        // Arrange
+        val input = truncatedSharesInput(collateral = BigInteger("4910095"))
+
+        // Act
+        val actual = validate(input)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(
+            PredictionOrderValidationError.PriceWorseThanTolerated(
+                implied = BigDecimal("0.98001976"),
+                tolerated = QUANTIZED_WORST_CASE_PRICE,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a buy at the far edge of the quote scale WHEN validated THEN it still passes`() {
+        // Arrange
+        val input = truncatedSharesInput(collateral = BigInteger("4910094"))
+
+        // Act
+        val actual = validate(input)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a coarse quote scale WHEN the price is genuinely worse THEN it is still refused`() {
+        // Arrange
+        val input = truncatedSharesInput(collateral = BigInteger("6000000"))
+
+        // Act
+        val actual = validate(input)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(
+            PredictionOrderValidationError.PriceWorseThanTolerated(
+                implied = BigDecimal("1.19755698"),
+                tolerated = QUANTIZED_WORST_CASE_PRICE,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN sell proceeds the quote truncated WHEN validated THEN the order passes`() {
+        // Arrange
+        val input = truncatedProceedsInput(collateral = BigInteger("71999990"))
+
+        // Act
+        val actual = validate(input)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN sell proceeds shorter than the quote scale explains WHEN validated THEN it is refused`() {
+        // Arrange
+        val input = truncatedProceedsInput(collateral = BigInteger("71999989"))
+
+        // Act
+        val actual = validate(input)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(
+            PredictionOrderValidationError.PriceWorseThanTolerated(
+                implied = BigDecimal("0.71999989"),
+                tolerated = BigDecimal("0.72"),
+            ),
+        )
+    }
+
     private fun validate(input: Input) = useCase(
         signedOrder = PredictionSignedOrder(order = input.order, signature = input.signature),
         draft = input.draft,
@@ -109,6 +196,31 @@ internal class ValidatePredictionOrderUseCaseTest {
         quoteReceivedAtMillis = input.quoteReceivedAtMillis,
         nowMillis = input.nowMillis,
     )
+
+    private fun truncatedSharesInput(collateral: BigInteger = QUANTIZED_COLLATERAL): Input = Input(
+        draft = draft(
+            makerAmount = collateral,
+            takerAmount = QUANTIZED_SHARES,
+            takerAmountQuantum = QUANTIZED_SHARES_QUANTUM,
+            worstCasePrice = QUANTIZED_WORST_CASE_PRICE,
+        ),
+        order = order(makerAmount = collateral, takerAmount = QUANTIZED_SHARES),
+    )
+
+    private fun truncatedProceedsInput(collateral: BigInteger): Input {
+        val shares = BigInteger("100000000")
+
+        return Input(
+            draft = draft(
+                side = PredictionOrderSide.SELL,
+                makerAmount = shares,
+                takerAmount = collateral,
+                takerAmountQuantum = BigInteger.TEN,
+                worstCasePrice = BigDecimal("0.72"),
+            ),
+            order = order(side = PredictionOrderSide.SELL, makerAmount = shares, takerAmount = collateral),
+        )
+    }
 
     private fun sellInput(worstCasePrice: BigDecimal = BigDecimal("0.72")): Input {
         val shares = BigInteger("100000000")
@@ -213,6 +325,13 @@ internal class ValidatePredictionOrderUseCaseTest {
             expected = PredictionOrderValidationError.MissingBuilderCode(builder = ""),
         ),
         ValidationModel(
+            input = Input(order = order(builder = "0xsomeoneelse")),
+            expected = PredictionOrderValidationError.BuilderCodeMismatch(
+                signed = "0xsomeoneelse",
+                quoted = BUILDER_CODE,
+            ),
+        ),
+        ValidationModel(
             input = Input(order = order(timestampMillis = NOW_MILLIS / 1_000)),
             expected = PredictionOrderValidationError.TimestampNotInMillis(timestampMillis = NOW_MILLIS / 1_000),
         ),
@@ -225,7 +344,7 @@ internal class ValidatePredictionOrderUseCaseTest {
         ),
         ValidationModel(
             input = Input(signature = BARE_SIGNATURE),
-            expected = PredictionOrderValidationError.SignatureNotWrapped(length = BARE_SIGNATURE.length),
+            expected = PredictionOrderValidationError.SignatureNotWrapped(length = BARE_SIGNATURE.length - 2),
         ),
         ValidationModel(
             input = Input(quoteReceivedAtMillis = NOW_MILLIS - 60_001),
@@ -248,13 +367,19 @@ internal class ValidatePredictionOrderUseCaseTest {
         val TAKER_AMOUNT: BigInteger = BigInteger("97959184")
         val WORST_CASE_PRICE: BigDecimal = BigDecimal("0.735")
 
-        val BARE_SIGNATURE = "11".repeat(n = 65)
+        val QUANTIZED_COLLATERAL: BigInteger = BigInteger("4910000")
+        val QUANTIZED_SHARES: BigInteger = BigInteger("5010200")
+        val QUANTIZED_WORST_CASE_PRICE: BigDecimal = BigDecimal("0.98")
+        val QUANTIZED_SHARES_QUANTUM: BigInteger = BigInteger("100")
+
+        val BARE_SIGNATURE = "0x" + "11".repeat(n = 65)
         val WRAPPED_SIGNATURE = "11".repeat(n = 317)
 
         fun draft(
             side: PredictionOrderSide = PredictionOrderSide.BUY,
             makerAmount: BigInteger = MAKER_AMOUNT,
             takerAmount: BigInteger = TAKER_AMOUNT,
+            takerAmountQuantum: BigInteger = BigInteger.ONE,
             worstCasePrice: BigDecimal = WORST_CASE_PRICE,
             builderCode: String = BUILDER_CODE,
         ) = PredictionOrderDraft(
@@ -263,6 +388,7 @@ internal class ValidatePredictionOrderUseCaseTest {
             side = side,
             makerAmount = makerAmount,
             takerAmount = takerAmount,
+            takerAmountQuantum = takerAmountQuantum,
             worstCasePrice = worstCasePrice,
             builderCode = builderCode,
         )
