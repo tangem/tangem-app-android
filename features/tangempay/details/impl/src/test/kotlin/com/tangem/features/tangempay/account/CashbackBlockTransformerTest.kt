@@ -236,13 +236,16 @@ internal class CashbackBlockTransformerTest {
             expectedSubtitle = resourceReference(R.string.tangempay_cashback_refund_banner),
         ),
         AmountCase(
-            description = "zero -> deposit window subtitle",
+            description = "zero -> start spending subtitle",
             amount = BigDecimal.ZERO,
             expectedNegative = false,
-            expectedSubtitle = resourceReference(
-                id = R.string.tangempay_cashback_deposited_on,
-                formatArgs = wrappedList("July 1 – 5"),
-            ),
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
+        ),
+        AmountCase(
+            description = "zero with scale -> start spending subtitle",
+            amount = BigDecimal("0.00"),
+            expectedNegative = false,
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
         ),
         AmountCase(
             description = "positive -> deposit window subtitle",
