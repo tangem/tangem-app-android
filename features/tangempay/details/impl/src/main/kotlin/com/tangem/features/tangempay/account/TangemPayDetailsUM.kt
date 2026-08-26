@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardState
 import kotlinx.collections.immutable.ImmutableList
@@ -14,7 +15,7 @@ internal data class TangemPayDetailsUM(
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val isBalanceHidden: Boolean,
     val errorNotificationConfig: NotificationConfig?,
-    val accountDeactivatedNotificationConfig: NotificationConfig?,
+    val accountDeactivatedBannerState: TangemMessageBanner.State?,
     val cashbackBlockState: CashbackBlockUM? = null,
 )
 
