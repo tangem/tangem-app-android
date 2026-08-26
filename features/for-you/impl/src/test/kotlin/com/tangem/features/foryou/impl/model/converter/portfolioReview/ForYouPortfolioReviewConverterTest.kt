@@ -896,11 +896,15 @@ internal class ForYouPortfolioReviewConverterTest {
     private fun selectedPortfolio(
         currencies: List<CryptoCurrencyStatus>,
         totalFiatBalance: TotalFiatBalance,
-    ): ForYouSelectedPortfolio = ForYouSelectedPortfolio(
-        accountCryptoCurrencyStatuses = currencies.map(::accountCryptoCurrencyStatus),
-        totalAccountsCount = 1,
-        totalFiatBalance = totalFiatBalance,
-    )
+    ): ForYouSelectedPortfolio {
+        val accountStatuses = currencies.map(::accountCryptoCurrencyStatus)
+        return ForYouSelectedPortfolio(
+            accountCryptoCurrencyStatuses = accountStatuses,
+            selectedAccounts = accountStatuses.map { it.account }.distinct(),
+            totalAccountsCount = 1,
+            totalFiatBalance = totalFiatBalance,
+        )
+    }
 
     private fun accountCryptoCurrencyStatus(
         currencyStatus: CryptoCurrencyStatus,
