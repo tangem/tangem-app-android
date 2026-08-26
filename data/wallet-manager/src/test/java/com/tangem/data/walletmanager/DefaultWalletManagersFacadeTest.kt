@@ -1,7 +1,6 @@
 package com.tangem.data.walletmanager
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
@@ -16,8 +15,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * A joint account is a Safe contract: the facade must never derive a key or build a wallet manager for its network,
- * whichever door the request comes through.
+ * A joint account is a Safe contract: the facade never derives a key or builds a wallet manager for its network.
+ * A tester build crashes on the attempt, a release one refuses quietly — the tests follow the build they run in.
  */
 internal class DefaultWalletManagersFacadeTest {
 
@@ -34,9 +33,8 @@ internal class DefaultWalletManagersFacadeTest {
     )
 
     private val userWalletId = UserWalletId("011")
-    private val ownerKeyPath = "m/44'/60'/888888'/0/2"
     private val jointNetwork = MockCryptoCurrencyFactory().ethereum.network.let { network ->
-        val derivationPath = Network.DerivationPath.Joint(value = ownerKeyPath)
+        val derivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/2")
 
         network.copy(
             id = Network.ID(rawId = network.id.rawId, derivationPath = derivationPath),
@@ -45,17 +43,18 @@ internal class DefaultWalletManagersFacadeTest {
     }
 
     @Test
-    fun `GIVEN joint network WHEN update THEN unreachable and nothing is looked up or derived`() = runTest {
+    fun `GIVEN joint network WHEN update THEN refused before any lookup`() = runTest {
         // Act
-        val actual = facade.update(
-            userWalletId = userWalletId,
-            network = jointNetwork,
-            extraTokens = emptySet(),
-            xpub = null,
-        )
+        val actual = runCatching {
+            facade.update(userWalletId = userWalletId, network = jointNetwork, extraTokens = emptySet(), xpub = null)
+        }
 
         // Assert
-        assertThat(actual).isEqualTo(UpdateWalletManagerResult.Unreachable())
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            assertThat(actual.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
+        } else {
+            assertThat(actual.getOrNull()).isEqualTo(UpdateWalletManagerResult.Unreachable())
+        }
         verify {
             userWalletsListRepository wasNot Called
             walletManagersStore wasNot Called
@@ -64,16 +63,16 @@ internal class DefaultWalletManagersFacadeTest {
 
     @Suppress("DEPRECATION")
     @Test
-    fun `GIVEN owner key path WHEN getOrCreateWalletManager THEN no manager is created`() = runTest {
+    fun `GIVEN joint network WHEN getOrCreateWalletManager THEN refused before any lookup`() = runTest {
         // Act
-        val actual = facade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = Blockchain.Ethereum,
-            derivationPath = ownerKeyPath,
-        )
+        val actual = runCatching { facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork) }
 
         // Assert
-        assertThat(actual).isNull()
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            assertThat(actual.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
+        } else {
+            assertThat(actual.getOrNull()).isNull()
+        }
         verify {
             userWalletsListRepository wasNot Called
             walletManagersStore wasNot Called
