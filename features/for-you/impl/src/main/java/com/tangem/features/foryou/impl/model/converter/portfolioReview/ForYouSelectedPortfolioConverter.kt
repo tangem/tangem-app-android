@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.StatusSource
@@ -51,7 +52,7 @@ internal class ForYouSelectedPortfolioConverter(
         isEmpty() -> TotalFiatBalance.Failed
         all { it.status.value is CryptoCurrencyStatus.Loading } -> TotalFiatBalance.Loading
         else -> TotalFiatBalance.Loaded(
-            amount = sumOf { it.status.value.fiatAmount.orZero() },
+            amount = sumOf { it.status.getTotalFiatAmount().orZero() },
             source = map { it.status.value.sources.total }.worstSource(),
         )
     }
