@@ -117,6 +117,7 @@ internal class ChooseTokenListItemConverterPaymentAccountTest {
         PaymentNetworkStatus.Available(
             network = token.network,
             depositAddress = DEPOSIT_ADDRESS,
+            chainId = 137L,
             cryptoCurrencyStatuses = listOf(createCurrencyStatus(token)),
         )
 

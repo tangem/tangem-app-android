@@ -103,6 +103,7 @@ dependencies {
 
     // region Test
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(deps.moshi.kotlin)
     // endregion
 }
