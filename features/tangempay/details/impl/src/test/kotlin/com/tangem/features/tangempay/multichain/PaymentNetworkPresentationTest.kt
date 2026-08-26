@@ -34,6 +34,7 @@ internal class PaymentNetworkPresentationTest {
         val status = PaymentNetworkStatus.Available(
             network = network(networkName = "Polygon", networkRawId = "polygon"),
             depositAddress = "0xDEPOSIT",
+            chainId = 137L,
             cryptoCurrencyStatuses = listOf(status(currency("USDC")), status(currency("USDT"))),
         )
 
@@ -89,6 +90,7 @@ internal class PaymentNetworkPresentationTest {
         val status = PaymentNetworkStatus.Available(
             network = network(networkName = "Base", networkRawId = "base/test"),
             depositAddress = "0xDEPOSIT",
+            chainId = 137L,
             cryptoCurrencyStatuses = listOf(
                 status(currency("USDC")),
                 status(currency("rUSD", rawCurrencyId = null)),
@@ -108,6 +110,7 @@ internal class PaymentNetworkPresentationTest {
         val status = PaymentNetworkStatus.Available(
             network = network(networkName = "Base", networkRawId = "base/test"),
             depositAddress = "0xDEPOSIT",
+            chainId = 137L,
             cryptoCurrencyStatuses = listOf(status(currency("rUSD", rawCurrencyId = null))),
         )
 
@@ -124,6 +127,7 @@ internal class PaymentNetworkPresentationTest {
         val status = PaymentNetworkStatus.Available(
             network = network(networkName = "Polygon", networkRawId = "polygon"),
             depositAddress = "0xDEPOSIT",
+            chainId = 137L,
             cryptoCurrencyStatuses = emptyList(),
         )
 
