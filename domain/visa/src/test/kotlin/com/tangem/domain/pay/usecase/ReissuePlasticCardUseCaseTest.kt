@@ -94,7 +94,7 @@ internal class ReissuePlasticCardUseCaseTest {
                     order(
                         id = "existing",
                         status = OrderStatus.PROCESSING,
-                        productInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+                        sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
                     ),
                 ).right()
 
@@ -112,7 +112,7 @@ internal class ReissuePlasticCardUseCaseTest {
         // Arrange
         coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns
             listOf(
-                order(id = "other", status = OrderStatus.PROCESSING, productInstanceId = "pi_other_0002"),
+                order(id = "other", status = OrderStatus.PROCESSING, sourceProductInstanceId = "pi_other_0002"),
             ).right()
         val created = order(id = "created", status = OrderStatus.NEW)
         coEvery {
@@ -128,6 +128,32 @@ internal class ReissuePlasticCardUseCaseTest {
     }
 
     @Test
+    fun `GIVEN an active order whose new instance id equals the source card WHEN invoked THEN order is created`() =
+        runTest {
+            // Arrange
+            coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns
+                listOf(
+                    order(
+                        id = "other",
+                        status = OrderStatus.PROCESSING,
+                        sourceProductInstanceId = "pi_other_0002",
+                        productInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+                    ),
+                ).right()
+            val created = order(id = "created", status = OrderStatus.NEW)
+            coEvery {
+                orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+            } returns created.right()
+
+            // Act
+            val result = invokeUseCase()
+
+            // Assert
+            assertThat(result).isEqualTo(created.right())
+            coVerify(exactly = 1) { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) }
+        }
+
+    @Test
     fun `GIVEN a terminal reissue order for the same card WHEN invoked THEN creates a new order`() = runTest {
         // Arrange
         coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns
@@ -135,7 +161,7 @@ internal class ReissuePlasticCardUseCaseTest {
                 order(
                     id = "done",
                     status = OrderStatus.COMPLETED,
-                    productInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+                    sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
                 ),
             ).right()
         val created = order(id = "created", status = OrderStatus.NEW)
@@ -222,7 +248,12 @@ internal class ReissuePlasticCardUseCaseTest {
         ),
     )
 
-    private fun order(id: String, status: OrderStatus, productInstanceId: String? = null) = Order(
+    private fun order(
+        id: String,
+        status: OrderStatus,
+        sourceProductInstanceId: String? = null,
+        productInstanceId: String? = null,
+    ) = Order(
         id = id,
         customerId = "customer",
         type = OrderType.CARD_REISSUE_PLASTIC_RAIN,
@@ -236,6 +267,7 @@ internal class ReissuePlasticCardUseCaseTest {
         withdrawTxHash = null,
         createdAt = null,
         updatedAt = null,
+        sourceProductInstanceId = sourceProductInstanceId,
     )
 
     private companion object {
