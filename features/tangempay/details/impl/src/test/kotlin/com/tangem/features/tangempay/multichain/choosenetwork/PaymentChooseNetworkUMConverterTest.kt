@@ -89,6 +89,7 @@ internal class PaymentChooseNetworkUMConverterTest {
         val empty = PaymentNetworkStatus.Available(
             network = network(networkName = "Empty", networkRawId = "empty"),
             depositAddress = "0xEMPTY",
+            chainId = 137L,
             cryptoCurrencyStatuses = emptyList(),
         )
         val polygon = available(networkName = "Polygon", networkRawId = "polygon", address = "0xPOLY")
@@ -178,6 +179,7 @@ internal class PaymentChooseNetworkUMConverterTest {
         return PaymentNetworkStatus.Available(
             network = network(networkName, networkRawId),
             depositAddress = address,
+            chainId = 137L,
             cryptoCurrencyStatuses = listOf(CryptoCurrencyStatus(currency = currency(symbol), value = value)),
         )
     }
