@@ -320,7 +320,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         val token2 = mockk<CryptoCurrency>(relaxed = true)
         val token3 = mockk<CryptoCurrency>(relaxed = true)
 
-        val customAccount = Account.CryptoPortfolio(
+        val customAccount = Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex(1).getOrNull()!!),
             name = "Account 1",
             icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),

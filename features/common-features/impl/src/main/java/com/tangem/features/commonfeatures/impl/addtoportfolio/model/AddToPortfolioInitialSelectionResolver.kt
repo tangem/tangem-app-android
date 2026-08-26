@@ -5,6 +5,7 @@ import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddAccount
@@ -134,7 +135,7 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
         network: TokenMarketInfo.Network,
         tokenParams: RawMarketToken,
     ): Boolean {
-        val derivationIndex = account.account.account.derivationIndex
+        val derivationIndex = account.account.account.derivationIndex ?: return false
         val currency = getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
             tokenMarketParams = tokenParams,

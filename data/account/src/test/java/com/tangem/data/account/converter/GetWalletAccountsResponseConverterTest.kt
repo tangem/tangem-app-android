@@ -72,7 +72,9 @@ class GetWalletAccountsResponseConverterTest {
                 model.value.accounts.forEach { domain ->
                     val dto = model.expected.getOrNull()!!.accounts.firstOrNull { it.id == domain.accountId.value }
 
-                    every { cryptoPortfolioConverter.convertBack(domain as Account.CryptoPortfolio) } returns dto!!
+                    (domain as? Account.Personal)?.let { personal ->
+                        every { cryptoPortfolioConverter.convertBack(personal) } returns dto!!
+                    }
                 }
             }
 

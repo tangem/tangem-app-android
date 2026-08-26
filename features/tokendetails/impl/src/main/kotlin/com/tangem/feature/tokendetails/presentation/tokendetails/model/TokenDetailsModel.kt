@@ -951,9 +951,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun getAccountIndexOrNull(): Int? {
-        val account = account
-        val isNotMainAccount = account != null && !account.isMainAccount
-        return if (isNotMainAccount) account.derivationIndex.value else null
+        val personal = account as? Account.Personal ?: return null
+        return if (personal.isMainAccount) null else personal.derivationIndex.value
     }
 
     private fun openExplorer() {

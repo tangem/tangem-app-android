@@ -18,6 +18,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
+import com.tangem.domain.models.account.isMainAccount
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.ManageTokensComponent

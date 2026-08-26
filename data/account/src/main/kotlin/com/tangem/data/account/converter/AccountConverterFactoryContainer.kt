@@ -11,6 +11,7 @@ import javax.inject.Inject
  * @property getWalletAccountsResponseCF factory for creating a wallet accounts response converter
  * @property accountsListCF              factory for creating an account list converter
  * @property cryptoPortfolioCF           factory for creating a crypto portfolio converter
+ * @property jointAccountCF              factory for creating a joint account converter
  * @property userWalletsListRepository   repository for getting user wallets
  *
  * @constructor Creates an instance of the container with injected factories.
@@ -21,6 +22,7 @@ internal class AccountConverterFactoryContainer @Inject constructor(
     private val getWalletAccountsResponseCF: GetWalletAccountsResponseConverter.Factory,
     private val accountsListCF: AccountListConverter.Factory,
     private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory,
+    private val jointAccountCF: JointAccountConverter.Factory,
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
@@ -40,5 +42,10 @@ internal class AccountConverterFactoryContainer @Inject constructor(
         val userWallet = userWalletsListRepository.getSyncStrict(id = userWalletId)
 
         return cryptoPortfolioCF.create(userWallet)
+    }
+
+    fun createJointAccountConverter(userWalletId: UserWalletId): JointAccountConverter {
+        val userWallet = userWalletsListRepository.getSyncStrict(id = userWalletId)
+        return jointAccountCF.create(userWallet)
     }
 }

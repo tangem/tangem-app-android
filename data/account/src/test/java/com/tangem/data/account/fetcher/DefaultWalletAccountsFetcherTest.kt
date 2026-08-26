@@ -19,7 +19,9 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -45,6 +47,7 @@ class DefaultWalletAccountsFetcherTest {
     private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler = mockk()
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
 
     private val fetcher: DefaultWalletAccountsFetcher = DefaultWalletAccountsFetcher(
         tangemTechApi = tangemTechApi,
@@ -55,6 +58,7 @@ class DefaultWalletAccountsFetcherTest {
         eTagsStore = eTagsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
         mainAccountTokensMigration = tokensMigration,
+        jointAccountFeatureToggles = jointAccountFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -70,6 +74,11 @@ class DefaultWalletAccountsFetcherTest {
         coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
     }
 
+    @BeforeEach
+    fun setUpEach() {
+        every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns false
+    }
+
     @AfterEach
     fun tearDown() {
         clearMocks(
@@ -79,6 +88,66 @@ class DefaultWalletAccountsFetcherTest {
         )
 
         accountsResponseStoreFlow.value = null
+    }
+
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class JointAccountToggle {
+
+        private val ownAccount = createWalletAccountDTO(userWalletId = userWalletId)
+        private val jointAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = "9CC9C1C9A1F1B62B1F0FCBB5D4C7A34F1B8B98A6D3B3E1B94F6C8F0A1E2D3C4B",
+            accountName = "Family",
+            derivationIndex = 0,
+            type = WalletAccountDTO.Type.JOINT.value,
+        )
+
+        @Test
+        fun `GIVEN toggle is off WHEN fetch THEN joint records do not reach the store`() = runTest {
+            // Arrange
+            every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns false
+
+            val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            Truth.assertThat(stored.captured.invoke(null)?.accounts).containsExactly(ownAccount)
+        }
+
+        @Test
+        fun `GIVEN toggle is on WHEN fetch THEN joint records reach the store`() = runTest {
+            // Arrange
+            every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns true
+
+            val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            Truth.assertThat(stored.captured.invoke(null)?.accounts)
+                .containsExactly(ownAccount, jointAccount)
+                .inOrder()
+        }
+
+        private fun arrangeFetch(
+            accounts: List<WalletAccountDTO>,
+        ): CapturingSlot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?> {
+            val response = createGetWalletAccountsResponse(userWalletId).copy(accounts = accounts)
+
+            coEvery {
+                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+            } returns ApiResponse.Success(data = response, headers = mapOf(ETAG_HEADER to listOf(eTag)))
+
+            val transform = slot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
+            coEvery { accountsResponseStore.updateData(capture(transform)) } returns response
+
+            return transform
+        }
     }
 
     @Nested
