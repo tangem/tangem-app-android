@@ -165,6 +165,21 @@ internal class WalletAccountsApiTest {
         coVerify(exactly = 0) { tangemTechApi.getWalletArchivedAccountsV2(walletId = any(), eTag = any()) }
     }
 
+    @Test
+    fun `GIVEN toggle is on WHEN getArchivedAccounts THEN v2 is requested`() = runTest {
+        // Arrange
+        toggle(enabled = true)
+        val response = ApiResponse.Success(data = mockk<GetWalletArchivedAccountsResponse>())
+        coEvery { tangemTechApi.getWalletArchivedAccountsV2(walletId = walletId, eTag = eTag) } returns response
+
+        // Act
+        val actual = walletAccountsApi.getArchivedAccounts(walletId = walletId, eTag = eTag)
+
+        // Assert
+        assertThat(actual).isEqualTo(response)
+        coVerify(exactly = 0) { tangemTechApi.getWalletArchivedAccountsV1(walletId = any(), eTag = any()) }
+    }
+
     private fun toggle(enabled: Boolean) {
         every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns enabled
     }

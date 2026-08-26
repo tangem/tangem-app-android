@@ -25,14 +25,14 @@ internal class WalletAccountsApi @Inject constructor(
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) {
 
-    private val knowsJointAccounts: Boolean
+    private val isJointAccountsEnabled: Boolean
         get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
 
     val eTagKey: ETagsStore.Key
-        get() = if (knowsJointAccounts) ETagsStore.Key.WalletAccountsV2 else ETagsStore.Key.WalletAccountsV1
+        get() = if (isJointAccountsEnabled) ETagsStore.Key.WalletAccountsV2 else ETagsStore.Key.WalletAccountsV1
 
     suspend fun getAccounts(walletId: String, eTag: String?): ApiResponse<GetWalletAccountsResponse> {
-        return if (knowsJointAccounts) {
+        return if (isJointAccountsEnabled) {
             tangemTechApi.getWalletAccountsV2(walletId = walletId, eTag = eTag)
         } else {
             tangemTechApi.getWalletAccountsV1(walletId = walletId, eTag = eTag)
@@ -44,7 +44,7 @@ internal class WalletAccountsApi @Inject constructor(
         eTag: String,
         body: SaveWalletAccountsResponse,
     ): ApiResponse<GetWalletAccountsResponse> {
-        return if (knowsJointAccounts) {
+        return if (isJointAccountsEnabled) {
             tangemTechApi.saveWalletAccountsV2(walletId = walletId, eTag = eTag, body = body)
         } else {
             tangemTechApi.saveWalletAccountsV1(
@@ -56,7 +56,7 @@ internal class WalletAccountsApi @Inject constructor(
     }
 
     suspend fun getArchivedAccounts(walletId: String, eTag: String?): ApiResponse<GetWalletArchivedAccountsResponse> {
-        return if (knowsJointAccounts) {
+        return if (isJointAccountsEnabled) {
             tangemTechApi.getWalletArchivedAccountsV2(walletId = walletId, eTag = eTag)
         } else {
             tangemTechApi.getWalletArchivedAccountsV1(walletId = walletId, eTag = eTag)
