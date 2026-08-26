@@ -1110,7 +1110,6 @@ internal class SwapInteractorImpl @Inject constructor(
         if (isTangemPayWithdrawal) {
             return SwapTransactionState.TangemPayWithdrawalData(
                 cryptoAmount = amount.value,
-                cryptoCurrencyId = requireNotNull(fromSwapCurrencyStatus.currency.id.rawCurrencyId),
                 cexAddress = exchangeDataCex.txTo,
                 fromAmount = amountFormatter.formatSwapAmountToUI(
                     amount,
