@@ -119,6 +119,50 @@ internal class ForYouPortfolioFilterConverterTest {
         )
     }
 
+    @Test
+    fun `GIVEN every account picked but one holds no tokens WHEN convert THEN chip is All accounts`() {
+        // Arrange — a token-less account contributes no currency status, so it is invisible in the
+        // currency list while still counting towards totalAccountsCount
+        val withTokens = MockAccounts.createAccount(derivationIndex = 1)
+        val empty = MockAccounts.createAccount(derivationIndex = 2)
+        val portfolio = createSelectedPortfolio(
+            accountStatusWithCurrency(withTokens),
+            accountStatusWithoutCurrencies(empty),
+            totalAccountsCount = 2,
+        )
+
+        // Act
+        val actual = converter.convert(portfolio)
+
+        // Assert
+        assertThat(actual).isEqualTo(allAccountsChip())
+    }
+
+    @Test
+    fun `GIVEN only a token-less account picked WHEN convert THEN chip names that account`() {
+        // Arrange — the selection is real even though it resolves to no currencies, so the chip must
+        // read as filtered rather than falling back to the unfiltered label
+        val empty = MockAccounts.createAccount(derivationIndex = 1)
+        val portfolio = createSelectedPortfolio(
+            accountStatusWithoutCurrencies(empty),
+            totalAccountsCount = 2,
+        )
+
+        // Act
+        val actual = converter.convert(portfolio)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            TangemFilterItemUM.Active(
+                id = ForYouPortfolioFilterConverter.ID,
+                value = empty.accountName.toUM().value,
+                counter = null,
+                onClick = onClick,
+                onClearClick = onClearClick,
+            ),
+        )
+    }
+
     private fun allAccountsChip() = TangemFilterItemUM.Inactive(
         id = ForYouPortfolioFilterConverter.ID,
         label = resourceReference(R.string.common_all_accounts),
@@ -131,6 +175,10 @@ internal class ForYouPortfolioFilterConverterTest {
             currencies = listOf(createStatus(createEarnCurrency())),
             account = account,
         )
+
+    /** A picked account holding nothing — it produces no currency status at all. */
+    private fun accountStatusWithoutCurrencies(account: Account.CryptoPortfolio): AccountStatus.CryptoPortfolio =
+        createPortfolioStatus(currencies = emptyList(), account = account)
 
     internal data class ConvertModel(
         val portfolio: ForYouSelectedPortfolio,
