@@ -60,13 +60,14 @@ internal fun BigDecimal?.toForYouPercent(totalFiatBalance: BigDecimal): BigDecim
  * Builds the sentiment badge of an asset row from the asset's [coinIndicators] for the selected
  * [timeframe]. The sign of [totalSentimentScore] — the exact score shown on the token summary
  * sentiment section — picks the badge, so the row badge always agrees with that screen's overall
- * outlook. Returns `null` (no badge) only when there is no data for the asset at all.
+ * outlook. Returns `null` (no badge) when there is no data for the asset at all, and when the asset
+ * has data but nothing interpretable in it — see [CoinIndicators.shouldHideBadge].
  */
 internal fun forYouSentimentBadge(
     coinIndicators: CoinIndicators?,
     timeframe: CoinIndicators.Reading.Timeframe,
 ): TangemBadgeUM? {
-    if (coinIndicators == null) return null
+    if (coinIndicators == null || coinIndicators.shouldHideBadge()) return null
 
     val totalScore = coinIndicators.totalSentimentScore(timeframe)
 
