@@ -127,7 +127,7 @@ internal class DetailsModel @Inject constructor(
             val userWallets = getWalletsUseCase.invokeSync()
 
             val selectedUserWallet = getSelectedWalletSyncUseCase().getOrNull()
-                ?: error("Selected wallet is null")
+                ?: return@launch
 
             val metaInfo = getWalletMetaInfoUseCase(selectedUserWallet.walletId).getOrNull() ?: return@launch
             val visaCustomerId = getTangemPayCustomerIdUseCase(selectedUserWallet.walletId).getOrNull()
@@ -201,7 +201,7 @@ internal class DetailsModel @Inject constructor(
 
     private fun openUseDesk() {
         modelScope.launch {
-            val userWallet = getSelectedWalletSyncUseCase().getOrNull() ?: error("Selected wallet is null")
+            val userWallet = getSelectedWalletSyncUseCase().getOrNull() ?: return@launch
             val metaInfo = getWalletMetaInfoUseCase.invoke(userWallet.walletId).getOrNull() ?: return@launch
             router.push(AppRoute.Usedesk(metaInfo))
         }
