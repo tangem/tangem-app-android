@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -924,6 +925,51 @@ internal class WalletBalanceFetcherTest {
             coVerify(inverse = true) { predictionAccountStatusFetcher(params = any()) }
         }
 
+    /**
+     * The collateral is priced from the app's USDC quote, and a cached balance needs that rate as much as a
+     * freshly read one — so the quote is read here, beside the status, and not by the status refresh itself.
+     */
+    @Test
+    fun `GIVEN prediction source and polymarket enabled WHEN fetch THEN the collateral quote is fetched`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns Unit.right()
+
+        // Act
+        val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) {
+            multiQuoteStatusFetcher(
+                params = MultiQuoteStatusFetcher.Params(
+                    currenciesIds = setOf(PredictionCollateral.RAW_ID),
+                    appCurrencyId = null,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the prediction status fails WHEN fetch THEN the collateral quote is fetched anyway`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns IllegalStateException("Error").left()
+
+        // Act
+        createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        coVerify(exactly = 1) {
+            multiQuoteStatusFetcher(
+                params = MultiQuoteStatusFetcher.Params(
+                    currenciesIds = setOf(PredictionCollateral.RAW_ID),
+                    appCurrencyId = null,
+                ),
+            )
+        }
+    }
+
     @Test
     fun `GIVEN the prediction fetch fails WHEN fetch THEN the whole wallet fetch still succeeds`() = runTest {
         // Arrange
@@ -960,6 +1006,7 @@ internal class WalletBalanceFetcherTest {
                 ),
             )
         } returns Unit.right()
+        coEvery { multiQuoteStatusFetcher(params = any()) } returns Unit.right()
     }
 
     private fun createFetcher(isPolymarketEnabled: Boolean): WalletBalanceFetcher = WalletBalanceFetcher(
