@@ -97,7 +97,7 @@ internal fun PlacePredictionAmountContent(
             PredictionMarketBlock(state = state.market)
             PredictionAmountBlock(
                 amountValue = state.amountValue,
-                toWin = state.quote.payout()?.expected,
+                payout = state.quote.payout(),
                 amountError = state.amountError,
                 payment = state.payment,
                 onAmountChange = intents::onAmountChange,
