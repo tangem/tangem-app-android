@@ -4,6 +4,7 @@ import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import kotlinx.collections.immutable.ImmutableList
@@ -42,7 +43,7 @@ internal object PlacePredictionNotificationsFactory {
  * flow this one is modelled on gates its button from three places, one of them outside the notifications.
  */
 internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
-    val required = (quote as? QuoteUM.Content)?.total
+    val required = (quote as? QuoteUM.Content)?.total ?: enteredAmount()
     val balance = payment.balance
     val hasSufficientBalance = required != null && balance != null && balance >= required
 
