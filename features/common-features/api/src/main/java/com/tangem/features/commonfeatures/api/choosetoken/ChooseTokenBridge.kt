@@ -41,6 +41,11 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
         val isShowSingleCurrencyWallets: Boolean = false,
         /** When `true`, the FROM selector shows the zero-balance filter (default HideZero). Swap FROM only. */
         val isHideZeroBalanceFilterEnabled: Boolean = false,
+        /**
+         * When `true`, the payment account section lists every token the account is issued on (its `ENABLED`
+         * networks) instead of the single account currency. Account flows (Tangem Pay add funds / withdraw) only.
+         */
+        val isPaymentAccountMultiTokenEnabled: Boolean = false,
     ) {
         companion object {
             val SwapFrom = Settings(

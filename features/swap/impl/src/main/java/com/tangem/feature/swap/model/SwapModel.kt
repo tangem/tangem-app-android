@@ -208,11 +208,11 @@ internal class SwapModel @Inject constructor(
     val chooseFromTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
         modelScope = modelScope,
         settings = if (isTangemPayWithdrawFlow) {
-            ChooseTokenBridge.Settings.WithdrawFrom
+            ChooseTokenBridge.Settings.WithdrawFrom.withAccountFlowTokenSelection()
         } else {
-            ChooseTokenBridge.Settings.SwapFrom.copy(
-                isHideZeroBalanceFilterEnabled = swapFeatureToggles.isHideZeroBalanceSourceEnabled,
-            )
+            ChooseTokenBridge.Settings.SwapFrom
+                .copy(isHideZeroBalanceFilterEnabled = swapFeatureToggles.isHideZeroBalanceSourceEnabled)
+                .withAccountFlowTokenSelection()
         },
         analyticsPayload = setOf(
             ChooseTokenAnalyticsPayload.ScreensSources(ScreensSources.Swap.value),
@@ -220,7 +220,7 @@ internal class SwapModel @Inject constructor(
     )
     val chooseToTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
         modelScope = modelScope,
-        settings = ChooseTokenBridge.Settings.SwapTo,
+        settings = ChooseTokenBridge.Settings.SwapTo.withAccountFlowTokenSelection(),
         analyticsPayload = setOf(
             ChooseTokenAnalyticsPayload.ScreensSources(ScreensSources.Swap.value),
         ),
@@ -499,7 +499,7 @@ internal class SwapModel @Inject constructor(
                 swapCurrencyPosition = params.fromCurrencyPosition,
                 accountFlow = accountFlow,
                 initialToCryptoCurrency = params.toCryptoCurrency,
-                applyAccountTopUpFromPriority = swapFeatureToggles.isAccountSwapFlowEnabled,
+                isAccountFlowEnabled = swapFeatureToggles.isAccountSwapFlowEnabled,
             )
 
             if (isTangemPayWithdrawFlow) {
@@ -2582,6 +2582,13 @@ internal class SwapModel @Inject constructor(
             this
         }
     }
+
+    /**
+     * In an account flow the payment account is the flow's subject, so its section lists every token the
+     * account is issued on instead of the single account currency.
+     */
+    private fun ChooseTokenBridge.Settings.withAccountFlowTokenSelection(): ChooseTokenBridge.Settings =
+        if (isAccountFlowActive) copy(isPaymentAccountMultiTokenEnabled = true) else this
 
     /**
      * Applied here rather than in [StateBuilder] so every state it produces gets the same treatment. The main
