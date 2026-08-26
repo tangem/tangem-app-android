@@ -42,7 +42,6 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
                 quote = previewQuote(),
                 tradingPermission = TradingPermissionUM.Restricted,
             ),
-            // Nothing produces this state yet — the deposit it reports on arrives with the add-funds flow.
             previewState(amountValue = "4000", quote = previewQuote(), balance = BigDecimal("10"))
                 .copy(notifications = persistentListOf(PredictionNotificationUM.AwaitingFunds)),
         )
