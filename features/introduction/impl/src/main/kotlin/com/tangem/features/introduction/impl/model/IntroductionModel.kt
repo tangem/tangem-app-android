@@ -29,8 +29,6 @@ internal class IntroductionModel @Inject constructor(
 
     private val params = paramsContainer.require<IntroductionComponent.Params>()
 
-    private var attachedSurfaceView: SurfaceView? = null
-
     private val videoPlayer = videoPlayerFactory.create(
         videoRes = R.raw.introduction_background,
         listener = this,
@@ -67,29 +65,24 @@ internal class IntroductionModel @Inject constructor(
     }
 
     override fun onFirstFrameRendered() {
-        if (attachedSurfaceView == null || uiState.value.isVideoReady) return
+        if (!videoPlayer.isSurfaceAttached || uiState.value.isVideoReady) return
         uiState.update { it.copy(isVideoReady = true) }
     }
 
     override fun onError() {
         // Errors arrive asynchronously, so one can land after the surface is gone; lifting the shutter then
         // would uncover a blank surface on the way back.
-        if (attachedSurfaceView == null) return
+        if (!videoPlayer.isSurfaceAttached) return
         uiState.update { it.copy(isVideoReady = true) }
     }
 
     fun attachSurface(surfaceView: SurfaceView) {
-        attachedSurfaceView = surfaceView
         videoPlayer.attachSurface(surfaceView)
     }
 
     fun detachSurface(surfaceView: SurfaceView) {
         videoPlayer.detachSurface(surfaceView)
-        // A replacement can be attached before the old surface is released, and the live one keeps the
-        // picture, so only losing the current surface puts the shutter back up.
-        if (attachedSurfaceView !== surfaceView) return
-        attachedSurfaceView = null
-        // A new surface starts out blank, so the shutter has to wait for its own first frame.
+        if (videoPlayer.isSurfaceAttached) return
         uiState.update { it.copy(isVideoReady = false) }
     }
 
