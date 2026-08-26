@@ -6,14 +6,22 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.R
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
+import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -43,21 +51,18 @@ import java.math.BigDecimal
 import javax.inject.Inject
 
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
-internal const val QUOTE_POLL_INTERVAL_MILLIS = 10_000L
 
-/**
- * The only owner of the place-prediction state: every step renders a slice of [uiState] and writes back through
- * [PlacePredictionIntents].
- *
- * The quote is re-requested on an interval rather than fetched once, because the number it carries is the sum that
- * is actually debited, and the book moves. The loop stops as soon as a submission starts, so what is signed is what
- * was shown.
- */
+internal const val LIVE_QUOTE_POLL_INTERVAL_MILLIS = 3_000L
+internal const val QUOTE_POLL_INTERVAL_MILLIS = 15_000L
+
 @Suppress("LongParameterList")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
+    private val urlOpener: UrlOpener,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
@@ -73,6 +78,8 @@ internal class PlacePredictionModel @Inject constructor(
         field = MutableStateFlow(PlacePredictionUM.initial())
 
     private val quoteJobHolder = JobHolder()
+
+    private var isMarketLive = false
 
     init {
         loadMarket()
@@ -99,6 +106,18 @@ internal class PlacePredictionModel @Inject constructor(
         }
     }
 
+    /**
+     * The flow polls a live market every few seconds, so it must not keep doing that off-screen: the loop is
+     * suspended with the screen and resumed with it, rather than living as long as the model.
+     */
+    fun onScreenShown() {
+        restartQuoteLoop(withDebounce = false)
+    }
+
+    fun onScreenHidden() {
+        quoteJobHolder.cancel()
+    }
+
     override fun onAmountChange(value: String) {
         uiState.update(SetAmountTransformer(value = value))
         restartQuoteLoop(withDebounce = true)
@@ -107,6 +126,14 @@ internal class PlacePredictionModel @Inject constructor(
     override fun onSlippageSelected(percent: BigDecimal) {
         uiState.update(SetSlippageTransformer(percent = percent))
         restartQuoteLoop(withDebounce = false)
+    }
+
+    override fun onSlippageClick() {
+        showComingLater(part = "Choosing the slippage")
+    }
+
+    override fun onAddFundsClick() {
+        showComingLater(part = "Adding funds")
     }
 
     override fun onQuoteRetryClick() {
@@ -127,6 +154,53 @@ internal class PlacePredictionModel @Inject constructor(
                 onDismissRequest = { uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle)) },
             ),
         )
+    }
+
+    /**
+     * A submission that never reached the book: the same order can still be placed, so this is a dialog over
+     * the summary rather than a result screen, and it returns the flow to [SubmitUM.Idle].
+     */
+    fun showPlaceFailure() {
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
+
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.prediction_place_error_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_support),
+                        onClick = ::onSupportClick,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun onSupportClick() {
+        modelScope.launch {
+            val metaInfo = getWalletMetaInfoUseCase(userWalletId = params.userWalletId).getOrNull() ?: return@launch
+
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
+        }
+    }
+
+    private fun showComingLater(part: String) {
+        messageSender.send(
+            DialogMessage(
+                title = stringReference(value = "Not implemented"),
+                message = stringReference(value = "$part arrives in a later part of this flow."),
+            ),
+        )
+    }
+
+    override fun onPolymarketTermsClick() {
+        urlOpener.openUrl(PolymarketLegalUrls.polymarketTerms)
+    }
+
+    override fun onTangemTermsClick() {
+        urlOpener.openUrl(PolymarketLegalUrls.TANGEM_TERMS)
     }
 
     override fun onBackClick() {
@@ -183,10 +257,12 @@ internal class PlacePredictionModel @Inject constructor(
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
-                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)
     }
+
+    private fun pollInterval(): Long = if (isMarketLive) LIVE_QUOTE_POLL_INTERVAL_MILLIS else QUOTE_POLL_INTERVAL_MILLIS
 
     private suspend fun requestQuote() {
         val state = uiState.value
@@ -207,6 +283,7 @@ internal class PlacePredictionModel @Inject constructor(
             )
         }
 
+        result.onRight { isMarketLive = it.isLive }
         if (uiState.value.submit is SubmitUM.Idle) {
             uiState.update(SetQuoteResultTransformer(result = result))
         }

@@ -14,6 +14,7 @@ import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
@@ -146,7 +147,7 @@ internal class RestoreCloudBackupModelTest {
         // Arrange
         val words = (1..MNEMONIC_WORDS).joinToString(separator = " ") { "word$it" }
         coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
-            CloudBackupSecretData(mnemonic = words.toCharArray(), isPassphraseRequired = false).right()
+            restoredBackup(mnemonic = words).right()
         val capturedMnemonicString = slot<String>()
         every { mnemonicRepository.generateMnemonic(capture(capturedMnemonicString)) } returns mnemonic
         coEvery {
@@ -170,11 +171,34 @@ internal class RestoreCloudBackupModelTest {
     }
 
     @Test
+    fun `GIVEN name truncated in the list WHEN restore clicked THEN import uses the name from the backup file`() =
+        runTest {
+            // Arrange
+            val fullName = "Wallet with a very long name"
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+                restoredBackup(mnemonic = "word1 word2", walletName = fullName).right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery { hotWalletImporter.import(any(), mnemonic, null, fullName) } returns walletId.right()
+
+            val model = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { hotWalletImporter.import(any(), mnemonic, null, fullName) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN passphraseRequired backup WHEN password entered THEN passphrase screen shown AND import waits`() =
         runTest {
             // Arrange
             coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
-                CloudBackupSecretData(mnemonic = "word1 word2".toCharArray(), isPassphraseRequired = true).right()
+                restoredBackup(mnemonic = "word1 word2", isPassphraseRequired = true).right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
 
             val model = createModel(this, holderOf(backupInfo))
@@ -196,7 +220,10 @@ internal class RestoreCloudBackupModelTest {
         // Arrange
         val mnemonicChars = "word1 word2".toCharArray()
         coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
-            CloudBackupSecretData(mnemonic = mnemonicChars, isPassphraseRequired = true).right()
+            RestoredCloudBackup(
+                walletName = "My Wallet",
+                secret = CloudBackupSecretData(mnemonic = mnemonicChars, isPassphraseRequired = true),
+            ).right()
 
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
@@ -217,7 +244,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN passphrase screen WHEN passphrase entered THEN import invoked with that passphrase`() = runTest {
         // Arrange
         coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
-            CloudBackupSecretData(mnemonic = "word1 word2".toCharArray(), isPassphraseRequired = true).right()
+            restoredBackup(mnemonic = "word1 word2", isPassphraseRequired = true).right()
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
         val capturedPassphrase = slot<CharArray>()
         coEvery {
@@ -246,7 +273,7 @@ internal class RestoreCloudBackupModelTest {
         runTest {
             // Arrange
             coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
-                CloudBackupSecretData(mnemonic = "word1 word2".toCharArray(), isPassphraseRequired = false).right()
+                restoredBackup(mnemonic = "word1 word2").right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
             coEvery {
                 hotWalletImporter.import(any(), mnemonic, null, "My Wallet")
@@ -354,6 +381,15 @@ internal class RestoreCloudBackupModelTest {
         assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
         model.onDestroy()
     }
+
+    private fun restoredBackup(
+        mnemonic: String,
+        isPassphraseRequired: Boolean = false,
+        walletName: String = "My Wallet",
+    ): RestoredCloudBackup = RestoredCloudBackup(
+        walletName = walletName,
+        secret = CloudBackupSecretData(mnemonic = mnemonic.toCharArray(), isPassphraseRequired = isPassphraseRequired),
+    )
 
     private fun holderOf(vararg backups: CloudBackupInfo, accountEmail: String? = ACCOUNT_EMAIL): CloudRestoreResultHolder {
         val holder = CloudRestoreResultHolder()
