@@ -10,11 +10,7 @@ import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.account.derivationIndex
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.tester.presentation.accounts.entity.AccountsUM
@@ -157,8 +153,7 @@ internal class TesterAccountsViewModel @Inject constructor(
     private fun clearETag() {
         viewModelScope.launch {
             val userWalletId = getUserWallet()?.walletId ?: return@launch
-            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccountsV1)
-            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccountsV2)
+            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
         }
     }
 
