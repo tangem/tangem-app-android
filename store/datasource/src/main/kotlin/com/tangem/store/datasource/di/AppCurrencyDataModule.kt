@@ -1,4 +1,4 @@
-package com.tangem.datasource.di
+package com.tangem.store.datasource.di
 
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.appcurrency.DefaultAppCurrencyResponseStore
