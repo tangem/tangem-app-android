@@ -15,6 +15,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent

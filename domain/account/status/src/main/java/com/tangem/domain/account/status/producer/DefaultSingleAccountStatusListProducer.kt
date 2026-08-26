@@ -192,7 +192,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             )
             val accountStatuses = accountList.accounts.map { account ->
                 when (account) {
-                    is Account.CryptoPortfolio -> buildCryptoPortfolioStatus(account, currencyStatusMap, accountList)
+                    is Account.Personal -> buildCryptoPortfolioStatus(account, currencyStatusMap, accountList)
                     is Account.Payment -> specialStatuses[account.accountId] ?: account.errorPaymentAccountStatus
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
                     is Account.Prediction ->
@@ -438,7 +438,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             userWalletId = accountList.userWalletId,
             accountStatuses = accountList.accounts.mapNotNull { account ->
                 when (account) {
-                    is Account.CryptoPortfolio -> {
+                    is Account.Personal -> {
                         val currencyStatuses = account.cryptoCurrencies.map {
                             CryptoCurrencyStatus(currency = it, value = CryptoCurrencyStatus.Loading)
                         }
