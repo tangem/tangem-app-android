@@ -11,14 +11,6 @@ import java.util.Locale
  */
 const val JOINT_ACCOUNT_OWNER_DERIVATION_PATH_TEMPLATE: String = "m/44'/60'/888888'/0/%d"
 
-private val ownerDerivationPathPrefix: String = JOINT_ACCOUNT_OWNER_DERIVATION_PATH_TEMPLATE.substringBefore("%d")
-
-/**
- * Whether [rawPath] lies in the owner key namespace of joint accounts. No key of the wallet's own accounts sits
- * there, so a path in it never stands for an address of the wallet — the funds are at the Safe address.
- */
-fun isJointAccountOwnerDerivationPath(rawPath: String): Boolean = rawPath.startsWith(ownerDerivationPathPrefix)
-
 fun jointAccountOwnerDerivationPath(index: Int): DerivationPath {
     require(index >= 0) { "Owner derivation index cannot be negative: $index" }
 
