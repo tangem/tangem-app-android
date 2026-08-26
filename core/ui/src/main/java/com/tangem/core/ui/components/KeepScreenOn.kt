@@ -25,7 +25,7 @@ fun KeepScreenOn() {
 
 private object ScreenOnRequests {
 
-    private val counts = mutableMapOf<View, Int>()
+    private val counts = java.util.WeakHashMap<View, Int>()
 
     fun acquire(view: View) {
         counts[view] = counts.getOrElse(view) { 0 } + 1
