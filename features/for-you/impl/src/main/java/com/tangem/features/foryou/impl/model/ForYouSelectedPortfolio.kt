@@ -2,6 +2,7 @@ package com.tangem.features.foryou.impl.model
 
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.Account
 
 /**
  * Aggregated portfolio across the accounts the user picked in the portfolio selector.
@@ -12,6 +13,7 @@ import com.tangem.domain.models.TotalFiatBalance
  * downstream converters can still route clicks to the right wallet after regrouping by asset/network.
  *
  * @property accountCryptoCurrencyStatuses the selected accounts' currency statuses (one entry per account × currency)
+ * @property selectedAccounts               the picked accounts themselves.
  * @property totalAccountsCount             total number of available accounts (before the selection filter), used to
  *                                          tell a full "all accounts" selection from a partial one
  * @property totalFiatBalance               aggregate fiat balance recomputed from the selected currencies
@@ -20,6 +22,7 @@ import com.tangem.domain.models.TotalFiatBalance
  */
 internal data class ForYouSelectedPortfolio(
     val accountCryptoCurrencyStatuses: List<AccountCryptoCurrencyStatus>,
+    val selectedAccounts: List<Account.CryptoPortfolio>,
     val totalAccountsCount: Int,
     val totalFiatBalance: TotalFiatBalance,
 )

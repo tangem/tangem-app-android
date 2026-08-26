@@ -18,6 +18,8 @@ dependencies {
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
 
     /** Core */
     implementation(projects.core.configToggles)
