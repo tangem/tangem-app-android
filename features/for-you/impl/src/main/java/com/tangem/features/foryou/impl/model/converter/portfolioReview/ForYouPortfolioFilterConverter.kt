@@ -35,7 +35,14 @@ internal class ForYouPortfolioFilterConverter(
         val selectedAccounts = value.selectedAccounts
 
         return when {
-            selectedAccounts.isEmpty() || selectedAccounts.size == value.totalAccountsCount -> {
+            selectedAccounts.isEmpty() -> {
+                TangemFilterItemUM.Inactive(
+                    id = ID,
+                    label = resourceReference(R.string.common_select_account),
+                    onClick = onClick,
+                )
+            }
+            selectedAccounts.size == value.totalAccountsCount -> {
                 TangemFilterItemUM.Inactive(
                     id = ID,
                     label = resourceReference(R.string.common_all_accounts),
