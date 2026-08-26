@@ -31,6 +31,7 @@ import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -55,6 +56,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -130,7 +132,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private var shownTiersBanner: TangemPayTiersBannerType? = null
     private var shownCashbackBlock: CashbackBlockAnalyticsType? = null
-    private var cashbackTransformer: CashbackBlockTransformer? = null
+    private var cashbackTransformer: Transformer<TangemPayDetailsUM>? = null
     private var isDeliveryBannerShown = false
 
     private val isInitialRouteHandled = MutableStateFlow(false)
@@ -272,17 +274,69 @@ internal class TangemPayDetailsModel @Inject constructor(
                     isDeactivationDismissed = isDismissed,
                     dateFormatter = cashbackDateFormatter,
                     onClick = ::onClickCashback,
+                    onMenuItemClick = ::onClickCashbackMenuItem,
                     onGotIt = ::onDismissCashbackDeactivation,
                 )
                 cashbackTransformer = transformer
                 uiState.update(transformer)
+            }.onLeft {
+                val current = cashbackTransformer
+                val isMenuEntryShown = current is CashbackMenuItemErrorTransformer ||
+                    current is CashbackBlockTransformer && current.isAltBlockMode
+                when {
+                    // The menu entry is the shown cashback UI — the error state lives there ([REDACTED_TASK_KEY])
+                    isMenuEntryShown -> {
+                        sendCashbackBlockShown(CashbackBlockAnalyticsType.SettingsButtonError)
+                        applyCashbackTransformer(
+                            CashbackMenuItemErrorTransformer(
+                                onReload = ::onReloadCashbackMenuItem,
+                                isReloading = false,
+                            ),
+                        )
+                    }
+                    // A failed refresh must not wipe the successfully shown widget ([REDACTED_TASK_KEY])
+                    current is CashbackBlockTransformer -> return@onLeft
+                    else -> {
+                        sendCashbackBlockShown(CashbackBlockAnalyticsType.Error)
+                        applyCashbackTransformer(
+                            CashbackErrorBlockTransformer(
+                                onReload = ::onReloadCashbackBlock,
+                                isReloading = false,
+                            ),
+                        )
+                    }
+                }
             }
         }.saveIn(cashbackBlockJobHolder)
     }
 
+    private fun applyCashbackTransformer(transformer: Transformer<TangemPayDetailsUM>) {
+        cashbackTransformer = transformer
+        uiState.update(transformer)
+    }
+
+    private fun onReloadCashbackBlock() {
+        if (cashbackBlockJobHolder.isActive) return
+        applyCashbackTransformer(
+            CashbackErrorBlockTransformer(onReload = ::onReloadCashbackBlock, isReloading = true),
+        )
+        fetchCashbackBlock()
+    }
+
+    private fun onReloadCashbackMenuItem() {
+        if (cashbackBlockJobHolder.isActive) return
+        applyCashbackTransformer(
+            CashbackMenuItemErrorTransformer(onReload = ::onReloadCashbackMenuItem, isReloading = true),
+        )
+        fetchCashbackBlock()
+    }
+
     private fun sendCashbackBlockAnalytics(summary: CashbackSummary, isDeactivationDismissed: Boolean) {
         val block = when (summary) {
-            is CashbackSummary.Enabled -> CashbackBlockAnalyticsType.Widget
+            is CashbackSummary.Enabled -> when (summary.displayMode) {
+                CashbackDisplayMode.FULL -> CashbackBlockAnalyticsType.Widget
+                CashbackDisplayMode.ALT_BLOCK -> CashbackBlockAnalyticsType.SettingsButton
+            }
 
             CashbackSummary.Deactivated ->
                 CashbackBlockAnalyticsType.DeactivationBanner.takeIf { !isDeactivationDismissed }
@@ -291,7 +345,10 @@ internal class TangemPayDetailsModel @Inject constructor(
             CashbackSummary.Unknown,
             -> null
         }
+        sendCashbackBlockShown(block)
+    }
 
+    private fun sendCashbackBlockShown(block: CashbackBlockAnalyticsType?) {
         if (block == shownCashbackBlock) return
         shownCashbackBlock = block
 
@@ -299,8 +356,17 @@ internal class TangemPayDetailsModel @Inject constructor(
             CashbackBlockAnalyticsType.Widget -> {
                 TangemPayAnalyticsEvents.Cashback.BannerShowed()
             }
+            CashbackBlockAnalyticsType.SettingsButton -> {
+                TangemPayAnalyticsEvents.Cashback.ButtonInSettingsShowed()
+            }
             CashbackBlockAnalyticsType.DeactivationBanner -> {
                 TangemPayAnalyticsEvents.Cashback.DeactivationBannerShowed()
+            }
+            CashbackBlockAnalyticsType.Error -> {
+                TangemPayAnalyticsEvents.Cashback.BannerErrorStateShowed()
+            }
+            CashbackBlockAnalyticsType.SettingsButtonError -> {
+                TangemPayAnalyticsEvents.Cashback.ButtonErrorStateShowed()
             }
             null -> null
         }
@@ -535,6 +601,11 @@ internal class TangemPayDetailsModel @Inject constructor(
         router.push(TangemPayAccountDetailsInnerRoute.Cashback)
     }
 
+    private fun onClickCashbackMenuItem() {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.ButtonInSettingsClicked())
+        router.push(TangemPayAccountDetailsInnerRoute.Cashback)
+    }
+
     override fun onCardClick(cardId: String) {
         analytics.send(TangemPayAnalyticsEvents.CardIconClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = cardId))
@@ -679,4 +750,4 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 }
 
-private enum class CashbackBlockAnalyticsType { Widget, DeactivationBanner }
+private enum class CashbackBlockAnalyticsType { Widget, SettingsButton, DeactivationBanner, Error, SettingsButtonError }
