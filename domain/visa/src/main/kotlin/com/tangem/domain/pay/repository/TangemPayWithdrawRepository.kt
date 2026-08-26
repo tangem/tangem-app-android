@@ -15,7 +15,7 @@ interface TangemPayWithdrawRepository {
         userWallet: UserWallet,
         receiverAddress: String,
         cryptoAmount: BigDecimal,
-        cryptoCurrencyId: CryptoCurrency.RawID,
+        sourceCurrency: CryptoCurrency,
         exchangeData: TangemPayWithdrawExchangeState,
     ): Either<UniversalError, WithdrawalResult>
 
@@ -23,7 +23,7 @@ interface TangemPayWithdrawRepository {
         userWallet: UserWallet,
         receiverAddress: String,
         cryptoAmount: BigDecimal,
-        cryptoCurrencyId: CryptoCurrency.RawID,
+        sourceCurrency: CryptoCurrency,
     ): Either<UniversalError, WithdrawalResult>
 
     suspend fun hasWithdrawOrder(userWalletId: UserWalletId): Boolean

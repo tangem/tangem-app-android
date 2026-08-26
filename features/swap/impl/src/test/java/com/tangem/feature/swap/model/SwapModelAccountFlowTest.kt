@@ -803,13 +803,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     // data is available, and collapses back to a single one when it is not.
 
     @Test
-    fun `GIVEN withdraw and a multi token account WHEN from filter applied THEN only the withdrawable currency passes`() =
+    fun `GIVEN withdraw and a multi token account WHEN from filter applied THEN every account currency passes`() =
         runTest {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-            val withdrawable = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
-            val notWithdrawable = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
-            coEvery { accountUnderlyingCurrencies.getWithdrawable(userWalletId) } returns listOf(withdrawable)
+            val polygonCurrency = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
+            val tronCurrency = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
             val model = createModel(accountFlow = AccountFlow.Withdraw)
             advanceUntilIdle()
             val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
@@ -817,9 +816,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Act
             val predicate = model.chooseFromTokenBridge.tokenFilter.value
 
-            // Assert — the endpoint can only move the default currency, so the other network must not be offered.
-            assertThat(predicate(paymentAccountStatus, withdrawable)).isTrue()
-            assertThat(predicate(paymentAccountStatus, notWithdrawable)).isFalse()
+            // Assert — the withdrawal endpoints take the source network, so every issued network can be drawn from.
+            assertThat(predicate(paymentAccountStatus, polygonCurrency)).isTrue()
+            assertThat(predicate(paymentAccountStatus, tronCurrency)).isTrue()
             model.onDestroy()
         }
 
