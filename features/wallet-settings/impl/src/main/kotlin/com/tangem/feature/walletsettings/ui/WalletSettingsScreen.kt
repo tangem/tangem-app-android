@@ -119,6 +119,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
         ) { item ->
             val offsetModifier = when (item) {
                 is WalletSettingsAccountsUM.Account,
+                is WalletSettingsAccountsUM.JointAccount,
                 is WalletSettingsAccountsUM.Footer,
                 -> Modifier.padding(horizontal = TangemTheme.dimens.spacing16)
                 else -> Modifier.padding(
@@ -159,6 +160,10 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     model = item,
                     reorderableListState = reorderableListState,
                     accountReorderUM = state.accountReorderUM,
+                    modifier = itemModifier,
+                )
+                is WalletSettingsAccountsUM.JointAccount -> JointAccountItem(
+                    model = item,
                     modifier = itemModifier,
                 )
                 is WalletSettingsAccountsUM.Footer -> AccountsFooter(item, itemModifier)
@@ -369,6 +374,15 @@ private fun LazyItemScope.AccountItem(
             )
         }
     }
+}
+
+@Composable
+private fun JointAccountItem(model: WalletSettingsAccountsUM.JointAccount, modifier: Modifier = Modifier) {
+    UserWalletItem(
+        state = model.state,
+        blockColors = walletSettingsBlockCardColors,
+        modifier = modifier.background(color = TangemTheme.colors3.bg.secondary),
+    )
 }
 
 @Composable

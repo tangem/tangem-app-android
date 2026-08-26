@@ -935,6 +935,46 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 .isEqualTo(TangemPayCardState.Delivering)
         }
 
+        @Test
+        fun `GIVEN a delivering card with an in-flight close order WHEN fetched THEN the card is Closing`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance),
+                cards = listOf(
+                    createCardInfo(
+                        cardStatus = TangemPayCard.Status.INACTIVE,
+                        cardType = TangemPayCardType.PHYSICAL,
+                    ),
+                ),
+            )
+            stubHappyPath(customerInfo)
+            coEvery {
+                customerOrderRepository.findOrders(
+                    userWalletId = any(),
+                    types = setOf(OrderType.CARD_ACTIVATION_PLASTIC_RAIN),
+                    statuses = OrderStatus.activeStatuses,
+                )
+            } returns Either.Right(emptyList())
+            coEvery { closeCardRepository.getCloseOrderId(any(), any()) } returns Either.Right("close_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "close_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "close_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.UNKNOWN,
+                ),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().cards.single().state)
+                .isEqualTo(TangemPayCardState.Closing)
+        }
+
         private fun provideForeignOrders() = listOf(
             activationOrder(productInstanceId = "another-instance"),
             activationOrder(productInstanceId = cardProductInstance.id)
@@ -1042,7 +1082,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 ),
             )
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
             val storedStatuses = captureStoredStatuses()
 
             // Act
@@ -1075,7 +1114,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     ),
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
                 val storedStatuses = captureStoredStatuses()
 
                 // Act

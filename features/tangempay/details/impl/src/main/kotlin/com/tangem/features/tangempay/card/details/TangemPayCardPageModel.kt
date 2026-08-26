@@ -131,6 +131,8 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private val cardControllers = linkedMapOf<String, TangemPayCardDetailsController>()
 
+    private val isDetailsShown = MutableStateFlow(false)
+
     val cardControllersState: StateFlow<ImmutableList<TangemPayCardDetailsController>>
         field = MutableStateFlow(persistentListOf())
 
@@ -170,11 +172,13 @@ internal class TangemPayCardPageModel @Inject constructor(
             }
             .launchIn(modelScope)
 
-        combine(currentStatus, selectedCardId, deliveryEmail) { status, selectedId, email ->
-            Triple(status, selectedId, email)
-        }
-            .onEach { (status, selectedId, email) -> updateSelectedCardUi(status, selectedId, email) }
-            .launchIn(modelScope)
+        combine(
+            flow = currentStatus,
+            flow2 = selectedCardId,
+            flow3 = deliveryEmail,
+            flow4 = isDetailsShown,
+            transform = ::updateSelectedCardUi,
+        ).launchIn(modelScope)
     }
 
     override fun onDestroy() {
@@ -249,7 +253,12 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    private fun updateSelectedCardUi(state: AccountStatus.Payment, selectedId: String, email: String?) {
+    private fun updateSelectedCardUi(
+        state: AccountStatus.Payment,
+        selectedId: String,
+        email: String?,
+        isDetailsShown: Boolean,
+    ) {
         val status = state.value
         if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
             val card = status.findCardWithId(selectedId) ?: return
@@ -258,7 +267,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             uiState.update { uiState ->
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
-                    settings = status.buildSettings(card.frozenState),
+                    settings = status.buildSettings(card.frozenState, isDetailsShown),
                     menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                     cardState = card.state,
                     delivery = buildDeliveryState(cardState = card.state, email = email),
@@ -312,21 +321,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private suspend fun subscribeOnDetailsState() {
         combine(cardDetailsEventListener.event, selectedCardId) { event, selectedId ->
             event is CardDetailsEvent.Show && event.cardId == selectedId
-        }.collect { isDetailsShown ->
-            uiState.update { state ->
-                state.copy(
-                    settings = state.settings
-                        .map { setting ->
-                            if (setting.id == TangemPayCardPageSetting.Id.Details) {
-                                setting.copy(isEnabled = !isDetailsShown)
-                            } else {
-                                setting
-                            }
-                        }
-                        .toImmutableList(),
-                )
-            }
-        }
+        }.collect { isShown -> isDetailsShown.value = isShown }
     }
 
     private fun subscribeToCardFrozenState(cardId: String) {
@@ -334,7 +329,9 @@ internal class TangemPayCardPageModel @Inject constructor(
             .onEach { cardFrozenState ->
                 updateGooglePayBannerState(cardFrozenState)
                 uiState.update { state ->
-                    val settings = currentStatus.value.ifLoadedOrNull { it.buildSettings(cardFrozenState) }
+                    val settings = currentStatus.value.ifLoadedOrNull {
+                        it.buildSettings(frozenState = cardFrozenState, isDetailsShown = isDetailsShown.value)
+                    }
                     state.copy(settings = settings ?: persistentListOf())
                 }
             }
@@ -357,6 +354,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun PaymentAccountStatusValue.Loaded.buildSettings(
         frozenState: TangemPayCardFrozenState,
+        isDetailsShown: Boolean,
     ): ImmutableList<TangemPayCardPageSetting> {
         val card = findCardWithId(selectedCardId.value) ?: return persistentListOf()
         return persistentListOf(
@@ -366,7 +364,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onClick = ::onClickViewDetails,
                 iconRes = CoreUiR.drawable.ic_visa_card_details_24,
                 testTag = TangemPayTestTags.SHOW_DETAILS_ROW,
-                isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen,
+                isEnabled = frozenState == TangemPayCardFrozenState.Unfrozen && !isDetailsShown,
             ),
             TangemPayCardPageSetting(
                 id = TangemPayCardPageSetting.Id.Freeze,

@@ -71,8 +71,8 @@ private fun PayContextMenuItem(item: TangemPayDropDownItemUM, onMenuDismiss: () 
                 text = item.title.resolveReference(),
                 style = TangemTheme.typography3.body.medium,
                 color = when {
-                    !item.isEnabled -> TangemTheme.colors3.text.tertiary
                     item.titleColor != null -> item.titleColor.invoke()
+                    !item.isEnabled -> TangemTheme.colors3.text.tertiary
                     else -> TangemTheme.colors3.text.primary
                 },
                 maxLines = 1,
@@ -81,7 +81,7 @@ private fun PayContextMenuItem(item: TangemPayDropDownItemUM, onMenuDismiss: () 
                 Text(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.tertiary,
+                    color = item.subtitleColor?.invoke() ?: TangemTheme.colors3.text.tertiary,
                     maxLines = 2,
                 )
             }

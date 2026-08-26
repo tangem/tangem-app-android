@@ -167,7 +167,10 @@ internal object PortfolioSelectorPreviewData {
         )
 
     private val lockedWalletItem: UserWalletItemUM
-        get() = walletItem.copy(isEnabled = false)
+        get() = walletItem.copy(
+            isEnabled = false,
+            balance = UserWalletItemUM.Balance.Locked,
+        )
 
     val button = PortfolioSelectorButtonUM(
         text = resourceReference(R.string.common_apply),

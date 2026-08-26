@@ -25,6 +25,7 @@ internal object OrderConverter {
             withdrawTxHash = value.data.transactionHash?.ifEmpty { null },
             createdAt = value.createdAt,
             updatedAt = value.updatedAt,
+            sourceProductInstanceId = value.data.sourceProductInstanceId,
         )
     }
 }

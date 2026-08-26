@@ -11,6 +11,8 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.essenty.lifecycle.doOnStart
+import com.arkivanov.essenty.lifecycle.doOnStop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -23,12 +25,6 @@ import com.tangem.features.polymarket.impl.placeprediction.model.PlacePrediction
 import com.tangem.features.polymarket.impl.placeprediction.status.PlacePredictionStatusComponent
 import com.tangem.features.polymarket.impl.placeprediction.summary.PlacePredictionSummaryComponent
 
-/**
- * Root of the place-prediction flow: amount → summary → status.
- *
-
- * route in the Polymarket feature stack.
- */
 internal class PlacePredictionComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
@@ -41,10 +37,6 @@ internal class PlacePredictionComponent(
         popCallback = { onChildBack() },
     )
 
-    /**
-
-     * resolving its own would get a second, empty flow state rather than this one.
-     */
     private val model: PlacePredictionModel = getOrCreateModel(params = params, router = innerRouter)
 
     private val childStack = childStack(
@@ -60,6 +52,11 @@ internal class PlacePredictionComponent(
             )
         },
     )
+
+    init {
+        lifecycle.doOnStart(isOneTime = false, block = model::onScreenShown)
+        lifecycle.doOnStop(isOneTime = false, block = model::onScreenHidden)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -91,16 +88,6 @@ internal class PlacePredictionComponent(
         }
     }
 
-    /**
-     * @property userWalletId wallet the order is placed from
-     * @property eventId event the prediction belongs to
-     * @property marketId market inside the event
-     * @property assetId outcome the user tapped
-     * @property side direction of the order
-     *
-     * Carries no access mode: whether trading is allowed is produced by the region, which a route and its
-     * params cannot know — the flow reads it itself, where the answer means something.
-     */
     data class Params(
         val userWalletId: UserWalletId,
         val eventId: String,
