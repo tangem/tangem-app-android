@@ -14,6 +14,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.tester.presentation.accounts.entity.AccountsUM
@@ -207,7 +208,7 @@ internal class TesterAccountsViewModel @Inject constructor(
             while (accountList.canAddMoreCryptoAccounts) {
                 val derivationIndex = DerivationIndex(nextIndex).getOrNull() ?: break
 
-                val newAccount = Account.CryptoPortfolio.invoke(
+                val newAccount = Account.Personal.invoke(
                     accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
                     name = "Account #$nextIndex",
                     icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
@@ -272,7 +273,7 @@ internal class TesterAccountsViewModel @Inject constructor(
                     userWalletId = accountList.userWalletId,
                     accounts = accountList.accounts
                         .filterIsInstance<Account.CryptoPortfolio>()
-                        .sortedBy { it.derivationIndex.value },
+                        .sortedBy { it.derivationIndex?.value ?: Int.MAX_VALUE },
                     totalAccounts = accountList.totalAccounts,
                     totalArchivedAccounts = accountList.totalArchivedAccounts,
                     sortType = accountList.sortType,

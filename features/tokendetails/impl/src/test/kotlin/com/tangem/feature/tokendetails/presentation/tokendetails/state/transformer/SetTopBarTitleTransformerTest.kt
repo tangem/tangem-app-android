@@ -252,7 +252,7 @@ class SetTopBarTitleTransformerTest {
     private fun stubAccount(
         iconValue: CryptoPortfolioIcon.Icon = CryptoPortfolioIcon.Icon.Star,
         iconColor: CryptoPortfolioIcon.Color = CryptoPortfolioIcon.Color.Azure,
-    ): Account.CryptoPortfolio {
+    ): Account.Personal {
         val icon: CryptoPortfolioIcon = mockk {
             every { value } returns iconValue
             every { color } returns iconColor
