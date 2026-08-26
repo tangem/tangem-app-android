@@ -33,7 +33,6 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.domain.jointaccount.derivation.isJointAccountOwnerDerivationPath
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -89,9 +88,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         xpub: String?,
     ): UpdateWalletManagerResult {
         if (network.derivationPath is Network.DerivationPath.Joint) {
-            TangemLogger.w(
-                "No keys to derive for a joint network, its balance is read by the Safe address: ${network.id}",
-            )
+            refuseJointNetwork(network)
             return UpdateWalletManagerResult.Unreachable()
         }
         val userWallet = getUserWallet(userWalletId) ?: run {
@@ -409,12 +406,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        if (derivationPath != null && isJointAccountOwnerDerivationPath(derivationPath)) {
-            TangemLogger.w(
-                "No wallet manager at a joint account owner path, the account is a Safe contract: $blockchain",
-            )
-            return null
-        }
         getWmInitializationMutex(userWalletId, blockchain, derivationPath).withLock {
             val userWallet = getUserWallet(userWalletId) ?: run {
                 TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
@@ -608,6 +599,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
+        if (network.derivationPath is Network.DerivationPath.Joint) {
+            refuseJointNetwork(network)
+            return null
+        }
         val blockchain = network.toBlockchain()
         return getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -970,6 +965,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
         val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return true
         return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
+    }
+
+    /**
+     * A joint account is a Safe contract: its network has no keys to derive, the balance is read by the address.
+     * A tester build crashes so that the wrong entry point is noticed; a release one refuses quietly.
+     */
+    private fun refuseJointNetwork(network: Network) {
+        val message = "No wallet manager for the joint network ${network.id}: read its balance by the Safe address"
+
+        check(!BuildConfig.TESTER_MENU_ENABLED) { message }
+        TangemLogger.w(message)
     }
 
     private fun getWmInitializationMutex(

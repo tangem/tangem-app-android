@@ -6,7 +6,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 
 /**
@@ -23,17 +22,6 @@ internal fun ResponseCryptoCurrenciesFactory.createAccountCurrencies(
     if (tokens.isNullOrEmpty()) return emptyList()
 
     return createCurrencies(tokens = tokens, userWallet = userWallet, accountIndex = accountIndex)
-}
-
-/** The currencies of a joint row: every token sits on the network at the participant's owner key path. */
-internal fun ResponseCryptoCurrenciesFactory.createAccountCurrencies(
-    tokens: List<UserTokensResponse.Token>?,
-    userWallet: UserWallet,
-    derivationPath: Network.DerivationPath.Joint,
-): List<CryptoCurrency> {
-    if (tokens.isNullOrEmpty()) return emptyList()
-
-    return createCurrencies(tokens = tokens, userWallet = userWallet, derivationPath = derivationPath)
 }
 
 /** The currencies of an account as the tokens of its `GET /accounts` row. */
