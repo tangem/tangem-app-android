@@ -58,6 +58,10 @@ dependencies {
     implementation(projects.domain.models)
     // endregion
 
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
     // region tests
     testImplementation(deps.androidx.datastore.core)
     testImplementation(projects.test.core)
