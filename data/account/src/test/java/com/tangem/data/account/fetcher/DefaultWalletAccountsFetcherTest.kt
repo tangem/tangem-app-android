@@ -102,7 +102,7 @@ class DefaultWalletAccountsFetcherTest {
             accountId = "9CC9C1C9A1F1B62B1F0FCBB5D4C7A34F1B8B98A6D3B3E1B94F6C8F0A1E2D3C4B",
             accountName = "Family",
             derivationIndex = 0,
-            type = WalletAccountDTO.Type.JOINT.value,
+            type = WalletAccountDTO.Type.JOINT,
         )
 
         @Test

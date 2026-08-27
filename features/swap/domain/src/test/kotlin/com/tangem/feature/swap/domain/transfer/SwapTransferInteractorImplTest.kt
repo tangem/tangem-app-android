@@ -1354,10 +1354,15 @@ internal class SwapTransferInteractorImplTest {
     // region withdrawTangemPay
 
     @Test
-    fun `GIVEN valid destination and currency id WHEN withdrawTangemPay THEN return WithdrawalResult from use case`() =
+    fun `GIVEN valid destination WHEN withdrawTangemPay THEN the account token is the source and TO the receiver`() =
         runTest {
+            // Arrange — the source drives the network the backend draws from, so it must come from FROM.
             val userWallet: UserWallet = mockk()
             val cryptoAmount = BigDecimal("1.5")
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+            )
             val toCurrencyStatus = buildCurrencyStatus(
                 rawCurrencyId = TO_RAW_CURRENCY_ID,
                 decimals = TO_DECIMALS,
@@ -1367,23 +1372,26 @@ internal class SwapTransferInteractorImplTest {
                 tangemPayWithdrawUseCase(
                     userWallet = userWallet,
                     cryptoAmount = cryptoAmount,
-                    cryptoCurrencyId = TO_RAW_CURRENCY_ID,
+                    sourceCurrency = fromCurrencyStatus.currency,
                     receiverCexAddress = DESTINATION_ADDRESS,
                 )
             } returns WithdrawalResult.Success.right()
 
+            // Act
             val result = sut.withdrawTangemPay(
                 userWallet = userWallet,
                 cryptoAmount = cryptoAmount,
+                fromSwapCurrencyStatus = fromCurrencyStatus,
                 toSwapCurrencyStatus = toCurrencyStatus,
             )
 
+            // Assert
             assertThat(result).isEqualTo(WithdrawalResult.Success.right())
             coVerify {
                 tangemPayWithdrawUseCase(
                     userWallet = userWallet,
                     cryptoAmount = cryptoAmount,
-                    cryptoCurrencyId = TO_RAW_CURRENCY_ID,
+                    sourceCurrency = fromCurrencyStatus.currency,
                     receiverCexAddress = DESTINATION_ADDRESS,
                 )
             }

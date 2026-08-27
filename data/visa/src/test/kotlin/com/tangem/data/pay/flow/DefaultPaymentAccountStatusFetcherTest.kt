@@ -1175,6 +1175,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             val networkStatus = PaymentNetworkStatus.Available(
                 network = mockk(),
                 depositAddress = "0xDEPOSIT",
+                chainId = 137L,
                 cryptoCurrencyStatuses = emptyList(),
             )
             val customerInfo = buildCustomerInfo(networks = listOf(network))
