@@ -3,6 +3,7 @@ package com.tangem.features.details.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import io.mockk.coEvery
@@ -16,6 +17,15 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DetailsModelInitTest : DetailsModelTestBase() {
+
+    @Test
+    fun `GIVEN details screen WHEN init THEN Settings ScreenOpened analytics event is sent`() = runTest {
+        // Act
+        createModel(this).also { advanceUntilIdle() }.onDestroy()
+
+        // Assert
+        verify { analyticsEventHandler.send(match { it is Settings.ScreenOpened }) }
+    }
 
     @Test
     fun `GIVEN walletConnect available WHEN init THEN buildAll receives isWalletConnectAvailable true`() = runTest {
@@ -45,24 +55,6 @@ internal class DetailsModelInitTest : DetailsModelTestBase() {
         createModel(this).also { advanceUntilIdle() }.onDestroy()
 
         assertThat(wcSlot.captured).isFalse()
-    }
-
-    @Test
-    fun `GIVEN addressBook enabled WHEN init THEN buildAll receives isAddressBookAvailable true`() = runTest {
-        every { addressBookFeatureToggles.isAddressBookEnabled } returns true
-
-        createModel(this).also { advanceUntilIdle() }.onDestroy()
-
-        assertThat(abSlot.captured).isTrue()
-    }
-
-    @Test
-    fun `GIVEN addressBook disabled WHEN init THEN buildAll receives isAddressBookAvailable false`() = runTest {
-        every { addressBookFeatureToggles.isAddressBookEnabled } returns false
-
-        createModel(this).also { advanceUntilIdle() }.onDestroy()
-
-        assertThat(abSlot.captured).isFalse()
     }
 
     @Test

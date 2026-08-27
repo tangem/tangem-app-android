@@ -2,7 +2,6 @@ package com.tangem.features.survey.impl.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.features.survey.SurveyFeatureToggles
 import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -11,7 +10,6 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultSurveyDeepLinkHandler @AssistedInject constructor(
     @Assisted private val queryParams: Map<String, String>,
-    private val surveyFeatureToggles: SurveyFeatureToggles,
     private val appRouter: AppRouter,
 ) : SurveyDeepLinkHandler {
 
@@ -20,11 +18,6 @@ internal class DefaultSurveyDeepLinkHandler @AssistedInject constructor(
     }
 
     private fun handleDeepLink() {
-        if (!surveyFeatureToggles.areSurveysEnabled) {
-            TangemLogger.i("$TAG: survey deeplink ignored, feature is disabled")
-            return
-        }
-
         val token = queryParams[QUERY_TOKEN]?.takeIf { it.isNotBlank() }
         if (token == null) {
             TangemLogger.e("$TAG: survey deeplink ignored, missing 'token' query param")

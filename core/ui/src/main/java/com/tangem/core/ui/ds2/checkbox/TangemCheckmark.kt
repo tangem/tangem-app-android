@@ -2,10 +2,7 @@ package com.tangem.core.ui.ds2.checkbox
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -42,6 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -81,19 +79,19 @@ fun TangemCheckmark(
     // Whole control shrinks slightly while pressed and springs back on release.
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = TangemAnimationSpec.Bouncy,
         label = "pressScale",
     )
     // Press fill fades in/out instead of toggling instantly.
     val pressColor by animateColorAsState(
         targetValue = if (isPressed) TangemTheme.colors3.interaction.press.default else Color.Transparent,
-        animationSpec = tween(durationMillis = 100),
+        animationSpec = TangemAnimationSpec.PressOverlay,
         label = "pressColor",
     )
     // Drives the filled circle growing over the outline (0 = unchecked, 1 = filled).
     val fillProgress by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
-        animationSpec = tween(durationMillis = 150),
+        animationSpec = TangemAnimationSpec.Fill,
         label = "fillProgress",
     )
 
@@ -154,10 +152,7 @@ fun TangemCheckmark(
             transitionSpec = {
                 val enter = scaleIn(
                     initialScale = 0.5f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
-                    ),
+                    animationSpec = TangemAnimationSpec.Bouncy,
                 ) + fadeIn()
                 val exit = scaleOut(targetScale = 0.5f) + fadeOut()
                 enter togetherWith exit

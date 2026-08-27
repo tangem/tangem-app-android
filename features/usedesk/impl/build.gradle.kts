@@ -47,4 +47,7 @@ dependencies {
     /** Usedesk */
     implementation(tangemDeps.usedesk.chat.sdk)
     implementation(tangemDeps.usedesk.chat.gui)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

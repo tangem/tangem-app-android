@@ -14,8 +14,8 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.utils.*
-import com.tangem.datasource.api.visa.VisaApi
-import com.tangem.datasource.api.visa.models.response.VisaTxHistoryResponse
+import com.tangem.spend.datasource.visa.VisaApi
+import com.tangem.spend.datasource.visa.models.response.VisaTxHistoryResponse
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -23,14 +23,12 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.visa.model.VisaCurrency
-import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.visa.repository.VisaRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,10 +45,6 @@ internal class DefaultVisaRepository @Inject constructor(
     private val visaApi: VisaApi,
     private val visaCurrencyFactory: VisaCurrencyFactory,
 ) : VisaRepository {
-
-    private val txDetailsFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
-        VisaTxDetailsFactory()
-    }
 
     private val fetchedCurrencies = MutableStateFlow(
         value = hashMapOf<String, VisaCurrency>(),
@@ -133,22 +127,6 @@ internal class DefaultVisaRepository @Inject constructor(
         return pager.flow
     }
 
-    override suspend fun getTxDetails(userWalletId: UserWalletId, txId: String): VisaTxDetails {
-        return withContext(dispatchers.io) {
-            val userWallet = findVisaUserWallet(userWalletId)
-            val cardPubKey = getCardPubKey(userWallet)
-            val transaction = fetchedHistoryItems.value[cardPubKey]?.firstOrNull {
-                it.transactionId.toString() == txId
-            }
-            requireNotNull(transaction) { "Transaction not found: $txId" }
-
-            txDetailsFactory.create(
-                transaction = transaction,
-                walletBlockchain = userWallet.requireColdWallet().scanResponse.cardTypesResolver.getBlockchain(),
-            )
-        }
-    }
-
     private suspend fun getPaymentAccountAddress(userWalletId: UserWalletId): String? = runCatching {
         val userWallet = findVisaUserWallet(userWalletId)
 
@@ -215,8 +193,8 @@ internal class DefaultVisaRepository @Inject constructor(
             it.curve == EllipticCurve.Secp256k1
         }
         requireNotNull(cardWallet) { "Visa card wallet not found" }
-
-        return cardWallet.publicKey.toHexString()
+        val publicKey = requireNotNull(cardWallet.publicKey) { "Visa card wallet has no public key" }
+        return publicKey.toHexString()
     }
 
     private fun findVisaUserWallet(userWalletId: UserWalletId): UserWallet {

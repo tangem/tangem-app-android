@@ -13,18 +13,21 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.SelectProviderBottomSheetTestTags
+import com.tangem.domain.onramp.model.OnrampPaymentMethod
 
 @Composable
-internal fun PaymentMethodIcon(imageUrl: String, modifier: Modifier = Modifier) {
+internal fun PaymentMethodIcon(method: OnrampPaymentMethod, modifier: Modifier = Modifier) {
+    val tileColor = if (method.hasThemedImages) TangemTheme.colors.field.focused else TangemColorPalette.Light1
+
     SubcomposeAsyncImage(
         modifier = modifier
             .size(TangemTheme.dimens.size40)
             .clip(TangemTheme.shapes.roundedCorners8)
-            .background(TangemColorPalette.Light1)
+            .background(tileColor)
             .padding(TangemTheme.dimens.spacing4)
             .testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_ICON),
         model = ImageRequest.Builder(context = LocalContext.current)
-            .data(imageUrl)
+            .data(method.themedImageUrl())
             .crossfade(enable = true)
             .allowHardware(false)
             .build(),

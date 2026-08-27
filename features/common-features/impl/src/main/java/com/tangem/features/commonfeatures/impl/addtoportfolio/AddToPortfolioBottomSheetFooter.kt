@@ -10,11 +10,13 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalHazeState
@@ -43,6 +45,7 @@ internal fun AddToPortfolioBottomSheetFooter(
             WithLocalHaze {
                 UserPortfolioAddFooter(
                     isEnabled = state.isAddEnabled,
+                    isAddedEverywhere = state.isAddedEverywhere,
                     onClick = onClick,
                 )
             }
@@ -71,7 +74,7 @@ private fun CancelFooterButton(onClick: () -> Unit) {
 }
 
 @Composable
-private fun UserPortfolioAddFooter(isEnabled: Boolean, onClick: () -> Unit) {
+private fun UserPortfolioAddFooter(isEnabled: Boolean, isAddedEverywhere: Boolean, onClick: () -> Unit) {
     TangemRowContainer(
         contentPadding = PaddingValues(
             horizontal = TangemTheme.dimens2.x6,
@@ -80,7 +83,11 @@ private fun UserPortfolioAddFooter(isEnabled: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-            text = stringResourceSafe(R.string.common_add_token),
+            text = if (isAddedEverywhere) {
+                stringResourceSafe(R.string.markets_token_add_all_added_title)
+            } else {
+                stringResourceSafe(R.string.common_add_token)
+            },
             style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors2.text.neutral.primary,
             maxLines = 1,
@@ -89,21 +96,25 @@ private fun UserPortfolioAddFooter(isEnabled: Boolean, onClick: () -> Unit) {
 
         Text(
             modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-            text = stringResourceSafe(R.string.markets_token_add_subtitle),
+            text = if (isAddedEverywhere) {
+                stringResourceSafe(R.string.markets_token_add_all_added_description)
+            } else {
+                stringResourceSafe(R.string.markets_token_add_subtitle)
+            },
             style = TangemTheme.typography2.captionMedium12,
             color = TangemTheme.colors2.text.neutral.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
 
-        SecondaryTangemButton(
+        TangemButton(
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.TAIL)
-                .padding(start = TangemTheme.dimens2.x2),
+                .padding(start = 8.dp),
+            variant = TangemButton.Variant.Secondary,
             onClick = onClick,
             text = resourceReference(R.string.common_add),
-            size = TangemButtonSize.X9,
-            shape = TangemButtonShape.Rounded,
+            size = TangemButton.Size.X9,
             isEnabled = isEnabled,
         )
     }
