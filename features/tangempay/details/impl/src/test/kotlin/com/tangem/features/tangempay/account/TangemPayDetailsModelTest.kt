@@ -408,6 +408,51 @@ internal class TangemPayDetailsModelTest {
         unmockkStatic(DateFormat::class)
     }
 
+    @Test
+    fun `GIVEN deactivated account WHEN screen started THEN cashback is not requested and block absent`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
+        val model = createModel(testScope = this, statusValue = deactivatedStatus(id = "customer-id"))
+        advanceUntilIdle()
+
+        // Act
+        model.onStart()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.cashbackBlockState).isNull()
+        coVerify(exactly = 0) { getCashbackSummaryUseCase(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN cashback fetch in flight WHEN account becomes deactivated THEN widget is not applied`() = runTest {
+        // Arrange
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
+        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+        coEvery { getCashbackSummaryUseCase(any()) } coAnswers {
+            delay(timeMillis = 100)
+            enabledCashbackSummary().right()
+        }
+        val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        runCurrent()
+
+        // Act
+        statusFlow.value = paymentStatus(deactivatedStatus(id = "customer-id"))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.cashbackBlockState).isNull()
+        model.onDestroy()
+        unmockkObject(DateTimeFormatters)
+        unmockkStatic(DateFormat::class)
+    }
+
     @ParameterizedTest
     @MethodSource("provideMutedCases")
     fun `GIVEN status source WHEN status loaded THEN balance is muted only when cached`(case: MutedCase) = runTest {
