@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.datasource)
+    implementation(projects.store.datasource)
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
     implementation(projects.features.rating.api)
