@@ -34,10 +34,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.polymarket.impl.common.USD_CODE
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DASH_SIGN
 
 @Suppress("LongParameterList")
@@ -134,7 +135,7 @@ private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, 
             visualTransformation = AmountVisualTransformation(
                 decimals = COLLATERAL_DECIMALS,
                 symbol = AMOUNT_SYMBOL,
-                currencyCode = USD_CODE,
+                currencyCode = PolymarketConst.USD_CODE,
                 symbolColor = TangemTheme.colors3.text.primary,
                 emptyValueText = EMPTY_AMOUNT_HINT,
             ),
@@ -194,4 +195,4 @@ private const val EMPTY_AMOUNT_HINT = "0"
 
 private val CAPTION_GAP = 12.dp
 
-private const val AMOUNT_SYMBOL = "$\u00A0"
+private const val AMOUNT_SYMBOL = "${PolymarketConst.USD_SYMBOL}${StringsSigns.NON_BREAKING_SPACE}"
