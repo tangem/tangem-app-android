@@ -36,9 +36,11 @@ import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnal
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTitle
+import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.foryou.TokenSummaryBlockComponent
 import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -51,7 +53,7 @@ internal class DefaultMarketsTokenDetailsComponent(
     val params: Params,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
-    private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
+    marketingBannerComponentFactory: MarketingBannerComponent.Factory,
     tokenSummaryBlockComponentFactory: TokenSummaryBlockComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
@@ -63,6 +65,8 @@ internal class DefaultMarketsTokenDetailsComponent(
     )
     private val analyticsParams = params.analyticsParams
     private val model: MarketsTokenDetailsModel = getOrCreateModel(updatedParams)
+
+    val state: StateFlow<MarketsTokenDetailsUM> = model.state
 
     private val marketingBannerComponent = marketingBannerComponentFactory.create(
         context = child("marketsTokenDetailsMarketingBanner"),
