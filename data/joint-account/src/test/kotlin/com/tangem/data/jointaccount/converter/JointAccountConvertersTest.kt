@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.data.jointaccount.FIXTURE_ALICE_ADDRESS
 import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
-import com.tangem.datasource.api.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.models.StatusSource
 import com.tangem.test.core.ProvideTestModels
