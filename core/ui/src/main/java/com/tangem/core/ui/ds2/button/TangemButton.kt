@@ -59,6 +59,9 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param isLoading When `true`, hides the content and shows a centered loader.
  * @param isEnabled When `false`, the button is dimmed by the variant's disabled alpha and clicks
  *   are ignored.
+ * @param isDimmed When `true`, the button takes the disabled appearance but still routes clicks to
+ *   [onClick] — for an action that is unavailable yet wants to explain why when tapped. Prefer
+ *   [isEnabled] `false` whenever the tap really should do nothing.
  * @param iconStart Optional leading icon.
  * @param iconEnd Optional trailing icon.
  * @param text Optional label. `null` switches the button to icon-only mode.
@@ -78,6 +81,7 @@ fun TangemButton(
     size: TangemButton.Size = TangemButton.Size.X10,
     isLoading: Boolean = false,
     isEnabled: Boolean = true,
+    isDimmed: Boolean = false,
     iconStart: TangemIconUM? = null,
     iconEnd: TangemIconUM? = null,
     text: TextReference? = null,
@@ -93,8 +97,11 @@ fun TangemButton(
 
     // Disabled state fades the content + background + default border by `disabledAlpha`, but the
     // focus ring stays at full opacity so disabled-but-focused buttons remain clearly highlighted.
-    val contentAlpha = if (isEnabled) 1f else colorTokens.disabledAlpha
-    val backgroundColor = (if (isEnabled) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor)
+    val hasEnabledAppearance = isEnabled && !isDimmed
+    val contentAlpha = if (hasEnabledAppearance) 1f else colorTokens.disabledAlpha
+    val backgroundColor = (
+        if (hasEnabledAppearance) colorTokens.backgroundColor else colorTokens.disabledBackgroundColor
+        )
         .scaleAlpha(contentAlpha)
 
     TangemSurface(
@@ -115,7 +122,7 @@ fun TangemButton(
         TangemButtonInternal(
             modifier = Modifier.alpha(contentAlpha),
             isIconOnly = isIconOnly,
-            isEnabled = isEnabled,
+            isEnabled = hasEnabledAppearance,
             isLoading = shouldShowLoader,
             iconStart = iconStart,
             iconEnd = iconEnd,
