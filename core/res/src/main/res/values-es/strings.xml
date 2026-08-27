@@ -817,7 +817,7 @@
   <string name="hw_cloud_backup_no_access_title">No puedo acceder a Google Drive.</string>
   <string name="hw_cloud_backup_no_backups_description">Inicie sesión en otra cuenta o importe su frase de recuperación.</string>
   <string name="hw_cloud_backup_not_found_create">Crear copia de seguridad</string>
-  <string name="hw_cloud_backup_not_found_description">Ya se había realizado una copia de seguridad de esta billetera, pero no hemos podido encontrar el archivo de copia de seguridad en su Google Drive.</string>
+  <string name="hw_cloud_backup_not_found_description">Ya se había hecho una copia de seguridad de esta billetera, pero no hemos podido encontrarla.</string>
   <string name="hw_cloud_backup_not_found_forget">Olvidar la copia de seguridad</string>
   <string name="hw_cloud_backup_not_found_title">No se encontró ninguna copia de seguridad</string>
   <string name="hw_cloud_backup_password_hint">Contraseña</string>
@@ -826,7 +826,7 @@
   <string name="hw_cloud_backup_permissions_description">Faltan algunos permisos. Concédenos acceso completo para que podamos guardar la copia de seguridad de su billetera en Google Drive.</string>
   <string name="hw_cloud_backup_permissions_description_v2">Faltan algunos permisos. Otorgue acceso completo para que podamos guardar la copia de seguridad de su billetera en %1$s.</string>
   <string name="hw_cloud_backup_permissions_title">Acceso completo a Google Drive</string>
-  <string name="hw_cloud_backup_permissions_title_v2">Acceso completo a %1$s</string>
+  <string name="hw_cloud_backup_permissions_title_v2">Permitir acceso completo a %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s copia de seguridad</string>
   <string name="hw_cloud_backup_removed">Copia de seguridad eliminada</string>
   <string name="hw_cloud_backup_restore_error_title">Ha surgido un problema</string>
