@@ -10,9 +10,9 @@ data class SaveWalletAccountsResponse(
 ) {
 
     /**
-     * @property type `crypto` | `joint`. Always sent explicitly rather than left nullable: the class
-     * serializes nulls, and the contract distinguishes an absent field (treated as `crypto`) from a `null` one.
-     * A joint row must echo its `type` — omission would collide with the crypto derivation uniqueness check
+     * @property type always sent explicitly rather than left nullable: the class serializes nulls, and the contract
+     * distinguishes an absent field (treated as `crypto`) from a `null` one. A joint account must echo its `type` —
+     * omission would collide with the crypto derivation uniqueness check
      */
     @SerializeNulls
     @JsonClass(generateAdapter = true)
@@ -22,7 +22,7 @@ data class SaveWalletAccountsResponse(
         @Json(name = "derivation") val derivationIndex: Int,
         @Json(name = "icon") val icon: String,
         @Json(name = "iconColor") val iconColor: String,
-        @Json(name = "type") val type: String,
+        @Json(name = "type") val type: WalletAccountDTO.Type,
     )
 
     companion object {
@@ -36,7 +36,7 @@ data class SaveWalletAccountsResponse(
                         derivationIndex = accountDto.derivationIndex,
                         icon = accountDto.icon,
                         iconColor = accountDto.iconColor,
-                        type = accountDto.type ?: WalletAccountDTO.Type.CRYPTO.value,
+                        type = accountDto.type ?: WalletAccountDTO.Type.CRYPTO,
                     )
                 },
             )

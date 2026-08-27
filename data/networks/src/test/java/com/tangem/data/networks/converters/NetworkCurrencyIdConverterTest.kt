@@ -237,6 +237,30 @@ class NetworkCurrencyIdConverterTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class JointDerivationPath {
+
+        private val jointDerivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/1")
+        private val jointConverter = NetworkCurrencyIdConverter(
+            blockchainId = blockchainId,
+            derivationPath = jointDerivationPath,
+        )
+
+        @Test
+        fun `GIVEN joint derivation path WHEN convert coin id THEN id carries the owner path hash`() {
+            // Act
+            val actual = jointConverter.convert(CurrencyId.createCoinId("ethereum"))
+
+            // Assert
+            val expected = CryptoCurrency.ID.fromValue(
+                value = "coin⟨$canonicalNetworkRawId→${jointDerivationPath.value.hashCode()}⟩ethereum",
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+            Truth.assertThat(actual).isNotEqualTo(converter.convert(CurrencyId.createCoinId("ethereum")))
+        }
+    }
+
     data class ConvertModel(val value: CurrencyId, val expected: Result<CryptoCurrency.ID>)
 
     data class ConvertBackModel(val value: CryptoCurrency.ID, val expected: Result<CurrencyId>)
