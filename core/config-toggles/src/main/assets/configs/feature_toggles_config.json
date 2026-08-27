@@ -41,11 +41,11 @@
     },
     {
         "name": "AND_16636_YIELD_DEX_TRANSFER_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_14786_XRP_TX_HISTORY_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "ADDRESS_SYNC_ENABLED",
@@ -73,7 +73,7 @@
     },
     {
         "name": "TWI_1469_FOR_YOU_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
@@ -81,7 +81,7 @@
     },
     {
         "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_16204_POLYMARKET_ENABLED",
@@ -89,11 +89,11 @@
     },
     {
         "name": "TWI_1157_PLASTIC_CARD_ORDER_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "TWI_1684_ACCOUNT_MULTICHAIN_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
@@ -105,7 +105,7 @@
     },
     {
         "name": "AND_16063_TRON_GASLESS_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
@@ -113,7 +113,7 @@
     },
     {
         "name": "TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
@@ -133,7 +133,7 @@
     },
     {
         "name": "TWI_1717_BALANCE_CONTRIBUTIONS",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_16356_ACCOUNT_SWAP_FLOW",
