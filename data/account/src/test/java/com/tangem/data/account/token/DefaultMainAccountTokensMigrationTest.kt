@@ -447,7 +447,7 @@ class DefaultMainAccountTokensMigrationTest {
             accountId = "aa".repeat(n = 32),
             derivationIndex = jointDerivationIndex.value,
             tokens = emptyList(),
-            type = WalletAccountDTO.Type.JOINT.value,
+            type = WalletAccountDTO.Type.JOINT,
         )
 
         val response = GetWalletAccountsResponse(
@@ -483,7 +483,7 @@ class DefaultMainAccountTokensMigrationTest {
             accountId = "aa".repeat(n = 32),
             derivationIndex = DerivationIndex.Main.value,
             tokens = emptyList(),
-            type = WalletAccountDTO.Type.JOINT.value,
+            type = WalletAccountDTO.Type.JOINT,
         )
 
         val mainAccount = createWalletAccountDTO(
