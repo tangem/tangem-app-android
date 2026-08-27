@@ -8,8 +8,11 @@ import javax.inject.Inject
 
 internal class WalletActivationStepperStateManager @Inject constructor() {
 
-    fun getStepperState(route: WalletActivationRoute): HotWalletStepperComponent.StepperUM? {
-        return when (route) {
+    fun getStepperState(
+        route: WalletActivationRoute,
+        isAccessCodeStepRequired: Boolean,
+    ): HotWalletStepperComponent.StepperUM? {
+        val state = when (route) {
             is WalletActivationRoute.ManualBackupStart -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_BACKUP,
                 steps = STEPS_COUNT,
@@ -67,7 +70,14 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 showSkipButton = false,
             )
         }
+
+        return if (isAccessCodeStepRequired) state else state.withoutAccessCodeStep()
     }
+
+    private fun HotWalletStepperComponent.StepperUM.withoutAccessCodeStep() = copy(
+        currentStep = if (currentStep > STEP_ACCESS_CODE) currentStep - 1 else currentStep,
+        steps = steps - 1,
+    )
 
     companion object {
         private const val STEPS_COUNT = 7
