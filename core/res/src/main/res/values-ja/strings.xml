@@ -287,6 +287,9 @@
   <string name="common_approve">承認</string>
   <string name="common_approved">承認済み</string>
   <string name="common_approving">承認中</string>
+  <plurals name="common_assets_count">
+    <item quantity="other">%d種類</item>
+  </plurals>
   <string name="common_attention">注意</string>
   <string name="common_available_networks">利用可能なネットワーク</string>
   <string name="common_backup">バックアップ</string>
@@ -727,6 +730,13 @@
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
   <string name="feedback_token_description_error">コインの説明エラー</string>
+  <string name="for_you_description">ポートフォリオを確認して、運用方法を見つける</string>
+  <string name="for_you_earn_opportunities">運用のおすすめ</string>
+  <string name="for_you_earn_opportunities_explore">すべてのトークンを見る</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">最大獲得可能報酬 %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/年</string>
+  <string name="for_you_portfolio_review_title">ポートフォリオ分析</string>
+  <string name="for_you_title">おすすめ</string>
   <string name="force_update_action">今すぐアップデート</string>
   <string name="force_update_banner_message">Tangemアプリをアップデートして、新機能や最新の改善をご利用ください。</string>
   <string name="force_update_banner_title">新しいバージョンをご利用いただけます</string>
@@ -824,14 +834,22 @@
   <string name="hw_cloud_backup_no_access_description">ウォレットのバックアップを保存するには、Googleアカウントにもう一度ログインしてください。</string>
   <string name="hw_cloud_backup_no_access_sign_in">ログイン</string>
   <string name="hw_cloud_backup_no_backups_description">別のアカウントにログインするか、リカバリーフレーズをインポートしてください。</string>
+  <string name="hw_cloud_backup_not_found_create">バックアップを作成</string>
+  <string name="hw_cloud_backup_not_found_description">このウォレットは以前バックアップされましたが、バックアップが見つかりませんでした。</string>
+  <string name="hw_cloud_backup_not_found_forget">バックアップを削除</string>
+  <string name="hw_cloud_backup_not_found_title">バックアップが見つかりません</string>
   <string name="hw_cloud_backup_password_hint">パスワード</string>
   <string name="hw_cloud_backup_password_rule_v2">大文字、小文字、数字、記号を含む%d文字以上で入力してください。</string>
+  <string name="hw_cloud_backup_passwords_dont_match">パスワードが一致しません</string>
   <string name="hw_cloud_backup_permissions_description">一部の権限が許可されていません。ウォレットのバックアップをGoogleドライブに保存するには、すべてのアクセスを許可してください。</string>
+  <string name="hw_cloud_backup_permissions_description_v2">一部の権限が許可されていません。ウォレットのバックアップを%1$sに保存できるよう、フルアクセスを許可してください。</string>
   <string name="hw_cloud_backup_permissions_title">Googleドライブへのアクセスを許可</string>
+  <string name="hw_cloud_backup_permissions_title_v2">%1$sへのフルアクセスを許可</string>
   <string name="hw_cloud_backup_remove_title">%1$s%2$sのバックアップ</string>
   <string name="hw_cloud_backup_removed">バックアップを削除しました</string>
   <string name="hw_cloud_backup_restore_error_title">問題が発生しました</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">しばらくしてからもう一度お試しいただくか、リカバリーフレーズをインポートしてください。</string>
+  <string name="hw_cloud_backup_restore_navtitle_v2">%1$sのバックアップ</string>
   <string name="hw_cloud_backup_restore_passphrase_description">このウォレットの正確なパスフレーズを入力してください。大文字と小文字は区別されるため、異なるパスフレーズを入力すると、別のアドレスセットが開きます。</string>
   <string name="hw_cloud_backup_restore_passphrase_title">パスフレーズを入力</string>
   <string name="hw_cloud_backup_restore_password_button">復元する</string>
@@ -997,6 +1015,10 @@
   <string name="manage_tokens_unavailable_description">選択したトークンは現在、暗号資産ウォレット内でのアクションには利用できません。しかし、心配しないでください。賛成票を投じることで関心を表明できます。</string>
   <string name="manage_tokens_unavailable_vote">賛成票を投じる</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
+  <plurals name="market_chart_assets_android">
+    <item quantity="other">%d種類</item>
+  </plurals>
+  <string name="market_chart_top_holding">トップ資産比率%s</string>
   <string name="markets_about_coin_header">コインについて</string>
   <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは現在ウォレットで利用できません</string>
@@ -1911,7 +1933,7 @@
   <string name="tangem_pay_status_pending">保留中</string>
   <string name="tangem_pay_status_reversed">取消済み</string>
   <string name="tangem_pay_terms_fees_limits">利用規約・手数料・利用制限</string>
-  <string name="tangem_pay_terms_limits">利用規約と手数料</string>
+  <string name="tangem_pay_terms_limits">利用規約</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行がこの取引リクエストを拒否しました。</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">最低取引額は です</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">月間上限に達しました</string>
@@ -2182,7 +2204,7 @@
   <string name="tangempay_other_networks_header">その他のネットワーク</string>
   <string name="tangempay_other_networks_subtitle">その後、1:1のレートかつ手数料無料で決済口座に交換できます</string>
   <string name="tangempay_other_networks_title">任意のチェーンでUSDT / USDCをTangem Walletに送金してください</string>
-  <string name="tangempay_pay_support">Payサポート</string>
+  <string name="tangempay_pay_support">サポート</string>
   <string name="tangempay_payment_account">支払いアカウント</string>
   <string name="tangempay_payment_account_sync_needed">セッションの有効期限が切れました</string>
   <string name="tangempay_pin_validation_error_message">無効な暗証番号：連続や繰り返しを避けてください</string>
@@ -2287,8 +2309,10 @@
   <string name="token_market_metrics_no_data">該当なし</string>
   <string name="token_receive_show_qr_code_title">QRコードを表示</string>
   <string name="token_summary_galaxy_score_description">Galaxy Scoreは、市場パフォーマンスとSNSでの活動を組み合わせ、資産の総合的な健全性を0～100のスコアで示します。出典：LunarCrush</string>
+  <string name="token_summary_go_to_swap_button">スワップへ移動</string>
   <string name="token_summary_ma_cross_description">MAクロスは、50日移動平均線と200日移動平均線を比較し、資産価格が長期トレンドを上回っているか下回っているかを示します。出典：taapi.io</string>
   <string name="token_summary_macd_description">MACDは、短期と長期の価格モメンタムを比較し、資産の勢いが強まっているか弱まっているかを示します。出典：taapi.io</string>
+  <string name="token_summary_outlook_is_not_available">このトークンの市場見通しはありません</string>
   <string name="token_summary_rsi_description">RSI（相対力指数）は、過去14期間に資産が買われすぎているか売られすぎているかを測定し、買われすぎ・売られすぎの可能性を示します。出典：taapi.io</string>
   <string name="token_summary_sentiment_description">センチメントは、資産に関するSNS投稿の論調を1～5で評価し、数値が高いほどポジティブな話題が多いことを示します。出典：LunarCrush</string>
   <string name="token_swap_changelly_promotion_message">このトークンは、2月%2$s-%3$s の間、%1$s のサービス手数料で別のトークンと交換できます。</string>
@@ -2363,9 +2387,9 @@
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、ウォレットに着金したときにアラートを受信できます。</string>
   <string name="user_push_notification_banner_title">取引を見逃さない</string>
-  <string name="user_wallet_add_hardware_description">Tangemカードをスキャンして追加します</string>
+  <string name="user_wallet_add_hardware_description">Tangemカードをスキャンして追加</string>
   <string name="user_wallet_add_hardware_title">ハードウェアウォレットを追加</string>
-  <string name="user_wallet_add_mobile_description">このデバイスに新しいウォレットを作成します</string>
+  <string name="user_wallet_add_mobile_description">このデバイスで新しいウォレットを作成</string>
   <string name="user_wallet_add_mobile_title">モバイルウォレットを追加</string>
   <string name="user_wallet_coming_soon_dialog_description">複数のモバイルウォレットを作成できる機能を開発中です。</string>
   <string name="user_wallet_list_add_button">ウォレットを追加</string>

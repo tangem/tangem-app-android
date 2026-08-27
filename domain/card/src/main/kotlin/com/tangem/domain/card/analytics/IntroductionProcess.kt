@@ -14,6 +14,10 @@ sealed class IntroductionProcess(
      * Tracks the user opening the Introduction Process screen.
      */
     class ScreenOpened : IntroductionProcess("Introduction Process Screen Opened"), CriticalEvent
+    /**
+     * Tracks the user starting wallet creation from the Introduction screen.
+     */
+    class ButtonCreateNewWallet : IntroductionProcess("Button - Create New Wallet")
     class ButtonTokensList : IntroductionProcess("Button - Tokens List")
     class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
     class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
