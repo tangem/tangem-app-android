@@ -12,7 +12,6 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
-import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
@@ -54,18 +53,6 @@ internal object NetworkModule {
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)
             else -> ProdApiConfigsManager(apiConfigs)
         }
-    }
-
-    @Provides
-    @Singleton
-    fun provideJointAccountApi(retrofitApiBuilder: RetrofitApiBuilder): JointAccountApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
     }
 
     @Provides
