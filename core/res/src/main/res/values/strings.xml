@@ -88,10 +88,10 @@
   <string name="add_and_manage_sheet_manage_title">Add tokens</string>
   <string name="add_and_manage_sheet_organize_subtitle">Sorting and grouping</string>
   <string name="add_and_manage_sheet_organize_title">Organize tokens</string>
-  <string name="add_crypto_account_subtitle">Organize funds across accounts</string>
+  <string name="add_crypto_account_subtitle">A separate set of addresses for your funds</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
-  <string name="add_joint_account_subtitle">Manage shared funds together</string>
+  <string name="add_joint_account_subtitle">A shared account for managing funds together</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="addfunds_buy_row_description">Credit card or bank account</string>
   <string name="addfunds_fund_token">Fund token</string>
