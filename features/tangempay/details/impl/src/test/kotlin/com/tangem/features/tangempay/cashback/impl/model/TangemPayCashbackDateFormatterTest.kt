@@ -45,6 +45,27 @@ internal class TangemPayCashbackDateFormatterTest {
     }
 
     @Test
+    fun `GIVEN year and month WHEN formatShortMonth THEN standalone short month name`() {
+        // Act
+        val actual = formatter.formatShortMonth(year = 2026, month = 6)
+
+        // Assert
+        assertThat(actual).isEqualTo("Jun")
+    }
+
+    @Test
+    fun `GIVEN russian locale WHEN formatShortMonth THEN nominative month name`() {
+        // Arrange
+        Locale.setDefault(Locale("ru"))
+
+        // Act
+        val actual = formatter.formatShortMonth(year = 2026, month = 5)
+
+        // Assert
+        assertThat(actual).isEqualTo("май")
+    }
+
+    @Test
     fun `GIVEN date WHEN formatMonthDay THEN month name then day`() {
         // Act
         val actual = formatter.formatMonthDay(DateTime.parse("2026-07-05"))
