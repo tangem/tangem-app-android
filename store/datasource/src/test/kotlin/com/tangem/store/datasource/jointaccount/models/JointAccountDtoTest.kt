@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.jointaccount.models
+package com.tangem.store.datasource.jointaccount.models
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
