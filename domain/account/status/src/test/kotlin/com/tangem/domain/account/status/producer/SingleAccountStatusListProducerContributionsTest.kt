@@ -214,7 +214,7 @@ internal class SingleAccountStatusListProducerContributionsTest {
 
     // region Fixtures
     private fun accountList(id: UserWalletId): AccountList {
-        val account = Account.CryptoPortfolio.createMainAccount(id).copy(cryptoCurrencies = listOf(currency))
+        val account = Account.Personal.createMainAccount(id).copy(cryptoCurrencies = listOf(currency))
 
         return AccountList(
             userWalletId = id,

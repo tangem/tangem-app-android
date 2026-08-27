@@ -13,11 +13,11 @@ import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
-import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionConfig
-import com.tangem.test.core.getEmittedValues
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -106,11 +106,10 @@ internal class PolymarketEventDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN content WHEN outcome clicked THEN place prediction sheet requested`() = runTest {
+    fun `GIVEN content WHEN outcome clicked THEN place prediction flow pushed`() = runTest {
         // Arrange
         coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
-        val requests = getEmittedValues(model.sheetRequests)
         advanceUntilIdle()
 
         // Act
@@ -121,9 +120,18 @@ internal class PolymarketEventDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(requests).containsExactly(
-            PlacePredictionConfig(eventId = "event-1", marketId = "market-1", side = "asset-1"),
-        )
+        verify {
+            router.push(
+                route = PolymarketRoute.PlacePrediction(
+                    userWalletId = UserWalletId("011"),
+                    eventId = "event-1",
+                    marketId = "market-1",
+                    assetId = "asset-1",
+                    side = PredictionOrderSide.BUY,
+                ),
+                onComplete = any(),
+            )
+        }
     }
 
     @Test

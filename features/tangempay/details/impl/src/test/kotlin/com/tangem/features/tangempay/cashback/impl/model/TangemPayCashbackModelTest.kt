@@ -54,7 +54,12 @@ internal class TangemPayCashbackModelTest {
     fun setup() {
         Locale.setDefault(Locale.US)
         mockkStatic(DateFormat::class)
-        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        // DateTimeFormatters caches its formatters in `lazy` object fields shared across the whole test JVM,
+        // so this mock must mirror what ICU really does with the skeleton — see TangemPayCashbackDateFormatterTest.
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers {
+            val skeleton = secondArg<String>()
+            if (skeleton == "d MMMM") "MMMM d" else skeleton
+        }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "July 1 – 5"
         clearMocks(cashbackRepository)
@@ -79,7 +84,7 @@ internal class TangemPayCashbackModelTest {
         assertThat(model.content().infoTiles).isNotNull()
         assertThat(model.content().infoTiles?.rate?.title)
             .isEqualTo(resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")))
-        assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITH_CAP)
+        assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITHOUT_PAYOUT)
         assertThat(model.accrualsSheet.value.docRows).hasSize(2)
     }
 
@@ -120,7 +125,40 @@ internal class TangemPayCashbackModelTest {
 
         // Assert
         assertThat(model.content().infoTiles).isNotNull()
-        assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITH_CAP)
+        assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITHOUT_PAYOUT)
+    }
+
+    @Test
+    fun `GIVEN summary without cashback WHEN model created THEN paid-in row is dropped`() {
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.detailsSheet.value.rows).containsExactly(
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic Card", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("2", "Plus Card", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+            resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$300")),
+        ).inOrder()
+    }
+
+    @Test
+    fun `GIVEN enabled summary WHEN model created THEN paid-in row uses the backend payout currency`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns enabledSummary(payoutCurrency = "USDT").right()
+        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns history().right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.detailsSheet.value.rows).containsExactly(
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic Card", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("2", "Plus Card", "$30")),
+            resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+            resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDT")),
+            resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$300")),
+        ).inOrder()
     }
 
     @Test
@@ -273,12 +311,13 @@ internal class TangemPayCashbackModelTest {
         CashbackDocument(id = "terms", title = "Full terms of cashback program", url = "https://x/terms.pdf"),
     )
 
-    private fun enabledSummary() = CashbackSummary.Enabled(
+    private fun enabledSummary(payoutCurrency: String? = "USDC") = CashbackSummary.Enabled(
         displayMode = CashbackDisplayMode.FULL,
         cashback = TangemPayCashback(
             confirmedAmount = BigDecimal("32.15"),
             totalEarnedAmount = BigDecimal("132.15"),
             currency = "USD",
+            payoutCurrency = payoutCurrency,
             previousPayout = null,
             period = TangemPayCashback.Period(
                 year = 2026,
@@ -304,6 +343,6 @@ internal class TangemPayCashbackModelTest {
     )
 
     private companion object {
-        const val DETAILS_ROWS_WITH_CAP = 5
+        const val DETAILS_ROWS_WITHOUT_PAYOUT = 4
     }
 }

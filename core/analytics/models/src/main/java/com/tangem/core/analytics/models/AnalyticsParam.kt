@@ -264,6 +264,12 @@ sealed class AnalyticsParam {
         AccessCode("Access Code"),
     }
 
+    enum class WalletsType(val value: String) {
+        Mobile("Mobile"),
+        Cold("Cold"),
+        Multiple("Multiple"),
+    }
+
     /** Way a mobile wallet secret is backed up: the recovery phrase written down by hand, or a cloud backup */
     enum class BackupType(val value: String) {
         Manual("Manual"),
@@ -352,6 +358,7 @@ sealed class AnalyticsParam {
         const val FEE_ASSET_TYPE = "Fee Asset Type"
         const val SIGN_IN_TYPE = "Sign in type"
         const val WALLETS_COUNT = "Wallets Count"
+        const val WALLETS = "Wallets"
         const val WALLET_TYPE = "Wallet Type"
         const val BACKUPED = "Backuped"
         const val COMPLETED_BACKUPS = "Completed Backups"

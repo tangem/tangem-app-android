@@ -53,4 +53,7 @@ interface MarketsTokenRepository {
      * @param tokenId token id
      */
     suspend fun getTokenExchanges(tokenId: CryptoCurrency.RawID): List<TokenMarketExchange>
+
+    /** Get coin categories with their sectors */
+    suspend fun getCoinCategories(): List<CoinCategory>
 }
