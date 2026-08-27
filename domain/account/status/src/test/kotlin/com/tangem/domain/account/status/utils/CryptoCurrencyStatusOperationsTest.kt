@@ -192,7 +192,7 @@ class CryptoCurrencyStatusOperationsTest {
                 currency = currency,
                 value = CryptoCurrencyStatus.Loading,
             )
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )
@@ -223,7 +223,7 @@ class CryptoCurrencyStatusOperationsTest {
                 currency = currency,
                 value = CryptoCurrencyStatus.Loading,
             )
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )
@@ -245,7 +245,7 @@ class CryptoCurrencyStatusOperationsTest {
         @Test
         fun `returns None when CryptoPortfolio has empty token list`() {
             // Arrange
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = emptyList(),
             )
@@ -267,7 +267,7 @@ class CryptoCurrencyStatusOperationsTest {
             val currencyStatuses = currencies.map {
                 CryptoCurrencyStatus(currency = it, value = CryptoCurrencyStatus.Loading)
             }
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = currencies,
             )
@@ -514,7 +514,7 @@ class CryptoCurrencyStatusOperationsTest {
         currencies: List<CryptoCurrency>,
         currencyStatuses: List<CryptoCurrencyStatus> = emptyList(),
     ): AccountStatusList {
-        val account = Account.CryptoPortfolio.createMainAccount(
+        val account = Account.Personal.createMainAccount(
             userWalletId = userWalletId,
             cryptoCurrencies = currencies,
         )

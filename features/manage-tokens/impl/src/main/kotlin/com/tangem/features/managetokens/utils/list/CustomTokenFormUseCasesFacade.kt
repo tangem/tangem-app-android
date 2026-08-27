@@ -71,9 +71,9 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
         val currencyAccountIndex = currency.getAccountIndex().bind()
 
         val account = accountList.accounts.firstOrNull { account ->
-            val cryptoPortfolioAccount = account as? Account.CryptoPortfolio
+            val personalAccount = account as? Account.Personal
 
-            cryptoPortfolioAccount?.derivationIndex?.value == currencyAccountIndex
+            personalAccount?.derivationIndex?.value == currencyAccountIndex
         }
 
         return account?.accountId ?: AccountId.forMainCryptoPortfolio(userWalletId = userWalletId)

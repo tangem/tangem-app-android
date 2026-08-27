@@ -4,6 +4,8 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketSearchResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
@@ -76,6 +78,15 @@ interface PolymarketApi {
     ): ApiResponse<PolymarketWalletStatusResponse>
 
     /**
+     * The same status, looked up by the Tangem wallet id the deposit wallet was bound to on first deploy.
+     * This is the only way to ask about a wallet whose owner address this device has never derived.
+     */
+    @GET("api/predictions/v1/wallet")
+    suspend fun getWalletStatusByWalletId(
+        @Query("walletId") walletId: String,
+    ): ApiResponse<PolymarketWalletStatusResponse>
+
+    /**
      * Initiate deposit-wallet deployment via the relayer (gasless, unsigned). Returns as soon as the
      * relayer accepts the submission; the client then polls [getWalletStatus].
      */
@@ -92,4 +103,11 @@ interface PolymarketApi {
     suspend fun submitApprovals(
         @Body request: PolymarketWalletApprovalsRequest,
     ): ApiResponse<PolymarketWalletOperationResponse>
+
+    /**
+     * Preview the execution of a fill-and-kill order against the live order book. Read-only: nothing is
+     * placed, and the quote is only valid for as long as the book stands still, so callers re-request it.
+     */
+    @POST("api/predictions/v1/orders/quote")
+    suspend fun getOrderQuote(@Body request: PolymarketOrderQuoteRequest): ApiResponse<PolymarketOrderQuoteResponse>
 }

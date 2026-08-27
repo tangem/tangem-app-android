@@ -8,8 +8,8 @@ import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
-import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
+import com.tangem.core.remote.auth.SessionAuthAuthenticator
+import com.tangem.core.remote.auth.SessionAuthInterceptor
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs
@@ -17,10 +17,10 @@ import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
-import com.tangem.datasource.api.utils.ConnectTimeout
-import com.tangem.datasource.api.utils.ReadTimeout
-import com.tangem.datasource.api.utils.WriteTimeout
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.ConnectTimeout
+import com.tangem.core.remote.ReadTimeout
+import com.tangem.core.remote.WriteTimeout
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker

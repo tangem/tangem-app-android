@@ -85,7 +85,7 @@ internal fun PaymentAccountStatusValue.canAddFunds(isMultichainEnabled: Boolean)
     is PaymentAccountStatusValue.Deactivated -> if (isMultichainEnabled) {
         networks.hasAvailableNetwork()
     } else {
-        balance.cryptoBalance.depositAddress.isNotEmpty()
+        balance?.cryptoBalance?.depositAddress?.isNotEmpty() == true
     }
     else -> false
 }

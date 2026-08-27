@@ -3,6 +3,7 @@ package com.tangem.test.mock
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.*
+import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -33,9 +34,9 @@ object MockAccounts {
         ).getOrNull()!!
     }
 
-    fun createAccounts(count: Int, userWalletId: UserWalletId = this.userWalletId): List<Account.CryptoPortfolio> {
+    fun createAccounts(count: Int, userWalletId: UserWalletId = this.userWalletId): List<Account.Personal> {
         return buildList {
-            add(Account.CryptoPortfolio.createMainAccount(userWalletId))
+            add(Account.Personal.createMainAccount(userWalletId))
 
             repeat(count - 1) {
                 val account = createAccount(derivationIndex = it + 1, userWalletId = userWalletId)
@@ -46,19 +47,19 @@ object MockAccounts {
     }
 
     fun createJointAccount(
-        derivationIndex: Int = 0,
-        name: String = "Joint #$derivationIndex",
+        ownerKeyIndex: Int = 0,
+        name: String = "Joint #$ownerKeyIndex",
         icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
         cryptoCurrencies: List<CryptoCurrency> = emptyList(),
         userWalletId: UserWalletId = this.userWalletId,
     ): Account.Joint {
-        val backendId = derivationIndex.toString(radix = 16).padStart(length = 64, padChar = '0')
+        val backendId = ownerKeyIndex.toString(radix = 16).padStart(length = 64, padChar = '0')
 
         return Account.Joint(
             accountId = AccountId.forJointAccount(userWalletId = userWalletId, value = backendId).getOrNull()!!,
             accountName = AccountName(name).getOrNull()!!,
             icon = icon,
-            derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!,
+            ownerKeyIndex = OwnerKeyIndex(ownerKeyIndex).getOrNull()!!,
             cryptoCurrencies = cryptoCurrencies,
         )
     }
@@ -69,10 +70,10 @@ object MockAccounts {
         icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
         cryptoCurrencies: List<CryptoCurrency> = emptyList(),
         userWalletId: UserWalletId = this.userWalletId,
-    ): Account.CryptoPortfolio {
+    ): Account.Personal {
         val derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!
 
-        return Account.CryptoPortfolio(
+        return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = AccountName(name).getOrNull()!!,
             icon = icon,
@@ -89,6 +90,7 @@ object MockAccounts {
         depositAddress: String? = "0xdeposit",
         fiatRate: BigDecimal? = BigDecimal.ONE,
         balance: PaymentAccountStatusValue.Balance = createPaymentAccountBalance(),
+        networks: List<PaymentNetworkStatus> = emptyList(),
     ): AccountStatus.Payment {
         return AccountStatus.Payment(
             account = Account.Payment(userWalletId),
@@ -98,7 +100,7 @@ object MockAccounts {
                 depositAddress = depositAddress,
                 balance = balance,
                 cryptoCurrency = cryptoCurrency,
-                networks = emptyList(),
+                networks = networks,
                 cards = emptyList(),
                 fiatRate = fiatRate,
                 error = null,
@@ -134,11 +136,14 @@ object MockAccounts {
         contractAddress: String = "0xcontract",
         name: String = "USD Coin",
         symbol: String = "USDC",
+        networkId: String = "polygon",
+        networkName: String = "Polygon",
+        networkCurrencySymbol: String = "MATIC",
     ): CryptoCurrency.Token {
         val network = Network(
-            id = Network.ID(value = "polygon", derivationPath = Network.DerivationPath.None),
-            name = "Polygon",
-            currencySymbol = "MATIC",
+            id = Network.ID(value = networkId, derivationPath = Network.DerivationPath.None),
+            name = networkName,
+            currencySymbol = networkCurrencySymbol,
             derivationPath = Network.DerivationPath.None,
             isTestnet = false,
             standardType = Network.StandardType.ERC20,
@@ -150,7 +155,7 @@ object MockAccounts {
         return CryptoCurrency.Token(
             id = CryptoCurrency.ID(
                 prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-                body = CryptoCurrency.ID.Body.NetworkId(rawId = "polygon"),
+                body = CryptoCurrency.ID.Body.NetworkId(rawId = networkId),
                 suffix = CryptoCurrency.ID.Suffix.RawID(rawId = rawId),
             ),
             network = network,
