@@ -44,11 +44,11 @@
         "version": "undefined"
     },
     {
-        "name": "AND_16636_YIELD_DEX_TRANSFER_ENABLED",
+        "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
         "version": "6.3"
     },
     {
-        "name": "AND_14786_XRP_TX_HISTORY_ENABLED",
+        "name": "TWI_1749_XRP_TX_HISTORY_ENABLED",
         "version": "6.3"
     },
     {
@@ -64,7 +64,7 @@
         "version": "6.1"
     },
     {
-        "name": "AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED",
+        "name": "TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED",
         "version": "6.2"
     },
     {
@@ -108,7 +108,7 @@
         "version": "undefined"
     },
     {
-        "name": "AND_16063_TRON_GASLESS_ENABLED",
+        "name": "TWI_1259_TRON_GASLESS_ENABLED",
         "version": "6.3"
     },
     {
