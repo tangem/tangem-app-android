@@ -3,6 +3,9 @@ package com.tangem.datasource.api.polymarket.clob
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
+import com.tangem.datasource.api.polymarket.clob.models.PolymarketPlaceOrderResponse
+import okhttp3.RequestBody
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
@@ -32,6 +35,12 @@ interface PolymarketClobApi {
      * L2-authenticated; the sibling of [updateBalanceAllowance] that returns the numbers instead of
      * only refreshing them.
      */
+    @POST("order")
+    suspend fun placeOrder(
+        @HeaderMap headers: Map<String, String>,
+        @Body body: RequestBody,
+    ): ApiResponse<PolymarketPlaceOrderResponse>
+
     @GET("balance-allowance")
     suspend fun getBalanceAllowance(
         @HeaderMap headers: Map<String, String>,

@@ -835,7 +835,7 @@
   <string name="hw_cloud_backup_no_access_sign_in">ログイン</string>
   <string name="hw_cloud_backup_no_backups_description">別のアカウントにログインするか、リカバリーフレーズをインポートしてください。</string>
   <string name="hw_cloud_backup_not_found_create">バックアップを作成</string>
-  <string name="hw_cloud_backup_not_found_description">このウォレットは以前バックアップされましたが、Googleドライブにバックアップファイルが見つかりませんでした。</string>
+  <string name="hw_cloud_backup_not_found_description">このウォレットは以前バックアップされましたが、バックアップが見つかりませんでした。</string>
   <string name="hw_cloud_backup_not_found_forget">バックアップを削除</string>
   <string name="hw_cloud_backup_not_found_title">バックアップが見つかりません</string>
   <string name="hw_cloud_backup_password_hint">パスワード</string>
@@ -844,7 +844,7 @@
   <string name="hw_cloud_backup_permissions_description">一部の権限が許可されていません。ウォレットのバックアップをGoogleドライブに保存するには、すべてのアクセスを許可してください。</string>
   <string name="hw_cloud_backup_permissions_description_v2">一部の権限が許可されていません。ウォレットのバックアップを%1$sに保存できるよう、フルアクセスを許可してください。</string>
   <string name="hw_cloud_backup_permissions_title">Googleドライブへのアクセスを許可</string>
-  <string name="hw_cloud_backup_permissions_title_v2">%1$sへのアクセスを完了</string>
+  <string name="hw_cloud_backup_permissions_title_v2">%1$sへのフルアクセスを許可</string>
   <string name="hw_cloud_backup_remove_title">%1$s%2$sのバックアップ</string>
   <string name="hw_cloud_backup_removed">バックアップを削除しました</string>
   <string name="hw_cloud_backup_restore_error_title">問題が発生しました</string>

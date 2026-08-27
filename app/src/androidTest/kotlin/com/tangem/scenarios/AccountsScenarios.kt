@@ -181,7 +181,7 @@ fun BaseTestCase.awaitCryptoPortfolioAccount(derivationIndex: Int): Account.Cryp
             while (true) {
                 val candidate = singleAccountListSupplier.getSyncOrNull(walletId)
                     ?.accounts
-                    ?.filterIsInstance<Account.CryptoPortfolio>()
+                    ?.filterIsInstance<Account.Personal>()
                     ?.firstOrNull { it.derivationIndex.value == derivationIndex }
 
                 if (candidate != null && candidate.cryptoCurrencies.isNotEmpty()) {
