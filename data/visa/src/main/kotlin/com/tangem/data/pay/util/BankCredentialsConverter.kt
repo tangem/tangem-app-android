@@ -1,6 +1,6 @@
 package com.tangem.data.pay.util
 
-import com.tangem.datasource.api.pay.models.response.BankCredentialsResponse
+import com.tangem.spend.datasource.pay.models.response.BankCredentialsResponse
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.utils.converter.Converter
 

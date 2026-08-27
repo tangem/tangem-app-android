@@ -1,5 +1,6 @@
 package com.tangem.datasource.di
 
+import com.tangem.core.remote.config.ApiConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -11,14 +12,16 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoSet
+import dagger.multibindings.IntoMap
+import dagger.multibindings.StringKey
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal object ApiConfigsModule {
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(Express.KEY)
     fun provideExpressConfig(
         environmentConfig: EnvironmentConfig,
         expressAuthProvider: ExpressAuthProvider,
@@ -32,19 +35,22 @@ internal object ApiConfigsModule {
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(StakeKit.KEY)
     fun provideStakeKitConfig(stakeKitAuthProvider: StakeKitAuthProvider): ApiConfig {
         return StakeKit(stakeKitAuthProvider)
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(P2PEthPool.KEY)
     fun provideP2PEthPoolConfig(p2pAuthProvider: P2PEthPoolAuthProvider): ApiConfig {
         return P2PEthPool(p2pAuthProvider)
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(TangemTech.KEY)
     fun provideTangemTechConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
         return TangemTech(
             authProvider = authProvider,
@@ -53,7 +59,8 @@ internal object ApiConfigsModule {
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(News.KEY)
     fun provideNewsConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
         return News(
             appInfoProvider = appInfoProvider,
@@ -62,7 +69,8 @@ internal object ApiConfigsModule {
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(YieldSupply.KEY)
     fun provideYieldSupplyConfig(
         environmentConfig: EnvironmentConfig,
         authProvider: AuthProvider,
@@ -76,31 +84,22 @@ internal object ApiConfigsModule {
     }
 
     @Provides
-    @IntoSet
-    fun provideTangemPayBffConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
-        return TangemPay.Bff(environmentConfig, appInfoProvider)
-    }
-
-    @Provides
-    @IntoSet
-    fun provideTangemPayAuthConfig(environmentConfig: EnvironmentConfig, appInfoProvider: AppInfoProvider): ApiConfig {
-        return TangemPay.Auth(environmentConfig, appInfoProvider)
-    }
-
-    @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(BlockAid.KEY)
     fun provideBlockAidConfig(environmentConfig: EnvironmentConfig): ApiConfig {
         return BlockAid(environmentConfig)
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(MoonPay.KEY)
     fun provideMoonPayConfig(): ApiConfig {
         return MoonPay()
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(GaslessTxService.KEY)
     fun provideGaslessServiceConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
         return GaslessTxService(
             authProvider = authProvider,
@@ -109,14 +108,37 @@ internal object ApiConfigsModule {
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(SurveySparrow.KEY)
     fun provideSurveySparrowConfig(environmentConfig: EnvironmentConfig): ApiConfig {
         return SurveySparrow(environmentConfig)
     }
 
     @Provides
-    @IntoSet
+    @IntoMap
+    @StringKey(Auth.KEY)
     fun provideAuthConfig(): ApiConfig {
         return Auth()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketWeb.KEY)
+    fun providePolymarketWebConfig(): ApiConfig {
+        return PolymarketWeb()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketRelayer.KEY)
+    fun providePolymarketRelayerConfig(): ApiConfig {
+        return PolymarketRelayer()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketClob.KEY)
+    fun providePolymarketClobConfig(): ApiConfig {
+        return PolymarketClob()
     }
 }

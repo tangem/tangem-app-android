@@ -21,6 +21,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringReference
@@ -87,6 +88,7 @@ internal fun ForYouContent(
             portfolioReviewUM = forYouUM.portfolioReviewUM,
             periodPickerUM = forYouUM.periodPickerUM,
             onPeriodClick = forYouUM.onPeriodClick,
+            portfolioFilter = forYouUM.portfolioFilter,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
 
@@ -141,6 +143,14 @@ private class ForYouContentPreviewProvider : PreviewParameterProvider<ForYouUM> 
                     isAltSurface = true,
                 ),
                 onPeriodClick = {},
+                // Active state on purpose: ForYouPortfolioReview's own preview covers the inactive chip.
+                portfolioFilter = TangemFilterItemUM.Active(
+                    id = "portfolio_selector",
+                    value = stringReference("Accounts"),
+                    counter = 3,
+                    onClick = {},
+                    onClearClick = {},
+                ),
             ),
         )
 }

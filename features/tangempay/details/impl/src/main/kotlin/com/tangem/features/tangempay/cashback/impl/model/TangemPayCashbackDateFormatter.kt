@@ -11,16 +11,14 @@ internal class TangemPayCashbackDateFormatter {
     fun formatShortMonth(year: Int, month: Int): String =
         DateTimeFormatters.formatDate(DateTime(year, month, 1, 0, 0), DateTimeFormatters.dateMMM)
 
-    fun formatMonthDay(date: DateTime): String = DateTimeFormatters.formatDate(date, DateTimeFormatters.dateMMMMd)
+    fun formatMonthDay(date: DateTime): String = DateTimeFormatters.formatDate(date, DateTimeFormatters.dateDMMM)
 
     fun formatNumericDate(date: DateTime): String = DateTimeFormatters.formatDate(date, DateTimeFormatters.dateDDMMYYYY)
 
-    fun formatWindow(start: DateTime, end: DateTime): String {
-        val isSameMonth = start.year == end.year && start.monthOfYear == end.monthOfYear
-        return if (isSameMonth) {
-            "${formatMonthDay(start)}–${end.dayOfMonth}"
-        } else {
-            "${formatMonthDay(start)} – ${formatMonthDay(end)}"
-        }
+    fun formatWindow(start: DateTime, end: DateTime): String =
+        DateTimeFormatters.formatDateRange(start, end, MONTH_DAY_SKELETON)
+
+    private companion object {
+        const val MONTH_DAY_SKELETON = "MMMMd"
     }
 }

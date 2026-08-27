@@ -24,9 +24,8 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.backup.CardBackupConverter
+import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.usecase.IsWalletAlreadySavedUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
@@ -35,6 +34,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.ImportSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.SeedPhraseCheckUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -62,10 +62,10 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
     private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase,
-    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
+    private val walletCardsBackupReporter: WalletCardsBackupReporter,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -215,6 +215,17 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         val scanResponse = params.parentParams.scanResponse
 
         modelScope.launch {
+            val isWalletAlreadySaved = isWalletAlreadySavedUseCase
+                .invoke(mnemonic = mnemonic, passphrase = passphrase)
+                .getOrElse { false }
+
+            if (isWalletAlreadySaved) {
+                uiMessageSender.send(
+                    SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
+                )
+                return@launch
+            }
+
             val result = tangemSdkManager.importWallet(
                 scanResponse = scanResponse,
                 mnemonic = mnemonic.mnemonicComponents.joinToString(" "),
@@ -230,42 +241,41 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                         primaryCard = result.data.primaryCard,
                     )
 
-                    val wallet = createUserWallet(updatedScanResponse)
+                    analyticsHandler.send(
+                        OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
+                            creationType = if (generatedSeedPhrase) {
+                                AnalyticsParam.WalletCreationType.NewSeed
+                            } else {
+                                AnalyticsParam.WalletCreationType.SeedImport
+                            },
+                            seedPhraseLength = mnemonic.mnemonicComponents.size,
+                            passPhraseState = if (passphrase.isNullOrBlank()) {
+                                AnalyticsParam.EmptyFull.Empty
+                            } else {
+                                AnalyticsParam.EmptyFull.Full
+                            },
+                            referralId = appsFlyerStore.get()?.refcode,
+                        ),
+                    )
 
-                    val isWalletAlreadySaved = isWalletAlreadySavedUseCase
-                        .invoke(wallet)
-                        .getOrElse { false }
-
-                    if (!isWalletAlreadySaved) {
-                        analyticsHandler.send(
-                            OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                                creationType = if (generatedSeedPhrase) {
-                                    AnalyticsParam.WalletCreationType.NewSeed
-                                } else {
-                                    AnalyticsParam.WalletCreationType.SeedImport
-                                },
-                                seedPhraseLength = mnemonic.mnemonicComponents.size,
-                                passPhraseState = if (passphrase.isNullOrBlank()) {
-                                    AnalyticsParam.EmptyFull.Empty
-                                } else {
-                                    AnalyticsParam.EmptyFull.Full
-                                },
-                                referralId = appsFlyerStore.get()?.refcode,
-                            ),
-                        )
-
-                        multiWalletState.update {
-                            it.copy(currentScanResponse = updatedScanResponse)
-                        }
-
-                        cardRepository.startCardActivation(cardId = result.data.card.cardId)
-
-                        onDone.emit(Unit)
-                    } else {
-                        uiMessageSender.send(
-                            SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
-                        )
+                    multiWalletState.update {
+                        it.copy(currentScanResponse = updatedScanResponse)
                     }
+
+                    cardRepository.startCardActivation(cardId = result.data.card.cardId)
+
+                    walletCardsBackupReporter.report(
+                        scanResponse = updatedScanResponse,
+                        cards = listOf(
+                            CardBackupConverter.convert(
+                                card = updatedScanResponse.card,
+                                role = WalletCardBackup.Role.PRIMARY,
+                            ),
+                        ),
+                        usedSeed = true,
+                    )
+
+                    onDone.emit(Unit)
                 }
                 is CompletionResult.Failure -> {
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
@@ -297,13 +307,6 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                 allowsRequestAccessCodeFromRepository = true,
             )
         }
-    }
-
-    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
-        return requireNotNull(
-            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
-            lazyMessage = { "User wallet not created" },
-        )
     }
 
     fun navigateToSupportScreen() {

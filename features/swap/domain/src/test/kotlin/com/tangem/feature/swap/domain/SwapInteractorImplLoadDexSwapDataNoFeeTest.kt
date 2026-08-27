@@ -192,7 +192,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         runTest {
             // [REDACTED_TASK_KEY] / iOS parity: yield swaps must never use the integrated approve+swap path.
             // The yield-module proxy allowance is granted at enrollment, so no in-flow approval is shown.
-            every { swapFeatureToggles.isYieldSwapEnabled } returns true
             coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
             coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
             stubAllowance(AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE))

@@ -29,11 +29,6 @@ internal class ItemsBuilder @Inject constructor() {
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         onCheckedNFTChange: (Boolean) -> Unit,
-        isNotificationsEnabled: Boolean,
-        isNotificationsPermissionGranted: Boolean,
-        onCheckedNotificationsChanged: (Boolean) -> Unit,
-        onNotificationsDescriptionClick: () -> Unit,
-        isPushNotificationSettingsEnabled: Boolean,
         onNotificationSettingsClick: () -> Unit,
         forgetWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
@@ -52,7 +47,6 @@ internal class ItemsBuilder @Inject constructor() {
                 isLinkMoreCardsAvailable = isLinkMoreCardsAvailable,
                 isReferralAvailable = isReferralAvailable,
                 isManageTokensAvailable = isManageTokensAvailable,
-                isPushNotificationSettingsEnabled = isPushNotificationSettingsEnabled,
                 onLinkMoreCardsClick = onLinkMoreCardsClick,
                 onReferralClick = onReferralClick,
                 onManageTokensClick = onManageTokensClick,
@@ -60,18 +54,6 @@ internal class ItemsBuilder @Inject constructor() {
                 onCardSettingsClick = onCardSettingsClick,
                 onNotificationSettingsClick = onNotificationSettingsClick,
             ),
-        )
-        .addAll(
-            if (isPushNotificationSettingsEnabled) {
-                emptyList()
-            } else {
-                buildNotificationItems(
-                    isNotificationsPermissionGranted = isNotificationsPermissionGranted,
-                    isNotificationsEnabled = isNotificationsEnabled,
-                    onCheckedNotificationsChanged = onCheckedNotificationsChanged,
-                    onNotificationsDescriptionClick = onNotificationsDescriptionClick,
-                )
-            },
         )
         .addAll(
             buildNFTItems(
@@ -94,21 +76,6 @@ internal class ItemsBuilder @Inject constructor() {
         }
     }
 
-    private fun buildNotificationItems(
-        isNotificationsPermissionGranted: Boolean,
-        isNotificationsEnabled: Boolean,
-        onCheckedNotificationsChanged: (Boolean) -> Unit,
-        onNotificationsDescriptionClick: () -> Unit,
-    ): List<WalletSettingsItemUM> {
-        return buildList {
-            if (!isNotificationsPermissionGranted) {
-                add(buildNotificationsPermissionItem())
-            }
-            add(buildNotificationsSwitchItem(isNotificationsEnabled, onCheckedNotificationsChanged))
-            add(buildNotificationsDescriptionItem(onNotificationsDescriptionClick))
-        }
-    }
-
     private fun buildNFTItem(isNFTEnabled: Boolean, onCheckedNFTChange: (Boolean) -> Unit) =
         WalletSettingsItemUM.WithSwitch(
             id = "nft",
@@ -117,35 +84,12 @@ internal class ItemsBuilder @Inject constructor() {
             onCheckedChange = onCheckedNFTChange,
         )
 
-    private fun buildNotificationsPermissionItem() = WalletSettingsItemUM.NotificationPermission(
-        id = "notifications_permission",
-        title = resourceReference(id = R.string.transaction_notifications_warning_title),
-        description = resourceReference(id = R.string.transaction_notifications_warning_description),
-    )
-
-    private fun buildNotificationsSwitchItem(isNFTEnabled: Boolean, onCheckedNFTChange: (Boolean) -> Unit) =
-        WalletSettingsItemUM.WithSwitch(
-            id = "notifications",
-            title = resourceReference(id = R.string.wallet_settings_push_notifications_title),
-            isChecked = isNFTEnabled,
-            onCheckedChange = onCheckedNFTChange,
-        )
-
-    private fun buildNotificationsDescriptionItem(onDescriptionClick: () -> Unit) =
-        WalletSettingsItemUM.DescriptionWithMore(
-            id = "notifications_description",
-            text = resourceReference(id = R.string.wallet_settings_push_notifications_description),
-            more = resourceReference(id = R.string.push_notifications_more_info),
-            onClick = onDescriptionClick,
-        )
-
     @Suppress("LongParameterList")
     private fun buildCardItem(
         userWallet: UserWallet,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
-        isPushNotificationSettingsEnabled: Boolean,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
         onManageTokensClick: () -> Unit,
@@ -218,15 +162,13 @@ internal class ItemsBuilder @Inject constructor() {
                 add(referralBlock)
             }
 
-            if (isPushNotificationSettingsEnabled) {
-                val notificationSettingsBlock = BlockUM(
-                    text = resourceReference(R.string.push_notification_settings_title),
-                    iconRes = R.drawable.ic_push_notification_settings_24,
-                    onClick = onNotificationSettingsClick,
-                )
+            val notificationSettingsBlock = BlockUM(
+                text = resourceReference(R.string.push_notification_settings_title),
+                iconRes = R.drawable.ic_push_notification_settings_24,
+                onClick = onNotificationSettingsClick,
+            )
 
-                add(notificationSettingsBlock)
-            }
+            add(notificationSettingsBlock)
         }.toImmutableList(),
     )
 

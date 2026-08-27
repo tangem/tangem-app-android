@@ -27,6 +27,8 @@ import com.tangem.common.ui.markets.action.QuickActionUM
 import com.tangem.common.ui.markets.action.QuickActions
 import com.tangem.common.ui.tokenaction.TokenActionRow
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -40,7 +42,10 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.price
-import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenActionsTestTags
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.PortfolioBadgeUM
@@ -63,7 +68,8 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
 private fun CompactLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
         QuickActionsList(state)
-        SpacerH(TangemTheme.dimens2.x4)
+        SpacerH24()
+        BottomActionButton(state.bottomActionText, state.onBottomActionClick)
     }
 }
 
@@ -87,20 +93,8 @@ private fun FullLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
             )
         }
         QuickActionsList(state)
-        val bottomText = state.bottomActionText
-        if (bottomText != null) {
-            SpacerH(TangemTheme.dimens2.x6)
-            CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
-                SecondaryTangemButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = state.onBottomActionClick,
-                    text = bottomText,
-                    size = TangemButtonSize.X12,
-                    shape = TangemButtonShape.Rounded,
-                )
-            }
-        }
-        SpacerH(TangemTheme.dimens2.x4)
+        SpacerH24()
+        BottomActionButton(state.bottomActionText, state.onBottomActionClick)
     }
 }
 
@@ -221,6 +215,22 @@ private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, mo
             state = deviceIcon,
             modifier = Modifier.size(TangemTheme.dimens2.x4),
         )
+    }
+}
+
+@Composable
+private fun BottomActionButton(bottomActionText: TextReference?, onBottomActionClick: () -> Unit) {
+    if (bottomActionText != null) {
+        CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
+            SecondaryTangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onBottomActionClick,
+                text = bottomActionText,
+                size = TangemButtonSize.X12,
+                shape = TangemButtonShape.Rounded,
+            )
+        }
+        SpacerH16()
     }
 }
 

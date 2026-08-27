@@ -76,7 +76,10 @@ internal class VisaCardScanHandler @Inject constructor(
             return CompletionResult.Failure(VisaCardScanError.FailedToFindWallet.tangemError)
         }
 
-        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(wallet.publicKey)
+        val publicKey = wallet.publicKey ?: return CompletionResult.Failure(
+            VisaActivationError.PublicKeyIsEmpty.tangemError,
+        )
+        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(publicKey)
             .getOrElse {
                 return CompletionResult.Failure(it.tangemError)
             }
@@ -86,14 +89,14 @@ internal class VisaCardScanHandler @Inject constructor(
         val challengeResponse = visaAuthRemoteDataSource.getCardWalletAuthChallenge(
             cardId = card.cardId,
             // This is the wallet public key, not the address and it's alright, as the API expects it in this format
-            cardWalletAddress = wallet.publicKey.toHexString(),
+            cardWalletAddress = publicKey.toHexString(),
         ).getOrElse { error ->
             TangemLogger.i("Failed to get Access token for Wallet public key authorization")
             return CompletionResult.Failure(error.tangemError)
         }
 
         val signChallengeResult = signChallengeWithWallet(
-            publicKey = wallet.publicKey,
+            publicKey = publicKey,
             nonce = challengeResponse.challenge,
         )
 

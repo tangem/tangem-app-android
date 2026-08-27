@@ -3,10 +3,12 @@ package com.tangem.datasource.local.visa
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -27,18 +29,34 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultTangemPayReissueCardStoreTest {
 
     private val dataStore = MockStateDataStore(default = emptyPreferences())
-    private val prefs = AppPreferencesStore(
+    private val prefs = createAppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = dataStore,
     )
-    private val feeStore: RuntimeDataStore<TangemPayReissueCardFee> = mockk(relaxed = true)
+    private val feeStore = RuntimeSharedMapStore<UserWalletId, TangemPayReissueCardFee>()
 
     private val store = DefaultTangemPayReissueCardStore(feeStore = feeStore, prefs = prefs)
 
     @BeforeEach
     fun resetStore() {
-        runBlocking { dataStore.updateData { emptyPreferences() } }
+        runBlocking {
+            dataStore.updateData { emptyPreferences() }
+            feeStore.clear()
+        }
+    }
+
+    @Test
+    fun `GIVEN reissue fee stored WHEN getReissueFee THEN returns it per wallet`() = runTest {
+        // Arrange
+        val walletId = mockk<UserWalletId>()
+        val otherWalletId = mockk<UserWalletId>()
+        val fee = mockk<TangemPayReissueCardFee>()
+        store.storeReissueFee(walletId, fee)
+
+        // Assert
+        assertThat(store.getReissueFee(walletId)).isEqualTo(fee)
+        assertThat(store.getReissueFee(otherWalletId)).isNull()
     }
 
     @Test

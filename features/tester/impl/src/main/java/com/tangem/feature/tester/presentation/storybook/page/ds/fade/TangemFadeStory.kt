@@ -73,12 +73,18 @@ private fun ComponentPreview(state: TangemFadeStory) {
             position = state.position,
             variant = state.variant,
             blur = state.isBlur,
-            modifier = Modifier.align(
-                when (state.position) {
-                    TangemFade.Position.Top -> Alignment.TopCenter
-                    TangemFade.Position.Bottom -> Alignment.BottomCenter
-                },
-            ),
+            modifier = when (state.variant) {
+                // The fade is sized by the call site — fill the container or set a height.
+                TangemFade.Variant.Hard -> Modifier.matchParentSize()
+                TangemFade.Variant.Soft -> Modifier
+                    .height(96.dp)
+                    .align(
+                        when (state.position) {
+                            TangemFade.Position.Top -> Alignment.TopCenter
+                            TangemFade.Position.Bottom -> Alignment.BottomCenter
+                        },
+                    )
+            },
         )
     }
 }

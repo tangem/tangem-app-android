@@ -1793,6 +1793,8 @@
   <string name="swap_story_third_subtitle_v2">Обмінюйте тисячі токенів між будь-якими мережами. Комісія 0% на обмін стейблкоїнів</string>
   <string name="swap_story_third_title">Легше, ніж будь-коли</string>
   <string name="swap_story_third_title_v2">90+ Блокчейнів\n16 000+ Активів</string>
+  <string name="swap_token_selector_empty_filtered_message">У цьому гаманці немає токенів з балансом. Перегляньте інші гаманці або змініть фільтр</string>
+  <string name="swap_token_selector_filter_hide_zero_balance">Приховати нульові баланси</string>
   <string name="swap_via_provider">Обмін через провайдера</string>
   <string name="swap_your_assets_title">Ваші активи</string>
   <string name="swapping_alert_cex_description">Сума включає: \n• комісію постачальника послуг\n• комісію мережі за відправлення %s з біржі назад на адресу користувача.</string>
@@ -1863,7 +1865,7 @@
   <string name="tangem_pay_terms_fees_limits">Умови, комісії та ліміти</string>
   <string name="tangem_pay_terms_limits">Умови та обмеження</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк відхилив цей запит на транзакцію.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Мін. сума транзакції — %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Мін. сума транзакції</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Досягнуто місячний ліміт</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC виключено</string>
   <string name="tangem_pay_transaction_details_cashback_none">Без кешбеку</string>
@@ -2090,8 +2092,8 @@
   <string name="tangempay_newonboard_body">Витрачайте крипту будь-де — без банків, посередників і бірж. Сила self-custody для щоденних платежів.</string>
   <string name="tangempay_newonboard_bottomleft_body">Платіть онлайн і через Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">По всьому світу</string>
-  <string name="tangempay_newonboard_bottomright_body">Користуйтеся всюди</string>
-  <string name="tangempay_newonboard_bottomright_title">FX-комісія лише 1%</string>
+  <string name="tangempay_newonboard_bottomright_body">USD→USDC 1:1; комісія $1</string>
+  <string name="tangempay_newonboard_bottomright_title">Отримуйте ACH-перекази</string>
   <string name="tangempay_newonboard_title">Отримайте картку Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Без комісії за покупки</string>
@@ -2216,6 +2218,11 @@
   <string name="token_details_unable_hide_alert_title">Неможливо приховати %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Показати QR-код</string>
+  <string name="token_summary_galaxy_score_description">Galaxy Score поєднує ринкові показники й активність у соцмережах в єдину оцінку від 0 до 100, яка відображає загальний стан активу. Джерело: LunarCrush.</string>
+  <string name="token_summary_ma_cross_description">MA Cross порівнює середні ціни за 50 і 200 днів та показує, чи торгується актив вище, чи нижче свого довгострокового тренду. Джерело: taapi.io.</string>
+  <string name="token_summary_macd_description">MACD порівнює короткостроковий і довгостроковий ціновий імпульс та показує, посилюється він чи слабшає. Джерело: taapi.io.</string>
+  <string name="token_summary_rsi_description">RSI (індекс відносної сили) показує, чи не надто інтенсивно купували або продавали актив за останні 14 періодів, і сигналізує про можливу перекупленість чи перепроданість. Джерело: taapi.io.</string>
+  <string name="token_summary_sentiment_description">Sentiment (настрій) оцінює тональність дописів про актив у соцмережах за шкалою від 1 до 5: що вища оцінка, то позитивніше обговорення. Джерело: LunarCrush.</string>
   <string name="token_swap_changelly_promotion_message">Обмінюйте цей токен на інші з %1$s комісією за обслуговування з %2$s по %3$s лютого.</string>
   <string name="token_swap_changelly_promotion_title">Обмін із Changelly, %s комісії</string>
   <string name="token_swap_promotion_button">Обміняти</string>

@@ -47,7 +47,6 @@ import com.tangem.features.send.api.subcomponents.notifications.SendNotification
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent.Params.NotificationData
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.swap.v2.api.SwapFeatureToggles
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -91,7 +90,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val sendNotificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val swapNotificationsUpdateTrigger: SwapNotificationsUpdateTrigger,
@@ -402,14 +400,15 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     private fun updateAmountSubtractAvailability() {
         modelScope.launch {
-            val fee = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal
-            val feeTokenId =
-                feeUMV2?.feeExtraInfo?.transactionFeeExtended?.feeTokenId ?: primaryCurrencyStatus.currency.id
+            // No extended fee info means no token-paid fee to reason about, so the use case falls back to
+            // the network's own FeePaidCurrency rules. Take the fee token from the same object as the fee:
+            // pairing the fee with the sent token would make the use case's contract check tautological.
+            val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
             isAmountSubtractAvailable =
                 isAmountSubtractAvailableUseCase(
                     userWalletId = params.userWallet.walletId,
                     currency = primaryCurrencyStatus.currency,
-                    maybeGaslessFee = fee?.let { feeTokenId to fee },
+                    maybeGaslessFee = feeExtended?.let { it.feeTokenId to it.transactionFee.normal },
                 ).getOrElse { false }
         }
     }
@@ -489,7 +488,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     }
 
     private suspend fun isHighNetworkFee(feeCurrency: CryptoCurrency): Boolean {
-        if (!swapFeatureToggles.isHighFeeWarningEnabled) return false
         val feeAmount = confirmData.fee?.amount?.value ?: return false
         return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }

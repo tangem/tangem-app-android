@@ -1,8 +1,8 @@
 package com.tangem.data.staking
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolNetworkDTO
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
@@ -135,10 +135,9 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
     }
 
     @Test
-    fun `GIVEN 451 AND toggle on WHEN fetchVaults THEN region flag set true`() = runTest {
+    fun `GIVEN 451 WHEN fetchVaults THEN region flag set true`() = runTest {
         // Arrange
         every { featureToggles.isIntegrationEnabled(any()) } returns true
-        every { featureToggles.isRegionUnavailableHandlingEnabled() } returns true
         coEvery { api.getVaults(any()) } returns regionBlockedErrorResponse()
 
         // Act
@@ -147,20 +146,6 @@ internal class DefaultP2PEthPoolRepositoryAvailabilityTest {
         // Assert
         coVerify { regionBlockedStore.store(true) }
         coVerify { vaultsStore.store(emptyList()) }
-    }
-
-    @Test
-    fun `GIVEN 451 AND toggle off WHEN fetchVaults THEN region flag stays false`() = runTest {
-        // Arrange
-        every { featureToggles.isIntegrationEnabled(any()) } returns true
-        every { featureToggles.isRegionUnavailableHandlingEnabled() } returns false
-        coEvery { api.getVaults(any()) } returns regionBlockedErrorResponse()
-
-        // Act
-        repository.fetchVaults()
-
-        // Assert
-        coVerify { regionBlockedStore.store(false) }
     }
 
     @Test
