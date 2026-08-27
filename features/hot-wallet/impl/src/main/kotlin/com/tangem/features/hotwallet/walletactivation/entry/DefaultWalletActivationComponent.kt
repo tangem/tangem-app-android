@@ -72,7 +72,10 @@ internal class DefaultWalletActivationComponent @AssistedInject constructor(
 
         BackHandler(onBack = model::onChildBack)
 
-        val stepperState = stepperStateManager.getStepperState(currentRoute)
+        val stepperState = stepperStateManager.getStepperState(
+            route = currentRoute,
+            isAccessCodeStepRequired = model.isAccessCodeStepRequired,
+        )
         stepperState?.let { stepperComponent.updateState(it) }
 
         WalletActivationContent(
