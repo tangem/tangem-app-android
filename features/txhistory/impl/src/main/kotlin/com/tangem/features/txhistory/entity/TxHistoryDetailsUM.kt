@@ -225,7 +225,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
     /**
      * Counterparty ("Recipient" / "From") card of the single-asset detail: a leading [avatar], the section [label] over
-     * the counterparty [title], and — when [onCopyClick] is non-null — a trailing copy button.
+     * the counterparty [title], and — when [onCopyClick] is non-null — the whole card is clickable to copy.
      *
      * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
      * and whether copy is offered. The kind is resolved through the shared `TxHistoryLookupContext` — the same
@@ -234,8 +234,8 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
      * @property title Counterparty value: brief address / account name / wallet name.
      * @property avatar Leading avatar.
-     * @property onCopyClick Copy action; `null` hides the copy button (an own account / wallet shows a display name,
-     * not an address, so there is nothing to copy).
+     * @property onCopyClick Copy action; `null` makes the card non-interactive (an own account / wallet shows a
+     * display name, not an address, so there is nothing to copy).
      */
     data class CounterpartyUM(
         val label: TextReference,
