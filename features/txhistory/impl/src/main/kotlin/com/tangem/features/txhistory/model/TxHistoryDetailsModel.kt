@@ -2,13 +2,18 @@ package com.tangem.features.txhistory.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.express.models.ExchangeTransaction
@@ -25,9 +30,11 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.component.TxHistoryDetailsComponent
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
@@ -38,8 +45,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -51,6 +60,7 @@ import javax.inject.Inject
 internal class TxHistoryDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
+    private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -84,6 +94,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * `null` while unresolved or when the deal carries no refund token.
      */
     private val refundCurrency = MutableStateFlow<CryptoCurrency?>(null)
+
+    /**
+     * Provider-rating (CSAT) card slot. Activated once the viewed tx turns out to be an express swap — the card is
+     * shown for any swap status, mirroring the legacy express-status sheet. Stays dismissed for onramp / on-chain txs.
+     */
+    val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
+
+    private var isRatingActivationStarted = false
 
     init {
         // One-shot: the portfolio add must not re-run when the UI resubscribes.
@@ -124,6 +142,38 @@ internal class TxHistoryDetailsModel @Inject constructor(
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
 
     /**
+     * Activates the rating slot for an express swap. The rating key is the provider-side deal id when present, the
+     * express id otherwise — same as the legacy surface, so ratings stay shared between the old and new UI.
+
+     */
+    fun activateRatingForSwap() {
+        if (isRatingActivationStarted) return
+        isRatingActivationStarted = true
+        params.txHistoryInfo
+            .mapNotNull { (it as? ExpressTx.Swap)?.tx }
+            .map { tx ->
+                RatingKey(
+                    txExternalId = tx.externalTxId ?: tx.txId,
+                    providerName = tx.provider?.name.orEmpty(),
+                    txExternalUrl = tx.externalTxUrl.orEmpty(),
+                )
+            }
+            .distinctUntilChanged()
+            .onEach { key ->
+                ratingSlotNavigation.activate(
+                    RatingComponent.Params(
+                        txExternalId = key.txExternalId,
+                        providerName = key.providerName,
+                        txExternalUrl = key.txExternalUrl,
+                        userWalletId = params.userWalletId,
+                        isRedesign = true,
+                    ),
+                )
+            }
+            .launchIn(modelScope)
+    }
+
+    /**
      * Resolves the viewed currency's staking validators into an address-keyed map. Returns empty when the currency has
      * no yield (non-staking / custom token) — the use case surfaces that as a [Left] which we treat as "no validators".
      */
@@ -145,11 +195,23 @@ internal class TxHistoryDetailsModel @Inject constructor(
     /** Copies a counterparty address to the clipboard — wired into the detail card's copy button via the converter. */
     private fun onCopyAddress(address: String) {
         clipboardManager.setText(text = address, isSensitive = false)
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(R.string.wallet_notification_address_copied),
+                startIconId = R.drawable.ic_check_24,
+            ),
+        )
     }
 
     /** Copies the transaction id to the clipboard — wired into the header menu's "Transaction ID" row. */
     private fun onCopyTxId(id: String) {
         clipboardManager.setText(text = id, isSensitive = false)
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(R.string.express_transaction_id_copied),
+                startIconId = R.drawable.ic_check_24,
+            ),
+        )
     }
 
     /** Opens the transaction in the blockchain explorer — wired into the header menu's "Explore" row. */
@@ -197,6 +259,13 @@ internal class TxHistoryDetailsModel @Inject constructor(
             .getOrNull()
     }
 }
+
+/** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */
+private data class RatingKey(
+    val txExternalId: String,
+    val providerName: String,
+    val txExternalUrl: String,
+)
 
 /**
  * The deal of a refunded DEX-bridge swap; `null` for everything else. Only a DEX-bridge deal is refunded in an

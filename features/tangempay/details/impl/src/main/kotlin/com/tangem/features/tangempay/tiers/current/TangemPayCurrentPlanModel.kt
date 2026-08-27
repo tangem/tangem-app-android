@@ -6,23 +6,26 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlanState
+import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
+import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.common.tariffPlanState
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.tiers.formatNextBillingDateOrNull
 import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
-import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
-import com.tangem.features.tangempay.utils.tariffPlan
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -41,6 +44,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
+    private val cancelTariffTransition: CancelTariffTransitionUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
@@ -49,10 +53,10 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private val params = paramsContainer.require<TangemPayCurrentPlanComponent.Params>()
 
     private var isProcessing: Boolean = false
-    private var currentPlan: TangemPayCustomerTariffPlan = params.tariffPlan
+    private var currentPlanState: TangemPayTariffPlanState = params.tariffPlan
 
     val state: StateFlow<TangemPayCurrentPlanUM>
-        field = MutableStateFlow(createState(currentPlan))
+        field = MutableStateFlow(createState(currentPlanState))
 
     init {
         observePlanChanges()
@@ -61,11 +65,11 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private fun observePlanChanges() {
         modelScope.launch {
             paymentAccountStatusSupplier(params.userWalletId)
-                .mapNotNull { it.tariffPlan }
+                .mapNotNull { it.tariffPlanState }
                 .distinctUntilChanged()
-                .collect { plan ->
-                    currentPlan = plan
-                    state.value = createState(plan)
+                .collect { planState ->
+                    currentPlanState = planState
+                    state.value = createState(planState)
                 }
         }
     }
@@ -75,28 +79,57 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         router.pop()
     }
 
-    private fun createState(customerPlan: TangemPayCustomerTariffPlan): TangemPayCurrentPlanUM = TangemPayCurrentPlanUM(
-        planName = stringReference(customerPlan.plan.name),
-        notification = createNotification(customerPlan),
-        sections = buildSections(customerPlan.plan),
+    private fun createState(planState: TangemPayTariffPlanState): TangemPayCurrentPlanUM = TangemPayCurrentPlanUM(
+        planName = stringReference(planState.tariff.plan.name),
+        notification = createNotification(planState),
+        sections = buildSections(planState.tariff.plan),
         onBackClick = ::onBackClick,
-        onChangePlanClick = ::onChangePlanClick
-            .takeIf {
-                customerPlan.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING
-            },
+        onChangePlanClick = ::onChangePlanClick.takeIf {
+            planState.tariff.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING &&
+                !planState.isPlanTransitioningState
+        },
     )
 
     private fun onChangePlanClick() {
         analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked())
         router.push(
             TangemPayAccountDetailsInnerRoute.SelectPlan(
-                tariffPlan = currentPlan,
+                tariffPlan = currentPlanState.tariff,
                 source = TangemPaySelectPlanSource.CHANGE_PLAN,
             ),
         )
     }
 
-    private fun createNotification(customerPlan: TangemPayCustomerTariffPlan): TangemPayCurrentPlanUM.Notification? {
+    private fun createNotification(planState: TangemPayTariffPlanState): TangemPayCurrentPlanUM.Notification? {
+        return createAwaitingDepositNotification(planState) ?: createBillingNotification(planState.tariff)
+    }
+
+    private fun createAwaitingDepositNotification(
+        planState: TangemPayTariffPlanState,
+    ): TangemPayCurrentPlanUM.Notification? {
+        val order = planState.order ?: return null
+        val orderStep = order.step
+        if (orderStep !is TangemPayTariffPlanState.OrderStep.AwaitingDeposit) return null
+
+        return TangemPayCurrentPlanUM.Notification(
+            text = resourceReference(
+                R.string.tangempay_current_plan_awaiting_deposit_notification,
+                wrappedList(orderStep.toPlan.name),
+            ),
+            button = TangemPayCurrentPlanUM.Notification.Button(
+                text = resourceReference(
+                    R.string.tangempay_card_details_awaiting_deposit_cancel_button,
+                    wrappedList(orderStep.toPlan.name, orderStep.fromPlan.name),
+                ),
+                isProcessing = isProcessing,
+                onClick = { onCancelTariffTransitionClick(order.orderId) },
+            ),
+        )
+    }
+
+    private fun createBillingNotification(
+        customerPlan: TangemPayCustomerTariffPlan,
+    ): TangemPayCurrentPlanUM.Notification? {
         val date = customerPlan.formatNextBillingDateOrNull(formatter = DateTimeFormatters.dateMMMd) ?: return null
         val feeText = customerPlan.plan.formatRecurringFeeOrNull() ?: return null
         return when (customerPlan.status) {
@@ -127,9 +160,22 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         }
     }
 
+    private fun onCancelTariffTransitionClick(orderId: String) {
+        if (isProcessing) return
+        analytics.send(TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked())
+        isProcessing = true
+        state.value = createState(currentPlanState)
+        modelScope.launch {
+            cancelTariffTransition(userWalletId = params.userWalletId, orderId = orderId)
+                .onLeft { uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError()) }
+            isProcessing = false
+            state.value = createState(currentPlanState)
+        }
+    }
+
     private fun onStayOnPlanClick() {
         if (isProcessing) return
-        val customerPlan = currentPlan
+        val customerPlan = currentPlanState.tariff
         val targetPlanName = customerPlan.pendingPlan?.name ?: return
         analytics.send(TangemPayAnalyticsEvents.Tiers.StayOnPlusConditionsClicked())
         analytics.send(TangemPayAnalyticsEvents.Tiers.StayOnPlusPopupShowed())
@@ -146,12 +192,12 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         if (isProcessing) return
         analytics.send(TangemPayAnalyticsEvents.Tiers.StayOnPlusPopupClicked())
         isProcessing = true
-        state.value = createState(currentPlan)
+        state.value = createState(currentPlanState)
         modelScope.launch {
             cancelPendingTransition(params.userWalletId).fold(
                 ifRight = {},
                 ifLeft = {
-                    state.value = createState(currentPlan)
+                    state.value = createState(currentPlanState)
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 },
             )

@@ -44,6 +44,7 @@ enum class VisaActivationError(
     VisaCardForApproval(104003011),
     CardIdNotMatched(104003011),
     FailedToSetPinCode(104003012),
+    PublicKeyIsEmpty(104003013),
 }
 
 sealed class VisaApiError(

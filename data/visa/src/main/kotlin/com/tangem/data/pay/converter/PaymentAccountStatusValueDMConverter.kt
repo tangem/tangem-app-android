@@ -9,6 +9,8 @@ import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.utils.extensions.orZero
+import java.math.BigDecimal
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,11 +37,11 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.IssuingCard -> PaymentAccountStatusValueDM.IssuingCard()
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
-                currencyCode = value.balance.fiatBalance.currency,
+                currencyCode = value.balance?.fiatBalance?.currency,
                 depositAddress = value.depositAddress,
-                fiatBalance = value.balance.fiatBalance.toDM(),
-                cryptoBalance = value.balance.cryptoBalance.toDM(),
-                availableForWithdrawal = value.balance.availableForWithdrawal,
+                fiatBalance = value.balance?.fiatBalance?.toDM(),
+                cryptoBalance = value.balance?.cryptoBalance?.toDM(),
+                availableForWithdrawal = value.balance?.availableForWithdrawal,
                 fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
@@ -69,9 +71,9 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
                 customerId = value.customerId,
                 fiatRate = value.fiatRate,
-                fiatBalance = value.balance.fiatBalance.toDM(),
-                cryptoBalance = value.balance.cryptoBalance.toDM(),
-                availableForWithdrawal = value.balance.availableForWithdrawal,
+                fiatBalance = value.balance?.fiatBalance?.toDM(),
+                cryptoBalance = value.balance?.cryptoBalance?.toDM(),
+                availableForWithdrawal = value.balance?.availableForWithdrawal,
             )
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
@@ -101,6 +103,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 depositAddress = value.depositAddress,
                 balance = value.getBalance(),
                 cryptoCurrency = cryptoCurrency,
+                networks = emptyList(),
                 fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
                     TangemPayCard(
@@ -135,12 +138,13 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.DeactivatedAccount -> PaymentAccountStatusValue.Deactivated(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
-                balance = PaymentAccountStatusValue.Balance(
-                    fiatBalance = value.fiatBalance.toDomain(),
-                    cryptoBalance = value.cryptoBalance.toDomain(),
+                balance = buildBalance(
+                    fiatBalance = value.fiatBalance,
+                    cryptoBalance = value.cryptoBalance,
                     availableForWithdrawal = value.availableForWithdrawal,
                 ),
                 cryptoCurrency = cryptoCurrency,
+                networks = emptyList(),
                 fiatRate = value.fiatRate,
                 error = null,
             )
@@ -165,11 +169,25 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         )
     }
 
-    private fun PaymentAccountStatusValueDM.ActiveAccount.getBalance(): PaymentAccountStatusValue.Balance {
+    private fun PaymentAccountStatusValueDM.ActiveAccount.getBalance(): PaymentAccountStatusValue.Balance? {
+        return buildBalance(
+            fiatBalance = fiatBalance,
+            cryptoBalance = cryptoBalance,
+            availableForWithdrawal = availableForWithdrawal,
+        )
+    }
+
+    /** Restores the balance only when both dimensions were persisted; a partial balance is not representable. */
+    private fun buildBalance(
+        fiatBalance: PaymentAccountStatusValueDM.FiatBalanceDM?,
+        cryptoBalance: PaymentAccountStatusValueDM.CryptoBalanceDM?,
+        availableForWithdrawal: BigDecimal?,
+    ): PaymentAccountStatusValue.Balance? {
+        if (fiatBalance == null || cryptoBalance == null) return null
         return PaymentAccountStatusValue.Balance(
             fiatBalance = fiatBalance.toDomain(),
             cryptoBalance = cryptoBalance.toDomain(),
-            availableForWithdrawal = availableForWithdrawal,
+            availableForWithdrawal = availableForWithdrawal.orZero(),
         )
     }
 

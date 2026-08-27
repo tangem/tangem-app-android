@@ -20,6 +20,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.biometricAuth.api)
     implementation(projects.core.error)
     implementation(projects.core.pagination)
 
@@ -32,7 +33,7 @@ dependencies {
     api(projects.features.tokenRecieve.api)
     api(projects.features.tokendetails.api)
     api(projects.features.promoBanners.api)
-    api(projects.features.virtualAccounts.details.api) // TWI_1638_VA_MVP0_ENABLED
+    api(projects.features.virtualAccounts.details.api)
 
     /** Domain */
     api(projects.domain.balanceHiding)

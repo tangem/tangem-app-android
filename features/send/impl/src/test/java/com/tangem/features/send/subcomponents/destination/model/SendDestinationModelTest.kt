@@ -99,7 +99,6 @@ internal class SendDestinationModelTest {
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk(relaxed = true)
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase = mockk(relaxed = true)
-    private val addressBookFeatureToggles: AddressBookFeatureToggles = mockk(relaxed = true)
     private val contactSelectionListener: ContactSelectionListener = mockk(relaxed = true)
     private val addressBookSendAnalytics: AddressBookSendAnalytics = mockk(relaxed = true)
     private val callback: SendDestinationComponent.ModelCallback = mockk(relaxed = true)
@@ -695,29 +694,13 @@ internal class SendDestinationModelTest {
     inner class SyncAddressBooks {
 
         @Test
-        fun `GIVEN address book enabled WHEN model initialized THEN sync address books`() = runTest {
-            // Arrange
-            every { addressBookFeatureToggles.isAddressBookEnabled } returns true
-
+        fun `GIVEN model created WHEN model initialized THEN sync address books`() = runTest {
             // Act
             buildModel()
             advanceUntilIdle()
 
             // Assert
             coVerify(exactly = 1) { syncAddressBooksUseCase() }
-        }
-
-        @Test
-        fun `GIVEN address book disabled WHEN model initialized THEN do NOT sync address books`() = runTest {
-            // Arrange
-            every { addressBookFeatureToggles.isAddressBookEnabled } returns false
-
-            // Act
-            buildModel()
-            advanceUntilIdle()
-
-            // Assert
-            coVerify(exactly = 0) { syncAddressBooksUseCase() }
         }
     }
 
@@ -842,7 +825,6 @@ internal class SendDestinationModelTest {
             sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
             addressBookSendAnalytics = addressBookSendAnalytics,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
-            addressBookFeatureToggles = addressBookFeatureToggles,
             isAddressBookCompatibleUseCase = isAddressBookCompatibleUseCase,
             getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             contactSelectionListener = contactSelectionListener,

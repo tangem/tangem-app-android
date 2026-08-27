@@ -132,6 +132,9 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
         }
     }
 
+    Spacer(modifier = Modifier.weight(1f))
+    Spacer(modifier = Modifier.size(12.dp))
+
     if (plans.size > 1) {
         TangemPagerIndicator(
             pagerState = pagerState,
@@ -145,6 +148,8 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
         title = plan.name,
         points = plan.points,
     )
+
+    Spacer(modifier = Modifier.weight(1f))
 }
 
 @Composable
@@ -153,7 +158,7 @@ private fun ColumnScope.PlanDetails(title: TextReference, points: ImmutableList<
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .padding(top = 24.dp, bottom = 12.dp),
+            .padding(vertical = 12.dp),
         text = title.resolveReference(),
         style = TangemTheme.typography3.heading.medium,
         color = TangemTheme.colors3.text.primary,
@@ -162,8 +167,8 @@ private fun ColumnScope.PlanDetails(title: TextReference, points: ImmutableList<
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .padding(top = 12.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         points.fastForEach { point -> PlanPoint(point = point) }
     }
@@ -208,10 +213,12 @@ private fun ColumnScope.ConfirmContent(state: TangemPaySelectPlanUM, content: Ta
         modifier = Modifier.padding(start = 24.dp, top = 12.dp),
     )
     Spacer(modifier = Modifier.weight(1f))
+    Spacer(modifier = Modifier.size(12.dp))
     PlanDetails(
         title = content.title,
         points = content.points,
     )
+    Spacer(modifier = Modifier.size(24.dp))
 }
 
 @Composable

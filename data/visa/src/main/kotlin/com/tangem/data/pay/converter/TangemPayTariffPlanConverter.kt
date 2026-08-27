@@ -1,6 +1,6 @@
 package com.tangem.data.pay.converter
 
-import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import java.util.Locale
 

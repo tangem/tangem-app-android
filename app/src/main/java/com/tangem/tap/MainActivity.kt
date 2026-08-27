@@ -31,13 +31,11 @@ import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import com.appsflyer.AppsFlyerLib
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.LocalUserInteractionTracker
 import com.tangem.core.ui.extensions.UserInteractionTracker
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
@@ -66,9 +64,9 @@ import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import com.tangem.utils.extensions.uriValidate
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.AndroidEntryPoint
@@ -147,9 +145,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var deeplinkFactory: DeepLinkFactory
-
-    @Inject
-    internal lateinit var urlOpener: UrlOpener
 
     @Inject
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
@@ -418,29 +413,28 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
         val externalDeepLink = intent.data
+        // Covers every payload shape, including the `link` key: see PayloadToDeeplinkConverter.
         val extrasDeepLink = PayloadToDeeplinkConverter.convertBundle(intent.extras)?.toUri()
-        val webLink = intent.getStringExtra(WEBLINK_KEY)
 
         when {
             // External deep links (browser / universal links) arrive via intent.data — never gated.
-            externalDeepLink != null -> launchDeepLink(externalDeepLink, isFromOnNewIntent)
+            externalDeepLink != null ->
+                launchDeepLink(externalDeepLink, isFromOnNewIntent, DeeplinkSource.External)
             // A deep link reconstructed from a notification payload must pass the push policy. If it is
-            // present but blocked, stop — do not fall back to another payload-supplied field (e.g. webLink).
+            // present but blocked, stop — there is deliberately no second chance for the same payload.
             extrasDeepLink != null ->
                 if (PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)) {
-                    launchDeepLink(extrasDeepLink, isFromOnNewIntent)
+                    launchDeepLink(extrasDeepLink, isFromOnNewIntent, DeeplinkSource.Push)
                 }
-            webLink?.uriValidate() == true -> {
-                urlOpener.openUrl(webLink)
-            }
         }
     }
 
-    private fun launchDeepLink(deeplinkUri: Uri, isFromOnNewIntent: Boolean) {
+    private fun launchDeepLink(deeplinkUri: Uri, isFromOnNewIntent: Boolean, source: DeeplinkSource) {
         deeplinkFactory.handleDeeplink(
             deeplinkUri = deeplinkUri,
             coroutineScope = lifecycleScope,
             isFromOnNewIntent = isFromOnNewIntent,
+            source = source,
         )
     }
 

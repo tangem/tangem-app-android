@@ -1,7 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.BankCredentialsResponse
+import com.tangem.spend.datasource.pay.models.response.BankCredentialsResponse
 import com.tangem.domain.models.account.BankCredentials
 import org.junit.jupiter.api.Test
 

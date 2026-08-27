@@ -37,6 +37,7 @@ dependencies {
     // region Core
     api(projects.core.datasource)
     api(projects.core.utils)
+    implementation(projects.domain.demo)
     // endregion
 
     // region Data
@@ -65,4 +66,5 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }

@@ -44,7 +44,7 @@ internal class TxHistoryTitleConverter {
             confirmed = R.string.transaction_history_staking_reward,
         )
         is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
-        is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw || tx.isOutgoing) {
+        is TransactionType.YieldSupply.Send -> if (type.isYieldSupplyWithdraw) {
             resourceReference(R.string.yield_module_transaction_withdraw)
         } else {
             resourceReference(R.string.common_transfer)

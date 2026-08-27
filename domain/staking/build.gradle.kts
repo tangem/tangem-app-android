@@ -33,6 +33,8 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.walletManager) // TODO refactor to use from data module
+    implementation(projects.domain.blockaid)
+    implementation(projects.domain.blockaid.models)
     // endregion
 
     // region Domain models

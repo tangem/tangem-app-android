@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -13,7 +14,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -21,8 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.ds.TangemPagerIndicator
-import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.components.pager.PagerIndicator
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.messagebanner.CloseButton
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.orEmpty
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -37,8 +41,6 @@ import kotlin.math.floor
 internal fun PromoBannersBlock(state: PromoBannersBlockUM, horizontalItemPadding: Dp, modifier: Modifier = Modifier) {
     if (state.banners.isEmpty()) return
 
-    val containerColor = bannerContainerColor(state.placeholder)
-
     if (state.banners.size == 1) {
         val banner = state.banners.first()
         LaunchedEffect(banner.displayId, state.isVisibleOnScreen) {
@@ -48,14 +50,12 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, horizontalItemPadding
         }
         SingleBanner(
             banner = banner,
-            containerColor = containerColor,
             modifier = modifier.padding(horizontal = horizontalItemPadding),
         )
     } else {
         key(state.userWalletId) {
             BannersCarousel(
                 state = state,
-                containerColor = containerColor,
                 horizontalPadding = horizontalItemPadding,
                 modifier = modifier,
             )
@@ -64,41 +64,59 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, horizontalItemPadding
 }
 
 @Composable
-private fun bannerContainerColor(placeholder: Placeholder): Color = when (placeholder) {
-    Placeholder.MAIN -> TangemTheme.colors2.surface.level1
-    Placeholder.FEED -> TangemTheme.colors2.surface.level3
-    Placeholder.PAYMENT_ACCOUNT_MAIN -> TangemTheme.colors3.bg.opaque.primary
-}
-
-/**
- * Renders a banner with the [TangemMessage] component. Uses the same [NotificationConfig] as the banner
- * model and converters, so they stay untouched.
- */
-@Composable
-private fun BannerNotification(config: NotificationConfig, containerColor: Color, modifier: Modifier = Modifier) {
-    TangemMessage(
-        config = config,
+private fun BannerNotification(config: NotificationConfig, modifier: Modifier = Modifier) {
+    TangemMessageBanner(
         modifier = modifier.fillMaxWidth(),
-        contentColor = containerColor,
+        title = config.title.orEmpty(),
+        description = config.subtitle,
+        variant = TangemMessageBanner.Variant.Solid,
+        showGlowRing = false,
+        secondaryButton = config.buttonsState.toSecondaryButton(),
+        primaryButton = config.buttonsState.toPrimaryButton(),
+        slotStart = {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Url(url = config.iconUrl, fallbackRes = config.iconResId),
+                modifier = Modifier.size(config.iconSize),
+            )
+        },
+        slotEnd = config.onCloseClick?.let { onCloseClick ->
+            { TangemMessageBanner.CloseButton(onClick = onCloseClick) }
+        },
     )
 }
 
+/** Maps a [NotificationConfig.ButtonsState.SecondaryButtonConfig] to the banner's secondary action. */
+private fun NotificationConfig.ButtonsState?.toSecondaryButton(): TangemMessageBanner.Button? = when (this) {
+    is NotificationConfig.ButtonsState.SecondaryButtonConfig -> TangemMessageBanner.Button(
+        text = text,
+        onClick = onClick,
+        isLoading = shouldShowProgress,
+        iconStart = iconResId?.let { TangemIconUM.Icon(iconRes = it) },
+    )
+    else -> null
+}
+
+/** Maps a [NotificationConfig.ButtonsState.PrimaryButtonConfig] to the banner's primary action. */
+private fun NotificationConfig.ButtonsState?.toPrimaryButton(): TangemMessageBanner.Button? = when (this) {
+    is NotificationConfig.ButtonsState.PrimaryButtonConfig -> TangemMessageBanner.Button(
+        text = text,
+        onClick = onClick,
+        isLoading = shouldShowProgress,
+        iconStart = iconResId?.let { TangemIconUM.Icon(iconRes = it) },
+    )
+    else -> null
+}
+
 @Composable
-private fun SingleBanner(banner: PromoBannerNotificationUM, containerColor: Color, modifier: Modifier = Modifier) {
+private fun SingleBanner(banner: PromoBannerNotificationUM, modifier: Modifier = Modifier) {
     BannerNotification(
         config = banner.config,
-        containerColor = containerColor,
         modifier = modifier,
     )
 }
 
 @Composable
-private fun BannersCarousel(
-    state: PromoBannersBlockUM,
-    containerColor: Color,
-    horizontalPadding: Dp,
-    modifier: Modifier = Modifier,
-) {
+private fun BannersCarousel(state: PromoBannersBlockUM, horizontalPadding: Dp, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(
         initialPage = state.initialPage,
         pageCount = { state.banners.size },
@@ -127,14 +145,16 @@ private fun BannersCarousel(
         SmoothHeightPager(
             banners = state.banners,
             pagerState = pagerState,
-            containerColor = containerColor,
             horizontalPadding = horizontalPadding,
             modifier = Modifier.fillMaxWidth(),
         )
 
         SpacerH8()
 
-        TangemPagerIndicator(pagerState = pagerState)
+        PagerIndicator(
+            pagerState = pagerState,
+            hasBackground = false,
+        )
     }
 }
 
@@ -149,7 +169,6 @@ private fun BannersCarousel(
 private fun SmoothHeightPager(
     banners: List<PromoBannerNotificationUM>,
     pagerState: PagerState,
-    containerColor: Color,
     horizontalPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
@@ -169,7 +188,6 @@ private fun SmoothHeightPager(
         val lowerHeight = subcompose(slotId = "measure_lower") {
             BannerNotification(
                 config = banners[lowerPage].config,
-                containerColor = containerColor,
                 modifier = Modifier.padding(horizontal = horizontalPadding),
             )
         }.first().measure(pageConstraints).height
@@ -178,7 +196,6 @@ private fun SmoothHeightPager(
             subcompose(slotId = "measure_upper") {
                 BannerNotification(
                     config = banners[upperPage].config,
-                    containerColor = containerColor,
                     modifier = Modifier.padding(horizontal = horizontalPadding),
                 )
             }.first().measure(pageConstraints).height
@@ -198,7 +215,6 @@ private fun SmoothHeightPager(
                 BannerNotification(
                     modifier = Modifier.padding(horizontal = horizontalPadding),
                     config = banner.config,
-                    containerColor = containerColor,
                 )
             }
         }.first().measure(

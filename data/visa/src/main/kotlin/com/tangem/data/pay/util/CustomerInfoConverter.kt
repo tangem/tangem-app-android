@@ -2,9 +2,6 @@ package com.tangem.data.pay.util
 
 import arrow.core.getOrElse
 import com.tangem.data.pay.converter.TangemPayTariffPlanConverter
-import com.tangem.datasource.api.pay.models.response.CryptoBalance
-import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
-import com.tangem.datasource.api.pay.models.response.FiatBalance
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
@@ -19,6 +16,10 @@ import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
+import com.tangem.spend.datasource.pay.models.response.BalanceResponse
+import com.tangem.spend.datasource.pay.models.response.CryptoBalance
+import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
+import com.tangem.spend.datasource.pay.models.response.FiatBalance
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import org.joda.time.DateTime
@@ -30,24 +31,30 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         val cryptoBalance = value.balance?.crypto
 
         val productInstances = value.productInstances.map { it.toDomain() }
-        val cards = if (value.paymentAccount == null || value.balance == null) {
-            emptyList()
-        } else {
-            value.cards.mapNotNull { it.toDomain() }
-        }
 
         return CustomerInfo(
             customerId = value.id,
+            paymentAccount = value.paymentAccount?.toDomain(),
             productInstances = productInstances,
-            cards = cards,
+            cards = value.cards.mapNotNull { it.toDomain() },
             kycStatus = kycStatus,
             state = CustomerInfo.State.fromString(value.state),
             fiatBalance = fiatBalance?.toDomain(),
             cryptoBalance = cryptoBalance?.toDomain(),
             availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
             tariffPlan = value.customerTariffPlan?.toDomain(),
+            networks = value.balance?.networks.orEmpty().map { it.toDomain() },
+            country = value.kyc?.country,
+            phoneMask = value.kyc?.phoneMask,
+            email = value.kyc?.email,
         )
     }
+
+    private fun CustomerMeResponse.PaymentAccount.toDomain() = CustomerInfo.PaymentAccount(
+        id = id,
+        address = address,
+        customerWalletAddress = customerWalletAddress,
+    )
 
     private fun CustomerMeResponse.CustomerTariffPlan.toDomain(): TangemPayCustomerTariffPlan? {
         val plan = tariffPlan?.toDomain() ?: return null
@@ -143,4 +150,19 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         }
 
     private fun String?.toDateTimeOrNull(): DateTime? = this?.let { runCatching { DateTime.parse(it) }.getOrNull() }
+
+    private fun BalanceResponse.NetworkResponse.toDomain() = CustomerInfo.NetworkInfo(
+        name = name,
+        chainId = chainId,
+        isTestnet = isTestnet,
+        status = CustomerInfo.NetworkInfo.Status.fromWire(status),
+        depositAddress = depositAddress,
+        tokens = tokens.map { it.toDomain() },
+    )
+
+    private fun BalanceResponse.NetworkTokenResponse.toDomain() = CustomerInfo.NetworkInfo.Token(
+        symbol = token,
+        contractAddress = tokenContractAddress,
+        availableForWithdrawal = availableForWithdrawal,
+    )
 }

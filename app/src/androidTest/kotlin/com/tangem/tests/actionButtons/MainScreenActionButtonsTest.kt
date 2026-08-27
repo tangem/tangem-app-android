@@ -1,5 +1,7 @@
 package com.tangem.tests.actionButtons
 
+import com.tangem.datasource.api.common.config.MoonPay
+
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
@@ -12,8 +14,7 @@ import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
@@ -26,7 +27,7 @@ import org.junit.Test
 @HiltAndroidTest
 class MainScreenActionButtonsTest : BaseTestCase() {
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(MoonPay.KEY, ApiEnvironment.PROD))
     @AllureId("79")
     @DisplayName("Action buttons (long tap): validate UI")
     @Test
@@ -294,7 +295,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(MoonPay.KEY, ApiEnvironment.PROD))
     @AllureId("85")
     @DisplayName("Action buttons (long tap): check 'Sell' button")
     @Test
@@ -411,7 +412,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(MoonPay.KEY, ApiEnvironment.PROD))
     @AllureId("4395")
     @DisplayName("Action buttons (main screen): click on buttons with success response")
     @Test
@@ -471,15 +472,16 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @DisplayName("Action buttons (main screen): click on buttons without data")
     @Test
     fun clickOnActionButtonsWithoutDataTest() {
+        val scenarioName = "express_api_assets"
+        val scenarioState = "Unreachable"
+
         setupHooks(
             additionalAfterSection = {
-                enableWiFi()
-                enableMobileData()
+                resetWireMockScenarioState(scenarioName)
             }
         ).run {
-            step("Turn off internet") {
-                disableWiFi()
-                disableMobileData()
+            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
+                setWireMockScenarioState(scenarioName, scenarioState)
             }
             step("Open 'Main Screen'") {
                 openMainScreen()

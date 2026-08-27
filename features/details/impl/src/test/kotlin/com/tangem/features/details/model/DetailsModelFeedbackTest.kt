@@ -7,6 +7,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.features.details.entity.SelectContactSupportTypeBS
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,6 +36,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
         val model = createModel(this)
         advanceUntilIdle()
         onSupportSlot.captured.invoke()
+        model.chooseMailSupport()
         advanceUntilIdle()
 
         // Assert
@@ -55,6 +57,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
         val model = createModel(this)
         advanceUntilIdle()
         onSupportSlot.captured.invoke()
+        model.chooseMailSupport()
         advanceUntilIdle()
 
         verify { analyticsEventHandler.send(any<Basic.ButtonSupport>()) }
@@ -74,6 +77,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
         val model = createModel(this)
         advanceUntilIdle()
         onSupportSlot.captured.invoke()
+        model.chooseMailSupport()
         advanceUntilIdle()
 
         val bsConfig = model.state.value.selectFeedbackEmailTypeBSConfig
@@ -94,6 +98,7 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
         val model = createModel(this)
         advanceUntilIdle()
         onSupportSlot.captured.invoke()
+        model.chooseMailSupport()
         advanceUntilIdle()
 
         coVerify(exactly = 0) { sendFeedbackEmailUseCase(any()) }
@@ -184,8 +189,15 @@ internal class DetailsModelFeedbackTest : DetailsModelTestBase() {
         currentModel = createModel(this)
         advanceUntilIdle()
         onSupportSlot.captured.invoke()
+        currentModel.chooseMailSupport()
         advanceUntilIdle()
 
         return currentModel.state.value.selectFeedbackEmailTypeBSConfig.content as SelectEmailFeedbackTypeBS
+    }
+
+    /** Picks the "Mail" option in the contact-support chooser, which is what opens the feedback-email flow. */
+    private fun DetailsModel.chooseMailSupport() {
+        val chooser = state.value.selectContactSupportTypeBSConfig.content as SelectContactSupportTypeBS
+        chooser.onOptionClick(SelectContactSupportTypeBS.Option.Mail)
     }
 }
