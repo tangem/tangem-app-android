@@ -48,9 +48,10 @@ class UpdateCryptoPortfolioUseCase(
             .firstOrNull { it.accountId == accountId } as? Account.CryptoPortfolio
             ?: raise(Error.DataOperationFailed(message = "Account not found: $accountId"))
 
-        val updatedAccount = account
-            .setName(name = accountName)
-            .setIcon(icon = icon)
+        val updatedAccount = account.copySealed(
+            accountName = accountName ?: account.accountName,
+            icon = icon ?: account.icon,
+        )
 
         val updatedAccounts = withError({ Error.AccountListRequirementsNotMet(it) }) {
             if (accountName != null) {
@@ -90,14 +91,6 @@ class UpdateCryptoPortfolioUseCase(
             block = { crudRepository.saveAccounts(accountList) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
-    }
-
-    private fun Account.CryptoPortfolio.setName(name: AccountName?): Account.CryptoPortfolio {
-        return if (name != null) this.copy(accountName = name) else this
-    }
-
-    private fun Account.CryptoPortfolio.setIcon(icon: CryptoPortfolioIcon?): Account.CryptoPortfolio {
-        return if (icon != null) this.copy(icon = icon) else this
     }
 
     private fun Raise<AccountList.Error>.checkDefaultName(accountList: AccountList, accountName: AccountName) {

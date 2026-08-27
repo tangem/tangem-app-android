@@ -222,7 +222,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
     private fun accountList(): AccountList = AccountList(
         userWalletId = walletId,
         accounts = listOf(
-            Account.CryptoPortfolio.createMainAccount(walletId).copy(cryptoCurrencies = listOf(currency)),
+            Account.Personal.createMainAccount(walletId).copy(cryptoCurrencies = listOf(currency)),
         ),
         totalAccounts = 1,
         totalArchivedAccounts = 0,

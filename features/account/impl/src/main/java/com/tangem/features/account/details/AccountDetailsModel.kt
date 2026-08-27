@@ -14,9 +14,14 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.account.AccountDetailsComponent
@@ -32,30 +37,48 @@ import javax.inject.Inject
 @ModelScoped
 internal class AccountDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    singleAccountSupplier: SingleAccountSupplier,
+    getUserWalletUseCase: GetUserWalletUseCase,
+    singleAccountStatusSupplier: SingleAccountStatusSupplier,
     private val messageSender: UiMessageSender,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
-    singleAccountSupplier: SingleAccountSupplier,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountDetailsComponent.Params>()
 
-    val uiState: StateFlow<AccountDetailsUM>
-        field = MutableStateFlow(buildUI(params.account))
+    private val isMultiCurrency: Boolean = getUserWalletUseCase(params.account.accountId.userWalletId)
+        .getOrNull()
+        ?.isMultiCurrency == true
 
     private val accountId = params.account.accountId
 
+    val uiState: StateFlow<AccountDetailsUM>
+        field = MutableStateFlow(
+            when (val account = params.account) {
+                is Account.Personal -> buildPersonalUI(account)
+                is Account.Joint -> buildJointUI(account, status = null)
+            },
+        )
+
     init {
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.AccountSettingsScreenOpened())
-        singleAccountSupplier.filterCryptoPortfolioAccount(accountId)
-            .onEach { account -> uiState.update { buildUI(account) } }
+
+        when (params.account) {
+            is Account.Personal -> singleAccountSupplier.filterCryptoPortfolioAccount(accountId)
+                .filterIsInstance<Account.Personal>()
+                .map { account -> buildPersonalUI(account) }
+            is Account.Joint -> singleAccountStatusSupplier(SingleAccountStatusProducer.Params(accountId))
+                .filterIsInstance<AccountStatus.Joint>()
+                .map { status -> buildJointUI(status.account, status) }
+        }
+            .onEach { newState -> uiState.update { newState } }
             .launchIn(modelScope)
     }
 
-    private fun onEditAccountClick(account: Account.CryptoPortfolio) {
+    private fun onEditAccountClick(account: Account.Personal) {
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonEdit())
         router.push(AppRoute.EditAccount(account))
     }
@@ -66,23 +89,23 @@ internal class AccountDetailsModel @Inject constructor(
             accountId = account.accountId,
         )
         analyticsEventHandler.send(
-            AccountSettingsAnalyticEvents.ButtonManageTokens(account.derivationIndex.value),
+            AccountSettingsAnalyticEvents.ButtonManageTokens(account.derivationIndex?.value),
         )
         router.push(route)
     }
 
-    private fun onArchiveAccountClick() {
-        val accountDerivation = params.account.derivationIndex.value
+    private fun onArchiveAccountClick(account: Account.Personal) {
+        val accountDerivation = account.derivationIndex.value
         val event = AccountSettingsAnalyticEvents.ButtonArchiveAccount(accountDerivation)
         analyticsEventHandler.send(event)
-        confirmArchiveDialog()
+        confirmArchiveDialog(account)
     }
 
-    private fun confirmArchiveDialog() {
+    private fun confirmArchiveDialog(account: Account.Personal) {
         val secondAction = EventMessageAction(
             title = resourceReference(R.string.common_cancel),
             onClick = {
-                val accountDerivation = params.account.derivationIndex.value
+                val accountDerivation = account.derivationIndex.value
                 val event = AccountSettingsAnalyticEvents.ButtonCancelAccountArchivation(accountDerivation)
                 analyticsEventHandler.send(event)
             },
@@ -90,7 +113,7 @@ internal class AccountDetailsModel @Inject constructor(
         val firstAction = EventMessageAction(
             title = resourceReference(R.string.account_details_archive_action),
             isWarning = true,
-            onClick = ::archiveCryptoPortfolio,
+            onClick = { archiveCryptoPortfolio(account) },
         )
         messageSender.send(
             DialogMessage(
@@ -102,14 +125,14 @@ internal class AccountDetailsModel @Inject constructor(
         )
     }
 
-    private fun archiveCryptoPortfolio() = modelScope.launch {
-        val accountDerivation = params.account.derivationIndex.value
+    private fun archiveCryptoPortfolio(account: Account.Personal) = modelScope.launch {
+        val accountDerivation = account.derivationIndex.value
         val event = AccountSettingsAnalyticEvents.ButtonArchiveAccountConfirmation(accountDerivation)
         analyticsEventHandler.send(event)
         uiState.update { it.toggleProgress(true) }
         archiveCryptoPortfolioUseCase(accountId)
             .onLeft { error ->
-                failedArchiveDialog(error)
+                failedArchiveDialog(error, account)
                 uiState.update { it.toggleProgress(false) }
             }
             .onRight {
@@ -120,11 +143,11 @@ internal class AccountDetailsModel @Inject constructor(
             }
     }
 
-    private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error) {
+    private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error, account: Account.Personal) {
         val event = AccountSettingsAnalyticEvents.AccountError(
             source = AccountSettingsAnalyticEvents.Source.ARCHIVE,
             error = error.tag,
-            accountDerivation = params.account.derivationIndex.value,
+            accountDerivation = account.derivationIndex.value,
         )
         analyticsEventHandler.send(event)
         val titleRes: Int
@@ -151,16 +174,14 @@ internal class AccountDetailsModel @Inject constructor(
         messageSender.send(dialogMessage)
     }
 
-    private fun buildUI(account: Account.CryptoPortfolio): AccountDetailsUM {
+    private fun buildPersonalUI(account: Account.Personal): AccountDetailsUM {
         val archiveMode = when (account.isMainAccount) {
             true -> ArchiveMode.None
             false -> ArchiveMode.Available(
-                onArchiveAccountClick = ::onArchiveAccountClick,
+                onArchiveAccountClick = { onArchiveAccountClick(account) },
                 isLoading = false,
             )
         }
-        val isMultiCurrency = getUserWalletUseCase(account.accountId.userWalletId).getOrNull()
-            ?.isMultiCurrency == true
         return AccountDetailsUM(
             accountName = account.accountName.toUM().value,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
@@ -169,6 +190,20 @@ internal class AccountDetailsModel @Inject constructor(
             onManageTokensClick = { onManageTokensClick(account) },
             archiveMode = archiveMode,
             isManageTokensAvailable = isMultiCurrency,
+        )
+    }
+
+    private fun buildJointUI(account: Account.Joint, status: AccountStatus.Joint?): AccountDetailsUM {
+        val isActive = status?.value is JointAccountStatusValue.Active
+        return AccountDetailsUM(
+            accountName = account.accountName.toUM().value,
+            accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
+            onCloseClick = { router.pop() },
+            onAccountEditClick = null,
+            onManageTokensClick = { onManageTokensClick(account) },
+            archiveMode = ArchiveMode.None,
+            isManageTokensAvailable = isActive && isMultiCurrency,
+            isPendingActivation = !isActive,
         )
     }
 

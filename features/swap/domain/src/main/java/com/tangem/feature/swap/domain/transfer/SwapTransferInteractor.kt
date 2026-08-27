@@ -51,6 +51,7 @@ interface SwapTransferInteractor {
     suspend fun withdrawTangemPay(
         userWallet: UserWallet,
         cryptoAmount: BigDecimal,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
     ): Either<SendTransactionError, WithdrawalResult>
 

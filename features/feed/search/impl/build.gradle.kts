@@ -16,13 +16,22 @@ dependencies {
     implementation(projects.features.feed.search.api)
 
     /* Project - Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
+    /* Project - Domain */
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.feed.search)
+    implementation(projects.domain.markets.models)
+
     /* Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
     implementation(deps.compose.material3)
     implementation(deps.lifecycle.compose)
 
@@ -37,4 +46,8 @@ dependencies {
     /* DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /* Testing */
+    testImplementation(projects.test.core)
+    testImplementation(projects.domain.models)
 }

@@ -2,7 +2,7 @@ package com.tangem.data.news.di
 
 import com.tangem.data.news.DefaultNewsErrorResolver
 import com.tangem.data.news.repository.DefaultNewsRepository
-import com.tangem.datasource.api.news.NewsApi
+import com.tangem.store.datasource.news.NewsApi
 import com.tangem.datasource.local.news.details.NewsDetailsStore
 import com.tangem.datasource.local.news.liked.NewsLikedStore
 import com.tangem.datasource.local.news.trending.TrendingNewsStore

@@ -2,7 +2,7 @@ package com.tangem.common.rules
 
 import com.tangem.spend.datasource.config.TangemPay
 
-import com.tangem.datasource.api.common.config.News
+import com.tangem.store.datasource.config.News
 
 import com.tangem.datasource.api.common.config.TangemTech
 
