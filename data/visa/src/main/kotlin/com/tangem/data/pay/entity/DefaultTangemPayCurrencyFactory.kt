@@ -109,6 +109,7 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
                 PaymentNetworkStatus.Available(
                     network = network,
                     depositAddress = address,
+                    chainId = chainId,
                     cryptoCurrencyStatuses = tokensWithCurrency.map { (token, currency) ->
                         buildStatus(
                             currency = currency,
