@@ -84,6 +84,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase,
+    private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
@@ -175,9 +176,16 @@ internal class TangemPayDetailsModel @Inject constructor(
         isInitialRouteHandled.update { true }
 
         when (params.initialRoute) {
-            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS -> Unit
-            TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> Unit
+            TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
+            TangemPayDetailsInitialRoute.TIERS_ONBOARDING,
+            -> Unit
             TangemPayDetailsInitialRoute.ADD_FUNDS -> openAddFunds()
+            TangemPayDetailsInitialRoute.VA_ONRAMP -> openVirtualAccountOnramp()
+            TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS -> openVirtualAccountBankingDetails()
+            TangemPayDetailsInitialRoute.CURRENT_PLAN -> openCurrentPlan()
+            TangemPayDetailsInitialRoute.CHANGE_PLAN -> openChangePlan()
+            TangemPayDetailsInitialRoute.CASHBACK -> openCashback()
+            TangemPayDetailsInitialRoute.ORDER_CARD -> openOrderCard()
         }
     }
 
@@ -431,18 +439,42 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickBankTransfer() {
+        openVirtualAccountOnramp(shouldSendClickAnalytics = true)
+    }
+
+    private fun openVirtualAccountOnramp(shouldSendClickAnalytics: Boolean = false) {
         val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
         when (val onramp = loaded.virtualAccount) {
             null -> return
             VirtualAccountOnramp.Processing -> showVaPreparing()
             is VirtualAccountOnramp.Available,
             VirtualAccountOnramp.Eligible,
-            -> openVirtualAccountDeposit(onramp, loaded)
+            -> {
+                if (shouldSendClickAnalytics) analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
+                openVirtualAccountDeposit(onramp, loaded)
+            }
+        }
+    }
+
+    private fun openVirtualAccountBankingDetails() {
+        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
+        when (val onramp = loaded.virtualAccount) {
+            null -> return
+            VirtualAccountOnramp.Processing -> showVaPreparing()
+            VirtualAccountOnramp.Eligible -> openVirtualAccountDeposit(onramp, loaded)
+            is VirtualAccountOnramp.Available -> fetchVirtualAccountBankingDetails(onramp)
+        }
+    }
+
+    private fun fetchVirtualAccountBankingDetails(onramp: VirtualAccountOnramp.Available) {
+        modelScope.launch {
+            getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = onramp.productInstanceId)
+                .onRight(::onShowVirtualAccountRequisites)
+                .onLeft { showVaBankingDetailsError(onramp.productInstanceId) }
         }
     }
 
     private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
-        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
         val paymentAccountAddress = loaded.balance?.cryptoBalance?.depositAddress
         if (paymentAccountAddress == null) {
@@ -604,6 +636,31 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun onClickCashbackMenuItem() {
         analytics.send(TangemPayAnalyticsEvents.Cashback.ButtonInSettingsClicked())
         router.push(TangemPayAccountDetailsInnerRoute.Cashback)
+    }
+
+    private fun openCurrentPlan() {
+        val tariffPlan = currentStatus.value.tariffPlanState ?: return
+        router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
+    }
+
+    private fun openChangePlan() {
+        val tariffPlan = currentStatus.value.tariffPlan ?: return
+        router.push(
+            TangemPayAccountDetailsInnerRoute.SelectPlan(
+                tariffPlan = tariffPlan,
+                source = TangemPaySelectPlanSource.CHANGE_PLAN,
+            ),
+        )
+    }
+
+    private fun openCashback() {
+        if (!tangemPayFeatureToggles.isCashbackEnabled) return
+        currentStatus.value.ifLoadedOrNull { router.push(TangemPayAccountDetailsInnerRoute.Cashback) }
+    }
+
+    private fun openOrderCard() {
+        if (!tangemPayFeatureToggles.isPlasticCardOrderEnabled) return
+        currentStatus.value.ifLoadedOrNull { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
     }
 
     override fun onCardClick(cardId: String) {
