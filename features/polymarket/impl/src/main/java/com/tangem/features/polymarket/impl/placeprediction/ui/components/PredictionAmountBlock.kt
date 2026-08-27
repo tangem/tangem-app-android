@@ -29,23 +29,22 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.surface.TangemSurface
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.USD_CODE
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
-import com.tangem.features.polymarket.impl.placeprediction.entity.AmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
 
 @Suppress("LongParameterList")
 @Composable
 internal fun PredictionAmountBlock(
     amountValue: String,
-    payout: PayoutUM?,
-    amountError: AmountErrorUM?,
+    amountCaption: AmountCaptionUM?,
     payment: PaymentSourceUM,
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
@@ -55,8 +54,7 @@ internal fun PredictionAmountBlock(
         Column {
             AmountSection(
                 amountValue = amountValue,
-                payout = payout,
-                amountError = amountError,
+                amountCaption = amountCaption,
                 onAmountChange = onAmountChange,
             )
             HorizontalDivider(
@@ -99,12 +97,7 @@ internal fun PredictionAmountBlock(
 }
 
 @Composable
-private fun AmountSection(
-    amountValue: String,
-    payout: PayoutUM?,
-    amountError: AmountErrorUM?,
-    onAmountChange: (String) -> Unit,
-) {
+private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, onAmountChange: (String) -> Unit) {
     val amountColor by animateColorAsState(
         targetValue = if (amountValue.isBlank()) {
             TangemTheme.colors3.text.tertiary
@@ -146,27 +139,27 @@ private fun AmountSection(
                 emptyValueText = EMPTY_AMOUNT_HINT,
             ),
         )
-        AmountCaptionSlot(amountError = amountError, payout = payout)
+        AmountCaptionSlot(amountCaption = amountCaption)
     }
 }
 
 @Composable
-private fun AmountCaptionSlot(amountError: AmountErrorUM?, payout: PayoutUM?) {
+private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
     AnimatedContent(
-        targetState = amountCaption(amountError = amountError, payout = payout),
+        targetState = amountCaption,
         transitionSpec = { fadeIn() togetherWith fadeOut() using null },
         contentAlignment = Alignment.Center,
         label = "amountCaption",
     ) { caption ->
         when (caption) {
-            is AmountCaption.Shortfall -> Text(
+            is AmountCaptionUM.Shortfall -> Text(
                 modifier = Modifier.padding(top = CAPTION_GAP),
-                text = stringResourceSafe(caption.error.textRes()),
+                text = caption.error.text.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.status.error,
                 textAlign = TextAlign.Center,
             )
-            is AmountCaption.ToWin -> Column(
+            is AmountCaptionUM.ToWin -> Column(
                 modifier = Modifier.padding(top = CAPTION_GAP),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(space = 4.dp),
@@ -195,19 +188,6 @@ private fun AmountCaptionSlot(amountError: AmountErrorUM?, payout: PayoutUM?) {
     }
 }
 
-private sealed interface AmountCaption {
-
-    data class Shortfall(val error: AmountErrorUM) : AmountCaption
-
-    data class ToWin(val payout: PayoutUM) : AmountCaption
-}
-
-private fun amountCaption(amountError: AmountErrorUM?, payout: PayoutUM?): AmountCaption? = when {
-    amountError != null -> AmountCaption.Shortfall(error = amountError)
-    payout != null -> AmountCaption.ToWin(payout = payout)
-    else -> null
-}
-
 private const val COLLATERAL_DECIMALS = 2
 
 private const val EMPTY_AMOUNT_HINT = "0"
@@ -215,8 +195,3 @@ private const val EMPTY_AMOUNT_HINT = "0"
 private val CAPTION_GAP = 12.dp
 
 private const val AMOUNT_SYMBOL = "$\u00A0"
-
-private fun AmountErrorUM.textRes(): Int = when (this) {
-    AmountErrorUM.NotEnoughForBet -> R.string.prediction_place_insufficient_balance_bet
-    AmountErrorUM.NotEnoughForFees -> R.string.prediction_place_insufficient_balance_fees
-}
