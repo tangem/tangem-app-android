@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.features.send.impl.R
+import com.tangem.utils.annotations.RemoveWithToggle
 import javax.inject.Inject
 
 @ModelScoped
@@ -31,6 +32,20 @@ internal class SendDestinationAlertFactory @Inject constructor(
             DialogMessage(
                 title = resourceReference(id = R.string.qr_scanner_error_unrecognized_title),
                 message = resourceReference(id = R.string.qr_scanner_error_unrecognized_message),
+            ),
+        )
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    fun showRecipientBackupErrorAlert(onContactSupport: () -> Unit) {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.warning_backup_error_add_funds_title),
+                message = resourceReference(id = R.string.warning_backup_error_add_funds_message),
+                firstAction = EventMessageAction(
+                    title = resourceReference(R.string.common_contact_support),
+                    onClick = onContactSupport,
+                ),
             ),
         )
     }

@@ -2,6 +2,7 @@ package com.tangem.feature.swap.model
 
 import arrow.core.right
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -18,10 +19,12 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -115,6 +118,11 @@ internal abstract class SwapModelTestBase {
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
+    }
+    protected val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase = mockk(relaxed = true)
+    protected val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
+    protected val backupErrorFeatureToggles: BackupErrorFeatureToggles = mockk {
+        every { isTopUpWarningEnabled } returns true
     }
 
     private val chooseTokenBridgeFactory: ChooseTokenBridge.Factory = mockk(relaxed = true)
@@ -235,6 +243,9 @@ internal abstract class SwapModelTestBase {
         isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
+        backupErrorFeatureToggles = backupErrorFeatureToggles,
+        isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
     )
 
     // region builders
