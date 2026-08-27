@@ -1546,6 +1546,16 @@
   <string name="prediction_onboarding_legal">By using Predictions functionality, you agree with %1$s and %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">Polymarket T&amp;Cs</string>
   <string name="prediction_onboarding_legal_tangem_terms">Tangem T&amp;Cs</string>
+  <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">Same deposit account, same funds. Re-linking never transfers</string>
+  <string name="prediction_onboarding_reconnect_benefit_safe_title">Nothing moves</string>
+  <string name="prediction_onboarding_reconnect_benefit_tap_subtitle">Re-issues the keys that link this phone to your account</string>
+  <string name="prediction_onboarding_reconnect_benefit_tap_title">One card tap</string>
+  <string name="prediction_onboarding_reconnect_button">Continue predicting</string>
+  <string name="prediction_onboarding_reconnect_faq_answer">Access keys are stored only on your device. They are cleared when you reinstall the app, switch to a new phone, or when a session becomes invalid. Your account itself lives on Polymarket and is unaffected.</string>
+  <string name="prediction_onboarding_reconnect_faq_question">Why am I seeing this?</string>
+  <string name="prediction_onboarding_reconnect_legal">No new terms to accept — your agreement with %1$s and %2$s still applies</string>
+  <string name="prediction_onboarding_reconnect_subtitle">Your deposit account, balance and open positions are safe. This device just needs to be re-linked — tap your card once to restore access.</string>
+  <string name="prediction_onboarding_reconnect_title">Reconnect your Polymarket account</string>
   <string name="prediction_onboarding_start_button">Start predicting</string>
   <string name="prediction_onboarding_subtitle">Forecast real-world events — from politics, sports to crypto, culture and more — right from Tangem. You buy shares in the outcome you believe in. Get it right and receive a payout. Close out position anytime while outcome is still non-resolved</string>
   <string name="prediction_onboarding_title">Open your Polymarket account</string>
@@ -1582,7 +1592,7 @@
   <string name="prediction_place_slippage_max">Max %s</string>
   <string name="prediction_place_slippage_max_error">Slippage above %s may cost you significantly more</string>
   <string name="prediction_place_slippage_min_error">Slippage must be at least %s</string>
-  <string name="prediction_place_slippage_sheet_description">Maximum price change you accept between placing the order and its execution</string>
+  <string name="prediction_place_slippage_sheet_description">Prices can change while your order is being placed. Slippage setting sets the max price change you allow from the price you see in Tangem app vs price of execution that you are willing to accept.</string>
   <string name="prediction_place_summary_account">Polymarket account</string>
   <string name="prediction_place_summary_from">From</string>
   <string name="prediction_place_summary_title">Placing prediction summary</string>
