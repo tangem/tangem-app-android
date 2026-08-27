@@ -55,6 +55,7 @@ import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackInf
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.R as CoreUiR
 
@@ -173,7 +174,14 @@ private fun EmptyStateGlow(modifier: Modifier = Modifier) {
     val blue = if (isDark) Color(0xFF0090F9) else Color(0xFF0092FC)
     Box(
         modifier = modifier
-            .hazeForegroundEffectTangem(style = HazeStyle(blurRadius = 56.dp, tint = null))
+            .hazeForegroundEffectTangem(
+                style = HazeStyle(
+                    backgroundColor = Color.Transparent,
+                    tint = HazeTint(Color.Transparent),
+                    blurRadius = 56.dp,
+                    noiseFactor = 0f,
+                ),
+            )
             .drawBehind {
                 val radius = size.width * GLOW_RADIUS_FACTOR
                 val center = Offset(x = size.width / 2f, y = 0f)
@@ -290,8 +298,8 @@ private class TangemPayCashbackScreenUMProvider : CollectionPreviewParameterProv
                 isEmpty = true,
                 banner = null,
             ),
-            infoTiles = null,
-            histogram = null,
+            infoTiles = previewInfoTiles(),
+            histogram = previewZeroHistogram(),
             additionalCashback = null,
         ),
         TangemPayCashbackScreenUM.Loading(onCloseClick = {}),
@@ -315,24 +323,34 @@ private fun previewInfoTiles() = TangemPayCashbackInfoTilesUM(
 )
 
 @Suppress("MagicNumber")
-private fun previewHistogram(): TangemPayCashbackHistogramUM {
-    fun bar(month: String, amount: String, value: Float, style: Style) = TangemPayCashbackHistogramUM.Bar(
-        month = stringReference(month),
-        amount = stringReference(amount),
-        amountValue = value,
-        style = style,
-    )
-    return TangemPayCashbackHistogramUM(
-        title = stringReference("$132.15 earned in total"),
-        bars = persistentListOf(
-            bar(month = "Feb", amount = "$12.02", value = 12.02f, style = Style.Regular),
-            bar(month = "Mar", amount = "$44.22", value = 44.22f, style = Style.Regular),
-            bar(month = "Apr", amount = "$38.52", value = 38.52f, style = Style.Regular),
-            bar(month = "May", amount = "$26.10", value = 26.10f, style = Style.Regular),
-            bar(month = "Jun", amount = "$32.15", value = 32.15f, style = Style.Highlighted),
-        ),
-    )
-}
+private fun previewHistogram() = TangemPayCashbackHistogramUM(
+    title = stringReference("$132.15 earned in total"),
+    bars = persistentListOf(
+        previewBar(month = "Feb", amount = "$12.02", value = 12.02f, style = Style.Regular),
+        previewBar(month = "Mar", amount = "$44.22", value = 44.22f, style = Style.Regular),
+        previewBar(month = "Apr", amount = "$38.52", value = 38.52f, style = Style.Regular),
+        previewBar(month = "May", amount = "$26.10", value = 26.10f, style = Style.Regular),
+        previewBar(month = "Jun", amount = "$32.15", value = 32.15f, style = Style.Highlighted),
+    ),
+)
+
+private fun previewZeroHistogram() = TangemPayCashbackHistogramUM(
+    title = stringReference("$0 earned in total"),
+    bars = persistentListOf(
+        previewBar(month = "Feb", amount = "$0.00", value = 0f, style = Style.Regular),
+        previewBar(month = "Mar", amount = "$0.00", value = 0f, style = Style.Regular),
+        previewBar(month = "Apr", amount = "$0.00", value = 0f, style = Style.Regular),
+        previewBar(month = "May", amount = "$0.00", value = 0f, style = Style.Regular),
+        previewBar(month = "Jun", amount = "$0.00", value = 0f, style = Style.Highlighted),
+    ),
+)
+
+private fun previewBar(month: String, amount: String, value: Float, style: Style) = TangemPayCashbackHistogramUM.Bar(
+    month = stringReference(month),
+    amount = stringReference(amount),
+    amountValue = value,
+    style = style,
+)
 
 private fun previewAdditionalCashback() = TangemPayAdditionalCashbackUM(
     items = persistentListOf(
