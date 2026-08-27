@@ -1,7 +1,10 @@
 package com.tangem.features.polymarket.impl.placeprediction.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -16,7 +19,7 @@ internal data class PlacePredictionUM(
     val quote: QuoteUM,
     val tradingPermission: TradingPermissionUM,
     val notifications: ImmutableList<PredictionNotificationUM>,
-    val amountError: AmountErrorUM? = null,
+    val amountCaption: AmountCaptionUM? = null,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
 ) {
@@ -63,7 +66,18 @@ internal data class MarketHeaderUM(
     val outcomePriceCents: Int?,
 )
 
-internal enum class AmountErrorUM { NotEnoughForBet, NotEnoughForFees }
+@Immutable
+internal sealed interface AmountCaptionUM {
+
+    data class ToWin(val payout: PayoutUM) : AmountCaptionUM
+
+    data class Shortfall(val error: PaymentAmountErrorUM) : AmountCaptionUM
+}
+
+internal enum class PaymentAmountErrorUM(val text: TextReference) {
+    NotEnoughForBet(text = resourceReference(R.string.prediction_place_insufficient_balance_bet)),
+    NotEnoughForFees(text = resourceReference(R.string.prediction_place_insufficient_balance_fees)),
+}
 
 @Immutable
 internal data class PaymentSourceUM(
