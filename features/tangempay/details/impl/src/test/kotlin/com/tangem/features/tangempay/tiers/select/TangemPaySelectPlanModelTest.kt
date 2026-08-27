@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
@@ -31,6 +32,7 @@ internal class TangemPaySelectPlanModelTest {
     private val submitTariffTransitionUseCase: SubmitTariffTransitionUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     private fun createModel(
         source: TangemPaySelectPlanSource = TangemPaySelectPlanSource.CHANGE_PLAN,
@@ -51,6 +53,7 @@ internal class TangemPaySelectPlanModelTest {
             submitTariffTransitionUseCase = submitTariffTransitionUseCase,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
+            urlOpener = urlOpener,
         )
     }
 
@@ -86,10 +89,23 @@ internal class TangemPaySelectPlanModelTest {
             submitTariffTransitionUseCase = submitTariffTransitionUseCase,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
+            urlOpener = urlOpener,
         )
 
         // THEN
         assertThat(model.state.value.plans).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN point body link WHEN onPointLinkClick THEN url is opened in app`() {
+        // GIVEN
+        val model = createModel()
+
+        // WHEN
+        model.state.value.onPointLinkClick("https://tangem.com/visa-benefits")
+
+        // THEN
+        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/visa-benefits") }
     }
 
     @Test

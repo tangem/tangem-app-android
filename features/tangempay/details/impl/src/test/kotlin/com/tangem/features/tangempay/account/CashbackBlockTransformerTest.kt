@@ -2,9 +2,14 @@ package com.tangem.features.tangempay.account
 
 import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
@@ -15,6 +20,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -31,6 +37,7 @@ internal class CashbackBlockTransformerTest {
     private val defaultLocale = Locale.getDefault()
 
     private val onClick: () -> Unit = {}
+    private val onMenuItemClick: () -> Unit = {}
     private val onGotIt: () -> Unit = {}
     private val dateFormatter = TangemPayCashbackDateFormatter()
 
@@ -84,6 +91,98 @@ internal class CashbackBlockTransformerTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideAmountModels")
+    fun `GIVEN confirmed amount WHEN transform THEN widget negative state follows the sign`(model: AmountCase) {
+        // Arrange
+        val transformer = createTransformer(summary = enabledSummary(confirmedAmount = model.amount))
+
+        // Act
+        val widget = transformer.transform(contentState()).cashbackBlockState as CashbackBlockUM.Widget
+
+        // Assert
+        assertThat(widget.isNegative).isEqualTo(model.expectedNegative)
+        assertThat(widget.subtitle).isEqualTo(model.expectedSubtitle)
+    }
+
+    @Test
+    fun `GIVEN enabled alt_block summary WHEN transform THEN cashback menu item inserted below current plan`() {
+        // Arrange
+        val summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK)
+        val transformer = createTransformer(summary = summary)
+        val expectedTitle = resourceReference(
+            id = R.string.tangempay_cashback_menu_item_title,
+            formatArgs = wrappedList(dateFormatter.formatMonth(year = 2026, month = 6)),
+        )
+
+        // Act
+        val items = transformer.transform(contentState()).topBarConfig.items
+
+        // Assert
+        val cashbackIndex = items.indexOfFirst { it.title == expectedTitle }
+        val planIndex = items.indexOfFirst { it.title == resourceReference(R.string.tangempay_current_plan_title) }
+        assertThat(planIndex).isAtLeast(0)
+        assertThat(cashbackIndex).isEqualTo(planIndex + 1)
+        assertThat(items[cashbackIndex].subtitle).isNull()
+        assertThat(items[cashbackIndex].onClick).isSameInstanceAs(onMenuItemClick)
+    }
+
+    @Test
+    fun `GIVEN menu without current plan WHEN transform THEN cashback menu item inserted above terms`() {
+        // Arrange
+        val transformer = createTransformer(summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK))
+        val stateWithoutPlan = contentState().let { state ->
+            state.copy(
+                topBarConfig = state.topBarConfig.copy(
+                    items = state.topBarConfig.items
+                        .filterNot { it.title == resourceReference(R.string.tangempay_current_plan_title) }
+                        .toImmutableList(),
+                ),
+            )
+        }
+
+        // Act
+        val items = transformer.transform(stateWithoutPlan).topBarConfig.items
+
+        // Assert
+        val cashbackIndex = items.indexOfFirst {
+            (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_menu_item_title
+        }
+        val termsIndex = items.indexOfFirst { it.title == resourceReference(R.string.tangem_pay_terms_limits) }
+        assertThat(cashbackIndex).isAtLeast(0)
+        assertThat(termsIndex).isEqualTo(cashbackIndex + 1)
+    }
+
+    @Test
+    fun `GIVEN enabled alt_block summary WHEN transform twice THEN cashback menu item not duplicated`() {
+        // Arrange
+        val transformer = createTransformer(summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK))
+
+        // Act
+        val state = transformer.transform(transformer.transform(contentState()))
+
+        // Assert
+        val cashbackItemCount = state.topBarConfig.items.count {
+            (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_menu_item_title
+        }
+        assertThat(cashbackItemCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN enabled full summary WHEN transform THEN menu has no cashback item`() {
+        // Arrange
+        val transformer = createTransformer(summary = enabledSummary())
+
+        // Act
+        val items = transformer.transform(contentState()).topBarConfig.items
+
+        // Assert
+        val hasCashbackItem = items.any {
+            (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_menu_item_title
+        }
+        assertThat(hasCashbackItem).isFalse()
+    }
+
+    @ParameterizedTest
     @MethodSource("provideTestModels")
     fun `GIVEN summary and dismissed flag WHEN transform THEN resolves expected cashback block`(model: BlockCase) {
         // Arrange
@@ -97,6 +196,12 @@ internal class CashbackBlockTransformerTest {
     }
 
     private fun provideTestModels(): List<BlockCase> = listOf(
+        BlockCase(
+            description = "enabled & alt_block -> hidden",
+            summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK),
+            isDismissed = false,
+            expectedBlock = null,
+        ),
         BlockCase(
             description = "deactivated & not dismissed -> banner",
             summary = CashbackSummary.Deactivated,
@@ -123,6 +228,36 @@ internal class CashbackBlockTransformerTest {
         ),
     )
 
+    private fun provideAmountModels(): List<AmountCase> = listOf(
+        AmountCase(
+            description = "negative -> refund subtitle",
+            amount = BigDecimal("-2.15"),
+            expectedNegative = true,
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_refund_banner),
+        ),
+        AmountCase(
+            description = "zero -> start spending subtitle",
+            amount = BigDecimal.ZERO,
+            expectedNegative = false,
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
+        ),
+        AmountCase(
+            description = "zero with scale -> start spending subtitle",
+            amount = BigDecimal("0.00"),
+            expectedNegative = false,
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
+        ),
+        AmountCase(
+            description = "positive -> deposit window subtitle",
+            amount = BigDecimal("32.15"),
+            expectedNegative = false,
+            expectedSubtitle = resourceReference(
+                id = R.string.tangempay_cashback_deposited_on,
+                formatArgs = wrappedList("July 1 – 5"),
+            ),
+        ),
+    )
+
     private fun createTransformer(
         summary: CashbackSummary,
         isDismissed: Boolean = false,
@@ -131,6 +266,7 @@ internal class CashbackBlockTransformerTest {
         isDeactivationDismissed = isDismissed,
         dateFormatter = dateFormatter,
         onClick = onClick,
+        onMenuItemClick = onMenuItemClick,
         onGotIt = onGotIt,
     )
 
@@ -141,12 +277,14 @@ internal class CashbackBlockTransformerTest {
         month: Int = 6,
         payoutStart: DateTime? = DateTime.parse("2026-07-02"),
         payoutEnd: DateTime? = DateTime.parse("2026-07-05"),
+        displayMode: CashbackDisplayMode = CashbackDisplayMode.FULL,
     ): CashbackSummary.Enabled = CashbackSummary.Enabled(
-        displayMode = CashbackDisplayMode.FULL,
+        displayMode = displayMode,
         cashback = TangemPayCashback(
             confirmedAmount = confirmedAmount,
             totalEarnedAmount = BigDecimal("132.15"),
             currency = currency,
+            payoutCurrency = "USDC",
             period = TangemPayCashback.Period(
                 year = year,
                 month = month,
@@ -161,7 +299,12 @@ internal class CashbackBlockTransformerTest {
         topBarConfig = TangemPayDetailsTopBarConfig(
             onBackClick = {},
             onOpenMenu = {},
-            items = persistentListOf(),
+            items = persistentListOf(
+                menuItem(R.string.tangempay_current_plan_title),
+                menuItem(R.string.tangempay_visa_benefits),
+                menuItem(R.string.tangem_pay_terms_limits),
+                menuItem(R.string.tangempay_pay_support),
+            ),
             subtitle = TextReference.EMPTY,
         ),
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
@@ -175,8 +318,23 @@ internal class CashbackBlockTransformerTest {
         ),
         isBalanceHidden = false,
         errorNotificationConfig = null,
-        accountDeactivatedNotificationConfig = null,
+        accountDeactivatedBannerState = null,
     )
+
+    private fun menuItem(titleRes: Int): TangemPayDropDownItemUM = TangemPayDropDownItemUM(
+        title = resourceReference(titleRes),
+        onClick = {},
+        icon = TangemIconUM.Empty,
+    )
+
+    internal class AmountCase(
+        val amount: BigDecimal,
+        val expectedNegative: Boolean,
+        val expectedSubtitle: TextReference,
+        private val description: String,
+    ) {
+        override fun toString(): String = description
+    }
 
     internal class BlockCase(
         val summary: CashbackSummary,

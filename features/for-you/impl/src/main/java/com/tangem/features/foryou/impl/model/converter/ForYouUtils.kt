@@ -10,6 +10,7 @@ import com.tangem.domain.markets.CoinIndicators
 import com.tangem.domain.markets.totalSentimentScore
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -59,13 +60,14 @@ internal fun BigDecimal?.toForYouPercent(totalFiatBalance: BigDecimal): BigDecim
  * Builds the sentiment badge of an asset row from the asset's [coinIndicators] for the selected
  * [timeframe]. The sign of [totalSentimentScore] — the exact score shown on the token summary
  * sentiment section — picks the badge, so the row badge always agrees with that screen's overall
- * outlook. Returns `null` (no badge) only when there is no data for the asset at all.
+ * outlook. Returns `null` (no badge) when there is no data for the asset at all, and when the asset
+ * has data but nothing interpretable in it — see [CoinIndicators.shouldHideBadge].
  */
 internal fun forYouSentimentBadge(
     coinIndicators: CoinIndicators?,
     timeframe: CoinIndicators.Reading.Timeframe,
 ): TangemBadgeUM? {
-    if (coinIndicators == null) return null
+    if (coinIndicators == null || coinIndicators.shouldHideBadge()) return null
 
     val totalScore = coinIndicators.totalSentimentScore(timeframe)
 
@@ -83,8 +85,16 @@ internal fun forYouSentimentBadge(
     )
 }
 
+/**
+ * Ids of the accounts the portfolio selector can actually offer: the crypto-portfolio ones.
+ *
+ * A wallet's statuses also carry `Payment` / `Virtual` / `Prediction` / `Joint` accounts, and the selector
+ * renders no row for those. Seeding the selection with an id that has no row would strand it there forever —
+ * nothing could ever uncheck it, so the selection could never become empty and the Apply button could never
+ * disable.
+ */
 internal fun Map<UserWalletId, AccountStatusList>.availableAccountIds(): Set<AccountId> = values
-    .flatMap { statusList -> statusList.accountStatuses.map { it.accountId } }
+    .flatMap { statusList -> statusList.accountStatuses.filterCryptoPortfolio().map { it.accountId } }
     .toSet()
 
 /**

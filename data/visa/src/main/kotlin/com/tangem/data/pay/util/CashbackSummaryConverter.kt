@@ -10,6 +10,8 @@ import org.joda.time.DateTime
 
 internal object CashbackSummaryConverter : Converter<CashbackSummaryResponse, CashbackSummary> {
 
+    private const val FIAT_CURRENCY_CODE = "USD"
+
     override fun convert(value: CashbackSummaryResponse): CashbackSummary {
         val result = value.result ?: return CashbackSummary.Unknown
         return when (CashbackProgramStatus.fromString(result.cashbackProgramStatus)) {
@@ -27,7 +29,8 @@ internal object CashbackSummaryConverter : Converter<CashbackSummaryResponse, Ca
             cashback = TangemPayCashback(
                 confirmedAmount = result.confirmedAmount,
                 totalEarnedAmount = result.totalEarnedAmount,
-                currency = result.currency.takeIf(String::isNotBlank) ?: "USD",
+                currency = result.currency.takeIf(String::isNotBlank) ?: FIAT_CURRENCY_CODE,
+                payoutCurrency = result.payoutCurrency?.takeIf(String::isNotBlank),
                 period = TangemPayCashback.Period(
                     year = period.year,
                     month = period.month,

@@ -127,6 +127,56 @@ internal class DefaultIntroductionVideoPlayerTest {
         verify(exactly = 1) { player.release() }
     }
 
+    @Test
+    fun `GIVEN a fresh player WHEN nothing is attached THEN no surface is reported`() {
+        // Act
+        val videoPlayer = createPlayer()
+
+        // Assert
+        assertThat(videoPlayer.isSurfaceAttached).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an attached surface WHEN the same one is detached THEN no surface is reported`() {
+        // Arrange
+        val videoPlayer = createPlayer()
+        videoPlayer.attachSurface(surfaceView)
+        assertThat(videoPlayer.isSurfaceAttached).isTrue()
+
+        // Act
+        videoPlayer.detachSurface(surfaceView)
+
+        // Assert
+        assertThat(videoPlayer.isSurfaceAttached).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a replacement surface WHEN the previous one is detached THEN the replacement stays bound`() {
+        // Arrange
+        val videoPlayer = createPlayer()
+        videoPlayer.attachSurface(surfaceView)
+        videoPlayer.attachSurface(otherSurfaceView)
+
+        // Act
+        videoPlayer.detachSurface(surfaceView)
+
+        // Assert
+        assertThat(videoPlayer.isSurfaceAttached).isTrue()
+    }
+
+    @Test
+    fun `GIVEN an attached surface WHEN the player is released THEN no surface is reported`() {
+        // Arrange
+        val videoPlayer = createPlayer()
+        videoPlayer.attachSurface(surfaceView)
+
+        // Act
+        videoPlayer.release()
+
+        // Assert
+        assertThat(videoPlayer.isSurfaceAttached).isFalse()
+    }
+
     private fun createPlayer(isMotionEnabled: Boolean = true) = DefaultIntroductionVideoPlayer(
         player = player,
         videoItem = videoItem,

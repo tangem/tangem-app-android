@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
@@ -87,6 +88,10 @@ internal class NFTSendConfirmModelTest {
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger = mockk(relaxed = true)
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener = mockk(relaxed = true)
     private val alertFactory: SendConfirmAlertFactory = mockk(relaxed = true)
+    private val backupErrorWarningSender: BackupErrorWarningSender = mockk {
+        every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
+    }
+
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
@@ -176,6 +181,24 @@ internal class NFTSendConfirmModelTest {
                     )
                 }
                 coVerify(exactly = 1) { feeSelectorCheckReloadTrigger.triggerCheckUpdate() }
+            }
+        }
+
+        @Test
+        fun `GIVEN recipient warning declined WHEN onSendClick THEN transaction is not created`() = runTest {
+            // Arrange
+            every { SystemClock.elapsedRealtime() } returns 0L
+            every { backupErrorWarningSender.forAddress(any(), any(), any()) } returns Unit
+            val sut = buildModel()
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) {
+                createNFTTransferTransactionUseCase(any(), any(), any(), any(), any(), any(), any())
             }
         }
 
@@ -315,6 +338,7 @@ internal class NFTSendConfirmModelTest {
             feeSelectorCheckReloadTrigger = feeSelectorCheckReloadTrigger,
             feeSelectorCheckReloadListener = feeSelectorCheckReloadListener,
             alertFactory = alertFactory,
+            backupErrorWarningSender = backupErrorWarningSender,
             urlOpener = urlOpener,
             shareManager = shareManager,
             analyticsEventHandler = analyticsEventHandler,

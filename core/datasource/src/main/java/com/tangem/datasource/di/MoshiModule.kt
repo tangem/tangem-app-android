@@ -6,9 +6,9 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
-import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
@@ -31,12 +31,6 @@ class MoshiModule {
     fun provideNetworkMoshi(configurers: Set<@JvmSuppressWildcards NetworkMoshiConfigurer>): Moshi {
         val builder = Moshi.Builder()
             .add(SerializeNullsFactory)
-            .add(
-                PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
-                    .withSubtype(ProviderModel.Public::class.java, "public")
-                    .withSubtype(ProviderModel.Private::class.java, "private")
-                    .withDefaultValue(ProviderModel.UnsupportedType),
-            )
             .add(BigDecimalAdapter())
             .add(BigIntegerAdapter())
             .add(LocalDateAdapter())

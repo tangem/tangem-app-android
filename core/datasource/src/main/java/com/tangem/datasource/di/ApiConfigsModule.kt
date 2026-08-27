@@ -1,9 +1,12 @@
 package com.tangem.datasource.di
 
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.header.CardAuthHeaderProvider
+import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.utils.AuthenticationHeader
+import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -19,43 +22,28 @@ internal object ApiConfigsModule {
     @Provides
     @IntoMap
     @StringKey(TangemTech.KEY)
-    fun provideTangemTechConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
-        return TangemTech(
-            authProvider = authProvider,
-            appInfoProvider = appInfoProvider,
-        )
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(News.KEY)
-    fun provideNewsConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
-        return News(
-            appInfoProvider = appInfoProvider,
-            authProvider = authProvider,
-        )
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(YieldSupply.KEY)
-    fun provideYieldSupplyConfig(
-        environmentConfig: EnvironmentConfig,
-        authProvider: AuthProvider,
+    fun provideTangemTechConfig(
+        apiKeyHeaderProvider: TangemApiKeyHeaderProvider,
+        cardAuthHeaderProvider: CardAuthHeaderProvider,
         appInfoProvider: AppInfoProvider,
     ): ApiConfig {
-        return YieldSupply(
-            environmentConfig = environmentConfig,
-            authProvider = authProvider,
+        return TangemTech(
+            apiKeyHeader = apiKeyHeaderProvider,
+            cardAuthHeader = cardAuthHeaderProvider,
             appInfoProvider = appInfoProvider,
         )
     }
 
     @Provides
-    @IntoMap
-    @StringKey(Auth.KEY)
-    fun provideAuthConfig(): ApiConfig {
-        return Auth()
+    fun provideTangemApiKeyHeaderProvider(authProvider: AuthProvider): TangemApiKeyHeaderProvider {
+        return TangemApiKeyHeaderProvider { environment ->
+            TangemApiKeyHeader(authProvider, environment)
+        }
+    }
+
+    @Provides
+    fun provideCardAuthHeaderProvider(authProvider: AuthProvider): CardAuthHeaderProvider {
+        return CardAuthHeaderProvider { AuthenticationHeader(authProvider) }
     }
 
     @Provides
