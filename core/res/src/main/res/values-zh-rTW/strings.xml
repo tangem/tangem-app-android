@@ -598,7 +598,7 @@
   <string name="tangempay_other_networks_header">其他網路</string>
   <string name="tangempay_other_networks_subtitle">然後以 1:1 匯率、零手續費兌換到支付帳戶</string>
   <string name="tangempay_other_networks_title">在任意鏈上將 USDT / USDC 傳送至您的 Tangem 錢包</string>
-  <string name="tangempay_pay_support">Pay 客服</string>
+  <string name="tangempay_pay_support">客服</string>
   <string name="tangempay_payment_account">付款帳戶</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay 工作階段已過期</string>
   <string name="tangempay_pin_validation_error_message">無效 PIN 碼：請避免使用連續或重複的號碼</string>
