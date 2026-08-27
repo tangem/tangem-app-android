@@ -395,10 +395,15 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
+                <!-- pathPrefix is a plain string prefix: "/news" alone would also capture /newsletter/… -->
                 <data
                     android:scheme="https"
                     android:host="tangem.com"
-                    android:pathPrefix="/news" />
+                    android:path="/news" />
+                <data
+                    android:scheme="https"
+                    android:host="tangem.com"
+                    android:pathPrefix="/news/" />
             </intent-filter>
         </activity>
 

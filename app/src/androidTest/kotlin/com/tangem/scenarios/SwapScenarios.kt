@@ -61,8 +61,15 @@ fun BaseTestCase.openSwapScreen(
     }
 
     if (storiesExist) {
+        // Whether stories show at all is decided by a request that can still be in flight here.
         step("Close 'Stories' screen") {
-            onSwapStoriesScreen { closeButton.clickWithAssertion() }
+            val storiesShown = runCatching {
+                awaitSuccess { onSwapStoriesScreen { closeButton.assertIsDisplayed() } }
+            }.isSuccess
+
+            if (storiesShown) {
+                onSwapStoriesScreen { closeButton.performClick() }
+            }
         }
     } else {
         step("Assert 'Stories' screen is not displayed") {
@@ -351,6 +358,62 @@ private fun BaseTestCase.navigateToSwapForToken(tokenName: String, fromAccountNa
     }
 }
 
+/**
+ * Opens Swap from [tokenName]'s zero-balance token-details screen. At zero balance the Buy / Swap /
+ * Receive block replaces the action buttons, and its 'Swap' row routes through TO-position swap, so the
+ * entry token lands in the receive block. [accountName] groups the token and is collapsed by default.
+ */
+fun BaseTestCase.openSwapFromZeroBalanceToken(tokenName: String, accountName: String) {
+    step("Collapse balance header") {
+        onMainScreen { collapseHeader() }
+    }
+    // Multi-account wallets group the token under a collapsed account section; a single-account
+    // wallet has none, so only scroll/expand when that section is actually present.
+    var hasAccountSection = false
+    step("Check whether the '$accountName' account section is present") {
+        onMainScreen { hasAccountSection = findAccountSectionByName(accountName).isDisplayedSafely() }
+    }
+    if (hasAccountSection) {
+        step("Scroll '$accountName' into view") {
+            onMainScreen { scrollToAccount(accountName) }
+        }
+        step("Expand '$accountName' and reveal token '$tokenName'") {
+            onMainScreen {
+                findAccountSectionByName(accountName).clickAndWaitFor(
+                    rule = composeTestRule,
+                    expectedCondition = {
+                        onMainScreen { findTokenInAnyAccountByName(tokenName).assertIsDisplayed() }
+                    },
+                )
+            }
+        }
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { findTokenInAnyAccountByName(tokenName).clickWithAssertion() }
+    }
+    step("Assert 'Token details' screen is displayed") {
+        onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
+    }
+    // assertHasClickAction gates on the loaded (Content) row — the Loading row has no onClick, so a click would throw.
+    step("Assert 'Swap' button is active for the zero-balance token") {
+        awaitSuccess {
+            onTokenDetailsScreen {
+                zeroBalanceSwapButton.assertHasClickAction()
+                zeroBalanceSwapButton.assertIsEnabled()
+            }
+        }
+    }
+    step("Click on 'Swap' button") {
+        onTokenDetailsScreen { zeroBalanceSwapButton.clickWhenEnabled() }
+    }
+    step("Close 'Stories' screen") {
+        onSwapStoriesScreen { closeButton.clickWithAssertion() }
+    }
+    step("Assert 'Swap' screen title is displayed") {
+        onSwapTokenScreen { title.assertIsDisplayed() }
+    }
+}
+
 // Hot wallets derive locally, so the second account's missing addresses are generated without a card scan when prompted.
 fun BaseTestCase.generateMissingHotWalletAddresses() {
     var notificationShown = false
@@ -411,6 +474,7 @@ fun BaseTestCase.openSwapAmountScreen(
     receiveTokenName: String,
     amount: String,
     seedPhrase: String? = null,
+    storiesExist: Boolean = true,
 ) {
     if (seedPhrase == null) {
         step("Open 'Main' screen") {
@@ -428,7 +492,7 @@ fun BaseTestCase.openSwapAmountScreen(
         onMainScreen { tokenWithTitleAndAddress(fromTokenName).clickWithAssertion() }
     }
     step("Open 'Swap' screen") {
-        openSwapScreen(from = SwapEntryPoint.TokenDetails)
+        openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = storiesExist)
     }
     step("Choose receive token '$receiveTokenName'") {
         chooseReceiveToken(receiveTokenName)
@@ -441,8 +505,8 @@ fun BaseTestCase.openSwapAmountScreen(
         }
     }
     step("Wait for the receive amount to load") {
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            runCatching { onSwapTokenScreen { receiveAmount.assertIsDisplayed() } }.isSuccess
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onSwapTokenScreen { receiveAmount.assertIsDisplayed() }
         }
     }
 }
@@ -452,9 +516,9 @@ fun BaseTestCase.openSwapAmountScreen(
  * Single action without its own step — wrap the call in a `step(...)`.
  */
 fun BaseTestCase.openSwapNetworkFeeSelector() {
-    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
         runCatching { onSwapTokenScreen { networkFeeBlock.performClick() } }
-        runCatching { onSendFeeSelectorBottomSheet { networkFeeTitle.assertIsDisplayed() } }.isSuccess
+        onSendFeeSelectorBottomSheet { networkFeeTitle.assertIsDisplayed() }
     }
 }
 
@@ -470,8 +534,8 @@ fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: St
         onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() }
     }
     step("Select '$newFeeToken' as the fee-paying token") {
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            runCatching { onSendFeeSelectorBottomSheet { feeTokenItem(newFeeToken).performClick() } }.isSuccess
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onSendFeeSelectorBottomSheet { feeTokenItem(newFeeToken).performClick() }
         }
     }
     step("Click on 'Apply' button") {
@@ -480,21 +544,40 @@ fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: St
     }
 }
 
+private const val HOLD_ATTEMPTS = 3
+private const val HOLD_CONFIRMATION_TIMEOUT = 10_000L
+
 /** Holds the last BASE_BUTTON; enters [accessCode] if a hot wallet prompts for it. */
 fun BaseTestCase.confirmSwapByHolding(accessCode: String? = null) {
     val buttonMatcher = hasTestTag(BaseButtonTestTags.BUTTON)
-    val buttons = composeTestRule.onAllNodes(buttonMatcher)
-    // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
-    val swapButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
-    swapButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
-    waitForIdle()
     val accessCodeInput = hasTestTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
     val swapInProgressText = hasText(getResourceString(CoreUiR.string.swap_in_progress))
-    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+
+    fun confirmationStarted(): Boolean =
         composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty() ||
             composeTestRule.onAllNodes(swapInProgressText, useUnmergedTree = true)
                 .fetchSemanticsNodes().isNotEmpty()
+
+    // holdToConfirmGestures swallows the hold while the quote is being re-fetched, with no feedback.
+    var attemptsLeft = HOLD_ATTEMPTS
+    while (attemptsLeft > 0 && !confirmationStarted()) {
+        attemptsLeft--
+        val buttons = composeTestRule.onAllNodes(buttonMatcher)
+        // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
+        val swapButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
+        swapButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+        waitForIdle()
+
+        val isLastAttempt = attemptsLeft == 0
+        if (isLastAttempt) {
+            composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) { confirmationStarted() }
+        } else {
+            runCatching {
+                composeTestRule.waitUntil(timeoutMillis = HOLD_CONFIRMATION_TIMEOUT) { confirmationStarted() }
+            }
+        }
     }
+
     val needsAccessCode =
         composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()
     if (needsAccessCode && accessCode != null) {
@@ -526,8 +609,8 @@ enum class FeeType {
 
 fun BaseTestCase.inputAmount(amount: String) {
     // No waitForIdle(): the transfer screen recalculates the fee continuously and never reaches idle.
-    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-        runCatching { onSwapTokenScreen { textInput.assertIsDisplayed() } }.isSuccess
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        onSwapTokenScreen { textInput.assertIsDisplayed() }
     }
     onSwapTokenScreen {
         textInput.clickWithAssertion()
@@ -535,17 +618,16 @@ fun BaseTestCase.inputAmount(amount: String) {
     }
 }
 
-// composeTestRule.waitUntil rather than flakySafely — the latter is unavailable in extensions on BaseTestCase.
 fun BaseTestCase.assertTransferReady() {
-    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-        runCatching { onSwapTokenScreen { transferButton.assertIsDisplayed() } }.isSuccess
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        onSwapTokenScreen { transferButton.assertIsDisplayed() }
     }
     onSwapTokenScreen { providersBlock.assertIsNotDisplayed() }
 }
 
 fun BaseTestCase.waitForFeeDisplayed() {
-    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-        runCatching { onSwapTokenScreen { feeAmount.assertIsDisplayed() } }.isSuccess
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        onSwapTokenScreen { feeAmount.assertIsDisplayed() }
     }
 }
 
@@ -555,4 +637,49 @@ fun BaseTestCase.swapFeeDiffersFrom(previousFee: String): Boolean {
     return current.isNotEmpty() && current != previousFee
 }
 
+/** Opens the swap 'more' menu and selects the layout [mode] (Simple / Detailed). */
+fun BaseTestCase.switchSwapMode(mode: String) {
+    step("Open the swap mode menu") {
+        onSwapTokenScreen { moreButton.clickWithAssertion() }
+    }
+    step("Select '$mode'") {
+        onSwapTokenScreen { swapModeMenuItem(mode).clickWithAssertion() }
+    }
+}
 
+
+
+
+private const val PROVIDER_SHEET_OPEN_ATTEMPTS = 3
+
+/**
+ * Opens the providers bottom sheet, reopening it until the ALL/CEX/DEX segments render.
+ *
+ * The segments exist only when the provider list already holds both a CEX and a DEX quote, and that set is
+ * captured once, when the sheet config is built (`StateBuilder.showSelectProviderBottomSheet`). A DEX quote
+ * arriving later never adds them to an open sheet, so a slow quote is waited out by reopening, not by a
+ * longer assert — hence the mutating retry instead of a plain awaitSuccess.
+ */
+fun BaseTestCase.openProviderSheetWithTypeFilter(allFilter: String) {
+    repeat(PROVIDER_SHEET_OPEN_ATTEMPTS - 1) {
+        step("Click on 'Providers' block") {
+            onSwapTokenScreen { providersBlock.performClick() }
+        }
+        val filtersRendered = runCatching {
+            awaitSuccess { onChooseProviderBottomSheet { filterButton(allFilter).assertIsDisplayed() } }
+        }.isSuccess
+        if (filtersRendered) return
+
+        step("Close the providers bottom sheet and wait for the next quote") {
+            device.uiDevice.pressBack()
+            awaitSuccess { onSwapTokenScreen { providersBlock.assertIsDisplayed() } }
+        }
+    }
+
+    step("Click on 'Providers' block") {
+        onSwapTokenScreen { providersBlock.performClick() }
+    }
+    step("Assert the '$allFilter' filter is displayed") {
+        awaitSuccess { onChooseProviderBottomSheet { filterButton(allFilter).assertIsDisplayed() } }
+    }
+}

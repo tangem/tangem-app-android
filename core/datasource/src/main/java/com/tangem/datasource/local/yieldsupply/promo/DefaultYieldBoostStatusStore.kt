@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.yieldsupply.promo
 
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
 

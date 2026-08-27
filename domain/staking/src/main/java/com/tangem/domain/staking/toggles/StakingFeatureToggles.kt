@@ -4,7 +4,7 @@ import com.tangem.domain.staking.model.StakingIntegrationID
 
 interface StakingFeatureToggles {
 
-    fun isIntegrationEnabled(integrationId: StakingIntegrationID): Boolean
+    val isTransactionValidationEnabled: Boolean
 
-    fun isRegionUnavailableHandlingEnabled(): Boolean
+    fun isIntegrationEnabled(integrationId: StakingIntegrationID): Boolean
 }

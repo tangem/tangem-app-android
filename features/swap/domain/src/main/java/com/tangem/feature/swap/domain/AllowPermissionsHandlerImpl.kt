@@ -1,14 +1,15 @@
 package com.tangem.feature.swap.domain
 
-import java.util.Collections.synchronizedSet
+import java.math.BigDecimal
+import java.util.Collections.synchronizedMap
 
 class AllowPermissionsHandlerImpl : AllowPermissionsHandler {
 
     // todo maybe need to save in store
-    private val allowPermissionsInProgress = synchronizedSet(mutableSetOf<String>())
+    private val allowPermissionsInProgress = synchronizedMap(mutableMapOf<String, BigDecimal?>())
 
-    override fun addAddressToInProgress(tokenAddress: String) {
-        allowPermissionsInProgress.add(tokenAddress)
+    override fun addAddressToInProgress(tokenAddress: String, approvedAmount: BigDecimal?) {
+        allowPermissionsInProgress[tokenAddress] = approvedAmount
     }
 
     override fun removeAddressFromProgress(tokenAddress: String) {
@@ -16,6 +17,10 @@ class AllowPermissionsHandlerImpl : AllowPermissionsHandler {
     }
 
     override fun isAddressAllowanceInProgress(tokenAddress: String): Boolean {
-        return allowPermissionsInProgress.contains(tokenAddress)
+        return allowPermissionsInProgress.containsKey(tokenAddress)
+    }
+
+    override fun getApprovedAmount(tokenAddress: String): BigDecimal? {
+        return allowPermissionsInProgress[tokenAddress]
     }
 }
