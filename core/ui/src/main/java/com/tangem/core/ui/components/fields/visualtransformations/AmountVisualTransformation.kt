@@ -23,7 +23,6 @@ class AmountVisualTransformation(
     private val currencyCode: String? = null,
     private val decimalFormat: DecimalFormat = DecimalFormat(),
     private val symbolColor: Color = Color.Unspecified,
-    private val emptyValueText: String? = null,
 ) : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {
@@ -31,7 +30,7 @@ class AmountVisualTransformation(
             text.text,
             decimals,
         )
-        formattedAmount = formattedAmount.ifEmpty { emptyValueText ?: decimalFormat.defaultFormat() }
+        formattedAmount = formattedAmount.ifEmpty { decimalFormat.defaultFormat() }
         val formattedText = if (formattedAmount.isNotEmpty()) {
             buildAnnotatedString {
                 when {
@@ -56,7 +55,7 @@ class AmountVisualTransformation(
                 }
             }
         } else {
-            AnnotatedString(emptyValueText ?: decimalFormat.defaultFormat())
+            AnnotatedString(decimalFormat.defaultFormat())
         }
 
         val groupingSymbol = decimalFormat.decimalFormatSymbols.groupingSeparator
