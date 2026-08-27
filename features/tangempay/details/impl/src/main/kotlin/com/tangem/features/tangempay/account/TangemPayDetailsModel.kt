@@ -135,6 +135,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private var shownCashbackBlock: CashbackBlockAnalyticsType? = null
     private var cashbackTransformer: Transformer<TangemPayDetailsUM>? = null
     private var isDeliveryBannerShown = false
+    private var isCardIssueFailedBannerDismissed = false
 
     private val isInitialRouteHandled = MutableStateFlow(false)
 
@@ -147,6 +148,9 @@ internal class TangemPayDetailsModel @Inject constructor(
             .map { it.value }
             .onEach { state ->
                 sendTiersAnalytics(state)
+                if (state !is PaymentAccountStatusValue.Error.CardIssueFailed) {
+                    isCardIssueFailedBannerDismissed = false
+                }
                 when (state) {
                     is PaymentAccountStatusValue.Deactivated -> {
                         cashbackBlockJobHolder.cancel()
@@ -165,6 +169,12 @@ internal class TangemPayDetailsModel @Inject constructor(
                     }
                     is PaymentAccountStatusValue.Inactive -> uiState.update {
                         stateFactory.getInactiveState(state)
+                    }
+                    is PaymentAccountStatusValue.Error.CardIssueFailed -> uiState.update {
+                        stateFactory.getCardIssueFailedState(
+                            status = state,
+                            isBannerDismissed = isCardIssueFailedBannerDismissed,
+                        )
                     }
                     else -> uiState.update { stateFactory.getLoadingState() }
                 }
@@ -399,10 +409,31 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onContactSupportClicked() {
         analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
-        val customerId = currentStatus.value.ifLoadedOrNull { it.customerId } ?: return
+        val customerId = currentStatus.value.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
                 type = FeedbackEmailType.Visa.FeatureIsBeta(
+                    walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+                    customerId = customerId,
+                ),
+            )
+        }
+    }
+
+    override fun onCardIssueFailedBannerDismissed() {
+        isCardIssueFailedBannerDismissed = true
+        val status = currentStatus.value.value
+        if (status is PaymentAccountStatusValue.Error.CardIssueFailed) {
+            uiState.update { stateFactory.getCardIssueFailedState(status = status, isBannerDismissed = true) }
+        }
+    }
+
+    override fun onCardIssueFailedSupportClick() {
+        analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
+        val customerId = currentStatus.value.customerId ?: return
+        modelScope.launch {
+            sendFeedbackEmailUseCase.invoke(
+                type = FeedbackEmailType.Visa.FailedIssueCard(
                     walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                     customerId = customerId,
                 ),
