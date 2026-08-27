@@ -1,5 +1,6 @@
 package com.tangem.features.swap.v2.impl.notifications.model
 
+import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -7,7 +8,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
@@ -19,6 +23,7 @@ import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -29,6 +34,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -39,6 +45,9 @@ internal class SwapNotificationsModel @Inject constructor(
     private val swapNotificationsUpdateTrigger: DefaultSwapNotificationsUpdateTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val isMemoRequiredUseCase: IsMemoRequiredUseCase,
+    private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -47,6 +56,9 @@ internal class SwapNotificationsModel @Inject constructor(
 
     private var notificationData = params.swapNotificationData
     private var lastSentErrorKeys: Set<Pair<String, Map<String, String>>> = emptySet()
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     val uiState: StateFlow<ImmutableList<NotificationUM>>
         field = MutableStateFlow<ImmutableList<NotificationUM>>(persistentListOf())
@@ -75,6 +87,7 @@ internal class SwapNotificationsModel @Inject constructor(
             addExpressErrorNotification()
             maybeAddRegionRestrictionError()
             addDestinationTagRequiredNotification()
+            addDestinationBackupErrorNotification()
             maybeAddPriceImpactNotification()
         }
 
@@ -134,6 +147,29 @@ internal class SwapNotificationsModel @Inject constructor(
         if (isMemoRequired) {
             add(NotificationUM.Error.DestinationTagRequired)
         }
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private suspend fun MutableList<NotificationUM>.addDestinationBackupErrorNotification() {
+        if (backupErrorFeatureToggles.isTopUpWarningEnabled) return
+
+        val destinationAddress = notificationData.destinationAddress
+        if (destinationAddress.isEmpty()) return
+
+        val problematicWalletId = resolveBackupProblematicWallet(destinationAddress) ?: return
+        add(
+            NotificationUM.Error.DestinationBackupError(
+                onContactSupport = { modelScope.launch { sendBackupProblemEmailUseCase(problematicWalletId) } },
+            ),
+        )
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private suspend fun resolveBackupProblematicWallet(address: String): UserWalletId? {
+        backupProblematicWalletCache.get()?.let { if (it.first == address) return it.second }
+
+        return getBackupProblematicWalletForAddressUseCase(address)
+            .also { backupProblematicWalletCache.set(address to it) }
     }
 
     private fun MutableList<NotificationUM>.addInsufficientFundsNotification() {
