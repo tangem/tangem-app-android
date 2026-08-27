@@ -2,7 +2,6 @@ package com.tangem.data.visa.utils
 
 import com.squareup.moshi.Moshi
 import com.tangem.spend.datasource.pay.models.response.TangemPayTxHistoryResponse
-import com.tangem.spend.datasource.pay.models.response.TransactionCashbackResponse
 import com.tangem.domain.pay.utils.TangemPayTxHistoryItemStatusConverter
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.converter.Converter
@@ -23,7 +22,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
     private val collateralAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Collateral::class.java) }
 
     override fun convert(value: TangemPayTxHistoryResponse.Transaction): TangemPayTxHistoryItem? {
-        return value.spend?.let { convertSpend(id = value.id, spend = it, cashback = value.cashback) }
+        return value.spend?.let { convertSpend(id = value.id, spend = it) }
             ?: value.payment?.let { convertPayment(id = value.id, payment = it) }
             ?: value.fee?.let { convertFee(id = value.id, fee = it) }
             ?: value.collateral?.let { convertCollateral(id = value.id, collateral = it) }
@@ -33,11 +32,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             }
     }
 
-    private fun convertSpend(
-        id: String,
-        spend: TangemPayTxHistoryResponse.Spend,
-        cashback: TransactionCashbackResponse?,
-    ): TangemPayTxHistoryItem.Spend {
+    private fun convertSpend(id: String, spend: TangemPayTxHistoryResponse.Spend): TangemPayTxHistoryItem.Spend {
         val rawDate = if (spend.amount.signum() < 0) {
             spend.postedAt ?: spend.authorizedAt
         } else {
@@ -62,7 +57,11 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             declinedReason = spend.declinedReason,
             cardName = spend.cardDisplayName,
             cardNumberLast4 = spend.cardNumberEnd,
-            cashback = PayTransactionCashbackConverter.convert(cashback),
+            cashback = PayTransactionCashbackConverter.convertSpendCashback(
+                status = spend.cashbackStatus,
+                amount = spend.cashback,
+                currencyCode = spend.cashbackCurrencyCode,
+            ),
         )
     }
 

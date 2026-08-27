@@ -250,12 +250,12 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             }
         }
         null -> {
-            if (state.accountDeactivatedNotificationConfig != null) {
+            if (state.accountDeactivatedBannerState != null) {
                 item("deactivationBannerBlock") {
                     SpacerH12()
-                    ErrorMessage(
-                        config = state.accountDeactivatedNotificationConfig,
-                        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    TangemMessageBanner(
+                        state = state.accountDeactivatedBannerState,
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
             }

@@ -2,7 +2,7 @@ package com.tangem.data.visa.converter
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.visa.model.AccessCodeData
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.utils.converter.Converter
 import okio.ByteString.Companion.decodeBase64
