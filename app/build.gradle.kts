@@ -181,6 +181,7 @@ dependencies {
     implementation(projects.domain.earn)
     implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
+    implementation(projects.domain.feed.search)
     implementation(projects.domain.cloudBackup)
 
     implementation(projects.common)
