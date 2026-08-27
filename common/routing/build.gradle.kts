@@ -27,6 +27,7 @@ dependencies {
     api(projects.domain.markets.models)
     api(projects.domain.models)
     api(projects.domain.nft.models)
+    implementation(projects.domain.notifications.models)
     api(projects.domain.onramp.models)
     api(projects.domain.staking)
     api(projects.domain.tokens.models)
