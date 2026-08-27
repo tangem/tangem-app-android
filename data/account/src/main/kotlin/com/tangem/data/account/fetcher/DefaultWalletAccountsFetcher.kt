@@ -1,21 +1,22 @@
 package com.tangem.data.account.fetcher
 
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
+import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.assignTokens
+import com.tangem.data.account.utils.isJoint
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
-import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -24,6 +25,7 @@ import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +37,7 @@ import javax.inject.Singleton
 /**
  * Default implementation of [WalletAccountsFetcher] and [WalletAccountsSaver]
  *
- * @property tangemTechApi                   API for network requests
+ * @property walletAccountsApi               the accounts document, from the version this build may speak
  * @property accountsResponseStoreFactory    factory to create [AccountsResponseStore]
  * @property userTokensSaver                 saves user tokens to the database
  * @property fetchWalletAccountsErrorHandler handles errors during fetching wallet accounts
@@ -48,7 +50,7 @@ import javax.inject.Singleton
 @Suppress("LongParameterList")
 @Singleton
 internal class DefaultWalletAccountsFetcher @Inject constructor(
-    private val tangemTechApi: TangemTechApi,
+    private val walletAccountsApi: WalletAccountsApi,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val userTokensSaver: UserTokensSaver,
     private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler,
@@ -56,6 +58,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val eTagsStore: ETagsStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
@@ -132,7 +135,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 val resolvedETag = eTag ?: getETagForPush(userWalletId)
 
                 val apiResponse = withContext(dispatchers.io) {
-                    tangemTechApi.saveWalletAccounts(
+                    walletAccountsApi.saveAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = resolvedETag,
                         body = body,
@@ -178,7 +181,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         return safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
-                    tangemTechApi.getWalletAccounts(
+                    walletAccountsApi.getAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = getETag(userWalletId),
                     )
@@ -186,7 +189,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 saveETag(userWalletId, apiResponse)
 
-                val response = apiResponse.bind().enrichByAccountId()
+                val response = apiResponse.bind().enrichByAccountId().withoutJointAccountsIfDisabled(userWalletId)
 
                 store(userWalletId = userWalletId, response = response)
 
@@ -209,6 +212,23 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 )
             },
         )
+    }
+
+    /** With the toggle off no joint record reaches the store, so nothing downstream has to tell the two kinds apart */
+    private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
+        userWalletId: UserWalletId,
+    ): GetWalletAccountsResponse {
+        if (jointAccountFeatureToggles.isJointAccountCreationEnabled) return this
+
+        val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
+        if (ownAccounts.size == accounts.size) return this
+
+        TangemLogger.i(
+            "Joint account feature is off: dropped ${accounts.size - ownAccounts.size} joint account(s) " +
+                "of $userWalletId from the accounts response",
+        )
+
+        return copy(accounts = ownAccounts)
     }
 
     private suspend fun initializeAccounts(

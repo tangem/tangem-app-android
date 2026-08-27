@@ -16,9 +16,9 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
-import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
+import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -43,22 +43,15 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
-    private val polymarketOnboardedStore: PolymarketOnboardedStore,
+    private val polymarketRepository: PolymarketRepository,
+    private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
-    private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusFetcher {
 
     override suspend fun invoke(params: PredictionAccountStatusFetcher.Params): Either<Throwable, Unit> {
         return Either.catchOn(dispatchers.default) {
-            // Unconditionally: a cached balance needs the rate as much as a freshly read one, and every path that
-            // returns early below leaves that balance in place. Without the quote the producer keeps reporting
-            // loading, which contributes zero, so the collateral would silently read as nothing.
-            singleQuoteStatusFetcher(
-                SingleQuoteStatusFetcher.Params(rawCurrencyId = COLLATERAL_CURRENCY_ID, appCurrencyId = null),
-            )
-
             val value = resolve(userWalletId = params.userWalletId)
 
             if (value == null) {
@@ -82,16 +75,28 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
         if (userWallet.isLocked) return null
 
         val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = userWalletId)
-            ?: return PredictionAccountStatusValue.NotOnboarded
+            ?: return resolveWithoutAddresses(userWalletId = userWalletId)
 
         val state = getPolymarketWalletStatusUseCase(addresses = addresses)
             .onLeft { logger.e("Prediction wallet status is unavailable for $userWalletId: $it") }
             .getOrNull()
             ?: return null
 
-        recordConfirmation(userWalletId = userWalletId, status = state.status)
+        return toStatusValue(userWalletId = userWalletId, status = state.status) {
+            active(addresses = addresses)
+        }
+    }
 
-        return when (state.status) {
+    /**
+     * Shared by both reads so they cannot disagree about a status. [whenReady] supplies the ready state, which
+     * differs by path: the balance needs credentials only the addressed path has.
+     */
+    private suspend fun toStatusValue(
+        userWalletId: UserWalletId,
+        status: PolymarketWalletStatus,
+        whenReady: suspend () -> PredictionAccountStatusValue?,
+    ): PredictionAccountStatusValue? {
+        val value = when (status) {
             PolymarketWalletStatus.NOT_CREATED -> PredictionAccountStatusValue.NotOnboarded
             PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS -> onboarding(
                 PredictionAccountStatusValue.Onboarding.Stage.DEPLOYING,
@@ -105,20 +110,27 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             -> PredictionAccountStatusValue.Error.OnboardingFailed
             // A status this build does not know is "not ready, keep polling" by the BFF contract, not an error
             PolymarketWalletStatus.UNKNOWN -> null
-            PolymarketWalletStatus.READY_TO_TRADE -> active(addresses = addresses)
+            PolymarketWalletStatus.READY_TO_TRADE -> whenReady()
         }
+
+        // Keyed on the status, not on the value: a recognised status is an answer about the account even when
+        // the balance behind it could not be read.
+        recordPolymarketConfirmation(userWalletId = userWalletId, status = status)
+
+        return value
     }
 
     /**
-     * The balance read needs the L2 credentials this device holds. A wallet deployed elsewhere has none here, and
-     * that is not an error — its setup is simply unfinished on this device, which is what the deployed stage says.
+     * A missing key is not an unfinished setup: the backend has just called the wallet ready, so what is unknown is
+     * the collateral, not the account. The resolver also answers `KeyNotFound` for any `404` from the CLOB — all the
+     * more reason to withhold the wallet total here rather than contribute a zero to it.
      */
     private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusValue? {
         return getPolymarketBalanceInteractor(addresses = addresses).fold(
             ifLeft = { error ->
                 when (error) {
-                    is PolymarketAuthError.KeyNotFound -> onboarding(
-                        PredictionAccountStatusValue.Onboarding.Stage.DEPLOYED,
+                    is PolymarketAuthError.KeyNotFound -> PredictionAccountStatusValue.Onboarded(
+                        source = StatusSource.ACTUAL,
                     )
                     // Throttled, offline or rejected: the balance is unknown, not zero
                     else -> {
@@ -152,16 +164,15 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
         )
     }
 
-    /**
-     * Keeps the onboarding record honest. This is the only place that re-reads the backend for a wallet the entry
-     * gate has stopped asking about, so a wallet the backend no longer calls ready loses its record here — without
-     * it the gate would answer from a record that outlived the fact and the user could never re-run onboarding.
-     */
-    private suspend fun recordConfirmation(userWalletId: UserWalletId, status: PolymarketWalletStatus) {
-        if (status == PolymarketWalletStatus.READY_TO_TRADE) {
-            polymarketOnboardedStore.markOnboarded(userWalletId)
-        } else {
-            polymarketOnboardedStore.clear(userWalletId)
+    /** A wallet this device never derived an address for: the backend still knows it by its Tangem wallet id. */
+    private suspend fun resolveWithoutAddresses(userWalletId: UserWalletId): PredictionAccountStatusValue? {
+        val state = polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue)
+            .onLeft { logger.e("Prediction wallet status by id is unavailable for $userWalletId: $it") }
+            .getOrNull()
+            ?: return null
+
+        return toStatusValue(userWalletId = userWalletId, status = state.status) {
+            PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
         }
     }
 

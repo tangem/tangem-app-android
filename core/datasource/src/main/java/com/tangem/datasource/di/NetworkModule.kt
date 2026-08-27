@@ -1,29 +1,22 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.api.common.config.TangemTech
-import com.tangem.datasource.api.common.config.News
-import com.tangem.datasource.api.common.config.YieldSupply
 import com.tangem.datasource.api.common.config.PolymarketWeb
 import com.tangem.datasource.api.common.config.PolymarketRelayer
 import com.tangem.datasource.api.common.config.PolymarketClob
-import com.tangem.datasource.api.common.config.Auth
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
-import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.jointaccount.JointAccountApi
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.build
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
@@ -65,46 +58,10 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemTechApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = true,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideYieldSupplyApi(retrofitApiBuilder: RetrofitApiBuilder): YieldSupplyApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = YieldSupply.ID,
-                shouldApplyTimeoutAnnotations = true,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideJointAccountApi(retrofitApiBuilder: RetrofitApiBuilder): JointAccountApi {
         return retrofitApiBuilder.build(
             RetrofitApiSpec(
                 apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = News.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
@@ -157,22 +114,6 @@ internal object NetworkModule {
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
                 shouldSaveLogs = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideAuthApi(retrofitApiBuilder: RetrofitApiBuilder): AuthApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = Auth.ID,
-                shouldApplyTimeoutAnnotations = false,
-                // Per-method annotations (`@RequiresDpopProof`, `@RequiresSessionAuth`) gate the hooks
-                // installed here. `/refresh` carries `@RequiresDpopProof` only, so the Authenticator
-                // skips it on 401 — no recursion into the refresher's mutex. Future session-protected
-                // endpoints (e.g. /wallet) will carry `@RequiresSessionAuth` and benefit from refresh-on-401.
-                shouldUseSessionAuth = true,
             ),
         )
     }

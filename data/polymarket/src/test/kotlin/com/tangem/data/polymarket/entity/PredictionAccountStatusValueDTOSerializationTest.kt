@@ -36,6 +36,7 @@ internal class PredictionAccountStatusValueDTOSerializationTest {
                 stage = PredictionAccountStatusValueDTO.Stage.APPROVING,
             ),
             "wallet-new" to PredictionAccountStatusValueDTO.NotOnboarded,
+            "wallet-elsewhere" to PredictionAccountStatusValueDTO.Onboarded,
         )
 
         // Act
