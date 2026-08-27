@@ -3,6 +3,7 @@ package com.tangem.domain.pay.repository
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
@@ -24,6 +25,8 @@ interface OnboardingRepository {
         userWalletId: UserWalletId,
         productInstanceId: String,
     ): Either<VisaApiError, BankCredentials>
+
+    suspend fun getOnrampFees(userWalletId: UserWalletId): Either<VisaApiError, List<TangemPayOnrampFee>>
 
     suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String>
 

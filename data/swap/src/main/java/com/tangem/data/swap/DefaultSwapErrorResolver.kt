@@ -1,7 +1,7 @@
 package com.tangem.data.swap
 
 import com.tangem.data.express.converter.ExpressErrorConverter
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.swap.SwapErrorResolver
 

@@ -38,18 +38,23 @@ internal class SecurityModeModel @Inject constructor(
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
         ?: error("Scan response is null")
 
+    /**
+     * Security option that is set on the card at the moment the screen is opened. A successful [saveChanges] closes
+     * the screen, so this option stays valid for the whole lifetime of the model.
+     */
+    private val actualSecurityOption = getCurrentSecurityOption(scannedScanResponse.card)
+
     val screenState = MutableStateFlow(value = getInitialState())
 
     private fun getInitialState(): SecurityModeScreenState {
         val card = scannedScanResponse.card
         val cardTypesResolver = scannedScanResponse.cardTypesResolver
 
-        val currentSecurityOption = getCurrentSecurityOption(card)
-        val allowedSecurityOptions = getAllowedSecurityOptions(card, cardTypesResolver, currentSecurityOption)
+        val allowedSecurityOptions = getAllowedSecurityOptions(card, cardTypesResolver, actualSecurityOption)
 
         return SecurityModeScreenState(
             availableOptions = allowedSecurityOptions.toList(),
-            selectedSecurityMode = currentSecurityOption,
+            selectedSecurityMode = actualSecurityOption,
             isSaveChangesEnabled = false,
             onNewModeSelected = ::selectOption,
             onSaveChangesClicked = ::saveChanges,
@@ -60,7 +65,7 @@ internal class SecurityModeModel @Inject constructor(
         screenState.update { state ->
             state.copy(
                 selectedSecurityMode = securityOption,
-                isSaveChangesEnabled = securityOption != getCurrentSecurityOption(scannedScanResponse.card),
+                isSaveChangesEnabled = securityOption != actualSecurityOption,
             )
         }
     }
@@ -76,23 +81,28 @@ internal class SecurityModeModel @Inject constructor(
                 SecurityOption.AccessCode -> tangemSdkManager.setAccessCode(cardId)
             }
 
-            cardSettingsInteractor.update { scanResponse ->
-                scanResponse.copy(
-                    card = scanResponse.card.copy(
-                        isAccessCodeSet = selectedOption == SecurityOption.AccessCode,
-                        isPasscodeSet = selectedOption == SecurityOption.PassCode,
-                    ),
-                )
-            }
-
-            val paramValue = AnalyticsParam.SecurityMode.from(selectedOption)
             when (result) {
                 is CompletionResult.Success -> {
+                    // The scan response is shared between all card settings screens, so it must reflect the card
+                    // state only after the user code has actually been changed
+                    cardSettingsInteractor.update { scanResponse ->
+                        scanResponse.copy(
+                            card = scanResponse.card.copy(
+                                isAccessCodeSet = selectedOption == SecurityOption.AccessCode,
+                                isPasscodeSet = selectedOption == SecurityOption.PassCode,
+                            ),
+                        )
+                    }
+
+                    val paramValue = AnalyticsParam.SecurityMode.from(selectedOption)
                     analyticsEventHandler.send(Settings.CardSettings.SecurityModeChanged(paramValue))
 
                     appRouter.pop()
                 }
                 is CompletionResult.Failure -> {
+                    // The user cancelled the operation or it failed, so the card keeps its previous security option
+                    selectOption(actualSecurityOption)
+
                     val error = result.error
                     if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
                         analyticsErrorHandler.sendErrorEvent(TangemSdkErrorEvent(error))

@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -10,9 +11,13 @@ import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.derivations.DerivationsHelper
+import com.tangem.domain.wallets.models.backup.CardBackupStatus
+import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -23,6 +28,7 @@ import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletCo
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWalletFinalizeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui.state.MultiWalletFinalizeUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
@@ -63,9 +69,29 @@ internal class MultiWalletFinalizeModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val backupValidator: BackupValidator = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val walletCardsBackupReporter: WalletCardsBackupReporter = mockk(relaxUnitFun = true)
+    private val derivationsHelper: DerivationsHelper = mockk(relaxUnitFun = true)
     private val paramsContainer: ParamsContainer = mockk()
 
-    private val scanResponse: ScanResponse = mockk()
+    private val primaryCardDto: CardDTO = mockk {
+        every { cardId } returns "primary-id-aaaa"
+        every { cardPublicKey } returns PRIMARY_CARD_PUBLIC_KEY
+        every { backupStatus } returns CardDTO.BackupStatus.NoBackup
+        every { wallets } returns emptyList()
+        every { firmwareVersion } returns CardDTO.FirmwareVersion(
+            major = 6,
+            minor = 33,
+            patch = 0,
+            type = com.tangem.common.card.FirmwareVersion.FirmwareType.Release,
+        )
+    }
+
+    private val scanResponse: ScanResponse = mockk {
+        every { card } returns primaryCardDto
+        every { copy(card = any()) } returns this@mockk
+    }
+
+    private val backupsFlow = MutableStateFlow(MultiWalletChildParams.Backup())
 
     private val multiWalletStateFlow = MutableStateFlow(
         OnboardingMultiWalletState(
@@ -86,6 +112,7 @@ internal class MultiWalletFinalizeModelTest {
     private val params: MultiWalletChildParams = mockk {
         every { multiWalletState } returns multiWalletStateFlow
         every { parentParams } returns this@MultiWalletFinalizeModelTest.parentParams
+        every { backups } returns backupsFlow
     }
 
     @BeforeEach
@@ -107,7 +134,10 @@ internal class MultiWalletFinalizeModelTest {
 
         val events = mutableListOf<MultiWalletFinalizeComponent.Event>()
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect { events.add(it) } }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect { events.add(it) } }
         advanceUntilIdle()
 
         Assertions.assertEquals(emptyList<MultiWalletFinalizeComponent.Event>(), events)
@@ -121,7 +151,10 @@ internal class MultiWalletFinalizeModelTest {
 
         val events = mutableListOf<MultiWalletFinalizeComponent.Event>()
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect { events.add(it) } }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect { events.add(it) } }
         advanceUntilIdle()
 
         Assertions.assertEquals(
@@ -138,7 +171,10 @@ internal class MultiWalletFinalizeModelTest {
 
         val events = mutableListOf<MultiWalletFinalizeComponent.Event>()
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect { events.add(it) } }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect { events.add(it) } }
         advanceUntilIdle()
 
         Assertions.assertEquals(
@@ -204,7 +240,10 @@ internal class MultiWalletFinalizeModelTest {
         )
 
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect {} }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect {} }
         advanceUntilIdle()
 
         val state = model.uiState.value
@@ -220,7 +259,10 @@ internal class MultiWalletFinalizeModelTest {
         )
 
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect {} }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect {} }
         advanceUntilIdle()
 
         val state = model.uiState.value
@@ -235,7 +277,10 @@ internal class MultiWalletFinalizeModelTest {
 
         val model = createModel(this)
         val received = mutableListOf<Unit>()
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onBackFlow.collect { received.add(it) } }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onBackFlow.collect { received.add(it) } }
         advanceUntilIdle()
 
         model.onBack()
@@ -252,7 +297,10 @@ internal class MultiWalletFinalizeModelTest {
         )
 
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect {} }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect {} }
         advanceUntilIdle()
 
         model.onBack()
@@ -285,7 +333,10 @@ internal class MultiWalletFinalizeModelTest {
 
         val events = mutableListOf<MultiWalletFinalizeComponent.Event>()
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect { events.add(it) } }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect { events.add(it) } }
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -294,7 +345,7 @@ internal class MultiWalletFinalizeModelTest {
         verify { tangemSdkManager.changeProductType(false) }
         verify { backupService.proceedBackup(iconScanRes = null, callback = any()) }
 
-        callbackSlot.captured.invoke(CompletionResult.Success(mockk()))
+        callbackSlot.captured.invoke(CompletionResult.Success(mockk(relaxed = true)))
         advanceUntilIdle()
 
         verify { tangemSdkManager.clearProductType() }
@@ -310,6 +361,114 @@ internal class MultiWalletFinalizeModelTest {
             events,
         )
     }
+
+    @Test
+    fun `GIVEN primary finalized WHEN onScanClick THEN primary card is reported with the card it returned`() =
+        runTest {
+            // Arrange
+            backupsFlow.value = MultiWalletChildParams.Backup(card2 = addedBackupCard(cardId = "backup-1-bbbb"))
+            val callbackSlot = slot<(CompletionResult<Card>) -> Unit>()
+            every {
+                backupService.proceedBackup(iconScanRes = null, callback = capture(callbackSlot))
+            } just Runs
+            val finalizedPrimaryCard: Card = mockk(relaxed = true) {
+                every { cardId } returns "primary-id-aaaa"
+                every { cardPublicKey } returns PRIMARY_CARD_PUBLIC_KEY
+                every { backupStatus } returns Card.BackupStatus.Active(cardsCount = 1)
+            }
+
+            val model = createModel(this)
+            backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+                model.onEvent.collect {}
+            }
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onScanClick.invoke()
+            advanceUntilIdle()
+            callbackSlot.captured.invoke(CompletionResult.Success(finalizedPrimaryCard))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                walletCardsBackupReporter.report(
+                    scanResponse = scanResponse,
+                    cards = listOf(
+                        WalletCardBackup(
+                            cardId = "primary-id-aaaa",
+                            cardPublicKey = PRIMARY_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.PRIMARY,
+                            backupStatus = CardBackupStatus.ACTIVE,
+                            curves = emptyList(),
+                        ),
+                        WalletCardBackup(
+                            cardId = "backup-1-bbbb",
+                            cardPublicKey = BACKUP_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.BACKUP_1,
+                            backupStatus = CardBackupStatus.NO_BACKUP,
+                            curves = emptyList(),
+                        ),
+                    ),
+                    usedSeed = false,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN backup card finalized WHEN onScanClick THEN it is reported as backup1 next to the primary card`() =
+        runTest {
+            // Arrange
+            multiWalletStateFlow.value = multiWalletStateFlow.value.copy(
+                startFromFinalize = OnboardingMultiWalletState.FinalizeStage.ScanBackupFirstCard,
+            )
+            every { backupService.currentState } returns BackupService.State.FinalizingBackupCard(index = 1)
+            val callbackSlot = slot<(CompletionResult<Card>) -> Unit>()
+            every {
+                backupService.proceedBackup(iconScanRes = null, callback = capture(callbackSlot))
+            } just Runs
+            val finalizedBackupCard: Card = mockk(relaxed = true) {
+                every { cardId } returns "backup-1-bbbb"
+                every { cardPublicKey } returns BACKUP_CARD_PUBLIC_KEY
+                every { backupStatus } returns Card.BackupStatus.Active(cardsCount = 1)
+            }
+
+            val model = createModel(this)
+            backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+                model.onEvent.collect {}
+            }
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onScanClick.invoke()
+            advanceUntilIdle()
+            callbackSlot.captured.invoke(CompletionResult.Success(finalizedBackupCard))
+            advanceUntilIdle()
+
+            // Assert
+            // the primary card was finalized in an earlier session, so it is reported as the scan response knows it
+            verify(exactly = 1) {
+                walletCardsBackupReporter.report(
+                    scanResponse = scanResponse,
+                    cards = listOf(
+                        WalletCardBackup(
+                            cardId = "primary-id-aaaa",
+                            cardPublicKey = PRIMARY_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.PRIMARY,
+                            backupStatus = CardBackupStatus.NO_BACKUP,
+                            curves = emptyList(),
+                        ),
+                        WalletCardBackup(
+                            cardId = "backup-1-bbbb",
+                            cardPublicKey = BACKUP_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.BACKUP_1,
+                            backupStatus = CardBackupStatus.ACTIVE,
+                            curves = emptyList(),
+                        ),
+                    ),
+                    usedSeed = false,
+                )
+            }
+        }
 
     @Test
     fun `GIVEN Ring primary WHEN onScanClick THEN changeProductType is true and ring icon is used`() = runTest {
@@ -343,7 +502,10 @@ internal class MultiWalletFinalizeModelTest {
 
         val events = mutableListOf<MultiWalletFinalizeComponent.Event>()
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect { events.add(it) } }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect { events.add(it) } }
         advanceUntilIdle()
         val stateBefore = model.uiState.value
 
@@ -367,7 +529,10 @@ internal class MultiWalletFinalizeModelTest {
         every { backupService.backupCardsBatchIds } returns emptyList()
 
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect {} }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect {} }
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -387,7 +552,10 @@ internal class MultiWalletFinalizeModelTest {
         } just Runs
 
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect {} }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect {} }
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -410,7 +578,10 @@ internal class MultiWalletFinalizeModelTest {
         } just Runs
 
         val model = createModel(this)
-        backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) { model.onEvent.collect {} }
+        backgroundScope.launch(
+            context = Dispatchers.Unconfined,
+            start = CoroutineStart.UNDISPATCHED
+        ) { model.onEvent.collect {} }
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -480,8 +651,17 @@ internal class MultiWalletFinalizeModelTest {
             uiMessageSender = uiMessageSender,
             backupValidator = backupValidator,
             analyticsEventHandler = analyticsEventHandler,
+            walletCardsBackupReporter = walletCardsBackupReporter,
+            derivationsHelper = derivationsHelper,
         )
     }
+
+    private fun addedBackupCard(cardId: String) = MultiWalletChildParams.Backup.BackupCardInfo(
+        cardId = cardId,
+        cardPublicKey = BACKUP_CARD_PUBLIC_KEY,
+        manufacturer = mockk(),
+        firmwareVersion = mockk(),
+    )
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
         val testDispatcher = StandardTestDispatcher(testScheduler)
@@ -495,6 +675,8 @@ internal class MultiWalletFinalizeModelTest {
     }
 
     private companion object {
+        private val PRIMARY_CARD_PUBLIC_KEY = byteArrayOf(0x01, 0x02)
+        private val BACKUP_CARD_PUBLIC_KEY = byteArrayOf(0x0A, 0x0B)
         private const val NON_RING_BATCH_ID = "AC02"
         private const val RING_BATCH_ID_AC17 = "AC17"
     }

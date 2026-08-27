@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.*
+import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import dagger.Module
@@ -81,5 +82,21 @@ object MarketsDomainModule {
     @Singleton
     fun provideGetTokenExchangesUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenExchangesUseCase {
         return GetTokenExchangesUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchCoinIndicatorsUseCase(
+        coinIndicatorsRepository: CoinIndicatorsRepository,
+    ): FetchCoinIndicatorsUseCase {
+        return FetchCoinIndicatorsUseCase(coinIndicatorsRepository = coinIndicatorsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetCoinIndicatorsUpdatesUseCase(
+        coinIndicatorsRepository: CoinIndicatorsRepository,
+    ): GetCoinIndicatorsUpdatesUseCase {
+        return GetCoinIndicatorsUpdatesUseCase(coinIndicatorsRepository = coinIndicatorsRepository)
     }
 }
