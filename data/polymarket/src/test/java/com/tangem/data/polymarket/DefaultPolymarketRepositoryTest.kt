@@ -633,7 +633,7 @@ internal class DefaultPolymarketRepositoryTest {
             signedOrder = signedOrder(),
         )
 
-        // Assert — the screen must never have to decide whether a 200 was a refusal
+        // Assert
         assertThat(result.leftOrNull())
             .isEqualTo(PredictionPlaceOrderError.Rejected(detail = "not enough balance"))
     }
@@ -651,7 +651,7 @@ internal class DefaultPolymarketRepositoryTest {
             signedOrder = signedOrder(),
         )
 
-        // Assert — the exchange may well have taken the order, so nothing may offer to send it again
+        // Assert
         assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
     }
 
