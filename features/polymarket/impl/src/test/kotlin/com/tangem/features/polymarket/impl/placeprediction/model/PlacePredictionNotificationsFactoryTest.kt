@@ -2,9 +2,11 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
-import com.tangem.features.polymarket.impl.placeprediction.entity.AmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
@@ -145,7 +147,8 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.payment.hasSufficientBalance).isFalse()
-        assertThat(actual.amountError).isEqualTo(AmountErrorUM.NotEnoughForBet)
+        assertThat(actual.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet))
     }
 
     @Test
@@ -157,12 +160,13 @@ internal class PlacePredictionNotificationsFactoryTest {
         val actual = state.recomputeGate()
 
         // Assert
-        assertThat(actual.amountError).isEqualTo(AmountErrorUM.NotEnoughForFees)
+        assertThat(actual.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees))
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
     }
 
     @Test
-    fun `GIVEN the balance covers the bet and its fees WHEN the gate runs THEN nothing is reported`() {
+    fun `GIVEN the balance covers the bet and its fees WHEN the gate runs THEN the payout is shown`() {
         // Arrange
         val state = createState(balance = BigDecimal("50"), quote = createQuote(total = BigDecimal("10.4")))
 
@@ -170,7 +174,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         val actual = state.recomputeGate()
 
         // Assert
-        assertThat(actual.amountError).isNull()
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.ToWin(payout = QUOTE_PAYOUT))
         assertThat(actual.isPrimaryButtonEnabled).isTrue()
     }
 
@@ -183,7 +187,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         val actual = state.recomputeGate()
 
         // Assert
-        assertThat(actual.amountError).isNull()
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.ToWin(payout = QUOTE_PAYOUT))
         assertThat(actual.payment.hasSufficientBalance).isFalse()
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
     }
@@ -230,4 +234,8 @@ internal class PlacePredictionNotificationsFactoryTest {
         total = total,
         minOrderSize = minOrderSize,
     )
+
+    private companion object {
+        val QUOTE_PAYOUT = PayoutUM(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2"))
+    }
 }
