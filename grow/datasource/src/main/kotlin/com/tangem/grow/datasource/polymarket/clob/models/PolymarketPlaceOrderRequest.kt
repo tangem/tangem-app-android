@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.polymarket.clob.models
+package com.tangem.grow.datasource.polymarket.clob.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

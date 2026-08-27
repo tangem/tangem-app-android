@@ -1,7 +1,7 @@
-package com.tangem.datasource.api.polymarket.geo
+package com.tangem.grow.datasource.polymarket.geo
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockResponse
+import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
 import retrofit2.http.GET
 
 interface PolymarketGeoApi {
