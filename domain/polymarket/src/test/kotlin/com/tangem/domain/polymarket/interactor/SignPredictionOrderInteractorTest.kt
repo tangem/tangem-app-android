@@ -127,7 +127,7 @@ internal class SignPredictionOrderInteractorTest {
         // Act
         val actual = interactor(request = createRequest())
 
-        // Assert — a signed order that fails the gate must never reach the caller
+        // Assert
         assertThat(actual).isEqualTo(PredictionOrderFailure.Invalid(error = error).left())
     }
 
