@@ -70,6 +70,7 @@ dependencies {
     /** Core modules */
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.store.datasource)
     implementation(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
