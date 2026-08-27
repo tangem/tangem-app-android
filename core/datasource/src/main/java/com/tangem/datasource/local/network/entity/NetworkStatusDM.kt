@@ -93,6 +93,9 @@ sealed interface NetworkStatusDM {
 
             @Json(name = "none")
             NONE,
+
+            @Json(name = "joint")
+            JOINT,
         }
     }
 

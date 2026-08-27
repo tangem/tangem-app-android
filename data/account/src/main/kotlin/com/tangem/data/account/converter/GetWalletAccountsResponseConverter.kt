@@ -15,15 +15,10 @@ import dagger.assisted.AssistedInject
 internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     cryptoPortfolioConverterFactory: CryptoPortfolioConverter.Factory,
-    private val jointAccountConverterFactory: JointAccountConverter.Factory,
 ) : Converter<AccountList, GetWalletAccountsResponse> {
 
     private val cryptoPortfolioConverter: CryptoPortfolioConverter by lazy {
         cryptoPortfolioConverterFactory.create(userWallet)
-    }
-
-    private val jointAccountConverter: JointAccountConverter by lazy {
-        jointAccountConverterFactory.create(userWallet)
     }
 
     override fun convert(value: AccountList): GetWalletAccountsResponse {
@@ -36,8 +31,7 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
             ),
             accounts = value.accounts.mapNotNull { account ->
                 when (account) {
-                    is Account.Personal -> cryptoPortfolioConverter.convertBack(account)
-                    is Account.Joint -> jointAccountConverter.convertBack(account)
+                    is Account.CryptoPortfolio -> cryptoPortfolioConverter.convertBack(account)
                     else -> null
                 }
             },

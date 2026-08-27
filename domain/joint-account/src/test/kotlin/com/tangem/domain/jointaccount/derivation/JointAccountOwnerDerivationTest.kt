@@ -1,6 +1,9 @@
 package com.tangem.domain.jointaccount.derivation
 
+import arrow.core.getOrElse
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.account.OwnerKeyIndex
+import com.tangem.domain.models.network.Network
 import org.junit.jupiter.api.Test
 
 internal class JointAccountOwnerDerivationTest {
@@ -23,5 +26,17 @@ internal class JointAccountOwnerDerivationTest {
 
         // Assert
         assertThat(exception).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    fun `GIVEN owner key index WHEN toNetworkDerivationPath THEN joint path at that index`() {
+        // Arrange
+        val index = OwnerKeyIndex(value = 7).getOrElse { error(it) }
+
+        // Act
+        val actual = index.toNetworkDerivationPath()
+
+        // Assert
+        assertThat(actual).isEqualTo(Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/7"))
     }
 }
