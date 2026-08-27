@@ -11,6 +11,8 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormatterBuilder
+import java.time.Month
+import java.time.format.TextStyle
 import java.util.Locale
 
 @Suppress("MagicNumber")
@@ -125,13 +127,6 @@ object DateTimeFormatters {
     }
 
     /**
-     * Example: "Jun"
-     */
-    val dateMMM: DateTimeFormatter by lazy {
-        getBestFormatterBySkeleton("MMM")
-    }
-
-    /**
      * Example: "31.06.2020 12:00", "06/31/2020 12:00", "06/31/2020 12:00 PM"
      */
     val dateTimeFormatter: DateTimeFormatter by lazy {
@@ -155,6 +150,11 @@ object DateTimeFormatters {
 
     fun formatDate(date: DateTime, formatter: DateTimeFormatter = dateFormatter): String {
         return formatter.print(date)
+    }
+
+    
+    fun formatStandaloneShortMonth(date: DateTime): String {
+        return Month.of(date.monthOfYear).getDisplayName(TextStyle.SHORT_STANDALONE, Locale.getDefault())
     }
 
     
