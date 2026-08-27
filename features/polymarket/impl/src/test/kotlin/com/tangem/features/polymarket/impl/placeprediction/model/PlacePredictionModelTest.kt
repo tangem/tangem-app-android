@@ -37,7 +37,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
-import com.tangem.features.polymarket.impl.placeprediction.entity.AmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -278,7 +279,7 @@ internal class PlacePredictionModelTest {
         // Assert
         assertThat(model.uiState.value.payment.balance).isNull()
         assertThat(model.uiState.value.payment.tokenSymbol).isEqualTo("USDC")
-        assertThat(model.uiState.value.amountError).isNull()
+        assertThat(model.uiState.value.amountCaption).isNotInstanceOf(AmountCaptionUM.Shortfall::class.java)
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
         model.onDestroy()
@@ -430,7 +431,8 @@ internal class PlacePredictionModelTest {
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
         // Assert
-        assertThat(model.uiState.value.amountError).isEqualTo(AmountErrorUM.NotEnoughForFees)
+        assertThat(model.uiState.value.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees))
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
         model.onDestroy()
