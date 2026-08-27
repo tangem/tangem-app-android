@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.arkivanov.essenty.backhandler.BackCallback
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
@@ -19,10 +18,6 @@ internal class DefaultResetCardComponent @AssistedInject constructor(
 ) : ResetCardComponent, AppComponentContext by appComponentContext {
 
     private val model: ResetCardModel = getOrCreateModel(params)
-
-    init {
-        backHandler.register(BackCallback { model.onBackClick() })
-    }
 
     @Composable
     override fun Content(modifier: Modifier) {
