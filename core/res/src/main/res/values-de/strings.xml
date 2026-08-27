@@ -35,6 +35,7 @@
   <string name="account_details_archive_action">Archiv</string>
   <string name="account_details_archive_description">Du archivierst dieses Konto, kannst es aber jederzeit entarchivieren.</string>
   <string name="account_details_archiving">Archivierung...</string>
+  <string name="account_details_joint_pending_description">Das Konto wird derzeit noch mit Mitgliedern befüllt.</string>
   <string name="account_details_title">Konto</string>
   <string name="account_edit_failure_dialog_title">Ich kann das Konto nicht bearbeiten.</string>
   <string name="account_edit_success_message">Konto gespeichert</string>
@@ -837,7 +838,7 @@
   <string name="hw_backup_alert_title">Möchtest Du den Aktivierungsprozess wirklich abbrechen?</string>
   <string name="hw_backup_banner_description">Hält Deine Kryptowährungen sicher und offline. Schlank wie eine Kreditkarte, sicherer als ein Banktresor.</string>
   <string name="hw_backup_close_description">Wenn dies der Fall ist, musst Du von vorne beginnen.</string>
-  <string name="hw_backup_cloud_delete_confirm_title">Löschen %s Backup?</string>
+  <string name="hw_backup_cloud_delete_confirm_title">%sBackup löschen?</string>
   <string name="hw_backup_google_drive_description">Vorhandene Wallet über Google Drive-Backup wiederherstellen</string>
   <string name="hw_backup_google_drive_dialog_message">Wir arbeiten an einer Google Drive-Datensicherung, um die Wiederherstellung der Wallet noch einfacher zu gestalten.</string>
   <string name="hw_backup_google_drive_dialog_title">Google Drive-Sicherung kommt bald</string>
@@ -861,7 +862,7 @@
   <string name="hw_backup_to_upgrade_description">Um Deine Wallet auf Hardware umzustellen, erstelle vorher ein Backup.</string>
   <string name="hw_backup_upgrade_description">Rüste Deine mobile Wallet auf eine Tangem-Hardware-Wallet um, um höchste Sicherheit zu gewährleisten. Importiere Deine Wallet oder übertrage Dein Guthaben auf eine neue Wallet.</string>
   <string name="hw_backup_upgrade_title">Upgrade auf Cold Wallet</string>
-  <string name="hw_cloud_backup_access_unavailable_description">Erlauben Sie Tangem die Nutzung %1$s Gehen Sie in die Einstellungen Ihres Geräts und versuchen Sie dann erneut, Ihre Sicherung zu speichern.</string>
+  <string name="hw_cloud_backup_access_unavailable_description">Erlaube Tangem in den Geräteeinstellungen den Zugriff auf %1$s und versuche anschließend erneut, dein Backup zu speichern.</string>
   <string name="hw_cloud_backup_access_unavailable_title">Kein Zugriff auf %1$s</string>
   <string name="hw_cloud_backup_cancel_setup_cancel">Backup abbrechen</string>
   <string name="hw_cloud_backup_cancel_setup_continue">Sicherung fortsetzen</string>
@@ -903,7 +904,7 @@
   <string name="hw_cloud_backup_restore_passphrase_description">Geben Sie die genaue Passphrase für diese Wallet ein. Bei der Eingabe wird zwischen Groß- und Kleinschreibung unterschieden; eine andere Passphrase öffnet daher einen anderen Satz von Adressen.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Passphrase eingeben</string>
   <string name="hw_cloud_backup_restore_password_button">Wiederherstellen</string>
-  <string name="hw_cloud_backup_restore_password_description">Sie stellen wieder her „%1$s\" von einem %2$s Sicherung erstellt am %3$s</string>
+  <string name="hw_cloud_backup_restore_password_description">Sie stellen „%1$s\" von einer am %3$s erstellten %2$s-Sicherung wieder her</string>
   <string name="hw_cloud_backup_restore_password_navtitle">Wallet wiederherstellen</string>
   <string name="hw_cloud_backup_restore_password_title">Passwort eingeben</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Seed-Phrase importieren</string>
@@ -937,17 +938,17 @@
   <string name="hw_create_upgrade_title">Upgrade auf Hardware-Wallet</string>
   <string name="hw_import_existing_wallet">Vorhandene Wallet importieren</string>
   <string name="hw_import_existing_wallet_description">Verwenden Sie weiterhin eine bereits vorhandene Wallet, indem Sie diese importieren oder wiederherstellen</string>
-  <string name="hw_import_restore_cloud_backup">Wiederherstellen %s Backup</string>
+  <string name="hw_import_restore_cloud_backup">%s-Backup wiederherstellen</string>
   <string name="hw_import_restore_cloud_backup_not_found">%s Backup nicht gefunden</string>
   <string name="hw_import_seed_phrase_already_imported">Diese Wiederherstellungsphrase wurde bereits importiert</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_remove_wallet_action_forget_title">Wallet dauerhaft entfernen</string>
   <string name="hw_remove_wallet_attention_description">Diese Wallet wird dauerhaft von Deinem Gerät entfernt.</string>
-  <string name="hw_remove_wallet_cloud_backup_description">Die Wallet wird von diesem Gerät entfernt. %s Das Backup bleibt sicher – Sie können diese Wallet jederzeit mit Ihrem Passwort wiederherstellen.</string>
-  <string name="hw_remove_wallet_cloud_backup_title">Trotzdem entfernen!</string>
+  <string name="hw_remove_wallet_cloud_backup_description">Die Wallet wird von diesem Gerät entfernt. Ihr %s-Backup bleibt sicher– Sie können diese Wallet jederzeit mit Ihrem Passwort wiederherstellen.</string>
+  <string name="hw_remove_wallet_cloud_backup_title">Diese Wallet entfernen?</string>
   <string name="hw_remove_wallet_confirmation_title">Bist du dir sicher, dass du das tun willst?</string>
   <string name="hw_remove_wallet_confirmation_with_cloud_backup">Wenn Sie diese Wallet löschen, wird auch die Google Drive-Sicherung entfernt. Stellen Sie sicher, dass Sie Zugriff auf Ihre Wiederherstellungsphrase haben – dieser Vorgang kann nicht rückgängig gemacht werden.</string>
-  <string name="hw_remove_wallet_forget_and_delete_backup">Wallet dauerhaft entfernen und löschen</string>
+  <string name="hw_remove_wallet_forget_and_delete_backup">Entfernen und Backup löschen</string>
   <string name="hw_remove_wallet_nav_title">Wallet dauerhaft entfernen</string>
   <string name="hw_remove_wallet_notification_action_backup_go">Zum Backup wechseln</string>
   <string name="hw_remove_wallet_notification_action_backup_view">Backup anzeigen</string>
@@ -1002,6 +1003,8 @@
   <string name="introduction_create_wallet_hardware_title">Tangem-Karte oder -Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Ohne Hardware-Wallet beginnen</string>
   <string name="introduction_create_wallet_seed_phrase_title">Wallet mit Seed-Phrase erstellen</string>
+  <string name="introduction_i_have_wallet_hardware_description">Verwenden Sie die Tangem Wallet, um die App zu öffnen</string>
+  <string name="introduction_i_have_wallet_sign_in_google_title">Mit Google anmelden</string>
   <string name="introduction_legal">Wenn Sie fortfahren, erklären Sie sich mit %1$s und %2$s</string>
   <string name="introduction_terms_of_service">Nutzungsbedingungen</string>
   <string name="joint_account_activation_account_button_title">Konto aktivieren</string>
@@ -1544,6 +1547,10 @@
   <string name="prediction_place_button">Platz vorhersagen</string>
   <string name="prediction_place_error_description">Die Bestellung konnte nicht aufgegeben werden. Bitte versuchen Sie es später erneut.</string>
   <string name="prediction_place_fee">Gebühr</string>
+  <string name="prediction_place_insufficient_balance_bet">Guthaben reicht nicht aus – Guthaben für den Einsatz aufladen</string>
+  <string name="prediction_place_insufficient_balance_fees">Guthaben reicht nicht aus – zur Deckung der Gebühren</string>
+  <string name="prediction_place_notification_awaiting_funds_description">Ihr Guthaben ist unterwegs. Ihr Kontostand wird alle paar Sekunden aktualisiert, sodass Sie auf diesem Bildschirm bleiben können.</string>
+  <string name="prediction_place_notification_awaiting_funds_title">Ich warte auf die Gelder.</string>
   <string name="prediction_place_notification_market_closed_description">Dieser Marktplatz nimmt keine Bestellungen mehr an.</string>
   <string name="prediction_place_notification_market_closed_title">Der Markt ist geschlossen.</string>
   <string name="prediction_place_notification_min_order_description">Erhöhen Sie den Einsatz, um diese Vorhersage abzugeben</string>
