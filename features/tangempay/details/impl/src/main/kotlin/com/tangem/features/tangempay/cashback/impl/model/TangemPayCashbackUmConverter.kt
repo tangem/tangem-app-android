@@ -13,6 +13,7 @@ import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isNegative
 import com.tangem.utils.extensions.isZero
+import java.util.Currency
 
 internal class TangemPayCashbackUmConverter(
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
@@ -29,24 +30,16 @@ internal class TangemPayCashbackUmConverter(
         }
         val currency = getJavaCurrencyByCode(value.currency)
         val earned = value.confirmedAmount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
-        val month = dateFormatter.formatMonth(value.period.year, value.period.month)
         val monthIn = arrayItemReference(R.array.common_month_in, value.period.month - 1)
         val isNegative = value.confirmedAmount.isNegative()
-        val payoutEnd = value.period.payoutEnd?.let(dateFormatter::formatMonthDay)
+        val previousPayout = value.previousPayout
         val banner = when {
             isNegative -> TangemPayCashbackUM.Banner(
                 text = resourceReference(R.string.tangempay_cashback_refund_banner),
                 type = TangemPayCashbackUM.Banner.Type.Error,
             )
-            // The deposit promise cannot be worded without a payout date, so the banner is dropped instead
-            payoutEnd == null -> null
-            else -> TangemPayCashbackUM.Banner(
-                text = resourceReference(
-                    id = R.string.tangempay_cashback_deposit_banner,
-                    formatArgs = wrappedList(earned, month, payoutEnd),
-                ),
-                type = TangemPayCashbackUM.Banner.Type.Info,
-            )
+            previousPayout == null -> null
+            else -> depositBanner(payout = previousPayout, currency = currency)
         }
         val subtitle = if (isNegative) {
             null
@@ -59,6 +52,26 @@ internal class TangemPayCashbackUmConverter(
             subtitle = subtitle,
             isEmpty = false,
             banner = banner,
+        )
+    }
+
+    private fun depositBanner(
+        payout: TangemPayCashback.PreviousPayout,
+        currency: Currency,
+    ): TangemPayCashbackUM.Banner {
+        val amount = payout.amount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
+        // The payout always lands in the month after the one it was earned in
+        val earnedMonth = payout.endDate.minusMonths(1)
+        return TangemPayCashbackUM.Banner(
+            text = resourceReference(
+                id = R.string.tangempay_cashback_deposit_banner,
+                formatArgs = wrappedList(
+                    amount,
+                    dateFormatter.formatMonth(earnedMonth.year, earnedMonth.monthOfYear),
+                    dateFormatter.formatMonthDay(payout.endDate),
+                ),
+            ),
+            type = TangemPayCashbackUM.Banner.Type.Info,
         )
     }
 }

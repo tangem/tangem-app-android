@@ -103,29 +103,27 @@ internal class TangemPayCashbackModelTest {
     }
 
     @Test
-    fun `GIVEN promotions load fails WHEN model created THEN tiles hidden and details rows empty`() {
+    fun `GIVEN promotions load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackPromotions(any()) } throws RuntimeException("boom")
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns VisaApiError.Unspecified.left()
 
         // Act
         val model = createModel()
 
         // Assert
-        assertThat(model.content().infoTiles).isNull()
-        assertThat(model.detailsSheet.value.rows).isEmpty()
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Error::class.java)
     }
 
     @Test
-    fun `GIVEN summary load fails WHEN model created THEN tiles still shown`() {
+    fun `GIVEN summary load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackSummary(any()) } throws RuntimeException("boom")
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns VisaApiError.Unspecified.left()
 
         // Act
         val model = createModel()
 
         // Assert
-        assertThat(model.content().infoTiles).isNotNull()
-        assertThat(model.detailsSheet.value.rows).hasSize(DETAILS_ROWS_WITHOUT_PAYOUT)
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Error::class.java)
     }
 
     @Test
@@ -205,16 +203,42 @@ internal class TangemPayCashbackModelTest {
     }
 
     @Test
-    fun `GIVEN docs load fails WHEN model created THEN accrual doc rows empty but info rows kept`() {
+    fun `GIVEN docs load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } throws RuntimeException("boom")
+        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns VisaApiError.Unspecified.left()
 
         // Act
         val model = createModel()
 
         // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Error::class.java)
+    }
+
+    @Test
+    fun `GIVEN empty docs list WHEN model created THEN content shown with empty doc rows`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns emptyList<CashbackDocument>().right()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Content::class.java)
         assertThat(model.accrualsSheet.value.docRows).isEmpty()
         assertThat(model.accrualsSheet.value.infoRows).isNotEmpty()
+    }
+
+    @Test
+    fun `GIVEN enabled summary AND history fails WHEN model created THEN error state`() {
+        // Arrange
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns enabledSummary().right()
+        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns VisaApiError.Unspecified.left()
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayCashbackScreenUM.Error::class.java)
     }
 
     @Test
