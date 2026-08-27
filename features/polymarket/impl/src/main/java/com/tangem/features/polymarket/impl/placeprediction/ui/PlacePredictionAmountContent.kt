@@ -41,7 +41,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
@@ -97,8 +96,7 @@ internal fun PlacePredictionAmountContent(
             PredictionMarketBlock(state = state.market)
             PredictionAmountBlock(
                 amountValue = state.amountValue,
-                payout = state.quote.payout(),
-                amountError = state.amountError,
+                amountCaption = state.amountCaption,
                 payment = state.payment,
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
