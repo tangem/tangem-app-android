@@ -149,6 +149,8 @@ internal class TangemPayDetailsModel @Inject constructor(
                 sendTiersAnalytics(state)
                 when (state) {
                     is PaymentAccountStatusValue.Deactivated -> {
+                        cashbackBlockJobHolder.cancel()
+                        cashbackTransformer = null
                         uiState.update { stateFactory.getDeactivatedState(state) }
                         handleInitialRoute()
                     }
@@ -269,6 +271,8 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun fetchCashbackBlock() {
         if (!tangemPayFeatureToggles.isCashbackEnabled || cashbackBlockJobHolder.isActive) return
+        // A closed account shows only the deactivation notice — no cashback UI on top of it ([REDACTED_TASK_KEY])
+        if (currentStatus.value.value is PaymentAccountStatusValue.Deactivated) return
         modelScope.launch {
             getCashbackSummaryUseCase(userWalletId).onRight { summary ->
                 val isDismissed = getCashbackDeactivationDismissedUseCase(userWalletId)
