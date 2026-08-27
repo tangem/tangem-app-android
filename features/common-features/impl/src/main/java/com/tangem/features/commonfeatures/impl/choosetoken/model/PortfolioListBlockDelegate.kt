@@ -119,6 +119,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
                             searchQuery = searchQuery,
                             tokenFilter = tokenFilter,
                             isShowPaymentAccount = featureSettings.isShowPaymentAccount,
+                            isPaymentAccountMultiTokenEnabled = featureSettings.isPaymentAccountMultiTokenEnabled,
                             balanceFilter = balanceFilter,
                         ),
                     ).convert()

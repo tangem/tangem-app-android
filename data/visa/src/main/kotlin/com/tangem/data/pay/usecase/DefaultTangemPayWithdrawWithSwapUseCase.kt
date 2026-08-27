@@ -18,7 +18,7 @@ internal class DefaultTangemPayWithdrawWithSwapUseCase @Inject constructor(
     override suspend fun invoke(
         userWallet: UserWallet,
         cryptoAmount: BigDecimal,
-        cryptoCurrencyId: CryptoCurrency.RawID,
+        sourceCurrency: CryptoCurrency,
         receiverCexAddress: String,
         exchangeData: TangemPayWithdrawExchangeState,
     ): Either<UniversalError, WithdrawalResult> {
@@ -26,7 +26,7 @@ internal class DefaultTangemPayWithdrawWithSwapUseCase @Inject constructor(
             userWallet = userWallet,
             cryptoAmount = cryptoAmount,
             receiverAddress = receiverCexAddress,
-            cryptoCurrencyId = cryptoCurrencyId,
+            sourceCurrency = sourceCurrency,
             exchangeData = exchangeData,
         )
     }
