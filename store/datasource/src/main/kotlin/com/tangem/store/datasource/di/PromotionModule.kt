@@ -1,4 +1,4 @@
-package com.tangem.datasource.di
+package com.tangem.store.datasource.di
 
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
