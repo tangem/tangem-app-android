@@ -18,6 +18,8 @@ enum class ExpressOnrampStatus(val raw: String) {
     Sending("sending"),
     Finished("finished"),
     Paused("paused"),
+    RefundInProgress("refund-in-progress"),
+    Refunded("refunded"),
 
     /**
      * Client-side fallback for an unrecognized status. The backend does NOT currently send such a value —
@@ -28,7 +30,8 @@ enum class ExpressOnrampStatus(val raw: String) {
 
     /**
      * Whether the deal has reached a final state where no further status changes are expected.
-     * Terminal: [Expired], [Failed], [Finished], [Paused] (and the client fallback [Unknown]).
+     * Terminal: [Expired], [Failed], [Finished], [Paused], [Refunded] (and the client fallback [Unknown]).
+     * [RefundInProgress] is still in flight — the refund has not settled yet.
      */
     val isTerminal: Boolean
         get() = when (this) {
@@ -36,6 +39,7 @@ enum class ExpressOnrampStatus(val raw: String) {
             Failed,
             Finished,
             Paused,
+            Refunded,
             Unknown,
             -> true
             Created,
@@ -44,6 +48,7 @@ enum class ExpressOnrampStatus(val raw: String) {
             Verifying,
             Paid,
             Sending,
+            RefundInProgress,
             -> false
         }
 

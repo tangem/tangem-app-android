@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.tangemTech
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
@@ -178,6 +178,14 @@ interface TangemTechApi {
 
     @POST("v1/user-wallets/wallets")
     suspend fun createWallet(@Body body: WalletIdBody): ApiResponse<Unit>
+
+    /** Sends the cards of the wallet [walletId] and the state of its backup */
+    @POST("api/v1/wallets/{wallet_id}/card-backups")
+    suspend fun saveWalletCards(@Path("wallet_id") walletId: String, @Body body: WalletCardsBody): ApiResponse<Unit>
+
+    /** Returns the cards of the wallet [walletId] and the state of its backup */
+    @GET("api/v1/wallets/{wallet_id}/card-backups")
+    suspend fun getWalletCards(@Path("wallet_id") walletId: String): ApiResponse<WalletCardsResponse>
     // endregion
 
     // promo

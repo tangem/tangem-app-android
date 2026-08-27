@@ -1,0 +1,20 @@
+package com.tangem.features.tangempay.card.view
+
+import com.tangem.utils.transformer.Transformer
+
+internal class DetailsHiddenStateTransformer(
+    private val stateFactory: TangemPayCardDetailsBlockStateFactory,
+    private val shouldShowCardDetailsButtonOnCard: Boolean,
+) : Transformer<TangemPayCardDetailsUM> {
+
+    override fun transform(prevState: TangemPayCardDetailsUM): TangemPayCardDetailsUM {
+        val initialState = stateFactory.getInitialState()
+        return prevState.copy(
+            buttonText = initialState.buttonText,
+            onClick = initialState.onClick,
+            isHidden = initialState.isHidden,
+            isLoading = initialState.isLoading,
+            shouldShowCardDetailsButtonOnCard = shouldShowCardDetailsButtonOnCard,
+        )
+    }
+}

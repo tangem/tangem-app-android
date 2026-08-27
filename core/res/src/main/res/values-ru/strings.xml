@@ -1796,6 +1796,8 @@
   <string name="swap_story_third_subtitle_v2">Обменивайте тысячи токенов между любыми сетями. Комиссия 0% на обмен стейблкоинов</string>
   <string name="swap_story_third_title">Проще простого</string>
   <string name="swap_story_third_title_v2">90+ Блокчейнов\n16 000+ Активов</string>
+  <string name="swap_token_selector_empty_filtered_message">В этом кошельке нет токенов с балансом. Посмотрите другие кошельки или измените фильтр</string>
+  <string name="swap_token_selector_filter_hide_zero_balance">Скрыть нулевые балансы</string>
   <string name="swap_via_provider">Обмен через провайдера</string>
   <string name="swap_your_assets_title">Ваши средства</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
@@ -1866,7 +1868,7 @@
   <string name="tangem_pay_terms_fees_limits">Тарифы и полные условия</string>
   <string name="tangem_pay_terms_limits">Тарифы и лимиты</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк отклонил транзакцию</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Мин.сумма  — %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Ниже мин.суммы</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Достигнут лимит</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC исключён</string>
   <string name="tangem_pay_transaction_details_cashback_none">Без кэшбэка</string>
@@ -2005,7 +2007,7 @@
   <string name="tangempay_cashback_widget_title">%1$s кэшбэк в %2$s</string>
   <string name="tangempay_change_pin_code">Изменить PIN-код</string>
   <string name="tangempay_changing_plan">Изменение тарифа</string>
-  <string name="tangempay_choose_network_fast_way">Быстрый способ</string>
+  <string name="tangempay_choose_network_fast_way">Быстрые способы</string>
   <string name="tangempay_choose_network_other_ways">Другие способы</string>
   <string name="tangempay_choose_network_row_error">Не удалось получить адрес, попробуйте снова</string>
   <string name="tangempay_choose_network_row_loading">Подготовка адреса…</string>
@@ -2013,7 +2015,7 @@
   <string name="tangempay_common_card">Карта</string>
   <string name="tangempay_common_error_loading">Ошибка загрузки</string>
   <string name="tangempay_current_plan_active_till_notification">Ваш тариф %1$s активен до %2$s, после чего мы переведём вас на %3$s. %4$s не будет списано.</string>
-  <string name="tangempay_current_plan_change">Изменить тариф</string>
+  <string name="tangempay_current_plan_change">Сменить тариф</string>
   <string name="tangempay_current_plan_fee_charged_notification">Ежемесячная плата %1$s будет списана %2$s</string>
   <string name="tangempay_current_plan_section_card">По карте</string>
   <string name="tangempay_current_plan_section_plan">По тарифу</string>
@@ -2093,8 +2095,8 @@
   <string name="tangempay_newonboard_body">Тратьте крипту где угодно — без банков, бирж и посредников. Сила self-custody для повседневных платежей.</string>
   <string name="tangempay_newonboard_bottomleft_body">Онлайн и c Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Принимается везде</string>
-  <string name="tangempay_newonboard_bottomright_body">За покупки не в USD</string>
-  <string name="tangempay_newonboard_bottomright_title">FX-комиссия 1%</string>
+  <string name="tangempay_newonboard_bottomright_body">USD в USDC 1:1; фикс.комиссия $1</string>
+  <string name="tangempay_newonboard_bottomright_title">Получайте ACH-переводы</string>
   <string name="tangempay_newonboard_title">Откройте Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Без комиссии за покупки</string>
@@ -2219,6 +2221,11 @@
   <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Показать QR код</string>
+  <string name="token_summary_galaxy_score_description">Galaxy Score объединяет рыночные показатели и активность в соцсетях в единую оценку от 0 до 100, которая отражает общее состояние актива. Источник: LunarCrush.</string>
+  <string name="token_summary_ma_cross_description">MA Cross сравнивает средние цены за 50 и 200 дней и показывает, торгуется ли актив выше или ниже своего долгосрочного тренда. Источник: taapi.io.</string>
+  <string name="token_summary_macd_description">MACD сравнивает краткосрочный и долгосрочный ценовой импульс и показывает, усиливается он или ослабевает. Источник: taapi.io.</string>
+  <string name="token_summary_rsi_description">RSI (индекс относительной силы) показывает, не слишком ли интенсивно покупали или продавали актив за последние 14 периодов, и сигнализирует о возможной перекупленности или перепроданности. Источник: taapi.io.</string>
+  <string name="token_summary_sentiment_description">Sentiment (настроение) оценивает тональность постов об активе в соцсетях по шкале от 1 до 5: чем выше оценка, тем позитивнее обсуждение. Источник: LunarCrush.</string>
   <string name="token_swap_changelly_promotion_message">Обменивайте этот токен на другие с %1$s комиссии за обслуживание с %2$s по %3$s февраля.</string>
   <string name="token_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="token_swap_promotion_button">Обменять</string>
