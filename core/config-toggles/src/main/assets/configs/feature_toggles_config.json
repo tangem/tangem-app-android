@@ -1,5 +1,9 @@
 [
     {
+        "name": "TWI_1741_TOP_UP_WARNING_ENABLED",
+        "version": "6.3"
+    },
+    {
         "name": "AND_16115_OTEL_METRICS_ENABLED",
         "version": "undefined"
     },
