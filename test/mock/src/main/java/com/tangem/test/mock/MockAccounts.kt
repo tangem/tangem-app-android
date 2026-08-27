@@ -90,6 +90,7 @@ object MockAccounts {
         depositAddress: String? = "0xdeposit",
         fiatRate: BigDecimal? = BigDecimal.ONE,
         balance: PaymentAccountStatusValue.Balance = createPaymentAccountBalance(),
+        networks: List<PaymentNetworkStatus> = emptyList(),
     ): AccountStatus.Payment {
         return AccountStatus.Payment(
             account = Account.Payment(userWalletId),
@@ -99,7 +100,7 @@ object MockAccounts {
                 depositAddress = depositAddress,
                 balance = balance,
                 cryptoCurrency = cryptoCurrency,
-                networks = emptyList(),
+                networks = networks,
                 cards = emptyList(),
                 fiatRate = fiatRate,
                 error = null,
@@ -135,11 +136,14 @@ object MockAccounts {
         contractAddress: String = "0xcontract",
         name: String = "USD Coin",
         symbol: String = "USDC",
+        networkId: String = "polygon",
+        networkName: String = "Polygon",
+        networkCurrencySymbol: String = "MATIC",
     ): CryptoCurrency.Token {
         val network = Network(
-            id = Network.ID(value = "polygon", derivationPath = Network.DerivationPath.None),
-            name = "Polygon",
-            currencySymbol = "MATIC",
+            id = Network.ID(value = networkId, derivationPath = Network.DerivationPath.None),
+            name = networkName,
+            currencySymbol = networkCurrencySymbol,
             derivationPath = Network.DerivationPath.None,
             isTestnet = false,
             standardType = Network.StandardType.ERC20,
@@ -151,7 +155,7 @@ object MockAccounts {
         return CryptoCurrency.Token(
             id = CryptoCurrency.ID(
                 prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-                body = CryptoCurrency.ID.Body.NetworkId(rawId = "polygon"),
+                body = CryptoCurrency.ID.Body.NetworkId(rawId = networkId),
                 suffix = CryptoCurrency.ID.Suffix.RawID(rawId = rawId),
             ),
             network = network,
