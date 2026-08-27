@@ -42,6 +42,7 @@ import com.tangem.features.feed.nav.FeedScreenFactory
 import com.tangem.features.feed.nav.FeedTabSet
 import com.tangem.features.feed.ui.v2.FeedSearchBarHeader
 import com.tangem.features.feed.v2.FeedV2Component
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -55,6 +56,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val screenFactories: Map<Class<*>, @JvmSuppressWildcards Provider<FeedScreenFactory>>,
     private val tabSet: FeedTabSet,
     private val searchBarController: DefaultFeedSearchBarController,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : FeedV2Component, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<FeedRoute>()
@@ -160,7 +162,11 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         val childContext = childByContext(componentContext = factoryContext, router = feedRouter)
 
         return when (route) {
-            is FeedHomeRoute -> FeedHomeComponent(context = childContext, tabSet = tabSet)
+            is FeedHomeRoute -> FeedHomeComponent(
+                context = childContext,
+                tabSet = tabSet,
+                isPredictionsEntryVisible = polymarketFeatureToggles.isPolymarketEnabled,
+            )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
                 .get()
                 .create(context = childContext, route = route)
