@@ -5,6 +5,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -91,6 +93,16 @@ internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
 @Immutable
 internal data class SlippageUM(val percent: BigDecimal, val isDefault: Boolean)
+
+internal fun SlippageUM.label(): TextReference {
+    val formatted = "$percent%"
+
+    return if (isDefault) {
+        resourceReference(R.string.prediction_place_slippage_default, wrappedList(formatted))
+    } else {
+        stringReference(formatted)
+    }
+}
 
 @Immutable
 internal sealed interface QuoteUM {
