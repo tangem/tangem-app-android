@@ -1,10 +1,5 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.api.common.config.TangemTech
-import com.tangem.datasource.api.common.config.PolymarketWeb
-import com.tangem.datasource.api.common.config.PolymarketRelayer
-import com.tangem.datasource.api.common.config.PolymarketClob
-
 import com.tangem.datasource.BuildConfig
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
@@ -12,13 +7,6 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
-import com.tangem.datasource.api.polymarket.PolymarketApi
-import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
-import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
-import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
-import com.tangem.core.remote.RetrofitApiSpec
-import com.tangem.core.remote.build
-import com.tangem.datasource.di.utils.RetrofitApiBuilder
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
@@ -27,7 +15,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
@@ -53,55 +40,5 @@ internal object NetworkModule {
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)
             else -> ProdApiConfigsManager(apiConfigs)
         }
-    }
-
-    @Provides
-    @Singleton
-    fun providePolymarketApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketApi {
-        // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun providePolymarketGeoApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketGeoApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = PolymarketWeb.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun providePolymarketRelayerApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketRelayerApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = PolymarketRelayer.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-            ),
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun providePolymarketClobApi(retrofitApiBuilder: RetrofitApiBuilder): PolymarketClobApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = PolymarketClob.ID,
-                shouldApplyTimeoutAnnotations = false,
-                shouldUseSessionAuth = false,
-                shouldSaveLogs = false,
-            ),
-        )
     }
 }
