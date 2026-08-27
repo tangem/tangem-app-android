@@ -2,7 +2,7 @@ package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketPlaceOrderResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import org.junit.jupiter.api.Test
 
 internal class PolymarketPlaceOrderWireFormatTest {

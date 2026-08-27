@@ -1,10 +1,10 @@
-package com.tangem.datasource.api.common.config
+package com.tangem.grow.datasource.config
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
 
-class PolymarketClob : ApiConfig() {
+class PolymarketRelayer : ApiConfig() {
 
     override val id: ApiConfig.ID get() = ID
 
@@ -13,12 +13,12 @@ class PolymarketClob : ApiConfig() {
     override val environmentConfigs = listOf(
         ApiEnvironmentConfig(
             environment = ApiEnvironment.PROD,
-            baseUrl = "https://clob.polymarket.com/",
+            baseUrl = "https://relayer-v2.polymarket.com/",
         ),
     )
 
     companion object {
-        const val KEY = "PolymarketClob"
+        const val KEY = "PolymarketRelayer"
         val ID = ApiConfig.ID(KEY)
     }
 }

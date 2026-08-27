@@ -1,16 +1,16 @@
-package com.tangem.datasource.api.polymarket
+package com.tangem.grow.datasource.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketSearchResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventsResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketSearchResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletApprovalsRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletOperationResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
