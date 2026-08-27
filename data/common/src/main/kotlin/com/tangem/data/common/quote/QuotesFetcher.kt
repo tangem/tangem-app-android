@@ -2,7 +2,7 @@ package com.tangem.data.common.quote
 
 import arrow.core.Either
 import com.tangem.data.common.quote.utils.combine
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 
 /**

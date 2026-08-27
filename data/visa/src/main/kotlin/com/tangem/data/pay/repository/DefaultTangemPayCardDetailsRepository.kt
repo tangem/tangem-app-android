@@ -1,5 +1,7 @@
 package com.tangem.data.pay.repository
 
+import com.tangem.spend.datasource.config.TangemPay
+
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.catch
@@ -9,16 +11,15 @@ import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.RainCryptoUtil
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.data.visa.config.VisaLibLoader
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
-import com.tangem.datasource.api.pay.models.request.FreezeUnfreezeCardRequest
-import com.tangem.datasource.api.pay.models.request.UpdateCardRequest
-import com.tangem.datasource.api.pay.models.request.SetPinRequest
-import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
-import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
+import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.CardDetailsRequest
+import com.tangem.spend.datasource.pay.models.request.FreezeUnfreezeCardRequest
+import com.tangem.spend.datasource.pay.models.request.UpdateCardRequest
+import com.tangem.spend.datasource.pay.models.request.SetPinRequest
+import com.tangem.spend.datasource.pay.models.response.FreezeUnfreezeCardResponse
+import com.tangem.spend.datasource.pay.models.response.OrderResponse.Result.Status
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.CardDisplayName
@@ -327,7 +328,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     }
 
     private suspend fun getPublicKeyBase64(): String {
-        val env = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemPay).environment
+        val env = apiConfigsManager.getEnvironmentConfig(TangemPay.Bff.ID).environment
         return when (env) {
             ApiEnvironment.DEV,
             ApiEnvironment.DEV_2,

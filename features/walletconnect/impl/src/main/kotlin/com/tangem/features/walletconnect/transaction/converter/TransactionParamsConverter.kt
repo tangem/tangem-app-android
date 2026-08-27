@@ -34,18 +34,12 @@ internal class TransactionParamsConverter @Inject constructor() : Converter<Stri
                                 result.addMultipleObjectsBlock(key, objectValue)
                             }
 
+                            // Render the whole EIP-712 `message` object, not just contents/from/to.
+                            // Otherwise dangerous approval payloads (EIP-2612 Permit / Permit2), whose
+                            // fields are owner/spender/value/amount/deadline, would show nothing —
+                            // the user must be able to see the spender and the approved value/amount.
                             MESSAGE -> if (objectValue is JSONObject) {
-                                objectValue.optString(CONTENTS).let { contents ->
-                                    result.addNestedStringValueBlock(key, nestedKey = CONTENTS, contents)
-                                }
-
-                                objectValue.optJSONObject(FROM)?.let { from ->
-                                    result.addMultipleObjectsBlock(FROM, from)
-                                }
-
-                                objectValue.optJSONObject(TO)?.let { to ->
-                                    result.addMultipleObjectsBlock(TO, to)
-                                }
+                                result.addObjectBlocks(key, objectValue)
                             }
 
                             else -> loop(objectValue)
@@ -89,23 +83,63 @@ internal class TransactionParamsConverter @Inject constructor() : Converter<Stri
         return this
     }
 
-    private fun MutableList<WcTransactionRequestBlockUM>.addNestedStringValueBlock(
-        key: String,
-        nestedKey: String,
-        stringValue: String,
-    ): MutableList<WcTransactionRequestBlockUM> {
-        add(
-            WcTransactionRequestBlockUM(
-                info = listOf(
-                    WcTransactionRequestInfoItemUM(TextReference.Str(key.capitalize())),
-                    WcTransactionRequestInfoItemUM(
-                        title = TextReference.Str(nestedKey.capitalize()),
-                        description = stringValue,
-                    ),
-                ).toImmutableList(),
-            ),
-        )
-        return this
+    /**
+     * Renders an EIP-712 `message`-like object **fully and recursively**, so no security-critical field
+     * can hide:
+     *  - all scalar fields of [obj] (e.g. owner/spender/value/nonce/deadline of an EIP-2612 Permit) as
+     *    one block titled [key],
+     *  - every nested object at any depth (e.g. Permit2 `details`/`permitted`) as its own block,
+     *  - arrays of scalars and arrays of objects (e.g. Permit2 `PermitBatch`).
+     *
+     * Replaces the old behaviour that surfaced only `contents`/`from`/`to`.
+     */
+    private fun MutableList<WcTransactionRequestBlockUM>.addObjectBlocks(key: String, obj: JSONObject) {
+        val scalars = extractObjects(obj)
+        if (scalars.isNotEmpty()) {
+            add(
+                WcTransactionRequestBlockUM(
+                    info = buildList {
+                        add(WcTransactionRequestInfoItemUM(TextReference.Str(key.capitalize())))
+                        addAll(scalars)
+                    }.toImmutableList(),
+                ),
+            )
+        }
+        for (nestedKey in obj.keys()) {
+            when (val nested = obj.get(nestedKey)) {
+                is JSONObject -> addObjectBlocks(nestedKey, nested)
+                is JSONArray -> addArrayBlocks(nestedKey, nested)
+            }
+        }
+    }
+
+    private fun MutableList<WcTransactionRequestBlockUM>.addArrayBlocks(key: String, array: JSONArray) {
+        // Scalar elements: one block, one row per element.
+        val scalarItems = buildList {
+            for (i in 0 until array.length()) {
+                val element = array.get(i)
+                if (element is String || element is Number || element is Boolean) {
+                    add(WcTransactionRequestInfoItemUM(TextReference.Str("$key[$i]"), element.toString()))
+                }
+            }
+        }
+        if (scalarItems.isNotEmpty()) {
+            add(
+                WcTransactionRequestBlockUM(
+                    info = buildList {
+                        add(WcTransactionRequestInfoItemUM(TextReference.Str(key.capitalize())))
+                        addAll(scalarItems)
+                    }.toImmutableList(),
+                ),
+            )
+        }
+        // Object / nested-array elements: recurse so their fields stay visible at any depth.
+        for (i in 0 until array.length()) {
+            when (val element = array.get(i)) {
+                is JSONObject -> addObjectBlocks("$key[$i]", element)
+                is JSONArray -> addArrayBlocks("$key[$i]", element)
+            }
+        }
     }
 
     private fun MutableList<WcTransactionRequestBlockUM>.addMultipleObjectsBlock(
@@ -149,6 +183,5 @@ internal class TransactionParamsConverter @Inject constructor() : Converter<Stri
         const val VALUE = "value"
         const val DOMAIN = "domain"
         const val MESSAGE = "message"
-        const val CONTENTS = "contents"
     }
 }

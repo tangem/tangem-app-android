@@ -6,8 +6,8 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody

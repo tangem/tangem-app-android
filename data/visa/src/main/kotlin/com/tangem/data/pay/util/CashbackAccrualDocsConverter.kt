@@ -1,6 +1,6 @@
 package com.tangem.data.pay.util
 
-import com.tangem.datasource.api.pay.models.response.CashbackAccrualDocsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackAccrualDocsResponse
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.utils.converter.Converter
 

@@ -2,7 +2,7 @@ package com.tangem.blockchainsdk.providers
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.network.providers.ProviderType
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import javax.inject.Inject
 import javax.inject.Singleton
 

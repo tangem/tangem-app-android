@@ -46,6 +46,7 @@ class DefaultYieldDeepLinkHandlerTest {
     fun setUp() {
         mockkObject(TangemLogger)
         every { appRouter.push(any(), any()) } just Runs
+        every { appRouter.stack } returns emptyList()
     }
 
     @Test
@@ -161,6 +162,70 @@ class DefaultYieldDeepLinkHandlerTest {
                 any(),
             )
         }
+    }
+
+    @Test
+    fun `same bare yield deeplink while earn already in stack does not push again`() = runTest {
+        every { appRouter.stack } returns listOf(
+            AppRoute.Earn(
+                preselectedEarnType = PreselectedEarnType.Yield,
+                preselectedNetworkId = null,
+            ),
+        )
+
+        handle(
+            scope = CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+            queryParams = emptyMap(),
+        )
+        advanceUntilIdle()
+
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `bare yield deeplink while earn is deeper in stack does not push again`() = runTest {
+        val earnRoute = AppRoute.Earn(
+            preselectedEarnType = PreselectedEarnType.Yield,
+            preselectedNetworkId = null,
+        )
+        every { appRouter.stack } returns listOf(
+            earnRoute,
+            AppRoute.Earn(preselectedEarnType = null, preselectedNetworkId = "some-other"),
+        )
+
+        handle(
+            scope = CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+            queryParams = emptyMap(),
+        )
+        advanceUntilIdle()
+
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `same yield deeplink while entry already in stack does not push again`() = runTest {
+        val walletId = UserWalletId("011")
+        val wallet = mockk<UserWallet> { every { this@mockk.walletId } returns walletId }
+        val currency = mockEligibleCurrency()
+        every { getSelectedWalletSyncUseCase() } returns Either.Right(wallet)
+        coEvery {
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                MultiWalletCryptoCurrenciesProducer.Params(walletId),
+            )
+        } returns setOf(currency)
+        coEvery { yieldSupplyGetAvailabilityUseCase(currency) } returns
+            Either.Right(YieldSupplyAvailability.Available(apy = "2.66"))
+        every { appRouter.stack } returns listOf(
+            AppRoute.YieldSupplyEntry(userWalletId = walletId, cryptoCurrency = currency, apy = "2.66"),
+        )
+
+        handle(
+            scope = CoroutineScope(UnconfinedTestDispatcher(testScheduler)),
+            queryParams = mapOf(TOKEN_ID_KEY to tokenId, NETWORK_ID_KEY to networkId),
+        )
+        advanceUntilIdle()
+
+        verify(exactly = 0) { appRouter.push(any<AppRoute.YieldSupplyEntry>(), any()) }
     }
 
     @Test

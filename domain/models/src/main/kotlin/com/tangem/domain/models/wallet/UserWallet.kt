@@ -124,5 +124,5 @@ inline val UserWallet.isColdWallet get() = this is UserWallet.Cold
 val UserWallet.isTangemPayCompatible: Boolean
     get() = when (this) {
         is UserWallet.Cold -> scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
-        is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
+        is UserWallet.Hot -> true
     }

@@ -8,7 +8,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.data.quotes.store.setSourceAsCache
 import com.tangem.data.quotes.store.setSourceAsOnlyCache
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
@@ -174,7 +174,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
 
         // Assert
         val expected = IllegalStateException(
-            "Cause: ApiOperationError(apiError=com.tangem.datasource.api.common.response.ApiResponseError\$NetworkException)",
+            "Cause: ApiOperationError(apiError=com.tangem.core.remote.response.ApiResponseError\$NetworkException)",
         ).left()
         assertEither(actual, expected)
 

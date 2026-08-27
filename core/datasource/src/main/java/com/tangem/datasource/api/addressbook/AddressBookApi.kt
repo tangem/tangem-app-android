@@ -4,7 +4,7 @@ import com.tangem.datasource.api.addressbook.models.SyncAddressBooksRequest
 import com.tangem.datasource.api.addressbook.models.SyncAddressBooksResponse
 import com.tangem.datasource.api.addressbook.models.UpdateAddressBookRequest
 import com.tangem.datasource.api.addressbook.models.UpdateAddressBookResponse
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.PUT

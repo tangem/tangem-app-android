@@ -71,7 +71,7 @@ class DefaultSingleAccountListProducerTest {
         val actual = producer.produce().let(::getEmittedValues)
 
         // Assert
-        val expected = accountList
+        val expected = accountList.withPaymentAccount()
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
@@ -132,14 +132,14 @@ class DefaultSingleAccountListProducerTest {
         val firstEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (first emission)
-        Truth.assertThat(firstEmission).containsExactly(accountList)
+        Truth.assertThat(firstEmission).containsExactly(accountList.withPaymentAccount())
 
         // Act (second emission)
         factoryFlow.value = updatedAccountList
         val secondEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (second emission)
-        Truth.assertThat(secondEmission).containsExactly(updatedAccountList)
+        Truth.assertThat(secondEmission).containsExactly(updatedAccountList.withPaymentAccount())
 
         coVerifyOrder {
             walletAccountListFlowFactory.create(userWalletId)
@@ -160,18 +160,21 @@ class DefaultSingleAccountListProducerTest {
         val firstEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (first emission)
-        Truth.assertThat(firstEmission).containsExactly(accountList)
+        Truth.assertThat(firstEmission).containsExactly(accountList.withPaymentAccount())
 
         // Act (second emission) - the same status
         factoryFlow.value = accountList
         val secondEmission = producer.produce().let(::getEmittedValues)
 
         // Assert (second emission)
-        Truth.assertThat(secondEmission).containsExactly(accountList)
+        Truth.assertThat(secondEmission).containsExactly(accountList.withPaymentAccount())
 
         coVerify(ordering = Ordering.SEQUENCE) {
             walletAccountListFlowFactory.create(userWalletId)
             walletAccountListFlowFactory.create(userWalletId)
         }
     }
+
+    private fun AccountList.withPaymentAccount(): AccountList = plus(Account.Payment(userWalletId))
+        .getOrElse { error("Unable to add payment account: $it") }
 }

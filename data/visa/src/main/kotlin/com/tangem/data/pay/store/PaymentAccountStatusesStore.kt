@@ -2,7 +2,7 @@ package com.tangem.data.pay.store
 
 import androidx.datastore.core.DataStore
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
