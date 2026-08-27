@@ -72,13 +72,13 @@ internal class WalletActivationModel @Inject constructor(
 
     private val isStartingWithAccessCode = params.isBackupExists
 
-    val isAccessCodeStepRequired = isStartingWithAccessCode || !isAccessCodeAlreadySet()
+    val isAccessCodeStepRequired = !isAccessCodeAlreadySet()
 
     val stackNavigation = StackNavigation<WalletActivationRoute>()
-    val startRoute = if (isStartingWithAccessCode) {
-        WalletActivationRoute.SetAccessCode
-    } else {
-        WalletActivationRoute.ManualBackupStart
+    val startRoute = when {
+        !isStartingWithAccessCode -> WalletActivationRoute.ManualBackupStart
+        isAccessCodeStepRequired -> WalletActivationRoute.SetAccessCode
+        else -> WalletActivationRoute.SetupFinished
     }
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
 
@@ -130,7 +130,9 @@ internal class WalletActivationModel @Inject constructor(
     }
 
     private fun isAccessCodeAlreadySet(): Boolean {
-        val hotWallet = getUserWalletUseCase(params.userWalletId).getOrNull() as? UserWallet.Hot
+        val hotWallet = runCatching { getUserWalletUseCase(params.userWalletId).getOrNull() }
+            .onFailure { TangemLogger.e("Failed to get the user wallet ${params.userWalletId}", it) }
+            .getOrNull() as? UserWallet.Hot
             ?: return false
 
         return hotWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword

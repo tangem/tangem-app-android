@@ -107,6 +107,52 @@ internal class WalletActivationModelTest {
             assertThat(stacks.last()).containsExactly(WalletActivationRoute.PushNotifications)
         }
 
+    @Test
+    fun `GIVEN backup exists AND access code is set WHEN model created THEN flow starts on setup finished`() =
+        runTest {
+            // Act
+            val model = createModel(
+                testScope = this,
+                authType = HotWalletId.AuthType.Password,
+                isBackupExists = true,
+            )
+
+            // Assert
+            assertThat(model.isAccessCodeStepRequired).isFalse()
+            assertThat(model.startRoute).isEqualTo(WalletActivationRoute.SetupFinished)
+        }
+
+    @Test
+    fun `GIVEN backup exists AND access code is not set WHEN model created THEN flow starts on access code`() =
+        runTest {
+            // Act
+            val model = createModel(
+                testScope = this,
+                authType = HotWalletId.AuthType.NoPassword,
+                isBackupExists = true,
+            )
+
+            // Assert
+            assertThat(model.isAccessCodeStepRequired).isTrue()
+            assertThat(model.startRoute).isEqualTo(WalletActivationRoute.SetAccessCode)
+        }
+
+    @Test
+    fun `GIVEN wallets are not loaded WHEN manual backup completed THEN access code screen is shown`() = runTest {
+        // Arrange
+        every { getUserWalletUseCase(walletId) } throws IllegalStateException("User wallets list is not loaded")
+        val model = createModel(testScope = this, authType = null)
+        val stacks = trackStacks(model)
+
+        // Act
+        model.manualBackupCompletedModelCallbacks.onContinueClick(walletId)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.isAccessCodeStepRequired).isTrue()
+        assertThat(stacks.last().last()).isEqualTo(WalletActivationRoute.SetAccessCode)
+    }
+
     private fun trackStacks(model: WalletActivationModel): List<List<WalletActivationRoute>> {
         val stacks = mutableListOf<List<WalletActivationRoute>>()
         model.stackNavigation.subscribe { event -> stacks += event.transformer(listOf(model.startRoute)) }
@@ -115,7 +161,7 @@ internal class WalletActivationModelTest {
 
     private fun createModel(
         testScope: TestScope,
-        authType: HotWalletId.AuthType,
+        authType: HotWalletId.AuthType?,
         isBackupExists: Boolean = false,
     ): WalletActivationModel {
         every { paramsContainer.require<WalletActivationComponent.Params>() } returns
@@ -123,12 +169,14 @@ internal class WalletActivationModelTest {
                 userWalletId = walletId,
                 isBackupExists = isBackupExists,
             )
-        val hotWalletId: HotWalletId = mockk { every { this@mockk.authType } returns authType }
-        val hotWallet: UserWallet.Hot = mockk {
-            every { walletId } returns this@WalletActivationModelTest.walletId
-            every { this@mockk.hotWalletId } returns hotWalletId
+        if (authType != null) {
+            val hotWalletId: HotWalletId = mockk { every { this@mockk.authType } returns authType }
+            val hotWallet: UserWallet.Hot = mockk {
+                every { walletId } returns this@WalletActivationModelTest.walletId
+                every { this@mockk.hotWalletId } returns hotWalletId
+            }
+            every { getUserWalletUseCase(walletId) } returns hotWallet.right()
         }
-        every { getUserWalletUseCase(walletId) } returns hotWallet.right()
 
         return WalletActivationModel(
             paramsContainer = paramsContainer,
