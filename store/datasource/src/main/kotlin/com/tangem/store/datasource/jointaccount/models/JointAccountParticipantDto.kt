@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.jointaccount.models
+package com.tangem.store.datasource.jointaccount.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
