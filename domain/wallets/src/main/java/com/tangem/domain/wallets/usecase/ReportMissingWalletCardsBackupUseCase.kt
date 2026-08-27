@@ -1,7 +1,7 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
-import arrow.core.flatMap
+import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.models.wallet.UserWallet
@@ -36,9 +36,15 @@ class ReportMissingWalletCardsBackupUseCase(
 
         if (!isWalletBackupProblematicUseCase(userWallet)) return Unit.right()
 
-        return walletCardsBackupRepository.getWalletCards(userWallet.walletId).flatMap { knownCards ->
-            if (knownCards.isEmpty()) report(userWallet) else Unit.right()
-        }
+        return walletCardsBackupRepository.getWalletCards(userWallet.walletId).fold(
+            // offline the backend cannot be asked what it already knows, and staying silent would lose the
+            // report for good — this is the one wallet the app knows to be broken. Report it and let the
+            // pending queue deliver it; at worst the backend records a repeat of what it already had
+            ifLeft = { error ->
+                if (error is WalletCardsBackupError.NoInternetConnection) report(userWallet) else error.left()
+            },
+            ifRight = { knownCards -> if (knownCards.isEmpty()) report(userWallet) else Unit.right() },
+        )
     }
 
     private suspend fun report(userWallet: UserWallet.Cold): Either<WalletCardsBackupError, Unit> {

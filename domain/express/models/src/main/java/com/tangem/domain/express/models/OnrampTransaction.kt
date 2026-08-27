@@ -20,6 +20,7 @@ import java.math.BigDecimal
  * @property toAsset The crypto asset received.
  * @property externalTxUrl The provider's page for this deal (tracking / refund / KYC); `null` when the provider
  *  supplies none (not provided by all providers).
+ * @property externalTxId The provider-side id of this deal; `null` when the provider supplies none.
  * @property fiatCurrency The fiat currency the onramp was paid in; `null` if not resolved.
  */
 data class OnrampTransaction(
@@ -34,6 +35,7 @@ data class OnrampTransaction(
     val toAsset: ExpressTransactionAsset,
     val fiatCurrency: OnrampCurrency?,
     val externalTxUrl: String?,
+    val externalTxId: String?,
     val toAmount: BigDecimal?,
     val toActualAmount: BigDecimal?,
 )

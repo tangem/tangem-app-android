@@ -970,6 +970,7 @@ internal class TangemPayOrderCardDataModelTest {
         sourceCardEmbossName: String? = SOURCE_CARD_EMBOSS_NAME,
     ) = CustomerInfo(
         customerId = "c1",
+        paymentAccount = null,
         productInstances = listOf(sourceProductInstance()),
         cards = listOf(sourceCard(embossName = sourceCardEmbossName)),
         kycStatus = KycStatus.APPROVED,

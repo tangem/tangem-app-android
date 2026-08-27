@@ -7,7 +7,7 @@ import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.utils.coroutines.AppCoroutineScope

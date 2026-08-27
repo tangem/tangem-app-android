@@ -85,6 +85,10 @@ private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
             rawId = network.rawId,
             derivationPath = path.value,
         )
+        is Network.DerivationPath.Joint -> CurrencyIdBody.NetworkIdWithDerivationPath(
+            rawId = network.rawId,
+            derivationPath = path.value,
+        )
         is Network.DerivationPath.None,
         -> CurrencyIdBody.NetworkId(network.rawId)
     }

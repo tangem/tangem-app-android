@@ -6,7 +6,7 @@ import com.tangem.domain.models.account.AccountId
 
 /**
  * Produces a flow of [Account] for a single account identified by [Params.accountId].
- * The flow emits updates whenever the account's portfolio changes.
+ * The flow emits updates whenever the account changes.
  */
 interface SingleAccountProducer : FlowProducer<Account> {
 

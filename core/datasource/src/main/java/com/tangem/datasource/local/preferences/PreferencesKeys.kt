@@ -55,8 +55,6 @@ object PreferencesKeys {
 
     val APP_THEME_MODE_KEY by lazy { stringPreferencesKey(name = "appThemeMode") }
 
-    val SELECTED_APP_CURRENCY_KEY by lazy { stringPreferencesKey(name = "selectedAppCurrency") }
-
     val BALANCE_HIDING_SETTINGS_KEY by lazy { stringPreferencesKey(name = "balanceHidingSettings") }
 
     val SWAP_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "swapTransactions") }
@@ -114,11 +112,6 @@ object PreferencesKeys {
     val IS_GOOGLE_SERVICES_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGoogleServicesAvailable") }
 
     val IS_GOOGLE_PAY_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGooglePayAvailable") }
-
-    val IS_DEVICE_REGISTERED_KEY by lazy { booleanPreferencesKey(name = "isDeviceRegistered") }
-
-    /** Base64 `UserWalletId`s already registered with the Tangem Auth Service (`/auth/wallet`). */
-    val REGISTERED_WALLET_IDS_KEY by lazy { stringSetPreferencesKey(name = "registeredWalletIds") }
 
     val WAS_LOG_FILE_CLEARED by lazy { booleanPreferencesKey(name = "wasLogFileCleared") }
 

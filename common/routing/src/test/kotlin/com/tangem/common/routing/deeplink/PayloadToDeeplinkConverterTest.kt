@@ -1,6 +1,7 @@
 package com.tangem.common.routing.deeplink
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
@@ -47,7 +48,8 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isEqualTo(
-            "tangem://token?network_id=ethereum&token_id=0x123&type=token&user_wallet_id=wallet123&derivation_path=m'0'0'0",
+            "tangem://token?network_id=ethereum&token_id=0x123&type=token&user_wallet_id=wallet123" +
+                "&derivation_path=m%270%270%270",
         )
     }
 
@@ -287,6 +289,78 @@ internal class PayloadToDeeplinkConverterTest {
     }
 
     @Test
+    fun `GIVEN joint_members push payload WHEN convert THEN should return joint_account deeplink with entry members`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to "joint_members",
+            WALLET_ID_KEY to "wallet123",
+            ACCOUNT_ID_KEY to "account123",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "tangem://joint_account?entry=members&user_wallet_id=wallet123&account_id=account123&type=joint_members",
+        )
+    }
+
+    @Test
+    fun `GIVEN joint_overview push payload WHEN convert THEN should return joint_account deeplink with entry overview`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to "joint_overview",
+            WALLET_ID_KEY to "wallet123",
+            ACCOUNT_ID_KEY to "account123",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "tangem://joint_account?entry=overview&user_wallet_id=wallet123&account_id=account123&type=joint_overview",
+        )
+    }
+
+    @Test
+    fun `GIVEN joint_members push payload missing account_id WHEN convert THEN should return null`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to "joint_members",
+            WALLET_ID_KEY to "wallet123",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `GIVEN joint_tx_sent push payload with account_id WHEN convert THEN should return token deeplink with account_id`() {
+        // GIVEN
+        val payload = mapOf(
+            TYPE_KEY to "joint_tx_sent",
+            NETWORK_ID_KEY to "ethereum",
+            TOKEN_ID_KEY to "0x123",
+            WALLET_ID_KEY to "wallet123",
+            ACCOUNT_ID_KEY to "account123",
+        )
+
+        // WHEN
+        val result = PayloadToDeeplinkConverter.convert(payload)
+
+        // THEN
+        assertThat(result).isEqualTo(
+            "tangem://token?network_id=ethereum&token_id=0x123&type=joint_tx_sent&user_wallet_id=wallet123" +
+                "&account_id=account123",
+        )
+    }
+
+    @Test
     fun `GIVEN payload with link key holding a deeplink WHEN convert THEN should return link value`() {
         // GIVEN
         val payload = mapOf(WEBLINK_KEY to "tangem://markets")
@@ -359,7 +433,8 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isEqualTo(
-            "tangem://pay-app-main?type=card_ready&customer_wallet_id=wallet123&link=https://tangem.com/pricing/",
+            "tangem://pay-app-main?type=card_ready&customer_wallet_id=wallet123" +
+                "&link=https%3A%2F%2Ftangem.com%2Fpricing%2F",
         )
     }
 }
