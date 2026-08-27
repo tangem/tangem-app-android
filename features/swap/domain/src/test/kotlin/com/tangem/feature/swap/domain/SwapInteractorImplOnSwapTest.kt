@@ -174,7 +174,6 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
             // Arrange — yield-active token swap is routed through the yield module proxy: the swap tx is
             // addressed to the proxy, but the Express status must be tracked by the original dex router (txTo).
             // [REDACTED_TASK_KEY] / [REDACTED_TASK_KEY]: otherwise the "Supplying to Aave" status never resolves.
-            every { swapFeatureToggles.isYieldSwapEnabled } returns true
             coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
             coEvery {
                 createTransactionExtrasUseCase(callData = any(), network = any(), gasLimit = any())

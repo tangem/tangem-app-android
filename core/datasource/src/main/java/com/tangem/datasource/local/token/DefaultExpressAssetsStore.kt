@@ -1,8 +1,8 @@
 package com.tangem.datasource.local.token
 
 import androidx.datastore.core.DataStore
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.datasource.api.express.models.response.Asset
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
@@ -12,11 +12,11 @@ internal typealias AssetsByWalletId = Map<String, List<Asset>>
 
 internal class DefaultExpressAssetsStore(
     private val persistenceStore: DataStore<AssetsByWalletId>,
-    private val runtimeStore: StringKeyDataStore<List<Asset>>,
+    private val runtimeStore: RuntimeSharedMapStore<UserWalletId, List<Asset>>,
 ) : ExpressAssetsStore {
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId): List<Asset>? {
-        val runtimeAssets = runtimeStore.getSyncOrNull(userWalletId.stringValue)
+        val runtimeAssets = runtimeStore.getSyncOrNull(userWalletId)
 
         if (runtimeAssets != null) {
             return runtimeAssets
@@ -25,7 +25,7 @@ internal class DefaultExpressAssetsStore(
         val cachedAssets = getCachedAssets(userWalletId)
 
         return if (cachedAssets != null) {
-            runtimeStore.store(userWalletId.stringValue, cachedAssets)
+            runtimeStore.store(userWalletId, cachedAssets)
             cachedAssets
         } else {
             null
@@ -39,7 +39,7 @@ internal class DefaultExpressAssetsStore(
     override suspend fun store(userWalletId: UserWalletId, item: List<Asset>) {
         coroutineScope {
             launch {
-                runtimeStore.store(userWalletId.stringValue, item)
+                runtimeStore.store(userWalletId, item)
             }
             launch {
                 persistenceStore.updateData { assetsByWalletId ->

@@ -11,8 +11,8 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi

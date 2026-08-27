@@ -54,16 +54,17 @@ class CreateTariffPlanTransitionOrderUseCase(
         issueCardRepository.storeIssueOrderId(userWalletId = userWalletId, orderId = order.id)
 
         appCoroutineScope.launch {
+            var prevStep = order.step
             startTangemPayOrderPollingUseCase(
                 order = TangemPayOrderInfo.fromOrder(order),
                 userWalletId = userWalletId,
-                onOrderStateChange = { newOrder ->
-                    if (newOrder.orderStatus.isTerminal) {
+                onOrderStateChange = { new ->
+                    if (new.orderStatus.isTerminal) {
                         issueCardRepository.removeIssueOrderId(userWalletId, order.id)
-                    }
-                    if (newOrder.orderStep == OrderStep.AWAITING_DEPOSIT) {
+                    } else if (new.orderStep == OrderStep.AWAITING_DEPOSIT || prevStep == OrderStep.AWAITING_DEPOSIT) {
                         paymentAccountStatusFetcher.invoke(userWalletId)
                     }
+                    prevStep = new.orderStep
                 },
             )
         }

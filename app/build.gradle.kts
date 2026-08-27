@@ -28,7 +28,10 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
-            excludes.add("lib/x86_64/libargon2.so")
+            // org.signal:argon2 comes in transitively via solana-kmp -> com.diglol.crypto:crypto -> :kdf
+            // and is never loaded (only Hash/Ed25519 are used). Its libargon2.so is built with NDK r19c
+            // and Play reports it as not 16 KB page size compatible (PT_GNU_RELRO ends on a 4 KB boundary).
+            excludes.add("**/libargon2.so")
         }
         resources.excludes.add("META-INF/LICENSE.md")
         resources.excludes.add("META-INF/NOTICE.md")
@@ -187,10 +190,12 @@ dependencies {
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
+    implementation(projects.spend.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
     implementation(projects.core.error.ext)
     implementation(projects.core.security)
+    implementation(projects.core.biometricAuth.impl)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)

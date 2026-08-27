@@ -73,20 +73,17 @@ internal class StateBuilder(
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val appRouter: AppRouter,
+    private val isChooseTokenPulseEnabled: Boolean,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
-    private val amountScreenClickIntents by lazy(LazyThreadSafetyMode.NONE) {
-        SwapAmountScreenClickIntents(actions)
-    }
+    private val amountScreenClickIntents = SwapAmountScreenClickIntents(actions)
 
-    private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SwapNotificationsFactory(
-            actions = actions,
-            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-            appCurrencyProvider = appCurrencyProvider,
-        )
-    }
+    private val notificationsFactory = SwapNotificationsFactory(
+        actions = actions,
+        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        appCurrencyProvider = appCurrencyProvider,
+    )
 
     fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
         return SwapStateHolder(
@@ -448,6 +445,7 @@ internal class StateBuilder(
             ),
             amountField = placeholderAmountField(value = if (isFromCard) "0" else "0".appendApproximateSign()),
             amountEquivalent = emptyAmountState.zeroAmountEquivalent,
+            isPulseAnimationEnabled = isChooseTokenPulseEnabled,
         )
 
     fun createSwapNotSupportedState(
@@ -595,7 +593,8 @@ internal class StateBuilder(
             isInsufficientFunds -> AccountTitleUM.Text(TextReference.Res(R.string.swapping_insufficient_funds))
             else -> getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true)
         }
-        val sendCardType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
+        val sendCardType = uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable
+            ?: return uiStateHolder
         val sendInput = when (sendCardType.inputError) {
             is TransactionCardType.InputError.WrongAmount,
             -> sendCardType
@@ -855,6 +854,7 @@ internal class StateBuilder(
             type = type,
             amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
             amountField = null,
+            isPulseAnimationEnabled = isChooseTokenPulseEnabled,
         )
         return uiStateHolder.copy(
             receiveCardData = receiveCardData,

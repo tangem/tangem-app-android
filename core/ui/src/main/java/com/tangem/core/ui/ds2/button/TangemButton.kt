@@ -151,6 +151,10 @@ object TangemButton {
      * - [Brand] — brand-colored background, static-dark content.
      * - [Primary] — inverse-surface background, used for the dominant call to action.
      * - [Secondary] — opaque-surface background, used as a secondary action alongside [Primary].
+     * - [SecondaryError] — [Secondary] in the error appearance (Figma `Appearance = Error`):
+     *   error-subtle background with red accent content, e.g. the negative side of a paired choice.
+     * - [SecondaryInfo] — [Secondary] in the info appearance (Figma `Appearance = Info`):
+     *   info-subtle background with blue accent content, e.g. the affirmative side of a paired choice.
      * - [Material] — translucent haze fill (rendered by [TangemSurface] when `isMaterial = true`),
      *   used over content backgrounds.
      * - [Success] — success-colored background for positive confirmations.
@@ -161,6 +165,8 @@ object TangemButton {
         Brand,
         Primary,
         Secondary,
+        SecondaryError,
+        SecondaryInfo,
         Material,
         Success,
         Outline,

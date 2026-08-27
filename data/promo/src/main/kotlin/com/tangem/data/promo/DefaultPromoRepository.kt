@@ -2,8 +2,8 @@ package com.tangem.data.promo
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.promo.converter.PromoCampaignConverter
-import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi

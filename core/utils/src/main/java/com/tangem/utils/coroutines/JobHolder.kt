@@ -15,6 +15,10 @@ class JobHolder {
     val isActive: Boolean
         get() = job?.isActive ?: false
 
+    /** Whether the current [job] was cancelled, either while running or before it could complete */
+    val isCancelled: Boolean
+        get() = job?.isCancelled == true
+
     private var job: Job? = null
 
     /** Update current [JobHolder.job] and return new [job] */

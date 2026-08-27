@@ -3,7 +3,7 @@ package com.tangem.data.staking.store
 import androidx.datastore.core.DataStore
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolStakingBalanceConverter
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger

@@ -216,7 +216,6 @@ private fun TokenDetailsBody(
         val balance = tokenDetailsUM.balanceBlockUM
         notifications(
             notifications = tokenDetailsUM.notifications,
-            contentColor = rootBackground,
             modifier = itemModifier,
         )
         tokenDetailsUM.earnBlockState?.let { earnBlock ->

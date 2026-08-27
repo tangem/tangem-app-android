@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.datasource.api.tangemTech.models.YieldMarketsResponse
 import com.tangem.datasource.api.tangemTech.models.YieldModuleStatusResponse

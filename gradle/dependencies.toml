@@ -7,6 +7,7 @@ firebaseCrashlytics = "3.0.1"
 googleServices = "4.4.1"
 playServices = "18.10.0"
 playServicesAds = "18.2.0"
+playServicesAuth = "21.2.0"
 kotlin = "2.1.10"
 ksp = "2.1.10-1.0.30"
 firebasePerf = "1.4.2"
@@ -23,6 +24,7 @@ androidxActivity = "1.10.1"
 androidxActivityCompose = "1.8.0"
 androidxAnnotation = "1.9.1"
 androidxAppCompat = "1.5.1"
+androidxBiometric = "1.1.0"
 androidxBrowser = "1.4.0"
 androidxConstraintLayout = "2.2.1"
 androidxCore = "1.13.1"
@@ -81,6 +83,7 @@ okio = "3.7.0"
 retrofit = "2.11.0"
 retrofitMoshiConverter = "2.9.0"
 spongycastleCryptoCore = "1.58.0.0"
+bouncycastleBcprov = "1.78.1"
 viewBindingDelegate = "1.5.9"
 xmlShimmer = "1.1.3"
 zxingQrCode = "3.5.1"
@@ -163,6 +166,7 @@ androidx-activity = { module = "androidx.activity:activity", version.ref = "andr
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivityCompose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppCompat" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidxBiometric" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidxBrowser" }
 androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidxConstraintLayout" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidxCore" }
@@ -182,6 +186,7 @@ lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx
 lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compose-lifecycle-runtime" }
 androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 androidx-datastore-core = { module = "androidx.datastore:datastore-core", version.ref = "androidx-datastore" }
+androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "androidx-datastore" }
 androidx-workmanager = { module = "androidx.work:work-runtime", version.ref = "androidxWorkManager" }
 hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-work" }
 # region AndroidX
@@ -271,6 +276,7 @@ googlePlay-review = { module = "com.google.android.play:review", version.ref = "
 googlePlay-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "googlePlayReviewKtx" }
 googlePlay-services-wallet = { module = "com.google.android.gms:play-services-wallet", version.ref = "googlePlayServicesWallet" }
 googlePlay-services = { module = "com.google.android.gms:play-services-base", version.ref = "playServices" }
+googlePlay-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 googlePlay-advertising = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playServicesAds" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
@@ -289,9 +295,11 @@ okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 spongecastle-core = { module = "com.madgag.spongycastle:core", version.ref = "spongycastleCryptoCore" }
+bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastleBcprov" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-response-type-keeper = { module = "com.squareup.retrofit2:response-type-keeper", version.ref = "retrofit" }
 retrofit-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofitMoshiConverter" }
+retrofit-kotlinxSerialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate-noreflection", version.ref = "viewBindingDelegate" }
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }
 zxing-qrCore = { module = "com.google.zxing:core", version.ref = "zxingQrCode" }
