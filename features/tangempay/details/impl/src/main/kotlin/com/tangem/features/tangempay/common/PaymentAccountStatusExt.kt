@@ -42,8 +42,7 @@ internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
         is PaymentAccountStatusValue.Inactive -> v.tariffPlan.tariff
         is PaymentAccountStatusValue.AwaitingPlanSelection -> v.tariffPlan
         is PaymentAccountStatusValue.Loaded -> v.tariffPlan?.tariff
-        is PaymentAccountStatusValue.Deactivated -> null
-        else -> error("TangemPayDetails opened with unsupported status: $v")
+        else -> null
     }
 
 internal val AccountStatus.Payment.cardMainImageUrl: String?

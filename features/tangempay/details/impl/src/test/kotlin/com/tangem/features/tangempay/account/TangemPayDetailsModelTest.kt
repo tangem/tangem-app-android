@@ -13,7 +13,9 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -23,6 +25,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -34,8 +37,10 @@ import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.tariffPlan
+import com.tangem.features.tangempay.tariffPlanState
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdrawButton
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -60,7 +65,9 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
@@ -75,10 +82,11 @@ internal class TangemPayDetailsModelTest {
     private val router: Router = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase = mockk(relaxed = true)
+    private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk(relaxed = true)
 
     @BeforeEach
     fun resetCashbackMocks() {
-        clearMocks(analytics, tangemPayFeatureToggles, getCashbackSummaryUseCase)
+        clearMocks(analytics, router, tangemPayFeatureToggles, getCashbackSummaryUseCase, getBankCredentialsUseCase)
     }
 
     @Test
@@ -664,6 +672,7 @@ internal class TangemPayDetailsModelTest {
         accountError: PaymentAccountStatusValue.Error? = null,
         statusValue: PaymentAccountStatusValue? = null,
         virtualAccount: VirtualAccountOnramp? = null,
+        planState: TangemPayTariffPlanState? = null,
         initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
         statusEmissions: Int = 1,
         statusFlow: Flow<AccountStatus.Payment>? = null,
@@ -674,6 +683,7 @@ internal class TangemPayDetailsModelTest {
                 accountError = accountError,
                 availableForWithdrawal = availableForWithdrawal,
                 virtualAccount = virtualAccount,
+                planState = planState,
             ),
         )
         val params = TangemPayDetailsContainerComponent.Params(
@@ -702,6 +712,7 @@ internal class TangemPayDetailsModelTest {
             onboardingRepository = mockk(relaxed = true),
             getCustomerOffers = mockk(relaxed = true),
             getCashbackSummaryUseCase = getCashbackSummaryUseCase,
+            getBankCredentialsUseCase = getBankCredentialsUseCase,
             getCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             setCashbackDeactivationDismissedUseCase = mockk(relaxed = true),
             tangemPayCurrencyFactory = mockk(relaxed = true),
@@ -733,7 +744,9 @@ internal class TangemPayDetailsModelTest {
         availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         virtualAccount: VirtualAccountOnramp? = null,
         cardState: TangemPayCardState = TangemPayCardState.Active,
+        planState: TangemPayTariffPlanState? = null,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
+        if (planState != null) every { tariffPlan } returns planState
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
@@ -869,6 +882,21 @@ internal class TangemPayDetailsModelTest {
             ),
         )
 
+        const val PRODUCT_INSTANCE_ID = "pi_account"
+        const val DEPOSIT_ADDRESS = "address"
+
+        val DEEPLINK_PLAN_STATE: TangemPayTariffPlanState = tariffPlanState()
+
+        val BANK_CREDENTIALS = BankCredentials(
+            type = "SWIFT",
+            beneficiaryName = "Tangem",
+            beneficiaryAddress = "Address",
+            beneficiaryBankName = "Bank",
+            beneficiaryBankAddress = "Bank address",
+            accountNumber = "123456",
+            routingNumber = "654321",
+        )
+
         @JvmStatic
         fun provideTransactionClickCases() = listOf(
             TransactionClickCase(
@@ -911,5 +939,179 @@ internal class TangemPayDetailsModelTest {
                 availableForWithdrawal = BigDecimal.ZERO,
             )
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class DeepLinkInitialRoute {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN deeplink screen route WHEN status loaded THEN the requested screen is pushed once`(
+            model: DeepLinkRouteModel,
+        ) = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isCashbackEnabled } returns true
+            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
+            val payModel = createModel(
+                testScope = this,
+                initialRoute = model.initialRoute,
+                planState = DEEPLINK_PLAN_STATE,
+                statusEmissions = 2,
+            )
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.push(route = model.expectedRoute, onComplete = any()) }
+            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerClicked>()) }
+            payModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN cashback deeplink route WHEN cashback is disabled THEN nothing is pushed`() = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isCashbackEnabled } returns false
+
+            // Act
+            val payModel = createModel(testScope = this, initialRoute = TangemPayDetailsInitialRoute.CASHBACK)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) {
+                router.push(route = TangemPayAccountDetailsInnerRoute.Cashback, onComplete = any())
+            }
+            payModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN va onramp deeplink route WHEN status loaded THEN deposit sheet opens without a click event`() =
+            runTest {
+                // Arrange
+                val payModel = createModel(
+                    testScope = this,
+                    initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP,
+                    virtualAccount = VirtualAccountOnramp.Eligible,
+                )
+                val openedSheets = payModel.bottomSheetNavigation.trackSlot()
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VirtualAccountDeposit>())
+                    .containsExactly(expectedDepositSheet())
+                verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
+                payModel.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN va onramp details deeplink route WHEN credentials load THEN requisites sheet opens`() = runTest {
+            // Arrange
+            coEvery { getBankCredentialsUseCase(any(), any()) } returns BANK_CREDENTIALS.right()
+            val payModel = createModel(
+                testScope = this,
+                initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
+                virtualAccount = VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID),
+            )
+            val openedSheets = payModel.bottomSheetNavigation.trackSlot()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VirtualAccountRequisites>())
+                .containsExactly(
+                    TangemPayDetailsNavigation.VirtualAccountRequisites(
+                        userWalletId = userWalletId,
+                        bankCredentials = BANK_CREDENTIALS,
+                    ),
+                )
+            coVerify(exactly = 1) { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) }
+            payModel.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN va onramp details deeplink route WHEN credentials fail THEN the details error sheet opens`() =
+            runTest {
+                // Arrange
+                coEvery { getBankCredentialsUseCase(any(), any()) } returns mockk<VisaApiError>(relaxed = true).left()
+                val payModel = createModel(
+                    testScope = this,
+                    initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
+                    virtualAccount = VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID),
+                )
+                val openedSheets = payModel.bottomSheetNavigation.trackSlot()
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
+                    .containsExactly(
+                        TangemPayDetailsNavigation.VaBankingDetailsError(
+                            userWalletId = userWalletId,
+                            productInstanceId = PRODUCT_INSTANCE_ID,
+                        ),
+                    )
+                payModel.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN va onramp details deeplink route WHEN account is not eligible yet THEN deposit sheet opens`() =
+            runTest {
+                // Arrange
+                val payModel = createModel(
+                    testScope = this,
+                    initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
+                    virtualAccount = VirtualAccountOnramp.Eligible,
+                )
+                val openedSheets = payModel.bottomSheetNavigation.trackSlot()
+
+                // Act
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VirtualAccountDeposit>())
+                    .containsExactly(expectedDepositSheet())
+                coVerify(exactly = 0) { getBankCredentialsUseCase(any(), any()) }
+                payModel.onDestroy()
+            }
+
+        private fun expectedDepositSheet() = TangemPayDetailsNavigation.VirtualAccountDeposit(
+            virtualAccountOnramp = VirtualAccountOnramp.Eligible,
+            userWalletId = userWalletId,
+            paymentAccountAddress = DEPOSIT_ADDRESS,
+        )
+
+        private fun provideTestModels() = listOf(
+            DeepLinkRouteModel(
+                initialRoute = TangemPayDetailsInitialRoute.CASHBACK,
+                expectedRoute = TangemPayAccountDetailsInnerRoute.Cashback,
+            ),
+            DeepLinkRouteModel(
+                initialRoute = TangemPayDetailsInitialRoute.ORDER_CARD,
+                expectedRoute = TangemPayAccountDetailsInnerRoute.OrderCard(),
+            ),
+            DeepLinkRouteModel(
+                initialRoute = TangemPayDetailsInitialRoute.CURRENT_PLAN,
+                expectedRoute = TangemPayAccountDetailsInnerRoute.CurrentPlan(DEEPLINK_PLAN_STATE),
+            ),
+            DeepLinkRouteModel(
+                initialRoute = TangemPayDetailsInitialRoute.CHANGE_PLAN,
+                expectedRoute = TangemPayAccountDetailsInnerRoute.SelectPlan(
+                    tariffPlan = DEEPLINK_PLAN_STATE.tariff,
+                    source = TangemPaySelectPlanSource.CHANGE_PLAN,
+                ),
+            ),
+        )
+    }
+
+    internal data class DeepLinkRouteModel(
+        val initialRoute: TangemPayDetailsInitialRoute,
+        val expectedRoute: TangemPayAccountDetailsInnerRoute,
+    ) {
+        override fun toString(): String = initialRoute.name
     }
 }
