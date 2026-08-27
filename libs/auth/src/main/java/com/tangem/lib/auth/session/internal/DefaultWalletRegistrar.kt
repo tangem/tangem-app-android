@@ -138,6 +138,21 @@ internal class DefaultWalletRegistrar(
             return@either null
         }
 
+        // /wallet/register is @RequiresSessionAuth. Without a session the request goes out
+        // unauthenticated and 401s, wasting the one-time wallet nonce fetched just below. Bail up
+        // front; the session is established by device registration, and this retries idempotently
+        // on a later attempt once it exists.
+        val hasSession = try {
+            store.get().getOrNull() != null
+        } catch (e: Exception) {
+            TangemLogger.e("Failed to read session tokens before wallet registration", e)
+            raise(WalletRegistrationError.PersistenceFailed(e))
+        }
+        if (!hasSession) {
+            TangemLogger.i("No active session — skipping wallet registration until authenticated")
+            raise(WalletRegistrationError.NoActiveSession)
+        }
+
         TangemLogger.i("Preparing wallet registration")
 
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
