@@ -1,5 +1,9 @@
 package com.tangem.feature.tester.presentation.environments.ui
 
+import com.tangem.datasource.api.common.config.TangemTech
+
+import com.tangem.datasource.api.common.config.Express
+
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
@@ -25,8 +29,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.environments.state.EnvironmentTogglesScreenUM
 import kotlinx.collections.immutable.persistentSetOf
@@ -173,8 +176,8 @@ private fun PreviewFeatureTogglesScreen() {
                 title = R.string.environment_toggles,
                 apiInfoList = persistentSetOf(
                     EnvironmentTogglesScreenUM.ApiInfoUM(
-                        name = ApiConfig.ID.Express.name,
-                        select = select[ApiConfig.ID.Express.name] ?: ApiEnvironment.DEV.name,
+                        name = Express.ID.name,
+                        select = select[Express.ID.name] ?: ApiEnvironment.DEV.name,
                         url = "https://api.express.tangem.com",
                         environments = persistentSetOf(
                             ApiEnvironment.DEV.name,
@@ -186,8 +189,8 @@ private fun PreviewFeatureTogglesScreen() {
                         ),
                     ),
                     EnvironmentTogglesScreenUM.ApiInfoUM(
-                        name = ApiConfig.ID.TangemTech.name,
-                        select = select[ApiConfig.ID.TangemTech.name] ?: ApiEnvironment.DEV.name,
+                        name = TangemTech.ID.name,
+                        select = select[TangemTech.ID.name] ?: ApiEnvironment.DEV.name,
                         url = "https://api.express.tangem.com",
                         environments = persistentSetOf(
                             ApiEnvironment.DEV.name,

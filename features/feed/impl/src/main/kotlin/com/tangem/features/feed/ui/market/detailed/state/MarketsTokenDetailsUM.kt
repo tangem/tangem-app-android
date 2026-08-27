@@ -33,6 +33,7 @@ internal data class MarketsTokenDetailsUM(
     val relatedNews: RelatedNews,
     val onShareClick: () -> Unit,
     val isAddToPortfolioButtonVisible: Boolean,
+    val isAddToPortfolioButtonEnabled: Boolean,
     val onAddToPortfolioClick: () -> Unit,
     val scrollToSection: StateEvent<String> = consumedEvent(),
 ) {

@@ -3,7 +3,10 @@ package com.tangem.data.pay.datasource
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
+import arrow.core.raise.catch
 import arrow.core.raise.either
+import arrow.core.recover
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.core.error.ext.tangemError
@@ -98,6 +101,10 @@ internal class TangemPayHotSdkManager @Inject constructor(
         )
 
         WithdrawalSignatureResult.Success(signature)
+    }.recover { error ->
+        // Dismissing the password/access-code prompt is an expected outcome, not an error —
+        // mirrors the cold-wallet path in DefaultTangemSdkManager.getWithdrawalSignature
+        if (error is TangemSdkError.UserCancelled) WithdrawalSignatureResult.Cancelled else raise(error)
     }
 
     private suspend fun Raise<Throwable>.getExtendedPublicKey(unlockHotWallet: UnlockHotWallet): ExtendedPublicKey {
@@ -146,16 +153,28 @@ internal class TangemPayHotSdkManager @Inject constructor(
         )
     }
 
-    private suspend inline fun <Error, T> withUnlockedHotWallet(
+    /**
+     * Runs [block] with a contextually unlocked hot wallet.
+     *
+     * Unlocking may show the password/access-code prompt, and [HotWalletAccessor] signals its dismissal
+     * by throwing [TangemSdkError.UserCancelled]. [catch] converts thrown errors into [Either.Left]
+     * so the returned [Either] actually holds them (fatal errors and coroutine cancellation still propagate).
+     */
+    private suspend inline fun <T> withUnlockedHotWallet(
         hotWallet: UserWallet.Hot,
-        block: Raise<Error>.(UnlockHotWallet) -> T,
-    ): Either<Error, T> = either {
-        try {
-            val unlockHotWallet = hotWalletAccessor.getContextualUnlock(hotWallet.hotWalletId)
-                ?: hotWalletAccessor.unlockContextual(hotWallet.hotWalletId)
-            block(unlockHotWallet)
-        } finally {
-            hotWalletAccessor.clearContextualUnlock(hotWallet.hotWalletId)
-        }
+        block: Raise<Throwable>.(UnlockHotWallet) -> T,
+    ): Either<Throwable, T> = either {
+        catch(
+            block = {
+                try {
+                    val unlockHotWallet = hotWalletAccessor.getContextualUnlock(hotWallet.hotWalletId)
+                        ?: hotWalletAccessor.unlockContextual(hotWallet.hotWalletId)
+                    block(unlockHotWallet)
+                } finally {
+                    hotWalletAccessor.clearContextualUnlock(hotWallet.hotWalletId)
+                }
+            },
+            catch = { raise(it) },
+        )
     }
 }

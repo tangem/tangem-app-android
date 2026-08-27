@@ -1,9 +1,19 @@
 package com.tangem.common.rules
 
+import com.tangem.spend.datasource.config.TangemPay
+
+import com.tangem.datasource.api.common.config.News
+
+import com.tangem.datasource.api.common.config.TangemTech
+
+import com.tangem.datasource.api.common.config.StakeKit
+
+import com.tangem.datasource.api.common.config.Express
+
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.annotations.ApiEnv
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
 import com.tangem.wallet.test.BuildConfig
@@ -20,7 +30,7 @@ import com.tangem.utils.logging.TangemLogger
  * or via an instrumentation argument.
  *
  * This rule supports @ApiEnv annotation with a map of API configs to configure different environments.
- * For any ApiConfig.ID not specified in annotations, MOCK environment will be used by default.
+ * For any api config not specified in annotations, MOCK environment will be used by default.
  */
 class ApiEnvironmentRule : TestRule {
 
@@ -78,7 +88,7 @@ class ApiEnvironmentRule : TestRule {
                     val parts = configPair.split("=").map { it.trim() }
                     if (parts.size == 2) {
                         try {
-                            val apiConfigId = ApiConfig.ID.valueOf(parts[0])
+                            val apiConfigId = ApiConfig.ID(parts[0])
                             val environment = ApiEnvironment.valueOf(parts[1])
                             apiConfigId to environment
                         } catch (e: IllegalArgumentException) {
@@ -101,12 +111,12 @@ class ApiEnvironmentRule : TestRule {
 
     private fun collectApiEnvAnnotations(description: Description): Map<ApiConfig.ID, ApiEnvironment> {
         return description.getAnnotation(ApiEnv::class.java)?.value
-            ?.associate { it.apiConfigId to it.environment } ?: emptyMap()
+            ?.associate { ApiConfig.ID(it.apiConfigId) to it.environment } ?: emptyMap()
     }
 
     private fun collectApiEnvAnnotations(testClass: Class<*>): Map<ApiConfig.ID, ApiEnvironment> {
         return testClass.getAnnotation(ApiEnv::class.java)?.value
-            ?.associate { it.apiConfigId to it.environment } ?: emptyMap()
+            ?.associate { ApiConfig.ID(it.apiConfigId) to it.environment } ?: emptyMap()
     }
 
     private fun MutableApiConfigsManager.setupEnvironments() {
@@ -115,7 +125,7 @@ class ApiEnvironmentRule : TestRule {
         runBlocking {
             targetEnvironments.forEach { (apiConfigId, environment) ->
                 changeEnvironment(apiConfigId.name, environment)
-                TangemLogger.i("$apiConfigId environment set to: ${environment.name}")
+                TangemLogger.i("${apiConfigId.name} environment set to: ${environment.name}")
             }
         }
     }
@@ -124,11 +134,11 @@ class ApiEnvironmentRule : TestRule {
         const val ENV_CONFIGS_ARGUMENT = "testEnvironmentConfigs"
 
         val DEFAULT_API_CONFIGS = listOf(
-            ApiConfig.ID.TangemTech,
-            ApiConfig.ID.Express,
-            ApiConfig.ID.TangemPay,
-            ApiConfig.ID.StakeKit,
-            ApiConfig.ID.News,
+            TangemTech.ID,
+            Express.ID,
+            TangemPay.Bff.ID,
+            StakeKit.ID,
+            News.ID,
         )
     }
 }

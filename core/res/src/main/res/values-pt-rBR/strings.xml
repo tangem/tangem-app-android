@@ -1866,7 +1866,7 @@
   <string name="tangem_pay_terms_fees_limits">Termos, taxas e limites</string>
   <string name="tangem_pay_terms_limits">Termos e Limites</string>
   <string name="tangem_pay_transaction_declined_notification_text">O banco rejeitou esta solicitação de transação.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Transação mínima: %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Transação mínima</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">O limite mensal foi atingido.</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluído</string>
   <string name="tangem_pay_transaction_details_cashback_none">Sem reembolso</string>
@@ -2091,8 +2091,8 @@
   <string name="tangempay_newonboard_body">Gaste cripto em qualquer lugar — sem bancos, sem intermediários, sem exchanges. A força da autocustódia nos pagamentos do dia a dia.</string>
   <string name="tangempay_newonboard_bottomleft_body">Compre online e com Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">No mundo todo</string>
-  <string name="tangempay_newonboard_bottomright_body">Use no mundo todo</string>
-  <string name="tangempay_newonboard_bottomright_title">Taxa FX de só 1%</string>
+  <string name="tangempay_newonboard_bottomright_body">USD→USDC 1:1; taxa US$ 1</string>
+  <string name="tangempay_newonboard_bottomright_title">Receba transferências ACH</string>
   <string name="tangempay_newonboard_title">Peça seu cartão Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">Pague o que vê</string>
   <string name="tangempay_newonboard_topleft_title">Sem taxa de compra\n1 USDC = 1 USD</string>
@@ -2138,7 +2138,7 @@
   <string name="tangempay_select_plan_confirm_downgrade_title">Seu %1$s plano e %2$s Os cartões ficarão ativos até %3$s</string>
   <string name="tangempay_select_plan_confirm_point_cancel_till">Você pode cancelar essa transição até %1$s</string>
   <string name="tangempay_select_plan_confirm_point_cards_closed">Seu %1$s Os cartões serão fechados.</string>
-  <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s A taxa mensal será debitada da sua conta.</string>
+  <string name="tangempay_select_plan_confirm_point_monthly_fee">%1$s A taxa mensal será debitada da sua conta</string>
   <string name="tangempay_select_plan_confirm_point_move_on_date">Sobre %1$s nós o transferiremos para %2$s plano</string>
   <string name="tangempay_select_plan_confirm_point_no_fee">Nenhuma taxa será cobrada.</string>
   <string name="tangempay_select_plan_confirm_point_virtual_card">Você receberá sua versão virtual %1$s em minutos</string>

@@ -27,17 +27,12 @@ internal class ItemsBuilder @Inject constructor(
     @Suppress("LongParameterList")
     fun buildAll(
         isWalletConnectAvailable: Boolean,
-        isAddressBookAvailable: Boolean,
         hasAnyMobileWallet: Boolean,
         userWalletId: UserWalletId,
         onSupportClick: () -> Unit,
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
-        if (isAddressBookAvailable) {
-            buildWalletActionBlock(isWalletConnectAvailable, userWalletId)
-        } else {
-            buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
-        }
+        buildWalletActionBlock(isWalletConnectAvailable, userWalletId)
         buildUserWalletListBlock().let(::add)
 
         if (hotWalletRestrictionManager.isCreationEnabledSync() && hasAnyMobileWallet) {
@@ -98,16 +93,6 @@ internal class ItemsBuilder @Inject constructor(
                 block
             }
         }.toImmutableList()
-    }
-
-    private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
-        return if (isWalletConnectAvailable) {
-            DetailsItemUM.WalletConnect(
-                onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
-            )
-        } else {
-            null
-        }
     }
 
     private fun MutableList<DetailsItemUM>.buildWalletActionBlock(

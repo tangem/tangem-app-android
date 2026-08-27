@@ -16,6 +16,7 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
@@ -23,7 +24,6 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -64,7 +64,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
-    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
 ) : PaymentAccountStatusFetcher {
@@ -216,8 +215,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
 
-        val hasActiveIssueOrder = issueCardRepository.getIssueOrderIds(userWalletId).isNotEmpty()
-        return if (hasActiveIssueOrder) {
+        // Plan selection is an onboarding state: never surface it to a customer whose account already exists,
+        // even when the response carries no cards and no balances.
+        if (customerInfo.isEnrolled) {
+            logger.i("resolveFinalStatus $userWalletId: enrolled customer, keeping $status")
+            return status
+        }
+
+        return if (hasActiveIssuanceOrder(userWalletId)) {
             PaymentAccountStatusValue.Inactive(
                 source = StatusSource.ACTUAL,
                 tariffPlan = getTangemPayTariffPlanStateUseCase(
@@ -235,6 +240,27 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 tariffPlan = tariffPlan,
             )
         }
+    }
+
+    /**
+     * Whether an issuance or a tariff-plan transition is already in flight.
+     *
+     * `findOrders` is the source of truth: a locally stored order id does not survive a fresh install or an
+
+     * selection. The local store stays as a fallback for a failed lookup.
+     */
+    private suspend fun hasActiveIssuanceOrder(userWalletId: UserWalletId): Boolean {
+        return customerOrderRepository.findOrders(
+            userWalletId = userWalletId,
+            types = OrderType.issueCardTypes + OrderType.TARIFF_PLAN_TRANSITION,
+            statuses = OrderStatus.activeStatuses,
+        ).fold(
+            ifLeft = { error ->
+                logger.e("hasActiveIssuanceOrder $userWalletId failed: $error")
+                issueCardRepository.getIssueOrderIds(userWalletId).isNotEmpty()
+            },
+            ifRight = { orders -> orders.any { it.status.isActive } },
+        )
     }
 
     private suspend fun proceedWithOrderId(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
@@ -353,10 +379,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val customerId = customerId
         val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
-        val fiatBalance = fiatBalance
-        val cryptoBalance = cryptoBalance
-        val hasCardData = cards.isNotEmpty() && productInstances.isNotEmpty()
-        val isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled
+        val multichainNetworkStatuses by lazy {
+            if (tangemPayFeatureToggles.isAccountMultichainEnabled) {
+                tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
+            } else {
+                emptyList()
+            }
+        }
         return when {
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.ACTUAL,
@@ -366,54 +395,93 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 kycStatus = kycStatus,
                 customerId = customerId,
             )
-            fiatBalance != null && cryptoBalance != null && (isDeactivated || isFormer) ->
+            isDeactivated || isFormer -> {
+                val resolved = resolveBalance(userWalletId)
                 PaymentAccountStatusValue.Deactivated(
-                    source = StatusSource.ACTUAL,
+                    source = resolved.source,
                     customerId = customerId,
-                    balance = PaymentAccountStatusValue.Balance(
-                        fiatBalance = fiatBalance,
-                        cryptoBalance = cryptoBalance,
-                        availableForWithdrawal = availableForWithdrawal.orZero(),
-                    ),
+                    balance = resolved.balance,
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                    networks = multichainNetworkStatuses,
                     fiatRate = quotesData?.fiatRate,
                     error = null,
                 )
-            fiatBalance != null && cryptoBalance != null && (hasCardData || isTiersPlusPlanEnabled) ->
+            }
+            isEnrolled -> {
+                val resolved = resolveBalance(userWalletId)
                 convertToContentState(
                     userWalletId = userWalletId,
-                    fiatBalance = fiatBalance,
-                    cryptoBalance = cryptoBalance,
+                    balance = resolved.balance,
+                    source = resolved.source,
                     fiatRate = quotesData?.fiatRate,
                     customerId = customerId,
+                    networks = multichainNetworkStatuses,
                 )
+            }
             else -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
     }
 
     /**
+     * Balances of the payment account, degrading to the cached ones when `customer/me` delivers none.
+     *
+     * The backend can answer with `balance.fiat` / `balance.crypto` set to `null` for an operational account
+     * (provider outage, partial response). Reusing the cached balances keeps the account readable instead of
+     * showing a fabricated zero; [StatusSource.ONLY_CACHE] tells the UI the figures are stale. When there is no
+     * cache either, the balance stays `null` and the UI renders a placeholder.
+     */
+    private suspend fun CustomerInfo.resolveBalance(userWalletId: UserWalletId): ResolvedBalance {
+        val fiat = fiatBalance
+        val crypto = cryptoBalance
+        if (fiat != null && crypto != null) {
+            return ResolvedBalance(
+                balance = PaymentAccountStatusValue.Balance(
+                    fiatBalance = fiat,
+                    cryptoBalance = crypto,
+                    availableForWithdrawal = availableForWithdrawal.orZero(),
+                ),
+                source = StatusSource.ACTUAL,
+            )
+        }
+
+        val cached = paymentAccountStatusesStore.getSyncOrNull(userWalletId)?.value?.balanceOrNull
+        logger.i("resolveBalance $userWalletId: response without balances, cachedBalance=${cached != null}")
+        return if (cached == null) {
+            ResolvedBalance(balance = null, source = StatusSource.ACTUAL)
+        } else {
+            ResolvedBalance(balance = cached, source = StatusSource.ONLY_CACHE)
+        }
+    }
+
+    private data class ResolvedBalance(
+        val balance: PaymentAccountStatusValue.Balance?,
+        val source: StatusSource,
+    )
+
+    /**
      * Builds the [PaymentAccountStatusValue.Loaded] content state with the full list of cards.
-     * Each card is the join of a product instance with its card info by `cardId`; balances are
-     * payment-account-level (shared across cards). Falls back to [PaymentAccountStatusValue.IssuingCard]
-     * when no card has both a product instance and card info yet (e.g. issuance in progress).
+     * A card is driven by its product instance; the `cards[]` payload only enriches it (last digits, PIN flag,
+     * artwork), because the backend can omit it for an operational account. Balances are
+     * payment-account-level (shared across cards) and may be absent — see [resolveBalance].
      */
     private suspend fun CustomerInfo.convertToContentState(
         userWalletId: UserWalletId,
-        fiatBalance: PaymentAccountStatusValue.FiatBalance,
-        cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
+        balance: PaymentAccountStatusValue.Balance?,
+        source: StatusSource,
         customerId: String,
         fiatRate: BigDecimal?,
+        networks: List<PaymentNetworkStatus>,
     ): PaymentAccountStatusValue {
         val cardsById = cards.associateBy { it.cardId }
         val tangemPayCards = cardProductInstances.mapNotNull { productInstance ->
-            val cardInfo = cardsById[productInstance.cardId] ?: return@mapNotNull null
-            val cardId = productInstance.cardId
+            val cardId = productInstance.cardId.ifEmpty { return@mapNotNull null }
+            val cardInfo = cardsById[cardId]
             val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
             TangemPayCard(
                 id = cardId,
                 productInstanceId = productInstance.id,
-                cardStatus = cardInfo.cardStatus,
-                hasPinCode = cardInfo.isPinSet,
+                cardStatus = cardInfo?.cardStatus ?: productInstance.status.toCardStatus(),
+                hasPinCode = cardInfo?.isPinSet == true,
                 displayName = productInstance.displayName,
                 limit = TangemPayCardLimitData(
                     actualCardLimit = productInstance.actualCardLimit,
@@ -424,8 +492,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 } else {
                     productInstance.frozenState
                 },
-                lastDigits = cardInfo.lastFourDigits,
-                images = cardInfo.images,
+                lastDigits = cardInfo?.lastFourDigits.orEmpty(),
+                images = cardInfo?.images ?: tariffPlan?.plan?.images.orEmpty(),
                 state = getCardState(cardId, userWalletId),
             )
         }
@@ -452,17 +520,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val virtualAccount = resolveVirtualAccountOnramp(userWalletId)
 
         return PaymentAccountStatusValue.Loaded(
-            source = StatusSource.ACTUAL,
+            source = source,
             customerId = customerId,
-            depositAddress = cryptoBalance.depositAddress,
+            depositAddress = balance?.cryptoBalance?.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+            networks = networks,
             fiatRate = fiatRate,
             cards = allCards,
-            balance = PaymentAccountStatusValue.Balance(
-                fiatBalance = fiatBalance,
-                cryptoBalance = cryptoBalance,
-                availableForWithdrawal = availableForWithdrawal.orZero(),
-            ),
+            balance = balance,
             error = null,
             virtualAccount = virtualAccount,
             tariffPlan = tariffPlan?.let { tariff ->
@@ -475,12 +540,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638). Gated by the feature toggle.
+     * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638).
      *
      * Resolution order:
      * 1. A product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted VA order id
-     *    (idempotent) and eagerly fetches its bank credentials ([VirtualAccountOnramp.Available], or
-     *    [VirtualAccountOnramp.BankCredentialsError] on failure).
+     *    (idempotent) and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank credentials are
+     *    fetched on demand by the deposit screen, not here.
      * 2. Otherwise, a VA order id is persisted locally — checks its status via `getOrderData`:
      *    NEW/PROCESSING/COMPLETED (or a transient lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
      *    or a [VisaApiError.OrderNotFound] (the persisted id went stale) clears the persisted id and falls through
@@ -489,26 +554,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      *    the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
      */
     private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp? {
-        if (!virtualAccountFeatureToggles.isVaMvp0Enabled) return null
-
         val accountInstance = productInstances.firstOrNull {
             it.specificationDataType == SpecificationDataType.ACCOUNT
         }
         if (accountInstance != null) {
             // Order provisioned into an ACCOUNT product instance — drop the in-flight order hint (idempotent).
             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
-            return onboardingRepository.getBankCredentials(userWalletId, accountInstance.id).fold(
-                ifLeft = { error ->
-                    logger.e("getBankCredentials failed for ${accountInstance.id}: $error")
-                    VirtualAccountOnramp.BankCredentialsError
-                },
-                ifRight = { credentials ->
-                    VirtualAccountOnramp.Available(
-                        productInstanceId = accountInstance.id,
-                        bankCredentials = credentials,
-                    )
-                },
-            )
+            return VirtualAccountOnramp.Available(productInstanceId = accountInstance.id)
         }
 
         val vaOrderId = onboardingRepository.getVirtualAccountOrderId(userWalletId)
@@ -624,6 +676,27 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 },
             )
         }
+    }
+
+    /**
+     * Card status derived from the owning product instance, used when `customer/me`.cards[] carries no entry
+     * for it — the account is operational, only the card payload is missing.
+     */
+    private fun CustomerInfo.ProductInstance.Status.toCardStatus(): TangemPayCard.Status = when (this) {
+        CustomerInfo.ProductInstance.Status.ACTIVE -> TangemPayCard.Status.ACTIVE
+        CustomerInfo.ProductInstance.Status.BLOCKED -> TangemPayCard.Status.BLOCKED
+        CustomerInfo.ProductInstance.Status.DEACTIVATED,
+        CustomerInfo.ProductInstance.Status.DEACTIVATING,
+        CustomerInfo.ProductInstance.Status.CANCELED,
+        -> TangemPayCard.Status.CANCELED
+        CustomerInfo.ProductInstance.Status.NEW,
+        CustomerInfo.ProductInstance.Status.READY_FOR_MANUFACTURING,
+        CustomerInfo.ProductInstance.Status.MANUFACTURING,
+        CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
+        CustomerInfo.ProductInstance.Status.DELIVERED,
+        CustomerInfo.ProductInstance.Status.ACTIVATING,
+        -> TangemPayCard.Status.INACTIVE
+        CustomerInfo.ProductInstance.Status.UNKNOWN -> TangemPayCard.Status.UNDEFINED
     }
 
     /** Placeholder card for an additional card that is still being issued (no backend card yet). */

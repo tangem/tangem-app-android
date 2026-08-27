@@ -4,11 +4,6 @@ import com.tangem.datasource.api.express.models.response.ExchangeItemResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
-import org.joda.time.DateTime
-
-// todo txHistory backend does not send `updatedAt` yet — drop this placeholder and map the real
-//  ExchangeItemResponse.updatedAt / OnrampItemResponse.updatedAt once it does.
-private fun updatedAtPlaceholder(): String = DateTime.now().toString()
 
 /**
  * Maps API history items into their persisted [androidx.room.Entity] representations.
@@ -35,7 +30,7 @@ fun ExchangeItemResponse.toEntity(): ExpressExchangeEntity? {
         refundNetwork = refundNetwork,
         refundContractAddress = refundContractAddress,
         createdAt = createdAt,
-        updatedAt = updatedAtPlaceholder(),
+        updatedAt = updatedAt,
         payTill = payTill,
         averageDuration = averageDuration,
         from = ExpressExchangeEntity.AssetEmbedded(
@@ -66,7 +61,7 @@ fun OnrampItemResponse.toEntity(): ExpressOnrampEntity {
         externalTxUrl = externalTxUrl,
         payoutHash = payoutHash,
         createdAt = createdAt,
-        updatedAt = updatedAtPlaceholder(),
+        updatedAt = updatedAt,
         fromCurrencyCode = fromCurrencyCode,
         fromAmount = fromAmount,
         fromPrecision = fromPrecision,

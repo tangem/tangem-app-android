@@ -1,8 +1,11 @@
 package com.tangem.datasource.api.ethpool
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import com.tangem.datasource.api.common.MoshiConverter
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.common.json.TangemSdkAdapter
+import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountsListResponse
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
 import org.junit.jupiter.api.Test
@@ -10,7 +13,13 @@ import java.math.BigDecimal
 
 internal class P2PEthPoolAccountsListResponseTest {
 
-    private val adapter = MoshiConverter.networkMoshi.adapter<P2PEthPoolResponse<P2PEthPoolAccountsListResponse>>(
+    private val moshi = Moshi.Builder()
+        .addLast(KotlinJsonAdapterFactory())
+        .add(BigDecimalAdapter())
+        .add(TangemSdkAdapter.ByteArrayAdapter())
+        .build()
+
+    private val adapter = moshi.adapter<P2PEthPoolResponse<P2PEthPoolAccountsListResponse>>(
         Types.newParameterizedType(
             P2PEthPoolResponse::class.java,
             P2PEthPoolAccountsListResponse::class.java,

@@ -1,5 +1,7 @@
 package com.tangem.tests.swap
 
+import com.tangem.datasource.api.common.config.Express
+
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
@@ -11,11 +13,12 @@ import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.datasource.api.common.config.ApiConfig
-import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.res.R
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertTrue
@@ -25,7 +28,170 @@ import org.junit.Test
 class SwapTokenScreenTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
+    )
+    @AllureId("9456")
+    @DisplayName("Swap: provider modal shows ALL/CEX/DEX filter and the picked provider appears in the tab")
+    @Test
+    fun checkProviderTypeFilterTest() {
+        val fromTokenSymbol = "ETH"
+        val receiveTokenName = "POL (ex-MATIC)"
+        val inputAmount = "0.1"
+        val allFilter = getResourceString(R.string.common_all)
+        val cexFilter = "CEX"
+        val dexFilter = "DEX"
+        val dexProviderName = "1Inch"
+
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Swap' from the main screen") {
+                openSwapScreen(from = SwapEntryPoint.MainScreen)
+            }
+            step("Assert the most funded token '$fromTokenSymbol' is pre-filled in the 'From' block") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol(fromTokenSymbol).assertIsDisplayed() }
+                }
+            }
+            step("Choose receive token '$receiveTokenName'") {
+                chooseReceiveToken(receiveTokenName)
+            }
+            step("Input swap amount '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Wait for the providers block to load") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providersBlock.assertIsDisplayed() }
+                }
+            }
+            step("Open the providers bottom sheet with the type filter displayed") {
+                openProviderSheetWithTypeFilter(allFilter)
+            }
+            step("Assert the 'CEX' filter is displayed") {
+                onChooseProviderBottomSheet { filterButton(cexFilter).assertIsDisplayed() }
+            }
+            step("Assert the 'DEX' filter is displayed") {
+                onChooseProviderBottomSheet { filterButton(dexFilter).assertIsDisplayed() }
+            }
+            step("Select the 'DEX' filter") {
+                onChooseProviderBottomSheet { filterButton(dexFilter).performClick() }
+            }
+            step("Assert the DEX provider '$dexProviderName' is displayed under the filter") {
+                onChooseProviderBottomSheet {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerItem(dexProviderName).assertIsDisplayed() }
+                }
+            }
+            step("Select the '$dexProviderName' provider") {
+                onChooseProviderBottomSheet { providerItem(dexProviderName).clickWithAssertion() }
+            }
+            step("Assert the selected provider '$dexProviderName' is shown in the providers tab") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { providerWithName(dexProviderName).assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
+    @ApiEnv(
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
+    )
+    @AllureId("9458")
+    @DisplayName("Swap: predefined percent buttons (25/50/75/Max) split the balance of the 'From' token")
+    @Test
+    fun checkPredefinedPercentButtonsTest() {
+        val mostFundedTokenSymbol = "ETH"
+        val receiveTokenName = "Polygon"
+        val percent25 = "PERCENT_25"
+        val percent50 = "PERCENT_50"
+        val percent75 = "PERCENT_75"
+        val max = "MAX"
+        // The most funded token on the standard mock is Ethereum with a 1.0 ETH balance,
+        // so the predefined-percent amounts are exact fractions of it.
+        val amount25 = "0.25"
+        val amount50 = "0.5"
+        val amount75 = "0.75"
+        val amountMax = "1"
+
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Swap' from the main screen") {
+                openSwapScreen(from = SwapEntryPoint.MainScreen)
+            }
+            step("Assert the most funded token '$mostFundedTokenSymbol' is pre-filled in the 'From' block") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol(mostFundedTokenSymbol).assertIsDisplayed() }
+                }
+            }
+            step("Choose receive token '$receiveTokenName'") {
+                chooseReceiveToken(receiveTokenName)
+            }
+            step("Focus the 'From' amount input") {
+                onSwapTokenScreen { textInput.clickWithAssertion() }
+            }
+            step("Assert the '25%' button is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { percentButton(percent25).assertIsDisplayed() }
+                }
+            }
+            step("Assert the '50%' button is displayed") {
+                onSwapTokenScreen { percentButton(percent50).assertIsDisplayed() }
+            }
+            step("Assert the '75%' button is displayed") {
+                onSwapTokenScreen { percentButton(percent75).assertIsDisplayed() }
+            }
+            step("Assert the 'Max' button is displayed") {
+                onSwapTokenScreen { percentButton(max).assertIsDisplayed() }
+            }
+            step("Click on '25%' button") {
+                onSwapTokenScreen { percentButton(percent25).clickWithAssertion() }
+            }
+            step("Assert the 'From' amount is '$amount25'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { textInput.assertTextEquals(amount25) }
+                }
+            }
+            step("Click on '50%' button") {
+                onSwapTokenScreen { percentButton(percent50).clickWithAssertion() }
+            }
+            step("Assert the 'From' amount is '$amount50'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { textInput.assertTextEquals(amount50) }
+                }
+            }
+            step("Click on '75%' button") {
+                onSwapTokenScreen { percentButton(percent75).clickWithAssertion() }
+            }
+            step("Assert the 'From' amount is '$amount75'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { textInput.assertTextEquals(amount75) }
+                }
+            }
+            step("Click on 'Max' button") {
+                onSwapTokenScreen { percentButton(max).clickWithAssertion() }
+            }
+            step("Assert the 'From' amount is the full balance '$amountMax'") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { textInput.assertTextEquals(amountMax) }
+                }
+            }
+        }
+    }
+
+    @ApiEnv(
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("3546")
     @DisplayName("Swap: network fee")
@@ -115,7 +281,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("3549")
     @DisplayName("Swap: network error test")
@@ -177,7 +343,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("3547")
     @DisplayName("Swap: change network fee")
@@ -280,7 +446,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("2828")
     @DisplayName("Swap: go to token swap")
@@ -333,7 +499,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("575")
     @DisplayName("Swap: check UI")
@@ -428,7 +594,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("5162")
     @DisplayName("Swap: check swap tokens switch")
@@ -515,18 +681,20 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
+                flakySafely { onMainScreen { screenContainer.assertIsDisplayed() } }
             }
             step("Click on token with name: '$bitcoin'. Swap unavailable") {
-                onMainScreen { tokenWithTitleAndAddress(bitcoin).clickWithAssertion() }
+                onMainScreen { clickDisplayedToken(bitcoin) }
             }
             step("Assert 'Swap' button is dimmed") {
                 onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
+                flakySafely { onMainScreen { screenContainer.assertIsDisplayed() } }
             }
             step("Click on unknown custom token with name: '$salam'. Swap unavailable") {
-                onMainScreen { tokenWithTitleAndAddress(salam).clickWithAssertion() }
+                onMainScreen { clickDisplayedToken(salam) }
             }
             step("Assert 'Swap' button is dimmed") {
                 onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
@@ -535,7 +703,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     }
 
     @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+        ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("583")
     @DisplayName("Swap: check switch fee type (enable to cover 'Market' and 'Fast' fee)")
