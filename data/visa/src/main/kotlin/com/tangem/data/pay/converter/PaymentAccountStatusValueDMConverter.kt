@@ -69,6 +69,8 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             )
             is PaymentAccountStatusValue.Error.CardIssueFailed -> PaymentAccountStatusValueDM.CardIssueFailed(
                 customerId = value.customerId,
+                fiatRate = value.fiatRate,
+                balance = value.balance?.toDM(),
             )
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
@@ -94,9 +96,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is PaymentAccountStatusValueDM.Empty -> PaymentAccountStatusValue.Empty
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
-            is PaymentAccountStatusValueDM.CardIssueFailed -> PaymentAccountStatusValue.Error.CardIssueFailed(
-                customerId = value.customerId,
-            )
+            is PaymentAccountStatusValueDM.CardIssueFailed -> value.toDomain()
             is PaymentAccountStatusValueDM.IssuingCard -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.CACHE,
             )
@@ -157,6 +157,18 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         }
     }
 
+    private fun PaymentAccountStatusValue.Balance.toDM() = PaymentAccountStatusValueDM.BalanceDM(
+        fiatBalance = fiatBalance.toDM(),
+        cryptoBalance = cryptoBalance.toDM(),
+        availableForWithdrawal = availableForWithdrawal,
+    )
+
+    private fun PaymentAccountStatusValueDM.BalanceDM.toDomain() = PaymentAccountStatusValue.Balance(
+        fiatBalance = fiatBalance.toDomain(),
+        cryptoBalance = cryptoBalance.toDomain(),
+        availableForWithdrawal = availableForWithdrawal,
+    )
+
     private fun PaymentAccountStatusValue.FiatBalance.toDM(): PaymentAccountStatusValueDM.FiatBalanceDM {
         return PaymentAccountStatusValueDM.FiatBalanceDM(
             availableBalance = availableBalance,
@@ -195,6 +207,14 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             availableForWithdrawal = availableForWithdrawal.orZero(),
         )
     }
+
+    private fun PaymentAccountStatusValueDM.CardIssueFailed.toDomain() =
+        PaymentAccountStatusValue.Error.CardIssueFailed(
+            customerId = customerId,
+            source = StatusSource.CACHE,
+            balance = balance?.toDomain(),
+            fiatRate = fiatRate,
+        )
 
     private fun PaymentAccountStatusValueDM.FiatBalanceDM.toDomain(): PaymentAccountStatusValue.FiatBalance {
         return PaymentAccountStatusValue.FiatBalance(
