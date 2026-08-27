@@ -1,15 +1,16 @@
 package com.tangem.datasource.api.marketing
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
+import com.squareup.moshi.ToJson
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class MarketingCampaignsResponseTest {
 
-    private val moshi = Moshi.Builder().add(BigDecimalAdapter()).build()
+    private val moshi = Moshi.Builder().add(TestBigDecimalAdapter()).build()
     private val adapter = moshi.adapter(MarketingCampaignsResponse::class.java)
 
     @Test
@@ -71,5 +72,13 @@ internal class MarketingCampaignsResponseTest {
         // Assert
         assertThat(tokens.map { it.id }).containsExactly("1696501400", "3296501412")
         assertThat(tokens.all { it.networkId == null }).isTrue()
+    }
+
+    private class TestBigDecimalAdapter {
+        @FromJson
+        fun fromJson(value: String) = BigDecimal(value)
+
+        @ToJson
+        fun toJson(value: BigDecimal) = value.toString()
     }
 }
