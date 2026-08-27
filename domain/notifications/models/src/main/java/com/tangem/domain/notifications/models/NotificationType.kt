@@ -5,6 +5,9 @@ enum class NotificationType(val type: String) {
     IncomeTransactions("income_transaction"),
     SwapStatus("swap_status_update"),
     OnrampStatus("onramp_status_update"),
+    JointMembers("joint_members"),
+    JointOverview("joint_overview"),
+    JointTxSent("joint_tx_sent"),
     Unknown("unknown"),
     ;
 
