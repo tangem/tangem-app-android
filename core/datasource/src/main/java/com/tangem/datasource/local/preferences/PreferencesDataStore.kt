@@ -86,7 +86,9 @@ internal object PreferencesDataStore {
                 context = context,
                 legacyPrefsName = "selected_app_currency",
                 legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
-                keyName = PreferencesKeys.SELECTED_APP_CURRENCY_KEY.name,
+                // Key now lives in store:datasource (DefaultAppCurrencyResponseStore); the legacy migration
+                // only needs the persisted key name, kept here as a literal to avoid a core→store dependency.
+                keyName = "selectedAppCurrency",
                 analyticsExceptionHandler = analyticsExceptionHandler,
             ),
             SharedPreferencesKeyMigration(
