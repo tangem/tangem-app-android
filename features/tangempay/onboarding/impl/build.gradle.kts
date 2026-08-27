@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.features.tangempay.details.api)
 
     /** Domain */
+    api(projects.domain.common)
     api(projects.domain.hotWallet)
     api(projects.domain.visa)
     api(projects.domain.visa.models)
@@ -67,6 +68,7 @@ dependencies {
     implementation(deps.kotlin.serialization.core)
 
     /** Test */
+    testImplementation(projects.test.core)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
