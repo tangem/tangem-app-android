@@ -6,7 +6,7 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
-import com.tangem.datasource.api.jointaccount.JointAccountApi
+import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
