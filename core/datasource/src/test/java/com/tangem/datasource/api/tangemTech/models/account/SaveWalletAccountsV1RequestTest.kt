@@ -14,9 +14,9 @@ internal class SaveWalletAccountsV1RequestTest {
             derivationIndex = 0,
             icon = "Wallet",
             iconColor = "DullLavender",
-            type = WalletAccountDTO.Type.CRYPTO.value,
+            type = WalletAccountDTO.Type.CRYPTO,
         )
-        val joint = personal.copy(id = "B".repeat(64), name = "Family", type = WalletAccountDTO.Type.JOINT.value)
+        val joint = personal.copy(id = "B".repeat(64), name = "Family", type = WalletAccountDTO.Type.JOINT)
 
         // Act
         val actual = SaveWalletAccountsV1Request.of(SaveWalletAccountsResponse(accounts = listOf(personal, joint)))

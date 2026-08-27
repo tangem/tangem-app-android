@@ -155,7 +155,7 @@ class CryptoPortfolioConverterTest {
                     value = createCryptoPortfolio(userWalletId = userWallet.walletId),
                     expected = createWalletAccountDTO(
                         userWalletId = userWallet.walletId,
-                        type = WalletAccountDTO.Type.CRYPTO.value,
+                        type = WalletAccountDTO.Type.CRYPTO,
                     ),
                 ),
             )
@@ -252,7 +252,7 @@ class CryptoPortfolioConverterTest {
                 derivationIndex = 2,
                 icon = CryptoPortfolioIcon.Icon.Star.name,
                 iconColor = CryptoPortfolioIcon.Color.Azure.name,
-                type = WalletAccountDTO.Type.JOINT.value,
+                type = WalletAccountDTO.Type.JOINT,
                 tokens = emptyList(),
             )
             Truth.assertThat(actual).isEqualTo(expected)
@@ -265,7 +265,7 @@ class CryptoPortfolioConverterTest {
                 accountName = "Family",
                 derivationIndex = derivationIndex,
                 tokens = tokens,
-                type = WalletAccountDTO.Type.JOINT.value,
+                type = WalletAccountDTO.Type.JOINT,
             )
         }
     }

@@ -18,8 +18,8 @@ import dagger.assisted.AssistedInject
 /**
  * Converts a row of `GET /accounts` to an [Account.CryptoPortfolio] and back.
  *
- * The row's `type` tells a personal portfolio from a joint one. A type this build does not know renders as personal:
- * a value the backend adds later must not cost the user the whole account list.
+ * The account's `type` tells a personal portfolio from a joint one; an absent type is a personal one — the field
+ * predates joint accounts.
  *
  * @property userWallet                      the user wallet associated with the account list
  * @property responseCryptoCurrenciesFactory factory to create crypto currencies from response tokens
@@ -33,7 +33,7 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
 ) : TwoWayConverter<WalletAccountDTO, Account.CryptoPortfolio> {
 
     override fun convert(value: WalletAccountDTO): Account.CryptoPortfolio {
-        return when (WalletAccountDTO.Type.of(raw = value.type)) {
+        return when (value.type) {
             WalletAccountDTO.Type.JOINT -> convertJoint(value)
             WalletAccountDTO.Type.CRYPTO,
             null,
@@ -56,8 +56,8 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
                 accountId = value.accountId,
             ),
             type = when (value) {
-                is Account.Joint -> WalletAccountDTO.Type.JOINT.value
-                is Account.Personal -> WalletAccountDTO.Type.CRYPTO.value
+                is Account.Joint -> WalletAccountDTO.Type.JOINT
+                is Account.Personal -> WalletAccountDTO.Type.CRYPTO
             },
         )
     }
