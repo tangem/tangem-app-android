@@ -13,7 +13,7 @@ interface TangemPayWithdrawWithSwapUseCase {
     suspend operator fun invoke(
         userWallet: UserWallet,
         cryptoAmount: BigDecimal,
-        cryptoCurrencyId: CryptoCurrency.RawID,
+        sourceCurrency: CryptoCurrency,
         receiverCexAddress: String,
         exchangeData: TangemPayWithdrawExchangeState,
     ): Either<UniversalError, WithdrawalResult>
