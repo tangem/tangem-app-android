@@ -29,6 +29,7 @@ import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -332,7 +333,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 clobApi.updateBalanceAllowance(
                     headers = headers,
                     assetType = ASSET_TYPE_COLLATERAL,
-                    signatureType = SIGNATURE_TYPE_DEPOSIT_WALLET,
+                    signatureType = PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET,
                 ).bind().right()
             },
             onError = { authErrorResolver.resolve(it).left() },
@@ -355,7 +356,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 val response = clobApi.getBalanceAllowance(
                     headers = headers,
                     assetType = ASSET_TYPE_COLLATERAL,
-                    signatureType = SIGNATURE_TYPE_DEPOSIT_WALLET,
+                    signatureType = PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET,
                 ).bind()
                 Either.catch { PolymarketBalanceAllowanceConverter.convert(response) }
                     .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
@@ -402,8 +403,6 @@ internal class DefaultPolymarketRepository @Inject constructor(
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"
-
-        const val SIGNATURE_TYPE_DEPOSIT_WALLET = 3
 
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
 
