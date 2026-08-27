@@ -24,6 +24,7 @@ import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
 import com.tangem.features.virtualaccount.onboarding.deeplink.OnboardVirtualAccountsDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
@@ -64,6 +65,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val onboardVirtualAccountsDeepLink: OnboardVirtualAccountsDeepLinkHandler.Factory,
     private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
     private val tangemPayMainDeepLink: TangemPayMainDeepLinkHandler.Factory,
+    private val tangemPayAccountDeepLink: TangemPayAccountDeepLinkHandler.Factory,
     private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
     private val newsDeepLink: NewsDeepLinkHandler.Factory,
     private val earnDeepLink: EarnDeepLinkHandler.Factory,
@@ -252,6 +254,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Earn.host -> earnDeepLink.create(queryParams)
             DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.PayAppMain.host -> tangemPayMainDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.PayAccount.host -> tangemPayAccountDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
             DeepLinkRoute.Campaigns.host -> promoCampaignsDeepLink.create(queryParams)
             else -> {
