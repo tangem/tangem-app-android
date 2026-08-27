@@ -22,6 +22,7 @@ internal data class PlacePredictionUM(
     val tradingPermission: TradingPermissionUM,
     val notifications: ImmutableList<PredictionNotificationUM>,
     val amountCaption: AmountCaptionUM? = null,
+    val slippagePicker: SlippagePickerUM,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
 ) {
@@ -41,13 +42,12 @@ internal data class PlacePredictionUM(
             quote = QuoteUM.Empty,
             tradingPermission = TradingPermissionUM.Unknown,
             notifications = persistentListOf(),
+            slippagePicker = SlippagePickerUM.empty(),
             submit = SubmitUM.Idle,
             isPrimaryButtonEnabled = false,
         )
     }
 }
-
-internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("3")
 
 /**
  * The sum to quote, or `null` while what the user typed is not one yet.
@@ -95,7 +95,7 @@ internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 internal data class SlippageUM(val percent: BigDecimal, val isDefault: Boolean)
 
 internal fun SlippageUM.label(): TextReference {
-    val formatted = "$percent%"
+    val formatted = percent.formatSlippagePercent()
 
     return if (isDefault) {
         resourceReference(R.string.prediction_place_slippage_default, wrappedList(formatted))
