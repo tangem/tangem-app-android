@@ -8,9 +8,9 @@ import com.tangem.data.jointaccount.FIXTURE_CRYPTO_ACCOUNT_ID
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
-import com.tangem.datasource.api.jointaccount.JointAccountApi
-import com.tangem.datasource.api.jointaccount.models.CreateJointAccountRequest
-import com.tangem.datasource.api.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
