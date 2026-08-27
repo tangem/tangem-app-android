@@ -408,6 +408,17 @@ dependencyAnalysis {
                 exclude(":core:error")
             }
         }
+        // The only thing this module takes from the data-layer facade is the DataStore helper pair
+        // (AppDataStoreFactory, MoshiDataStoreSerializer), which lives in :core:local and arrives through
+        // `api(projects.core.local)` in :core:datasource. Nothing in :core:datasource itself is referenced,
+        // so DAGP calls the facade unused — but :core:local is excluded from the "declare directly" advice
+        // above precisely so modules keep reaching it through the facade. Dropping the declaration would
+        // take :core:local off the classpath and stop the module compiling.
+        project(":data:search") {
+            onUnusedDependencies {
+                exclude(":core:datasource")
+            }
+        }
     }
 }
 
