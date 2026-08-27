@@ -3,17 +3,13 @@ package com.tangem.features.commonfeatures.impl.portfolioselector.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -22,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -33,17 +31,14 @@ import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalCanScrollBackward
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.portfolioselector.converter.PortfolioSelectorGroupPositionsConverter
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorItemUM
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
@@ -154,21 +149,34 @@ private fun RowScope.InfoRow(informationModel: UserWalletItemUM.Information, bal
         TangemRowText(text = information, role = TangemRowTextRole.Subtitle)
     }
 
-    TangemRowText(text = " $DOT ", role = TangemRowTextRole.Subtitle)
-
     val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(balance)
 
-    if (balanceValue == null) {
-        TangemShimmer(style = TangemTheme.typography3.caption.medium)
-    } else {
-        Text(
-            text = balanceValue,
-            style = TangemTheme.typography3.caption.medium.applyBladeBrush(
-                isEnabled = isFlickering,
-                textColor = TangemTheme.colors3.text.secondary,
-            ),
-            maxLines = 1,
-        )
+    when {
+        balance is UserWalletItemUM.Balance.Locked -> {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_lock_24),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.secondary,
+                modifier = Modifier
+                    .padding(vertical = 2.dp)
+                    .size(12.dp),
+            )
+        }
+        balanceValue == null -> {
+            TangemRowText(text = " $DOT ", role = TangemRowTextRole.Subtitle)
+            TangemShimmer(style = TangemTheme.typography3.caption.medium)
+        }
+        else -> {
+            TangemRowText(text = " $DOT ", role = TangemRowTextRole.Subtitle)
+            Text(
+                text = balanceValue,
+                style = TangemTheme.typography3.caption.medium.applyBladeBrush(
+                    isEnabled = isFlickering,
+                    textColor = TangemTheme.colors3.text.secondary,
+                ),
+                maxLines = 1,
+            )
+        }
     }
 }
 
