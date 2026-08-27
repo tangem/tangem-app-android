@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
     implementation(deps.arrow.core)
+    implementation(deps.okHttp)
     // endregion
 
     // region Tangem SDK
@@ -41,7 +42,7 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     implementation(projects.data.common)
@@ -66,6 +67,7 @@ dependencies {
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(deps.okio)
     testImplementation(deps.web3j.core)
     // endregion
 }

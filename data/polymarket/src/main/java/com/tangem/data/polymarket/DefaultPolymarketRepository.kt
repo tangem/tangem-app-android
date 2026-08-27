@@ -22,11 +22,11 @@ import com.tangem.data.polymarket.pagination.PolymarketEventsUpdateFetcher
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.api.polymarket.PolymarketApi
-import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
-import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
-import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
+import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
+import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
+import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.approval.PolymarketContracts

@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.polymarket.models
+package com.tangem.grow.datasource.polymarket.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

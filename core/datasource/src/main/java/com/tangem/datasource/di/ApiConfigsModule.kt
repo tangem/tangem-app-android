@@ -45,25 +45,4 @@ internal object ApiConfigsModule {
     fun provideCardAuthHeaderProvider(authProvider: AuthProvider): CardAuthHeaderProvider {
         return CardAuthHeaderProvider { AuthenticationHeader(authProvider) }
     }
-
-    @Provides
-    @IntoMap
-    @StringKey(PolymarketWeb.KEY)
-    fun providePolymarketWebConfig(): ApiConfig {
-        return PolymarketWeb()
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(PolymarketRelayer.KEY)
-    fun providePolymarketRelayerConfig(): ApiConfig {
-        return PolymarketRelayer()
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(PolymarketClob.KEY)
-    fun providePolymarketClobConfig(): ApiConfig {
-        return PolymarketClob()
-    }
 }
