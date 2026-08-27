@@ -66,7 +66,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 // Feed layout: the scrolling header is item 0, the tab band — when there are categories — is item 1.
 private const val TAB_BAND_INDEX = 1
@@ -76,6 +78,9 @@ private const val KEY_STATUS = "status"
 
 /** How long the feed has to stand still before it counts as "the user stopped scrolling". */
 private val ScrollIdleDebounce = 500.milliseconds
+
+/** How long a scroll restoration waits for the feed to lay out the item it is going back to. */
+private val ScrollRestoreTimeout = 2.seconds
 
 /** Fixed height of the category tab band: 40dp pills + 8dp vertical padding. */
 private val TabBandHeight = 56.dp
@@ -329,6 +334,8 @@ private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?,
 /**
  * A category with no place to come back to keeps the header away by docking the tab band instead of jumping to
  * the top. Waits for the items to be laid out: scrolling to an index the list does not hold yet silently clamps.
+ * The wait is bounded — a feed that came back shorter than it was left would never reach that index; the scroll
+ * then clamps to the end of what there is.
  */
 @Composable
 private fun CategorySwitchEffect(
@@ -349,7 +356,9 @@ private fun CategorySwitchEffect(
             ?: PolymarketFeedScrollPosition(index = TAB_BAND_INDEX, offset = 0).takeIf { isTabBandPinned }
             ?: return@LaunchedEffect
 
-        snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > target.index }
+        withTimeoutOrNull(ScrollRestoreTimeout) {
+            snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it > target.index }
+        }
         listState.scrollToItem(index = target.index, scrollOffset = target.offset)
 
         if (pendingScrollPosition != null) currentOnScrollPositionRestore()
