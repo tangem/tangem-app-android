@@ -15,6 +15,7 @@ import com.tangem.store.datasource.config.BlockAid
 import com.tangem.store.datasource.config.News
 import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.store.datasource.config.SurveySparrow
+import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.store.datasource.markets.addCoinIndicatorsEnumFallbackAdapters
 import com.tangem.store.datasource.news.NewsApi
@@ -113,6 +114,18 @@ internal object StoreDatasourceModule {
     @Provides
     @Singleton
     fun provideAddressBookApi(factory: RetrofitFactory): AddressBookApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideJointAccountApi(factory: RetrofitFactory): JointAccountApi {
         return factory.build(
             RetrofitApiSpec(
                 apiConfigId = TangemTech.ID,
