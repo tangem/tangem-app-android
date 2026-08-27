@@ -9,7 +9,7 @@ internal class TangemPayCashbackDateFormatter {
         DateTimeFormatters.formatDate(DateTime(year, month, 1, 0, 0), DateTimeFormatters.dateMMMM)
 
     fun formatShortMonth(year: Int, month: Int): String =
-        DateTimeFormatters.formatDate(DateTime(year, month, 1, 0, 0), DateTimeFormatters.dateMMM)
+        DateTimeFormatters.formatStandaloneShortMonth(DateTime(year, month, 1, 0, 0))
 
     fun formatMonthDay(date: DateTime): String = DateTimeFormatters.formatDate(date, DateTimeFormatters.dateDMMM)
 
