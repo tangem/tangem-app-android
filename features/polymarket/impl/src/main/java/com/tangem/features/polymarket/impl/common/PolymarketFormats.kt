@@ -13,5 +13,10 @@ internal fun BigDecimal.formatPolymarketVolume(): String = format {
     fiat(fiatCurrencyCode = USD_CODE, fiatCurrencySymbol = USD_SYMBOL).compact()
 }
 
-private const val USD_CODE = "USD"
-private const val USD_SYMBOL = "$"
+/** Formats a collateral amount the way the trade screens state it: plain USD, never the app's fiat. */
+internal fun BigDecimal.formatPolymarketMoney(): String = format {
+    fiat(fiatCurrencyCode = USD_CODE, fiatCurrencySymbol = USD_SYMBOL)
+}
+
+internal const val USD_CODE = "USD"
+internal const val USD_SYMBOL = "$"
