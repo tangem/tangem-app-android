@@ -703,11 +703,11 @@ internal class PlacePredictionModelTest {
         coEvery { signOrderInteractor(request = any()) } returns
             PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
 
-        // Act — the attempt ends back in Idle, and the loop that stopped for it has to come back
+        // Act
         model.onPlaceClick()
         advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
 
-        // Assert — without this the frozen quote would age until every retry failed the age check
+        // Assert
         coVerify(atLeast = 2) { getQuoteUseCase(request = any()) }
 
         model.onDestroy()
@@ -744,7 +744,7 @@ internal class PlacePredictionModelTest {
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { placeOrderUseCase(any(), any()) } coAnswers {
-            // Act — tapped while the order is on its way to the exchange
+            // Act
             model.onCloseClick()
             model.onBackClick()
             createPlaceResult().right()
@@ -754,7 +754,7 @@ internal class PlacePredictionModelTest {
         model.onPlaceClick()
         advanceUntilIdle()
 
-        // Assert — leaving would cancel the request and lose an outcome nobody can ask for again
+        // Assert
         verify(exactly = 0) { router.pop(onComplete = any()) }
         verify(exactly = 0) { router.popTo(route = any<PlacePredictionRoute>(), onComplete = any()) }
         assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
@@ -777,7 +777,7 @@ internal class PlacePredictionModelTest {
         model.onPlaceClick()
         advanceUntilIdle()
 
-        // Assert — an unreadable balance is not the same answer as one that is too small
+        // Assert
         assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
         verify { messageSender.send(any()) }
         coVerify(exactly = 0) { signOrderInteractor(request = any()) }
