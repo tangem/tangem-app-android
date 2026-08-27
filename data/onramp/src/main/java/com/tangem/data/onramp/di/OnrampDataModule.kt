@@ -3,10 +3,12 @@ package com.tangem.data.onramp.di
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.onramp.DefaultHotCryptoRepository
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
+import com.tangem.data.onramp.DefaultOnrampFeatureToggles
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
@@ -62,6 +64,7 @@ internal object OnrampDataModule {
         expressHistoryDao: ExpressHistoryDao,
         expressHistoryRepository: ExpressHistoryRepository,
         txHistoryFeatureToggles: TxHistoryFeatureToggles,
+        onrampFeatureToggles: OnrampFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): OnrampRepository {
         return DefaultOnrampRepository(
@@ -80,8 +83,15 @@ internal object OnrampDataModule {
             expressHistoryDao = expressHistoryDao,
             expressHistoryRepository = expressHistoryRepository,
             txHistoryFeatureToggles = txHistoryFeatureToggles,
+            onrampFeatureToggles = onrampFeatureToggles,
             moshi = moshi,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampFeatureToggles(featureTogglesManager: FeatureTogglesManager): OnrampFeatureToggles {
+        return DefaultOnrampFeatureToggles(featureTogglesManager)
     }
 
     @Provides

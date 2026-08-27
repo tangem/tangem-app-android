@@ -1240,6 +1240,13 @@
   <string name="provider_name_support">Assistance %s</string>
   <string name="push_notification_settings_banner_description">Les notifications push sont activées mais ne fonctionneront pas avant que vous les autorisiez</string>
   <string name="push_notification_settings_banner_title">Autoriser les notifications</string>
+  <string name="push_notification_settings_offers_updates_subtitle">Actualités de nos produits, offres exclusives et rappels d\'activité.</string>
+  <string name="push_notification_settings_offers_updates_title">Offres et Actualités</string>
+  <string name="push_notification_settings_price_alerts_subtitle">Recevez des notifications sur les variations de prix des principales cryptomonnaies.</string>
+  <string name="push_notification_settings_price_alerts_title">Alertes de Prix</string>
+  <string name="push_notification_settings_title">Paramètres de Notifications</string>
+  <string name="push_notification_settings_transaction_alerts_subtitle">Alertes en temps réel concernant les transactions, échanges et mises à jour importantes.</string>
+  <string name="push_notification_settings_transaction_alerts_title">Alertes et Transactions</string>
   <string name="push_notification_warning_sheet_button_enable">Activer les notifications</string>
   <string name="push_notification_warning_sheet_description">Vous ne recevrez pas de notifications pour les dépôts, les retraits et les transactions. Vous pouvez les activer à tout moment dans les paramètres du portefeuille.</string>
   <string name="push_notification_warning_sheet_title">Notifications désactivées</string>
@@ -1652,6 +1659,8 @@
   <string name="swap_story_third_subtitle_v2">Échangez des milliers de jetons sur les principaux réseaux 0% de frais sur les échanges stablecoin à stablecoin</string>
   <string name="swap_story_third_title">Plus Simple Que Jamais</string>
   <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Actifs</string>
+  <string name="swap_token_selector_empty_filtered_message">Vous n\'avez aucun token approvisionné dans ce wallet. Explorez d\'autres wallets ou changez le filtre</string>
+  <string name="swap_token_selector_filter_hide_zero_balance">Masquer les solde 0</string>
   <string name="swap_via_provider">Échange via le fournisseur</string>
   <string name="swap_your_assets_title">Vos actifs</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
@@ -1715,7 +1724,7 @@
   <string name="tangem_pay_terms_fees_limits">Conditions, frais et limites</string>
   <string name="tangem_pay_terms_limits">Conditions et limites</string>
   <string name="tangem_pay_transaction_declined_notification_text">La banque a rejeté cette demande de transaction.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Montant min. : %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Montant min.</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Plafond mensuel atteint</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC exclu</string>
   <string name="tangem_pay_transaction_details_cashback_none">Aucun cashback</string>
@@ -1940,8 +1949,8 @@
   <string name="tangempay_newonboard_body">Dépensez vos cryptos partout — sans banque, sans intermédiaire, sans exchange. La self-custody au service des paiements du quotidien.</string>
   <string name="tangempay_newonboard_bottomleft_body">Paiement en ligne et via Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Acceptée partout</string>
-  <string name="tangempay_newonboard_bottomright_body">Utilisez-la partout</string>
-  <string name="tangempay_newonboard_bottomright_title">FX-fee ne sont que de 1%</string>
+  <string name="tangempay_newonboard_bottomright_body">USD → USDC 1:1 ; frais fixe 1 $</string>
+  <string name="tangempay_newonboard_bottomright_title">Virements ACH</string>
   <string name="tangempay_newonboard_title">Obtenez votre carte Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">Payez ce que vous voyez</string>
   <string name="tangempay_newonboard_topleft_title">Aucun frais d’achat, \n1 USDC = 1 USD</string>

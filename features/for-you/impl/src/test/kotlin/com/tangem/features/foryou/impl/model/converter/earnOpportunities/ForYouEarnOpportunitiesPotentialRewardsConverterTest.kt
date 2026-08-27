@@ -12,6 +12,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.entity.ForYouEarnOpportunitiesType
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
+import com.tangem.features.foryou.impl.entity.ForYouWalletHeaderUM
 import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -36,10 +37,12 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         // Act
         val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
 
-        // Assert — flat, non-expandable token rows
-        assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("token-a", "token-b").inOrder()
-        assertThat(result.tokenList.map { it.isExpandable }).containsExactly(false, false)
-        assertThat(result.tokenList.flatMap { it.tokenList }).isEmpty()
+        // Assert — flat, non-expandable token rows in a single header-less group
+        assertThat(result.tokenList.map { it.header }).containsExactly(null)
+        assertThat(result.items.map { it.tokenRowUM.id }).containsExactly("token-a", "token-b").inOrder()
+        assertThat(result.items.map { it.isExpandable }).containsExactly(false, false)
+        assertThat(result.items.map { it.isExpanded }).containsExactly(false, false)
+        assertThat(result.items.flatMap { it.tokenList }).isEmpty()
     }
 
     @Test
@@ -61,33 +64,11 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
 
         // Assert — a single account row hosting both token rows as children
-        val item = result.tokenList.single()
+        val item = result.items.single()
         assertThat(item.tokenRowUM.id).isEqualTo(account.accountId.value)
         assertThat(item.isExpandable).isTrue()
         assertThat(item.isExpanded).isFalse()
         assertThat(item.tokenList.map { it.id }).containsExactly("token-a", "token-b")
-    }
-
-    @Test
-    fun `GIVEN account id in expanded set WHEN convert THEN account row is expanded`() {
-        // Arrange
-        val account = MockAccounts.createAccount(derivationIndex = 1)
-        val earnData = createEarnOpportunities(
-            account = account,
-            earnCurrencies = mapOf(
-                createStatus(createEarnCurrency(), createRowLoadedValue()) to createEarnApyInfo(isActive = false),
-            ),
-        )
-        val converter = createConverter(
-            isAccountsModeEnabled = true,
-            expandedAssetIds = setOf(account.accountId.value),
-        )
-
-        // Act
-        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
-
-        // Assert
-        assertThat(result.tokenList.single().isExpanded).isTrue()
     }
 
     @Test
@@ -105,7 +86,7 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
 
         // Act
         val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
-        (result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
+        (result.items.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
 
         // Assert
         assertThat(clickedAssetId).isEqualTo(account.accountId.value)
@@ -116,22 +97,22 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         // Arrange
         val currency = createEarnCurrency()
         val earnType = ForYouEarnOpportunitiesType.YieldSupply(apy = "7.5")
+        val walletId = UserWalletId("01")
         val earnData = createEarnOpportunities(
+            userWalletId = walletId,
             earnCurrencies = mapOf(
                 createStatus(currency, createRowLoadedValue()) to createEarnApyInfo(isActive = false, type = earnType),
             ),
         )
-        val walletId = UserWalletId("01")
         var clicked: Triple<UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType>? = null
         val converter = createConverter(
             isAccountsModeEnabled = false,
-            userWalletId = walletId,
             onTokenClick = { id, clickedCurrency, type -> clicked = Triple(id, clickedCurrency, type) },
         )
 
         // Act
         val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
-        (result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
+        (result.items.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
 
         // Assert
         assertThat(clicked).isEqualTo(Triple(walletId, currency, earnType))
@@ -162,19 +143,63 @@ internal class ForYouEarnOpportunitiesPotentialRewardsConverterTest {
         assertThat(result.subtitleRes).isEqualTo(R.string.for_you_earn_opportunities_tokens_rewards)
     }
 
+    @Test
+    fun `GIVEN one wallet WHEN convert THEN single group has no header`() {
+        // Arrange
+        val earnData = createEarnOpportunities(userWalletId = UserWalletId("01"))
+        val converter = createConverter(
+            isAccountsModeEnabled = false,
+            walletHeaders = mapOf(UserWalletId("01") to createWalletHeader(UserWalletId("01"))),
+        )
+
+        // Act
+        val result = converter.convert(listOf(earnData)) as EarnOpportunitiesUM.Content
+
+        // Assert — a single wallet is rendered flat, without a header
+        assertThat(result.tokenList).hasSize(1)
+        assertThat(result.tokenList.single().header).isNull()
+    }
+
+    @Test
+    fun `GIVEN two wallets WHEN convert THEN one headed group per wallet in reward order`() {
+        // Arrange — second wallet earns more, so it must lead
+        val walletA = UserWalletId("0a")
+        val walletB = UserWalletId("0b")
+        val fromA = createEarnOpportunities(
+            userWalletId = walletA,
+            account = MockAccounts.createAccount(derivationIndex = 1),
+            accountPotentialReward = BigDecimal("10"),
+        )
+        val fromB = createEarnOpportunities(
+            userWalletId = walletB,
+            account = MockAccounts.createAccount(derivationIndex = 2),
+            accountPotentialReward = BigDecimal("25"),
+        )
+        val headerA = createWalletHeader(walletA, name = "Wallet A")
+        val headerB = createWalletHeader(walletB, name = "Wallet B")
+        val converter = createConverter(
+            isAccountsModeEnabled = true,
+            walletHeaders = mapOf(walletA to headerA, walletB to headerB),
+        )
+
+        // Act — pass reward-descending, matching how the parent converter sorts
+        val result = converter.convert(listOf(fromB, fromA)) as EarnOpportunitiesUM.Content
+
+        // Assert — one group per wallet, each with its header, highest-earning wallet first
+        assertThat(result.tokenList.map { it.header }).containsExactly(headerB, headerA).inOrder()
+    }
+
     private fun createConverter(
         isAccountsModeEnabled: Boolean,
-        expandedAssetIds: Set<String> = emptySet(),
         expandClick: (String) -> Unit = {},
-        userWalletId: UserWalletId? = UserWalletId("01"),
         onTokenClick: (UserWalletId?, CryptoCurrency, ForYouEarnOpportunitiesType) -> Unit = { _, _, _ -> },
+        walletHeaders: Map<UserWalletId, ForYouWalletHeaderUM> = emptyMap(),
     ) = ForYouEarnOpportunitiesPotentialRewardsConverter(
         appCurrency = appCurrency,
-        userWalletId = userWalletId,
         isAccountsModeEnabled = isAccountsModeEnabled,
-        expandedAssetIds = expandedAssetIds,
         expandClick = expandClick,
         onTokenClick = onTokenClick,
         onAllEarnTokensClick = {},
+        walletHeaders = walletHeaders,
     )
 }

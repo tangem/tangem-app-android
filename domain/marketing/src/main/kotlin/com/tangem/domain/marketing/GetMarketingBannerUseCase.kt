@@ -9,7 +9,6 @@ import java.math.BigDecimal
 
 class GetMarketingBannerUseCase(
     private val repository: MarketingRepository,
-    private val featureToggles: MarketingFeatureToggles,
 ) {
 
     /**
@@ -21,8 +20,6 @@ class GetMarketingBannerUseCase(
         screen: MarketingScreen,
         amountUsd: BigDecimal? = null,
     ): Either<Throwable, List<MarketingCampaign>> {
-        if (!featureToggles.isMarketingBannersEnabled) return Either.Right(emptyList())
-
         return repository.getCampaigns(screen).map { campaigns ->
             val dismissed = repository.getDismissedBannerIds()
             campaigns.asSequence()
