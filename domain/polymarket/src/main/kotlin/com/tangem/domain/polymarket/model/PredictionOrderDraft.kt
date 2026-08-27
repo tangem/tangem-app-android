@@ -9,6 +9,7 @@ data class PredictionOrderDraft(
     val side: PredictionOrderSide,
     val makerAmount: BigInteger,
     val takerAmount: BigInteger,
+    val takerAmountQuantum: BigInteger,
     val worstCasePrice: BigDecimal,
     val builderCode: String,
 )

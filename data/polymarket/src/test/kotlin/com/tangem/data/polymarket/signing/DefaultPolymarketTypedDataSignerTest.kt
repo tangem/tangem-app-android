@@ -513,6 +513,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
                 side = PredictionOrderSide.BUY,
                 makerAmount = BigInteger("72000000"),
                 takerAmount = BigInteger("97959180"),
+                takerAmountQuantum = BigInteger.ONE,
                 worstCasePrice = BigDecimal("0.735"),
                 builderCode = "0x00000000000000000000000000000000000000000000000000000000000000aa",
             ),
