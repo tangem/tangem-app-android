@@ -18,7 +18,7 @@ import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*

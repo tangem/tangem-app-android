@@ -14,6 +14,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
@@ -66,8 +67,22 @@ internal class ChooseTokenListItemConverter(
 
     private fun tokenStatusConverter(account: AccountStatus) = TokenItemStateConverter(
         appCurrency = appCurrency,
+        subtitleStateProvider = ::createNetworkSubtitleState,
         onItemClick = { _, status -> onTokenClick(account, status) },
     )
+
+    private fun createNetworkSubtitleState(status: CryptoCurrencyStatus): TokenItemState.SubtitleState {
+        return when (status.value) {
+            is CryptoCurrencyStatus.Loading -> TokenItemState.SubtitleState.Loading
+            else -> TokenItemState.SubtitleState.TextContent(
+                value = resourceReference(
+                    id = R.string.wallet_network_group_title,
+                    formatArgs = wrappedList(status.currency.network.name),
+                ),
+                isAvailable = false,
+            )
+        }
+    }
 
     fun convert(): TokenListUMData {
         return when (params) {
@@ -211,8 +226,8 @@ internal class ChooseTokenListItemConverter(
             PaymentAccountStatusValue.Loading,
             PaymentAccountStatusValue.Empty,
             -> return null
-            is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
-            is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
+            is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus ?: return null
+            is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus ?: return null
         }
         val account = this.account
         val tokensCount = 1

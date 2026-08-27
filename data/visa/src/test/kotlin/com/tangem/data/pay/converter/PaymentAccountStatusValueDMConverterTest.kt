@@ -74,6 +74,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     availableForWithdrawal = BigDecimal("7"),
                 ),
                 cryptoCurrency = cryptoCurrency,
+                networks = emptyList(),
                 fiatRate = BigDecimal("1.05"),
                 error = null,
             )
@@ -85,8 +86,8 @@ internal class PaymentAccountStatusValueDMConverterTest {
             assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.DeactivatedAccount::class.java)
             val dm = result as PaymentAccountStatusValueDM.DeactivatedAccount
             assertThat(dm.customerId).isEqualTo("customer-1")
-            assertThat(dm.fiatBalance.availableBalance).isEqualTo(BigDecimal("100"))
-            assertThat(dm.fiatBalance.currency).isEqualTo("USD")
+            assertThat(dm.fiatBalance?.availableBalance).isEqualTo(BigDecimal("100"))
+            assertThat(dm.fiatBalance?.currency).isEqualTo("USD")
             assertThat(dm.availableForWithdrawal).isEqualTo(BigDecimal("7"))
             assertThat(dm.fiatRate).isEqualTo(BigDecimal("1.05"))
         }
@@ -150,6 +151,35 @@ internal class PaymentAccountStatusValueDMConverterTest {
         }
 
         @Test
+        fun `GIVEN domain Loaded without balance WHEN convert THEN returns DM ActiveAccount without balance`() {
+            // GIVEN
+            val domain = PaymentAccountStatusValue.Loaded(
+                source = StatusSource.ACTUAL,
+                customerId = "customer-3",
+                depositAddress = null,
+                balance = null,
+                cryptoCurrency = cryptoCurrency,
+                networks = emptyList(),
+                cards = emptyList(),
+                fiatRate = null,
+                error = null,
+                virtualAccount = null,
+                tariffPlan = null,
+            )
+
+            // WHEN
+            val result = converter.convert(domain)
+
+            // THEN
+            val dm = result as PaymentAccountStatusValueDM.ActiveAccount
+            assertThat(dm.customerId).isEqualTo("customer-3")
+            assertThat(dm.fiatBalance).isNull()
+            assertThat(dm.cryptoBalance).isNull()
+            assertThat(dm.currencyCode).isNull()
+            assertThat(dm.availableForWithdrawal).isNull()
+        }
+
+        @Test
         fun `GIVEN domain NotCreated WHEN convert THEN returns DM NotCreated`() {
             // GIVEN
             val domain = PaymentAccountStatusValue.NotCreated
@@ -200,10 +230,34 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val deactivated = result as PaymentAccountStatusValue.Deactivated
             assertThat(deactivated.source).isEqualTo(StatusSource.CACHE)
             assertThat(deactivated.customerId).isEqualTo("customer-2")
-            assertThat(deactivated.balance.fiatBalance.availableBalance).isEqualTo(BigDecimal("200"))
-            assertThat(deactivated.balance.fiatBalance.currency).isEqualTo("EUR")
-            assertThat(deactivated.balance.availableForWithdrawal).isEqualTo(BigDecimal("5"))
+            assertThat(deactivated.balance?.fiatBalance?.availableBalance).isEqualTo(BigDecimal("200"))
+            assertThat(deactivated.balance?.fiatBalance?.currency).isEqualTo("EUR")
+            assertThat(deactivated.balance?.availableForWithdrawal).isEqualTo(BigDecimal("5"))
             assertThat(deactivated.fiatRate).isEqualTo(BigDecimal("0.92"))
+        }
+
+        @Test
+        fun `GIVEN DM ActiveAccount without balance WHEN convertBack THEN returns Loaded with null balance`() {
+            // GIVEN
+            val dm = PaymentAccountStatusValueDM.ActiveAccount(
+                customerId = "customer-4",
+                currencyCode = null,
+                depositAddress = null,
+                fiatBalance = null,
+                cryptoBalance = null,
+                fiatRate = null,
+                availableForWithdrawal = null,
+                cards = emptyList(),
+            )
+
+            // WHEN
+            val result = converter.convertBack(userWalletId, dm)
+
+            // THEN
+            val loaded = result as PaymentAccountStatusValue.Loaded
+            assertThat(loaded.balance).isNull()
+            assertThat(loaded.cryptoCurrencyStatus).isNull()
+            assertThat(loaded.source).isEqualTo(StatusSource.CACHE)
         }
 
         @Test

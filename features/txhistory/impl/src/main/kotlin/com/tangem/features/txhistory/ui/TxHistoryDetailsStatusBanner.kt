@@ -51,12 +51,14 @@ import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_success_20
 import com.tangem.core.ui.res.generated.icons.ic_warning_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM
-import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Severity
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Style
 import kotlinx.coroutines.delay
 
 // Animation timings in ms (ProtoPie spec). The status swap is two-phase: the old status fades out, then the new one
@@ -81,16 +83,16 @@ private val BANNER_TOP_GAP = 12.dp
 /** Gap between the title row and the subtitle; lives inside the subtitle slot so it folds away when there's no line. */
 private val SUBTITLE_TOP_GAP = 4.dp
 
-/** Key for the title [AnimatedContent]: the resolved [text] plus the [severity] that selects the swap motion. */
-private data class StatusBannerTitle(val text: String, val severity: Severity)
+/** Key for the title [AnimatedContent]: the resolved [text] plus the [style] that selects the swap motion. */
+private data class StatusBannerTitle(val text: String, val style: Style)
 
 /**
- * Title transition picked by the *target* severity: Info/Success slide in from the right ([titleSlide]); Warning/Error
- * float up from below ([titleRise]). Both fade the old status out fully before fading the new one in.
+ * Title transition picked by the *target* style: the in-progress/success looks slide in from the right ([titleSlide]);
+ * the alerting terminals float up from below ([titleRise]). Both fade the old status out fully before fading the new in.
  */
-private fun titleTransition(target: Severity): ContentTransform = when (target) {
-    Severity.Warning, Severity.Error -> titleRise()
-    Severity.Info, Severity.Success -> titleSlide()
+private fun titleTransition(target: Style): ContentTransform = when (target) {
+    Style.Warning, Style.Error, Style.Refunded, Style.Expired -> titleRise()
+    Style.Info, Style.Success -> titleSlide()
 }
 
 /** In-progress / success swap: old status fades out, new one fades in sliding from the right. */
@@ -144,14 +146,14 @@ internal fun TxHistoryDetailsStatusBanner(state: StatusBannerUM?, modifier: Modi
     SideEffect { if (state != null) lastState.value = state }
     val content = state ?: lastState.value
 
-    // Auto-hide rules for the success terminal ("Confirmed"). It is the only [Severity.Success] state and must read as a
+    // Auto-hide rules for the success terminal ("Confirmed"). It is the only [Style.Success] state and must read as a
     // *transition*, not a resting state: opening the details on an already-finished deal (no in-flight status was ever
     // seen) shows nothing, and once it does appear it lingers only briefly before collapsing. Failure / verification
     // terminals are not Success, so they stay put.
     val seenNonSuccess = remember { mutableStateOf(false) }
-    SideEffect { if (state != null && state.severity != Severity.Success) seenNonSuccess.value = true }
+    SideEffect { if (state != null && state.style != Style.Success) seenNonSuccess.value = true }
 
-    val isTerminalSuccess = state?.severity == Severity.Success
+    val isTerminalSuccess = state?.style == Style.Success
     val confirmedDismissed = remember { mutableStateOf(false) }
     LaunchedEffect(isTerminalSuccess) {
         if (isTerminalSuccess && seenNonSuccess.value) {
@@ -184,12 +186,12 @@ internal fun TxHistoryDetailsStatusBanner(state: StatusBannerUM?, modifier: Modi
 @Composable
 private fun StatusBannerContent(state: StatusBannerUM, modifier: Modifier = Modifier) {
     val backgroundColor by animateColorAsState(
-        targetValue = state.severity.backgroundColor(),
+        targetValue = state.style.backgroundColor(),
         // Delayed into Phase 2, so the tint starts shifting only once the old title has faded out, matching the spec.
         animationSpec = tween(durationMillis = DEFAULT_ANIMATION_MILLIS, delayMillis = ENTER_DELAY_MILLIS),
         label = "StatusBannerBackground",
     )
-    val contentColor = state.severity.contentColor()
+    val contentColor = state.style.contentColor()
 
     Column(
         modifier = modifier
@@ -203,11 +205,11 @@ private fun StatusBannerContent(state: StatusBannerUM, modifier: Modifier = Modi
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Animate the title as the status advances. Keyed on (text, severity) so [titleTransition] picks the motion
-            // by target; the key also colors each content from its own severity (see [color] below).
+            // Animate the title as the status advances. Keyed on (text, style) so [titleTransition] picks the motion
+            // by target; the key also colors each content from its own style (see [color] below).
             AnimatedContent(
-                targetState = StatusBannerTitle(state.title.resolveReference(), state.severity),
-                transitionSpec = { titleTransition(target = targetState.severity) },
+                targetState = StatusBannerTitle(state.title.resolveReference(), state.style),
+                transitionSpec = { titleTransition(target = targetState.style) },
                 label = "StatusBannerTitle",
                 modifier = Modifier.weight(1f),
             ) { title ->
@@ -215,12 +217,12 @@ private fun StatusBannerContent(state: StatusBannerUM, modifier: Modifier = Modi
                     text = title.text,
                     style = TangemTheme.typography3.body.medium,
                     // From this title's own key, so the outgoing title fades out in its colour instead of snapping.
-                    color = title.severity.contentColor(),
+                    color = title.style.contentColor(),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            StatusBannerTrailing(isLoading = state.isLoading, severity = state.severity)
+            StatusBannerTrailing(isLoading = state.isLoading, style = state.style)
         }
         // Retain the last non-null subtitle so the line stays rendered while it fades out (mirrors the retain above).
         val lastSubtitle = remember { mutableStateOf<TextReference?>(null) }
@@ -252,26 +254,28 @@ private fun StatusBannerContent(state: StatusBannerUM, modifier: Modifier = Modi
     }
 }
 
-/** Key for the trailing [AnimatedContent]: whether the loader or a glyph shows, plus the [severity] that tints it. */
-private data class StatusBannerGlyph(val isLoading: Boolean, val severity: Severity)
+/**
+ * Key for the trailing [AnimatedContent]: whether the loader or a glyph shows, and the [style] that tints and picks it.
+ */
+private data class StatusBannerGlyph(val isLoading: Boolean, val style: Style)
 
-/** Trailing slot: rotating loader while in progress, the static severity status glyph once terminal. */
+/** Trailing slot: rotating loader while in progress, the [style]'s static status glyph otherwise. */
 @Composable
-private fun StatusBannerTrailing(isLoading: Boolean, severity: Severity, modifier: Modifier = Modifier) {
-    // Keyed on (isLoading, severity) so the tint comes from each content's own key — the outgoing loader then fades
-    // out in its colour instead of snapping to the incoming status'.
+private fun StatusBannerTrailing(isLoading: Boolean, style: Style, modifier: Modifier = Modifier) {
+    // Keyed on (isLoading, style) so the tint/glyph come from each content's own key — the outgoing loader then fades
+    // out in its colour/glyph instead of snapping to the incoming status'.
     AnimatedContent(
-        targetState = StatusBannerGlyph(isLoading, severity),
+        targetState = StatusBannerGlyph(isLoading, style),
         transitionSpec = { iconSwapTransition() },
         label = "StatusBannerTrailing",
         modifier = modifier,
     ) { glyph ->
-        val tint = glyph.severity.contentColor()
+        val tint = glyph.style.contentColor()
         if (glyph.isLoading) {
             TangemLoader(size = TangemLoaderSize.X20, color = tint)
         } else {
             Icon(
-                imageVector = glyph.severity.statusIcon(),
+                imageVector = glyph.style.icon(),
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier.size(20.dp),
@@ -281,26 +285,30 @@ private fun StatusBannerTrailing(isLoading: Boolean, severity: Severity, modifie
 }
 
 @Composable
-private fun Severity.backgroundColor(): Color = when (this) {
-    Severity.Info -> TangemTheme.colors3.bg.status.infoSubtle
-    Severity.Success -> TangemTheme.colors3.bg.status.successSubtle
-    Severity.Error -> TangemTheme.colors3.bg.status.errorSubtle
-    Severity.Warning -> TangemTheme.colors3.bg.status.warningSubtle
+private fun Style.backgroundColor(): Color = when (this) {
+    Style.Info -> TangemTheme.colors3.bg.status.infoSubtle
+    Style.Success -> TangemTheme.colors3.bg.status.successSubtle
+    Style.Error, Style.Refunded -> TangemTheme.colors3.bg.status.errorSubtle
+    Style.Warning -> TangemTheme.colors3.bg.status.warningSubtle
+    Style.Expired -> TangemTheme.colors3.bg.tertiary
 }
 
 @Composable
-private fun Severity.contentColor(): Color = when (this) {
-    Severity.Info -> TangemTheme.colors3.text.status.info
-    Severity.Success -> TangemTheme.colors3.text.status.success
-    Severity.Error -> TangemTheme.colors3.text.status.error
-    Severity.Warning -> TangemTheme.colors3.text.status.warning
+private fun Style.contentColor(): Color = when (this) {
+    Style.Info -> TangemTheme.colors3.text.status.info
+    Style.Success -> TangemTheme.colors3.text.status.success
+    Style.Error, Style.Refunded -> TangemTheme.colors3.text.status.error
+    Style.Warning -> TangemTheme.colors3.text.status.warning
+    Style.Expired -> TangemTheme.colors3.text.tertiary
 }
 
-private fun Severity.statusIcon() = when (this) {
-    Severity.Success -> Icons.ic_success_20
-    Severity.Error -> Icons.ic_error_20
-    Severity.Warning -> Icons.ic_warning_20
-    Severity.Info -> Icons.ic_info_20
+private fun Style.icon() = when (this) {
+    Style.Success -> Icons.ic_success_20
+    Style.Error -> Icons.ic_error_20
+    Style.Warning -> Icons.ic_warning_20
+    Style.Info -> Icons.ic_info_20
+    Style.Refunded -> Icons.ic_arrow_refresh_20
+    Style.Expired -> Icons.ic_clock_20
 }
 
 // region Preview
@@ -317,17 +325,17 @@ private fun TxHistoryDetailsStatusBannerPreview() {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             TxHistoryDetailsStatusBanner(
-                state = StatusBannerUM(Severity.Info, stringReference("Awaiting funds"), isLoading = true),
+                state = StatusBannerUM(Style.Info, stringReference("Awaiting funds"), isLoading = true),
             )
             TxHistoryDetailsStatusBanner(
-                state = StatusBannerUM(Severity.Info, stringReference("Deposit confirmed"), isLoading = true),
+                state = StatusBannerUM(Style.Info, stringReference("Deposit confirmed"), isLoading = true),
             )
             TxHistoryDetailsStatusBanner(
-                state = StatusBannerUM(Severity.Success, stringReference("Confirmed"), isLoading = false),
+                state = StatusBannerUM(Style.Success, stringReference("Confirmed"), isLoading = false),
             )
             TxHistoryDetailsStatusBanner(
                 state = StatusBannerUM(
-                    severity = Severity.Error,
+                    style = Style.Error,
                     title = stringReference("Failed"),
                     subtitle = stringReference("Visit provider's website to refund your money"),
                     isLoading = false,
@@ -335,15 +343,18 @@ private fun TxHistoryDetailsStatusBannerPreview() {
             )
             TxHistoryDetailsStatusBanner(
                 state = StatusBannerUM(
-                    severity = Severity.Warning,
+                    style = Style.Warning,
                     title = stringReference("Verification required"),
                     subtitle = stringReference("Visit provider's website to refund your money"),
                     isLoading = false,
                 ),
             )
             TxHistoryDetailsStatusBanner(
+                state = StatusBannerUM(Style.Expired, stringReference("Expired"), isLoading = false),
+            )
+            TxHistoryDetailsStatusBanner(
                 state = StatusBannerUM(
-                    severity = Severity.Error,
+                    style = Style.Refunded,
                     title = stringReference("Refunded in WBTC"),
                     subtitle = stringReference(
                         "Your funds have been refunded in WBTC to your wallet on the Polygon network, " +

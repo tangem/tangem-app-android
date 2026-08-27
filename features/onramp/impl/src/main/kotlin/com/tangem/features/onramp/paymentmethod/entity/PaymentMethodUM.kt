@@ -1,11 +1,10 @@
 package com.tangem.features.onramp.paymentmethod.entity
 
+import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class PaymentMethodUM(
-    val id: String,
-    val imageUrl: String,
-    val name: String,
+    val method: OnrampPaymentMethod,
     val onSelect: () -> Unit,
 )

@@ -1,10 +1,8 @@
 package com.tangem.feature.walletsettings.model
 
-import android.os.Build
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -36,7 +34,6 @@ import com.tangem.domain.nft.DisableWalletNFTUseCase
 import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -50,7 +47,6 @@ import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
-import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
@@ -80,18 +76,15 @@ internal class WalletSettingsModel @Inject constructor(
     getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
     private val enableWalletNFTUseCase: EnableWalletNFTUseCase,
     private val disableWalletNFTUseCase: DisableWalletNFTUseCase,
-    getWalletNotificationsEnabledUseCase: GetWalletNotificationsEnabledUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val settingsManager: SettingsManager,
-    private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
-    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -139,12 +132,9 @@ internal class WalletSettingsModel @Inject constructor(
             flow = getWalletNFTEnabledUseCase.invoke(params.userWalletId)
                 .distinctUntilChanged()
                 .conflate(),
-            flow2 = getWalletNotificationsEnabledUseCase(params.userWalletId)
-                .distinctUntilChanged()
-                .conflate(),
-            flow3 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow4 = accountItemsDelegate.loadAccount(wallet),
-        ) { nftEnabled, notificationsEnabled, cardItem, accountList ->
+            flow2 = walletCardItemDelegate.cardItemFlow(wallet),
+            flow3 = accountItemsDelegate.loadAccount(wallet),
+        ) { nftEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
@@ -155,8 +145,6 @@ internal class WalletSettingsModel @Inject constructor(
                         userWallet = wallet,
                         cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
-                        isNotificationsEnabled = notificationsEnabled,
-                        isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
@@ -180,22 +168,10 @@ internal class WalletSettingsModel @Inject constructor(
         trackingContextProxy.removeContext()
     }
 
-    private fun isNotificationsPermissionGranted(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissionsRepository.hasRuntimePermission(
-                android.Manifest.permission.POST_NOTIFICATIONS,
-            )
-        } else {
-            true
-        }
-    }
-
     private fun buildItems(
         userWallet: UserWallet,
         cardItem: WalletSettingsItemUM.CardBlock,
         isNFTEnabled: Boolean,
-        isNotificationsEnabled: Boolean,
-        isNotificationsPermissionGranted: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
         val isAccountsFeatureEnabled = accountItemsDelegate.isAccountsSupported(userWallet)
@@ -203,8 +179,6 @@ internal class WalletSettingsModel @Inject constructor(
             is UserWallet.Cold -> userWallet.isMultiCurrency
             is UserWallet.Hot -> true
         }
-        val isPushNotificationSettingsEnabled =
-            pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled
         return itemsBuilder.buildItems(
             userWallet = userWallet,
             cardItem = cardItem,
@@ -243,11 +217,6 @@ internal class WalletSettingsModel @Inject constructor(
                     ),
                 )
             },
-            isNotificationsEnabled = isNotificationsEnabled,
-            isNotificationsPermissionGranted = isNotificationsPermissionGranted,
-            onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
-            onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
-            isPushNotificationSettingsEnabled = isPushNotificationSettingsEnabled,
             onNotificationSettingsClick = ::onNotificationSettingsClick,
             onAccessCodeClick = { onAccessCodeClick(userWallet) },
             onBackupClick = ::onBackupClick,
@@ -309,25 +278,6 @@ internal class WalletSettingsModel @Inject constructor(
                 ),
             )
         }
-    }
-
-    private fun onCheckedNotificationsChange(isChecked: Boolean) {
-        modelScope.launch {
-            if (isChecked) {
-                state.update { value ->
-                    value.copy(
-                        hasRequestPushNotificationsPermission = true,
-                    )
-                }
-            } else {
-                setNotificationsEnabledUseCase(params.userWalletId, false)
-                analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationsEnabled(false))
-            }
-        }
-    }
-
-    private fun onNotificationsDescriptionClick() {
-        bottomSheetNavigation.activate(NetworksAvailableForNotificationBSConfig)
     }
 
     private fun openPushSystemSettings() {
