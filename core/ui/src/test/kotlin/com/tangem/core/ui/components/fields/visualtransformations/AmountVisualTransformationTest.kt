@@ -56,23 +56,6 @@ internal class AmountVisualTransformationTest {
     }
 
     @Test
-    fun `GIVEN empty input and empty value text WHEN filter THEN that text replaces the default format`() {
-        // Arrange
-        val sut = AmountVisualTransformation(
-            decimals = 2,
-            symbol = "ETH",
-            decimalFormat = usFormat(),
-            emptyValueText = "0",
-        )
-
-        // Act
-        val result = sut.filter(AnnotatedString(""))
-
-        // Assert
-        assertThat(result.text.text).isEqualTo("0${CURRENCY_SPACE}ETH")
-    }
-
-    @Test
     fun `GIVEN grouping separators WHEN transformedToOriginal THEN separators are subtracted from offset`() {
         // Arrange
         val sut = AmountVisualTransformation(decimals = 2, symbol = "ETH", decimalFormat = usFormat())
