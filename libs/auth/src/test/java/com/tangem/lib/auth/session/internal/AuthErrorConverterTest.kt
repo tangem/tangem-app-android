@@ -72,6 +72,27 @@ class AuthErrorConverterTest {
     }
 
     @Test
+    fun `404 without type field (real auth-service shape) still parses problem and detail`() {
+        // The auth service never sends RFC-9457 `type`; keys observed live are
+        // detail/instance/status/title/traceId. A required `type` here would raise
+        // MissingFieldException, collapse problem to null, and break detail-based recovery.
+        val realBody = """
+            {
+              "title": "Not Found",
+              "status": 404,
+              "detail": "Device not found",
+              "instance": "/api/v1/mobile/device/authenticate",
+              "traceId": "abc-123"
+            }
+        """.trimIndent()
+
+        val result = converter.convert(httpError(Code.NOT_FOUND, realBody))
+
+        assertThat(result).isInstanceOf(AuthError.NotFound::class.java)
+        assertThat((result as AuthError.NotFound).problem?.detail).isEqualTo("Device not found")
+    }
+
+    @Test
     fun `409 is converted to Conflict`() {
         val result = converter.convert(httpError(Code.CONFLICT, sampleBody))
 
@@ -99,6 +120,24 @@ class AuthErrorConverterTest {
         val rateLimited = result as AuthError.RateLimited
         assertThat(rateLimited.retryAfterSeconds).isEqualTo(45)
         assertThat(rateLimited.problem?.code).isEqualTo("rate_limited")
+    }
+
+    @Test
+    fun `429 without type field still surfaces retryAfterSeconds`() {
+        val body = """
+            {
+              "title": "Too Many Requests",
+              "status": 429,
+              "detail": "Try again later.",
+              "instance": "/api/v1/auth/refresh",
+              "retryAfterSeconds": 45
+            }
+        """.trimIndent()
+
+        val result = converter.convert(httpError(Code.TOO_MANY_REQUESTS, body))
+
+        assertThat(result).isInstanceOf(AuthError.RateLimited::class.java)
+        assertThat((result as AuthError.RateLimited).retryAfterSeconds).isEqualTo(45)
     }
 
     @Test

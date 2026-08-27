@@ -9,6 +9,7 @@ import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.core.res.getStringSafe
+import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.converter.ArchivedAccountConverter
 import com.tangem.data.account.converter.SaveWalletAccountsResponseConverter
@@ -20,7 +21,6 @@ import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ETAG_HEADER
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.utils.getSyncOrNull
@@ -43,7 +43,7 @@ import kotlinx.coroutines.withContext
  */
 @Suppress("LongParameterList")
 internal class DefaultAccountsCRUDRepository(
-    private val tangemTechApi: TangemTechApi,
+    private val walletAccountsApi: WalletAccountsApi,
     private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
@@ -102,7 +102,7 @@ internal class DefaultAccountsCRUDRepository(
         val response = safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
-                    tangemTechApi.getWalletArchivedAccounts(
+                    walletAccountsApi.getArchivedAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = eTag,
                     )
