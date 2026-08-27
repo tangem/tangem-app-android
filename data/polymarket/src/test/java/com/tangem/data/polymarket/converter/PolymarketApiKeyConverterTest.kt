@@ -1,7 +1,7 @@
 package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import org.junit.jupiter.api.Test
 
