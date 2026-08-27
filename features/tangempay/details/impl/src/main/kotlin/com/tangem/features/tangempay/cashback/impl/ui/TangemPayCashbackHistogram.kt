@@ -59,6 +59,7 @@ private fun Chart(bars: ImmutableList<TangemPayCashbackHistogramUM.Bar>, modifie
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = if (maxValue > 0f) Dp.Unspecified else EmptyBarsAreaHeight)
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.Bottom,
@@ -116,6 +117,10 @@ private fun BarColumn(bar: TangemPayCashbackHistogramUM.Bar, maxValue: Float, mo
         )
     }
 }
+
+// Bars-area height from the zero-state mockup: without it an all-zero chart
+// collapses to the 3.dp stub bars right under the title
+private val EmptyBarsAreaHeight = 160.dp
 
 private fun barHeight(value: Float, maxValue: Float): Dp {
     if (maxValue <= 0f) return 3.dp
