@@ -33,6 +33,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -294,6 +295,8 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
             verify(exactly = 1) { trackingContextProxy.addHotWalletContext() }
+            // The creation flow owns the context from here on and releases it on its own destroy.
+            verify(exactly = 0) { trackingContextProxy.removeContext() }
             verify(exactly = 1) {
                 router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro))
             }
@@ -320,6 +323,11 @@ internal class IntroductionModelTest {
             assertThat(message.captured.title)
                 .isEqualTo(hotWalletCreationNotSupportedDialog(LEAST_OS_VERSION).title)
             verify { router wasNot Called }
+            // Nothing downstream opens, so the context added for the tap has to be given back here.
+            verifyOrder {
+                trackingContextProxy.addHotWalletContext()
+                trackingContextProxy.removeContext()
+            }
         }
 
         @Test
