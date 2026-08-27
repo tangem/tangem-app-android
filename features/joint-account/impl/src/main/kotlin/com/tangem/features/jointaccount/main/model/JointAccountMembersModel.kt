@@ -40,6 +40,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
 
     val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
+    val shareSafelyNavigation: SlotNavigation<Unit> = SlotNavigation()
 
     val uiState: StateFlow<JointAccountMembersUM>
         field = MutableStateFlow(createStubState())
@@ -83,10 +84,8 @@ internal class JointAccountMembersModel @Inject constructor(
             title = stringReference(if (isInviteMode) "Invite members" else "Members"),
             progress = stringReference("1 of ${FREE_SLOTS_COUNT + 1} joined, including you"),
             shareSafely = JointAccountMembersUM.ShareSafelyUM(
-                title = stringReference("Share invites safely"),
-                description = stringReference(
-                    "Anyone with the link can join and sign. Only share it with people you trust",
-                ),
+                title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_title),
+                description = resourceReference(CoreUiR.string.joint_account_invite_members_safety_subtitle),
                 onClick = ::onShareSafelyClick,
             ),
             members = (listOf(creator) + freeSlots).toImmutableList(),
@@ -130,7 +129,7 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onShareSafelyClick() {
-        // TODO([REDACTED_TASK_KEY]): open the "Sharing safely" info sheet
+        shareSafelyNavigation.activate(Unit)
     }
 
     private fun onMemberInfoClick(avatar: JointAccountMembersUM.MemberAvatarUM, name: TextReference, address: String) {

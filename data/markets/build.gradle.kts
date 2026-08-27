@@ -34,7 +34,6 @@ dependencies {
     api(projects.core.analytics)
     implementation(projects.core.local)
     api(projects.core.analytics.models)
-    api(projects.core.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     // endregion

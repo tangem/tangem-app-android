@@ -255,6 +255,8 @@ class DexSwapFeeCalculator(
      * model) is applied whenever the estimation cannot be obtained:
      *  - the native balance is empty;
      *  - [yieldModuleAddress] is `null` — yield module address could not be resolved upstream;
+     *  - the user's own address is unknown — it is the sender of the call to the module, and the
+     *    estimation would otherwise be attributed to `txFrom`, which is the module itself here;
      *  - the estimation call fails or throws `IllegalStateException` (e.g. payload too large).
      *
      * Yield-module errors ([YieldModuleUpgradeUnavailableException],
@@ -276,7 +278,11 @@ class DexSwapFeeCalculator(
             derivationPath = network.derivationPath.value,
         )
 
-        if (nativeBalance.signum() == 0 || yieldModuleAddress == null) {
+        val walletAddress = fromSwapCurrencyStatus.status.value.networkAddress
+            ?.defaultAddress
+            ?.value
+
+        if (nativeBalance.signum() == 0 || yieldModuleAddress == null || walletAddress == null) {
             val gasLimit = transaction.gas ?: raise(GetFeeError.UnknownError)
             return@either ethSpecificFeeFallback(fromSwapCurrencyStatus, gasLimit).bind()
         }
@@ -300,7 +306,7 @@ class DexSwapFeeCalculator(
                 amount = createNativeAmountForDex("0", network),
                 destinationAddress = yieldModuleAddress,
                 fee = null,
-                sourceAddress = transaction.txFrom,
+                sourceAddress = walletAddress,
                 extras = extras,
             )
             getFeeUseCase(

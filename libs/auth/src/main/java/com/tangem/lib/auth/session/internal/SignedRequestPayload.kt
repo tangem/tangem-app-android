@@ -1,9 +1,9 @@
 package com.tangem.lib.auth.session.internal
 
 import android.util.Base64
-import com.tangem.datasource.api.auth.models.request.AuthenticationPayload
-import com.tangem.datasource.api.auth.models.request.DeviceMetadata
-import com.tangem.datasource.api.auth.models.request.RegisterPayload
+import com.tangem.lib.auth.api.models.request.AuthenticationPayload
+import com.tangem.lib.auth.api.models.request.DeviceMetadata
+import com.tangem.lib.auth.api.models.request.RegisterPayload
 import com.tangem.utils.info.AppInfoProvider
 import javax.inject.Inject
 

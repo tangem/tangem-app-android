@@ -47,7 +47,7 @@ internal class PolymarketFeedContentTransformer(
         // The BFF pages with a keyset cursor over a shifting order, so an event that moved between two
         // page requests arrives twice; the copies would collide as LazyColumn keys and crash the feed.
         val events = batchListState.data
-            .flatMap { batch -> batch.data }
+            .flatMap { batch -> batch.data.events }
             .distinctBy(PolymarketEvent::id)
         return PolymarketMainUM.ContentUM.Content(
             events = eventUMConverter.convertList(events).toImmutableList(),

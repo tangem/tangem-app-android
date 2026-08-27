@@ -3,14 +3,14 @@ package com.tangem.lib.auth.session.internal
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
-import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
-import com.tangem.datasource.api.auth.models.request.RegisterPayload
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.NonceApiRequest
+import com.tangem.lib.auth.api.models.request.RegisterApiRequest
+import com.tangem.lib.auth.api.models.request.RegisterPayload
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.lib.auth.attestation.AttestationProvider
@@ -22,6 +22,7 @@ import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -48,9 +49,26 @@ internal class DefaultDeviceRegistrar(
         mutex.withLock { runRegister() }
     }
 
+    override suspend fun reregister(): Either<DeviceRegistrationError, Unit> = withContext(dispatchers.io) {
+        mutex.withLock {
+            either {
+                // The local flag is stale (backend lost the device record). Clear it up front so
+                // runRegister doesn't short-circuit, and so a failed attempt self-heals on the next
+                // launch's register() call.
+                runSuspendCatching {
+                    appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = false)
+                }.onFailure { e ->
+                    TangemLogger.e("Failed to reset device-registration flag before re-register", e)
+                    raise(DeviceRegistrationError.PersistenceFailed(e))
+                }
+                runRegister().bind()
+            }
+        }
+    }
+
     private suspend fun runRegister(): Either<DeviceRegistrationError, Unit> = either {
         val isAlreadyRegistered = appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY,
+            key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY,
             default = false,
         )
         if (isAlreadyRegistered) {
@@ -110,7 +128,7 @@ internal class DefaultDeviceRegistrar(
                     // `false` and the next launch retries cleanly. Worst case: tokens are persisted
                     // without the flag, and the retry mints fresh ones that overwrite them.
                     store.save(tokens)
-                    appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = true)
+                    appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = true)
                 } catch (e: Exception) {
                     TangemLogger.e("Failed to persist device-registration tokens / flag", e)
                     raise(DeviceRegistrationError.PersistenceFailed(e))
@@ -135,7 +153,7 @@ internal class DefaultDeviceRegistrar(
 
     private suspend fun Raise<DeviceRegistrationError>.markRegistered(onFailureLog: String) {
         try {
-            appPreferencesStore.store(key = PreferencesKeys.IS_DEVICE_REGISTERED_KEY, value = true)
+            appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = true)
         } catch (e: Exception) {
             TangemLogger.e(onFailureLog, e)
             raise(DeviceRegistrationError.PersistenceFailed(e))
