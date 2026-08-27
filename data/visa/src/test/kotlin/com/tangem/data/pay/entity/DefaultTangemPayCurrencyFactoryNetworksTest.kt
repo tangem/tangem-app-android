@@ -87,6 +87,7 @@ internal class DefaultTangemPayCurrencyFactoryNetworksTest {
         // Assert
         val available = statuses.single() as PaymentNetworkStatus.Available
         assertThat(available.depositAddress).isEqualTo("0xDEPOSIT")
+        assertThat(available.chainId).isEqualTo(POLYGON_CHAIN_ID)
     }
 
     @Test

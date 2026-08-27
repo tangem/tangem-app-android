@@ -1337,7 +1337,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            applyAccountTopUpFromPriority = true,
+            isAccountFlowEnabled = true,
         )
 
         // Prefers the account's own currency (becomes a transfer), not the richer BTC.
@@ -1369,7 +1369,7 @@ internal class DefaultInitialCurrenciesResolverTest {
                 initialCryptoCurrency = null,
                 swapCurrencyPosition = CurrencyPosition.ANY,
                 accountFlow = AccountFlow.TopUp,
-                applyAccountTopUpFromPriority = true,
+                isAccountFlowEnabled = true,
             )
 
             assertThat(from?.status).isSameInstanceAs(btcStatus)
@@ -1398,7 +1398,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.TopUp,
-            applyAccountTopUpFromPriority = false,
+            isAccountFlowEnabled = false,
         )
 
         // Gate off → falls back to plain most-funded selection (BTC), ignoring the account currency.
@@ -1428,7 +1428,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = null,
             swapCurrencyPosition = CurrencyPosition.ANY,
             accountFlow = AccountFlow.Withdraw,
-            applyAccountTopUpFromPriority = true,
+            isAccountFlowEnabled = true,
         )
 
         // AccountFlow.Withdraw is not TopUp → priority does not apply, plain most-funded selection wins.
@@ -1438,6 +1438,160 @@ internal class DefaultInitialCurrenciesResolverTest {
     // endregion
 
     // region helpers
+
+    @Test
+    fun `GIVEN withdraw and account issued on several networks WHEN resolve THEN most funded account token is FROM`() =
+        runTest {
+            // Arrange — the entry point passes the account's legacy currency, which no issued network provides.
+            val legacyCurrency = mockCryptoCurrency()
+            val baseCurrency = mockCryptoCurrency()
+            val ethereumCurrency = mockCryptoCurrency()
+            val baseStatus = createCurrencyStatus(baseCurrency, fiatAmount = BigDecimal("30"))
+            val ethereumStatus = createCurrencyStatus(ethereumCurrency, fiatAmount = BigDecimal("50"))
+            val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal.ZERO)
+            setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(baseStatus, ethereumStatus))))
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = legacyCurrency,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                accountFlow = AccountFlow.Withdraw,
+                isAccountFlowEnabled = true,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(ethereumStatus)
+        }
+
+    @Test
+    fun `GIVEN withdraw and no quotes WHEN resolve THEN the token holding the most crypto is FROM`() = runTest {
+        // Arrange — without quotes every fiat amount is null, so the crypto balance decides.
+        val legacyStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = null, amount = BigDecimal.ZERO)
+        val emptyStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = null, amount = BigDecimal.ZERO)
+        val fundedStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = null, amount = BigDecimal("7"))
+        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(emptyStatus, fundedStatus))))
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, _) = resolveWithdraw(legacyStatus.currency)
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(fundedStatus)
+    }
+
+    @Test
+    fun `GIVEN withdraw and the richest token is not swappable WHEN resolve THEN a swappable one is FROM`() = runTest {
+        // Arrange — picking an unswappable token would leave the user on a dead-end screen.
+        val legacyStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal.ZERO)
+        val unswappableStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
+        val swappableStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("30"))
+        setupSupplier(
+            listOf(createPaymentAccountStatus(legacyStatus, listOf(unswappableStatus, swappableStatus))),
+        )
+        setupAvailability(
+            linkedMapOf(unswappableStatus.currency to false, swappableStatus.currency to true),
+        )
+
+        // Act
+        val (from, _) = resolveWithdraw(legacyStatus.currency)
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(swappableStatus)
+    }
+
+    private suspend fun resolveWithdraw(initialCryptoCurrency: CryptoCurrency) = resolver.invoke(
+        userWalletId,
+        initialCryptoCurrency = initialCryptoCurrency,
+        swapCurrencyPosition = CurrencyPosition.FROM,
+        accountFlow = AccountFlow.Withdraw,
+        isAccountFlowEnabled = true,
+    )
+
+    @Test
+    fun `GIVEN withdraw and a single account currency WHEN resolve THEN that currency is FROM`() = runTest {
+        // Arrange — multichain off: the account exposes only its legacy currency.
+        val legacyCurrency = mockCryptoCurrency()
+        val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal("10"))
+        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus)))
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = legacyCurrency,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = AccountFlow.Withdraw,
+            isAccountFlowEnabled = true,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(legacyStatus)
+    }
+
+    @Test
+    fun `GIVEN toggle off WHEN withdraw resolve THEN the account legacy currency is still resolvable`() = runTest {
+        // Arrange — multichain data is present, but the account flow is off: the legacy currency the entry
+        // point passes is not one of the issued networks, exactly as on a real multichain account.
+        val legacyCurrency = mockCryptoCurrency()
+        val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal("10"))
+        val issuedStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
+        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(issuedStatus))))
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = legacyCurrency,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = AccountFlow.Withdraw,
+            isAccountFlowEnabled = false,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(legacyStatus)
+    }
+
+    @Test
+    fun `GIVEN toggle off WHEN withdraw resolve THEN the currency the entry point passed stays FROM`() = runTest {
+        // Arrange
+        val legacyCurrency = mockCryptoCurrency()
+        val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal.ZERO)
+        val richerStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
+        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(legacyStatus, richerStatus))))
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = legacyCurrency,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = AccountFlow.Withdraw,
+            isAccountFlowEnabled = false,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(legacyStatus)
+    }
+
+    /** Availability stub that survives the resolver widening the currency set it asks about. */
+    private fun setupAvailabilityForAnyCurrency() {
+        coEvery { rampStateManager.availableForSwap(any(), any<List<CryptoCurrency>>()) } answers {
+            secondArg<List<CryptoCurrency>>().associateWith { ScenarioUnavailabilityReason.None }
+        }
+    }
+
+    private fun createPaymentAccountStatus(
+        legacyStatus: CryptoCurrencyStatus,
+        issuedNetworkStatuses: List<CryptoCurrencyStatus> = listOf(legacyStatus),
+    ): AccountStatus.Payment {
+        val statusValue = mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
+            every { cryptoCurrencyStatuses } returns issuedNetworkStatuses
+            every { cryptoCurrencyStatus } returns legacyStatus
+        }
+        return AccountStatus.Payment(account = Account.Payment(userWalletId), value = statusValue)
+    }
 
     private fun mockCryptoCurrency(
         id: CryptoCurrency.ID = mockCurrencyId(),
@@ -1456,9 +1610,11 @@ internal class DefaultInitialCurrenciesResolverTest {
     private fun createCurrencyStatus(
         currency: CryptoCurrency,
         fiatAmount: BigDecimal?,
+        amount: BigDecimal? = null,
     ): CryptoCurrencyStatus {
         val value = mockk<CryptoCurrencyStatus.Value> {
             every { this@mockk.fiatAmount } returns fiatAmount
+            every { this@mockk.amount } returns amount
         }
         return CryptoCurrencyStatus(currency = currency, value = value)
     }
