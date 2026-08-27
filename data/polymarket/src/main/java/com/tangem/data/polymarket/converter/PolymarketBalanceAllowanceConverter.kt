@@ -1,6 +1,6 @@
 package com.tangem.data.polymarket.converter
 
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.utils.converter.Converter
