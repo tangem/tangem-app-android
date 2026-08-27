@@ -29,12 +29,14 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.OpenSlippagePickerTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPaymentCurrencyTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSlippageDraftTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSlippageTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSubmitTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
@@ -127,13 +129,25 @@ internal class PlacePredictionModel @Inject constructor(
         restartQuoteLoop(withDebounce = true)
     }
 
-    override fun onSlippageSelected(percent: BigDecimal) {
-        uiState.update(SetSlippageTransformer(percent = percent))
-        restartQuoteLoop(withDebounce = false)
+    override fun onSlippageClick() {
+        uiState.update(OpenSlippagePickerTransformer)
+        router.push(PlacePredictionRoute.Slippage)
     }
 
-    override fun onSlippageClick() {
-        showComingLater(part = "Choosing the slippage")
+    override fun onSlippageValueChange(value: String) {
+        uiState.update(SetSlippageDraftTransformer(value = value))
+    }
+
+    override fun onSlippagePresetClick(percent: BigDecimal) {
+        uiState.update(SetSlippageDraftTransformer(value = percent.toPlainString()))
+    }
+
+    override fun onSlippageConfirmClick() {
+        val percent = uiState.value.slippagePicker.value.toBigDecimalOrNull() ?: return
+
+        uiState.update(SetSlippageTransformer(percent = percent))
+        restartQuoteLoop(withDebounce = false)
+        router.pop()
     }
 
     override fun onAddFundsClick() {
