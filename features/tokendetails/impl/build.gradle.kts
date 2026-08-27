@@ -109,6 +109,7 @@ dependencies {
     testImplementation(deps.test.coroutine)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.kotlin.datetime)
+    testImplementation(projects.test.mock)
     api(deps.kotlin.coroutines)
     api(projects.domain.account)
     api(projects.domain.common)
