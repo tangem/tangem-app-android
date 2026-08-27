@@ -8,6 +8,7 @@ import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,7 @@ class BackupErrorWarningSender @Inject constructor(
     private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
 ) {
 
     private val addressCheckJobHolder = JobHolder()
@@ -48,6 +50,16 @@ class BackupErrorWarningSender @Inject constructor(
         }
 
         onWarningShown()
+
+        if (!backupErrorFeatureToggles.isTopUpWarningEnabled) {
+            showTopUpBlocked(
+                scope = scope,
+                userWalletId = userWallet.walletId,
+                onSupportClick = onSupportClick,
+            )
+            return
+        }
+
         showWarning(
             scope = scope,
             userWalletId = userWallet.walletId,
@@ -64,6 +76,11 @@ class BackupErrorWarningSender @Inject constructor(
      * verdict for the previous one.
      */
     fun forAddress(scope: CoroutineScope, address: () -> String?, onProceed: () -> Unit) {
+        if (!backupErrorFeatureToggles.isTopUpWarningEnabled) {
+            onProceed()
+            return
+        }
+
         scope.launch {
             val checkedAddress = address()
             val problematicWalletId = checkedAddress
@@ -117,6 +134,18 @@ class BackupErrorWarningSender @Inject constructor(
         messageSender.send(
             Dialogs.backupErrorAddFundsWarning(
                 onContinue = onProceed,
+                onContactSupport = {
+                    onSupportClick()
+                    scope.launch { sendBackupProblemEmailUseCase(userWalletId) }
+                },
+            ),
+        )
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private fun showTopUpBlocked(scope: CoroutineScope, userWalletId: UserWalletId, onSupportClick: () -> Unit) {
+        messageSender.send(
+            Dialogs.backupErrorAddFundsDisabled(
                 onContactSupport = {
                     onSupportClick()
                     scope.launch { sendBackupProblemEmailUseCase(userWalletId) }
