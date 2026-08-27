@@ -125,19 +125,9 @@ internal class DetailsModel @Inject constructor(
     private fun sendFeedback() {
         modelScope.launch {
             val selectedUserWallet = getSelectedWalletSyncUseCase().getOrNull()
-                ?: run {
-                    TangemLogger.w("Unable to send feedback: no selected wallet")
-
-                    return@launch
-                }
+                ?: return@launch
 
             val userWallets = getWalletsUseCase.invokeSync()
-
-            if (userWallets.isEmpty()) {
-                TangemLogger.w("Unable to send feedback: wallets list is empty")
-
-                return@launch
-            }
 
             val metaInfo = getWalletMetaInfoUseCase(selectedUserWallet.walletId).getOrNull() ?: return@launch
             val visaCustomerId = getTangemPayCustomerIdUseCase(selectedUserWallet.walletId).getOrNull()
@@ -211,13 +201,7 @@ internal class DetailsModel @Inject constructor(
 
     private fun openUseDesk() {
         modelScope.launch {
-            val userWallet = getSelectedWalletSyncUseCase().getOrNull()
-                ?: run {
-                    TangemLogger.w("Unable to open Usedesk: no selected wallet")
-
-                    return@launch
-                }
-
+            val userWallet = getSelectedWalletSyncUseCase().getOrNull() ?: return@launch
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
             router.push(AppRoute.Usedesk(metaInfo))
         }
