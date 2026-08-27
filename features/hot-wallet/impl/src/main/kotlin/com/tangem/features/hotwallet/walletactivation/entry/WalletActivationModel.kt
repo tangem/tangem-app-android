@@ -18,11 +18,14 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
@@ -49,6 +52,7 @@ internal class WalletActivationModel @Inject constructor(
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -67,6 +71,9 @@ internal class WalletActivationModel @Inject constructor(
     val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
     private val isStartingWithAccessCode = params.isBackupExists
+
+    val isAccessCodeStepRequired = isStartingWithAccessCode || !isAccessCodeAlreadySet()
+
     val stackNavigation = StackNavigation<WalletActivationRoute>()
     val startRoute = if (isStartingWithAccessCode) {
         WalletActivationRoute.SetAccessCode
@@ -120,6 +127,13 @@ internal class WalletActivationModel @Inject constructor(
             is WalletActivationRoute.PushNotifications -> Unit
             is WalletActivationRoute.SetupFinished -> Unit
         }
+    }
+
+    private fun isAccessCodeAlreadySet(): Boolean {
+        val hotWallet = getUserWalletUseCase(params.userWalletId).getOrNull() as? UserWallet.Hot
+            ?: return false
+
+        return hotWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
     }
 
     private fun navigateToPushNotificationsOrNext() {
@@ -218,6 +232,11 @@ internal class WalletActivationModel @Inject constructor(
 
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
+            if (!isAccessCodeStepRequired) {
+                navigateToPushNotificationsOrNext()
+                return
+            }
+
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.AccessCodeScreenOpened(source = analyticsSource.value),
             )
