@@ -2,7 +2,7 @@ package com.tangem.datasource.di
 
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.promotion.DefaultPromotionsSupplier
 import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.domain.models.wallet.UserWalletId

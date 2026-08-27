@@ -34,9 +34,9 @@ fun MarketChartMini(
     rawData: MarketChartRawData,
     modifier: Modifier = Modifier,
     type: MarketChartLook.Type = MarketChartLook.Type.Growing,
-    growingColor: Color = TangemTheme.colors.icon.accent,
-    fallingColor: Color = TangemTheme.colors.icon.warning,
-    neutralColor: Color = TangemTheme.colors.icon.informative,
+    growingColor: Color = TangemTheme.colors3.icon.accent.blue,
+    fallingColor: Color = TangemTheme.colors3.icon.accent.red,
+    neutralColor: Color = TangemTheme.colors3.icon.secondary,
 ) {
     val model = remember(rawData) {
         CartesianChartModel(LineCartesianLayerModel.build { series(rawData.y) })

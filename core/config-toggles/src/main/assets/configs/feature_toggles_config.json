@@ -1,11 +1,11 @@
 [
     {
-        "name": "AND_15901_STORIES_CONTAINER_ENABLED",
+        "name": "AND_16359_ONRAMP_THEMED_PAYMENT_METHOD_IMAGES",
         "version": "undefined"
     },
     {
-        "name": "TWI_1322_FORCE_UPDATE_ENABLED",
-        "version": "6.1"
+        "name": "AND_15901_STORIES_CONTAINER_ENABLED",
+        "version": "undefined"
     },
     {
         "name": "NEW_CARD_SCANNING_ENABLED",
@@ -16,8 +16,8 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_485_USEDESK_ENABLED",
-        "version": "6.1"
+        "name": "TWI_1602_STAKING_TRANSACTION_VALIDATION",
+        "version": "6.2"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
@@ -28,44 +28,20 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1326_YIELD_MODE_SWAP_ENABLED",
-        "version": "6.1"
-    },
-    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
-        "version": "6.1"
-    },
-    {
-        "name": "TWI_1403_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED",
-        "version": "6.1"
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "AND_15482_SURVEYSPARROW_ENABLED",
-        "version": "6.1"
-    },
-    {
-        "name": "AND_15741_VISA_PAY_REMOVE_ACCOUNT",
-        "version": "6.1"
-    },
-    {
         "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
         "version": "6.1"
     },
     {
-        "name": "TWI_83_ADDRESS_BOOK_ENABLED",
-        "version": "6.1"
-    },
-    {
         "name": "AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED",
-        "version": "undefined"
+        "version": "6.2"
     },
     {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
@@ -76,39 +52,51 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1522_MARKETING_BANNERS_ENABLED",
-        "version": "6.0.1"
-    },
-    {
         "name": "TWI_1469_FOR_YOU_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "TWI_1367_HIGH_FEE_WARNING_ENABLED",
-        "version": "6.1"
-    },
-    {
-        "name": "TWI_1638_VA_MVP0_ENABLED",
-        "version": "6.0.1"
-    },
-    {
-        "name": "TWI_1637_CASHBACK_AND_REACTIVATION_CAMPAIGNS_ENABLED",
-        "version": "6.0.1"
-    },
-    {
         "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
-        "version": "undefined"
+        "version": "6.2"
     },
     {
         "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "AND_15231_STAKING_REGION_UNAVAILABLE_ENABLED",
-        "version": "6.1"
+        "name": "AND_16204_POLYMARKET_ENABLED",
+        "version": "undefined"
     },
     {
-        "name": "AND_16204_POLYMARKET_ENABLED",
+        "name": "TWI_1157_PLASTIC_CARD_ORDER_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1684_ACCOUNT_MULTICHAIN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_16063_TRON_GASLESS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
+        "version": "6.2"
+    },
+    {
+        "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
         "version": "undefined"
     }
 ]

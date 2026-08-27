@@ -17,6 +17,8 @@ dependencies {
     api(projects.features.commonFeatures.api)
     api(projects.features.onramp.api)
     implementation(projects.features.marketing.api)
+    implementation(projects.domain.marketing.models)
+    implementation(projects.domain.quotes)
 
     /** Project - Core */
     api(projects.core.analytics)
@@ -53,8 +55,6 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.wallets.models)
-    implementation(projects.domain.marketing.models)
-    implementation(projects.domain.quotes)
     runtimeOnly(projects.domain.card)
 
     /** Data */

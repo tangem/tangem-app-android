@@ -110,7 +110,7 @@
   <string name="tangem_pay_terms_fees_limits">Termini, commissioni e limiti</string>
   <string name="tangem_pay_terms_limits">Termini e limiti</string>
   <string name="tangem_pay_transaction_declined_notification_text">La banca ha rifiutato questa richiesta di transazione.</string>
-  <string name="tangem_pay_transaction_details_cashback_below_min">Importo min.: %1$s</string>
+  <string name="tangem_pay_transaction_details_cashback_below_min">Importo min.</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Limite mensile raggiunto</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC escluso</string>
   <string name="tangem_pay_transaction_details_cashback_none">Nessun cashback</string>
@@ -335,8 +335,8 @@
   <string name="tangempay_newonboard_body">Spendi crypto ovunque — senza banche, senza intermediari, senza exchange. La self-custody incontra i pagamenti di ogni giorno.</string>
   <string name="tangempay_newonboard_bottomleft_body">Acquista online e con Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Accettata ovunque</string>
-  <string name="tangempay_newonboard_bottomright_body">Usala ovunque</string>
-  <string name="tangempay_newonboard_bottomright_title">Solo 1% di FX-fee</string>
+  <string name="tangempay_newonboard_bottomright_body">USD → USDC 1:1; 1 $ fissa</string>
+  <string name="tangempay_newonboard_bottomright_title">Ricevi bonifici ACH</string>
   <string name="tangempay_newonboard_title">Ottieni la tua carta Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Nessuna commissione sugli acquisti</string>

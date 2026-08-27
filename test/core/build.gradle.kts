@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    api(projects.core.local)
     api(projects.core.utils)
     api(projects.domain.core)
     api(deps.arrow.core)

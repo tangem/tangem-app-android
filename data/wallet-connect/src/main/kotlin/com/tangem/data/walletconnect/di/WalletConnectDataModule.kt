@@ -4,6 +4,7 @@ import android.app.Application
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
 import com.tangem.data.walletconnect.network.bitcoin.WcBitcoinNetwork
@@ -145,11 +146,13 @@ internal object WalletConnectDataModule {
         sessionsManager: WcSessionsManager,
         factories: WcEthNetwork.Factories,
         wcNetworksConverter: WcNetworksConverter,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
     ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
         networksConverter = wcNetworksConverter,
         sessionsManager = sessionsManager,
         factories = factories,
+        analyticsExceptionHandler = analyticsExceptionHandler,
     )
 
     @Provides

@@ -2,7 +2,6 @@ package com.tangem.features.survey.impl.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.features.survey.SurveyFeatureToggles
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.Test
 
 internal class DefaultSurveyDeepLinkHandlerTest {
 
-    private val featureToggles = mockk<SurveyFeatureToggles>()
     private val appRouter = mockk<AppRouter>(relaxed = true)
 
     @BeforeEach
@@ -33,18 +31,7 @@ internal class DefaultSurveyDeepLinkHandlerTest {
     }
 
     @Test
-    fun `does not navigate when feature is disabled`() {
-        every { featureToggles.areSurveysEnabled } returns false
-
-        createHandler(mapOf("token" to TOKEN, "display_id" to DISPLAY_ID))
-
-        verify(exactly = 0) { appRouter.push(any(), any()) }
-    }
-
-    @Test
     fun `does not navigate when token is missing`() {
-        every { featureToggles.areSurveysEnabled } returns true
-
         createHandler(emptyMap())
 
         verify(exactly = 0) { appRouter.push(any(), any()) }
@@ -52,8 +39,6 @@ internal class DefaultSurveyDeepLinkHandlerTest {
 
     @Test
     fun `pushes survey route with token and display id on happy path`() {
-        every { featureToggles.areSurveysEnabled } returns true
-
         createHandler(mapOf("token" to TOKEN, "display_id" to DISPLAY_ID))
 
         verify { appRouter.push(route = AppRoute.Survey(token = TOKEN, displayId = DISPLAY_ID), onComplete = any()) }
@@ -61,8 +46,6 @@ internal class DefaultSurveyDeepLinkHandlerTest {
 
     @Test
     fun `pushes survey route with null display id when absent`() {
-        every { featureToggles.areSurveysEnabled } returns true
-
         createHandler(mapOf("token" to TOKEN))
 
         verify { appRouter.push(route = AppRoute.Survey(token = TOKEN, displayId = null), onComplete = any()) }
@@ -70,7 +53,6 @@ internal class DefaultSurveyDeepLinkHandlerTest {
 
     private fun createHandler(queryParams: Map<String, String>) = DefaultSurveyDeepLinkHandler(
         queryParams = queryParams,
-        surveyFeatureToggles = featureToggles,
         appRouter = appRouter,
     )
 

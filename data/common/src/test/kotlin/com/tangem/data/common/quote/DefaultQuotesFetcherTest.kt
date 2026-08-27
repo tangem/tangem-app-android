@@ -6,7 +6,7 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
 import com.tangem.data.common.quote.DefaultQuotesFetcher.QuoteMetadata
 import com.tangem.data.common.quote.QuotesFetcher.Field
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider

@@ -38,6 +38,10 @@ dependencies {
     api(projects.domain.visa.models)
     // endregion
 
+    // region Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
     // region Runtime
     runtimeOnly(deps.room.runtime)
     // endregion

@@ -2,6 +2,7 @@ package com.tangem.core.ui.extensions
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import androidx.annotation.ArrayRes
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -12,6 +13,7 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.tangem.core.res.getPluralStringSafe
+import com.tangem.core.res.getStringArraySafe
 import com.tangem.core.res.getStringSafe
 import com.tangem.utils.StringsSigns.THREE_STARS
 import java.util.Hashtable
@@ -51,6 +53,17 @@ fun pluralStringResourceSafe(@PluralsRes id: Int, count: Int, vararg formatArgs:
     } else {
         resources.getPluralStringSafe(id, count, *formatArgs)
     }
+}
+
+/**
+ * Get a string-array resource safely or an empty list if an exception is thrown.
+ *
+ * @param id resource id
+ */
+@Composable
+@ReadOnlyComposable
+fun stringArrayResourceSafe(@ArrayRes id: Int): List<String> {
+    return LocalContext.current.resources.getStringArraySafe(id)
 }
 
 @Suppress("MagicNumber")

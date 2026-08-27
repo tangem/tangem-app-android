@@ -5,10 +5,12 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.quote.QuotesFetcher
+import com.tangem.data.markets.DefaultCoinIndicatorsRepository
 import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -43,6 +45,19 @@ internal object MarketsDataModule {
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
             excludedBlockchains = excludedBlockchains,
             networkFactory = networkFactory,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCoinIndicatorsRepository(
+        marketsApi: TangemTechMarketsApi,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CoinIndicatorsRepository {
+        return DefaultCoinIndicatorsRepository(
+            marketsApi = marketsApi,
+            store = RuntimeStateStore(defaultValue = emptyMap()),
+            dispatchers = dispatchers,
         )
     }
 }

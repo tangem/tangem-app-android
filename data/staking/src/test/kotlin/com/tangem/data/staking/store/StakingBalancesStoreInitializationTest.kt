@@ -6,7 +6,7 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.every

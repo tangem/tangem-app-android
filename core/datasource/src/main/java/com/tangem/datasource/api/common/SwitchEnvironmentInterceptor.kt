@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.common
 
-import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.core.remote.config.ApiConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.utils.ProviderSuspend
 import kotlinx.coroutines.runBlocking

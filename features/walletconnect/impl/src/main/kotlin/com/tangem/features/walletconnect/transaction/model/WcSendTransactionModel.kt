@@ -102,7 +102,7 @@ internal class WcSendTransactionModel @Inject constructor(
     internal var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     internal var feeStateConfiguration: FeeStateConfiguration = FeeStateConfiguration.None
     private var useCase: WcSignUseCase<*> by Delegates.notNull()
-    private var signState: WcSignState<*> by Delegates.notNull()
+    private var signState: WcSignState<*>? = null
     private var wcApproval: WcApproval? = null
     private var psbtOutputs: List<WcPsbtOutput>? = null
     private var sign: () -> Unit = {}
@@ -237,7 +237,7 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
-        val signModel = signState.signModel
+        val signModel = signState?.signModel ?: return Either.Left(GetFeeError.DataError(cause = null))
         val transactionData = signModel as? TransactionData.Uncompiled ?: error("TransactionData must be Uncompiled")
         return getFeeUseCase.invoke(
             userWallet = useCase.wallet,
