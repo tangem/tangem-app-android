@@ -10,7 +10,7 @@ import com.tangem.utils.coroutines.runSuspendCatching
  * Tells whether the Tron gasless flow is available for the given [network]/[currency].
  *
  * Checks ONLY domain facts: the currency is a token on a Tron network whose contract is in the
- * backend-supported token list. The `AND_16063_TRON_GASLESS_ENABLED` feature toggle is applied in the
+ * backend-supported token list. The `TWI_1259_TRON_GASLESS_ENABLED` feature toggle is applied in the
  * feature layer (SendModel) — this use case must not depend on `features/send/api`.
  */
 class IsTronGaslessSupportedUseCase(
