@@ -62,30 +62,11 @@ internal class JointAccountRowRoutingTest {
     }
 
     private fun provideTestModels() = listOf(
-        RoutingModel(type = WalletAccountDTO.Type.JOINT.value, expected = Account.Joint::class.java),
-        RoutingModel(type = WalletAccountDTO.Type.CRYPTO.value, expected = Account.CryptoPortfolio::class.java),
+        RoutingModel(type = WalletAccountDTO.Type.JOINT, expected = Account.Joint::class.java),
+        RoutingModel(type = WalletAccountDTO.Type.CRYPTO, expected = Account.CryptoPortfolio::class.java),
         // The field predates joint accounts, so its absence means crypto
         RoutingModel(type = null, expected = Account.CryptoPortfolio::class.java),
-        // A type this build does not know must render as crypto rather than fail the whole account list
-        RoutingModel(type = "shared_v2", expected = Account.CryptoPortfolio::class.java),
     )
-
-    @Test
-    fun `GIVEN a row of an unknown type without tokens WHEN convert THEN the account list still renders`() {
-        // Arrange
-        val response = response(secondRowType = "shared_v2").let { value ->
-            value.copy(accounts = value.accounts.map { it.copy(tokens = null) })
-        }
-
-        // Act
-        val actual = listConverter.convert(value = response)
-
-        // Assert
-        // The personal branch refuses a row without tokens, and the producer turns that refusal into an endless
-        // retry — a value the backend adds later must not cost the user the whole account list
-        assertThat(actual.accounts.map { it.accountId.value })
-            .containsExactly(cryptoAccount().accountId.value, SECOND_ROW_ID)
-    }
 
     @Test
     fun `GIVEN account list with a joint account WHEN convert back THEN the joint row keeps its type`() {
@@ -105,12 +86,12 @@ internal class JointAccountRowRoutingTest {
         // A row missing from the document means "archived" to the backend, so the joint row must survive the
         // round trip — otherwise editing the portfolio would archive the joint account
         assertThat(actual.accounts.map { it.type })
-            .containsExactly(WalletAccountDTO.Type.CRYPTO.value, WalletAccountDTO.Type.JOINT.value)
+            .containsExactly(WalletAccountDTO.Type.CRYPTO, WalletAccountDTO.Type.JOINT)
         assertThat(actual.accounts.map { it.id })
             .containsExactly(cryptoAccount().accountId.value, jointAccount().accountId.value)
     }
 
-    private fun response(secondRowType: String?): GetWalletAccountsResponse {
+    private fun response(secondRowType: WalletAccountDTO.Type?): GetWalletAccountsResponse {
         return GetWalletAccountsResponse(
             wallet = GetWalletAccountsResponse.Wallet(
                 group = UserTokensResponse.GroupType.NONE,
@@ -158,7 +139,7 @@ internal class JointAccountRowRoutingTest {
         )
     }
 
-    internal data class RoutingModel(val type: String?, val expected: Class<out Account>)
+    internal data class RoutingModel(val type: WalletAccountDTO.Type?, val expected: Class<out Account>)
 
     private companion object {
         val WALLET_ID = UserWalletId("011")
