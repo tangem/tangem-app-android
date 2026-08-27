@@ -24,6 +24,7 @@ import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -136,6 +137,20 @@ internal class DefaultWalletRegistrar(
         if (isAlreadyRegistered) {
             TangemLogger.i("Wallet already registered — skipping /wallet")
             return@either null
+        }
+
+        // /wallet/register is @RequiresSessionAuth. Without a session the request goes out
+        // unauthenticated and 401s, wasting the one-time wallet nonce fetched just below. Bail up
+        // front; the session is established by device registration, and this retries idempotently
+        // on a later attempt once it exists.
+        val hasSession = runSuspendCatching { store.get().getOrNull() != null }
+            .getOrElse { e ->
+                TangemLogger.e("Failed to read session tokens before wallet registration", e)
+                raise(WalletRegistrationError.PersistenceFailed(e))
+            }
+        if (!hasSession) {
+            TangemLogger.i("No active session — skipping wallet registration until authenticated")
+            raise(WalletRegistrationError.NoActiveSession)
         }
 
         TangemLogger.i("Preparing wallet registration")
