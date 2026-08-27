@@ -546,7 +546,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
         if (!isYieldSupplyActive) return this
 
-        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED)) {
+        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED)) {
             filterNot { it.type == ExpressProviderType.ONRAMP }
         } else {
             filter { provider ->
