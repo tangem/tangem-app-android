@@ -9,13 +9,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.features.feed.v2.FeedV2Component
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -58,7 +57,7 @@ fun FeedTabRow(
         variant = TangemTabItem.Variant.Transparent,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         modifier = modifier
-            .dropWhenNoRoom()
+            .dropWhenNoRoom(minRoom = MinRoom)
             .fillMaxWidth()
             .height(FeedV2Component.TabRowHeight),
     )
@@ -83,21 +82,5 @@ private fun rememberTabItems(
                 )
             }
             .toImmutableList()
-    }
-}
-
-@Composable
-private fun Modifier.dropWhenNoRoom(): Modifier {
-    val minRoomPx = with(LocalDensity.current) { MinRoom.roundToPx() }
-
-    return layout { measurable, constraints ->
-        if (constraints.maxHeight < minRoomPx) {
-            layout(width = 0, height = 0) {}
-        } else {
-            val placeable = measurable.measure(constraints)
-            layout(width = placeable.width, height = placeable.height) {
-                placeable.place(x = 0, y = 0)
-            }
-        }
     }
 }
