@@ -424,18 +424,16 @@ class SwapTransferInteractorImpl @Inject constructor(
     override suspend fun withdrawTangemPay(
         userWallet: UserWallet,
         cryptoAmount: BigDecimal,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
     ): Either<SendTransactionError, WithdrawalResult> {
         val destination = toSwapCurrencyStatus.destinationAddress() ?: return getDataError(
             message = "Destination address is null",
         )
-        val cryptoCurrencyId = toSwapCurrencyStatus.currency.id.rawCurrencyId ?: return getDataError(
-            message = "Crypto currency id should be null",
-        )
         return tangemPayWithdrawUseCase(
             userWallet = userWallet,
             cryptoAmount = cryptoAmount,
-            cryptoCurrencyId = cryptoCurrencyId,
+            sourceCurrency = fromSwapCurrencyStatus.currency,
             receiverCexAddress = destination,
         ).mapLeft { error ->
             SendTransactionError.DataError("Tangem Pay withdrawal error code is ${error.errorCode}")
