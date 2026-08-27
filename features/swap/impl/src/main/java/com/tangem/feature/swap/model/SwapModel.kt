@@ -21,6 +21,7 @@ import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -41,6 +42,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
@@ -51,10 +53,12 @@ import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -65,6 +69,7 @@ import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
@@ -124,6 +129,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.filterIf
 import com.tangem.utils.logging.TangemLogger
@@ -161,6 +167,9 @@ internal class SwapModel @Inject constructor(
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val backupErrorWarningSender: BackupErrorWarningSender,
+    private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
+    private val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -592,6 +601,8 @@ internal class SwapModel @Inject constructor(
         val selectedUserWallet = result.wallet
         val selectedCurrencyStatus = result.currency
         val selectedAccount = result.account.account
+
+        if (isTopUpBlockedByBackupError(isFromDirection = isFromDirection, userWallet = selectedUserWallet)) return
 
         val (fromSwapCurrencyStatus, toSwapCurrencyStatus) = if (isFromDirection) {
             val selectedFrom = SwapCurrencyStatus(
@@ -1473,7 +1484,7 @@ internal class SwapModel @Inject constructor(
 
     private fun onSwapClick() {
         val receivingUserWallet = dataState.toSwapCurrencyStatus?.userWallet
-        if (receivingUserWallet == null) {
+        if (receivingUserWallet == null || !backupErrorFeatureToggles.isTopUpWarningEnabled) {
             performSwap()
             return
         }
@@ -2098,6 +2109,20 @@ internal class SwapModel @Inject constructor(
                 ),
             ),
         )
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private fun isTopUpBlockedByBackupError(isFromDirection: Boolean, userWallet: UserWallet): Boolean {
+        if (backupErrorFeatureToggles.isTopUpWarningEnabled) return false
+        if (isFromDirection || !isWalletBackupProblematicUseCase(userWallet)) return false
+
+        router.pop()
+        messageSender.send(
+            Dialogs.backupErrorAddFundsDisabled(
+                onContactSupport = { modelScope.launch { sendBackupProblemEmailUseCase(userWallet.walletId) } },
+            ),
+        )
+        return true
     }
 
     private fun showTransactionErrorAlert(
