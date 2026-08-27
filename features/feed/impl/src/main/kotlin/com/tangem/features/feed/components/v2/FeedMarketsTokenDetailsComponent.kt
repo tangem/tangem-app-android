@@ -9,7 +9,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -17,7 +16,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
@@ -33,6 +31,7 @@ import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDet
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.features.foryou.TokenSummaryBlockComponent
 import com.tangem.features.foryou.TokenSummaryComponent
@@ -107,11 +106,11 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             isEndButtonsGroupBackgroundShown = false,
             startButton = { TangemButton.Back(onClick = { router.pop() }) },
             endButtonsGroup = {
-                NavActionButton(icon = Icons.ic_share_android_20, onClick = state.onShareClick)
+                FeedNavActionButton(icon = Icons.ic_share_android_20, onClick = state.onShareClick)
             },
             endButton = if (state.isAddToPortfolioButtonVisible) {
                 {
-                    NavActionButton(
+                    FeedNavActionButton(
                         icon = Icons.ic_sign_plus_20,
                         onClick = state.onAddToPortfolioClick,
                         // added to every account: the tap explains that instead of doing nothing
@@ -183,17 +182,6 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             params: FeedRoute.MarketsTokenDetails,
         ): FeedMarketsTokenDetailsComponent
     }
-}
-
-@Composable
-private fun NavActionButton(icon: ImageVector, onClick: () -> Unit, isDimmed: Boolean = false) {
-    TangemButton(
-        variant = TangemButton.Variant.Material,
-        size = TangemButton.Size.X11,
-        isDimmed = isDimmed,
-        iconStart = TangemIconUM.Icon(icon),
-        onClick = onClick,
-    )
 }
 
 private fun TokenSummaryComponent.Token.toRouteToken(): FeedRoute.TokenSummary.Token {
