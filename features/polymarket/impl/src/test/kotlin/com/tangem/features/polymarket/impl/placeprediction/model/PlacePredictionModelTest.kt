@@ -521,6 +521,7 @@ internal class PlacePredictionModelTest {
         isLive: Boolean = false,
     ): PredictionOrderQuote = PredictionOrderQuote(
         status = status,
+        side = PredictionOrderSide.BUY,
         shares = BigDecimal("23.2"),
         notional = BigDecimal("10"),
         expectedExecutionAmount = BigDecimal("23.8"),
