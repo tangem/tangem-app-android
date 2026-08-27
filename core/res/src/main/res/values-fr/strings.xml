@@ -771,7 +771,7 @@
   <string name="hw_cloud_backup_no_access_sign_in">Se connecter</string>
   <string name="hw_cloud_backup_no_backups_description">Connectez-vous à un autre compte ou importez votre phrase de récupération.</string>
   <string name="hw_cloud_backup_not_found_create">Créer une sauvegarde</string>
-  <string name="hw_cloud_backup_not_found_description">Ce portefeuille a été sauvegardé dans le passé, mais nous n\'avons trouvé aucune sauvegarde Google Drive pour ce portefeuille.</string>
+  <string name="hw_cloud_backup_not_found_description">Ce portefeuille a été sauvegardé par le passé, mais nous n\'avons pas pu trouver la sauvegarde.</string>
   <string name="hw_cloud_backup_not_found_forget">Oublier sauvegarde</string>
   <string name="hw_cloud_backup_not_found_title">Sauvegarde introuvable</string>
   <string name="hw_cloud_backup_password_hint">Mot de passe</string>
@@ -784,11 +784,11 @@
   <string name="hw_cloud_backup_restore_error_title">Une erreur est survenue</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Veuillez réessayer plus tard ou importer votre phrase de récupération.</string>
   <string name="hw_cloud_backup_restore_navtitle_v2">Sauvegarde %1$s</string>
-  <string name="hw_cloud_backup_restore_passphrase_description">Saisissez la passphrase exacte de ce portefeuille. Elle est sensible aux majuscules : une passphrase différente ouvre un ensemble d\'adresses différent.</string>
+  <string name="hw_cloud_backup_restore_passphrase_description">Saisissez la passphrase exacte de ce portefeuille. Elle est sensible à la casse : une passphrase différente ouvre un portefeuille différent.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Saisir la passphrase</string>
   <string name="hw_cloud_backup_restore_password_button">Restaurer</string>
   <string name="hw_cloud_backup_restore_password_description">Vous restaurez \"%1$s\" depuis une sauvegarde %2$s créée le %3$s</string>
-  <string name="hw_cloud_backup_restore_password_navtitle">Accéder au wallet</string>
+  <string name="hw_cloud_backup_restore_password_navtitle">Restaurer le wallet</string>
   <string name="hw_cloud_backup_restore_password_title">Saisir le mot de passe</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Importer la phrase de récupération</string>
   <string name="hw_cloud_backup_restore_wrong_password">Mot de passe incorrect. Veuillez réessayer.</string>
