@@ -147,7 +147,7 @@ internal object BlockchainSDKFactoryModule {
             featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
                 isYieldModeSwapEnabled = true,
                 isXrpTxHistoryEnabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.AND_14786_XRP_TX_HISTORY_ENABLED,
+                    FeatureToggles.TWI_1749_XRP_TX_HISTORY_ENABLED,
                 ),
             ),
         )
