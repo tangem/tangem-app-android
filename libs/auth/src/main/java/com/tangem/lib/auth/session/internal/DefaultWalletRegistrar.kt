@@ -4,14 +4,14 @@ import android.util.Base64
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
-import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
-import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.NonceApiRequest
+import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
+import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
@@ -24,6 +24,7 @@ import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -138,6 +139,20 @@ internal class DefaultWalletRegistrar(
             return@either null
         }
 
+        // /wallet/register is @RequiresSessionAuth. Without a session the request goes out
+        // unauthenticated and 401s, wasting the one-time wallet nonce fetched just below. Bail up
+        // front; the session is established by device registration, and this retries idempotently
+        // on a later attempt once it exists.
+        val hasSession = runSuspendCatching { store.get().getOrNull() != null }
+            .getOrElse { e ->
+                TangemLogger.e("Failed to read session tokens before wallet registration", e)
+                raise(WalletRegistrationError.PersistenceFailed(e))
+            }
+        if (!hasSession) {
+            TangemLogger.i("No active session — skipping wallet registration until authenticated")
+            raise(WalletRegistrationError.NoActiveSession)
+        }
+
         TangemLogger.i("Preparing wallet registration")
 
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
@@ -234,7 +249,7 @@ internal class DefaultWalletRegistrar(
     }
 
     private suspend fun registeredWalletIds(): Set<String> = appPreferencesStore.getSyncOrDefault(
-        key = PreferencesKeys.REGISTERED_WALLET_IDS_KEY,
+        key = AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY,
         default = emptySet(),
     )
 
@@ -242,15 +257,15 @@ internal class DefaultWalletRegistrar(
         // Atomic read-modify-write inside a single DataStore transaction — DataStore serialises
         // these, so concurrent registrations of different wallets can't lose set entries.
         appPreferencesStore.editData { preferences ->
-            val current = preferences.getOrDefault(PreferencesKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
-            preferences[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = current + walletId
+            val current = preferences.getOrDefault(AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
+            preferences[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = current + walletId
         }
     }
 
     private suspend fun markUnregistered(walletId: String) {
         appPreferencesStore.editData { preferences ->
-            val current = preferences.getOrDefault(PreferencesKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
-            preferences[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = current - walletId
+            val current = preferences.getOrDefault(AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY, emptySet())
+            preferences[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = current - walletId
         }
     }
 }

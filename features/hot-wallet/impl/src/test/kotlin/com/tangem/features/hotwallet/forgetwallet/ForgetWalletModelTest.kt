@@ -14,7 +14,9 @@ import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.DeleteCloudBackupWithRetryUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.DeleteWalletError
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
@@ -43,6 +45,7 @@ internal class ForgetWalletModelTest {
     private val cloudBackupRepository: CloudBackupRepository = mockk()
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val deleteCloudBackupWithRetryUseCase: DeleteCloudBackupWithRetryUseCase = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -58,8 +61,10 @@ internal class ForgetWalletModelTest {
             setCloudBackupStateUseCase,
             deleteCloudBackupWithRetryUseCase,
             hotWalletFeatureToggles,
+            userWalletsListRepository,
         )
         coEvery { deleteWalletUseCase(walletId) } returns true.right()
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
     }
 
     @Test
@@ -177,6 +182,70 @@ internal class ForgetWalletModelTest {
             coVerify(exactly = 1) { deleteWalletUseCase(walletId) }
         }
 
+    @Test
+    fun `GIVEN last wallet AND deleteCloudBackup WHEN forget confirmed THEN signed out after the backup deletion`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { deleteWalletUseCase(walletId) } returns false.right()
+            coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(walletId = "011")).right()
+            coEvery { deleteCloudBackupWithRetryUseCase(fileId) } returns Unit.right()
+            coEvery { cloudBackupRepository.signOut() } just Runs
+
+            // Act
+            confirmForget(createModel(this, deleteCloudBackup = true))
+
+            // Assert
+            coVerifyOrder {
+                deleteCloudBackupWithRetryUseCase(fileId)
+                cloudBackupRepository.signOut()
+            }
+        }
+
+    @Test
+    fun `GIVEN a wallet added while the backup is deleted WHEN forget confirmed THEN the cloud session is kept`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+            coEvery { deleteWalletUseCase(walletId) } returns false.right()
+            coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(walletId = "011")).right()
+            coEvery { deleteCloudBackupWithRetryUseCase(fileId) } returns Unit.right()
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
+
+            // Act
+            confirmForget(createModel(this, deleteCloudBackup = true))
+
+            // Assert
+            coVerify(exactly = 1) { deleteCloudBackupWithRetryUseCase(fileId) }
+            coVerify(exactly = 0) { cloudBackupRepository.signOut() }
+        }
+
+    @Test
+    fun `GIVEN wallets left WHEN forget confirmed THEN the cloud session is kept`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
+        coEvery { deleteWalletUseCase(walletId) } returns true.right()
+
+        // Act
+        confirmForget(createModel(this, deleteCloudBackup = false))
+
+        // Assert
+        coVerify(exactly = 0) { cloudBackupRepository.signOut() }
+    }
+
+    @Test
+    fun `GIVEN last wallet AND toggle off WHEN forget confirmed THEN the cloud session is untouched`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+        coEvery { deleteWalletUseCase(walletId) } returns false.right()
+
+        // Act
+        confirmForget(createModel(this, deleteCloudBackup = true))
+
+        // Assert
+        coVerify(exactly = 0) { cloudBackupRepository.signOut() }
+    }
+
     private fun TestScope.confirmForget(model: ForgetWalletModel) {
         val sentMessages = mutableListOf<UiMessage>()
         every { uiMessageSender.send(capture(sentMessages)) } just Runs
@@ -220,6 +289,7 @@ internal class ForgetWalletModelTest {
             cloudBackupRepository = cloudBackupRepository,
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
             deleteCloudBackupWithRetryUseCase = deleteCloudBackupWithRetryUseCase,
+            userWalletsListRepository = userWalletsListRepository,
         )
     }
 

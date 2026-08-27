@@ -5,16 +5,21 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.store.datasource.api.TangemTech
 import com.tangem.store.datasource.addressbook.AddressBookApi
 import com.tangem.store.datasource.blockaid.BlockAidApi
 import com.tangem.store.datasource.config.BlockAid
+import com.tangem.store.datasource.config.News
 import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.store.datasource.config.SurveySparrow
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.store.datasource.markets.addCoinIndicatorsEnumFallbackAdapters
+import com.tangem.store.datasource.news.NewsApi
 import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
+import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,6 +34,18 @@ import javax.inject.Singleton
 internal object StoreDatasourceModule {
 
     private const val TIMEOUT_60_SECONDS = 60L
+
+    @Provides
+    @Singleton
+    fun provideTangemTechApi(factory: RetrofitFactory): TangemTechApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
 
     @Provides
     @IntoMap
@@ -62,6 +79,31 @@ internal object StoreDatasourceModule {
         return factory.build(
             RetrofitApiSpec(
                 apiConfigId = BlockAid.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(News.KEY)
+    fun provideNewsConfig(
+        apiKeyHeaderProvider: TangemApiKeyHeaderProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
+        return News(
+            apiKeyHeader = apiKeyHeaderProvider,
+            appInfoProvider = appInfoProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideNewsApi(factory: RetrofitFactory): NewsApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = News.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),

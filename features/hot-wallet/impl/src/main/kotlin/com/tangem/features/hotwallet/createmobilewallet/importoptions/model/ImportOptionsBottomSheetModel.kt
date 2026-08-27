@@ -87,8 +87,11 @@ internal class ImportOptionsBottomSheetModel @Inject constructor(
             CloudBackupError.AuthPermissionsMissing,
             CloudBackupError.AuthRequired,
             -> showError(
-                title = resourceReference(R.string.hw_cloud_backup_permissions_title),
-                body = resourceReference(R.string.hw_cloud_backup_permissions_description),
+                title = resourceReference(R.string.hw_cloud_backup_permissions_title_v2, wrappedList(serviceName)),
+                body = resourceReference(
+                    R.string.hw_cloud_backup_permissions_description_v2,
+                    wrappedList(serviceName),
+                ),
                 isWarning = false,
             )
             CloudBackupError.NetworkError -> showError(

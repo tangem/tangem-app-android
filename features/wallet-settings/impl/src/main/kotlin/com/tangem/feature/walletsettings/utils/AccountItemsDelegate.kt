@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.account.AccountJointItemUMConverter
 import com.tangem.common.ui.account.AccountPortfolioItemUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -91,23 +92,32 @@ internal class AccountItemsDelegate @Inject constructor(
             return WalletSettingsAccountsUM.Account(state = accountItemUM)
         }
 
-        fun mapAccount(account: AccountStatus.CryptoPortfolio): WalletSettingsAccountsUM = when (account) {
-            is AccountStatus.CryptoPortfolio -> account.mapCryptoPortfolio()
+        fun AccountStatus.Joint.mapJoint(): WalletSettingsAccountsUM {
+            val accountItemUM = AccountJointItemUMConverter(
+                onClick = {
+                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
+                    openAccountDetails(this.account)
+                },
+            ).convert(account)
+            return WalletSettingsAccountsUM.JointAccount(state = accountItemUM)
         }
 
         val accounts = accountStatusList.accountStatuses.filterCryptoPortfolio()
+        val jointAccounts = accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Joint>()
 
         val header = WalletSettingsAccountsUM.Header(
             id = "accounts_header",
             text = resourceReference(R.string.common_accounts),
         )
 
+        val accountItems = accounts.map { it.mapCryptoPortfolio() } + jointAccounts.map { it.mapJoint() }
+
         add(header)
-        addAll(accounts.map(::mapAccount).applySortingOrder(order = accountsOrder))
+        addAll(accountItems.applySortingOrder(order = accountsOrder))
 
         val isAddAccountEnabled = accounts.size < AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
-        val shouldShowDescription = accounts.size > 1
-        val isArchivedAccountsEnabled = accountStatusList.accountStatuses.size != accountStatusList.totalAccounts
+        val shouldShowDescription = accountItems.size > 1
+        val isArchivedAccountsEnabled = accounts.size != accountStatusList.totalAccounts
 
         val footer = WalletSettingsAccountsUM.Footer(
             id = "accounts_footer",

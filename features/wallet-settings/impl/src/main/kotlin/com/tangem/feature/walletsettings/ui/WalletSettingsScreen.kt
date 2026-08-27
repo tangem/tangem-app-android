@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.CardImage
 import com.tangem.common.ui.userwallet.UserWalletItem
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -119,6 +120,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
         ) { item ->
             val offsetModifier = when (item) {
                 is WalletSettingsAccountsUM.Account,
+                is WalletSettingsAccountsUM.JointAccount,
                 is WalletSettingsAccountsUM.Footer,
                 -> Modifier.padding(horizontal = TangemTheme.dimens.spacing16)
                 else -> Modifier.padding(
@@ -155,8 +157,16 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     model = item,
                 )
                 is WalletSettingsAccountsUM.Header -> AccountsHeader(item, itemModifier)
-                is WalletSettingsAccountsUM.Account -> AccountItem(
-                    model = item,
+                is WalletSettingsAccountsUM.Account -> ReorderableAccountItem(
+                    id = item.id,
+                    accountState = item.state,
+                    reorderableListState = reorderableListState,
+                    accountReorderUM = state.accountReorderUM,
+                    modifier = itemModifier,
+                )
+                is WalletSettingsAccountsUM.JointAccount -> ReorderableAccountItem(
+                    id = item.id,
+                    accountState = item.state,
                     reorderableListState = reorderableListState,
                     accountReorderUM = state.accountReorderUM,
                     modifier = itemModifier,
@@ -337,15 +347,16 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
 
 @Suppress("MagicNumber")
 @Composable
-private fun LazyItemScope.AccountItem(
-    model: WalletSettingsAccountsUM.Account,
+private fun LazyItemScope.ReorderableAccountItem(
+    id: String,
+    accountState: UserWalletItemUM,
     reorderableListState: ReorderableLazyListState,
     accountReorderUM: AccountReorderUM,
     modifier: Modifier = Modifier,
 ) {
     ReorderableItem(
         state = reorderableListState,
-        key = model.id,
+        key = id,
         modifier = modifier,
     ) { isDragging ->
         val elevation by animateDpAsState(if (isDragging) 9.dp else 0.dp)
@@ -358,7 +369,7 @@ private fun LazyItemScope.AccountItem(
             modifier = Modifier.scale(scale),
         ) {
             UserWalletItem(
-                state = model.state,
+                state = accountState,
                 blockColors = walletSettingsBlockCardColors,
                 modifier = Modifier
                     .longPressDraggableHandle(

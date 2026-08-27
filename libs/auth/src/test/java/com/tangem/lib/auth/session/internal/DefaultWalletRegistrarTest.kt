@@ -8,14 +8,14 @@ import arrow.core.None
 import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.WalletRegistrationRequest
-import com.tangem.datasource.api.auth.models.request.WalletUnregisterRequest
-import com.tangem.datasource.api.auth.models.response.NonceApiResponse
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.WalletRegistrationRequest
+import com.tangem.lib.auth.api.models.request.WalletUnregisterRequest
+import com.tangem.lib.auth.api.models.response.NonceApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
@@ -38,6 +38,7 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -97,6 +98,9 @@ class DefaultWalletRegistrarTest {
         // fakes ignore the bytes, so any fixed value works here.
         every { android.util.Base64.decode(any<String>(), any()) } returns ByteArray(size = 16) { 7 }
         coEvery { attestationProvider.getAttestationToken(any()) } returns null
+        // Default to an active session so the happy-path tests reach the nonce/register flow;
+        // the no-session tests override this with None.
+        coEvery { store.get() } returns Some(sessionTokens())
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
@@ -179,7 +183,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `register short-circuits without network when walletId already registered`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
@@ -297,7 +301,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `prepare returns null when walletId already registered`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
 
         val result = registrar.prepare(WALLET_ID, mobileSigner)
 
@@ -384,7 +388,7 @@ class DefaultWalletRegistrarTest {
     @Test
     fun `unregister posts, persists rotated tokens and removes only that id from the marker`() = runTest {
         preferencesDataStore.edit {
-            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
         }
         val request = slot<WalletUnregisterRequest>()
         // Server rotates the session tokens to the wallets that remain bound (WALLET_ID removed).
@@ -413,7 +417,7 @@ class DefaultWalletRegistrarTest {
     @Test
     fun `unregister treats 404 NotFound as success and clears the marker without persisting tokens`() = runTest {
         preferencesDataStore.edit {
-            it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
         }
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
@@ -434,7 +438,7 @@ class DefaultWalletRegistrarTest {
 
     @Test
     fun `unregister surfaces API error and keeps the marker`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID) }
         @Suppress("UNCHECKED_CAST")
         coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
             cause = ApiResponseError.HttpException(
@@ -450,6 +454,42 @@ class DefaultWalletRegistrarTest {
         coVerify(exactly = 0) { store.save(any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
     }
+
+    @Test
+    fun `register returns NoActiveSession and consumes no nonce when the store has no session`() = runTest {
+        // Arrange — device not authenticated yet; registerWallet is @RequiresSessionAuth.
+        stubHappyPath()
+        coEvery { store.get() } returns None
+
+        // Act
+        val result = registrar.register(WALLET_ID, mobileSigner)
+
+        // Assert — bail before the one-time wallet nonce is fetched, nothing persisted.
+        assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.NoActiveSession)
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+        coVerify(exactly = 0) { authApi.registerWallet(any()) }
+        coVerify(exactly = 0) { store.save(any()) }
+        assertThat(registeredIds()).doesNotContain(WALLET_ID)
+    }
+
+    @Test
+    fun `prepare returns NoActiveSession and consumes no nonce when the store has no session`() = runTest {
+        stubHappyPath()
+        coEvery { store.get() } returns None
+
+        val result = registrar.prepare(WALLET_ID, coldSigner)
+
+        assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.NoActiveSession)
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+    }
+
+    private fun sessionTokens() = SessionTokens(
+        accessToken = "access",
+        accessTokenExpiresAt = Instant.DISTANT_FUTURE,
+        refreshToken = "refresh",
+        refreshTokenExpiresAt = Instant.DISTANT_FUTURE,
+        walletIds = emptyList(),
+    )
 
     private fun stubHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
@@ -472,7 +512,7 @@ class DefaultWalletRegistrarTest {
     )
 
     private fun registeredIds(): Set<String> =
-        preferencesDataStore.current()[PreferencesKeys.REGISTERED_WALLET_IDS_KEY].orEmpty()
+        preferencesDataStore.current()[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY].orEmpty()
 
     private fun base64(bytes: ByteArray): String = java.util.Base64.getEncoder().encodeToString(bytes)
 

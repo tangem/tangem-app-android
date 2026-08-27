@@ -6,9 +6,7 @@ import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseMergerTest.
 import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseMergerTest.Companion.remoteResponse
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
-import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.blockchainsdk.providers.models.ProviderModel
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -20,7 +18,7 @@ import org.junit.jupiter.api.Test
  */
 internal class BlockchainProvidersResponseLoaderTest {
 
-    private val tangemTechApi = mockk<TangemTechApi>()
+    private val blockchainProvidersApi = mockk<BlockchainProvidersApi>()
     private val blockchainProvidersStorage = mockk<BlockchainProvidersStorage>()
     private val analyticsExceptionHandler = object : AnalyticsExceptionHandler {
         override fun sendException(event: ExceptionAnalyticsEvent) {
@@ -29,7 +27,7 @@ internal class BlockchainProvidersResponseLoaderTest {
     }
 
     private val loader = BlockchainProvidersResponseLoader(
-        tangemTechApi = tangemTechApi,
+        blockchainProvidersApi = blockchainProvidersApi,
         blockchainProvidersStorage = blockchainProvidersStorage,
         blockchainProvidersResponseMerger = BlockchainProvidersResponseMerger(analyticsExceptionHandler),
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -52,7 +50,7 @@ internal class BlockchainProvidersResponseLoaderTest {
         val actual = loader.load()
 
         coVerifyOrder { blockchainProvidersStorage.getConfigSync() }
-        coVerify(inverse = true) { tangemTechApi.getBlockchainProviders() }
+        coVerify(inverse = true) { blockchainProvidersApi.getBlockchainProviders() }
 
         Truth.assertThat(actual).isEqualTo(expected)
     }
@@ -60,7 +58,7 @@ internal class BlockchainProvidersResponseLoaderTest {
     @Test
     fun test_if_remote_config_loading_is_failed() = runTest {
         coEvery { blockchainProvidersStorage.getConfigSync() } returns localResponse
-        coEvery { tangemTechApi.getBlockchainProviders() } throws IllegalStateException("Test exception")
+        coEvery { blockchainProvidersApi.getBlockchainProviders() } throws IllegalStateException("Test exception")
 
         val expected = localResponse
 
@@ -68,7 +66,7 @@ internal class BlockchainProvidersResponseLoaderTest {
 
         coVerifyOrder {
             blockchainProvidersStorage.getConfigSync()
-            tangemTechApi.getBlockchainProviders()
+            blockchainProvidersApi.getBlockchainProviders()
         }
 
         Truth.assertThat(actual).isEqualTo(expected)
@@ -79,7 +77,7 @@ internal class BlockchainProvidersResponseLoaderTest {
         val eth = "ethereum" to listOf(ProviderModel.Private(name = "nownodes"))
 
         coEvery { blockchainProvidersStorage.getConfigSync() } returns localResponse + eth
-        coEvery { tangemTechApi.getBlockchainProviders() } returns remoteResponse
+        coEvery { blockchainProvidersApi.getBlockchainProviders() } returns remoteResponse
 
         // Because configs are merged in BlockchainProvidersResponseMerger
         val expected = remoteResponse + eth
@@ -88,7 +86,7 @@ internal class BlockchainProvidersResponseLoaderTest {
 
         coVerifyOrder {
             blockchainProvidersStorage.getConfigSync()
-            tangemTechApi.getBlockchainProviders()
+            blockchainProvidersApi.getBlockchainProviders()
         }
 
         Truth.assertThat(actual).isEqualTo(expected)

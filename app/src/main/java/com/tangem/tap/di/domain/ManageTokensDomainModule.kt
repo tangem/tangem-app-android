@@ -1,5 +1,7 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -68,6 +70,18 @@ internal object ManageTokensDomainModule {
     @Singleton
     fun provideCheckCurrencyUnsupportedUseCase(repository: ManageTokensRepository): CheckCurrencyUnsupportedUseCase {
         return CheckCurrencyUnsupportedUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetManageTokensAllowedNetworksUseCase(
+        singleAccountSupplier: SingleAccountSupplier,
+        jointAccountSupportedNetworksRepository: JointAccountSupportedNetworksRepository,
+    ): GetManageTokensAllowedNetworksUseCase {
+        return GetManageTokensAllowedNetworksUseCase(
+            singleAccountSupplier = singleAccountSupplier,
+            jointAccountSupportedNetworksRepository = jointAccountSupportedNetworksRepository,
+        )
     }
 
     @Provides

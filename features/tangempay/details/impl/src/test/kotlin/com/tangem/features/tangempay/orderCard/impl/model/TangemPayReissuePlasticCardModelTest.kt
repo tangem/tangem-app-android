@@ -220,6 +220,7 @@ internal class TangemPayReissuePlasticCardModelTest {
         availableBalance: BigDecimal = BigDecimal("100.00"),
     ) = CustomerInfo(
         customerId = "c1",
+        paymentAccount = null,
         productInstances = emptyList(),
         cards = emptyList(),
         kycStatus = KycStatus.APPROVED,

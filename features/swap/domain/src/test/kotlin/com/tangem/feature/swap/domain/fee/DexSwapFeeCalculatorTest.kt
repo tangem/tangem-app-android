@@ -1115,6 +1115,43 @@ internal class DexSwapFeeCalculatorTest {
         }
 
     @Test
+    fun `GIVEN txFrom is the module WHEN calculateYield THEN the fee is estimated from the user's own address`() =
+        runTest {
+            val fromStatus =
+                buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
+            val transaction = buildDex(
+                txData = "0xa9059cbb",
+                txFrom = "0xYieldModule",
+                allowanceContract = "0xSpender",
+            )
+            every {
+                createTransactionExtrasUseCase.invoke(
+                    callData = any(),
+                    network = any(),
+                    gasLimit = any(),
+                    nonce = any(),
+                )
+            } returns mockk<TransactionExtras>(relaxed = true).right()
+            val capturedTxData = slot<TransactionData>()
+            coEvery {
+                getFeeUseCase.invoke(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = capture(capturedTxData),
+                )
+            } returns TransactionFee.Single(normal = ethLegacyFee()).right()
+
+            // Act
+            val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            val uncompiled = capturedTxData.captured as TransactionData.Uncompiled
+            assertThat(uncompiled.sourceAddress).isEqualTo("0xTestAddress")
+            assertThat(uncompiled.destinationAddress).isEqualTo("0xYieldModule")
+        }
+
+    @Test
     fun `GIVEN zero native balance and no gas in quote WHEN calculateYield THEN raises`() = runTest {
         // Arrange
         val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)

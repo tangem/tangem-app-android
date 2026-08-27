@@ -17,6 +17,12 @@ import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import java.math.BigInteger
 
 interface PolymarketRepository {
@@ -50,10 +56,32 @@ interface PolymarketRepository {
     suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent>
 
     /**
+     * Preview a fill-and-kill order against the live book (BFF `POST /orders/quote`). Places nothing.
+     *
+     * The result is only as good as the book at the moment it was served, so callers re-request it on a
+     * timer rather than caching it.
+     */
+    suspend fun placeOrder(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        signedOrder: PredictionSignedOrder,
+    ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult>
+
+    suspend fun getOrderQuote(
+        request: PredictionOrderQuoteRequest,
+    ): Either<PredictionOrderQuoteError, PredictionOrderQuote>
+
+    /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
      * This is the endpoint the onboarding flow polls to observe progress.
      */
     suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState>
+
+    /**
+     * The same read, keyed by the Tangem wallet id. Serves a wallet whose owner address this device has never
+     * derived — deriving it would open a card session, which a background refresh may not ask for.
+     */
+    suspend fun getWalletStatusByWalletId(walletId: String): Either<PolymarketWalletError, PolymarketWalletState>
 
     /**
      * Initiate deposit-wallet deployment (BFF `POST /wallet/deploy`). Gasless, unsigned; the client then

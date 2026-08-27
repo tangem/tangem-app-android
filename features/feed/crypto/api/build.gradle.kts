@@ -9,6 +9,9 @@ android {
 }
 
 dependencies {
+    /* Kotlin */
+    api(deps.kotlin.coroutines)
+
     /* Project - Core */
     api(projects.core.decompose)
 

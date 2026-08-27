@@ -32,6 +32,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.common.ui)
     implementation(projects.libs.blockchainSdk)

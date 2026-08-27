@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -40,7 +41,8 @@ data class AccountStatusList(
             .filterCryptoPortfolio()
             .first { accountStatus ->
                 when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
+                    is AccountStatus.CryptoPortfolio ->
+                        (accountStatus.account as? Account.Personal)?.isMainAccount == true
                 }
             }
 

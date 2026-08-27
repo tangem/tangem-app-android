@@ -29,7 +29,7 @@ dependencies {
 
     // region Project - Core
     api(projects.core.utils)
-    implementation(projects.core.datasource)
+    implementation(projects.store.datasource)
     // endregion
 
     // region Project - Data

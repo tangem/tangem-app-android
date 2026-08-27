@@ -4,8 +4,16 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteFeesResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
+import com.tangem.data.polymarket.error.PredictionPlaceOrderErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.signer.Base64UrlCodec
 import com.tangem.data.polymarket.signer.PolymarketHmacSigner
@@ -17,6 +25,7 @@ import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
+import com.tangem.datasource.api.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
@@ -45,6 +54,10 @@ import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.model.PredictionOrder
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
+import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchingContext
 import com.tangem.pagination.PaginationStatus
@@ -54,6 +67,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
+import okhttp3.RequestBody
+import okio.Buffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -78,6 +93,7 @@ internal class DefaultPolymarketRepositoryTest {
     private val walletErrorResolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
     private val authErrorResolver = PolymarketAuthErrorResolver()
     private val eventErrorResolver = PolymarketEventErrorResolver()
+    private val placeOrderErrorResolver = PredictionPlaceOrderErrorResolver()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val jvmCodec = object : Base64UrlCodec {
         override fun decode(value: String): ByteArray = JavaBase64.getUrlDecoder().decode(value)
@@ -93,6 +109,7 @@ internal class DefaultPolymarketRepositoryTest {
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
         eventErrorResolver = eventErrorResolver,
+        placeOrderErrorResolver = placeOrderErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
         dispatchers = dispatchers,
     )
@@ -184,7 +201,7 @@ internal class DefaultPolymarketRepositoryTest {
         advanceUntilIdle()
 
         // Assert
-        val events = batchFlow.state.value.data.flatMap { batch -> batch.data }
+        val events = batchFlow.state.value.data.flatMap { batch -> batch.data.events }
         assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
         coVerify(exactly = 1) { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") }
         sourceScope.cancel()
@@ -203,6 +220,7 @@ internal class DefaultPolymarketRepositoryTest {
                 walletErrorResolver = walletErrorResolver,
                 authErrorResolver = authErrorResolver,
                 eventErrorResolver = eventErrorResolver,
+                placeOrderErrorResolver = placeOrderErrorResolver,
                 l2HeaderBuilder = l2HeaderBuilder,
                 // The silent retry waits on a virtual-time dispatcher, so the test skips the 2s delay.
                 dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
@@ -561,6 +579,75 @@ internal class DefaultPolymarketRepositoryTest {
         }
 
     @Test
+    fun `GIVEN a signed order WHEN placeOrder THEN the signature covers exactly the bytes that are sent`() =
+        runTest {
+            // Arrange
+            val headers = slot<Map<String, String>>()
+            val body = slot<RequestBody>()
+            coEvery { clobApi.placeOrder(capture(headers), capture(body)) } returns
+                ApiResponse.Success(placeOrderResponse())
+
+            // Act
+            val result = repository.placeOrder(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                signedOrder = signedOrder(),
+            )
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            val sent = Buffer().also { body.captured.writeTo(it) }.readUtf8()
+            val timestamp = headers.captured.getValue("POLY_TIMESTAMP")
+            assertThat(headers.captured["POLY_SIGNATURE"]).isEqualTo(hmac(timestamp + "POST" + "/order" + sent))
+            assertThat(sent).contains(""""orderType":"FAK"""")
+            assertThat(sent).contains(""""owner":"k"""")
+        }
+
+    @Test
+    fun `GIVEN a timeout WHEN placeOrder THEN the outcome is ambiguous rather than failed`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns timeoutError()
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
+    }
+
+    @Test
+    fun `GIVEN a filled response WHEN placeOrder THEN the fill amounts come from the exchange`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
+            placeOrderResponse(status = "matched", makingAmount = "36.00", takingAmount = "48.97959"),
+        )
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PredictionPlaceOrderResult(
+                isSuccess = true,
+                orderId = "0xorder",
+                status = "matched",
+                makingAmount = BigDecimal("36.00"),
+                takingAmount = BigDecimal("48.97959"),
+                transactionHashes = listOf("0xtx"),
+                errorMessage = null,
+            ).right(),
+        )
+    }
+
+    @Test
     fun `GIVEN a 401 WHEN syncBalanceAllowance THEN maps to InvalidSignature`() = runTest {
         // Arrange
         coEvery { clobApi.updateBalanceAllowance(any(), any(), any()) } returns httpError(Code.UNAUTHORIZED, body = null)
@@ -696,6 +783,90 @@ internal class DefaultPolymarketRepositoryTest {
         return JavaBase64.getUrlEncoder().encodeToString(mac.doFinal(message.toByteArray(Charsets.UTF_8)))
     }
 
+    @Test
+    fun `GIVEN a priced quote WHEN getOrderQuote THEN the figures arrive as the exchange stated them`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns ApiResponse.Success(quoteResponse())
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        val quote = result.getOrNull()!!
+        assertThat(quote.status).isEqualTo(PredictionQuoteStatus.FULL)
+        assertThat(quote.shares).isEqualTo(BigDecimal("40.81632"))
+        assertThat(quote.notional).isEqualTo(BigDecimal("2.00"))
+        assertThat(quote.total).isEqualTo(BigDecimal("2.05000"))
+        assertThat(quote.worstCasePrice).isEqualTo(BigDecimal("0.049"))
+        assertThat(quote.isLive).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an unreadable amount WHEN getOrderQuote THEN it fails instead of escaping as an exception`() =
+        runTest {
+            // Arrange — safeApiCall recovers a raise, not a throw, so an unparsable figure would otherwise
+            coEvery { api.getOrderQuote(request = any()) } returns
+                ApiResponse.Success(quoteResponse(shares = "not-a-number"))
+
+            // Act
+            val result = repository.getOrderQuote(request = quoteRequest())
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PredictionOrderQuoteError.Unknown::class.java)
+        }
+
+    @Test
+    fun `GIVEN a quote request WHEN getOrderQuote THEN the market and the outcome are sent as asked`() = runTest {
+        // Arrange
+        val body = slot<PolymarketOrderQuoteRequest>()
+        coEvery { api.getOrderQuote(request = capture(body)) } returns ApiResponse.Success(quoteResponse())
+
+        // Act
+        repository.getOrderQuote(request = quoteRequest())
+
+        // Assert — a swapped market and outcome would quote the opposite bet instead of failing
+        assertThat(body.captured.marketId).isEqualTo("2944989")
+        assertThat(body.captured.assetId).isEqualTo("1116047")
+    }
+
+    @Test
+    fun `GIVEN a refusal from the endpoint WHEN getOrderQuote THEN the status survives for the poller`() = runTest {
+        // Arrange — a deterministic 400 repeats on every tick, unlike a transient 5xx
+        coEvery { api.getOrderQuote(request = any()) } returns httpError(Code.BAD_REQUEST, body = "bad amount")
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull())
+            .isEqualTo(PredictionOrderQuoteError.Unknown(httpCode = 400, detail = "bad amount"))
+    }
+
+    @Test
+    fun `GIVEN an unclassifiable failure WHEN getOrderQuote THEN its cause is carried`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns
+            (ApiResponse.Error(ApiResponseError.UnknownException(IllegalStateException("boom"))) as ApiResponse<PolymarketOrderQuoteResponse>)
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Unknown(httpCode = null, detail = "boom"))
+    }
+
+    @Test
+    fun `GIVEN no connection WHEN getOrderQuote THEN the failure keeps its kind`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns networkError()
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Network)
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> httpError(code: Code, body: String?): ApiResponse<T> =
         ApiResponse.Error(
@@ -706,22 +877,83 @@ internal class DefaultPolymarketRepositoryTest {
     private fun <T : Any> networkError(): ApiResponse<T> =
         ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<T>
 
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> timeoutError(): ApiResponse<T> =
+        ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<T>
+
     private companion object {
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
+        fun quoteRequest() = PredictionOrderQuoteRequest(
+            marketId = "2944989",
+            assetId = "1116047",
+            side = PredictionOrderSide.BUY,
+            amount = BigDecimal("2"),
+            slippagePercent = BigDecimal("3"),
+        )
+
+        fun quoteResponse(
+            shares: String = "40.81632",
+            status: String = "FULL",
+            notional: String = "2.00",
+            worstCasePrice: String = "0.049",
+            total: String = "2.05000",
+        ) = PolymarketOrderQuoteResponse(
+            status = status,
+            side = "BUY",
+            shares = shares,
+            notional = notional,
+            expectedExecutionAmount = "41.66666",
+            averagePrice = "0.048",
+            worstCasePrice = worstCasePrice,
+            fees = PolymarketOrderQuoteFeesResponse(market = "0.00000", builder = "0.05000", total = "0.05000"),
+            total = total,
+            builderCode = "0xbuilder",
+            minOrderSize = "5",
+            tickSize = "0.001",
+            isLive = false,
+        )
+
+        fun signedOrder(): PredictionSignedOrder = PredictionSignedOrder(
+            order = PredictionOrder(
+                salt = BigInteger("1234567890"),
+                maker = "0xMaker",
+                signer = "0xSigner",
+                tokenId = BigInteger("7"),
+                makerAmount = BigInteger("72000000"),
+                takerAmount = BigInteger("97959180"),
+                side = PredictionOrderSide.BUY,
+                signatureType = 3,
+                timestampMillis = 1_787_300_000_000L,
+                metadata = "0xmeta",
+                builder = "0xbuilder",
+            ),
+            signature = "0xsig",
+        )
+
+        fun placeOrderResponse(
+            status: String? = "live",
+            makingAmount: String? = null,
+            takingAmount: String? = null,
+        ): PolymarketPlaceOrderResponse = PolymarketPlaceOrderResponse(
+            isSuccess = true,
+            orderId = "0xorder",
+            status = status,
+            makingAmount = makingAmount,
+            takingAmount = takingAmount,
+            transactionHashes = listOf("0xtx"),
+            errorMessage = null,
+        )
+
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
             apiKey = "k",
             secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
             passphrase = "p",
         )
 
-        /**
-         * Field-by-field mapping is pinned by `PolymarketEventConverterTest`; here the event only has to come
-         * back out of the repository identifiable.
-         */
         val EVENT_DTO = PolymarketEventDto(
             eventId = "event-id",
             slug = "event-slug",
@@ -737,9 +969,9 @@ internal class DefaultPolymarketRepositoryTest {
             volume24hr = null,
             liquidity = null,
             totalMarketsCount = 0,
-            isNegRisk = false,
             displayMode = "plain_markets",
             markets = emptyList(),
+            isNegRisk = false,
         )
     }
 }

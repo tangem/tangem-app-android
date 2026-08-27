@@ -20,4 +20,13 @@ import arrow.core.Either
 interface DeviceRegistrar {
 
     suspend fun register(): Either<DeviceRegistrationError, Unit>
+
+    /**
+     * Forces a fresh device registration, ignoring the local "device registered" flag: resets the
+     * flag and re-runs the full registration (nonce + register). Recovery path for when the backend
+     * reports the device is unknown ("Device not found" on `/authenticate`) while the local flag is
+     * still set — e.g. after backend-side data drift or record loss. The flag is cleared up front, so
+     * even a failed attempt self-heals on the next launch (when [register] runs again).
+     */
+    suspend fun reregister(): Either<DeviceRegistrationError, Unit>
 }

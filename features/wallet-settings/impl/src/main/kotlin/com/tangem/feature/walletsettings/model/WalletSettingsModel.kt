@@ -20,6 +20,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -28,6 +29,7 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStateUseCase
+import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStatusUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.scan.CardDTO
@@ -41,6 +43,7 @@ import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction
+import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.*
@@ -93,6 +96,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val getCloudBackupStateUseCase: GetCloudBackupStateUseCase,
+    private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) : Model() {
 
@@ -158,7 +162,9 @@ internal class WalletSettingsModel @Inject constructor(
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
-                        isDragEnabled = accountList.count { it is WalletSettingsAccountsUM.Account } > 1,
+                        isDragEnabled = accountList.count {
+                            it is WalletSettingsAccountsUM.Account || it is WalletSettingsAccountsUM.JointAccount
+                        } > 1,
                         onMove = ::onAccountReorder,
                         onDragStopped = ::onAccountDragStopped,
                     ),
@@ -381,13 +387,11 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun showMakeBackupAtFirstAlertBS(userWallet: UserWallet.Hot) {
         modelScope.launch {
-            val hasCloudBackup = hotWalletFeatureToggles.isGoogleDriveBackupEnabled &&
-                getCloudBackupStateUseCase(userWallet.walletId.stringValue)
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
-                    cloudBackupState = cloudBackupState(hasCloudBackup),
+                    cloudBackupState = resolveCloudBackupState(userWallet),
                     isBackedUp = manualBackupState(userWallet.backedUp),
                 ),
             )
@@ -481,10 +485,15 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onAccountDragStopped() {
         val accountIds = state.value.items.mapNotNull { itemUM ->
-            val id = (itemUM as? WalletSettingsAccountsUM.Account)?.state?.id
-                ?: return@mapNotNull null
-
-            AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull()
+            when (itemUM) {
+                is WalletSettingsAccountsUM.Account ->
+                    AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                is WalletSettingsAccountsUM.JointAccount ->
+                    AccountId.forJointAccount(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                else -> null
+            }
         }
 
         accountListSortingSaver.save(accountIds = accountIds)
@@ -518,7 +527,7 @@ internal class WalletSettingsModel @Inject constructor(
         analyticsEventHandler.send(
             event = WalletSettingsAnalyticEvents.ForgetWalletRequest(
                 source = AnalyticsParam.ScreensSources.WalletSettings.value,
-                cloudBackupState = cloudBackupState(hasCloudBackup),
+                cloudBackupState = resolveCloudBackupState(userWallet),
                 isBackedUp = userWallet.backedUp,
             ),
         )
@@ -530,17 +539,13 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
-    /**
-     * Forget wallet reads the local flag only, which cannot tell `Action Required` from `Done`.
-     * With the feature off the parameter is omitted rather than reported as `Incomplete`.
-     */
     private fun manualBackupState(isBackedUp: Boolean): Boolean? =
         isBackedUp.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled }
 
-    private fun cloudBackupState(hasCloudBackup: Boolean): AnalyticsParam.CloudBackupState? = when {
-        !hotWalletFeatureToggles.isGoogleDriveBackupEnabled -> null
-        hasCloudBackup -> AnalyticsParam.CloudBackupState.Done
-        else -> AnalyticsParam.CloudBackupState.Incomplete
+    private suspend fun resolveCloudBackupState(userWallet: UserWallet.Hot): AnalyticsParam.CloudBackupState? {
+        if (!hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return null
+
+        return getCloudBackupStatusUseCase(userWallet.walletId.stringValue).toAnalyticsState()
     }
 
     private fun sendForgetWithCloudBackupSheet(userWallet: UserWallet.Hot) {
@@ -552,7 +557,10 @@ internal class WalletSettingsModel @Inject constructor(
                         backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
                     title = resourceReference(R.string.hw_remove_wallet_cloud_backup_title)
-                    body = resourceReference(R.string.hw_remove_wallet_cloud_backup_description)
+                    body = resourceReference(
+                        id = R.string.hw_remove_wallet_cloud_backup_description,
+                        formatArgs = wrappedList(resourceReference(R.string.hw_cloud_backup_service_name)),
+                    )
                 }
                 secondaryButton {
                     text = resourceReference(R.string.hw_remove_wallet_forget_and_delete_backup)
@@ -579,7 +587,8 @@ internal class WalletSettingsModel @Inject constructor(
                 event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Remove,
-                    cloudBackupState = cloudBackupState(hasCloudBackup = false),
+                    cloudBackupState = AnalyticsParam.CloudBackupState.Incomplete
+                        .takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled },
                     isBackedUp = manualBackupState(isBackedUp = false),
                 ),
             )

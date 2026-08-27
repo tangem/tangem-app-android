@@ -11,4 +11,5 @@ dependencies {
     api(deps.kotlin.serialization.core)
     api(deps.moshi)
     api(deps.moshi.adapters)
+    api(deps.hilt.core)
 }

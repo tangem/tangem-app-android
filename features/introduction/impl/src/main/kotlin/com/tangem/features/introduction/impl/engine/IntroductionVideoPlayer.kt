@@ -7,6 +7,8 @@ internal interface IntroductionVideoPlayer {
 
     val isMotionEnabled: Boolean
 
+    val isSurfaceAttached: Boolean
+
     fun attachSurface(surfaceView: SurfaceView)
 
     fun detachSurface(surfaceView: SurfaceView)

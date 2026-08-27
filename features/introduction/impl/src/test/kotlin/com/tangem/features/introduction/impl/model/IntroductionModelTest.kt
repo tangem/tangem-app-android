@@ -72,6 +72,7 @@ internal class IntroductionModelTest {
         every { isHotWalletCreationSupported() } returns true
         sentEvents.clear()
         every { videoPlayer.isMotionEnabled } returns true
+        surfaceAttached(isAttached = false)
         every { videoPlayerFactory.create(any(), any()) } returns videoPlayer
         every { analyticsEventHandler.send(capture(sentEvents)) } just runs
     }
@@ -93,13 +94,16 @@ internal class IntroductionModelTest {
         val model = createModel()
 
         // Act & Assert
+        surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
         model.onFirstFrameRendered()
         assertThat(model.uiState.value.isVideoReady).isTrue()
 
+        surfaceAttached(isAttached = false)
         model.detachSurface(surfaceView)
         assertThat(model.uiState.value.isVideoReady).isFalse()
 
+        surfaceAttached(isAttached = true)
         model.attachSurface(otherSurfaceView)
         assertThat(model.uiState.value.isVideoReady).isFalse()
 
@@ -111,6 +115,7 @@ internal class IntroductionModelTest {
     fun `GIVEN a replacement surface WHEN the previous one is released THEN the picture stays uncovered`() {
         // Arrange
         val model = createModel()
+        surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
         model.onFirstFrameRendered()
         model.attachSurface(otherSurfaceView)
@@ -128,6 +133,7 @@ internal class IntroductionModelTest {
     fun `GIVEN nothing rendered yet WHEN playback fails THEN shutter lifts to the still frame`() {
         // Arrange
         val model = createModel()
+        surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
 
         // Act
@@ -141,8 +147,10 @@ internal class IntroductionModelTest {
     fun `GIVEN surface already gone WHEN playback fails THEN shutter stays down`() {
         // Arrange
         val model = createModel()
+        surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
         model.onFirstFrameRendered()
+        surfaceAttached(isAttached = false)
         model.detachSurface(surfaceView)
 
         // Act
@@ -582,6 +590,10 @@ internal class IntroductionModelTest {
     internal data class RunningModel(val isRunning: Boolean)
 
     private fun IntroductionUM.renderedFields() = isVideoReady to isMotionEnabled
+
+    private fun surfaceAttached(isAttached: Boolean) {
+        every { videoPlayer.isSurfaceAttached } returns isAttached
+    }
 
     private fun createModel(launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard) = IntroductionModel(
         dispatchers = TestingCoroutineDispatcherProvider(),

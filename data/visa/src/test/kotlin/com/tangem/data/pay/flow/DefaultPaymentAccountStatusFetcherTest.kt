@@ -35,6 +35,7 @@ import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
@@ -171,8 +172,16 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         pendingTransitionAt = null,
     )
 
+    private val paymentAccount = CustomerInfo.PaymentAccount(
+        id = "pa_1",
+        address = "0xaccount",
+        customerWalletAddress = "0xwallet",
+    )
+
     private fun buildCustomerInfo(
         productInstances: List<CustomerInfo.ProductInstance> = listOf(cardProductInstance),
+        paymentAccount: CustomerInfo.PaymentAccount? = null,
+        cards: List<CustomerInfo.CardInfo> = listOf(cardInfo),
         fiatBalance: PaymentAccountStatusValue.FiatBalance? = PaymentAccountStatusValue.FiatBalance(
             availableBalance = BigDecimal.TEN,
             currency = "USD",
@@ -186,9 +195,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         ),
         tariffPlan: TangemPayCustomerTariffPlan? = null,
         networks: List<CustomerInfo.NetworkInfo> = emptyList(),
-        cards: List<CustomerInfo.CardInfo> = listOf(cardInfo),
     ) = CustomerInfo(
         customerId = "cust_1",
+        paymentAccount = paymentAccount,
         kycStatus = KycStatus.APPROVED,
         state = CustomerInfo.State.ACTIVE,
         fiatBalance = fiatBalance,
@@ -198,6 +207,22 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         productInstances = productInstances,
         tariffPlan = tariffPlan,
         networks = networks,
+    )
+
+    private fun activeOrder(id: String, type: OrderType) = Order(
+        id = id,
+        customerId = "cust_1",
+        type = type,
+        status = OrderStatus.PROCESSING,
+        step = OrderStep.UNKNOWN,
+        stepChangeCode = null,
+        productInstanceId = null,
+        paymentAccountId = null,
+        cardId = null,
+        toTariffPlanId = null,
+        withdrawTxHash = null,
+        createdAt = null,
+        updatedAt = null,
     )
 
     @BeforeEach
@@ -249,6 +274,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         coEvery { reissueCardRepository.getReissueOrderId(any(), any()) } returns Either.Right(null)
 
         coEvery { issueCardRepository.getIssueOrderIds(any()) } returns emptyList()
+        coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(emptyList())
 
         coEvery {
             customerOrderRepository.findOrders(
@@ -675,7 +701,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             )
             stubHappyPath(customerInfo)
             every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
-            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
+            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
+                listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
+            )
             coEvery {
                 getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
             } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
@@ -748,6 +776,60 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 assertThat(loaded.cards).hasSize(1)
                 assertThat(loaded.cards.single().state).isEqualTo(TangemPayCardState.Issuing)
             }
+
+        @Test
+        fun `GIVEN an active virtual issue order WHEN invoke THEN an issuing placeholder is added`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = emptyList())
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("virtual_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "virtual_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "virtual_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN,
+                ),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val loaded = storedStatuses.lastLoaded()
+            assertThat(loaded.cards).hasSize(1)
+            assertThat(loaded.cards.single().state).isEqualTo(TangemPayCardState.Issuing)
+        }
+
+        @Test
+        fun `GIVEN an active plastic issue order WHEN invoke THEN no issuing placeholder is added`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = emptyList())
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("plastic_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "plastic_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "plastic_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+                ),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value)
+                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+            coVerify(exactly = 0) { issueCardRepository.removeIssueOrderId(userWalletId, "plastic_order") }
+        }
 
         @Test
         fun `GIVEN local issue order missing on backend WHEN invoke THEN placeholder dropped and order forgotten`() =
@@ -851,6 +933,46 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             assertThat(storedStatuses.lastLoaded().cards.single().state)
                 .isEqualTo(TangemPayCardState.Delivering)
+        }
+
+        @Test
+        fun `GIVEN a delivering card with an in-flight close order WHEN fetched THEN the card is Closing`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance),
+                cards = listOf(
+                    createCardInfo(
+                        cardStatus = TangemPayCard.Status.INACTIVE,
+                        cardType = TangemPayCardType.PHYSICAL,
+                    ),
+                ),
+            )
+            stubHappyPath(customerInfo)
+            coEvery {
+                customerOrderRepository.findOrders(
+                    userWalletId = any(),
+                    types = setOf(OrderType.CARD_ACTIVATION_PLASTIC_RAIN),
+                    statuses = OrderStatus.activeStatuses,
+                )
+            } returns Either.Right(emptyList())
+            coEvery { closeCardRepository.getCloseOrderId(any(), any()) } returns Either.Right("close_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "close_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "close_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.UNKNOWN,
+                ),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().cards.single().state)
+                .isEqualTo(TangemPayCardState.Closing)
         }
 
         private fun provideForeignOrders() = listOf(
@@ -960,7 +1082,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 ),
             )
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
             val storedStatuses = captureStoredStatuses()
 
             // Act
@@ -993,7 +1114,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     ),
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
                 val storedStatuses = captureStoredStatuses()
 
                 // Act
@@ -1055,6 +1175,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             val networkStatus = PaymentNetworkStatus.Available(
                 network = mockk(),
                 depositAddress = "0xDEPOSIT",
+                chainId = 137L,
                 cryptoCurrencyStatuses = emptyList(),
             )
             val customerInfo = buildCustomerInfo(networks = listOf(network))
@@ -1071,6 +1192,179 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             val loaded = storedStatuses.lastLoaded()
             assertThat(loaded.networks).containsExactly(networkStatus)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AccountWithoutBalances {
+
+        @Test
+        fun `GIVEN active instances and no balances and no cards WHEN invoke THEN stores Loaded without balance`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    paymentAccount = paymentAccount,
+                    cards = emptyList(),
+                    fiatBalance = null,
+                    cryptoBalance = null,
+                    tariffPlan = customerTariffPlan,
+                )
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                coEvery {
+                    getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+                } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                val loaded = storedStatuses.lastLoaded()
+                assertThat(loaded.balance).isNull()
+                assertThat(loaded.depositAddress).isNull()
+                assertThat(loaded.source).isEqualTo(StatusSource.ACTUAL)
+                assertThat(loaded.cards.map { it.id }).containsExactly("card_1")
+                assertThat(loaded.cards.single().cardStatus).isEqualTo(TangemPayCard.Status.ACTIVE)
+                assertThat(loaded.cards.single().lastDigits).isEmpty()
+            }
+
+        @Test
+        fun `GIVEN no balances and cached balance WHEN invoke THEN stores Loaded with cached balance ONLY_CACHE`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    paymentAccount = paymentAccount,
+                    cards = emptyList(),
+                    fiatBalance = null,
+                    cryptoBalance = null,
+                )
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                val cached = loadedFixture()
+                coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns AccountStatus.Payment(
+                    account = Account.Payment(userWalletId = userWalletId),
+                    value = cached,
+                )
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                val loaded = storedStatuses.lastLoaded()
+                assertThat(loaded.balance).isEqualTo(cached.balance)
+                assertThat(loaded.source).isEqualTo(StatusSource.ONLY_CACHE)
+            }
+
+        @Test
+        fun `GIVEN payment account only and no instances WHEN invoke THEN keeps issuing instead of plan selection`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    productInstances = emptyList(),
+                    paymentAccount = paymentAccount,
+                    cards = emptyList(),
+                    fiatBalance = null,
+                    cryptoBalance = null,
+                    tariffPlan = customerTariffPlan,
+                )
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                coEvery {
+                    getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+                } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert — an enrolled customer is never pushed into the plan-selection onboarding
+                assertThat(storedStatuses.last().value)
+                    .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+            }
+
+        @Test
+        fun `GIVEN deactivated instance and no balances WHEN invoke THEN stores Deactivated without balance`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    productInstances = listOf(
+                        cardProductInstance.copy(status = CustomerInfo.ProductInstance.Status.DEACTIVATED),
+                    ),
+                    paymentAccount = paymentAccount,
+                    cards = emptyList(),
+                    fiatBalance = null,
+                    cryptoBalance = null,
+                )
+                stubHappyPath(customerInfo)
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                val deactivated = storedStatuses.last().value
+                assertThat(deactivated).isInstanceOf(PaymentAccountStatusValue.Deactivated::class.java)
+                assertThat((deactivated as PaymentAccountStatusValue.Deactivated).balance).isNull()
+            }
+
+        @Test
+        fun `GIVEN no account data and active transition order on backend WHEN invoke THEN stores Inactive`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    productInstances = emptyList(),
+                    cards = emptyList(),
+                    fiatBalance = null,
+                    cryptoBalance = null,
+                    tariffPlan = customerTariffPlan,
+                )
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
+                    listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
+                )
+                coEvery {
+                    getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+                } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert — a local order id is no longer required to recognise an in-flight transition
+                assertThat(storedStatuses.last().value).isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
+                coVerify(exactly = 0) { issueCardRepository.getIssueOrderIds(userWalletId) }
+            }
+
+        @Test
+        fun `GIVEN findOrders fails and local order stored WHEN invoke THEN falls back to local hint`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = emptyList(),
+                cards = emptyList(),
+                fiatBalance = null,
+                cryptoBalance = null,
+                tariffPlan = customerTariffPlan,
+            )
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery {
+                customerOrderRepository.findOrders(any(), any(), any())
+            } returns VisaApiError.UnknownWithoutCode.left()
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
+            coEvery {
+                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+            } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
         }
     }
 }

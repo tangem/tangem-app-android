@@ -87,6 +87,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         extraTokens: Set<CryptoCurrency.Token>,
         xpub: String?,
     ): UpdateWalletManagerResult {
+        if (network.derivationPath is Network.DerivationPath.Joint) {
+            refuseJointNetwork(network)
+            return UpdateWalletManagerResult.Unreachable()
+        }
         val userWallet = getUserWallet(userWalletId) ?: run {
             TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
             return UpdateWalletManagerResult.Unreachable()
@@ -595,6 +599,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
+        if (network.derivationPath is Network.DerivationPath.Joint) {
+            refuseJointNetwork(network)
+            return null
+        }
         val blockchain = network.toBlockchain()
         return getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -957,6 +965,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
         val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return true
         return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
+    }
+
+    /**
+     * A joint account is a Safe contract: its network has no keys to derive, the balance is read by the address.
+     * A tester build crashes so that the wrong entry point is noticed; a release one refuses quietly.
+     */
+    private fun refuseJointNetwork(network: Network) {
+        val message = "No wallet manager for the joint network ${network.id}: read its balance by the Safe address"
+
+        check(!BuildConfig.TESTER_MENU_ENABLED) { message }
+        TangemLogger.w(message)
     }
 
     private fun getWmInitializationMutex(
