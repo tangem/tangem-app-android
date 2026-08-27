@@ -162,7 +162,9 @@ internal class WalletSettingsModel @Inject constructor(
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
-                        isDragEnabled = accountList.count { it is WalletSettingsAccountsUM.Account } > 1,
+                        isDragEnabled = accountList.count {
+                            it is WalletSettingsAccountsUM.Account || it is WalletSettingsAccountsUM.JointAccount
+                        } > 1,
                         onMove = ::onAccountReorder,
                         onDragStopped = ::onAccountDragStopped,
                     ),
@@ -483,10 +485,15 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onAccountDragStopped() {
         val accountIds = state.value.items.mapNotNull { itemUM ->
-            val id = (itemUM as? WalletSettingsAccountsUM.Account)?.state?.id
-                ?: return@mapNotNull null
-
-            AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull()
+            when (itemUM) {
+                is WalletSettingsAccountsUM.Account ->
+                    AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                is WalletSettingsAccountsUM.JointAccount ->
+                    AccountId.forJointAccount(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                else -> null
+            }
         }
 
         accountListSortingSaver.save(accountIds = accountIds)
