@@ -61,17 +61,17 @@ internal class PlacePredictionNotificationsFactoryTest {
             expectedButtonEnabled = true,
         ),
         GateModel(
-            quote = createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
+            quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
             expectedNotifications = listOf(PredictionNotificationUM.NoLiquidity),
-            expectedButtonEnabled = true,
-        ),
-        GateModel(
-            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrderSize(minOrderSize = BigDecimal("5"))),
             expectedButtonEnabled = false,
         ),
         GateModel(
-            quote = createQuote(status = PredictionQuoteStatus.MARKET_CLOSED),
+            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrderSize),
+            expectedButtonEnabled = false,
+        ),
+        GateModel(
+            quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.MARKET_CLOSED),
             expectedNotifications = listOf(PredictionNotificationUM.MarketClosed),
             expectedButtonEnabled = false,
         ),
@@ -175,7 +175,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         ),
         payment = PaymentSourceUM(tokenSymbol = "USDC", balance = balance, hasSufficientBalance = false),
         amountValue = "10",
-        slippage = SlippageUM(percent = BigDecimal("0.25"), isDefault = true),
+        slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),
         quote = quote,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
@@ -185,15 +185,15 @@ internal class PlacePredictionNotificationsFactoryTest {
 
     private fun createQuote(
         status: PredictionQuoteStatus = PredictionQuoteStatus.FULL,
-        shares: BigDecimal = BigDecimal("23.8"),
-        toWin: BigDecimal = BigDecimal("23.8"),
+        expectedShares: BigDecimal = BigDecimal("23.8"),
+        guaranteedShares: BigDecimal = BigDecimal("23.2"),
         feeTotal: BigDecimal = BigDecimal("0.1"),
         total: BigDecimal = BigDecimal("10.1"),
         minOrderSize: BigDecimal = BigDecimal("5"),
     ): QuoteUM.Content = QuoteUM.Content(
         status = status,
-        shares = shares,
-        toWin = toWin,
+        expectedShares = expectedShares,
+        guaranteedShares = guaranteedShares,
         feeTotal = feeTotal,
         total = total,
         minOrderSize = minOrderSize,
