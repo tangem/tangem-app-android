@@ -168,6 +168,7 @@ internal class IntroductionModel @Inject constructor(
             ),
         )
         if (!isHotWalletCreationSupported()) {
+            trackingContextProxy.removeContext()
             uiMessageSender.send(
                 hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
             )
