@@ -11,6 +11,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
@@ -23,6 +24,9 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
@@ -92,10 +96,18 @@ internal class TangemPayDetailsModelTest {
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk(relaxed = true)
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
 
     @BeforeEach
     fun resetCashbackMocks() {
-        clearMocks(analytics, router, tangemPayFeatureToggles, getCashbackSummaryUseCase, getBankCredentialsUseCase)
+        clearMocks(
+            analytics,
+            router,
+            tangemPayFeatureToggles,
+            getCashbackSummaryUseCase,
+            getBankCredentialsUseCase,
+            sendFeedbackEmailUseCase,
+        )
     }
 
     @Test
@@ -606,6 +618,122 @@ internal class TangemPayDetailsModelTest {
             model.onDestroy()
         }
 
+    @Test
+    fun `GIVEN card issue failed WHEN screen started THEN failure is shown and the stack is not replaced`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, statusValue = cardIssueFailedStatus())
+        advanceUntilIdle()
+
+        // Act
+        model.onStart()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.statusBannerState?.state?.title)
+            .isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN dismissed banner WHEN the failure status re-emits THEN the banner stays hidden`() = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(cardIssueFailedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+
+        // Act
+        model.onCardIssueFailedBannerDismissed()
+        statusFlow.value = paymentStatus(cardIssueFailedStatus())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.statusBannerState).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN dismissed banner WHEN the account recovers and fails again THEN the banner reappears`() = runTest {
+        // Arrange
+        val statusFlow = MutableStateFlow(paymentStatus(cardIssueFailedStatus()))
+        val model = createModel(testScope = this, statusFlow = statusFlow)
+        advanceUntilIdle()
+        model.onCardIssueFailedBannerDismissed()
+
+        // Act
+        statusFlow.value = paymentStatus(loadedStatus())
+        advanceUntilIdle()
+        statusFlow.value = paymentStatus(cardIssueFailedStatus())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.statusBannerState).isNotNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN card issue failed WHEN generic support clicked THEN feedback is sent for the failed account`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this, statusValue = cardIssueFailedStatus())
+            advanceUntilIdle()
+
+            // Act
+            model.onContactSupportClicked()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                sendFeedbackEmailUseCase.invoke(
+                    type = FeedbackEmailType.Visa.FeatureIsBeta(
+                        walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+                        customerId = "customer-id",
+                    ),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a status without a customer id WHEN generic support clicked THEN no feedback is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, statusValue = awaitingPlanSelectionStatus())
+        advanceUntilIdle()
+
+        // Act
+        model.onContactSupportClicked()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { sendFeedbackEmailUseCase.invoke(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN card issue failed WHEN support clicked THEN failed issue feedback is sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, statusValue = cardIssueFailedStatus())
+        advanceUntilIdle()
+
+        // Act
+        model.onCardIssueFailedSupportClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            sendFeedbackEmailUseCase.invoke(
+                type = FeedbackEmailType.Visa.FailedIssueCard(
+                    walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+                    customerId = "customer-id",
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    private fun cardIssueFailedStatus(planState: TangemPayTariffPlanState? = tariffPlanState()) =
+        PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer-id", tariffPlan = planState)
+
     private fun awaitingPlanSelectionStatus() = PaymentAccountStatusValue.AwaitingPlanSelection(
         source = StatusSource.ACTUAL,
         tariffPlan = customerTariffPlan(
@@ -822,7 +950,7 @@ internal class TangemPayDetailsModelTest {
             uiMessageSender = uiMessageSender,
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = mockk(relaxed = true),
-            sendFeedbackEmailUseCase = mockk(relaxed = true),
+            sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             paymentAccountStatusFetcher = mockk(relaxed = true),
             produceTangemPayInitialDataUseCase = mockk(relaxed = true),
