@@ -22,13 +22,11 @@ import java.math.BigDecimal
 internal class GetMarketingBannerUseCaseTest {
 
     private val repository: MarketingRepository = mockk()
-    private val featureToggles: MarketingFeatureToggles = mockk()
-    private val useCase = GetMarketingBannerUseCase(repository, featureToggles)
+    private val useCase = GetMarketingBannerUseCase(repository)
 
     @BeforeEach
     fun reset() {
-        clearMocks(repository, featureToggles)
-        every { featureToggles.isMarketingBannersEnabled } returns true
+        clearMocks(repository)
         coEvery { repository.getDismissedBannerIds() } returns emptySet()
     }
 
@@ -61,20 +59,6 @@ internal class GetMarketingBannerUseCaseTest {
     private val tokenScreen = MarketingScreen.TokenDetails(networkId = "ethereum", contractAddress = "0xA0b8")
     private val stakingScreen = MarketingScreen.Staking(networkId = "ethereum", contractAddress = "0xA0b8")
     private val yieldScreen = MarketingScreen.Yield(networkId = "ethereum", contractAddress = "0xA0b8")
-
-    @Test
-    fun `GIVEN toggle disabled WHEN invoke THEN empty without touching repository`() = runTest {
-        // Arrange
-        every { featureToggles.isMarketingBannersEnabled } returns false
-
-        // Act
-        val result = useCase(swapScreen)
-
-        // Assert
-        assertThat(result.getOrNull()).isEmpty()
-        coVerify(exactly = 0) { repository.getCampaigns(any()) }
-        coVerify(exactly = 0) { repository.getDismissedBannerIds() }
-    }
 
     @Test
     fun `GIVEN several campaigns WHEN invoke THEN sorted by priority ascending`() = runTest {

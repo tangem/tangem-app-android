@@ -16,7 +16,6 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
@@ -30,7 +29,6 @@ import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
@@ -57,8 +55,6 @@ import javax.inject.Inject
 internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,
     paramsContainer: ParamsContainer,
-    feedbackFeatureToggles: FeedbackFeatureToggles,
-    addressBookFeatureToggles: AddressBookFeatureToggles,
     private val itemsBuilder: ItemsBuilder,
     private val appInfoProvider: AppInfoProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
@@ -79,13 +75,13 @@ internal class DetailsModel @Inject constructor(
 
     private val params: DetailsComponent.Params = paramsContainer.require()
 
-    private val isUsedeskEnabled = feedbackFeatureToggles.isUsedeskEnabled
-
     private val items: MutableStateFlow<ImmutableList<DetailsItemUM>>
 
     val state: MutableStateFlow<DetailsUM>
 
     init {
+        analyticsEventHandler.send(Settings.ScreenOpened())
+
         val isWalletConnectAvailable = runBlocking {
             // danger region, this works immediately, but will be refactored later with WC
             checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse { throwable ->
@@ -98,7 +94,6 @@ internal class DetailsModel @Inject constructor(
         items = MutableStateFlow(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
-                isAddressBookAvailable = addressBookFeatureToggles.isAddressBookEnabled,
                 hasAnyMobileWallet = getWalletsUseCase.invokeSync().any { it is UserWallet.Hot },
                 userWalletId = params.userWalletId,
                 onSupportClick = ::onContactSupportClick,
@@ -170,12 +165,7 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun onContactSupportClick() {
-        // Offer the mail/chat choice only when the chat is available; otherwise open mail directly.
-        if (isUsedeskEnabled) {
-            showContactSupportChooserBS()
-        } else {
-            sendFeedback()
-        }
+        showContactSupportChooserBS()
     }
 
     private fun showContactSupportChooserBS() {

@@ -23,6 +23,7 @@ import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 class GetFeeForTokenUseCase(
@@ -43,10 +44,15 @@ class GetFeeForTokenUseCase(
         gaslessYieldRepository = gaslessYieldRepository,
     )
 
+    /**
+     * @param sentAmount amount sent by the main transaction, in the sent token. Required for a yield-supply
+     * send, whose [TransactionData.Uncompiled.amount] is zeroed.
+     */
     suspend operator fun invoke(
         userWallet: UserWallet,
         token: CryptoCurrency,
         transactionData: TransactionData,
+        sentAmount: BigDecimal? = null,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             catch(
@@ -100,9 +106,10 @@ class GetFeeForTokenUseCase(
                             tokenFeeExtended = tokenFeeExtended,
                             transactionData = transactionData,
                             isYieldActive = true,
-                        )
+                            sentAmount = sentAmount,
+                        ).copy(nativeFee = initialTxFee)
                     } else {
-                        tokenFeeExtended
+                        tokenFeeExtended.copy(nativeFee = initialTxFee)
                     }
                 },
                 catch = {

@@ -81,6 +81,8 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
                 text = state.bottomActionText.resolveReference(),
                 onClick = state.onBottomActionClick,
             )
+
+            SpacerH16()
         }
     }
 }

@@ -7,9 +7,6 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
@@ -66,6 +63,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
+import com.tangem.domain.onramp.OnrampGetDefaultCurrencyUseCase
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.FetchStakingOptionsUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
@@ -92,8 +90,6 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
-import com.tangem.feature.swap.domain.SwapFeedbackUseCase
-import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -184,10 +180,10 @@ internal class TokenDetailsModel @Inject constructor(
     private val walletIconUMConverter: WalletIconUMConverter,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val redesignStateController: TokenDetailsStateController,
-    private val swapFeedbackUseCase: SwapFeedbackUseCase,
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
+    private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -1208,24 +1204,10 @@ internal class TokenDetailsModel @Inject constructor(
     ) {
         ratingSlotNavigation.activate(
             RatingComponent.Params(
-                onLoadRating = {
-                    swapFeedbackUseCase.getExistingRating(txExternalId)
-                        .fold(ifLeft = { null }, ifRight = { it?.rating })
-                },
-                onSubmitRating = { rating, feedback ->
-                    swapFeedbackUseCase.submit(
-                        SwapFeedbackParams(
-                            userWalletIdHash = userWalletIdStringValue.hexToBytes()
-                                .calculateSha256()
-                                .toHexString(),
-                            providerName = providerName,
-                            txUrl = txExternalUrl,
-                            txExternalId = txExternalId,
-                            rating = rating,
-                            feedback = feedback,
-                        ),
-                    ).onLeft { TangemLogger.e("Failed to submit swap feedback: $it") }
-                },
+                txExternalId = txExternalId,
+                providerName = providerName,
+                txExternalUrl = txExternalUrl,
+                userWalletId = UserWalletId(userWalletIdStringValue),
             ),
         )
     }
@@ -1491,10 +1473,12 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun observeQuickTopUpBlock() {
-        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+        val statusFlow = getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
             .map { it.status }
             .distinctUntilChanged()
-            .flatMapLatest { status ->
+
+        combine(statusFlow, selectedAppCurrencyFlow) { status, appCurrency -> status to appCurrency }
+            .flatMapLatest { (status, appCurrency) ->
                 flow {
                     val amount = status.value.amount
                     if (amount == null || !amount.isZero()) {
@@ -1508,12 +1492,17 @@ internal class TokenDetailsModel @Inject constructor(
                         ifLeft = { true },
                         ifRight = { it.isEmpty() },
                     )
+                    // Read the saved onramp currency BEFORE checkOnrampAvailabilityUseCase:
+                    // the latter auto-persists the regional currency once the country is confirmed.
+                    val selectedOnrampCurrency = onrampGetDefaultCurrencyUseCase().getOrNull()
                     val availability = checkOnrampAvailabilityUseCase(userWallet)
                     emit(
                         quickTopUpBlockFactory.build(
                             currencyStatus = status,
                             isHistoryEmpty = isHistoryEmpty,
                             onrampAvailability = availability,
+                            selectedOnrampCurrency = selectedOnrampCurrency,
+                            appCurrency = appCurrency,
                             onPresetClick = ::onQuickTopUpClick,
                             onOtherClick = ::onQuickTopUpOtherClick,
                         ),

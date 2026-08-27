@@ -37,7 +37,6 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
 
         PushNotificationsScreen(
             state = PushNotificationsUM(
-                isPushNotificationSettingsEnabled = model.isPushNotificationSettingsEnabled,
                 doubleAskSheet = PushNotificationsDoubleAskSheetState(
                     isShown = isDoubleAskSheetShown,
                     onEnableClick = model::onDoubleAskEnableClick,

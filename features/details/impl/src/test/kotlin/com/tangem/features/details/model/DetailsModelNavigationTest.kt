@@ -23,7 +23,6 @@ internal class DetailsModelNavigationTest : DetailsModelTestBase() {
         // Arrange
         val wallet = hotWallet(wallet1)
         val meta = metaInfo(wallet1)
-        every { feedbackFeatureToggles.isUsedeskEnabled } returns true
         every { getSelectedWalletSyncUseCase() } returns wallet.right()
         coEvery { getWalletMetaInfoUseCase(wallet1) } returns meta.right()
 
@@ -42,7 +41,6 @@ internal class DetailsModelNavigationTest : DetailsModelTestBase() {
     @Test
     fun `GIVEN meta info missing WHEN chat option selected THEN no navigation`() = runTest {
         val wallet = hotWallet(wallet1)
-        every { feedbackFeatureToggles.isUsedeskEnabled } returns true
         every { getSelectedWalletSyncUseCase() } returns wallet.right()
         coEvery { getWalletMetaInfoUseCase(wallet1) } returns Throwable().left()
 
@@ -61,7 +59,6 @@ internal class DetailsModelNavigationTest : DetailsModelTestBase() {
         // Arrange
         val wallet = hotWallet(wallet1)
         val meta = metaInfo(wallet1)
-        every { feedbackFeatureToggles.isUsedeskEnabled } returns true
         every { getWalletsUseCase.invokeSync() } returns listOf(wallet)
         every { getSelectedWalletSyncUseCase() } returns wallet.right()
         coEvery { getWalletMetaInfoUseCase(wallet1) } returns meta.right()
