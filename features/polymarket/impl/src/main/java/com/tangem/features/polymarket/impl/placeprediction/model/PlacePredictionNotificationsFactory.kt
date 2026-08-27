@@ -1,11 +1,13 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
-import com.tangem.features.polymarket.impl.placeprediction.entity.AmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import kotlinx.collections.immutable.ImmutableList
@@ -51,7 +53,7 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
 
     val priced = copy(
         payment = payment.copy(hasSufficientBalance = hasSufficientBalance),
-        amountError = amountError(entered = entered, required = required, balance = balance),
+        amountCaption = amountCaption(entered = entered, required = required, balance = balance),
     )
     val notifications = PlacePredictionNotificationsFactory.build(state = priced)
 
@@ -65,9 +67,23 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
     )
 }
 
-private fun amountError(entered: BigDecimal?, required: BigDecimal?, balance: BigDecimal?): AmountErrorUM? = when {
+private fun PlacePredictionUM.amountCaption(
+    entered: BigDecimal?,
+    required: BigDecimal?,
+    balance: BigDecimal?,
+): AmountCaptionUM? {
+    val error = paymentAmountError(entered = entered, required = required, balance = balance)
+
+    return if (error != null) AmountCaptionUM.Shortfall(error = error) else quote.payout()?.let(AmountCaptionUM::ToWin)
+}
+
+private fun paymentAmountError(
+    entered: BigDecimal?,
+    required: BigDecimal?,
+    balance: BigDecimal?,
+): PaymentAmountErrorUM? = when {
     balance == null || entered == null -> null
-    entered > balance -> AmountErrorUM.NotEnoughForBet
-    required != null && required > balance -> AmountErrorUM.NotEnoughForFees
+    entered > balance -> PaymentAmountErrorUM.NotEnoughForBet
+    required != null && required > balance -> PaymentAmountErrorUM.NotEnoughForFees
     else -> null
 }
