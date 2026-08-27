@@ -74,6 +74,7 @@ dependencies {
     implementation(deps.kotlin.serialization.core)
 
     /** Test */
+    testImplementation(projects.test.core)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
