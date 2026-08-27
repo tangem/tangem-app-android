@@ -17,7 +17,6 @@ import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.build
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
@@ -55,18 +54,6 @@ internal object NetworkModule {
             BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)
             else -> ProdApiConfigsManager(apiConfigs)
         }
-    }
-
-    @Provides
-    @Singleton
-    fun provideTangemTechApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechApi {
-        return retrofitApiBuilder.build(
-            RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
-                shouldApplyTimeoutAnnotations = true,
-                shouldUseSessionAuth = false,
-            ),
-        )
     }
 
     @Provides
