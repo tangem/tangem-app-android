@@ -1,8 +1,10 @@
 package com.tangem.feature.wallet.di
 
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.feature.wallet.DefaultWalletEntryComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedModel
 import com.tangem.feature.wallet.utils.DefaultUserWalletImageFetcher
 import com.tangem.feature.wallet.utils.DefaultUserWalletsFetcher
@@ -15,6 +17,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -30,6 +33,10 @@ internal interface WalletFeatureModule {
     @Binds
     @Singleton
     fun bindUserWalletImageFetcher(impl: DefaultUserWalletImageFetcher): UserWalletImageFetcher
+
+    @Binds
+    @IntoSet
+    fun bindWalletContentFetcherCleaner(impl: WalletContentFetcher): UserWalletDataCleaner
 
     @Binds
     @IntoMap

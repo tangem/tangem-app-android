@@ -2,6 +2,8 @@ package com.tangem.data.blockaid
 
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.transaction.SimulationResult
+import com.domain.blockaid.models.transaction.TransactionData
+import com.domain.blockaid.models.transaction.TransactionParams
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.domain.blockaid.models.transaction.simultation.AmountInfo
 import com.domain.blockaid.models.transaction.simultation.ApproveInfo
@@ -164,5 +166,64 @@ class BlockAidMapperTest {
 
         val result = mapper.mapToDomain(txResponse)
         Truth.assertThat(result.simulation is SimulationResult.Success).isTrue()
+    }
+
+    @Test
+    fun `GIVEN eth_signTypedData_v4 Permit WHEN mapToEvmRequest THEN params preserved and spender exposed`() {
+        // Arrange — signTypedData params are [address, typedData], not an array of tx objects.
+        val attacker = "0x00000000000000000000000000000000DeaDBeef"
+        val address = "0xC3E41b10Adb2b96421f103520c8C866618D9B030"
+        val rawParams = """
+            ["$address",{"types":{"Permit":[{"name":"owner","type":"address"}]},"primaryType":"Permit",
+            "domain":{"name":"USD Coin","chainId":1},
+            "message":{"owner":"$address","spender":"$attacker","value":"123","nonce":"0","deadline":"1999999999"}}]
+        """.trimIndent()
+        val data = TransactionData(
+            chain = "ethereum",
+            accountAddress = address,
+            method = "eth_signTypedData_v4",
+            domainUrl = "https://example.org",
+            params = TransactionParams.Evm(rawParams),
+        )
+
+        // Act — previously this threw (getJSONObject on the address string) -> FAILED_TO_VALIDATE.
+        val request = mapper.mapToEvmRequest(data)
+
+        // Assert — the array shape is preserved and the dangerous spender survives the mapping.
+        Truth.assertThat(request.data.method).isEqualTo("eth_signTypedData_v4")
+        Truth.assertThat(request.data.params).hasSize(2)
+        Truth.assertThat(request.data.params[0]).isEqualTo(address)
+        @Suppress("UNCHECKED_CAST")
+        val typedData = request.data.params[1] as Map<String, Any>
+        val message = typedData["message"] as Map<String, Any>
+        Truth.assertThat(message["spender"]).isEqualTo(attacker)
+        Truth.assertThat(message["value"]).isEqualTo("123")
+        // JSON primitive types are preserved (numeric chainId stays a number, not "1").
+        @Suppress("UNCHECKED_CAST")
+        val domain = typedData["domain"] as Map<String, Any>
+        Truth.assertThat(domain["chainId"]).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN eth_sendTransaction WHEN mapToEvmRequest THEN tx object params still mapped`() {
+        // Arrange — the existing send path: params is [ {tx} ].
+        val rawParams = """[{"from":"0xFROM","to":"0xTO","data":"0xdeadbeef","value":"0x0"}]"""
+        val data = TransactionData(
+            chain = "ethereum",
+            accountAddress = "0xFROM",
+            method = "eth_sendTransaction",
+            domainUrl = "https://example.org",
+            params = TransactionParams.Evm(rawParams),
+        )
+
+        // Act
+        val request = mapper.mapToEvmRequest(data)
+
+        // Assert — unchanged behaviour: one tx object with its string fields.
+        Truth.assertThat(request.data.params).hasSize(1)
+        @Suppress("UNCHECKED_CAST")
+        val tx = request.data.params[0] as Map<String, Any>
+        Truth.assertThat(tx["to"]).isEqualTo("0xTO")
+        Truth.assertThat(tx["data"]).isEqualTo("0xdeadbeef")
     }
 }

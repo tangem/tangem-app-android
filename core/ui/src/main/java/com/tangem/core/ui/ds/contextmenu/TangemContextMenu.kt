@@ -14,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -138,14 +139,19 @@ private fun DropdownMenuContent(
     }
     Card(
         modifier = Modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
                 this.alpha = alpha
                 transformOrigin = transformOriginState.value
-            },
-        elevation = CardDefaults.cardElevation(),
+            }
+            .shadow(
+                elevation = TangemTheme.dimens2.x2,
+                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                clip = false,
+            )
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x5)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
             modifier = modifier

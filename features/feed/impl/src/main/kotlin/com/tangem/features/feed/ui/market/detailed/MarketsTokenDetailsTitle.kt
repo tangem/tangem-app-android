@@ -34,6 +34,7 @@ internal fun MarketsTokenDetailsTitle(
 ) {
     MarketsTokenDetailsRedesignTopBar(
         isAddToPortfolioButtonVisible = state.isAddToPortfolioButtonVisible,
+        isAddToPortfolioButtonEnabled = state.isAddToPortfolioButtonEnabled,
         onAddToPortfolioClick = state.onAddToPortfolioClick,
         onShareClick = state.onShareClick,
         isBackButtonEnabled = isBackButtonEnabled,
@@ -41,9 +42,11 @@ internal fun MarketsTokenDetailsTitle(
     )
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun MarketsTokenDetailsRedesignTopBar(
     isAddToPortfolioButtonVisible: Boolean,
+    isAddToPortfolioButtonEnabled: Boolean,
     onAddToPortfolioClick: () -> Unit,
     onShareClick: () -> Unit,
     isBackButtonEnabled: Boolean,
@@ -55,7 +58,7 @@ private fun MarketsTokenDetailsRedesignTopBar(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
                 onClick = onBackClick,
                 enabled = isBackButtonEnabled,
-                contentPadding = TangemTheme.dimens2.x2,
+                contentPadding = 8.dp,
             )
         },
         endContent = {
@@ -72,14 +75,15 @@ private fun MarketsTokenDetailsRedesignTopBar(
                         imageVector = Icons.ic_sign_plus_24,
                         onClick = onAddToPortfolioClick,
                         enabled = isBackButtonEnabled,
-                        contentPadding = TangemTheme.dimens2.x2_5,
+                        contentPadding = 10.dp,
+                        isDimmed = !isAddToPortfolioButtonEnabled,
                     )
                 }
                 TopBarHazeIconButton(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_share_new_24),
                     onClick = onShareClick,
                     enabled = isBackButtonEnabled,
-                    contentPadding = TangemTheme.dimens2.x2_5,
+                    contentPadding = 10.dp,
                 )
             }
         },
@@ -92,13 +96,19 @@ private fun MarketsTokenDetailsRedesignTopBar(
 }
 
 @Composable
-private fun TopBarHazeIconButton(imageVector: ImageVector, onClick: () -> Unit, enabled: Boolean, contentPadding: Dp) {
+private fun TopBarHazeIconButton(
+    imageVector: ImageVector,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    contentPadding: Dp,
+    isDimmed: Boolean = false,
+) {
     Icon(
         imageVector = imageVector,
         contentDescription = null,
-        tint = TangemTheme.colors2.graphic.neutral.primary,
+        tint = if (isDimmed) TangemTheme.colors3.icon.tertiary else TangemTheme.colors3.icon.primary,
         modifier = Modifier
-            .size(TangemTheme.dimens2.x11)
+            .size(44.dp)
             .clip(CircleShape)
             .hazeEffectTangem { blurRadius = 8.dp }
             .clickableSingle(onClick = onClick, enabled = enabled)

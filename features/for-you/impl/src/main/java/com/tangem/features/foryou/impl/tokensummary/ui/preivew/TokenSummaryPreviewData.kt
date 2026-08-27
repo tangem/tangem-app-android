@@ -2,24 +2,26 @@ package com.tangem.features.foryou.impl.tokensummary.ui.preivew
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.ds.badge.TangemBadgeColor
-import com.tangem.core.ui.ds.badge.TangemBadgeShape
-import com.tangem.core.ui.ds.badge.TangemBadgeSize
-import com.tangem.core.ui.ds.badge.TangemBadgeType
-import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
-import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
-import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenIndicatorUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSentimentUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryHeaderUM
-import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
+import com.tangem.features.foryou.impl.tokensummary.entity.*
 import kotlinx.collections.immutable.persistentListOf
 
-internal fun previewTokenSummary(periodPickerUm: PeriodPickerUM, tokenSentiment: TokenSentimentUM) = TokenSummaryUm(
+internal fun previewBottomButton(
+    text: TextReference = resourceReference(R.string.token_summary_go_to_swap_button),
+    isEnabled: Boolean = true,
+) = BottomButtonUM.Content(text = text, isEnabled = isEnabled, onClick = {})
+
+internal fun previewTokenSummary(
+    periodPickerUm: PeriodPickerUM,
+    tokenSentiment: TokenSentimentUM,
+    bottomButton: BottomButtonUM = previewBottomButton(),
+) = TokenSummaryUm(
     header = TokenSummaryHeaderUM(
         tangemIconUM = TangemIconUM.Currency(
             CurrencyIconState.CustomTokenIcon(
@@ -38,101 +40,63 @@ internal fun previewTokenSummary(periodPickerUm: PeriodPickerUM, tokenSentiment:
         "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
             "buffer. Consider trimming concentration for a smoother ride",
     ),
+    bottomButton = bottomButton,
     onPeriodClick = {},
     onCloseClick = {},
-    onSwapClick = {},
     onInfoClick = {},
+)
+
+/** Readings arrived — so the rows keep their backend names — but none of them carries a value. */
+internal val previewNoOutlookSentiment = TokenSentimentUM.Empty.NoOutlook(
+    indicators = persistentListOf(
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.GalaxyScore, title = "Galaxy score"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.Sentiment, title = "Sentiment"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.RSI, title = "RSI"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.MACD, title = "MACD"),
+        TokenIndicatorUM.NoData(indicatorType = IndicatorType.MA_CROSS, title = "MA Cross"),
+    ),
 )
 
 internal val previewContentSentiment = TokenSentimentUM.Content(
     sentiment = stringReference("Negative outlook"),
     lastUpdate = stringReference("Updated Jan 20 2026, 9:24 PM"),
     totalScore = -4,
+    scaleMax = 5,
     indicators = persistentListOf(
         TokenIndicatorUM.Content(
-            sentimentBadge = TangemBadgeUM(
-                text = stringReference("Neutral"),
-                color = TangemBadgeColor.Blue,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
-            scoreBadge = TangemBadgeUM(
-                text = stringReference("72.21"),
-                color = TangemBadgeColor.Gray,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
+            sentimentBadgeText = resourceReference(R.string.common_neutral),
+            sentimentBadgeStatus = TangemBadge.Status.Info,
+            scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.GalaxyScore,
+            title = "Galaxy score",
         ),
         TokenIndicatorUM.Content(
-            sentimentBadge = TangemBadgeUM(
-                text = stringReference("Positive"),
-                color = TangemBadgeColor.Green,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
-            scoreBadge = TangemBadgeUM(
-                text = stringReference("72.21"),
-                color = TangemBadgeColor.Gray,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
+            sentimentBadgeText = resourceReference(R.string.common_positive),
+            sentimentBadgeStatus = TangemBadge.Status.Success,
+            scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.Sentiment,
+            title = "Sentiment",
         ),
         TokenIndicatorUM.Content(
-            sentimentBadge = TangemBadgeUM(
-                text = stringReference("Negative"),
-                color = TangemBadgeColor.Red,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
-            scoreBadge = TangemBadgeUM(
-                text = stringReference("72.21"),
-                color = TangemBadgeColor.Gray,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
+            sentimentBadgeText = resourceReference(R.string.common_negative),
+            sentimentBadgeStatus = TangemBadge.Status.Error,
+            scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.RSI,
+            title = "RSI",
         ),
         TokenIndicatorUM.Content(
-            sentimentBadge = TangemBadgeUM(
-                text = stringReference("Negative"),
-                color = TangemBadgeColor.Red,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
-            scoreBadge = TangemBadgeUM(
-                text = stringReference("72.21"),
-                color = TangemBadgeColor.Gray,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
+            sentimentBadgeText = resourceReference(R.string.common_negative),
+            sentimentBadgeStatus = TangemBadge.Status.Error,
+            scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.MACD,
+            title = "MACD",
         ),
         TokenIndicatorUM.Content(
-            sentimentBadge = TangemBadgeUM(
-                text = stringReference("Negative"),
-                color = TangemBadgeColor.Red,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
-            scoreBadge = TangemBadgeUM(
-                text = stringReference("72.21"),
-                color = TangemBadgeColor.Gray,
-                size = TangemBadgeSize.X6,
-                type = TangemBadgeType.Tinted,
-                shape = TangemBadgeShape.Rounded,
-            ),
+            sentimentBadgeText = resourceReference(R.string.common_negative),
+            sentimentBadgeStatus = TangemBadge.Status.Error,
+            scoreBadgeText = stringReference("72.21"),
             indicatorType = IndicatorType.MA_CROSS,
+            title = "MA Cross",
         ),
     ),
 )

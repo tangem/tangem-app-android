@@ -34,6 +34,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import com.tangem.test.core.ProvideTestModels
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -696,6 +698,57 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `UTXO DEX reads the PSBT fee from the wallet manager and skips the gas patch`(
+        blockchain: Blockchain,
+    ) = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = blockchain.toNetworkId(), isCoin = true)
+        val transaction = buildDex(txData = "cHNidP8B-base64-psbt", gas = null)
+
+        coEvery {
+            walletManagersFacade.getPsbtFee(any(), any(), psbtBase64 = "cHNidP8B-base64-psbt")
+        } returns BigDecimal("1329")
+
+        val result = sut.calculate(fromStatus, transaction)
+
+        coVerify(exactly = 0) {
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any(),
+                spenderAddress = any(),
+                isSimulateEstimation = any(),
+            )
+        }
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        }
+        coVerify(exactly = 1) {
+            walletManagersFacade.getPsbtFee(any(), any(), psbtBase64 = "cHNidP8B-base64-psbt")
+        }
+        assertThat(result.isRight()).isTrue()
+        result.onRight { dexFeeResult ->
+            val fee = (dexFeeResult.transactionFee as TransactionFeeResult.Loaded).fee
+            val utxoFee = (fee as TransactionFee.Single).normal as Fee.Common
+            assertThat(utxoFee.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("0.00001329"))
+            assertThat(utxoFee.amount.decimals).isEqualTo(8)
+            assertThat(dexFeeResult.gas).isNull()
+        }
+    }
+
+    private fun provideTestModels() = listOf(
+        Blockchain.Litecoin,
+        Blockchain.Dogecoin,
+        Blockchain.Dash,
+        Blockchain.BitcoinCash,
+    )
+
     // -------------------------------------------------------------------------
     // Integrated-approve simulated estimation override ([REDACTED_TASK_KEY])
     //
@@ -968,6 +1021,118 @@ internal class DexSwapFeeCalculatorTest {
         result.onRight { dexFeeResult ->
             // Toggle off → TRON falls through to the EVM branch, which carries the tx gas.
             assertThat(dexFeeResult.gas).isEqualTo(transaction.gas)
+        }
+    }
+
+    @Test
+    fun `GIVEN zero native balance WHEN calculateYield THEN falls back to getEthSpecificFeeUseCase`() = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
+        val gas = BigInteger.valueOf(871_439L)
+        val transaction = buildDex(gas = gas, allowanceContract = "0xSpender")
+        coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
+        coEvery {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        } returns TransactionFee.Choosable(
+            minimum = ethLegacyFee(),
+            normal = ethLegacyFee(),
+            priority = ethLegacyFee(),
+        ).right()
+
+        // Act
+        val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = gas,
+                gasPrice = any(),
+            )
+        }
+        coVerify(exactly = 0) {
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any<TransactionData>(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the node refuses to estimate WHEN calculateYield THEN falls back to getEthSpecificFeeUseCase`() =
+        runTest {
+            // Arrange
+            val fromStatus =
+                buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
+            val gas = BigInteger.valueOf(871_439L)
+            val transaction = buildDex(txData = "0xa9059cbb", gas = gas, allowanceContract = "0xSpender")
+            coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("0.0001")
+            every {
+                createTransactionExtrasUseCase.invoke(
+                    callData = any(),
+                    network = any(),
+                    gasLimit = any(),
+                    nonce = any(),
+                )
+            } returns mockk<TransactionExtras>(relaxed = true).right()
+            coEvery {
+                getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+            } returns GetFeeError.UnknownError.left()
+            coEvery {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = any(),
+                    gasPrice = any(),
+                )
+            } returns TransactionFee.Choosable(
+                minimum = ethLegacyFee(),
+                normal = ethLegacyFee(),
+                priority = ethLegacyFee(),
+            ).right()
+
+            // Act
+            val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 1) {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = gas,
+                    gasPrice = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN zero native balance and no gas in quote WHEN calculateYield THEN raises`() = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = false, yieldSupplyActive = true)
+        val transaction = buildDex(gas = null, allowanceContract = "0xSpender")
+        coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
+
+        // Act
+        val result = sut.calculateYield(fromStatus, transaction, yieldModuleAddress = "0xYieldModule")
+
+        // Assert
+        assertThat(result.isLeft()).isTrue()
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
         }
     }
 

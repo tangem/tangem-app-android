@@ -201,6 +201,251 @@ class PeriodicTaskTest {
         }
 
     @Test
+    fun `GIVEN request in flight WHEN scheduleTask supersedes it THEN the superseded request is aborted`() = runTest {
+        // Arrange
+        val started = AtomicInteger(0)
+        val completed = AtomicInteger(0)
+        val scheduler = SingleTaskScheduler<Int>()
+        fun requestTask() = PeriodicTask(
+            delay = PERIOD,
+            task = {
+                started.incrementAndGet()
+                delay(REQUEST_DURATION) // emulates an HTTP round trip
+                completed.incrementAndGet()
+                Result.success(VALUE)
+            },
+            onSuccess = mockk<(Int) -> Unit>(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+
+        // Act — a re-trigger arrives while the first request is still in flight
+        scheduler.scheduleTask(backgroundScope, requestTask())
+        runCurrent()
+        scheduler.scheduleTask(backgroundScope, requestTask())
+        advanceTimeBy(REQUEST_DURATION + 1)
+        runCurrent()
+
+        // Assert — both runs started, but only the surviving one reached the network
+        assertThat(started.get()).isEqualTo(2)
+        assertThat(completed.get()).isEqualTo(1)
+        scheduler.destroyTask()
+    }
+
+    @Test
+    fun `GIVEN request in flight WHEN cancelTask THEN the request is left to complete`() = runTest {
+        // Arrange — pausing must not abort work callers rely on landing in their stores; only the periodic
+        // loop stops. Cancelling it here would strand features that pause without ever resuming.
+        val completed = AtomicInteger(0)
+        val onSuccess = mockk<(Int) -> Unit>(relaxed = true)
+        val scheduler = SingleTaskScheduler<Int>()
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = {
+                delay(REQUEST_DURATION)
+                completed.incrementAndGet()
+                Result.success(VALUE)
+            },
+            onSuccess = onSuccess,
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+
+        // Act
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        scheduler.cancelTask()
+        advanceTimeBy(REQUEST_DURATION + 1)
+        runCurrent()
+
+        // Assert — the request completed, but its discarded result was not reported
+        assertThat(completed.get()).isEqualTo(1)
+        verify(exactly = 0) { onSuccess.invoke(any()) }
+        scheduler.destroyTask()
+    }
+
+    @Test
+    fun `GIVEN request in flight WHEN destroyTask THEN the request is aborted`() = runTest {
+        // Arrange
+        val completed = AtomicInteger(0)
+        val scheduler = SingleTaskScheduler<Int>()
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = {
+                delay(REQUEST_DURATION)
+                completed.incrementAndGet()
+                Result.success(VALUE)
+            },
+            onSuccess = mockk<(Int) -> Unit>(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+
+        // Act
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        scheduler.destroyTask()
+        advanceTimeBy(REQUEST_DURATION + 1)
+        runCurrent()
+
+        // Assert
+        assertThat(completed.get()).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN request in flight WHEN resumeLastTask THEN the superseded request is aborted`() = runTest {
+        // Arrange
+        val started = AtomicInteger(0)
+        val completed = AtomicInteger(0)
+        val scheduler = SingleTaskScheduler<Int>()
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = {
+                started.incrementAndGet()
+                delay(REQUEST_DURATION)
+                completed.incrementAndGet()
+                Result.success(VALUE)
+            },
+            onSuccess = mockk<(Int) -> Unit>(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+
+        // Act — pause and resume while the request is still in flight
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        scheduler.cancelTask()
+        scheduler.resumeLastTask(backgroundScope)
+        advanceTimeBy(REQUEST_DURATION + 1)
+        runCurrent()
+
+        // Assert — the resumed run replaces the paused one instead of polling alongside it
+        assertThat(started.get()).isEqualTo(2)
+        assertThat(completed.get()).isEqualTo(1)
+        scheduler.destroyTask()
+    }
+
+    @Test
+    fun `GIVEN task never paused WHEN resumeLastTask THEN the running task is not restarted`() = runTest {
+        // Arrange — the fee-selector block reports "bottom sheet hidden" the moment it subscribes, so a
+        // resume can arrive while the first request is still in flight. Restarting there re-sends the whole
+        // batch a few seconds after it was sent ([REDACTED_TASK_KEY]).
+        val started = AtomicInteger(0)
+        val scheduler = SingleTaskScheduler<Int>()
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = {
+                started.incrementAndGet()
+                delay(REQUEST_DURATION) // emulates an HTTP round trip
+                Result.success(VALUE)
+            },
+            onSuccess = mockk<(Int) -> Unit>(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+
+        // Act — resume without a preceding pause
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        scheduler.resumeLastTask(backgroundScope)
+        advanceTimeBy(REQUEST_DURATION + 1)
+        runCurrent()
+
+        // Assert — the already running task keeps its own cadence, the spurious resume adds no run
+        assertThat(started.get()).isEqualTo(1)
+        scheduler.destroyTask()
+    }
+
+    @Test
+    fun `GIVEN task already resumed WHEN resumeLastTask again THEN the task is not restarted`() = runTest {
+        // Arrange
+        val callCount = AtomicInteger(0)
+        val scheduler = SingleTaskScheduler<Int>()
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = { callCount.incrementAndGet(); Result.success(VALUE) },
+            onSuccess = mockk(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        scheduler.cancelTask()
+        advanceUntilIdle()
+
+        // Act — one pause must be undone by one resume, however many resumes arrive
+        scheduler.resumeLastTask(backgroundScope)
+        runCurrent()
+        val countAfterResume = callCount.get()
+        scheduler.resumeLastTask(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(callCount.get()).isEqualTo(countAfterResume)
+        scheduler.destroyTask()
+    }
+
+    @Test
+    fun `GIVEN paused task rescheduled WHEN resumeLastTask THEN the scheduled task is not restarted`() = runTest {
+        // Arrange — a fresh scheduleTask supersedes the pause, so a later resume has nothing to undo.
+        val callCount = AtomicInteger(0)
+        val scheduler = SingleTaskScheduler<Int>()
+        fun countingTask() = PeriodicTask(
+            delay = PERIOD,
+            task = { callCount.incrementAndGet(); Result.success(VALUE) },
+            onSuccess = mockk<(Int) -> Unit>(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+        scheduler.scheduleTask(backgroundScope, countingTask())
+        runCurrent()
+        scheduler.cancelTask()
+        scheduler.scheduleTask(backgroundScope, countingTask())
+        runCurrent()
+        val countAfterReschedule = callCount.get()
+
+        // Act
+        scheduler.resumeLastTask(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(callCount.get()).isEqualTo(countAfterReschedule)
+        scheduler.destroyTask()
+    }
+
+    @Test
+    fun `GIVEN task body swallowing cancellation WHEN its coroutine is cancelled THEN callbacks are not invoked`() =
+        runTest {
+            // Arrange — the owning scope dies (model destroyed) while a request is in flight, so the task
+            // flag stays set and only the coroutine state tells the run is over.
+            val onSuccess = mockk<(Int) -> Unit>(relaxed = true)
+            val onError = mockk<(Throwable) -> Unit>(relaxed = true)
+            val periodicTask = PeriodicTask(
+                delay = PERIOD,
+                // `runCatching` turns the CancellationException into a plain failure, as several models do.
+                task = {
+                    runCatching {
+                        delay(REQUEST_DURATION)
+                        VALUE
+                    }
+                },
+                onSuccess = onSuccess,
+                onError = onError,
+                initialDelay = 0L,
+            )
+
+            // Act
+            val job = backgroundScope.launch { periodicTask.runTaskWithDelay() }
+            runCurrent()
+            job.cancel()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 0) { onSuccess.invoke(any()) }
+            verify(exactly = 0) { onError.invoke(any()) }
+        }
+
+    @Test
     fun `GIVEN no task scheduled WHEN resumeLastTask THEN no crash and no invocations`() = runTest {
         val scheduler = SingleTaskScheduler<Int>()
 
@@ -330,6 +575,7 @@ class PeriodicTaskTest {
     private companion object {
         const val PERIOD = 10_000L
         const val INITIAL_DELAY = 1_000L
+        const val REQUEST_DURATION = 1_000L
         const val VALUE = 42
     }
 }

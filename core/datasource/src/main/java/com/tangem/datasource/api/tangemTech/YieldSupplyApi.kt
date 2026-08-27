@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.tangemTech
 
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.models.YieldMarketsResponse
 import com.tangem.datasource.api.tangemTech.models.YieldModuleStatusResponse
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody

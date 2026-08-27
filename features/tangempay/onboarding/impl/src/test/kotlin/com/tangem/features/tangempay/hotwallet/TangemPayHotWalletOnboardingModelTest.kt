@@ -78,7 +78,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
             }
 
         @Test
-        fun `GIVEN hot wallet supported AND wallet creation succeeds WHEN onGetCardClick THEN navigate to CreateWalletBackup`() =
+        fun `GIVEN hot wallet supported AND wallet creation succeeds WHEN onGetCardClick THEN navigate to TangemPayOnboarding`() =
             runTest {
                 // Arrange
                 every { isHotWalletCreationSupported() } returns true
@@ -92,11 +92,9 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 // Assert
                 verify {
                     router.replaceAll(
-                        match { route ->
-                            route is AppRoute.CreateWalletBackup &&
-                                route.userWalletId == testUserWalletId &&
-                                !route.shouldShowBackButton
-                        },
+                        AppRoute.TangemPayOnboarding(
+                            mode = AppRoute.TangemPayOnboarding.Mode.FirstSetup(testUserWalletId),
+                        ),
                     )
                 }
                 model.onDestroy()

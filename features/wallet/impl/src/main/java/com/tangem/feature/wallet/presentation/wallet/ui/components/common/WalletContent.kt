@@ -46,10 +46,8 @@ internal fun WalletListContent(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     walletId: String? = null,
 ) {
-    val containerColor = TangemTheme.colors3.bg.primary
-
-    val movableItemModifier = Modifier.padding(horizontal = 12.dp)
-    val itemModifier = movableItemModifier.padding(top = 12.dp)
+    val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
+    val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
 
     LazyColumn(
         modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
@@ -60,11 +58,9 @@ internal fun WalletListContent(
     ) {
         notifications(
             notifications = currentWallet.notifications.map { it.messageUM }.toPersistentList(),
-            contentColor = containerColor,
             modifier = movableItemModifier,
         )
         notificationsCarousel(
-            containerColor = containerColor,
             modifier = movableItemModifier,
             notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
         )

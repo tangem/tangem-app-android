@@ -14,7 +14,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
-import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -27,6 +26,7 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.converter.TxHistoryStatusPillConverter.Input as PillInput
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.counterpartyAddress
 import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
@@ -84,13 +84,41 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         }
     }
 
+    /**
+     * An unrecognized contract call whose direction-correct counterparty resolves to one of the user's own portfolios
+     * is really a transfer between the user's own accounts/wallets, so it is rendered as a Transfer (own-transfer title,
+     * directional icon, "to / from MY account/wallet" subtitle). `null` when the counterparty is external or cannot be
+     * resolved (no lookup context, multi-address side), leaving the caller's raw-operation rendering.
+     */
+    private fun ownTransferContentOrNull(
+        tx: TxInfo,
+        uiStatus: TransactionItemUM.Content.Status,
+    ): TransactionItemUM.Content? {
+        val address = tx.counterpartyAddress() ?: return null
+        val direction = if (tx.isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM
+        val ownSubtitle = resolveOwnSubtitle(
+            lookupContext = lookupContext,
+            networkRawId = currency.network.id.rawId,
+            address = address,
+            direction = direction,
+        ) ?: return null
+
+        return buildContent(
+            tx = tx,
+            uiStatus = uiStatus,
+            title = titleConverter.convert(tx.copy(type = TransactionType.Transfer), isOwnTransfer = true),
+            icon = tx.directionalIcon(),
+            subtitle = ownSubtitle,
+        )
+    }
+
     private fun operationContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
-        buildContent(
+        ownTransferContentOrNull(tx, uiStatus) ?: buildContent(
             tx = tx,
             uiStatus = uiStatus,
             title = titleConverter.convert(tx),
             icon = TxIcon.Vector(Icons.ic_document_20),
-            subtitle = tx.extractAddressSubtitle(),
+            subtitle = tx.operationCounterpartySubtitle(),
         )
 
     private fun swapContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
@@ -207,12 +235,12 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private fun unknownOperationContent(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
-    ): TransactionItemUM.Content = buildContent(
+    ): TransactionItemUM.Content = ownTransferContentOrNull(tx, uiStatus) ?: buildContent(
         tx = tx,
         uiStatus = uiStatus,
         title = titleConverter.convert(tx),
         icon = tx.directionalIcon(),
-        subtitle = tx.extractAddressSubtitle(),
+        subtitle = tx.operationCounterpartySubtitle(),
     )
 
     private fun gaslessFeeContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
@@ -238,7 +266,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         time = tx.timestampInMillis.toTimeFormat(),
         status = uiStatus,
         direction = tx.extractDirection(),
-        icon = if (uiStatus is TransactionItemUM.Content.Status.Failed) TxIcon.Vector(Icons.ic_cross_20) else icon,
+        icon = icon,
         title = title,
         subtitle = subtitle,
         timestamp = tx.timestampInMillis,
@@ -275,6 +303,10 @@ private fun resolveOwnSubtitle(
             accountName = resolved.account.accountName.toUM().value,
             iconResId = resolved.account.icon.value.getResId(),
             iconBackgroundColor = resolved.account.icon.color.getUiColor(),
+        )
+        is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.OwnPaymentAccount(
+            direction = direction,
+            accountName = resolved.account.accountName.toUM().value,
         )
         is ResolvedOwner.OwnWallet -> ContentSubtitle.OwnWallet(
             direction = direction,
@@ -322,6 +354,31 @@ private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: Transacti
 private fun TxInfo.amountSubtitle(currency: CryptoCurrency, @StringRes resId: Int): ContentSubtitle.Plain {
     val formatted = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
     return ContentSubtitle.Plain(resourceReference(resId, wrappedList(formatted)))
+}
+
+/**
+ * Counterparty subtitle for an unrecognized contract call (Operation / UnknownOperation). For an **incoming** call
+ * [interactionAddressType] is the destination — the viewed wallet itself — so the sender is read from
+ * [TxInfo.sourceType] instead: a single source renders its address, multiple sources render "from multiple addresses"
+ * (reading [interactionAddressType] here would wrongly show the own destination). An **outgoing** call keeps its
+ * (correct) destination-based subtitle. Own counterparties never reach here: they are already reclassified as a
+ * transfer upstream.
+ */
+private fun TxInfo.operationCounterpartySubtitle(): ContentSubtitle {
+    if (isOutgoing) return extractAddressSubtitle()
+    return when (val source = sourceType) {
+        is TxInfo.SourceType.Single -> ContentSubtitle.ExternalAddress(
+            direction = ContentSubtitle.Direction.FROM,
+            rawAddress = source.address,
+            briefAddress = source.address.toBriefAddressFormat(),
+        )
+        is TxInfo.SourceType.Multiple -> ContentSubtitle.Plain(
+            resourceReference(
+                R.string.transaction_history_transaction_from_address,
+                wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
+            ),
+        )
+    }
 }
 
 private fun TxInfo.extractAddressSubtitle(): ContentSubtitle {

@@ -63,10 +63,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
-import com.tangem.features.addressbook.AddressBookFeatureToggles
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -106,8 +104,6 @@ internal class WalletModel @Inject constructor(
     private val walletContentFetcher: WalletContentFetcher,
     private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     private val notificationsRepository: NotificationsRepository,
-    private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
-    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val applyPushNotificationFirstActivationUseCase: ApplyPushNotificationFirstActivationUseCase,
     private val systemNotificationsStateProvider: SystemNotificationsStateProvider,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
@@ -127,8 +123,6 @@ internal class WalletModel @Inject constructor(
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
-    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
-    private val addressBookFeatureToggles: AddressBookFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
@@ -166,9 +160,9 @@ internal class WalletModel @Inject constructor(
         subscribeTangemPayOnWalletState()
         subscribeToTangemPayTransactionDeepLink()
         subscribeToMainScreenQrScanning()
-        enableNotificationsIfNeeded()
+        applyPushFirstActivationIfNeeded()
         applyPendingAssetsDiscovery()
-        syncAddressBooksIfNeeded()
+        syncAddressBooks()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -212,7 +206,6 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun preloadPushNotificationPreferences() {
-        if (!pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
         getWalletsUseCase()
             .map { wallets -> wallets.map(UserWallet::walletId) }
             .distinctUntilChanged()
@@ -675,7 +668,7 @@ internal class WalletModel @Inject constructor(
             }
         }
 
-        enableNotificationsIfNeeded()
+        applyPushFirstActivationIfNeeded()
     }
 
     private fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
@@ -880,35 +873,10 @@ internal class WalletModel @Inject constructor(
         startAssetsDiscoveryUseCase.applyPendingAssetsDiscovery()
     }
 
-    private fun syncAddressBooksIfNeeded() {
-        if (addressBookFeatureToggles.isAddressBookEnabled) {
-            modelScope.launch {
-                syncAddressBooksUseCase()
-                    .onLeft { TangemLogger.e("Failed to sync address books: $it") }
-            }
-        }
-    }
-
-    private fun enableNotificationsIfNeeded() {
-        if (pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) {
-            applyPushFirstActivationIfNeeded()
-            return
-        }
+    private fun syncAddressBooks() {
         modelScope.launch {
-            val isUserAllowToEnableNotifications = notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
-            if (isUserAllowToEnableNotifications) {
-                val alreadyEnabledWallets = notificationsRepository.getWalletAutomaticallyEnabledList().map {
-                    UserWalletId(it)
-                }
-                val walletsListWhichShouldBeEnabled = getWalletsListForEnablingUseCase(alreadyEnabledWallets)
-                walletsListWhichShouldBeEnabled.forEach { userWalletId ->
-                    setNotificationsEnabledUseCase(userWalletId, true).onRight {
-                        notificationsRepository.setNotificationsWasEnabledAutomatically(userWalletId.stringValue)
-                    }.onLeft {
-                        TangemLogger.e("Error", it)
-                    }
-                }
-            }
+            syncAddressBooksUseCase()
+                .onLeft { TangemLogger.e("Failed to sync address books: $it") }
         }
     }
 
@@ -956,12 +924,12 @@ internal class WalletModel @Inject constructor(
 
         override fun onAllowSystemPermission() {
             innerWalletRouter.dialogNavigation.dismiss()
-            enableNotificationsIfNeeded()
+            applyPushFirstActivationIfNeeded()
         }
 
         override fun onDenySystemPermission() {
             innerWalletRouter.dialogNavigation.dismiss()
-            enableNotificationsIfNeeded()
+            applyPushFirstActivationIfNeeded()
         }
 
         override fun onDismiss() {

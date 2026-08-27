@@ -1,7 +1,7 @@
 package com.tangem.datasource.exchangeservice.hotcrypto
 
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse
-import com.tangem.datasource.local.datastore.RuntimeStateStore
+import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
 import javax.inject.Singleton

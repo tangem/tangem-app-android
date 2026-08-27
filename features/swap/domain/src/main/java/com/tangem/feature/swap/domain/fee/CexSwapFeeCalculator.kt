@@ -108,7 +108,10 @@ class CexSwapFeeCalculator(
         return when (transactionFee.normal) {
             is Fee.Ethereum.EIP1559,
             is Fee.Ethereum.Legacy,
-            -> copy(transactionFee = patchEthGasLimitForSwap(transactionFee))
+            -> {
+                val patched = patchEthGasLimitForSwap(transactionFee)
+                copy(transactionFee = patched, nativeFee = patched)
+            }
             else -> this
         }
     }

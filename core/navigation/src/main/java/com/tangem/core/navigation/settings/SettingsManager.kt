@@ -7,4 +7,6 @@ interface SettingsManager {
     fun openAppNotificationSettings()
 
     fun openBiometricSettings()
+
+    fun openScreenLockSettings()
 }

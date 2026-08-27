@@ -33,6 +33,7 @@ sealed class TangemPayTxHistoryItem {
         val declinedReason: String?,
         val cardName: String? = null,
         val cardNumberLast4: String? = null,
+        val cashback: Cashback? = null,
     ) : TangemPayTxHistoryItem()
 
     @Serializable
@@ -77,5 +78,38 @@ sealed class TangemPayTxHistoryItem {
         DECLINED,
         REVERSED,
         UNKNOWN,
+    }
+
+    /**
+     * Per-transaction cashback earned on a [Spend]. Present only when the cashback program applies to
+     * the transaction; `null` when it does not (customer on the cashback ignore list, non-spend
+     * transaction). [amount] is in USD and negative for refunds. [amount] and [currency] are `null`
+     * while [status] is [Status.AWAITING_CALCULATION] (cashback not yet calculated by the backend).
+     */
+    @Serializable
+    data class Cashback(
+        val status: Status,
+        val amount: SerializedBigDecimal?,
+        val currency: SerializedCurrency?,
+        val isCapTrimmed: Boolean,
+        val exclusionReason: ExclusionReason?,
+        val promotionIds: List<String>,
+    ) {
+        enum class Status {
+            ESTIMATED,
+            CONFIRMED,
+            EXCLUDED,
+            AWAITING_CALCULATION,
+            UNKNOWN,
+        }
+
+        enum class ExclusionReason {
+            MCC_EXCLUDED,
+            MONTHLY_CAP_REACHED,
+            CUSTOMER_BLOCKLISTED,
+            MERCHANT_COUNTRY_EXCLUDED,
+            BELOW_MIN,
+            UNKNOWN,
+        }
     }
 }

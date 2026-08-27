@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.earn.EarnRewardType
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.StakingBalance
@@ -40,12 +41,12 @@ internal class ForYouEarnOpportunitiesConverterTest {
     inner class StateSelection {
 
         @Test
-        fun `GIVEN null account status list WHEN convert THEN no-tokens state`() {
+        fun `GIVEN empty portfolio WHEN convert THEN no-tokens state`() {
             // Arrange
             val converter = createConverter()
 
             // Act
-            val result = converter.convert(null) as EarnOpportunitiesUM.Content
+            val result = converter.convert(createSelectedPortfolio()) as EarnOpportunitiesUM.Content
 
             // Assert
             assertThat(result.subtitleRes).isEqualTo(R.string.for_you_earn_opportunities_no_available_tokens)
@@ -58,7 +59,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             val converter = createConverter()
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert
             assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
@@ -75,7 +76,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert
             assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
@@ -92,7 +93,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert
             assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
@@ -113,7 +114,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert
             assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
@@ -133,7 +134,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert
             assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
@@ -152,7 +153,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert
             assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
@@ -174,7 +175,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert
             assertThat((result as EarnOpportunitiesUM.Content).subtitleRes)
@@ -198,7 +199,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert — 100 * (10.00 / 100) = 10.00 per year, not 50
             assertThat((result as EarnOpportunitiesUM.Content).potentialReward)
@@ -227,12 +228,12 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
             // Act
             val result = converter.convert(
-                createAccountStatusList(createPortfolioStatus(listOf(stakedStatus, freshStatus))),
+                createSelectedPortfolio(createPortfolioStatus(listOf(stakedStatus, freshStatus))),
             )
 
             // Assert — the staked token's row shows the 4% of the validator actually staked with
             assertThat((result as EarnOpportunitiesUM.Content).rateOfRow("coin-staked"))
-                .isEqualTo(BigDecimal("0.04").format { percent() })
+                .isEqualTo("APY " + BigDecimal("0.04").format { percent() })
         }
 
         @Test
@@ -258,17 +259,17 @@ internal class ForYouEarnOpportunitiesConverterTest {
 
             // Act
             val result = converter.convert(
-                createAccountStatusList(createPortfolioStatus(listOf(stakedStatus, freshStatus))),
+                createSelectedPortfolio(createPortfolioStatus(listOf(stakedStatus, freshStatus))),
             )
 
             // Assert — the best *preferred* rate (12%) is used; the non-preferred 50% is ignored
             assertThat((result as EarnOpportunitiesUM.Content).rateOfRow("coin-staked"))
-                .isEqualTo(BigDecimal("0.12").format { percent() })
+                .isEqualTo("APY " + BigDecimal("0.12").format { percent() })
         }
 
         /** Extracts the rendered rate (the styled bottom-end text) of the row with the given [id]. */
         private fun EarnOpportunitiesUM.Content.rateOfRow(id: String): String {
-            val row = tokenList.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
+            val row = items.first { it.tokenRowUM.id == id }.tokenRowUM as TangemTokenRowUM.Content
             val bottomEnd = row.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
             return (bottomEnd.text as TextReference.StyledStr).value
         }
@@ -283,7 +284,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
 
             // Assert — 200 * 0.04 = 8 per year
             val expectedTotal = BigDecimal("200").multiply(BigDecimal("0.04"))
@@ -307,7 +308,7 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
             result.clickFirstRow()
 
             // Assert
@@ -327,16 +328,21 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(createPortfolioStatus(listOf(status))))
+            val result = converter.convert(createSelectedPortfolio(createPortfolioStatus(listOf(status))))
             result.clickFirstRow()
 
             // Assert — the id comes from the resolved staking option
             val option = (availability as StakingAvailability.Available).option
-            assertThat(clickedType).isEqualTo(ForYouEarnOpportunitiesType.Staking(integrationID = option.integrationId))
+            assertThat(clickedType).isEqualTo(
+                ForYouEarnOpportunitiesType.Staking(
+                    integrationID = option.integrationId,
+                    rewardType = EarnRewardType.APY,
+                ),
+            )
         }
 
         private fun EarnOpportunitiesUM.clickFirstRow() {
-            val row = tokenList.first().tokenRowUM as TangemTokenRowUM.Content
+            val row = items.first().tokenRowUM as TangemTokenRowUM.Content
             row.onItemClick?.invoke()
         }
     }
@@ -365,10 +371,10 @@ internal class ForYouEarnOpportunitiesConverterTest {
             )
 
             // Act
-            val result = converter.convert(createAccountStatusList(smallAccount, largeAccount))
+            val result = converter.convert(createSelectedPortfolio(smallAccount, largeAccount))
 
             // Assert — the higher-earning account's token leads the flat list
-            assertThat((result as EarnOpportunitiesUM.Content).tokenList.map { it.tokenRowUM.id })
+            assertThat((result as EarnOpportunitiesUM.Content).items.map { it.tokenRowUM.id })
                 .containsExactly("coin-sol", "coin-eth")
                 .inOrder()
         }
@@ -383,13 +389,13 @@ internal class ForYouEarnOpportunitiesConverterTest {
     ) = ForYouEarnOpportunitiesConverter(
         appCurrency = appCurrency,
         isAccountsModeEnabled = isAccountsModeEnabled,
-        expandedAssetIds = emptySet(),
         expandClick = {},
         yieldSupplyAvailability = yieldSupplyAvailability,
         yieldStakingAvailability = yieldStakingAvailability,
         topEarnTokens = topEarnTokens,
         onTokenClick = onTokenClick,
         onAllEarnTokensClick = {},
+        walletHeaders = emptyMap(),
     )
 
     // Real StakingIntegrationID values are used below: mocking the sealed interface makes mockk try to

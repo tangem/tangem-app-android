@@ -7,4 +7,5 @@ import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
 internal data class UserPortfolioUM(
     val content: TokenSelectorContentUM,
     val isAddEnabled: Boolean,
+    val isAddedEverywhere: Boolean,
 )

@@ -26,20 +26,14 @@ import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.*
+import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 
 @Composable
 internal fun EarnListItem(item: EarnListItemUM, modifier: Modifier = Modifier) {
-    EarnListItemV2(
-        item = item,
-        modifier = modifier,
-    )
-}
-
-@Composable
-private fun EarnListItemV2(item: EarnListItemUM, modifier: Modifier = Modifier) {
     TangemRowContainer(
         modifier = modifier.clickable { item.onItemClick() },
         contentPadding = PaddingValues(12.dp),
@@ -48,14 +42,14 @@ private fun EarnListItemV2(item: EarnListItemUM, modifier: Modifier = Modifier) 
                 tangemIconUM = TangemIconUM.Currency(item.currencyIconState),
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x2)
-                    .size(TangemTheme.dimens2.x10),
+                    .padding(end = 8.dp)
+                    .size(40.dp),
             )
 
             TokenTitle(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_TOP)
-                    .padding(end = TangemTheme.dimens2.x2),
+                    .padding(end = 8.dp),
                 name = item.tokenName.resolveReference(),
                 symbol = item.symbol.resolveReference(),
             )
@@ -63,10 +57,10 @@ private fun EarnListItemV2(item: EarnListItemUM, modifier: Modifier = Modifier) 
             Text(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
-                    .padding(end = TangemTheme.dimens2.x2),
+                    .padding(end = 8.dp),
                 text = item.network.resolveReference(),
-                color = TangemTheme.colors2.text.neutral.secondary,
-                style = TangemTheme.typography2.captionSemibold12,
+                color = TangemTheme.colors3.text.secondary,
+                style = TangemTheme.typography3.caption.medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -74,8 +68,8 @@ private fun EarnListItemV2(item: EarnListItemUM, modifier: Modifier = Modifier) 
             Text(
                 modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_TOP),
                 text = item.earnValue.resolveReference(),
-                color = TangemTheme.colors2.text.neutral.primary,
-                style = TangemTheme.typography2.bodySemibold16,
+                color = TangemTheme.colors3.text.primary,
+                style = TangemTheme.typography3.body.medium,
                 maxLines = 1,
             )
 
@@ -96,8 +90,8 @@ private fun TokenTitle(name: String, symbol: String, modifier: Modifier = Modifi
                 .weight(1f, fill = false)
                 .alignByBaseline(),
             text = name,
-            color = TangemTheme.colors2.text.neutral.primary,
-            style = TangemTheme.typography2.bodySemibold16,
+            color = TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography3.body.medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -105,8 +99,8 @@ private fun TokenTitle(name: String, symbol: String, modifier: Modifier = Modifi
         Text(
             modifier = Modifier.alignByBaseline(),
             text = symbol,
-            color = TangemTheme.colors2.text.neutral.secondary,
-            style = TangemTheme.typography2.captionSemibold12,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
             maxLines = 1,
             overflow = TextOverflow.Visible,
         )
@@ -127,13 +121,13 @@ private fun ModeBlock(earnType: EarnType, earnTypeTitle: TextReference, modifier
                     EarnType.YIELD -> R.drawable.ic_yield_mode_16
                 },
             ),
-            tint = TangemTheme.colors2.markers.iconGray,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
         Text(
             text = earnTypeTitle.resolveReference(),
-            style = TangemTheme.typography2.captionSemibold12,
-            color = TangemTheme.colors2.text.neutral.tertiary,
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -141,55 +135,7 @@ private fun ModeBlock(earnType: EarnType, earnTypeTitle: TextReference, modifier
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EarnListItemPreviewV1() {
-    TangemThemePreview {
-        Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
-            EarnListItem(
-                item = EarnListItemUM(
-                    network = stringReference("Ethereum"),
-                    symbol = stringReference("ETH"),
-                    tokenName = stringReference("Ethereum"),
-                    currencyIconState = CurrencyIconState.TokenIcon(
-                        url = null,
-                        topBadgeIconResId = R.drawable.img_eth_22,
-                        fallbackTint = TangemColorPalette.Black,
-                        fallbackBackground = TangemColorPalette.Meadow,
-                        isGrayscale = false,
-                        shouldShowCustomBadge = false,
-                    ),
-                    earnValue = stringReference("APY 8.50%"),
-                    earnTypeTitle = stringReference("Yield"),
-                    earnType = EarnType.YIELD,
-                    onItemClick = {},
-                ),
-            )
-            EarnListItem(
-                item = EarnListItemUM(
-                    network = stringReference("Ethereum"),
-                    symbol = stringReference("USDT"),
-                    tokenName = stringReference("Tether"),
-                    currencyIconState = CurrencyIconState.TokenIcon(
-                        url = null,
-                        topBadgeIconResId = R.drawable.img_eth_22,
-                        fallbackTint = TangemColorPalette.Black,
-                        fallbackBackground = TangemColorPalette.Meadow,
-                        isGrayscale = false,
-                        shouldShowCustomBadge = false,
-                    ),
-                    earnValue = stringReference("APY 8.50%"),
-                    earnTypeTitle = stringReference("Yield"),
-                    earnType = EarnType.YIELD,
-                    onItemClick = {},
-                ),
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun EarnListItemPreviewV2() {
+private fun EarnListItemPreview() {
     TangemThemePreviewRedesign {
         Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
             SpacerH(12.dp)

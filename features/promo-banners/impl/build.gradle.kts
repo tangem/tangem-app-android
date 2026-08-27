@@ -33,6 +33,7 @@ dependencies {
 
     /** Core */
     api(projects.core.configToggles)
+    implementation(projects.core.local)
     api(projects.core.analytics)
     api(projects.core.datasource)
     api(projects.core.decompose)

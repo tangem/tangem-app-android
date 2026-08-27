@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.solana.RentProvider
+import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.DynamicAddressesManager
 import com.tangem.blockchain.common.address.Address
@@ -476,6 +477,23 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             }
         }
 
+    override suspend fun signTronGaslessTransactions(
+        userWalletId: UserWalletId,
+        network: Network,
+        transactionDataList: List<TransactionData>,
+        signer: TransactionSigner,
+    ): List<String>? = withContext(dispatchers.io) {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            ?: return@withContext null
+
+        if (walletManager !is TronGaslessTransactionSigner) return@withContext null
+
+        when (val result = walletManager.signGaslessTransactions(transactionDataList, signer)) {
+            is Result.Success -> result.data
+            is Result.Failure -> null
+        }
+    }
+
     override suspend fun isSwapSpenderAllowed(
         userWalletId: UserWalletId,
         network: Network,
@@ -656,11 +674,23 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         network: Network,
     ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
+        val derivationPath = network.derivationPath.value
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
-        ) ?: error("Wallet manager not found")
+            derivationPath = derivationPath,
+        )
+
+        if (walletManager == null) {
+            val errorMessage = "Failed to create or retrieve wallet manager: userWalletId=$userWalletId, " +
+                "blockchain=$blockchain, " +
+                "derivationPath=$derivationPath"
+            val error = IllegalStateException(errorMessage)
+
+            TangemLogger.e(errorMessage, error)
+
+            return@withContext Result.Failure(error.toBlockchainSdkError())
+        }
 
         val destination = when (amount.type) {
             is AmountType.TokenYieldSupply -> walletManager.getYieldModuleAddress()

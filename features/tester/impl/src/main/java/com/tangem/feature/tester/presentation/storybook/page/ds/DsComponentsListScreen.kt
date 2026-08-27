@@ -20,6 +20,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemBut
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.filter.tangemFilterGroupStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemGlowRingStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
@@ -50,6 +51,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
     DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
     DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
+    DsStoryItem(title = "🎛️ TangemFilterGroup", factory = tangemFilterGroupStoryFactory),
     DsStoryItem(title = "🔤 Text styles", factory = textStyleStoryFactory),
 )
 

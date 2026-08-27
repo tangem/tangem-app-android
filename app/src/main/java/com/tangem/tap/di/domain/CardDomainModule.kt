@@ -12,8 +12,10 @@ import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
+import com.tangem.tap.domain.card.FirmwareFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,6 +25,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object CardDomainModule {
+
+    @Provides
+    @Singleton
+    fun provideFirmwareFeatureToggles(featureTogglesManager: FeatureTogglesManager): FirmwareFeatureToggles {
+        return FirmwareFeatureToggles(featureTogglesManager)
+    }
 
     @Provides
     @Singleton

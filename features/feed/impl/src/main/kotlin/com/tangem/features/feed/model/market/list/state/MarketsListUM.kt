@@ -3,7 +3,6 @@ package com.tangem.features.feed.model.market.list.state
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -16,10 +15,8 @@ internal data class MarketsListUM(
     val list: ListUM,
     val marketsSearchBar: MarketsSearchBar,
     val selectedSortBy: SortByTypeUM,
-    val sortByBottomSheet: TangemBottomSheetConfig,
     val selectedInterval: TrendInterval,
     val onIntervalClick: (TrendInterval) -> Unit,
-    val onSortByButtonClick: () -> Unit,
     val onSearchClicked: () -> Unit,
     val feedListSearchBar: FeedListSearchBar,
     val sortByMenuUM: SortByMenuUM,

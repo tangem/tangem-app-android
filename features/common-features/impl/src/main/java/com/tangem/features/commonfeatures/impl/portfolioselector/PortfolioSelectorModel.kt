@@ -20,7 +20,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorFeatureToggles
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.portfolioselector.converter.PortfolioSelectorGroupPositionsConverter
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorButtonUM
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorItemUM
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
@@ -32,6 +34,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class PortfolioSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -40,11 +43,13 @@ internal class PortfolioSelectorModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val featureToggles: PortfolioSelectorFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<PortfolioSelectorComponent.Params>()
     private val balanceFetcher get() = params.portfolioFetcher
     private val selectorController get() = params.controller
+    private val groupPositionsConverter = PortfolioSelectorGroupPositionsConverter()
 
     internal val state: StateFlow<PortfolioSelectorUM>
         field = MutableStateFlow<PortfolioSelectorUM>(emptyState())
@@ -71,14 +76,18 @@ internal class PortfolioSelectorModel @Inject constructor(
                     true -> resourceReference(R.string.common_choose_account)
                     false -> resourceReference(R.string.common_choose_wallet)
                 }
+
                 val button = PortfolioSelectorButtonUM(
                     text = resourceReference(R.string.common_apply),
                     onClick = { onApplyClick() },
+                    isEnabled = selectedAccount.isNotEmpty(),
                 )
                 state.value = PortfolioSelectorUM(
                     title = title,
-                    items = uiList.toImmutableList(),
+                    items = groupPositionsConverter.convert(uiList).toImmutableList(),
                     button = button.takeIf { params.settings.isMultiChoice },
+                    isMultiChoiceEnabled = params.settings.isMultiChoice,
+                    isSelectorV3Enabled = featureToggles.isSelectorV3Enabled,
                 )
             },
         )
@@ -185,7 +194,7 @@ internal class PortfolioSelectorModel @Inject constructor(
                 is PortfolioFetcher.Mode.Wallet -> Unit
                 is PortfolioFetcher.Mode.All -> {
                     if (portfolioData.balances.size > 1) {
-                        val isAllSelected = portfolio.accountsBalance.accountStatuses
+                        val isAllSelected = portfolio.accountsBalance.accountStatuses.filterCryptoPortfolio()
                             .all { accountStatus -> accountStatus.account.accountId in selectedAccount }
                         val walletTitle = PortfolioSelectorItemUM.GroupTitle(
                             id = "GroupTitle ${wallet.walletId.stringValue}",
@@ -283,7 +292,7 @@ internal class PortfolioSelectorModel @Inject constructor(
             name = resourceReference(R.string.common_locked_wallets),
             deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
             isSelected = false,
-            onClick = {},
+            onClick = null,
         )
 
         return listOf(lockedWalletsTitle) + wallets
@@ -295,5 +304,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         items = persistentListOf(),
         title = TextReference.EMPTY,
         button = null,
+        isSelectorV3Enabled = featureToggles.isSelectorV3Enabled,
+        isMultiChoiceEnabled = params.settings.isMultiChoice,
     )
 }

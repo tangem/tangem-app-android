@@ -1,8 +1,10 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -18,24 +20,32 @@ internal class TangemPayCashbackInfoTilesConverterTest {
     )
 
     @ParameterizedTest
-    @MethodSource("rateSelectionModels")
-    fun `GIVEN plan WHEN convert THEN rate tile shows the tier rate and the plan subtitle`(model: RateSelectionModel) {
+    @MethodSource("titleModels")
+    fun `GIVEN plan WHEN convert THEN rate title reflects the plan level`(model: TitleModel) {
         // Act
         val result = converter.convert(twoTiers(), model.plan)
 
         // Assert
-        assertThat(result.rate.title).isEqualTo(stringReference(model.expectedTitle))
-        assertThat(result.rate.subtitle).isEqualTo(model.expectedSubtitle)
+        assertThat(result.rate.title).isEqualTo(model.expected)
     }
 
     @Test
-    fun `GIVEN empty tiers and no plan WHEN convert THEN rate tile has no percent and empty subtitle`() {
+    fun `GIVEN empty tiers WHEN convert THEN plain Cashback title`() {
         // Act
-        val result = converter.convert(emptyList(), currentPlan = null)
+        val result = converter.convert(emptyList(), plan(tierId = "plus", name = "Plus"))
 
         // Assert
-        assertThat(result.rate.title).isEqualTo(stringReference("Cashback"))
-        assertThat(result.rate.subtitle).isEqualTo(TextReference.EMPTY)
+        assertThat(result.rate.title).isEqualTo(resourceReference(R.string.tangempay_cashback_title))
+    }
+
+    @ParameterizedTest
+    @MethodSource("subtitleModels")
+    fun `GIVEN plan WHEN convert THEN rate subtitle reflects the plan`(model: SubtitleModel) {
+        // Act
+        val result = converter.convert(twoTiers(), model.plan)
+
+        // Assert
+        assertThat(result.rate.subtitle).isEqualTo(model.expected)
     }
 
     @Test
@@ -44,31 +54,40 @@ internal class TangemPayCashbackInfoTilesConverterTest {
         val result = converter.convert(twoTiers(), plan(tierId = "basic", name = "Basic"))
 
         // Assert
-        assertThat(result.accruals.title).isEqualTo(stringReference("Accruals"))
-        assertThat(result.accruals.subtitle).isEqualTo(stringReference("Limits and exceptions"))
+        assertThat(result.accruals.title).isEqualTo(resourceReference(R.string.tangempay_cashback_accruals_title))
+        assertThat(result.accruals.subtitle)
+            .isEqualTo(resourceReference(R.string.tangempay_cashback_accruals_subtitle))
     }
 
-    private fun rateSelectionModels() = listOf(
-        RateSelectionModel(
+    private fun titleModels() = listOf(
+        TitleModel(
             plan = plan(tierId = "plus", name = "Plus"),
-            expectedTitle = "Cashback 2%",
-            expectedSubtitle = stringReference("With your Plus plan"),
+            expected = resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")),
         ),
-        RateSelectionModel(
-            plan = plan(tierId = "basic", name = "Basic"),
-            expectedTitle = "Cashback 1%",
-            expectedSubtitle = stringReference("With your Basic plan"),
-        ),
-        RateSelectionModel(
+        TitleModel(
             plan = plan(tierId = "gold", name = "Gold"),
-            expectedTitle = "Cashback 1%",
-            expectedSubtitle = stringReference("With your Gold plan"),
+            expected = resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")),
         ),
-        RateSelectionModel(
+        TitleModel(
+            plan = plan(tierId = "basic", name = "Basic"),
+            expected = resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")),
+        ),
+        TitleModel(
             plan = null,
-            expectedTitle = "Cashback 1%",
-            expectedSubtitle = TextReference.EMPTY,
+            expected = resourceReference(R.string.tangempay_cashback_rate_title, wrappedList("1")),
         ),
+    )
+
+    private fun subtitleModels() = listOf(
+        SubtitleModel(
+            plan = plan(tierId = "plus", name = "Plus"),
+            expected = resourceReference(R.string.tangempay_cashback_rate_subtitle, wrappedList("Plus")),
+        ),
+        SubtitleModel(
+            plan = plan(tierId = "basic", name = "Basic"),
+            expected = resourceReference(R.string.tangempay_cashback_rate_subtitle, wrappedList("Basic")),
+        ),
+        SubtitleModel(plan = null, expected = TextReference.EMPTY),
     )
 
     private fun twoTiers() = listOf(
@@ -94,9 +113,7 @@ internal class TangemPayCashbackInfoTilesConverterTest {
         descriptionItems = emptyList(),
     )
 
-    data class RateSelectionModel(
-        val plan: TangemPayTariffPlan?,
-        val expectedTitle: String,
-        val expectedSubtitle: TextReference,
-    )
+    data class TitleModel(val plan: TangemPayTariffPlan?, val expected: TextReference)
+
+    data class SubtitleModel(val plan: TangemPayTariffPlan?, val expected: TextReference)
 }

@@ -934,4 +934,193 @@ class SendViaSwapTest : BaseTestCase() {
             }
         }
     }
+
+    @AllureId("10347")
+    @DisplayName("Send via Swap: 'High price impact' banner is displayed")
+    @Test
+    fun sendViaSwapHighPriceImpactWarningTest() {
+        val tokenName = "Bitcoin"
+        val swapTokenName = "Ethereum"
+        val main = "MAIN"
+        val inputAmount = "0.001"
+        val bitcoinBalanceScenarioName = "bitcoin_utxo"
+        val bitcoinBalanceScenarioState = "Balance"
+        val assetsScenarioName = "express_api_assets"
+        val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
+        // swap-v2 raises the "High price impact" banner already at the MEDIUM threshold — hence the Medium mock.
+        val quotesScenarioState = "MediumPriceImpact"
+        val bannerTitle = getResourceString(R.string.swapping_high_price_impact_title)
+        val dialogTitle = getResourceString(R.string.swapping_alert_title)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(bitcoinBalanceScenarioName)
+                resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
+                setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
+            }
+            step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
+            }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesScenarioState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesScenarioState)
+            }
+
+            step("Open 'Send' screen") {
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
+            }
+            step("Type '$inputAmount' in text field") {
+                onSendScreen { amountInputTextField.performTextInput(inputAmount) }
+            }
+            step("Click on 'Swap to another token' button") {
+                onSendScreen { swapToAnotherTokenButton.performClick() }
+            }
+            step("Click on token: '$swapTokenName'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendViaSwapScreen { tokenItem(swapTokenName).performClick() }
+                }
+            }
+            step("Click on '$swapTokenName $main' network") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onChooseNetworkBottomSheet { networkItem(swapTokenName, main).performClick() }
+                }
+            }
+            step("Click on 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendScreen {
+                        nextButton.assertIsEnabled()
+                        nextButton.performClick()
+                    }
+                }
+            }
+            step("Type recipient address") {
+                onSendAddressScreen { addressTextField.performTextReplacement(ETHEREUM_RECIPIENT_ADDRESS) }
+            }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
+            }
+            step("Assert price impact percentile is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { priceImpactPercent.assertIsDisplayed() }
+                }
+            }
+            step("Assert price impact information icon is displayed") {
+                onSendConfirmScreen { priceImpactInfoIcon.assertIsDisplayed() }
+            }
+            step("Assert 'High price impact' warning banner is displayed") {
+                onSendConfirmScreen { warningTitle(bannerTitle).assertIsDisplayed() }
+            }
+            step("Click on price impact information icon") {
+                onSendConfirmScreen { priceImpactInfoIcon.performClick() }
+            }
+            step("Assert information dialog title is displayed") {
+                onDialog { title.assertTextEquals(dialogTitle) }
+            }
+        }
+    }
+
+    @AllureId("10388")
+    @DisplayName("Send via Swap: 'Trade too large' banner is displayed")
+    @Test
+    fun sendViaSwapTradeTooLargeWarningTest() {
+        val tokenName = "Bitcoin"
+        val swapTokenName = "Ethereum"
+        val main = "MAIN"
+        val inputAmount = "0.001"
+        val bitcoinBalanceScenarioName = "bitcoin_utxo"
+        val bitcoinBalanceScenarioState = "Balance"
+        val assetsScenarioName = "express_api_assets"
+        val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
+        val quotesScenarioState = "HighPriceImpact"
+        val bannerTitle = getResourceString(R.string.swapping_trade_too_large_title)
+        val dialogTitle = getResourceString(R.string.swapping_alert_title)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(bitcoinBalanceScenarioName)
+                resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
+                setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
+            }
+            step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
+            }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$quotesScenarioState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = quotesScenarioState)
+            }
+
+            step("Open 'Send' screen") {
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
+            }
+            step("Type '$inputAmount' in text field") {
+                onSendScreen { amountInputTextField.performTextInput(inputAmount) }
+            }
+            step("Click on 'Swap to another token' button") {
+                onSendScreen { swapToAnotherTokenButton.performClick() }
+            }
+            step("Click on token: '$swapTokenName'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendViaSwapScreen { tokenItem(swapTokenName).performClick() }
+                }
+            }
+            step("Click on '$swapTokenName $main' network") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onChooseNetworkBottomSheet { networkItem(swapTokenName, main).performClick() }
+                }
+            }
+            step("Click on 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendScreen {
+                        nextButton.assertIsEnabled()
+                        nextButton.performClick()
+                    }
+                }
+            }
+            step("Type recipient address") {
+                onSendAddressScreen { addressTextField.performTextReplacement(ETHEREUM_RECIPIENT_ADDRESS) }
+            }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
+            }
+            step("Assert price impact percentile is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { priceImpactPercent.assertIsDisplayed() }
+                }
+            }
+            step("Assert price impact information icon is displayed") {
+                onSendConfirmScreen { priceImpactInfoIcon.assertIsDisplayed() }
+            }
+            step("Assert 'Trade too large' warning banner is displayed") {
+                onSendConfirmScreen { warningTitle(bannerTitle).assertIsDisplayed() }
+            }
+            step("Click on price impact information icon") {
+                onSendConfirmScreen { priceImpactInfoIcon.performClick() }
+            }
+            step("Assert information dialog title is displayed") {
+                onDialog { title.assertTextEquals(dialogTitle) }
+            }
+        }
+    }
 }

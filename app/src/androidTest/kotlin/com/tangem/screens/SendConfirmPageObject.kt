@@ -133,6 +133,16 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val priceImpactPercent: KNode = child {
+        hasTestTag(SwapAmountTestTags.PRICE_IMPACT_PERCENT)
+        useUnmergedTree = true
+    }
+
+    val priceImpactInfoIcon: KNode = child {
+        hasTestTag(SwapAmountTestTags.PRICE_IMPACT_INFO_ICON)
+        useUnmergedTree = true
+    }
+
     val blockchainAddress: KNode = child {
         hasTestTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS)
         useUnmergedTree = true

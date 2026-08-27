@@ -31,6 +31,9 @@ interface CustomerOrderRepository {
     /**
      * Create a new order via `POST /v1/order` with a per-attempt idempotency key.
      * The caller is responsible for finding an existing active order before creating a new one.
+     *
+     * @param chainId EVM chain id for [OrderType.SMART_CONTRACT_ISSUE_RAIN] (network contract-creation)
+     * orders; `null` for every other order type.
      */
     suspend fun createOrder(
         userWalletId: UserWalletId,
@@ -39,6 +42,7 @@ interface CustomerOrderRepository {
         idempotencyKey: String,
         targetTariffPlanId: String? = null,
         transitionType: TangemPayTariffPlanTransition.Type? = null,
+        chainId: Int? = null,
     ): Either<VisaApiError, Order>
 
     suspend fun cancelOrder(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit>

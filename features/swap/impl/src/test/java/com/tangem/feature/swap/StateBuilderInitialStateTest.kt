@@ -51,6 +51,7 @@ internal class StateBuilderInitialStateTest {
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
             appRouter = appRouter,
+            isChooseTokenPulseEnabled = false,
         )
     }
 

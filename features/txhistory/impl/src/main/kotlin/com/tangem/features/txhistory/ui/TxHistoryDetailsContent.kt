@@ -20,10 +20,18 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 
 @Composable
-internal fun TxHistoryDetailsContent(state: TxHistoryDetailsUM, modifier: Modifier = Modifier) {
+internal fun TxHistoryDetailsContent(
+    state: TxHistoryDetailsUM,
+    modifier: Modifier = Modifier,
+    ratingContent: (@Composable () -> Unit)? = null,
+) {
     when (state) {
         is TxHistoryDetailsUM.SingleAsset -> SingleAssetContent(state = state, modifier = modifier)
-        is TxHistoryDetailsUM.TwoAssets -> TwoAssetsContent(state = state, modifier = modifier)
+        is TxHistoryDetailsUM.TwoAssets -> TwoAssetsContent(
+            state = state,
+            modifier = modifier,
+            ratingContent = ratingContent,
+        )
     }
 }
 
@@ -49,7 +57,11 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
 }
 
 @Composable
-private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modifier = Modifier) {
+private fun TwoAssetsContent(
+    state: TxHistoryDetailsUM.TwoAssets,
+    modifier: Modifier = Modifier,
+    ratingContent: (@Composable () -> Unit)? = null,
+) {
     val from = state.from
     val to = state.to
     Column(modifier = modifier.fillMaxWidth().padding(bottom = 16.dp)) {
@@ -73,6 +85,16 @@ private fun TwoAssetsContent(state: TxHistoryDetailsUM.TwoAssets, modifier: Modi
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         )
+        // Provider-rating (CSAT) card — express swaps only, any status.
+        ratingContent?.let { rating ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp),
+            ) {
+                rating()
+            }
+        }
         // Network fee (and later rate) pulled from the matched on-chain leg; the block is skipped when [rows] is empty.
         TxHistoryDetailsInfoRows(
             rows = state.rows,

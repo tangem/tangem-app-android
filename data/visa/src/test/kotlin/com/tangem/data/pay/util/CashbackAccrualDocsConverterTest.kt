@@ -1,8 +1,8 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.pay.models.response.CashbackAccrualDocsResponse
-import com.tangem.datasource.api.pay.models.response.CashbackAccrualDocsResponse.Doc
+import com.tangem.spend.datasource.pay.models.response.CashbackAccrualDocsResponse
+import com.tangem.spend.datasource.pay.models.response.CashbackAccrualDocsResponse.Doc
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test

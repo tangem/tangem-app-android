@@ -34,7 +34,7 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
     operator fun invoke(userWalletId: UserWalletId): Flow<Pair<AccountStatus.Payment, CryptoCurrencyStatus>> {
         return paymentAccountStatusSupplier(userWalletId).mapNotNull { accountStatus ->
             val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
-                is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
+                is PaymentAccountStatusValue.Loaded -> statusValue.currencyStatusOrNull() ?: return@mapNotNull null
                 else -> return@mapNotNull null
             }
             accountStatus to cryptoCurrencyStatus
@@ -57,9 +57,18 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
     suspend fun invokeSync(userWalletId: UserWalletId): Option<Pair<AccountStatus.Payment, CryptoCurrencyStatus>> {
         val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return none()
         val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
-            is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
+            is PaymentAccountStatusValue.Loaded -> statusValue.currencyStatusOrNull() ?: return none()
             else -> return none()
         }
         return (accountStatus to cryptoCurrencyStatus).some()
     }
+
+    /**
+     * Currency status of the payment account: the account-level one when its balances are known, otherwise the
+     * first of the per-network statuses. Without the fallback a multichain response that carries no
+     * account-level balances would silently stop feeding swap / tx history, even though per-network data is
+     * available.
+     */
+    private fun PaymentAccountStatusValue.Loaded.currencyStatusOrNull(): CryptoCurrencyStatus? =
+        cryptoCurrencyStatus ?: cryptoCurrencyStatuses.firstOrNull()
 }

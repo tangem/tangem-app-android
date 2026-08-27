@@ -69,6 +69,57 @@ internal class TangemPayTxHistoryStoreSerializationTest {
         assertThat(encoded).contains("\"__type\":\"collateral\"")
     }
 
+    @Test
+    fun `GIVEN awaiting-calculation cashback with null amount WHEN serialized and deserialized THEN preserved`() {
+        // Arrange
+        val awaiting = spend().copy(
+            cashback = TangemPayTxHistoryItemDM.Cashback(
+                status = TangemPayTxHistoryItemDM.Cashback.Status.AWAITING_CALCULATION,
+                amount = null,
+                currency = null,
+                isCapTrimmed = false,
+                exclusionReason = null,
+            ),
+        )
+        val original: Map<String, Map<String, List<TangemPayTxHistoryItemDM>>> = mapOf(
+            "wallet-1" to mapOf("cursor" to listOf(awaiting)),
+        )
+
+        // Act
+        val restored = json.decodeFromString(serializer, json.encodeToString(serializer, original))
+
+        // Assert
+        assertThat(restored).isEqualTo(original)
+    }
+
+    @Test
+    fun `GIVEN spend with null cashback WHEN serialized and deserialized THEN cashback stays null`() {
+        // Arrange
+        val original: Map<String, Map<String, List<TangemPayTxHistoryItemDM>>> = mapOf(
+            "wallet-1" to mapOf("cursor" to listOf(spend().copy(cashback = null))),
+        )
+
+        // Act
+        val restored = json.decodeFromString(serializer, json.encodeToString(serializer, original))
+
+        // Assert
+        assertThat(restored).isEqualTo(original)
+    }
+
+    @Test
+    fun `GIVEN legacy spend JSON without the cashback key WHEN deserialized THEN cashback is null`() {
+        // Arrange — a cache written before the cashback field existed has no "cashback" key at all.
+        val itemSerializer = TangemPayTxHistoryItemDM.serializer()
+        val nullCashback = json.encodeToString(itemSerializer, spend().copy(cashback = null))
+        val legacyJson = nullCashback.replace(",\"cashback\":null", "")
+
+        // Act
+        val restored = json.decodeFromString(itemSerializer, legacyJson)
+
+        // Assert
+        assertThat((restored as TangemPayTxHistoryItemDM.Spend).cashback).isNull()
+    }
+
     private fun spend() = TangemPayTxHistoryItemDM.Spend(
         id = "spend-1",
         jsonRepresentation = "{}",
@@ -86,6 +137,14 @@ internal class TangemPayTxHistoryStoreSerializationTest {
         status = TangemPayTxHistoryItemDM.Status.COMPLETED,
         enrichedMerchantIconUrl = "https://example.com/icon.png",
         declinedReason = null,
+        cashback = TangemPayTxHistoryItemDM.Cashback(
+            status = TangemPayTxHistoryItemDM.Cashback.Status.CONFIRMED,
+            amount = BigDecimal("0.50"),
+            currency = Currency.getInstance("USD"),
+            isCapTrimmed = true,
+            exclusionReason = TangemPayTxHistoryItemDM.Cashback.ExclusionReason.MCC_EXCLUDED,
+            promotionIds = listOf("promo-1"),
+        ),
     )
 
     private fun payment() = TangemPayTxHistoryItemDM.Payment(

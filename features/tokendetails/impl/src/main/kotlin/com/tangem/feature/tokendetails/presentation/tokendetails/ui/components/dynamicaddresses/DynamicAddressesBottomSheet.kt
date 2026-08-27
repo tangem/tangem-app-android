@@ -1,11 +1,13 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.dynamicaddresses
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.ds2.button.Close
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.R as CoreR
 
 @Composable
 internal fun DynamicAddressesBottomSheet(config: TangemBottomSheetConfig) {
@@ -13,9 +15,10 @@ internal fun DynamicAddressesBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
         title = {
-            TangemModalBottomSheetTitle(
-                endIconRes = CoreR.drawable.ic_close_24,
-                onEndClick = config.onDismissRequest,
+            TangemTopNavigation(
+                windowInsets = WindowInsets(0),
+                blurBackground = false,
+                endButton = { TangemButton.Close(onClick = config.onDismissRequest) },
             )
         },
     ) { content ->

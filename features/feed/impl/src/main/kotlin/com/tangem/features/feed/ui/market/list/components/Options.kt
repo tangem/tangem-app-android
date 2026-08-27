@@ -7,38 +7,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
-import com.tangem.core.ui.ds.button.PrimaryInverseTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.impl.R
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_down_20
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByMenuUM
 import kotlinx.collections.immutable.persistentListOf
-import com.tangem.core.ui.ds.button.TangemButtonIconPosition as RedesignTangemButtonIconPosition
 
 @Composable
 internal fun Options(
-    sortMenuUM: SortByMenuUM,
-    trendInterval: MarketsListUM.TrendInterval,
-    onIntervalClick: (MarketsListUM.TrendInterval) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    OptionsV2(
-        sortMenuUM = sortMenuUM,
-        trendInterval = trendInterval,
-        onIntervalClick = onIntervalClick,
-        modifier = modifier,
-    )
-}
-
-@Composable
-private fun OptionsV2(
     sortMenuUM: SortByMenuUM,
     trendInterval: MarketsListUM.TrendInterval,
     onIntervalClick: (MarketsListUM.TrendInterval) -> Unit,
@@ -74,20 +56,18 @@ private fun OptionsV2(
                 .fillMaxWidth()
                 .height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            PrimaryInverseTangemButton(
+            TangemButton(
+                text = sortMenuUM.selectedOption.text,
                 onClick = {
                     hapticManager.perform(TangemHapticEffect.View.ContextClick)
                     isShowDropdownMenu = true
                 },
-                iconPosition = RedesignTangemButtonIconPosition.End,
-                tangemIconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_chewron_down_20,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
-                text = sortMenuUM.selectedOption.text,
-                size = TangemButtonSize.X9,
-                shape = TangemButtonShape.Rounded,
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X9,
+                iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_chevron_down_20),
+                modifier = Modifier.weight(weight = 1f, fill = false),
             )
 
             TangemSegmentedPicker(

@@ -56,6 +56,37 @@ added or edited** (production `testTag` files included), check and remove:
   needs no `@OptIn` — drop it (and its `import androidx.compose.ui.test.ExperimentalTestApi`).
 - **Dead vals / matchers / page-object members** you introduced and then stopped referencing.
 
+### Grepped self-review gates (run these — do not eyeball)
+
+The "must-follow" conventions below aren't optional reading you skim once; before you say the test is
+done, run these greps against **every file you touched** and act on each hit. These catch the exact
+mistakes that eyeballing misses (they're the ones reviewers keep flagging):
+
+```bash
+CHANGED="<space-separated list of the .kt files you added/edited>"
+
+# 1. Manual wait loop → must be awaitSuccess (scenario/BaseTestCase code) unless it wraps a
+#    per-iteration MUTATING action (retry a click/hold). Every hit is either replaced with
+#    `awaitSuccess { … }` or carries a one-line WHY it can't be (mutating-in-loop). No silent leaves.
+grep -nE "composeTestRule\.waitUntil \{" $CHANGED
+
+# 2. JSON built by string interpolation → use JSONObject().put(...).toString() instead
+#    (interpolation breaks on quotes/backslashes, e.g. regex urlPathPattern).
+grep -nE '"""\{|"\{\\"|\{\s*\\"[a-zA-Z]+\\"\s*:' $CHANGED
+
+# 3. flakySafely in scenario/extension code — NOT available there; must be awaitSuccess.
+grep -nE "flakySafely" $CHANGED   # legal only inside a TestCase test-body lambda, never in a scenario fun
+
+# 4. assertIsNotEnabled / assertIsEnabled on ACTION_BUTTON / HoldToConfirm — no Disabled semantics;
+#    use assertHasNoClickAction() / assertHasClickAction() instead.
+grep -nE "assertIs(Not)?Enabled" $CHANGED
+```
+
+For gate #1 specifically: `awaitSuccess(timeoutMillis, block)` **is** the codebase's canonical wrapper
+for `composeTestRule.waitUntil { runCatching(block).isSuccess }` (see the Waits section). A hand-rolled
+`waitUntil { runCatching { … }.isSuccess }` in a scenario/extension is the wrong form — convert it.
+Walk the **whole** Waits/sync section against the diff by meaning, not just what these greps match.
+
 Then recompile the changed module(s) to confirm the removals are valid — the androidTest APK
 (`:app:assembleGoogleMockedAndroidTest`) for test-side edits, or the touched production module
 (e.g. `:core:ui:compileDebugKotlin`) for `testTag` edits. A clean compile with no opt-in / unused-symbol

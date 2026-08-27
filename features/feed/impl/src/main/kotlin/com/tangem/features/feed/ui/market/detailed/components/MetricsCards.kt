@@ -31,13 +31,13 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.components.MetricsCard
-import com.tangem.features.feed.ui.market.detailed.state.InfoPointUMV2
+import com.tangem.features.feed.ui.market.detailed.state.MetricItemUM
 import com.tangem.features.feed.ui.market.detailed.state.MarketRatingChange24H
 import com.tangem.features.feed.ui.market.detailed.state.MarketRatingType
 import com.tangem.features.feed.ui.market.detailed.state.TrendingVolumeLiquidityType
 
 @Composable
-internal fun MarketCapCard(item: InfoPointUMV2.MarketCap) {
+internal fun MarketCapCard(item: MetricItemUM.MarketCap) {
     MetricsCard(
         onClick = item.onInfoClick,
         modifier = Modifier
@@ -54,12 +54,12 @@ internal fun MarketCapCard(item: InfoPointUMV2.MarketCap) {
 }
 
 @Composable
-internal fun TradingVolumeCard(item: InfoPointUMV2.TradingVolume) {
+internal fun TradingVolumeCard(item: MetricItemUM.TradingVolume) {
     val tradingColor = when (item.trendingVolumeLiquidityType) {
-        TrendingVolumeLiquidityType.HIGH -> TangemTheme.colors2.markers.backgroundSolidGreen
-        TrendingVolumeLiquidityType.MEDIUM -> TangemTheme.colors2.graphic.status.attention
-        TrendingVolumeLiquidityType.LOW -> TangemTheme.colors2.graphic.status.warning
-        TrendingVolumeLiquidityType.UNKNOWN -> TangemTheme.colors2.surface.level3
+        TrendingVolumeLiquidityType.HIGH -> TangemTheme.colors3.bg.accent.green
+        TrendingVolumeLiquidityType.MEDIUM -> TangemTheme.colors3.bg.accent.yellow
+        TrendingVolumeLiquidityType.LOW -> TangemTheme.colors3.bg.accent.red
+        TrendingVolumeLiquidityType.UNKNOWN -> TangemTheme.colors3.bg.secondary
     }
     val valueColor = metricValueColor(hasData = item.tradingValue != null)
 
@@ -72,9 +72,9 @@ internal fun TradingVolumeCard(item: InfoPointUMV2.TradingVolume) {
             Row {
                 MetricValueText(item.tradingValue)
                 Text(
-                    modifier = Modifier.padding(TangemTheme.dimens2.x1),
+                    modifier = Modifier.padding(4.dp),
                     text = stringResourceSafe(R.string.markets_token_details_trading_interval),
-                    style = TangemTheme.typography2.captionMedium11,
+                    style = TangemTheme.typography3.caption.medium,
                     color = valueColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -90,8 +90,7 @@ internal fun TradingVolumeCard(item: InfoPointUMV2.TradingVolume) {
                             .height(6.dp),
                         progress = { item.liquidity },
                         color = tradingColor,
-                        backgroundColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
-                            .copy(alpha = .1f),
+                        backgroundColor = TangemTheme.colors3.bg.tertiary,
                     )
                 }
                 SpacerH(12.dp)
@@ -101,12 +100,12 @@ internal fun TradingVolumeCard(item: InfoPointUMV2.TradingVolume) {
                 )
             }
         },
-        cardColor = TangemTheme.colors2.surface.level3,
+        cardColor = TangemTheme.colors3.bg.secondary,
     )
 }
 
 @Composable
-internal fun MarketPositionCard(item: InfoPointUMV2.MarketPosition) {
+internal fun MarketPositionCard(item: MetricItemUM.MarketPosition) {
     val ratingColor = mapRatingToColor(marketRatingType = item.marketRatingType)
 
     MetricsCard(
@@ -142,12 +141,12 @@ internal fun MarketPositionCard(item: InfoPointUMV2.MarketPosition) {
                 )
             }
         },
-        cardColor = TangemTheme.colors2.surface.level3,
+        cardColor = TangemTheme.colors3.bg.secondary,
     )
 }
 
 @Composable
-internal fun FDVCard(item: InfoPointUMV2.FullyDilutedValuation) {
+internal fun FDVCard(item: MetricItemUM.FullyDilutedValuation) {
     MetricsCard(
         modifier = Modifier
             .heightIn(104.dp)
@@ -158,10 +157,10 @@ internal fun FDVCard(item: InfoPointUMV2.FullyDilutedValuation) {
                 Row {
                     MetricValueText(value = item.fullyDilutedValuationChange24)
                     Text(
-                        modifier = Modifier.padding(TangemTheme.dimens2.x1),
+                        modifier = Modifier.padding(4.dp),
                         text = stringResourceSafe(R.string.markets_token_details_trading_interval),
-                        style = TangemTheme.typography2.captionMedium11,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography3.caption.medium,
+                        color = TangemTheme.colors3.text.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -176,8 +175,8 @@ internal fun FDVCard(item: InfoPointUMV2.FullyDilutedValuation) {
                     Text(
                         text = item.value?.resolveReference()
                             ?: stringResourceSafe(R.string.token_market_metrics_no_data),
-                        style = TangemTheme.typography2.captionMedium12,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography3.caption.medium,
+                        color = TangemTheme.colors3.text.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -194,7 +193,7 @@ internal fun FDVCard(item: InfoPointUMV2.FullyDilutedValuation) {
 }
 
 @Composable
-internal fun CirculatingSupplyCard(item: InfoPointUMV2.CirculatingSupply) {
+internal fun CirculatingSupplyCard(item: MetricItemUM.CirculatingSupply) {
     MetricsCard(
         modifier = Modifier
             .heightIn(min = if (item.fillValue == null) 88.dp else 106.dp)
@@ -204,8 +203,8 @@ internal fun CirculatingSupplyCard(item: InfoPointUMV2.CirculatingSupply) {
                 Text(
                     modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
                     text = stringResourceSafe(R.string.markets_token_details_circulating_supply),
-                    style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -220,8 +219,8 @@ internal fun CirculatingSupplyCard(item: InfoPointUMV2.CirculatingSupply) {
                 Text(
                     modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
                     text = stringResourceSafe(R.string.markets_token_details_max_supply),
-                    style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -232,8 +231,8 @@ internal fun CirculatingSupplyCard(item: InfoPointUMV2.CirculatingSupply) {
                             .padding(top = 12.dp)
                             .layoutId(TangemRowLayoutId.END_BOTTOM),
                         text = item.maxValue.resolveReference(),
-                        style = TangemTheme.typography2.headingSemibold20,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography3.heading.small,
+                        color = TangemTheme.colors3.text.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -246,9 +245,8 @@ internal fun CirculatingSupplyCard(item: InfoPointUMV2.CirculatingSupply) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp),
-                    color = TangemTheme.colors2.graphic.status.accent,
-                    trackColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
-                        .copy(alpha = .1f),
+                    color = TangemTheme.colors3.bg.brand,
+                    trackColor = TangemTheme.colors3.bg.tertiary,
                     progress = { item.fillValue },
                     strokeCap = StrokeCap.Round,
                     drawStopIndicator = {},
@@ -267,7 +265,7 @@ private fun MetricValueText(value: TextReference?, modifier: Modifier = Modifier
     Text(
         modifier = modifier,
         text = value?.resolveReference() ?: stringResourceSafe(R.string.token_market_metrics_no_data),
-        style = TangemTheme.typography2.headingSemibold20,
+        style = TangemTheme.typography3.heading.small,
         color = metricValueColor(hasData = value != null),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -276,7 +274,7 @@ private fun MetricValueText(value: TextReference?, modifier: Modifier = Modifier
 
 @Composable
 private fun metricValueColor(hasData: Boolean): Color {
-    return if (hasData) TangemTheme.colors2.text.neutral.primary else TangemTheme.colors2.text.neutral.tertiary
+    return if (hasData) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary
 }
 
 @Composable
@@ -291,7 +289,7 @@ private fun MarketPositionValue(position: TextReference?, ratingColor: Color) {
             textAlign = TextAlign.Center,
             text = position.resolveReference(),
             color = ratingColor,
-            style = TangemTheme.typography2.headingSemibold22.copy(letterSpacing = 0.sp),
+            style = TangemTheme.typography3.heading.small.copy(letterSpacing = 0.sp),
             maxLines = 1,
         )
         Icon(
@@ -309,15 +307,15 @@ private fun RatingChangeIndicator(change: MarketRatingChange24H) {
     when (change) {
         is MarketRatingChange24H.Up -> RatingChangeContent(
             iconRes = R.drawable.ic_arrow_up_8,
-            iconTint = TangemTheme.colors2.markers.iconBlue,
+            iconTint = TangemTheme.colors3.icon.accent.blue,
             changeValue = change.changeValue.toString(),
-            textColor = TangemTheme.colors2.text.status.accent,
+            textColor = TangemTheme.colors3.text.status.info,
         )
         is MarketRatingChange24H.Down -> RatingChangeContent(
             iconRes = R.drawable.ic_arrow_down_8,
-            iconTint = TangemTheme.colors2.markers.iconRed,
+            iconTint = TangemTheme.colors3.icon.accent.red,
             changeValue = change.changeValue.toString(),
-            textColor = TangemTheme.colors2.text.status.warning,
+            textColor = TangemTheme.colors3.text.status.error,
         )
         MarketRatingChange24H.NoChanges -> Unit
     }
@@ -327,7 +325,7 @@ private fun RatingChangeIndicator(change: MarketRatingChange24H) {
 private fun RatingChangeContent(iconRes: Int, iconTint: Color, changeValue: String, textColor: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens2.x3),
+            modifier = Modifier.size(12.dp),
             imageVector = ImageVector.vectorResource(id = iconRes),
             tint = iconTint,
             contentDescription = null,
@@ -335,7 +333,7 @@ private fun RatingChangeContent(iconRes: Int, iconTint: Color, changeValue: Stri
         SpacerW(2.dp)
         Text(
             text = changeValue,
-            style = TangemTheme.typography2.captionMedium12,
+            style = TangemTheme.typography3.caption.medium,
             color = textColor,
         )
     }
@@ -356,7 +354,7 @@ private fun MarketRatingType.baseColor(): Color {
             if (isDarkTheme) Color(BRONZE_PLACE_COLOR_NIGHT) else Color(BRONZE_PLACE_COLOR_LIGHT)
 
         MarketRatingType.OTHER ->
-            TangemTheme.colors2.graphic.neutral.primary
+            TangemTheme.colors3.icon.primary
     }
 }
 
@@ -382,19 +380,19 @@ private fun MetricsCardsPreview() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors2.surface.level2)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             MarketCapCard(
-                item = InfoPointUMV2.MarketCap(
+                item = MetricItemUM.MarketCap(
                     capitalizationValue = stringReference("$ 1.2 T"),
                     onInfoClick = {},
                 ),
             )
 
             TradingVolumeCard(
-                item = InfoPointUMV2.TradingVolume(
+                item = MetricItemUM.TradingVolume(
                     tradingValue = stringReference("$ 45.2 M"),
                     liquidity = 0.75f,
                     trendingVolumeLiquidityType = TrendingVolumeLiquidityType.HIGH,
@@ -403,7 +401,7 @@ private fun MetricsCardsPreview() {
             )
 
             TradingVolumeCard(
-                item = InfoPointUMV2.TradingVolume(
+                item = MetricItemUM.TradingVolume(
                     tradingValue = stringReference("$ 12.1 M"),
                     liquidity = 0.45f,
                     trendingVolumeLiquidityType = TrendingVolumeLiquidityType.MEDIUM,
@@ -412,7 +410,7 @@ private fun MetricsCardsPreview() {
             )
 
             TradingVolumeCard(
-                item = InfoPointUMV2.TradingVolume(
+                item = MetricItemUM.TradingVolume(
                     tradingValue = stringReference("$ 2.3 M"),
                     liquidity = 0.15f,
                     trendingVolumeLiquidityType = TrendingVolumeLiquidityType.LOW,
@@ -421,7 +419,7 @@ private fun MetricsCardsPreview() {
             )
 
             MarketPositionCard(
-                item = InfoPointUMV2.MarketPosition(
+                item = MetricItemUM.MarketPosition(
                     position = stringReference("1"),
                     rangeValue = 0.02f,
                     marketRatingType = MarketRatingType.GOLD,
@@ -431,7 +429,7 @@ private fun MetricsCardsPreview() {
             )
 
             MarketPositionCard(
-                item = InfoPointUMV2.MarketPosition(
+                item = MetricItemUM.MarketPosition(
                     position = stringReference("2"),
                     rangeValue = 0.05f,
                     marketRatingChange24H = MarketRatingChange24H.Up(1),
@@ -441,7 +439,7 @@ private fun MetricsCardsPreview() {
             )
 
             MarketPositionCard(
-                item = InfoPointUMV2.MarketPosition(
+                item = MetricItemUM.MarketPosition(
                     position = null,
                     rangeValue = null,
                     marketRatingType = MarketRatingType.OTHER,
@@ -451,7 +449,7 @@ private fun MetricsCardsPreview() {
             )
 
             MarketPositionCard(
-                item = InfoPointUMV2.MarketPosition(
+                item = MetricItemUM.MarketPosition(
                     position = stringReference("42"),
                     rangeValue = 0.42f,
                     marketRatingType = MarketRatingType.OTHER,
@@ -461,7 +459,7 @@ private fun MetricsCardsPreview() {
             )
 
             FDVCard(
-                item = InfoPointUMV2.FullyDilutedValuation(
+                item = MetricItemUM.FullyDilutedValuation(
                     value = stringReference("$ 1.5 T"),
                     fullyDilutedValuationChange24 = stringReference("$ 2.44 M in total"),
                     onInfoClick = {},
@@ -469,7 +467,7 @@ private fun MetricsCardsPreview() {
             )
 
             CirculatingSupplyCard(
-                item = InfoPointUMV2.CirculatingSupply(
+                item = MetricItemUM.CirculatingSupply(
                     currentValue = stringReference("12.5 B POL"),
                     maxValue = stringReference("21 B POL"),
                     fillValue = 0.6f,
@@ -478,7 +476,7 @@ private fun MetricsCardsPreview() {
             )
 
             CirculatingSupplyCard(
-                item = InfoPointUMV2.CirculatingSupply(
+                item = MetricItemUM.CirculatingSupply(
                     currentValue = stringReference("18.9 M ETH"),
                     maxValue = null,
                     fillValue = null,

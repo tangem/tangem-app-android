@@ -6,21 +6,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
 fun NewsDetailsPlaceholder(contentPadding: PaddingValues, background: Color, modifier: Modifier = Modifier) {
-    NewsDetailsPlaceholderV2(contentPadding, background, modifier)
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun NewsDetailsPlaceholderV2(contentPadding: PaddingValues, background: Color, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -28,86 +25,93 @@ private fun NewsDetailsPlaceholderV2(contentPadding: PaddingValues, background: 
             .padding(16.dp),
     ) {
         SpacerH(contentPadding.calculateTopPadding())
-        RectangleShimmer(
-            modifier = Modifier.size(width = 90.dp, height = 20.dp),
-            radius = TangemTheme.dimens2.x25,
+        NewsDetailsShimmerLine(
+            style = TangemTheme.typography3.body.medium,
+            width = 90.dp,
         )
 
         SpacerH(16.dp)
 
-        RectangleShimmer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp),
-            radius = TangemTheme.dimens2.x25,
+        NewsDetailsShimmerLine(
+            style = TangemTheme.typography3.heading.medium,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         SpacerH(12.dp)
 
-        RectangleShimmer(
+        NewsDetailsShimmerLine(
+            style = TangemTheme.typography3.heading.medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
                 .padding(end = 106.dp),
-            radius = TangemTheme.dimens2.x25,
         )
 
         SpacerH(30.dp)
 
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            RectangleShimmer(
-                modifier = Modifier.size(width = 98.dp, height = 36.dp),
-                radius = TangemTheme.dimens2.x25,
-            )
-            RectangleShimmer(
-                modifier = Modifier.size(width = 98.dp, height = 36.dp),
-                radius = TangemTheme.dimens2.x25,
-            )
+            NewsDetailsTagShimmer(width = 98.dp)
+            NewsDetailsTagShimmer(width = 98.dp)
         }
 
         SpacerH(20.dp)
 
-        RectangleShimmer(
+        NewsDetailsShimmerLine(
+            style = TangemTheme.typography3.body.medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
                 .padding(end = 22.dp),
-            radius = TangemTheme.dimens2.x25,
         )
         SpacerH(12.dp)
-        RectangleShimmer(
+        NewsDetailsShimmerLine(
+            style = TangemTheme.typography3.body.medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
                 .padding(end = 66.dp),
-            radius = TangemTheme.dimens2.x25,
         )
         SpacerH(12.dp)
-        RectangleShimmer(
+        NewsDetailsShimmerLine(
+            style = TangemTheme.typography3.body.medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
                 .padding(end = 18.dp),
-            radius = TangemTheme.dimens2.x25,
         )
         SpacerH(12.dp)
-        RectangleShimmer(
+        NewsDetailsShimmerLine(
+            style = TangemTheme.typography3.body.medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
                 .padding(end = 46.dp),
-            radius = TangemTheme.dimens2.x25,
         )
     }
+}
+
+@Composable
+private fun NewsDetailsShimmerLine(style: TextStyle, modifier: Modifier = Modifier, width: Dp? = null) {
+    val lineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .then(if (width != null) Modifier.width(width) else Modifier)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
+    )
+}
+
+@Composable
+private fun NewsDetailsTagShimmer(width: Dp, modifier: Modifier = Modifier) {
+    TangemShimmer(
+        radius = 999.dp,
+        modifier = modifier.size(width = width, height = 36.dp),
+    )
 }
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun NewsDetailsPlaceholderPreviewV2() {
+private fun NewsDetailsPlaceholderPreview() {
     TangemThemePreviewRedesign {
         NewsDetailsPlaceholder(
-            background = TangemTheme.colors2.surface.level3,
+            background = TangemTheme.colors3.bg.secondary,
             contentPadding = PaddingValues(),
         )
     }

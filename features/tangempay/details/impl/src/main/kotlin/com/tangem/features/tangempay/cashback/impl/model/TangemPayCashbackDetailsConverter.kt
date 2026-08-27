@@ -1,34 +1,53 @@
 package com.tangem.features.tangempay.cashback.impl.model
 
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
+import com.tangem.core.ui.format.bigdecimal.optionalDecimals
+import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackDetailsUM
-import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
-internal class TangemPayCashbackDetailsConverter : Converter<List<CashbackTier>, TangemPayCashbackDetailsUM> {
+internal class TangemPayCashbackDetailsConverter {
 
-    // TODO([REDACTED_TASK_KEY]): move hardcoded strings to string resources
-    override fun convert(value: List<CashbackTier>): TangemPayCashbackDetailsUM {
+    fun convert(
+        tiers: List<CashbackTier>,
+        payoutCurrency: String?,
+        monthlyCap: CashbackPromotions.MonthlyCap?,
+    ): TangemPayCashbackDetailsUM {
+        val rows = buildList {
+            tiers.forEach { add(tierRow(it)) }
+            if (tiers.isNotEmpty()) {
+                add(resourceReference(R.string.tangempay_cashback_details_eu_excluded))
+                if (!payoutCurrency.isNullOrEmpty()) {
+                    add(resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList(payoutCurrency)))
+                }
+                if (monthlyCap != null) {
+                    add(resourceReference(R.string.tangempay_cashback_details_cap, wrappedList(monthlyCap.formatted())))
+                }
+            }
+        }
         return TangemPayCashbackDetailsUM(
-            title = title(value),
-            rows = value.map(::tierRow).toImmutableList(),
+            title = cashbackRateTitle(tiers.mapNotNull { it.rate }),
+            rows = rows.toImmutableList(),
         )
     }
 
-    private fun title(tiers: List<CashbackTier>): TextReference {
-        val rates = tiers.mapNotNull { it.rate }
-        return when {
-            rates.isEmpty() -> stringReference("Cashback")
-            rates.size == 1 -> stringReference("Cashback ${rates.single()}%")
-            else -> stringReference("Cashback up to ${rates.max()}%")
-        }
+    private fun tierRow(tier: CashbackTier): TextReference = resourceReference(
+        id = R.string.tangempay_cashback_details_tier,
+        formatArgs = wrappedList(tier.rate?.toString().orEmpty(), tier.label, tier.minPurchase.orEmpty()),
+    )
+
+    private fun CashbackPromotions.MonthlyCap.formatted(): String {
+        val javaCurrency = getJavaCurrencyByCode(currency ?: DEFAULT_CURRENCY_CODE)
+        return amount.format { fiat(javaCurrency.currencyCode, javaCurrency.symbol).optionalDecimals() }
     }
 
-    private fun tierRow(tier: CashbackTier): TextReference {
-        val rate = tier.rate?.let { "$it% for " }.orEmpty()
-        val min = tier.minPurchase?.let { ", min purchase $it" }.orEmpty()
-        val cap = tier.monthlyCap?.let { ", up to $it per month" }.orEmpty()
-        return stringReference("$rate${tier.scope} with your ${tier.label}$min$cap")
+    private companion object {
+        const val DEFAULT_CURRENCY_CODE = "USD"
     }
 }

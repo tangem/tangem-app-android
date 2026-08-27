@@ -129,7 +129,13 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
      */
     private fun validateDerivations(scanResponse: ScanResponse, derivations: Derivations) {
         derivations.entries.forEach { derivationForKey ->
-            val wallet = scanResponse.card.wallets.firstOrNull { it.publicKey.toMapKey() == derivationForKey.key }
+            val wallet = scanResponse.card.wallets.firstOrNull { wallet ->
+                val publicKey = wallet.publicKey ?: run {
+                    TangemLogger.e("Wallet with index ${wallet.index} has no public key")
+                    return@firstOrNull false
+                }
+                publicKey.toMapKey() == derivationForKey.key
+            }
             if (wallet == null) return@forEach
             val hasHardenedNodes = derivationForKey.value.any { path -> path.nodes.any { node -> !node.isHardened } }
             if (wallet.curve == EllipticCurve.Ed25519Slip0010 && hasHardenedNodes) {

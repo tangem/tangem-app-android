@@ -151,9 +151,7 @@ internal class SelectProviderModel @Inject constructor(
 
     private fun ImmutableList<PaymentProviderUM>.toPaymentUMList(): ImmutableList<PaymentMethodUM> = map { method ->
         PaymentMethodUM(
-            id = method.paymentMethod.id,
-            imageUrl = method.paymentMethod.imageUrl,
-            name = method.paymentMethod.name,
+            method = method.paymentMethod,
             onSelect = { onPaymentMethodSelected(method) },
         )
     }.toPersistentList()

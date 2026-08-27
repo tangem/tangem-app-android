@@ -27,7 +27,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
-import com.tangem.features.foryou.impl.ui.components.ForYouPortfolioTokenList
+import com.tangem.features.foryou.impl.ui.components.ForYouEarnOpportunitiesTokenList
 import com.tangem.features.foryou.impl.ui.preview.ForYouEarnOpportunitiesPreviewData
 
 private const val INLINE_CONTENT_PADDING_COEF = 2.2f
@@ -82,22 +82,20 @@ internal fun ForYouEarnOpportunities(earnOpportunitiesUM: EarnOpportunitiesUM, m
             }
         }
 
-        ForYouPortfolioTokenList(
-            tokenList = earnOpportunitiesUM.tokenList,
-            modifier = Modifier.padding(top = 8.dp),
+        ForYouEarnOpportunitiesTokenList(
+            groups = earnOpportunitiesUM.tokenList,
+            modifier = Modifier.padding(top = 16.dp),
         )
 
         if (earnOpportunitiesUM is EarnOpportunitiesUM.Content) {
             TangemButton(
-                text = stringReference("Explore all tokens"), // todo FOR YOU lokalize
+                text = resourceReference(R.string.for_you_earn_opportunities_explore),
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X9,
                 isEnabled = true,
-                contentDescription = "Explore all tokens", // todo FOR YOU lokalize
                 onClick = earnOpportunitiesUM.onAllEarnTokensClick,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .fillMaxWidth(),
             )
         }
     }
@@ -165,6 +163,7 @@ private class ForYouEarnOpportunitiesPreviewProvider : PreviewParameterProvider<
     override val values: Sequence<EarnOpportunitiesUM>
         get() = sequenceOf(
             ForYouEarnOpportunitiesPreviewData.tokensRewards,
+            ForYouEarnOpportunitiesPreviewData.groupedByWallet,
             ForYouEarnOpportunitiesPreviewData.noAvailableTokens,
             ForYouEarnOpportunitiesPreviewData.allTokensActive,
             ForYouEarnOpportunitiesPreviewData.loading,

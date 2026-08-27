@@ -8,6 +8,8 @@ import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_SHORTENE
 import com.tangem.common.constants.TestConstants.ENS_NAME
 import com.tangem.common.constants.TestConstants.ETHEREUM_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_X_ADDRESS
@@ -333,7 +335,13 @@ class SendAddressScreenTest : BaseTestCase() {
         val tokenName = "Ethereum"
         val sendAmount = "1"
 
-        setupHooks().run {
+        setupHooks(
+            // openSendAddressScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -373,7 +381,13 @@ class SendAddressScreenTest : BaseTestCase() {
         val tokenName = "Ethereum"
         val sendAmount = "1"
 
-        setupHooks().run {
+        setupHooks(
+            // openSendAddressScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -633,7 +647,13 @@ class SendAddressScreenTest : BaseTestCase() {
         val hint = getResourceString(R.string.send_enter_address_field_ens)
         val recipient = getResourceString(R.string.send_recipient)
 
-        setupHooks().run {
+        setupHooks(
+            // openSendAddressScreen sets both scenarios; without a reset they stay set for the next test.
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }

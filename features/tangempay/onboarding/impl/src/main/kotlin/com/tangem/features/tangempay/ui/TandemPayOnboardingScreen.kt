@@ -16,10 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,12 +34,6 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_heart_broken_32
 import com.tangem.core.ui.utils.WindowInsetsZero
-
-// Warm top glow of the "unavailable" screen: a translucent gold (sampled from Figma) drawn over
-// bg.primary, so one value matches both light and dark themes. Fades to transparent by mid-screen.
-private const val GLOW_COLOR = 0xFFFCB92A
-private const val GLOW_ALPHA = 0.49f
-private const val GLOW_FADE_STOP = 0.5f
 
 @Composable
 internal fun TandemPayOnboardingScreen(state: TangemPayOnboardingScreenState, modifier: Modifier = Modifier) {
@@ -91,7 +82,6 @@ private fun TangemPayOnboardingUnavailable(onBack: () -> Unit, modifier: Modifie
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary),
     ) {
-        UnavailableGlow(modifier = Modifier.matchParentSize())
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -132,25 +122,6 @@ private fun TangemPayOnboardingUnavailable(onBack: () -> Unit, modifier: Modifie
             )
         }
     }
-}
-
-@Composable
-private fun UnavailableGlow(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.drawBehind {
-            drawRect(
-                brush = Brush.radialGradient(
-                    colorStops = arrayOf(
-                        0f to Color(GLOW_COLOR).copy(alpha = GLOW_ALPHA),
-                        GLOW_FADE_STOP to Color.Transparent,
-                        1f to Color.Transparent,
-                    ),
-                    center = Offset(x = size.width / 2f, y = 0f),
-                    radius = size.height,
-                ),
-            )
-        },
-    )
 }
 
 @Composable

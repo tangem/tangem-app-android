@@ -5,6 +5,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -22,6 +23,7 @@ dependencies {
     // region Other libraries
     api(deps.androidx.datastore)
     api(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
     implementation(deps.arrow.core)
     implementation(deps.firebase.crashlytics)
     implementation(deps.jodatime)
@@ -43,6 +45,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
+    implementation(projects.core.local)
     api(projects.core.configToggles)
     api(projects.core.datasource)
     api(projects.core.utils)
@@ -65,6 +68,7 @@ dependencies {
 
     // region Domain models
     api(projects.domain.staking.models)
+    implementation(projects.domain.blockaid.models)
     implementation(projects.domain.wallets.models)
     // endregion
 

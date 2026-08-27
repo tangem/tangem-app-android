@@ -29,7 +29,13 @@ class ExternalUrlValidatorTest {
             Model(url = "https://buy.tangem.com/?promocode=NEWINAPP", expected = true),
             Model(url = "https://feedback.tangem.com", expected = true),
             Model(url = "https://tangem.surveysparrow.com/s/tangem-pay/tt-F8XXH", expected = true),
-            // Subdomains not on the list
+            // Hostnames are case-insensitive per RFC 3986
+            Model(url = "https://TANGEM.COM/pricing/", expected = true),
+            Model(url = "https://Buy.Tangem.com", expected = true),
+            // Subdomains not on the list.
+            // Note: the AppsFlyer OneLink domains are deliberately absent here — they are attribution redirects,
+            // not content, and are allowed only for the push web-link fallback
+            // (see DeepLinkFactory.APPSFLYER_ONELINK_HOSTS).
             Model(url = "https://express.tangem.com/v1/", expected = false),
             Model(url = "https://fake.tangem.com", expected = false),
             Model(url = "https://join.tangem.com", expected = false),

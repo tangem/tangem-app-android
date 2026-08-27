@@ -217,6 +217,7 @@ internal class SwapModel @Inject constructor(
         isAccountsModeProvider = Provider { isAccountsMode },
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         appRouter = appRouter,
+        isChooseTokenPulseEnabled = swapFeatureToggles.isChooseTokenPulseEnabled,
     )
 
     private val amountDebouncer = Debouncer()
@@ -292,7 +293,11 @@ internal class SwapModel @Inject constructor(
         override fun onApproveDone() {
             val fromContractAddress = dataState.fromSwapCurrencyStatus?.currency?.getContractAddress()
             if (fromContractAddress != null) {
-                allowPermissionsHandler.addAddressToInProgress(fromContractAddress)
+                allowPermissionsHandler.addAddressToInProgress(
+                    tokenAddress = fromContractAddress,
+                    // the approval sheet approves the amount entered at the moment it was opened
+                    approvedAmount = dataState.amount?.parseBigDecimalOrNull(),
+                )
             }
             approvalSlotNavigation.dismiss()
             updateWalletBalance()
@@ -486,21 +491,23 @@ internal class SwapModel @Inject constructor(
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }
 
-            uiState = stateBuilder.createInitialReadyState(
-                uiStateHolder = uiState,
-                emptyAmountState = SwapState.EmptyAmountState(
-                    zeroAmountEquivalent = stringReference(
-                        BigDecimal.ZERO.format {
-                            fiat(
-                                fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
-                                fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
-                            )
-                        },
+            withContext(dispatchers.main) {
+                uiState = stateBuilder.createInitialReadyState(
+                    uiStateHolder = uiState,
+                    emptyAmountState = SwapState.EmptyAmountState(
+                        zeroAmountEquivalent = stringReference(
+                            BigDecimal.ZERO.format {
+                                fiat(
+                                    fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
+                                    fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
+                                )
+                            },
+                        ),
                     ),
-                ),
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                toSwapCurrencyStatus = toSwapCurrencyStatus,
-            )
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                )
+            }
 
             // Check swap availability if there is pair
             if (fromSwapCurrencyStatus != null && toSwapCurrencyStatus != null) {
@@ -1192,7 +1199,6 @@ internal class SwapModel @Inject constructor(
     }
 
     private suspend fun isHighNetworkFee(swapFee: SwapFee?): Boolean {
-        if (!swapFeatureToggles.isHighFeeWarningEnabled) return false
         swapFee ?: return false
         val totalFeeAmount = swapFee.fee.amount.value ?: return false
         // SwapFeeFactory folds otherNativeFee into fee.amount ONLY for native-coin fees. Recover the
@@ -1366,7 +1372,11 @@ internal class SwapModel @Inject constructor(
     private fun onSwapClick() {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createSwapInProgressState(uiState)
-        val provider = requireNotNull(dataState.selectedProvider) { "Selected provider is null" }
+        val provider = dataState.selectedProvider
+        if (provider == null) {
+            TangemLogger.e("Selected provider is null")
+            return
+        }
         val lastLoadedQuotesState = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState
         if (lastLoadedQuotesState == null) {
             TangemLogger.e("Last loaded quotes state is null")
@@ -2050,6 +2060,11 @@ internal class SwapModel @Inject constructor(
         return combinedReference(messages.toWrappedList())
     }
 
+    private fun dismissProviderBottomSheet() {
+        uiState = stateBuilder.dismissBottomSheet(uiState)
+        singleTaskScheduler.resumeLastTask(modelScope)
+    }
+
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun createUiActions(): UiActions {
         return UiActions(
@@ -2079,7 +2094,7 @@ internal class SwapModel @Inject constructor(
             onBackClicked = {
                 val bottomSheet = uiState.bottomSheetConfig
                 if (bottomSheet != null && bottomSheet.isShown) {
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                    dismissProviderBottomSheet()
                 } else {
                     router.pop()
                 }
@@ -2118,7 +2133,7 @@ internal class SwapModel @Inject constructor(
                     pricesLowerBest = pricesLowerBest,
                     providersStates = dataState.lastLoadedSwapStates,
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
+                ) { dismissProviderBottomSheet() }
             },
             onProviderSelect = { providerId ->
                 val provider = findAndSelectProvider(providerId)
@@ -2133,7 +2148,7 @@ internal class SwapModel @Inject constructor(
                         feeSelectorReloadTrigger.triggerUpdate()
                     }
                     analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                    dismissProviderBottomSheet()
                     modelScope.launch {
                         setupLoadedState(
                             provider = provider,
@@ -2308,8 +2323,8 @@ internal class SwapModel @Inject constructor(
         val selectedProviderRate = selectedProviderEntry.value.toTokenInfo.tokenAmount.value
         val hundredPercent = BigDecimal("100")
         return state.entries.mapNotNull { entry ->
-            if (entry.key != selectedProviderEntry.key) {
-                val amount = entry.value.toTokenInfo.tokenAmount.value
+            val amount = entry.value.toTokenInfo.tokenAmount.value
+            if (entry.key != selectedProviderEntry.key && amount.signum() != 0) {
                 val percentDiff = BigDecimal.ONE.minus(
                     selectedProviderRate.divide(amount, RoundingMode.HALF_UP),
                 ).multiply(hundredPercent)
@@ -2763,6 +2778,7 @@ internal class SwapModel @Inject constructor(
                         is TransactionFeeResult.Loaded -> TransactionFeeExtended(
                             transactionFee = res.fee,
                             feeTokenId = swapFee.selectedFeeToken.currency.id,
+                            nativeFee = res.fee,
                         )
                     }
                 }

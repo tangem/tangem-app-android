@@ -29,7 +29,6 @@ internal class PreviewDetailsComponent : DetailsComponent {
             },
         ).buildAll(
             isWalletConnectAvailable = true,
-            isAddressBookAvailable = true,
             hasAnyMobileWallet = true,
             userWalletId = UserWalletId(""),
             onSupportClick = {},

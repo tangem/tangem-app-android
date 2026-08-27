@@ -36,25 +36,9 @@ internal class ItemsBuilderTest {
     }
 
     @Test
-    fun `GIVEN walletConnect available AND addressBook unavailable WHEN buildAll THEN standalone WalletConnect block`() {
+    fun `GIVEN walletConnect available WHEN buildAll THEN combined block with both items`() {
         // Act
-        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = false)
-
-        // Assert
-        assertThat(result.map { it.id }).containsExactly(
-            "wallet_connect",
-            "user_wallet_list",
-            "shop",
-            "settings",
-            "support",
-        ).inOrder()
-        assertThat(result.first()).isInstanceOf(DetailsItemUM.WalletConnect::class.java)
-    }
-
-    @Test
-    fun `GIVEN walletConnect AND addressBook available WHEN buildAll THEN combined block with both items`() {
-        // Act
-        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = true)
+        val result = buildAll(isWalletConnectAvailable = true)
 
         // Assert
         assertThat(result.map { it.id }).containsExactly(
@@ -73,9 +57,9 @@ internal class ItemsBuilderTest {
     }
 
     @Test
-    fun `GIVEN walletConnect unavailable AND addressBook available WHEN buildAll THEN combined block with addressBook only`() {
+    fun `GIVEN walletConnect unavailable WHEN buildAll THEN combined block with addressBook only`() {
         // Act
-        val result = buildAll(isWalletConnectAvailable = false, isAddressBookAvailable = true)
+        val result = buildAll(isWalletConnectAvailable = false)
 
         // Assert
         assertThat(result.map { it.id }).containsExactly(
@@ -93,22 +77,9 @@ internal class ItemsBuilderTest {
     }
 
     @Test
-    fun `GIVEN standalone walletConnect block WHEN item clicked THEN router pushes WalletConnectSessions`() {
-        // Arrange
-        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = false)
-        val walletConnect = result.first() as DetailsItemUM.WalletConnect
-
-        // Act
-        walletConnect.onClick()
-
-        // Assert
-        verify(exactly = 1) { router.push(route = AppRoute.WalletConnectSessions(USER_WALLET_ID), onComplete = any()) }
-    }
-
-    @Test
     fun `GIVEN combined block walletConnect item WHEN clicked THEN router pushes WalletConnectSessions`() {
         // Arrange
-        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = true)
+        val result = buildAll(isWalletConnectAvailable = true)
         val block = result.first() as DetailsItemUM.WalletActionBlock
         val walletConnect = block.items
             .filterIsInstance<DetailsItemUM.WalletActionBlock.Item.WalletConnect>()
@@ -124,7 +95,7 @@ internal class ItemsBuilderTest {
     @Test
     fun `GIVEN combined block addressBook item WHEN clicked THEN router pushes AddressBook`() {
         // Arrange
-        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = true)
+        val result = buildAll(isWalletConnectAvailable = true)
         val block = result.first() as DetailsItemUM.WalletActionBlock
         val addressBook = block.items
             .filterIsInstance<DetailsItemUM.WalletActionBlock.Item.AddressBook>()
@@ -135,20 +106,6 @@ internal class ItemsBuilderTest {
 
         // Assert
         verify(exactly = 1) { router.push(route = AppRoute.AddressBook(), onComplete = any()) }
-    }
-
-    @Test
-    fun `GIVEN walletConnect AND addressBook unavailable WHEN buildAll THEN no walletConnect block`() {
-        // Act
-        val result = buildAll(isWalletConnectAvailable = false, isAddressBookAvailable = false)
-
-        // Assert
-        assertThat(result.map { it.id }).containsExactly(
-            "user_wallet_list",
-            "shop",
-            "settings",
-            "support",
-        ).inOrder()
     }
 
     @Test
@@ -191,7 +148,6 @@ internal class ItemsBuilderTest {
         // Act — most restrictive combination: nothing optional is added
         val result = buildAll(
             isWalletConnectAvailable = false,
-            isAddressBookAvailable = false,
             hasAnyMobileWallet = false,
         )
 
@@ -252,11 +208,9 @@ internal class ItemsBuilderTest {
 
     private fun buildAll(
         isWalletConnectAvailable: Boolean = false,
-        isAddressBookAvailable: Boolean = false,
         hasAnyMobileWallet: Boolean = false,
     ): ImmutableList<DetailsItemUM> = itemsBuilder.buildAll(
         isWalletConnectAvailable = isWalletConnectAvailable,
-        isAddressBookAvailable = isAddressBookAvailable,
         hasAnyMobileWallet = hasAnyMobileWallet,
         userWalletId = USER_WALLET_ID,
         onSupportClick = {},

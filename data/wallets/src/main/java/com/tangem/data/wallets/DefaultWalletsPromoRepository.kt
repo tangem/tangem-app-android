@@ -3,7 +3,7 @@ package com.tangem.data.wallets
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.BindWalletsByReferralCodeBody
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore

@@ -40,7 +40,6 @@ internal fun PushNotificationsBottomSheet(config: TangemBottomSheetConfig, conte
 
 @Composable
 internal fun PushNotificationsContent(
-    isPushNotificationSettingsEnabled: Boolean,
     onAllowClick: () -> Unit,
     onLaterClick: () -> Unit,
     onAllowPermission: () -> Unit,
@@ -52,16 +51,8 @@ internal fun PushNotificationsContent(
         permission = PUSH_PERMISSION,
     )
 
-    val argumentTwoTitleRes = if (isPushNotificationSettingsEnabled) {
-        R.string.user_push_notification_agreement_argument_two_title_v2
-    } else {
-        R.string.user_push_notification_agreement_argument_two_title
-    }
-    val argumentTwoSubtitleRes = if (isPushNotificationSettingsEnabled) {
-        R.string.user_push_notification_agreement_argument_two_subtitle_v2
-    } else {
-        R.string.user_push_notification_agreement_argument_two_subtitle
-    }
+    val argumentTwoTitleRes = R.string.user_push_notification_agreement_argument_two_title_v2
+    val argumentTwoSubtitleRes = R.string.user_push_notification_agreement_argument_two_subtitle_v2
 
     Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
         ShowcaseContent(
@@ -107,7 +98,6 @@ private fun Preview_PushNotificationsBottomSheet() {
             ),
         ) {
             PushNotificationsContent(
-                isPushNotificationSettingsEnabled = false,
                 onAllowClick = {},
                 onLaterClick = {},
                 onAllowPermission = {},

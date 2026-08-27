@@ -2,7 +2,7 @@ package com.tangem.data.staking
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
-import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
@@ -35,6 +35,9 @@ internal class DefaultStakingErrorResolver(
             is StakingError.UnknownError,
             -> {
                 // P2PEthPool errors - no specific analytics event yet
+            }
+            is StakingError.TransactionValidationFailed -> {
+                // Blockaid validation errors - no specific analytics event yet
             }
         }
 

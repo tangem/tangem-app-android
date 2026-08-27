@@ -23,7 +23,10 @@ internal class TangemPayCashbackDateFormatterTest {
     fun setup() {
         Locale.setDefault(Locale.US)
         mockkStatic(DateFormat::class)
-        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers {
+            val skeleton = secondArg<String>()
+            if (skeleton == "d MMMM") "MMMM d" else skeleton
+        }
     }
 
     @AfterEach
@@ -48,24 +51,6 @@ internal class TangemPayCashbackDateFormatterTest {
 
         // Assert
         assertThat(actual).isEqualTo("July 5")
-    }
-
-    @Test
-    fun `GIVEN window within one month WHEN formatWindow THEN single month with day range`() {
-        // Act
-        val actual = formatter.formatWindow(DateTime.parse("2026-07-01"), DateTime.parse("2026-07-05"))
-
-        // Assert
-        assertThat(actual).isEqualTo("July 1–5")
-    }
-
-    @Test
-    fun `GIVEN window spanning two months WHEN formatWindow THEN month name on both sides`() {
-        // Act
-        val actual = formatter.formatWindow(DateTime.parse("2026-07-30"), DateTime.parse("2026-08-02"))
-
-        // Assert
-        assertThat(actual).isEqualTo("July 30 – August 2")
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.entity.sign
 
+import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM
@@ -22,4 +23,5 @@ internal data class WcSignTransactionItemUM(
     val walletInteractionIcon: Int?,
     val isLoading: Boolean = false,
     val isHoldToConfirmEnabled: Boolean = false,
+    val validationResult: ValidationResult? = null,
 ) : TangemBottomSheetConfigContent

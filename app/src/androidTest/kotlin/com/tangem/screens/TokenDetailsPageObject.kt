@@ -8,6 +8,7 @@ import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.core.res.R as CoreResR
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -55,6 +56,21 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    val stakingNoRewards: KNode = child {
+        hasText(getResourceString(CoreResR.string.staking_details_no_rewards_to_claim))
+        useUnmergedTree = true
+    }
+
+    val totalBalanceLabel: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_total))
+        useUnmergedTree = true
+    }
+
+    val availableBalanceLabel: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_available))
+        useUnmergedTree = true
+    }
+
     val stakingTitle: KNode = child {
         hasText(getResourceString(R.string.common_staking))
     }
@@ -84,6 +100,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    val customDerivationIcon: KNode = child {
+        hasTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
+        useUnmergedTree = true
+    }
+
     fun yieldModeApy(apy: String): KNode = child {
         hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.YIELD_SUPPLY_BLOCK))
         hasText(getResourceString(CoreResR.string.yield_module_average_apy, apy))
@@ -98,6 +119,14 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasAnyAncestor(withTestTag(TokenDetailsScreenTestTags.BALANCE_FIAT))
         addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
         useUnmergedTree = true
+    }
+
+    val totalBalanceSwitcher: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_total))
+    }
+
+    val availableBalanceSwitcher: KNode = child {
+        hasText(getResourceString(CoreResR.string.token_details_balance_available))
     }
 
     val addFundsButton: KNode = child {
@@ -121,6 +150,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     /** 'Receive' row of the zero-balance actions block (Buy / Swap / Receive), shown instead of the action buttons. */
     val receiveButton: KNode = child {
         hasText(getResourceString(R.string.common_receive))
+    }
+
+    /** 'Swap' row of the zero-balance actions block; distinct from [swapButton] which is the funded-state action button. */
+    val zeroBalanceSwapButton: KNode = child {
+        hasText(getResourceString(R.string.common_swap))
     }
 
     fun networkFeeNotificationIcon(feeCurrencyName: String): KNode = child {

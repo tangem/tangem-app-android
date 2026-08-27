@@ -20,7 +20,8 @@ import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackDetailsUM
@@ -78,10 +79,13 @@ private fun TangemPayCashbackDetailsBottomSheetPreview(
 private class TangemPayCashbackDetailsPreviewProvider : CollectionPreviewParameterProvider<TangemPayCashbackDetailsUM>(
     listOf(
         TangemPayCashbackDetailsUM(
-            title = stringReference("Cashback up to 2%"),
+            title = resourceReference(R.string.tangempay_cashback_rate_title_up_to, wrappedList("2")),
             rows = persistentListOf<TextReference>(
-                stringReference("1% for All purchases with your Basic cards, min purchase $30, up to $100 per month"),
-                stringReference("2% for All purchases with your Plus cards, min purchase $30, up to $300 per month"),
+                resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("1", "Basic", "$30")),
+                resourceReference(R.string.tangempay_cashback_details_tier, wrappedList("2", "Plus", "$30")),
+                resourceReference(R.string.tangempay_cashback_details_eu_excluded),
+                resourceReference(R.string.tangempay_cashback_details_paid_in, wrappedList("USDC")),
+                resourceReference(R.string.tangempay_cashback_details_cap, wrappedList("$150")),
             ),
         ),
     ),

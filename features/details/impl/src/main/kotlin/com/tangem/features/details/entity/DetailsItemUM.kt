@@ -21,10 +21,6 @@ internal sealed class DetailsItemUM {
         )
     }
 
-    data class WalletConnect(val onClick: () -> Unit) : DetailsItemUM() {
-        override val id: String = "wallet_connect"
-    }
-
     data class WalletActionBlock(val items: ImmutableList<Item>) : DetailsItemUM() {
         override val id: String = "wallet_connect_address_book"
 

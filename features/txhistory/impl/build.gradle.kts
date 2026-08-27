@@ -31,6 +31,7 @@ dependencies {
 
     /** Features api */
     api(projects.features.txhistory.api)
+    implementation(projects.features.rating.api)
 
     /** Domain */
     api(projects.domain.account.status)
