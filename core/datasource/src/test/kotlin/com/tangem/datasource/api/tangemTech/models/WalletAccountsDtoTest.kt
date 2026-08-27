@@ -42,7 +42,9 @@ internal class WalletAccountsDtoTest {
 
         // Assert
         assertThat(actual?.wallet?.totalJointAccounts).isEqualTo(1)
-        assertThat(actual?.accounts?.map(WalletAccountDTO::type)).containsExactly("crypto", "joint").inOrder()
+        assertThat(actual?.accounts?.map(WalletAccountDTO::type))
+            .containsExactly(WalletAccountDTO.Type.CRYPTO, WalletAccountDTO.Type.JOINT)
+            .inOrder()
     }
 
     @Test
@@ -91,7 +93,7 @@ internal class WalletAccountsDtoTest {
                     derivationIndex = 0,
                     icon = "Family",
                     iconColor = "Azure",
-                    type = "joint",
+                    type = WalletAccountDTO.Type.JOINT,
                 ),
             ),
         )
