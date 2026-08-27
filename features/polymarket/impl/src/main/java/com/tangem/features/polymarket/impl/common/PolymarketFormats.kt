@@ -10,13 +10,10 @@ import java.math.BigDecimal
  * and compacted (e.g. "$1.2M"). Shared by the feed cards and the event-details screen.
  */
 internal fun BigDecimal.formatPolymarketVolume(): String = format {
-    fiat(fiatCurrencyCode = USD_CODE, fiatCurrencySymbol = USD_SYMBOL).compact()
+    fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL).compact()
 }
 
 /** Formats a collateral amount the way the trade screens state it: plain USD, never the app's fiat. */
 internal fun BigDecimal.formatPolymarketMoney(): String = format {
-    fiat(fiatCurrencyCode = USD_CODE, fiatCurrencySymbol = USD_SYMBOL)
+    fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL)
 }
-
-internal const val USD_CODE = "USD"
-internal const val USD_SYMBOL = "$"

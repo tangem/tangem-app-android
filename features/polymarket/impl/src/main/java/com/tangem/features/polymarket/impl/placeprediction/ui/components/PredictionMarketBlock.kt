@@ -12,6 +12,7 @@ import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 
@@ -42,6 +43,4 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
 }
 
 private fun MarketHeaderUM.outcomeLabel(): String =
-    outcomePriceCents?.let { cents -> "$outcomeTitle $cents$PRICE_CENTS_SIGN" } ?: outcomeTitle
-
-private const val PRICE_CENTS_SIGN = "¢"
+    outcomePriceCents?.let { cents -> "$outcomeTitle $cents${PolymarketConst.CENT_SIGN}" } ?: outcomeTitle
