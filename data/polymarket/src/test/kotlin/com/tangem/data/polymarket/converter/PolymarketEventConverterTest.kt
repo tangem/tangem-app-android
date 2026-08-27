@@ -1,9 +1,9 @@
 package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
-import com.tangem.datasource.api.polymarket.models.PolymarketMarketDto
-import com.tangem.datasource.api.polymarket.models.PolymarketOutcomeDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketMarketDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketOutcomeDto
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
