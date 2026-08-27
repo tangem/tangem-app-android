@@ -167,7 +167,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    applyAccountTopUpFromPriority = any(),
+                    isAccountFlowEnabled = any(),
                 )
             }
             assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
@@ -278,6 +278,19 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
         // Assert
         assertThat(model.chooseToTokenBridge.settings.chooserBlock).isInstanceOf(ChooserBlock.Market::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN Withdraw flow WHEN selector settings THEN payment account lists every issued token`() = runTest {
+        // Arrange & Act
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.chooseToTokenBridge.settings.isPaymentAccountMultiTokenEnabled).isTrue()
+        assertThat(model.chooseFromTokenBridge.settings.isPaymentAccountMultiTokenEnabled).isTrue()
         model.onDestroy()
     }
 
@@ -435,7 +448,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    applyAccountTopUpFromPriority = any(),
+                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
 
@@ -464,7 +477,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                applyAccountTopUpFromPriority = any(),
+                isAccountFlowEnabled = any(),
             )
         } returns (fromStatus to toStatus)
 
@@ -494,7 +507,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    applyAccountTopUpFromPriority = any(),
+                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
 
@@ -536,7 +549,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                applyAccountTopUpFromPriority = any(),
+                isAccountFlowEnabled = any(),
             )
         } returns (fromStatus to toStatus)
 
@@ -582,7 +595,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    applyAccountTopUpFromPriority = any(),
+                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
 
@@ -705,7 +718,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    applyAccountTopUpFromPriority = any(),
+                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
             every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
@@ -751,7 +764,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     swapCurrencyPosition = any(),
                     accountFlow = any(),
                     initialToCryptoCurrency = any(),
-                    applyAccountTopUpFromPriority = any(),
+                    isAccountFlowEnabled = any(),
                 )
             } returns (fromStatus to toStatus)
             every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
@@ -790,13 +803,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     // data is available, and collapses back to a single one when it is not.
 
     @Test
-    fun `GIVEN withdraw and a multi token account WHEN from filter applied THEN only the withdrawable currency passes`() =
+    fun `GIVEN withdraw and a multi token account WHEN from filter applied THEN every account currency passes`() =
         runTest {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-            val withdrawable = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
-            val notWithdrawable = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
-            coEvery { accountUnderlyingCurrencies.getWithdrawable(userWalletId) } returns listOf(withdrawable)
+            val polygonCurrency = accountCurrencyStatus(polygonCurrencyId, polygonNetworkId)
+            val tronCurrency = accountCurrencyStatus(tronCurrencyId, tronNetworkId)
             val model = createModel(accountFlow = AccountFlow.Withdraw)
             advanceUntilIdle()
             val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
@@ -804,9 +816,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Act
             val predicate = model.chooseFromTokenBridge.tokenFilter.value
 
-            // Assert — the endpoint can only move the default currency, so the other network must not be offered.
-            assertThat(predicate(paymentAccountStatus, withdrawable)).isTrue()
-            assertThat(predicate(paymentAccountStatus, notWithdrawable)).isFalse()
+            // Assert — the withdrawal endpoints take the source network, so every issued network can be drawn from.
+            assertThat(predicate(paymentAccountStatus, polygonCurrency)).isTrue()
+            assertThat(predicate(paymentAccountStatus, tronCurrency)).isTrue()
             model.onDestroy()
         }
 
@@ -917,7 +929,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 swapCurrencyPosition = any(),
                 accountFlow = any(),
                 initialToCryptoCurrency = any(),
-                applyAccountTopUpFromPriority = any(),
+                isAccountFlowEnabled = any(),
             )
         } returns (from to to)
         coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns accountCurrencies

@@ -39,6 +39,7 @@ internal data class ConverterConfig(
     val searchQuery: SearchQuery,
     val tokenFilter: (AccountStatus, CryptoCurrencyStatus) -> Boolean,
     val isShowPaymentAccount: Boolean,
+    val isPaymentAccountMultiTokenEnabled: Boolean,
     val balanceFilter: BalanceFilter,
 )
 
@@ -125,7 +126,7 @@ internal class ChooseTokenListItemConverter(
                 when (account) {
                     is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().map { account to it }
                     is AccountStatus.Payment ->
-                        account.paymentCryptoCurrencyOrNull()?.let { listOf(account to it) }.orEmpty()
+                        account.paymentCryptoCurrencies().map { account to it }
                     is AccountStatus.Virtual -> emptyList()
                     is AccountStatus.Prediction -> emptyList()
                     // Joint currencies belong to the Safe contract, never to a spendable EOA
@@ -134,12 +135,19 @@ internal class ChooseTokenListItemConverter(
             }
     }
 
-    private fun AccountStatus.Payment.paymentCryptoCurrencyOrNull(): CryptoCurrencyStatus? {
-        if (!config.isShowPaymentAccount) return null
+    /**
+     * Every token the account is issued on when multi-token is enabled, otherwise only the single currency the
+     * account is represented by.
+     */
+    private fun AccountStatus.Payment.paymentCryptoCurrencies(): List<CryptoCurrencyStatus> {
+        if (!config.isShowPaymentAccount) return emptyList()
+        val isMultiToken = config.isPaymentAccountMultiTokenEnabled
         return when (val status = value) {
-            is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
-            is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
-            else -> null
+            is PaymentAccountStatusValue.Deactivated ->
+                if (isMultiToken) status.cryptoCurrencyStatuses else listOfNotNull(status.cryptoCurrencyStatus)
+            is PaymentAccountStatusValue.Loaded ->
+                if (isMultiToken) status.cryptoCurrencyStatuses else listOfNotNull(status.cryptoCurrencyStatus)
+            else -> emptyList()
         }
     }
 
@@ -274,22 +282,10 @@ internal class ChooseTokenListItemConverter(
     private fun AccountStatus.Payment.createPaymentAccountItem(
         expandedAccounts: Set<AccountId>,
     ): TokensListItemUM.Portfolio? {
-        if (!config.isShowPaymentAccount) return null
-        val paymentCurrency: CryptoCurrencyStatus = when (val status = this.value) {
-            is PaymentAccountStatusValue.Error,
-            is PaymentAccountStatusValue.IssuingCard,
-            is PaymentAccountStatusValue.AwaitingPlanSelection,
-            is PaymentAccountStatusValue.Inactive,
-            PaymentAccountStatusValue.NotCreated,
-            is PaymentAccountStatusValue.UnderReview,
-            PaymentAccountStatusValue.Loading,
-            PaymentAccountStatusValue.Empty,
-            -> return null
-            is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus ?: return null
-            is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus ?: return null
-        }
+        val paymentCurrencies = paymentCryptoCurrencies().filterCurrencies(this)
+        if (paymentCurrencies.isEmpty()) return null
         val account = this.account
-        val tokensCount = 1
+        val tokensCount = paymentCurrencies.size
         val isExpanded = isSearchingState || expandedAccounts.contains(account.accountId)
         val onItemClick: (TokenItemState) -> Unit = {
             onAccountItemClick(account, isExpanded)
@@ -314,9 +310,7 @@ internal class ChooseTokenListItemConverter(
             onItemLongClick = null,
         )
         val tokenConverter = tokenStatusConverter(this)
-        val filtered = listOf(paymentCurrency)
-            .filterCurrencies(this)
-            .map { currency -> TokensListItemUM.Token(tokenConverter.convert(currency)) }
+        val filtered = paymentCurrencies.map { currency -> TokensListItemUM.Token(tokenConverter.convert(currency)) }
 
         return TokensListPortfolioItemConverter(
             tokenItemUM = paymentAccountItem,
