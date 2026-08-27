@@ -25,6 +25,20 @@ internal class TangemPayDetailsNotificationFactory(
         else -> createAccountUnavailableConfig()
     }
 
+    fun createCardIssueFailedBannerState() = TangemMessageBanner.State(
+        title = resourceReference(R.string.tangempay_failed_to_issue_card),
+        variant = TangemMessageBanner.Variant.Error,
+        description = resourceReference(R.string.tangempay_failed_to_issue_card_support_description),
+        secondaryButton = TangemMessageBanner.Button(
+            text = resourceReference(R.string.common_contact_support),
+            onClick = intents::onCardIssueFailedSupportClick,
+        ),
+        iconStart = TangemIconUM.Icon(
+            imageVector = Icons.ic_error_20,
+            tintReference = { TangemTheme.colors3.icon.primary },
+        ),
+    )
+
     fun createAccountDeactivatedBannerState() = TangemMessageBanner.State(
         title = resourceReference(R.string.tangempay_account_deactivated_message_title),
         variant = TangemMessageBanner.Variant.Error,
