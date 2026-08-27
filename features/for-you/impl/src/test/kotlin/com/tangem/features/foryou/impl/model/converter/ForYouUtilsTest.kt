@@ -6,13 +6,18 @@ import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.markets.CoinIndicators
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -209,14 +214,33 @@ internal class ForYouUtilsTest {
         private fun provideTestModels() = listOf(
             // No entry for the symbol at all → no badge
             BadgeModel(coinIndicators = null, expected = null),
-            // Entry present but without readings → score 0 → Neutral (summary shows "Neutral outlook" too)
-            BadgeModel(coinIndicators = createIndicators(), expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue),
-            // Only non-actionable signals → score 0 → Neutral, matching the summary's "Neutral outlook"
+            // Entry present but without a single reading → nothing to interpret → no badge
+            BadgeModel(coinIndicators = createIndicators(), expected = null),
+            // Every reading unavailable (stablecoin, or no fresh data) → no badge rather than a misleading "Neutral"
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NOT_AVAILABLE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_AVAILABLE),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NOT_AVAILABLE),
+                ),
+                expected = null,
+            ),
+            // One INSUFFICIENT_DATA reading among unavailable ones is still data → badge stays, scoring 0
+            // → Neutral, matching the summary's "Neutral outlook"
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.INSUFFICIENT_DATA, Timeframe.DAY),
                     createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_AVAILABLE),
                     createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NOT_AVAILABLE),
+                ),
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+            // Hiding is decided over every reading, not the selected timeframe: a WEEK signal keeps the
+            // badge for DAY, where the only reading is unavailable → score 0 → Neutral
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NOT_AVAILABLE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.WEEK),
                 ),
                 expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
             ),
@@ -303,6 +327,75 @@ internal class ForYouUtilsTest {
     }
 
     @Nested
+    inner class AvailableAccountIds {
+
+        @Test
+        fun `GIVEN wallet with non-portfolio accounts WHEN availableAccountIds THEN only crypto portfolios returned`() {
+            // Arrange — the selector renders a row only for crypto portfolios, so only their ids may be offered
+            val portfolio = MockAccounts.createAccount(derivationIndex = 1)
+            val statuses = mapOf(
+                WALLET_ID to createAccountStatusList(
+                    cryptoPortfolioStatus(portfolio),
+                    paymentStatus(),
+                    predictionStatus(),
+                ),
+            )
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).containsExactly(portfolio.accountId)
+        }
+
+        @Test
+        fun `GIVEN several wallets WHEN availableAccountIds THEN portfolios of every wallet are collected`() {
+            // Arrange
+            val onFirst = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET_ID)
+            val onSecond = MockAccounts.createAccount(derivationIndex = 1, userWalletId = OTHER_WALLET_ID)
+            val statuses = mapOf(
+                WALLET_ID to createAccountStatusList(cryptoPortfolioStatus(onFirst)),
+                OTHER_WALLET_ID to createAccountStatusList(cryptoPortfolioStatus(onSecond), predictionStatus()),
+            )
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).containsExactly(onFirst.accountId, onSecond.accountId)
+        }
+
+        @Test
+        fun `GIVEN only non-portfolio accounts WHEN availableAccountIds THEN result is empty`() {
+            // Arrange — nothing selectable, so the caller must not seed a selection at all
+            val statuses = mapOf(WALLET_ID to createAccountStatusList(paymentStatus(), predictionStatus()))
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).isEmpty()
+        }
+
+        private fun createAccountStatusList(vararg statuses: AccountStatus): AccountStatusList = mockk {
+            every { accountStatuses } returns statuses.toList()
+        }
+
+        private fun cryptoPortfolioStatus(account: Account.CryptoPortfolio): AccountStatus.CryptoPortfolio = mockk {
+            every { this@mockk.account } returns account
+            every { accountId } returns account.accountId
+        }
+
+        private fun paymentStatus(): AccountStatus.Payment = mockk {
+            every { account } returns mockk<Account.Payment> { every { accountId } returns mockk() }
+        }
+
+        private fun predictionStatus(): AccountStatus.Prediction = mockk {
+            every { account } returns mockk<Account.Prediction> { every { accountId } returns mockk() }
+        }
+    }
+
+    @Nested
     inner class ForYouPeriodFromId {
 
         @Test
@@ -361,6 +454,12 @@ internal class ForYouUtilsTest {
         signal = signal,
         updatedAt = null,
     )
+
+    private companion object {
+        /** UserWalletId parses its value as hex, so the ids must be valid hex strings. */
+        val WALLET_ID = UserWalletId("01")
+        val OTHER_WALLET_ID = UserWalletId("02")
+    }
 }
 
 private typealias Signal = CoinIndicators.Reading.Signal
