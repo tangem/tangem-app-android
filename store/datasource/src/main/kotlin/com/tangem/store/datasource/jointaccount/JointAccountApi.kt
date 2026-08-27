@@ -1,12 +1,12 @@
-package com.tangem.datasource.api.jointaccount
+package com.tangem.store.datasource.jointaccount
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.jointaccount.models.ActivateJointAccountRequest
-import com.tangem.datasource.api.jointaccount.models.CreateJointAccountRequest
-import com.tangem.datasource.api.jointaccount.models.GetJointAccountsResponse
-import com.tangem.datasource.api.jointaccount.models.JointAccountDto
-import com.tangem.datasource.api.jointaccount.models.JointAccountInvitePreviewDto
-import com.tangem.datasource.api.jointaccount.models.JoinJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
+import com.tangem.store.datasource.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
+import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
