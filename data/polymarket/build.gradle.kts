@@ -45,6 +45,7 @@ dependencies {
     api(projects.core.utils)
     implementation(projects.core.pagination)
     implementation(projects.data.common)
+    implementation(projects.libs.blockchainSdk)
     // endregion
 
     // region Domain

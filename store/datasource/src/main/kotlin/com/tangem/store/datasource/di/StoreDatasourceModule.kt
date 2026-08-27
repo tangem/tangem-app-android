@@ -7,6 +7,7 @@ import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.store.datasource.api.TangemTech
 import com.tangem.store.datasource.addressbook.AddressBookApi
 import com.tangem.store.datasource.blockaid.BlockAidApi
@@ -33,6 +34,18 @@ import javax.inject.Singleton
 internal object StoreDatasourceModule {
 
     private const val TIMEOUT_60_SECONDS = 60L
+
+    @Provides
+    @Singleton
+    fun provideTangemTechApi(factory: RetrofitFactory): TangemTechApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
 
     @Provides
     @IntoMap
