@@ -99,6 +99,13 @@ sealed class DeepLinkRoute {
     data object Campaigns : DeepLinkRoute() {
         override val host: String = "campaigns"
     }
+
+    data object JointAccount : DeepLinkRoute() {
+        override val host: String = "joint_account"
+
+        const val ENTRY_MEMBERS: String = "members"
+        const val ENTRY_OVERVIEW: String = "overview"
+    }
 }
 
 enum class DeepLinkScheme(val scheme: String) {

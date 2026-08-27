@@ -42,7 +42,7 @@ import javax.inject.Inject
 internal class ResetCardModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
-    getUserWalletUseCase: GetUserWalletUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val resetCardUseCase: ResetCardUseCase,
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
@@ -256,6 +256,25 @@ internal class ResetCardModel @Inject constructor(
         dismissDialog()
 
         finishFullReset()
+    }
+
+    /**
+     * The user wallet is deleted right after the primary card is reset, while the backup cards are still ahead. Until
+     * the flow is finished the whole screen stack belongs to a wallet that no longer exists, so leaving the screen has
+     * to go through the same completion path as the dialogs instead of a plain pop.
+     */
+    fun onBackClick() {
+        val isUserWalletDeleted = getUserWalletUseCase(userWalletId = currentUserWalletId).isLeft()
+
+        if (isUserWalletDeleted) {
+            analyticsEventHandler.send(
+                Settings.CardSettings.FactoryResetCanceled(cardsCount = resetBackupCardCount + 1),
+            )
+
+            finishFullReset()
+        } else {
+            appRouter.pop()
+        }
     }
 
     private fun finishFullReset() {
