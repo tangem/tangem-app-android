@@ -18,6 +18,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
@@ -34,6 +35,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
@@ -142,7 +144,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 
         Children(
             stack = stackState,
-            modifier = modifier,
+            modifier = modifier.dropWhenNoRoom(minRoom = contentPadding.calculateTopPadding() + ContentMinRoom),
             animation = stackAnimation(slide()),
         ) { child ->
             child.instance.Content(
@@ -190,6 +192,9 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 }
 
 private const val SEARCH_BAR_HEADER_KEY = "searchBarHeader"
+
+/** Slack below the sheet header before a screen's content is dropped instead of painting into it. */
+private val ContentMinRoom = 8.dp
 
 /**
  * Target of the sheet-header [AnimatedContent].
