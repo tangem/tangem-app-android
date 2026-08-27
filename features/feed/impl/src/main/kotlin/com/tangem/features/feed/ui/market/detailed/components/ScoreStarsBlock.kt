@@ -36,15 +36,15 @@ internal fun ScoreStarsBlock(score: Float, modifier: Modifier = Modifier) {
 @Suppress("MagicNumber")
 @Composable
 private fun Stars(@FloatRange(0.0, 1.0) fraction: Float = 0f) {
-    val grayColor = TangemTheme.colors2.markers.iconGray
+    val grayColor = TangemTheme.colors3.icon.secondary
 
     Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(times = STARS_COUNT) { i ->
             Box(
-                modifier = Modifier.size(TangemTheme.dimens2.x5),
+                modifier = Modifier.size(20.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -69,7 +69,7 @@ private fun Stars(@FloatRange(0.0, 1.0) fraction: Float = 0f) {
                         },
                     imageVector = ImageVector.vectorResource(R.drawable.ic_star_filled_20),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.markers.iconBlue,
+                    tint = TangemTheme.colors3.icon.brand,
                 )
             }
         }

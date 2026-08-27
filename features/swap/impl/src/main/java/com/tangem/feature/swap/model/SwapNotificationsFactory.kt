@@ -135,7 +135,12 @@ internal class SwapNotificationsFactory(
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
             maybeAddPermissionNeededWarning(quoteModel)
             maybeAddNetworkFeeCoverageWarning(quoteModel, swapFee)
-            maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, appRouter)
+            maybeAddUnableCoverFeeWarning(
+                quoteModel = quoteModel,
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                swapFee = swapFee,
+                appRouter = appRouter,
+            )
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
             maybeAddHighNetworkFeeWarning(isHighNetworkFee)
@@ -271,6 +276,9 @@ internal class SwapNotificationsFactory(
     }
 
     private fun MutableList<NotificationUM>.maybeAddPermissionNeededWarning(quoteModel: SwapState.QuotesLoadedState) {
+        // The fee coin cannot cover the approve fee — maybeAddUnableCoverFeeWarning shows the
+        // insufficient-fee error instead, and the approve prompt must not be offered.
+        if (quoteModel.preparedSwapConfigState.balanceStatus is SwapBalanceStatus.InsufficientFee) return
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
@@ -319,6 +327,7 @@ internal class SwapNotificationsFactory(
     private fun MutableList<NotificationUM>.maybeAddUnableCoverFeeWarning(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        swapFee: SwapFee?,
         appRouter: AppRouter,
     ) {
         if (feeCryptoCurrencyStatus == null) return
@@ -336,10 +345,13 @@ internal class SwapNotificationsFactory(
 
         val isNotEnoughFee = insufficientFee != null
 
-        // Suppress only when the user can actually switch the fee to a token via the gasless
-        // selector; on networks without gasless support the warning must show for CEX too.
-        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
-        if (shouldShowCoverWarning && !isGaslessAvailable && isNotEnoughFee) {
+        // Suppress only while the gasless selector has not resolved a fee token yet — until then the
+        // balance status still reflects the native coin and warning about it would be premature. Once
+        // [swapFee] is known it names the token that actually pays, so an insufficient balance is final
+        // and must be surfaced. On networks without gasless support the warning always shows.
+        val isFeeTokenUnresolved = swapFee == null &&
+            isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
+        if (shouldShowCoverWarning && !isFeeTokenUnresolved && isNotEnoughFee) {
             add(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
                     SwapNotificationUM.Error.InsufficientFunds

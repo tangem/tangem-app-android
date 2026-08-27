@@ -3,7 +3,6 @@ package com.tangem.features.promobanners.impl.campaigns.deeplink
 import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
-import com.tangem.features.promobanners.api.toggles.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -20,26 +19,21 @@ internal class DefaultCampaignsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val queryParams: Map<String, String>,
     campaignsService: CampaignsService,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    promoBannersFeatureToggles: PromoBannersFeatureToggles,
 ) : CampaignsDeepLinkHandler {
 
     init {
-        if (promoBannersFeatureToggles.isCampaignsToggleEnabled) {
-            // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
-            getSelectedWalletSyncUseCase().fold(
-                ifLeft = {
-                    TangemLogger.e("Error on getting user wallet")
-                },
-                ifRight = { userWallet ->
-                    val campaignId = queryParams[DeeplinkConst.CAMPAIGN_ID_KEY].orEmpty()
-                    val userWalletId = userWallet.walletId
+        // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
+        getSelectedWalletSyncUseCase().fold(
+            ifLeft = {
+                TangemLogger.e("Error on getting user wallet")
+            },
+            ifRight = { userWallet ->
+                val campaignId = queryParams[DeeplinkConst.CAMPAIGN_ID_KEY].orEmpty()
+                val userWalletId = userWallet.walletId
 
-                    campaignsService.show(campaignId = campaignId, userWalletId = userWalletId)
-                },
-            )
-        } else {
-            TangemLogger.i("Campaigns feature is disabled")
-        }
+                campaignsService.show(campaignId = campaignId, userWalletId = userWalletId)
+            },
+        )
     }
 
     @AssistedFactory

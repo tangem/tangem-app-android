@@ -459,6 +459,23 @@ val LocalMessageEffectAnimation = compositionLocalOf<MessageEffectAnimation> {
 val LocalCanScrollBackward = compositionLocalOf { false }
 
 /**
+ * Whether material surfaces ([com.tangem.core.ui.ds2.surface.TangemSurface] with `isMaterial = true`,
+ * which backs [com.tangem.core.ui.ds2.button.TangemButton.Variant.Material]) may cast their drop shadow.
+ *
+ * Provide `false` around content drawn into a transient graphics layer — an alpha cross-fade, an
+ * enter/exit transition. Such a layer clips drawing to the content's bounding box, and the shadow's
+ * soft halo, which is painted outside those bounds through a difference clip, then collapses into a
+ * hard rectangle around the surface. Only light theme is affected: on a dark backdrop the shadow is
+ * dropped anyway, as it isn't representable in 8 bits.
+ *
+ * DS components that animate their own material content provide this themselves; do the same when a
+ * feature wraps material content in its own `AnimatedVisibility` / `AnimatedContent` /
+ * `graphicsLayer { alpha = … }`. AND the incoming value with the current one so nested animations
+ * don't re-enable the shadow.
+ */
+val LocalMaterialShadowEnabled = compositionLocalOf { true }
+
+/**
  * Determines whether the dark theme should be used based on the given [AppThemeMode].
  *
  * @param appThemeMode The application theme mode.

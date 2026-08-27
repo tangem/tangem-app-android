@@ -41,9 +41,9 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.api.subcomponents.amount.SendAmountReduceTrigger
@@ -114,8 +114,8 @@ internal class SendConfirmModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
+    private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
-    private val sendFeatureToggles: SendFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -412,14 +412,19 @@ internal class SendConfirmModel @Inject constructor(
 
         val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
 
-        val result = if (isFeeInTokenCurrency) {
-            createAndSendGaslessTransactionUseCase(
+        val result = when {
+            feeExtended?.tronGaslessQuote != null -> createAndSendTronGaslessTransactionUseCase(
+                userWallet = userWallet,
+                network = cryptoCurrency.network,
+                transactionData = txData,
+                fee = feeExtended,
+            )
+            isFeeInTokenCurrency -> createAndSendGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = txData,
                 fee = feeExtended,
             )
-        } else {
-            sendTransactionUseCase(
+            else -> sendTransactionUseCase(
                 txData = txData,
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
@@ -445,6 +450,11 @@ internal class SendConfirmModel @Inject constructor(
                 )
             },
             ifRight = { txHash ->
+                if (feeExtended?.tronGaslessQuote != null) {
+                    analyticsEventHandler.send(
+                        CommonSendAnalyticEvents.GaslessTransactionUsed(categoryName = analyticsCategoryName),
+                    )
+                }
                 updateTransactionStatus(txData, txHash)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
@@ -464,7 +474,8 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency ||
+            feeExtended?.tronGaslessQuote != null
         return if (isFeeInTokenCurrency) {
             feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: cryptoCurrencyStatus
         } else {
@@ -476,8 +487,13 @@ internal class SendConfirmModel @Inject constructor(
         if (cryptoCurrency !is CryptoCurrency.Token) return
         val wallets = destinationUM?.wallets ?: return
 
+        // EVM chains share the same address across networks, so matching by address alone can resolve a destination
+        // on a different chain. Adding the token there would store this chain's contract address under that network.
         val receivingUserWallet = wallets
-            .firstOrNull { it.address == confirmData.enteredDestination }
+            .firstOrNull { recipient ->
+                recipient.address == confirmData.enteredDestination &&
+                    recipient.network?.rawId == cryptoCurrency.network.rawId
+            }
             ?: return
 
         val network = receivingUserWallet.network ?: return
@@ -563,7 +579,6 @@ internal class SendConfirmModel @Inject constructor(
     }
 
     private suspend fun isHighNetworkFee(feeCurrency: CryptoCurrency): Boolean {
-        if (!sendFeatureToggles.isHighFeeWarningEnabled) return false
         val feeAmount = confirmData.fee?.amount?.value ?: return false
         return isHighNetworkFeeUseCase(feeCurrency, feeAmount)
     }
@@ -611,13 +626,11 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun updateAmountSubtractAvailability() {
         modelScope.launch {
-            val fee = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal
-            // we assume if feeExtraInfo is empty then pay fee in the main currency
-            val feeTokenId = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.feeTokenId ?: cryptoCurrency.id
+            val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
             isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
                 userWalletId = userWallet.walletId,
                 currency = cryptoCurrency,
-                maybeGaslessFee = fee?.let { feeTokenId to fee },
+                maybeGaslessFee = feeExtended?.let { it.feeTokenId to it.transactionFee.normal },
             ).getOrElse { false }
         }
     }

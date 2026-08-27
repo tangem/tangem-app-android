@@ -3,21 +3,21 @@ package com.tangem.core.ui.components.background
 
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import com.tangem.core.ui.shader.TangemShader
 import com.tangem.core.ui.shader.runtime.buildEffect
 import kotlin.math.round
+
+/** ~30 fps. The shaders animate slowly, so capping the redraw frequency is visually lossless. */
+internal const val SHADER_FRAME_INTERVAL_MILLIS = 33L
 
 @Composable
 fun Modifier.shaderBackground(
@@ -28,16 +28,20 @@ fun Modifier.shaderBackground(
     },
 ): Modifier {
     val runtimeEffect = remember(shader) { buildEffect(shader) }
-    var size: Size by remember { mutableStateOf(Size(-1f, -1f)) }
     val speedModifier = shader.speedModifier
 
-    val time by if (runtimeEffect.isSupported) {
-        var startMillis = remember(shader) { -1L }
+    val timeState: State<Float> = if (runtimeEffect.isSupported) {
         produceState(0f, speedModifier) {
+            var startMillis = -1L
             while (true) {
                 withInfiniteAnimationFrameMillis { frameTimeMillis ->
                     if (startMillis < 0) startMillis = frameTimeMillis
-                    value = ((frameTimeMillis - startMillis) / 16.6f) / 10f
+                    // Quantized so the value changes at most once per SHADER_FRAME_INTERVAL_MILLIS:
+                    // writing an equal value doesn't invalidate the draw, capping shader redraws below
+                    // the panel refresh rate (which is a vsync every 8.3ms on 120Hz devices).
+                    val elapsedMillis = (frameTimeMillis - startMillis) /
+                        SHADER_FRAME_INTERVAL_MILLIS * SHADER_FRAME_INTERVAL_MILLIS
+                    value = (elapsedMillis / 16.6f) / 10f
                 }
             }
         }
@@ -45,22 +49,27 @@ fun Modifier.shaderBackground(
         remember { mutableFloatStateOf(-1f) }
     }
 
-    return this then Modifier.onGloballyPositioned {
-        size = Size(it.size.width.toFloat(), it.size.height.toFloat())
-    }.drawBehind {
-        runtimeEffect.update(
-            shader = shader,
-            time = (time * speed * speedModifier).round(3),
-            width = size.width,
-            height = size.height,
-        ) // set uniforms for the shaders
+    // The draw lambda is remembered so recompositions (e.g. animated shader colors upstream) reuse
+    // the same draw node: a fresh lambda would update the node and invalidate the draw on every
+    // recomposition, redrawing at full refresh rate regardless of the quantized time above.
+    val drawBlock: DrawScope.() -> Unit = remember(runtimeEffect, shader, speed, speedModifier, timeState, fallback) {
+        {
+            runtimeEffect.update(
+                shader = shader,
+                time = (timeState.value * speed * speedModifier).round(3),
+                width = size.width,
+                height = size.height,
+            ) // set uniforms for the shaders
 
-        if (runtimeEffect.isReady) {
-            drawRect(brush = runtimeEffect.build())
-        } else {
-            drawRect(brush = fallback())
+            if (runtimeEffect.isReady) {
+                drawRect(brush = runtimeEffect.build())
+            } else {
+                drawRect(brush = fallback())
+            }
         }
     }
+
+    return this then Modifier.drawBehind(drawBlock)
 }
 
 private fun Float.round(decimals: Int): Float {

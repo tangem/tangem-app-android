@@ -26,6 +26,21 @@ class TangemPayTransactionDetailsSheetPageObject(semanticsProvider: SemanticsNod
         hasTestTag(TangemPayTestTags.TRANSACTION_DETAILS_AMOUNT)
         useUnmergedTree = true
     }
+
+    val purchaseTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangem_pay_purchase))
+        useUnmergedTree = true
+    }
+
+    val completedStatus: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangem_pay_status_completed))
+        useUnmergedTree = true
+    }
+
+    val getHelpButton: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangem_pay_get_help))
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onTangemPayTransactionDetailsSheet(
