@@ -35,7 +35,7 @@ internal class AccountListTest {
         val actual = MockAccounts.onlyMainAccount.mainAccount
 
         // Assert
-        val expected = Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+        val expected = Account.Personal.createMainAccount(userWalletId = userWalletId)
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
@@ -65,9 +65,9 @@ internal class AccountListTest {
     fun `GIVEN joint accounts with duplicate names WHEN create THEN list is valid`() {
         // Arrange
         val accounts = listOf(
-            Account.CryptoPortfolio.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0, name = "Family"),
-            MockAccounts.createJointAccount(derivationIndex = 1, name = "Family"),
+            Account.Personal.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0, name = "Family"),
+            MockAccounts.createJointAccount(ownerKeyIndex = 1, name = "Family"),
         )
 
         // Act
@@ -86,7 +86,7 @@ internal class AccountListTest {
     @Test
     fun `GIVEN full crypto limit and a joint WHEN create THEN joint does not consume the limit`() {
         // Arrange
-        val accounts = createAccounts(count = 20) + MockAccounts.createJointAccount(derivationIndex = 0)
+        val accounts = createAccounts(count = 20) + MockAccounts.createJointAccount(ownerKeyIndex = 0)
 
         // Act
         val actual = AccountList(
@@ -105,9 +105,9 @@ internal class AccountListTest {
     fun `GIVEN more joint rows than the counter WHEN create THEN the list is refused`() {
         // Arrange
         val accounts = listOf(
-            Account.CryptoPortfolio.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0),
-            MockAccounts.createJointAccount(derivationIndex = 1),
+            Account.Personal.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0),
+            MockAccounts.createJointAccount(ownerKeyIndex = 1),
         )
 
         // Act
@@ -127,8 +127,8 @@ internal class AccountListTest {
     fun `GIVEN archived joint accounts WHEN create THEN the counter may exceed the rows`() {
         // Arrange
         val accounts = listOf(
-            Account.CryptoPortfolio.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0),
+            Account.Personal.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0),
         )
 
         // Act
@@ -149,13 +149,13 @@ internal class AccountListTest {
         // Arrange
         val accountList = AccountList(
             userWalletId = userWalletId,
-            accounts = listOf(Account.CryptoPortfolio.createMainAccount(userWalletId)),
+            accounts = listOf(Account.Personal.createMainAccount(userWalletId)),
             totalAccounts = 1,
             totalArchivedAccounts = 0,
         ).getOrNull()!!
 
         // Act
-        val actual = (accountList + MockAccounts.createJointAccount(derivationIndex = 0)).getOrNull()!!
+        val actual = (accountList + MockAccounts.createJointAccount(ownerKeyIndex = 0)).getOrNull()!!
 
         // Assert
         Truth.assertThat(actual.totalJointAccounts).isEqualTo(1)
@@ -165,10 +165,10 @@ internal class AccountListTest {
     @Test
     fun `GIVEN a joint account in the list WHEN removed THEN the joint counter follows it`() {
         // Arrange
-        val joint = MockAccounts.createJointAccount(derivationIndex = 0)
+        val joint = MockAccounts.createJointAccount(ownerKeyIndex = 0)
         val accountList = AccountList(
             userWalletId = userWalletId,
-            accounts = listOf(Account.CryptoPortfolio.createMainAccount(userWalletId), joint),
+            accounts = listOf(Account.Personal.createMainAccount(userWalletId), joint),
             totalAccounts = 1,
             totalArchivedAccounts = 0,
             totalJointAccounts = 1,
@@ -187,8 +187,8 @@ internal class AccountListTest {
         // Arrange
         val jointCurrency = mockk<CryptoCurrency>()
         val accounts = listOf(
-            Account.CryptoPortfolio.createMainAccount(userWalletId),
-            MockAccounts.createJointAccount(derivationIndex = 0, cryptoCurrencies = listOf(jointCurrency)),
+            Account.Personal.createMainAccount(userWalletId),
+            MockAccounts.createJointAccount(ownerKeyIndex = 0, cryptoCurrencies = listOf(jointCurrency)),
         )
         val accountList = AccountList(
             userWalletId = userWalletId,
@@ -277,7 +277,7 @@ internal class AccountListTest {
             ),
             CreateTestModel(
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(userWalletId),
+                    Account.Personal.createMainAccount(userWalletId),
                     Account.Virtual(userWalletId),
                     Account.Virtual(userWalletId),
                 ),
@@ -285,7 +285,7 @@ internal class AccountListTest {
             ),
             CreateTestModel(
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(userWalletId),
+                    Account.Personal.createMainAccount(userWalletId),
                     Account.Prediction(userWalletId),
                     Account.Prediction(userWalletId),
                 ),
@@ -299,8 +299,8 @@ internal class AccountListTest {
             ),
             CreateTestModel(
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(userWalletId),
-                    Account.CryptoPortfolio.createMainAccount(userWalletId).copy(
+                    Account.Personal.createMainAccount(userWalletId),
+                    Account.Personal.createMainAccount(userWalletId).copy(
                         icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
                     ),
                 ),
@@ -330,8 +330,8 @@ internal class AccountListTest {
             // and one joint account arrives as `totalAccounts = 1` with two rows. Comparing the counter with the
             // whole list rejected such a wallet outright and left the producer retrying the same failure forever
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val jointAccount = MockAccounts.createJointAccount(derivationIndex = 0)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
+                val jointAccount = MockAccounts.createJointAccount(ownerKeyIndex = 0)
 
                 CreateTestModel(
                     accounts = listOf(mainAccount, jointAccount),
@@ -385,7 +385,7 @@ internal class AccountListTest {
         private fun provideTestModels() = listOf(
             // region Add new account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
                 val newAccount = createAccount(derivationIndex = 1)
 
                 PlusTestModel(
@@ -407,7 +407,7 @@ internal class AccountListTest {
             // endregion
             // region Replace existing account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
                 val newAccount = mainAccount.copy(accountName = AccountName("New Name").getOrNull()!!)
 
                 PlusTestModel(
@@ -429,8 +429,8 @@ internal class AccountListTest {
             // endregion
             // region MainAccountNotFound
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val newAccount = Account.CryptoPortfolio(
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
+                val newAccount = Account.Personal(
                     accountId = mainAccount.accountId,
                     accountName = mainAccount.accountName,
                     derivationIndex = DerivationIndex(1).getOrNull()!!,
@@ -452,8 +452,8 @@ internal class AccountListTest {
             // endregion
             // region ExceedsMaxMainAccountsCount
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val newAccount = Account.CryptoPortfolio.createMainAccount(UserWalletId("012"))
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
+                val newAccount = Account.Personal.createMainAccount(UserWalletId("012"))
 
                 PlusTestModel(
                     initial = AccountList(
@@ -469,7 +469,7 @@ internal class AccountListTest {
             // endregion
             // region DuplicateAccountNames
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
                 val newAccount = createAccount(derivationIndex = 1).copy(accountName = mainAccount.accountName)
 
                 PlusTestModel(
@@ -522,7 +522,7 @@ internal class AccountListTest {
         private fun provideTestModels() = listOf(
             // region Remove existing account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
                 val secondaryAccount = createAccount(derivationIndex = 2)
 
                 MinusTestModel(
@@ -544,7 +544,7 @@ internal class AccountListTest {
             // endregion
             // region Remove unexisting account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
                 val notInList = createAccount(derivationIndex = 3)
 
                 val accountList = AccountList(
@@ -563,7 +563,7 @@ internal class AccountListTest {
             // endregion
             // region EmptyAccountsList
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
 
                 MinusTestModel(
                     initial = AccountList(
@@ -579,7 +579,7 @@ internal class AccountListTest {
             // endregion
             // region MainAccountNotFound
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Personal.createMainAccount(userWalletId)
                 val secondaryAccount = createAccount(derivationIndex = 2)
 
                 MinusTestModel(

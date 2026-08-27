@@ -8,7 +8,10 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
@@ -21,6 +24,7 @@ import com.tangem.features.polymarket.impl.walletblock.DefaultPolymarketWalletBl
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.search.model.PolymarketSearchModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import dagger.Binds
 import dagger.Module
@@ -78,6 +82,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PolymarketEventDetailsModel::class)
     fun bindPolymarketEventDetailsModel(impl: PolymarketEventDetailsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionModel::class)
+    fun bindPlacePredictionModel(impl: PlacePredictionModel): Model
 }
 
 @Module
@@ -102,11 +111,29 @@ internal object PolymarketDomainUseCasesModule {
         getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
         polymarketOnboardedStore: PolymarketOnboardedStore,
+        recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     ): ResolvePolymarketEntryInteractor = ResolvePolymarketEntryInteractor(
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
         getPolymarketApiCredentialsUseCase = getPolymarketApiCredentialsUseCase,
         polymarketOnboardedStore = polymarketOnboardedStore,
+        recordPolymarketConfirmation = recordPolymarketConfirmation,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRecordPolymarketConfirmationUseCase(
+        polymarketOnboardedStore: PolymarketOnboardedStore,
+    ): RecordPolymarketConfirmationUseCase = RecordPolymarketConfirmationUseCase(
+        onboardedStore = polymarketOnboardedStore,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionOrderQuoteUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): GetPredictionOrderQuoteUseCase = GetPredictionOrderQuoteUseCase(
+        polymarketRepository = polymarketRepository,
     )
 
     @Provides

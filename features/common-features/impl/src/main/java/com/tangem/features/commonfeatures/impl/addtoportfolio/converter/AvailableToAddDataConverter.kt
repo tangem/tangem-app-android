@@ -9,6 +9,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -110,7 +111,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
             userWalletId = userWallet.walletId,
             tokenMarketParams = marketParams,
             network = network,
-            accountIndex = account.derivationIndex,
+            accountIndex = account.derivationIndex ?: return null,
         )
     }
 }
