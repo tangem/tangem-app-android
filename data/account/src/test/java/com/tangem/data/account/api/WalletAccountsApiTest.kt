@@ -31,12 +31,12 @@ internal class WalletAccountsApiTest {
         derivationIndex = 0,
         icon = "Wallet",
         iconColor = "DullLavender",
-        type = WalletAccountDTO.Type.CRYPTO.value,
+        type = WalletAccountDTO.Type.CRYPTO,
     )
     private val jointRow = personalRow.copy(
         id = "B".repeat(64),
         name = "Family",
-        type = WalletAccountDTO.Type.JOINT.value,
+        type = WalletAccountDTO.Type.JOINT,
     )
     private val body = SaveWalletAccountsResponse(accounts = listOf(personalRow, jointRow))
 
