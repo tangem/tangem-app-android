@@ -10,7 +10,9 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isTangemPayCompatible
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
@@ -21,8 +23,9 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 
 /**
  * Default implementation of [SingleAccountListProducer].
@@ -42,6 +45,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
+    private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountListProducer {
 
@@ -53,15 +57,23 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     override fun produce(): Flow<AccountList> {
         val walletId = params.userWalletId
         logger.i("produce() called for $walletId")
-        return walletAccountListFlowFactory.create(walletId)
-            .map { accountList ->
-                val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
-                accountList
-                    .addAccountIf(userWallet.isTangemPayCompatible) { Account.Payment(walletId) }
-                    .addAccountIf(userWallet.isVirtualAccountSupported()) { Account.Virtual(walletId) }
-                    .addAccountIf(userWallet.isPredictionSupported()) { Account.Prediction(walletId) }
-            }
+        return combine(
+            walletAccountListFlowFactory.create(walletId),
+            predictionOnboardedFlow(walletId),
+        ) { accountList, isOnboarded ->
+            val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
+            accountList
+                .addAccountIf(userWallet.isTangemPayCompatible) { Account.Payment(walletId) }
+                .addAccountIf(userWallet.isVirtualAccountSupported()) { Account.Virtual(walletId) }
+                .addAccountIf(userWallet.isPredictionSupported(isOnboarded)) { Account.Prediction(walletId) }
+        }
             .flowOn(dispatchers.default)
+    }
+
+    private fun predictionOnboardedFlow(walletId: UserWalletId): Flow<Boolean> {
+        if (!polymarketFeatureToggles.isPolymarketEnabled) return flowOf(false)
+
+        return polymarketOnboardedStore.isOnboarded(walletId)
     }
 
     private fun UserWallet.isVirtualAccountSupported(): Boolean {
@@ -70,15 +82,9 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
         return isTangemPayCompatible
     }
 
-    private fun UserWallet.isPredictionSupported(): Boolean {
-        if (!polymarketFeatureToggles.isPolymarketEnabled) return false
-
-        return isPredictionAccountSupported && hasPredictionAccount()
+    private fun UserWallet.isPredictionSupported(isOnboarded: Boolean): Boolean {
+        return isPredictionAccountSupported && isOnboarded
     }
-
-    /** Temporary — the real answer comes from the backend: [REDACTED_JIRA] */
-    @Suppress("FunctionOnlyReturningConstant")
-    private fun hasPredictionAccount(): Boolean = true
 
     private inline fun AccountList.addAccountIf(condition: Boolean, account: () -> Account): AccountList {
         return if (condition) {

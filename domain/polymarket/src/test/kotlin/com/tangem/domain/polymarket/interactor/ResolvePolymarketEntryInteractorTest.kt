@@ -58,7 +58,7 @@ internal class ResolvePolymarketEntryInteractorTest {
     fun resetMocks() {
         clearMocks(deriveAddresses, getWalletStatus, getApiCredentials, onboardedStore)
         coEvery { getApiCredentials(any()) } returns credentials
-        coEvery { onboardedStore.isOnboarded(any()) } returns false
+        coEvery { onboardedStore.isOnboardedSync(any()) } returns false
         coEvery { onboardedStore.markOnboarded(any()) } just Runs
         coEvery { onboardedStore.clear(any()) } just Runs
     }
@@ -190,7 +190,7 @@ internal class ResolvePolymarketEntryInteractorTest {
         @Test
         fun `GIVEN a confirmed wallet WHEN withoutPrompting THEN resolves without the backend`() = runTest {
             // Arrange
-            coEvery { onboardedStore.isOnboarded(userWalletId) } returns true
+            coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
 
             // Act
             val actual = useCase.withoutPrompting(userWalletId)
@@ -204,7 +204,7 @@ internal class ResolvePolymarketEntryInteractorTest {
         @Test
         fun `GIVEN a confirmed wallet WHEN invoke THEN nothing is derived AND no card session is opened`() = runTest {
             // Arrange
-            coEvery { onboardedStore.isOnboarded(userWalletId) } returns true
+            coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
 
             // Act
             val actual = useCase(userWalletId)
@@ -219,7 +219,7 @@ internal class ResolvePolymarketEntryInteractorTest {
         fun `GIVEN a confirmed wallet whose credentials are gone WHEN withoutPrompting THEN the backend is asked`() =
             runTest {
                 // Arrange
-                coEvery { onboardedStore.isOnboarded(userWalletId) } returns true
+                coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
                 coEvery { getApiCredentials(any()) } returns null
                 coEvery { deriveAddresses.stored(userWalletId) } returns addresses
                 coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
@@ -260,7 +260,7 @@ internal class ResolvePolymarketEntryInteractorTest {
         @Test
         fun `GIVEN the backend no longer has the wallet WHEN resolved THEN the record is dropped`() = runTest {
             // Arrange
-            coEvery { onboardedStore.isOnboarded(userWalletId) } returns true
+            coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
             coEvery { getApiCredentials(any()) } returns null
             coEvery { deriveAddresses(userWalletId) } returns addresses.right()
             coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
@@ -280,7 +280,7 @@ internal class ResolvePolymarketEntryInteractorTest {
         @Test
         fun `GIVEN the setup failed WHEN resolved THEN the record survives`() = runTest {
             // Arrange
-            coEvery { onboardedStore.isOnboarded(userWalletId) } returns true
+            coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
             coEvery { getApiCredentials(any()) } returns null
             coEvery { deriveAddresses(userWalletId) } returns addresses.right()
             coEvery { getWalletStatus(addresses) } returns PolymarketWalletState(
