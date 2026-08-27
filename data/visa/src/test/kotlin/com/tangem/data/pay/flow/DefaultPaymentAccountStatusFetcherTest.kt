@@ -55,6 +55,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import kotlin.reflect.KClass
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultPaymentAccountStatusFetcherTest {
@@ -179,6 +180,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     )
 
     private fun buildCustomerInfo(
+        customerId: String = "cust_1",
         productInstances: List<CustomerInfo.ProductInstance> = listOf(cardProductInstance),
         paymentAccount: CustomerInfo.PaymentAccount? = null,
         cards: List<CustomerInfo.CardInfo> = listOf(cardInfo),
@@ -196,7 +198,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         tariffPlan: TangemPayCustomerTariffPlan? = null,
         networks: List<CustomerInfo.NetworkInfo> = emptyList(),
     ) = CustomerInfo(
-        customerId = "cust_1",
+        customerId = customerId,
         paymentAccount = paymentAccount,
         kycStatus = KycStatus.APPROVED,
         state = CustomerInfo.State.ACTIVE,
@@ -209,11 +211,16 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         networks = networks,
     )
 
-    private fun activeOrder(id: String, type: OrderType) = Order(
+    private fun order(
+        id: String,
+        type: OrderType,
+        status: OrderStatus = OrderStatus.PROCESSING,
+        updatedAt: String? = null,
+    ) = Order(
         id = id,
         customerId = "cust_1",
         type = type,
-        status = OrderStatus.PROCESSING,
+        status = status,
         step = OrderStep.UNKNOWN,
         stepChangeCode = null,
         productInstanceId = null,
@@ -222,8 +229,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         toTariffPlanId = null,
         withdrawTxHash = null,
         createdAt = null,
-        updatedAt = null,
+        updatedAt = updatedAt,
     )
+
+    private fun activeOrder(id: String, type: OrderType) = order(id = id, type = type)
 
     @BeforeEach
     fun setUp() {
@@ -780,6 +789,187 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
+        fun `GIVEN tiers on and latest issuance order canceled WHEN invoke THEN stores CardIssueFailed`() = runTest {
+            // Arrange
+            val planState = TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+            stubPlanSelectionCustomer()
+            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
+                listOf(order(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION, status = OrderStatus.CANCELED)),
+            )
+            coEvery {
+                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+            } returns planState
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(
+                PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "cust_1", tariffPlan = planState),
+            )
+            coVerify(exactly = 1) {
+                customerOrderRepository.findOrders(
+                    userWalletId = userWalletId,
+                    types = OrderType.issueCardTypes + OrderType.TARIFF_PLAN_TRANSITION,
+                    statuses = emptySet(),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN cached failure and findOrders fails WHEN invoke THEN keeps CardIssueFailed`() = runTest {
+            // Arrange
+            val planState = TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+            val cachedFailure = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "cust_1")
+            stubPlanSelectionCustomer()
+            coEvery {
+                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+            } returns planState
+            coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns AccountStatus.Payment(
+                account = Account.Payment(userWalletId = userWalletId),
+                value = cachedFailure,
+            )
+            coEvery {
+                customerOrderRepository.findOrders(any(), any(), any())
+            } returns VisaApiError.UnknownWithoutCode.left()
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns emptyList()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isEqualTo(
+                PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "cust_1", tariffPlan = planState),
+            )
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN issuance orders WHEN invoke THEN the stored status follows the latest order`(
+            model: OrderStateModel,
+        ) = runTest {
+            // Arrange
+            stubPlanSelectionCustomer(customerId = model.customerId)
+            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns model.orders
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns model.localIssueOrderIds
+            coEvery {
+                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+            } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isInstanceOf(model.expected.java)
+        }
+
+        private fun provideTestModels() = listOf(
+            OrderStateModel(
+                name = "canceled, but a newer order is still active -> Inactive",
+                orders = Either.Right(
+                    listOf(
+                        canceledOrder(id = "order_1", updatedAt = "2026-08-01T00:00:00Z"),
+                        activeOrderAt(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
+                    ),
+                ),
+                expected = PaymentAccountStatusValue.Inactive::class,
+            ),
+            OrderStateModel(
+                name = "canceled is newer, but an order is still active -> Inactive",
+                orders = Either.Right(
+                    listOf(
+                        canceledOrder(id = "order_1", updatedAt = "2026-08-02T00:00:00Z"),
+                        activeOrderAt(id = "order_2", updatedAt = "2026-08-01T00:00:00Z"),
+                    ),
+                ),
+                expected = PaymentAccountStatusValue.Inactive::class,
+            ),
+            OrderStateModel(
+                name = "canceled is the latest -> CardIssueFailed",
+                orders = Either.Right(
+                    listOf(
+                        completedOrder(id = "order_1", updatedAt = "2026-08-01T00:00:00Z"),
+                        canceledOrder(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
+                    ),
+                ),
+                expected = PaymentAccountStatusValue.Error.CardIssueFailed::class,
+            ),
+            OrderStateModel(
+                name = "completed is the latest -> AwaitingPlanSelection",
+                orders = Either.Right(
+                    listOf(
+                        canceledOrder(id = "order_1", updatedAt = "2026-08-01T00:00:00Z"),
+                        completedOrder(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
+                    ),
+                ),
+                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
+            ),
+            OrderStateModel(
+                name = "canceled without updatedAt loses to a completed one -> AwaitingPlanSelection",
+                orders = Either.Right(
+                    listOf(
+                        canceledOrder(id = "order_1", updatedAt = null),
+                        completedOrder(id = "order_2", updatedAt = "2026-08-02T00:00:00Z"),
+                    ),
+                ),
+                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
+            ),
+            OrderStateModel(
+                name = "canceled but the customer id is blank -> AwaitingPlanSelection",
+                orders = Either.Right(listOf(canceledOrder(id = "order_1", updatedAt = null))),
+                customerId = "",
+                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
+            ),
+            OrderStateModel(
+                name = "lookup failed, a local issue order remains -> Inactive",
+                orders = VisaApiError.UnknownWithoutCode.left(),
+                localIssueOrderIds = listOf("order_1"),
+                expected = PaymentAccountStatusValue.Inactive::class,
+            ),
+            OrderStateModel(
+                name = "lookup failed with nothing local or cached -> AwaitingPlanSelection",
+                orders = VisaApiError.UnknownWithoutCode.left(),
+                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
+            ),
+        )
+
+        private fun canceledOrder(id: String, updatedAt: String?) = order(
+            id = id,
+            type = OrderType.TARIFF_PLAN_TRANSITION,
+            status = OrderStatus.CANCELED,
+            updatedAt = updatedAt,
+        )
+
+        private fun completedOrder(id: String, updatedAt: String?) = order(
+            id = id,
+            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN,
+            status = OrderStatus.COMPLETED,
+            updatedAt = updatedAt,
+        )
+
+        private fun activeOrderAt(id: String, updatedAt: String?) = order(
+            id = id,
+            type = OrderType.TARIFF_PLAN_TRANSITION,
+            status = OrderStatus.PROCESSING,
+            updatedAt = updatedAt,
+        )
+
+        private suspend fun stubPlanSelectionCustomer(customerId: String = "cust_1") {
+            val customerInfo = buildCustomerInfo(
+                customerId = customerId,
+                productInstances = emptyList(),
+                fiatBalance = null,
+                cryptoBalance = null,
+                tariffPlan = customerTariffPlan,
+            )
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+        }
+
+        @Test
         fun `GIVEN tiers off and KYC approved without card WHEN invoke THEN creates order and stays issuing`() = runTest {
             // Arrange
             val customerInfo = buildCustomerInfo(productInstances = emptyList())
@@ -961,6 +1151,68 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 assertThat(loaded.cards.map { it.state }).doesNotContain(TangemPayCardState.Issuing)
                 coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") }
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CardlessEnrolledAccount {
+
+        @Test
+        fun `GIVEN enrolled account without cards and canceled order WHEN invoke THEN keeps the account balance`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(
+                    productInstances = emptyList(),
+                    cards = emptyList(),
+                    tariffPlan = customerTariffPlan,
+                )
+                stubHappyPath(customerInfo)
+                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+                coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
+                    listOf(
+                        order(
+                            id = "order_1",
+                            type = OrderType.TARIFF_PLAN_TRANSITION,
+                            status = OrderStatus.CANCELED,
+                        ),
+                    ),
+                )
+                coEvery {
+                    getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+                } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                val stored = storedStatuses.last().value
+                assertThat(stored).isInstanceOf(PaymentAccountStatusValue.Error.CardIssueFailed::class.java)
+                assertThat((stored as PaymentAccountStatusValue.Error.CardIssueFailed).balance).isNotNull()
+            }
+
+        @Test
+        fun `GIVEN enrolled account without cards and active order WHEN invoke THEN stores IssuingCard`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = emptyList(),
+                cards = emptyList(),
+                tariffPlan = customerTariffPlan,
+            )
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
+                listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
+            )
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value)
+                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+        }
     }
 
     @Nested
@@ -1474,5 +1726,15 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             assertThat(storedStatuses.last().value).isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
         }
+    }
+
+    internal data class OrderStateModel(
+        val name: String,
+        val orders: Either<VisaApiError, List<Order>>,
+        val localIssueOrderIds: List<String> = emptyList(),
+        val customerId: String = "cust_1",
+        val expected: KClass<out PaymentAccountStatusValue>,
+    ) {
+        override fun toString(): String = name
     }
 }

@@ -25,7 +25,7 @@ internal class TangemPayMainBlockConverter(
     override fun convert(value: AccountStatus.Payment): TangemPayMainUM {
         return when (val statusValue = value.value) {
             is PaymentAccountStatusValue.Error.CardIssueFailed -> TangemPayMainUM.FailedToIssue(
-                onClick = { tangemPayClickIntents.onIssuingFailedClicked(statusValue.customerId) },
+                onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Error.ExposedDevice -> TangemPayMainUM.ExposedDevice
             is PaymentAccountStatusValue.Error.NotSynced -> TangemPayMainUM.SyncNeeded

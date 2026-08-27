@@ -46,6 +46,8 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds2.messagebanner.CloseButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.orMaskWithStars
@@ -273,17 +275,43 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             }
         }
         null -> {
-            if (state.accountDeactivatedBannerState != null) {
-                item("deactivationBannerBlock") {
+            if (state.statusBannerState != null) {
+                item("messageBannerBlock") {
                     SpacerH12()
-                    TangemMessageBanner(
-                        state = state.accountDeactivatedBannerState,
+                    MessageBanner(
+                        banner = state.statusBannerState,
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun MessageBanner(banner: MessageBannerUM, modifier: Modifier = Modifier) {
+    val closeButton: (@Composable () -> Unit)? = banner.onClose?.let { onClose ->
+        { TangemMessageBanner.CloseButton(onClick = onClose) }
+    }
+    if (closeButton == null) {
+        TangemMessageBanner(state = banner.state, modifier = modifier)
+        return
+    }
+    val iconStart: (@Composable () -> Unit)? = banner.state.iconStart?.let { icon ->
+        { TangemIcon(icon) }
+    }
+    TangemMessageBanner(
+        title = banner.state.title,
+        modifier = modifier,
+        variant = banner.state.variant,
+        contentAlign = banner.state.contentAlign,
+        showGlowRing = banner.state.shouldShowGlowRing,
+        description = banner.state.description,
+        secondaryButton = banner.state.secondaryButton,
+        primaryButton = banner.state.primaryButton,
+        slotStart = iconStart,
+        slotEnd = closeButton,
+    )
 }
 
 @Composable
