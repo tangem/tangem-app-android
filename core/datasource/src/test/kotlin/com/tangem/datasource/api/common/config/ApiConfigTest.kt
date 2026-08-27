@@ -4,7 +4,6 @@ import com.tangem.core.remote.config.ApiConfig
 
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.AuthenticationHeader
 import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.utils.ProviderSuspend
@@ -24,7 +23,6 @@ class ApiConfigTest {
 
     private val appAuthProvider = mockk<AuthProvider>()
     private val apiKeyProvider = mockk<ProviderSuspend<String>>()
-    private val environmentConfig = mockk<EnvironmentConfig>()
 
     @BeforeEach
     fun setup() {
@@ -50,11 +48,6 @@ class ApiConfigTest {
 
     private fun createApiConfigs(): List<ApiConfig> {
         return listOf(
-            YieldSupply(
-                environmentConfig = environmentConfig,
-                cardAuthHeader = { AuthenticationHeader(appAuthProvider) },
-                appInfoProvider = mockk(),
-            ),
             TangemTech(
                 apiKeyHeader = { environment -> TangemApiKeyHeader(appAuthProvider, environment) },
                 cardAuthHeader = { AuthenticationHeader(appAuthProvider) },

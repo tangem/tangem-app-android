@@ -399,7 +399,7 @@ class DefaultSessionTokenRefresherTest {
             cause = ApiResponseError.HttpException(
                 code = ApiResponseError.HttpException.Code.NOT_FOUND,
                 message = "not found",
-                errorBody = """{"type":"about:blank","detail":"Device not found","status":404,"title":"Not Found"}""",
+                errorBody = """{"detail":"Device not found","status":404,"title":"Not Found","instance":"/authenticate"}""",
             ),
         ) as ApiResponse<TokenApiResponse>
         coEvery { deviceRegistrar.reregister() } returns Unit.right()
@@ -421,7 +421,7 @@ class DefaultSessionTokenRefresherTest {
             cause = ApiResponseError.HttpException(
                 code = ApiResponseError.HttpException.Code.NOT_FOUND,
                 message = "not found",
-                errorBody = """{"type":"about:blank","detail":"Nonce not found","status":404,"title":"Not Found"}""",
+                errorBody = """{"detail":"Nonce not found","status":404,"title":"Not Found","instance":"/authenticate"}""",
             ),
         ) as ApiResponse<TokenApiResponse>
 
