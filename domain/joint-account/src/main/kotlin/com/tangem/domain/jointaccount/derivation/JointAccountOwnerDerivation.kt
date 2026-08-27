@@ -1,6 +1,8 @@
 package com.tangem.domain.jointaccount.derivation
 
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.models.account.OwnerKeyIndex
+import com.tangem.domain.models.network.Network
 import java.util.Locale
 
 /**
@@ -14,4 +16,9 @@ fun jointAccountOwnerDerivationPath(index: Int): DerivationPath {
 
     // Locale.ROOT: %d on an Arabic-Indic digit locale would emit localized digits into rawPath
     return DerivationPath(rawPath = JOINT_ACCOUNT_OWNER_DERIVATION_PATH_TEMPLATE.format(Locale.ROOT, index))
+}
+
+/** The network path of the currencies of the joint account whose owner key sits at this index. */
+fun OwnerKeyIndex.toNetworkDerivationPath(): Network.DerivationPath.Joint {
+    return Network.DerivationPath.Joint(value = jointAccountOwnerDerivationPath(index = value).rawPath)
 }
