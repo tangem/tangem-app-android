@@ -13,12 +13,6 @@ import javax.inject.Inject
 interface AccountUnderlyingCurrencies {
 
     suspend fun get(userWalletId: UserWalletId): List<CryptoCurrencyStatus>
-
-    /**
-     * The subset of [get] that can actually receive a withdrawal. The withdraw endpoint takes an amount and a
-     * recipient address but no network, so the backend can only ever move the account's default currency.
-     */
-    suspend fun getWithdrawable(userWalletId: UserWalletId): List<CryptoCurrencyStatus>
 }
 
 internal class PaymentAccountUnderlyingCurrencies @Inject constructor(
@@ -27,11 +21,4 @@ internal class PaymentAccountUnderlyingCurrencies @Inject constructor(
 
     override suspend fun get(userWalletId: UserWalletId): List<CryptoCurrencyStatus> =
         getPaymentAccountCryptoCurrencyStatusUseCase.invokeSyncCurrencies(userWalletId)
-
-    override suspend fun getWithdrawable(userWalletId: UserWalletId): List<CryptoCurrencyStatus> {
-        val defaultCurrencyStatus = getPaymentAccountCryptoCurrencyStatusUseCase.invokeSync(userWalletId)
-            .getOrNull()
-            ?.second
-        return listOfNotNull(defaultCurrencyStatus)
-    }
 }
