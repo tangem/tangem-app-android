@@ -23,7 +23,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
             // Arrange
             every { appRouter.push(any(), any()) } just Runs
             every {
-                featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED)
+                featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED)
             } returns false
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -54,7 +54,7 @@ internal class StakingModelMarketingDeeplinkTest : StakingModelTestBase() {
             // Arrange
             every { appRouter.push(any(), any()) } just Runs
             every {
-                featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED)
+                featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED)
             } returns true
             val model = createModel(testScope = this)
             advanceUntilIdle()
