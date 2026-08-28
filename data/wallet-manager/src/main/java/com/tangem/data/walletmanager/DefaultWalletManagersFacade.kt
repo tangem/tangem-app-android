@@ -656,7 +656,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
         if (network.derivationPath is Network.DerivationPath.Joint) {
-            TangemLogger.w(jointNetworkRefusalMessage(network))
+            TangemLogger.e(jointNetworkRefusalMessage(network))
             return null
         }
         val blockchain = network.toBlockchain()
