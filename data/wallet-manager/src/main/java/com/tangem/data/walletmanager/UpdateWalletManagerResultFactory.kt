@@ -30,6 +30,30 @@ internal class UpdateWalletManagerResultFactory {
     }
 
     /**
+     * Get [UpdateWalletManagerResult.Verified] result for an address the wallet does not own — a joint account's
+     * Safe. The address is the only one of the network, so it is both the selected and the primary one.
+     */
+    fun getResult(
+        blockchain: Blockchain,
+        address: String,
+        amounts: Map<AmountType, Amount>,
+        recentTransactions: List<TransactionData.Uncompiled>,
+    ): UpdateWalletManagerResult.Verified {
+        val addresses = setOf(
+            UpdateWalletManagerResult.Address(value = address, type = UpdateWalletManagerResult.Address.Type.Primary),
+        )
+        val feePaidCurrency = blockchain.feePaidCurrency()
+        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses, feePaidCurrency)
+
+        return UpdateWalletManagerResult.Verified(
+            selectedAddress = address,
+            addresses = addresses,
+            currenciesAmounts = getTokensAmounts(amounts.values.toSet()),
+            currentTransactions = getCurrentTransactions(txHistoryItemConverter, recentTransactions.toSet()),
+        )
+    }
+
+    /**
      * Get demo [UpdateWalletManagerResult.Verified] result
      *
      * @param walletManager wallet manager
@@ -91,6 +115,15 @@ internal class UpdateWalletManagerResultFactory {
             selectedAddress = wallet.address,
             addresses = getAvailableAddresses(wallet.addresses),
         )
+    }
+
+    fun getUnreachableResult(address: String): UpdateWalletManagerResult.Unreachable {
+        val primaryAddress = UpdateWalletManagerResult.Address(
+            value = address,
+            type = UpdateWalletManagerResult.Address.Type.Primary,
+        )
+
+        return UpdateWalletManagerResult.Unreachable(selectedAddress = address, addresses = setOf(primaryAddress))
     }
 
     private fun getAvailableAddresses(addresses: Set<Address>): Set<UpdateWalletManagerResult.Address> {
