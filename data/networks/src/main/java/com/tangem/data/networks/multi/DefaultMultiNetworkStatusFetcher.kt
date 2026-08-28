@@ -9,6 +9,7 @@ import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.data.dynamicaddresses.DynamicAddressesInitializer
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.core.utils.eitherOn
+import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -25,6 +26,8 @@ import javax.inject.Inject
  * @property networksStatusesStore      networks statuses store
  * @property cardCryptoCurrencyFactory  card crypto currency factory
  * @property commonNetworkStatusFetcher common network status fetcher
+ * @property dynamicAddressesInitializer dynamic addresses initializer
+ * @property safeAddressResolver        resolver of the Safe addresses of joint account networks
  * @property dispatchers                dispatchers
  *
 [REDACTED_AUTHOR]
@@ -34,6 +37,7 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher,
     private val dynamicAddressesInitializer: DynamicAddressesInitializer,
+    private val safeAddressResolver: JointAccountSafeAddressResolver,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiNetworkStatusFetcher {
 
@@ -60,6 +64,14 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
             },
         )
 
+        val safeAddressByNetwork = catch(
+            block = { resolveSafeAddresses(params) },
+            catch = { error ->
+                TangemLogger.e("Failed to resolve the Safe addresses of the joint networks", error)
+                emptyMap()
+            },
+        )
+
         val result = coroutineScope {
             params.networks
                 .map { network ->
@@ -69,6 +81,7 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
                             network = network,
                             networkCurrencies = networksCurrencies[network].orEmpty().toSet() + params.extraTokens,
                             xpub = xpubByNetwork[network],
+                            safeAddress = safeAddressByNetwork[network],
                         )
                     }
                 }
@@ -80,6 +93,14 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
         ensure(failedResult == null) {
             IllegalStateException("Failed to fetch network statuses")
         }
+    }
+
+    private suspend fun resolveSafeAddresses(params: MultiNetworkStatusFetcher.Params): Map<Network, String> {
+        val jointNetworks = params.networks.filterTo(hashSetOf()) { it.derivationPath is Network.DerivationPath.Joint }
+
+        if (jointNetworks.isEmpty()) return emptyMap()
+
+        return safeAddressResolver.resolve(userWalletId = params.userWalletId, networks = jointNetworks)
     }
 
     private suspend fun createNetworksCurrenciesMap(
