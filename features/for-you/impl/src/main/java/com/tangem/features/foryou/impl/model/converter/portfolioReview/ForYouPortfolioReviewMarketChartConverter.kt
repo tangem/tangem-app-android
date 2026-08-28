@@ -40,7 +40,7 @@ internal class ForYouPortfolioReviewMarketChartConverter(
                         DonutSegmentUM(
                             color = DonutSegmentColor.entries.getOrNull(index) ?: DonutSegmentColor.Blue,
                             weight = segmentWeight,
-                            title = stringReference(currencies.firstOrNull()?.currency?.name.orEmpty()),
+                            title = stringReference(currencies.firstOrNull()?.currency?.symbol.orEmpty()),
                             fiatValue = stringReference(segmentBalance.format {
                                 fiat(
                                     fiatCurrencyCode = appCurrency.code,
