@@ -33,8 +33,6 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
 
-    implementation(projects.store.datasource.api)
-
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)
     testImplementation(deps.kotlin.coroutines)
