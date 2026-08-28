@@ -51,14 +51,14 @@ private fun Content(content: AddWalletBS) {
             title = resourceReference(R.string.user_wallet_add_hardware_title),
             subtitle = resourceReference(R.string.user_wallet_add_hardware_description),
             onClick = content.onAddHardwareWalletClick,
-            Modifier.testTag(DetailsScreenTestTags.ADD_HARDWARE_WALLET_BUTTON)
+            modifier = Modifier.testTag(DetailsScreenTestTags.ADD_HARDWARE_WALLET_BUTTON)
         )
         AddWalletOption(
             icon = Icons.ic_grid_plus_20,
             title = resourceReference(R.string.user_wallet_add_mobile_title),
             subtitle = resourceReference(R.string.user_wallet_add_mobile_description),
             onClick = content.onAddMobileWalletClick,
-            Modifier.testTag(DetailsScreenTestTags.ADD_MOBILE_WALLET_BUTTON)
+            modifier = Modifier.testTag(DetailsScreenTestTags.ADD_MOBILE_WALLET_BUTTON)
         )
     }
 }
