@@ -371,11 +371,17 @@ internal class SwapInteractorImpl @Inject constructor(
         val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
             fromSwapCurrencyStatus.currency is CryptoCurrency.Token
 
-        val spenderAddress = if (isYieldSwap) {
+        val yieldModuleAddress = if (isYieldSwap) {
             yieldModuleAddressProvider.getOrFetch(
                 userWalletId = fromSwapCurrencyStatus.userWalletId,
                 network = fromSwapCurrencyStatus.currency.network,
             )
+        } else {
+            null
+        }
+
+        val spenderAddress = if (isYieldSwap) {
+            yieldModuleAddress
         } else {
             maybeQuote.getOrNull()?.allowanceContract
         }
@@ -434,6 +440,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allowanceInfo = allowanceInfo,
                 spenderAddress = spenderAddress,
                 dexRouterSpenderAddress = dexRouterSpenderAddress,
+                yieldModuleAddress = yieldModuleAddress,
             )
         } else {
             val quoteBalanceStatus = if (isBalanceWithoutFeeEnough) {
@@ -515,6 +522,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allowanceInfo = null,
                 spenderAddress = null,
                 dexRouterSpenderAddress = null,
+                yieldModuleAddress = null,
             )
         } else {
             provider to getQuotesState(
@@ -1192,7 +1200,13 @@ internal class SwapInteractorImpl @Inject constructor(
         payInAddress: String,
     ): SwapTransactionState.TxSent {
         val networkAddress = fromSwapCurrencyStatus.status.value.networkAddress
-        val fromAddress = networkAddress?.defaultAddress?.value.orEmpty()
+        val walletAddress = networkAddress?.defaultAddress?.value.orEmpty()
+        // Express must see the sender the route was issued for: on a yield swap that is the module
+        // contract, which the signed response echoes back as `txFrom`.
+        val fromAddress = (swapData.transaction as? ExpressTransactionModel.DEX)
+            ?.txFrom
+            ?.takeIf(String::isNotEmpty)
+            ?: walletAddress
         repository.exchangeSent(
             userWallet = fromSwapCurrencyStatus.userWallet,
             txId = swapData.transaction.txId,
@@ -1988,9 +2002,11 @@ internal class SwapInteractorImpl @Inject constructor(
         allowanceInfo: AllowanceInfo?,
         spenderAddress: String?,
         dexRouterSpenderAddress: String?,
+        yieldModuleAddress: String?,
     ): SwapState {
         val fromNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
-        val dexFromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
+        val walletAddress = fromNetworkAddress?.defaultAddress?.value
+        val dexFromAddress = yieldModuleAddress ?: walletAddress.orEmpty()
         val toNetworkAddress = toSwapCurrencyStatus.status.value.networkAddress
         val dexToAddress = toNetworkAddress?.defaultAddress?.value.orEmpty()
         return repository.getExchangeData(
@@ -2006,7 +2022,7 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
             toAddress = dexToAddress,
-            refundAddress = fromNetworkAddress?.defaultAddress?.value,
+            refundAddress = walletAddress,
             expressOperationType = expressOperationType,
         ).map { swapData ->
             val dexTx = swapData.transaction as? ExpressTransactionModel.DEX
