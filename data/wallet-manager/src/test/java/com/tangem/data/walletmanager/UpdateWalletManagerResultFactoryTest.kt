@@ -286,6 +286,26 @@ internal class UpdateWalletManagerResultFactoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetUnreachableResultForAddress {
+
+        @Test
+        fun `GIVEN an address WHEN getUnreachableResult THEN unreachable with that one primary address`() {
+            // Act
+            val actual = factory.getUnreachableResult(address = "0xSafe")
+
+            // Assert
+            val expected = UpdateWalletManagerResult.Unreachable(
+                selectedAddress = "0xSafe",
+                addresses = setOf(
+                    UpdateWalletManagerResult.Address("0xSafe", UpdateWalletManagerResult.Address.Type.Primary),
+                ),
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetDemoResult {
 
         @ParameterizedTest

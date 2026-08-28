@@ -117,6 +117,15 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
+    fun getUnreachableResult(address: String): UpdateWalletManagerResult.Unreachable {
+        val primaryAddress = UpdateWalletManagerResult.Address(
+            value = address,
+            type = UpdateWalletManagerResult.Address.Type.Primary,
+        )
+
+        return UpdateWalletManagerResult.Unreachable(selectedAddress = address, addresses = setOf(primaryAddress))
+    }
+
     private fun getAvailableAddresses(addresses: Set<Address>): Set<UpdateWalletManagerResult.Address> {
         return SdkAddressToAddressConverter.convertList(addresses).toSet()
     }
