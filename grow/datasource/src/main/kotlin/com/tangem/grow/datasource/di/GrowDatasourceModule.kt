@@ -14,6 +14,7 @@ import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
+import com.tangem.grow.datasource.config.Collectibles
 import com.tangem.grow.datasource.config.Express
 import com.tangem.grow.datasource.config.GaslessTxService
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
@@ -24,6 +25,7 @@ import com.tangem.grow.datasource.config.PolymarketRelayer
 import com.tangem.grow.datasource.config.PolymarketWeb
 import com.tangem.grow.datasource.config.StakeKit
 import com.tangem.grow.datasource.config.YieldSupply
+import com.tangem.grow.datasource.collectibles.CollectiblesApi
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.express.ExpressAuthProvider
@@ -329,6 +331,25 @@ internal object GrowDatasourceModule {
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
                 shouldSaveLogs = false,
+            ),
+        )
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(Collectibles.KEY)
+    fun provideCollectiblesConfig(appInfoProvider: AppInfoProvider): ApiConfig {
+        return Collectibles(appInfoProvider = appInfoProvider)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCollectiblesApi(factory: RetrofitFactory): CollectiblesApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = Collectibles.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = true,
             ),
         )
     }
