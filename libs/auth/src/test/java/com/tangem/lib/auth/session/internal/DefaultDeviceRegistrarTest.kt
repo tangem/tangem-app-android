@@ -75,10 +75,9 @@ class DefaultDeviceRegistrarTest {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
         coEvery { attestationProvider.getAttestationToken(any()) } returns null
-        // Default to a present session so the already-registered / 409 paths treat ensureSession as a
-        // no-op; the recovery tests override store.get() with None.
-        coEvery { store.get() } returns Some(sessionTokens())
-        coEvery { sessionTokenRefresher.refresh() } returns sessionTokens().right()
+        // register() ensures a session on every successful outcome; the no-op-when-present logic lives
+        // in the refresher and is covered by DefaultSessionTokenRefresherTest.
+        coEvery { sessionTokenRefresher.ensureSession() } returns sessionTokens().right()
         registrar = DefaultDeviceRegistrar(
             authApi = authApi,
             store = store,
@@ -114,41 +113,27 @@ class DefaultDeviceRegistrarTest {
         coVerify { authApi.requestDeviceNonce(any()) }
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify { store.save(any()) }
+        coVerify { sessionTokenRefresher.ensureSession() }
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
     }
 
     @Test
-    fun `register short-circuits without network when the flag is already set and a session exists`() = runTest {
+    fun `register short-circuits the register call when the flag is set but still ensures a session`() = runTest {
         preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
-        coEvery { store.get() } returns Some(sessionTokens())
 
         val result = registrar.register()
 
+        // No /register (flag short-circuits), but a session is ensured unconditionally — this recovers
+        // a device left registered-but-sessionless by a prior 409.
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify(exactly = 0) { store.save(any()) }
-        coVerify(exactly = 0) { sessionTokenRefresher.refresh() }
+        coVerify(exactly = 1) { sessionTokenRefresher.ensureSession() }
     }
 
     @Test
-    fun `register establishes a session when the flag is set but the store is empty`() = runTest {
-        // Arrange — stuck 409 state: device registered (flag set) on an earlier launch, no tokens.
-        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
-        coEvery { store.get() } returns None
-        coEvery { sessionTokenRefresher.refresh() } returns sessionTokens().right()
-
-        // Act
-        val result = registrar.register()
-
-        // Assert — no /register (flag short-circuits), but a session is minted via the refresher.
-        assertThat(result.isRight()).isTrue()
-        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
-        coVerify(exactly = 1) { sessionTokenRefresher.refresh() }
-    }
-
-    @Test
-    fun `register establishes a session after a 409 that issues no tokens`() = runTest {
+    fun `register ensures a session after a 409 that issues no tokens`() = runTest {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
             data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
@@ -163,15 +148,23 @@ class DefaultDeviceRegistrarTest {
                 errorBody = null,
             ),
         ) as ApiResponse<TokenApiResponse>
-        coEvery { store.get() } returns None
-        coEvery { sessionTokenRefresher.refresh() } returns sessionTokens().right()
 
         val result = registrar.register()
 
-        // 409 marks the device registered, then mints a session (no tokens came back in the 409).
+        // 409 marks the device registered, then a session is ensured (no tokens came back in the 409).
         assertThat(result.isRight()).isTrue()
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
-        coVerify(exactly = 1) { sessionTokenRefresher.refresh() }
+        coVerify(exactly = 1) { sessionTokenRefresher.ensureSession() }
+    }
+
+    @Test
+    fun `register does not ensure a session when registration fails`() = runTest {
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns None
+
+        val result = registrar.register()
+
+        assertThat(result.leftOrNull()).isEqualTo(DeviceRegistrationError.DeviceKeyUnavailable)
+        coVerify(exactly = 0) { sessionTokenRefresher.ensureSession() }
     }
 
     @Test

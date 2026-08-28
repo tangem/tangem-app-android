@@ -52,6 +52,14 @@ internal class DefaultDeviceRegistrar(
         // `Mutex` guards against the unlikely case of two concurrent callers passing the
         // already-registered check together and consuming the same device nonce twice.
         mutex.withLock { runRegister() }
+            // Establish a session OUTSIDE the mutex: a 409 (or a flag set on an earlier launch) leaves
+            // the device registered without tokens, and nothing else would recover it. Must run
+            // unlocked — ensureSession → refresh → (on "device not found") reregister re-takes this
+            // same non-reentrant mutex, which would deadlock if called from within runRegister.
+            .onRight {
+                sessionTokenRefresher.get().ensureSession()
+                    .onLeft { TangemLogger.e("Failed to ensure a session after device registration: $it") }
+            }
     }
 
     override suspend fun reregister(): Either<DeviceRegistrationError, Unit> = withContext(dispatchers.io) {
@@ -78,10 +86,6 @@ internal class DefaultDeviceRegistrar(
         )
         if (isAlreadyRegistered) {
             TangemLogger.i("Device already registered — skipping /register")
-            // The flag can be set while the session store is empty (e.g. a prior 409 marked the
-            // device registered without issuing tokens, or a crash between the 200 response and the
-            // token write). Recover the session on this launch instead of staying stuck forever.
-            ensureSession()
             return@either
         }
 
@@ -148,12 +152,10 @@ internal class DefaultDeviceRegistrar(
                 val authError = errorConverter.convert(response.cause)
                 if (authError is AuthError.Conflict) {
                     // Device is already registered server-side, but a 409 returns no tokens. Persist
-                    // the flag to stop retrying, then mint a session via /authenticate — nothing else
-                    // would (wallet registration now short-circuits without a session), so the device
-                    // would otherwise stay authenticated-but-sessionless indefinitely.
+                    // the flag to stop retrying; the session is then minted by register()'s
+                    // ensureSession step (which runs unlocked — see register()).
                     TangemLogger.i("Device already registered server-side (409) — marking as registered")
                     markRegistered(onFailureLog = "Failed to persist device-registration flag after 409")
-                    ensureSession()
                     return
                 }
                 TangemLogger.e("/register request failed: $authError")
@@ -169,25 +171,5 @@ internal class DefaultDeviceRegistrar(
             TangemLogger.e(onFailureLog, e)
             raise(DeviceRegistrationError.PersistenceFailed(e))
         }
-    }
-
-    /**
-     * Establishes an authenticated session when the device is known-registered but the session store
-     * is empty (a 409, or a registration flag set on an earlier launch, leaves the device registered
-     * server-side without tokens). Nothing else would recover it — wallet registration short-circuits
-     * without a session — so the device would stay authenticated-but-sessionless indefinitely.
-     * Delegates to the refresher (which falls to `/authenticate`, as there is no refresh token).
-     * Best-effort: a failure here never fails device registration.
-     */
-    private suspend fun ensureSession() {
-        val hasSession = runSuspendCatching { store.get().getOrNull() != null }.getOrElse { e ->
-            TangemLogger.e("Failed to read session tokens while ensuring session", e)
-            return
-        }
-        if (hasSession) return
-
-        TangemLogger.i("Device registered but no session — establishing one")
-        sessionTokenRefresher.get().refresh()
-            .onLeft { TangemLogger.e("Failed to establish session for registered device: $it") }
     }
 }
