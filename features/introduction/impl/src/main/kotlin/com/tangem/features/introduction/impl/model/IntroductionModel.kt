@@ -245,9 +245,9 @@ internal class IntroductionModel @Inject constructor(
 
     private fun showHaveWalletStep(step: () -> HaveWalletUM.Step) {
         val content = HaveWalletUM(step = step())
-        uiState.update {
-            val current = it.haveWalletBottomSheetConfig
-            it.copy(
+        uiState.update { state ->
+            val current = state.haveWalletBottomSheetConfig
+            state.copy(
                 haveWalletBottomSheetConfig = current?.copy(isShown = true, content = content)
                     ?: TangemBottomSheetConfig(
                         isShown = true,
