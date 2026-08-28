@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
+import com.tangem.blockchain.blockchains.ethereum.ExternalAddressBalanceProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
@@ -62,6 +63,7 @@ import javax.inject.Inject
 @Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 internal class DefaultWalletManagersFacade @Inject constructor(
     private val walletManagersStore: WalletManagersStore,
+    private val externalAddressBalanceProvidersStore: ExternalAddressBalanceProvidersStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -107,12 +109,51 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         )
     }
 
+    override suspend fun updateJoint(
+        userWalletId: UserWalletId,
+        network: Network,
+        extraTokens: Set<CryptoCurrency.Token>,
+        safeAddress: String,
+    ): UpdateWalletManagerResult {
+        val blockchain = network.toBlockchain()
+
+        val provider = getOrCreateExternalAddressBalanceProvider(userWalletId, network, safeAddress) ?: run {
+            TangemLogger.e("Unable to create a balance provider for the joint network ${network.id}")
+            return resultFactory.getUnreachableResult(address = safeAddress)
+        }
+
+        val tokensToAdd = sdkTokenConverter.convertList(extraTokens).filter { it !in provider.tokens }
+        provider.addTokens(tokensToAdd)
+
+        return try {
+            when (val result = provider.update()) {
+                is Result.Success -> resultFactory.getResult(
+                    blockchain = blockchain,
+                    address = result.data.address,
+                    amounts = result.data.amounts,
+                    recentTransactions = result.data.recentTransactions,
+                )
+                is Result.Failure -> {
+                    TangemLogger.e("Unable to update the joint network ${network.id}: ${result.error}")
+                    resultFactory.getUnreachableResult(address = safeAddress)
+                }
+            }
+        } catch (e: Throwable) {
+            TangemLogger.e("Unable to update the joint network ${network.id}", e)
+            resultFactory.getUnreachableResult(address = safeAddress)
+        } finally {
+            externalAddressBalanceProvidersStore.store(userWalletId, network, provider)
+        }
+    }
+
     override suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>) {
         if (networks.isEmpty()) return
 
         val blockchainsToDerivationPaths = networks.map {
             it.toBlockchain() to it.derivationPath.value
         }
+
+        externalAddressBalanceProvidersStore.remove(userWalletId, networks)
 
         withContext(dispatchers.io) {
             walletManagersStore.remove(userWalletId) { walletManager ->
@@ -319,6 +360,21 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet? =
         userWalletsListRepository.getSyncOrNull(userWalletId)
+
+    /** The Safe address of an account is fixed once it is active, so a cached provider on another address is stale */
+    private suspend fun getOrCreateExternalAddressBalanceProvider(
+        userWalletId: UserWalletId,
+        network: Network,
+        safeAddress: String,
+    ): ExternalAddressBalanceProvider? {
+        val blockchain = network.toBlockchain()
+
+        return getWmInitializationMutex(userWalletId, blockchain, network.derivationPath.value).withLock {
+            externalAddressBalanceProvidersStore.getSyncOrNull(userWalletId, network)
+                ?.takeIf { it.address == safeAddress }
+                ?: walletManagerFactory.createExternalAddressBalanceProvider(blockchain, safeAddress)
+        }
+    }
 
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,
@@ -600,7 +656,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
         if (network.derivationPath is Network.DerivationPath.Joint) {
-            refuseJointNetwork(network)
+            TangemLogger.w(jointNetworkRefusalMessage(network))
             return null
         }
         val blockchain = network.toBlockchain()
@@ -967,15 +1023,14 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
     }
 
-    /**
-     * A joint account is a Safe contract: its network has no keys to derive, the balance is read by the address.
-     * A tester build crashes so that the wrong entry point is noticed; a release one refuses quietly.
-     */
     private fun refuseJointNetwork(network: Network) {
-        val message = "No wallet manager for the joint network ${network.id}: read its balance by the Safe address"
-
+        val message = jointNetworkRefusalMessage(network)
         check(!BuildConfig.TESTER_MENU_ENABLED) { message }
         TangemLogger.w(message)
+    }
+
+    private fun jointNetworkRefusalMessage(network: Network): String {
+        return "No wallet manager for the joint network ${network.id}: read its balance by the Safe address"
     }
 
     private fun getWmInitializationMutex(
