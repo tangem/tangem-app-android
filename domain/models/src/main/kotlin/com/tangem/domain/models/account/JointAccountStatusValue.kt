@@ -37,17 +37,43 @@ sealed class JointAccountStatusValue {
         override val source: StatusSource = StatusSource.ACTUAL
     }
 
-    /** Slots are being filled; the Safe address does not exist yet. */
+    /**
+     * Slots are being filled; the Safe address does not exist yet.
+     *
+     * @property joinedMembers members that have taken a slot, the creator included
+     * @property totalMembers  slots of the account, fixed at creation
+     */
     @Serializable
-    data class Pending(override val source: StatusSource) : JointAccountStatusValue()
+    data class Pending(
+        override val source: StatusSource,
+        val joinedMembers: Int,
+        val totalMembers: Int,
+    ) : JointAccountStatusValue()
 
-    /** Every slot is taken and the Safe address is computed; the creator has yet to activate the account. */
+    /**
+     * Every slot is taken and the Safe address is computed; the creator has yet to activate the account.
+     *
+     * @property totalMembers slots of the account, all of them taken in this state
+     */
     @Serializable
-    data class Confirming(override val source: StatusSource) : JointAccountStatusValue()
+    data class Confirming(
+        override val source: StatusSource,
+        val totalMembers: Int,
+    ) : JointAccountStatusValue()
 
-    /** Deposits and operations are available. */
+    /**
+     * Deposits and operations are available.
+     *
+     * @property totalMembers members of the account
+     * @property safeAddress  the account's Safe address, one and the same in every supported EVM network — the only
+     * address the account owns; the participant's owner key holds no funds
+     */
     @Serializable
-    data class Active(override val source: StatusSource) : JointAccountStatusValue()
+    data class Active(
+        override val source: StatusSource,
+        val totalMembers: Int,
+        val safeAddress: String,
+    ) : JointAccountStatusValue()
 
     /** Represents error states of a joint account. */
     @Serializable

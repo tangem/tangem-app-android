@@ -57,10 +57,22 @@ sealed interface AccountStatus {
         val value: PredictionAccountStatusValue,
     ) : AccountStatus
 
+    /**
+     * Represents the status of a joint account — its own type, never a [CryptoPortfolio]: the currencies belong to a
+     * Safe contract and must not reach the flows that pick every crypto portfolio of the wallet (send, swap,
+     * WalletConnect)
+     *
+     * @property account        the joint account
+     * @property value          the lifecycle state of the account
+     * @property tokenList      the tokens read by the Safe address; [TokenList.Empty] until the account is active
+     * @property priceChangeLce the price change of the token list
+     */
     @Serializable
     data class Joint(
         override val account: Account.Joint,
         val value: JointAccountStatusValue,
+        val tokenList: TokenList,
+        val priceChangeLce: Lce<Unit, PriceChange>,
     ) : AccountStatus
 }
 
