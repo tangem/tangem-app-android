@@ -189,7 +189,11 @@ internal class DefaultPolymarketRepository @Inject constructor(
             ).left()
         }
 
-        val json = PolymarketPlaceOrderBodyBuilder.build(signedOrder = signedOrder, apiKey = credentials.apiKey)
+        val json = Either
+            .catch { PolymarketPlaceOrderBodyBuilder.build(signedOrder = signedOrder, apiKey = credentials.apiKey) }
+            .mapLeft { PredictionPlaceOrderError.NotSent(detail = it.message) }
+            .getOrElse { return@withContext it.left() }
+
         val headers = Either
             .catch {
                 l2HeaderBuilder.build(
