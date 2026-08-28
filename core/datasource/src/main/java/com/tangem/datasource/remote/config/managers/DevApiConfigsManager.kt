@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.config.managers
+package com.tangem.datasource.remote.config.managers
 
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs

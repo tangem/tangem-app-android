@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.response
+package com.tangem.datasource.remote.response
 
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError

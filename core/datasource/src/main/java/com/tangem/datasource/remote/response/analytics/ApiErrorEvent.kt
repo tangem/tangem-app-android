@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.response.analytics
+package com.tangem.datasource.remote.response.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 
