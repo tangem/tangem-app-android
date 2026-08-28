@@ -2,6 +2,7 @@ package com.tangem.features.collectibles.impl.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.collectibles.impl.main.model.CollectiblesMainModel
 import com.tangem.features.collectibles.impl.onboarding.model.CollectiblesOnboardingModel
 import com.tangem.features.collectibles.impl.stories.model.CollectiblesStoriesModel
 import dagger.Binds
@@ -23,4 +24,9 @@ internal interface CollectiblesModelModule {
     @IntoMap
     @ClassKey(CollectiblesStoriesModel::class)
     fun bindCollectiblesStoriesModel(impl: CollectiblesStoriesModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CollectiblesMainModel::class)
+    fun bindCollectiblesMainModel(impl: CollectiblesMainModel): Model
 }
