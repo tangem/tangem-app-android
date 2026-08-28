@@ -1,5 +1,6 @@
 package com.tangem.grow.datasource.gasless
 
+import com.tangem.core.remote.ReadTimeout
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
@@ -10,6 +11,7 @@ import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import java.util.concurrent.TimeUnit
 
 interface TronGaslessApi {
 
@@ -19,6 +21,7 @@ interface TronGaslessApi {
     @POST("api/v1/tron/transaction/estimate")
     suspend fun estimate(@Body body: TronEstimateRequestBody): ApiResponse<GaslessServiceResponse<TronEstimateResponse>>
 
+    @ReadTimeout(duration = 120, unit = TimeUnit.SECONDS)
     @POST("api/v1/tron/transaction/submit")
     suspend fun submit(@Body body: TronSubmitRequestBody): ApiResponse<GaslessServiceResponse<TronSubmitResponse>>
 }
