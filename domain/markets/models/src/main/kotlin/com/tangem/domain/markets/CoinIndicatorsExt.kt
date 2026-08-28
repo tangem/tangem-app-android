@@ -46,3 +46,36 @@ fun CoinIndicators.sentimentScaleMax(timeframe: CoinIndicators.Reading.Timeframe
     CoinIndicators.Reading.Type.entries
         .count { type -> findReading(type, timeframe)?.signal in LOADED_SIGNALS }
         .coerceAtLeast(1)
+
+/**
+ * Aggregate outlook of the coin for the selected [timeframe]: the sign of [totalSentimentScore], but only
+ * once the score leaves a neutral dead-band around the centre of the `-M..M` scale — the ticks closest to
+ * the centre read as [SentimentOutlook.NEUTRAL] rather than as a weak positive/negative.
+ *
+ * The band scales with [sentimentScaleMax] (`M`), so it stays proportional to how many indicators actually
+ * loaded: a `+1` out of five indicators is barely off-centre, while a `+1` out of one is the whole scale.
+ *
+ * | `M` | band | decisive when |
+ * |-----|------|---------------|
+ * | 4, 5 | 2 | `abs(score) >= 3` |
+ * | 1, 2, 3 | 0 | `abs(score) >= 1` |
+ *
+ * The band never widens as `M` shrinks, so losing an indicator can only make the outlook more decisive,
+ * never flip it back to neutral. The single source of truth shared by the token summary headline and the
+ * portfolio-review row badge
+ */
+fun CoinIndicators.sentimentOutlook(timeframe: CoinIndicators.Reading.Timeframe): SentimentOutlook {
+    val score = totalSentimentScore(timeframe)
+    val band = neutralBand(scaleMax = sentimentScaleMax(timeframe))
+
+    return when {
+        score > band -> SentimentOutlook.POSITIVE
+        score < -band -> SentimentOutlook.NEGATIVE
+        else -> SentimentOutlook.NEUTRAL
+    }
+}
+
+/** Smallest scale that still fits the full two-tick neutral band on each side of the centre. */
+private const val WIDE_BAND_MIN_SCALE = 4
+
+private fun neutralBand(scaleMax: Int): Int = if (scaleMax >= WIDE_BAND_MIN_SCALE) 2 else 0

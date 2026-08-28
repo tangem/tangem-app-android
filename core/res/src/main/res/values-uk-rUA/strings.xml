@@ -1934,7 +1934,7 @@
   <string name="tangem_pay_status_pending">В очікуванні</string>
   <string name="tangem_pay_status_reversed">Скасовано</string>
   <string name="tangem_pay_terms_fees_limits">Умови, комісії та ліміти</string>
-  <string name="tangem_pay_terms_limits">Умови та обмеження</string>
+  <string name="tangem_pay_terms_limits">Умови</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк відхилив цей запит на транзакцію.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Мін. сума транзакції</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Досягнуто місячний ліміт</string>
@@ -2185,7 +2185,7 @@
   <string name="tangempay_other_networks_header">Інші мережі</string>
   <string name="tangempay_other_networks_subtitle">А потім обміняйте на платіжний рахунок за курсом 1:1 без комісії</string>
   <string name="tangempay_other_networks_title">Надішліть USDT / USDC у будь-якій мережі на ваш Tangem Wallet</string>
-  <string name="tangempay_pay_support">Підтримка Pay</string>
+  <string name="tangempay_pay_support">Підтримка</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Сесія закінчилася</string>
   <string name="tangempay_pin_validation_error_message">Слабкий ПІН: не використовуйте повторів або послідовностей.</string>
