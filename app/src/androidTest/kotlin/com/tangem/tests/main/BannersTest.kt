@@ -8,6 +8,7 @@ import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasData
 import com.tangem.common.BaseTestCase
+import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.domain.models.scan.ProductType.Note
 import com.tangem.scenarios.addNewCardWallet
 import com.tangem.scenarios.openMainScreen
@@ -27,7 +28,7 @@ class BannersTest : BaseTestCase() {
     @DisplayName("Banners: Note banner contents link with pre-set promo code")
     @Test
     fun bannersNoteBannerContentsLinkWithPromoCodeTest() {
-        val promoCodeUrl = "https://tangem.com/en/?promocode=Note10"
+        val promoCodeUrl = TangemSiteUrlBuilder.NOTE_MIGRATION_URL
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -53,7 +54,7 @@ class BannersTest : BaseTestCase() {
     }
 
     @AllureId("4027")
-    @DisplayName("Banners: Discover Tangem Wallet banner is not display if Wallet card added")
+    @DisplayName("Banners: Discover Tangem Wallet banner is not displayed if Wallet card added")
     @Test
     fun bannersDiscoverTangemBannerNotDisplayIfWalletAddedTest() {
         val walletName = "Note"
