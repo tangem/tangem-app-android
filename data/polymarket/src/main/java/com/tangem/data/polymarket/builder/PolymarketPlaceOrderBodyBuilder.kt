@@ -1,6 +1,6 @@
 package com.tangem.data.polymarket.builder
 
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketPlaceOrderRequest
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderRequest
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import kotlinx.serialization.json.Json
 

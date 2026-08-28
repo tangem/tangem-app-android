@@ -19,6 +19,9 @@ import com.tangem.grow.datasource.config.GaslessTxService
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import com.tangem.grow.datasource.config.MoonPay
 import com.tangem.grow.datasource.config.P2PEthPool
+import com.tangem.grow.datasource.config.PolymarketClob
+import com.tangem.grow.datasource.config.PolymarketRelayer
+import com.tangem.grow.datasource.config.PolymarketWeb
 import com.tangem.grow.datasource.config.StakeKit
 import com.tangem.grow.datasource.config.YieldSupply
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
@@ -30,11 +33,16 @@ import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.grow.datasource.onramp.OnrampApi
+import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
+import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
+import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.addStakeKitEnumFallbackAdapters
 import com.tangem.grow.datasource.yield.local.DefaultYieldMarketsStore
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
+import com.tangem.store.datasource.api.TangemTech
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
@@ -47,6 +55,7 @@ import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object GrowDatasourceModule {
@@ -249,6 +258,77 @@ internal object GrowDatasourceModule {
                     readTimeoutSeconds = TIMEOUT_90_SECONDS,
                     writeTimeoutSeconds = TIMEOUT_90_SECONDS,
                 ),
+            ),
+        )
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketWeb.KEY)
+    fun providePolymarketWebConfig(): ApiConfig {
+        return PolymarketWeb()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketRelayer.KEY)
+    fun providePolymarketRelayerConfig(): ApiConfig {
+        return PolymarketRelayer()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketClob.KEY)
+    fun providePolymarketClobConfig(): ApiConfig {
+        return PolymarketClob()
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketApi(factory: RetrofitFactory): PolymarketApi {
+        // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemTech.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketGeoApi(factory: RetrofitFactory): PolymarketGeoApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketWeb.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketRelayerApi(factory: RetrofitFactory): PolymarketRelayerApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketRelayer.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketClobApi(factory: RetrofitFactory): PolymarketClobApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketClob.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+                shouldSaveLogs = false,
             ),
         )
     }
