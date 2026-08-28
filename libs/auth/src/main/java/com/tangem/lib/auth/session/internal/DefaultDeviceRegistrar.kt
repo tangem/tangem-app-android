@@ -58,7 +58,7 @@ internal class DefaultDeviceRegistrar(
             // same non-reentrant mutex, which would deadlock if called from within runRegister.
             .onRight {
                 sessionTokenRefresher.get().ensureSession()
-                    .onLeft { TangemLogger.e("Failed to ensure a session after device registration: $it") }
+                    .onLeft { error -> TangemLogger.e("Failed to ensure a session after device registration: $error") }
             }
     }
 
