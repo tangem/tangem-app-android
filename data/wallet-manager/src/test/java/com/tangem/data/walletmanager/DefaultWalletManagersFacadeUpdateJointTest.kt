@@ -3,11 +3,7 @@ package com.tangem.data.walletmanager
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.ExternalAddressBalanceProvider
 import com.tangem.blockchain.blockchains.ethereum.ExternalAddressInfo
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -18,13 +14,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.Called
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -79,7 +69,7 @@ internal class DefaultWalletManagersFacadeUpdateJointTest {
     )
 
     @BeforeEach
-    fun resetMocks() {
+    fun resetMocks() = runTest {
         clearMocks(sdkFactory, provider)
         providersStore.remove(userWalletId, setOf(jointNetwork))
 

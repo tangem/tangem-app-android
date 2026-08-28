@@ -1,9 +1,9 @@
 package com.tangem.data.walletmanager
 
 import com.tangem.blockchain.blockchains.ethereum.ExternalAddressBalanceProvider
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,18 +15,18 @@ import javax.inject.Singleton
 @Singleton
 internal class ExternalAddressBalanceProvidersStore @Inject constructor() {
 
-    private val providers = ConcurrentHashMap<Key, ExternalAddressBalanceProvider>()
+    private val store = RuntimeSharedMapStore<Key, ExternalAddressBalanceProvider>()
 
-    fun getSyncOrNull(userWalletId: UserWalletId, network: Network): ExternalAddressBalanceProvider? {
-        return providers[Key(userWalletId, network.id)]
+    suspend fun getSyncOrNull(userWalletId: UserWalletId, network: Network): ExternalAddressBalanceProvider? {
+        return store.getSyncOrNull(key = Key(userWalletId, network.id))
     }
 
-    fun store(userWalletId: UserWalletId, network: Network, provider: ExternalAddressBalanceProvider) {
-        providers[Key(userWalletId, network.id)] = provider
+    suspend fun store(userWalletId: UserWalletId, network: Network, provider: ExternalAddressBalanceProvider) {
+        store.store(key = Key(userWalletId, network.id), value = provider)
     }
 
-    fun remove(userWalletId: UserWalletId, networks: Set<Network>) {
-        networks.forEach { network -> providers.remove(Key(userWalletId, network.id)) }
+    suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>) {
+        store.remove(keys = networks.map { network -> Key(userWalletId, network.id) })
     }
 
     private data class Key(val userWalletId: UserWalletId, val networkId: Network.ID)
