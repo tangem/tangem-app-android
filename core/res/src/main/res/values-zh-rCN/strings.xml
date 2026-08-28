@@ -277,6 +277,7 @@
   <string name="common_added">已添加</string>
   <string name="common_address">地址</string>
   <string name="common_all">全部</string>
+  <string name="common_all_accounts">所有账户</string>
   <string name="common_allow">允许</string>
   <string name="common_amount">金额</string>
   <string name="common_analytics">分析</string>
@@ -286,6 +287,9 @@
   <string name="common_approve">批准</string>
   <string name="common_approved">已批准</string>
   <string name="common_approving">批准</string>
+  <plurals name="common_assets_count" formatted="false">
+    <item quantity="other">%d资产\n%d资产</item>
+  </plurals>
   <string name="common_attention">请注意</string>
   <string name="common_available_networks">可用网络</string>
   <string name="common_backup">备份</string>
@@ -320,6 +324,7 @@
   <string name="common_create">创建</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">定制</string>
+  <string name="common_day">天</string>
   <plurals name="common_days">
     <item quantity="other">%d天</item>
   </plurals>
@@ -402,6 +407,7 @@
   <string name="common_no">不</string>
   <string name="common_no_address">无地址</string>
   <string name="common_no_results">无结果</string>
+  <string name="common_none">无</string>
   <string name="common_not_added">未添加</string>
   <string name="common_not_available">不可用</string>
   <string name="common_not_now">现在不要</string>
@@ -712,6 +718,14 @@
   <string name="feedback_subject_support_tangem">Tangem反馈</string>
   <string name="feedback_subject_tx_failed">无法发送交易</string>
   <string name="feedback_token_description_error">代币描述错误</string>
+  <string name="for_you_description">查看投资组合，探索获利机会</string>
+  <string name="for_you_earn_opportunities">收益机会</string>
+  <string name="for_you_earn_opportunities_all_tokens_active">您的所有资产都在生效中，请探索新机会</string>
+  <string name="for_you_earn_opportunities_explore">查看所有代币</string>
+  <string name="for_you_earn_opportunities_no_available_tokens">每年最高可获得 %1$s</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">最高潜在回报 %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/年</string>
+  <string name="for_you_portfolio_review_title">持仓资产总览</string>
   <string name="force_update_action">立即更新</string>
   <string name="force_update_banner_message">请将应用更新至最新版本，以确保其正常运行</string>
   <string name="force_update_banner_title">需要更新</string>
@@ -788,7 +802,7 @@
   <string name="hw_backup_to_upgrade_description">要升级到硬件钱包，请完成备份过程。</string>
   <string name="hw_backup_upgrade_description">将您的手机钱包升级到 Tangem 硬件钱包，享受最高级别的安全性。导入您的钱包或将资金转移到新钱包。</string>
   <string name="hw_backup_upgrade_title">升级到冷钱包</string>
-  <string name="hw_cloud_backup_access_unavailable_description">请在设备设置中允许 Tangem 使用 %1$s ，然后请重新尝试保存备份。</string>
+  <string name="hw_cloud_backup_access_unavailable_description">在您的设备设置中允许 Tangem 使用 %1$s，然后再次尝试保存备份。</string>
   <string name="hw_cloud_backup_access_unavailable_title">无法访问 %1$s</string>
   <string name="hw_cloud_backup_cancel_setup_cancel">取消备份</string>
   <string name="hw_cloud_backup_cancel_setup_continue">继续备份</string>
@@ -809,18 +823,23 @@
   <string name="hw_cloud_backup_no_access_description">请再次登录您的 Google 账户，以保存您的钱包备份。</string>
   <string name="hw_cloud_backup_no_access_sign_in">登录</string>
   <string name="hw_cloud_backup_no_backups_description">请登录另一个账户或导入您的助记词。</string>
+  <string name="hw_cloud_backup_not_found_create">创建备份</string>
+  <string name="hw_cloud_backup_not_found_description">这个钱包之前已经备份过了，但我们找不到备份文件。</string>
+  <string name="hw_cloud_backup_not_found_forget">忘记备份</string>
+  <string name="hw_cloud_backup_not_found_title">未找到备份</string>
   <string name="hw_cloud_backup_password_hint">密码</string>
   <string name="hw_cloud_backup_password_rule_v2">请使用 %d 或更多字符，其中应包含大写字母、小写字母、数字和符号。</string>
   <string name="hw_cloud_backup_passwords_dont_match">密码不匹配</string>
   <string name="hw_cloud_backup_permissions_description">缺少某些权限。请授予完全访问权限，以便我们将您的钱包备份保存到 Google 云端硬盘。</string>
   <string name="hw_cloud_backup_permissions_description_v2">缺少某些权限。请授予完全访问权限，以便我们将您的钱包备份保存到 %1$s。</string>
   <string name="hw_cloud_backup_permissions_title">完全访问 Google 云端硬盘</string>
-  <string name="hw_cloud_backup_permissions_title_v2">完全访问 %1$s</string>
+  <string name="hw_cloud_backup_permissions_title_v2">允许完全访问 %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s 备份</string>
   <string name="hw_cloud_backup_removed">备份已删除</string>
   <string name="hw_cloud_backup_restore_error_title">出现了一些问题</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">请稍后再试，或导入您的恢复短语。</string>
-  <string name="hw_cloud_backup_restore_passphrase_description">请输入此钱包的完整密码短语。该密码短语区分大小写，因此不同的密码短语会打开不同的地址集。</string>
+  <string name="hw_cloud_backup_restore_navtitle_v2">%1$s 备份</string>
+  <string name="hw_cloud_backup_restore_passphrase_description">请输入此钱包准确的密码短语。该密码短语区分大小写，因此不同的密码短语会打开不同的地址集。</string>
   <string name="hw_cloud_backup_restore_passphrase_title">输入密码短语</string>
   <string name="hw_cloud_backup_restore_password_button">还原</string>
   <string name="hw_cloud_backup_restore_password_description">您正在从 %2$s 备份中恢复“%1$s”，该备份创建于 %3$s</string>
@@ -863,6 +882,7 @@
   <string name="hw_mobile_wallet">移动钱包</string>
   <string name="hw_remove_wallet_action_forget_title">忘记钱包</string>
   <string name="hw_remove_wallet_attention_description">此钱包将从您的设备中永久移除。</string>
+  <string name="hw_remove_wallet_cloud_backup_description">钱包将从此设备中移除。您的 %s 备份安全无虞——您可以随时使用密码恢复此钱包。</string>
   <string name="hw_remove_wallet_cloud_backup_title">忘记这个钱包吗？</string>
   <string name="hw_remove_wallet_confirmation_title">你确定要这么做吗？</string>
   <string name="hw_remove_wallet_forget_and_delete_backup">忘记并删除备份</string>
@@ -954,6 +974,10 @@
   <string name="manage_tokens_unavailable_description">所选代币目前无法在加密钱包中进行操作。不过别担心，您可以点赞来表达您的兴趣。</string>
   <string name="manage_tokens_unavailable_vote">点赞</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">该钱包不支持多个网络</string>
+  <plurals name="market_chart_assets_android" formatted="false">
+    <item quantity="other">%d资产\n%d资产</item>
+  </plurals>
+  <string name="market_chart_top_holding">最大持有占比 %s</string>
   <string name="markets_about_coin_header">关于硬币</string>
   <string name="markets_add_to_my_portfolio_description">要购买、交换或接收此资产，请将其添加到您的投资组合中。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">钱包目前不支持此资产。</string>
@@ -2208,8 +2232,10 @@
   <string name="token_market_metrics_no_data">不适用</string>
   <string name="token_receive_show_qr_code_title">显示二维码</string>
   <string name="token_summary_galaxy_score_description">Galaxy Score 将市场表现与社交媒体活跃度结合起来，生成一个0到100分的综合评分，反映资产的整体健康状况。来源：LunarCrush。</string>
+  <string name="token_summary_go_to_swap_button">去交换</string>
   <string name="token_summary_ma_cross_description">MA Cross 通过对比 50 日均价和 200 日均价，来显示该资产的交易价格是高于还是低于其长期趋势。来源：taapi.io。</string>
   <string name="token_summary_macd_description">MACD通过比较短期和长期的价格动能，来显示某项资产的动能是正在增强还是减弱。来源：taapi.io。</string>
+  <string name="token_summary_outlook_is_not_available">该代币的展望信息不可用</string>
   <string name="token_summary_rsi_description">RSI（相对强弱指数）用于衡量某资产在过去14个周期内是否被过度买入或卖出，从而提示潜在的超买或超卖状况。来源：taapi.io。</string>
   <string name="token_summary_sentiment_description">情绪评分以1到5的评分标准衡量社交媒体上关于该资产的帖子基调，分数越高意味着讨论越积极。来源：LunarCrush。</string>
   <string name="token_swap_changelly_promotion_message">从 2 月 %2$s-%3$s，兑换另一个代币的服务费为 %1$s 。</string>
@@ -2282,6 +2308,11 @@
   <string name="user_push_notification_agreement_header">您想使用推送通知吗？</string>
   <string name="user_push_notification_banner_subtitle">启用推送通知，即可在资金到账时收到提醒。</string>
   <string name="user_push_notification_banner_title">不要错过任何一笔交易</string>
+  <string name="user_wallet_add_hardware_description">扫描一张Tangem卡即可添加</string>
+  <string name="user_wallet_add_hardware_title">添加硬件钱包</string>
+  <string name="user_wallet_add_mobile_description">在此设备上创建一个新钱包</string>
+  <string name="user_wallet_add_mobile_title">添加移动钱包</string>
+  <string name="user_wallet_coming_soon_dialog_description">我们正在开发支持创建多个移动钱包的功能。</string>
   <string name="user_wallet_list_add_button">添加钱包</string>
   <string name="user_wallet_list_delete_hw_prompt">如果您在没有备份的情况下删除此钱包，您将永久失去对您的资金的访问权限。</string>
   <string name="user_wallet_list_delete_prompt">您确定要忘记这个钱包吗？</string>
