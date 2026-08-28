@@ -11,7 +11,6 @@ import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
-import java.math.BigInteger
 import java.security.SecureRandom
 
 class SignPredictionOrderInteractor(
@@ -62,10 +61,11 @@ class SignPredictionOrderInteractor(
         signedOrder
     }
 
-    private fun newSalt(): BigInteger = BigInteger(SALT_BITS, random)
+    private fun newSalt(): Long = random.nextLong() and SALT_MASK
 
     private companion object {
         const val SALT_BITS = 52
+        const val SALT_MASK = (1L shl SALT_BITS) - 1
 
         val random = SecureRandom()
     }
