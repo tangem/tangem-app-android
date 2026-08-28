@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import arrow.core.None
 import arrow.core.Some
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.lib.auth.api.AuthApi
@@ -19,10 +20,13 @@ import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrationError
+import com.tangem.lib.auth.session.SessionTokenRefresher
+import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
+import dagger.Lazy
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,6 +37,7 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,6 +53,7 @@ class DefaultDeviceRegistrarTest {
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
     private val attestationProvider: AttestationProvider = mockk()
+    private val sessionTokenRefresher: SessionTokenRefresher = mockk()
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -62,13 +68,17 @@ class DefaultDeviceRegistrarTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
+        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokenRefresher)
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
         coEvery { attestationProvider.getAttestationToken(any()) } returns null
+        // Default to a present session so the already-registered / 409 paths treat ensureSession as a
+        // no-op; the recovery tests override store.get() with None.
+        coEvery { store.get() } returns Some(sessionTokens())
+        coEvery { sessionTokenRefresher.refresh() } returns sessionTokens().right()
         registrar = DefaultDeviceRegistrar(
             authApi = authApi,
             store = store,
@@ -78,9 +88,18 @@ class DefaultDeviceRegistrarTest {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
+            sessionTokenRefresher = Lazy { sessionTokenRefresher },
             dispatchers = dispatchers,
         )
     }
+
+    private fun sessionTokens() = SessionTokens(
+        accessToken = "access",
+        accessTokenExpiresAt = Instant.DISTANT_FUTURE,
+        refreshToken = "refresh",
+        refreshTokenExpiresAt = Instant.DISTANT_FUTURE,
+        walletIds = emptyList(),
+    )
 
     @AfterEach
     fun teardown() = unmockkAll()
@@ -99,8 +118,9 @@ class DefaultDeviceRegistrarTest {
     }
 
     @Test
-    fun `register short-circuits without network when the flag is already set`() = runTest {
+    fun `register short-circuits without network when the flag is already set and a session exists`() = runTest {
         preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        coEvery { store.get() } returns Some(sessionTokens())
 
         val result = registrar.register()
 
@@ -108,6 +128,50 @@ class DefaultDeviceRegistrarTest {
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { sessionTokenRefresher.refresh() }
+    }
+
+    @Test
+    fun `register establishes a session when the flag is set but the store is empty`() = runTest {
+        // Arrange — stuck 409 state: device registered (flag set) on an earlier launch, no tokens.
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        coEvery { store.get() } returns None
+        coEvery { sessionTokenRefresher.refresh() } returns sessionTokens().right()
+
+        // Act
+        val result = registrar.register()
+
+        // Assert — no /register (flag short-circuits), but a session is minted via the refresher.
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
+        coVerify(exactly = 1) { sessionTokenRefresher.refresh() }
+    }
+
+    @Test
+    fun `register establishes a session after a 409 that issues no tokens`() = runTest {
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
+        coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Success(
+            data = NonceApiResponse(cipheredNonce = "abc", expiresAt = "2024-01-01T00:00:00Z"),
+        )
+        coEvery { nonceDecryptor.decryptNonce("abc") } returns "decrypted"
+        coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(64)
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.registerDevice(any<RegisterApiRequest>()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.CONFLICT,
+                message = "device already registered",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+        coEvery { store.get() } returns None
+        coEvery { sessionTokenRefresher.refresh() } returns sessionTokens().right()
+
+        val result = registrar.register()
+
+        // 409 marks the device registered, then mints a session (no tokens came back in the 409).
+        assertThat(result.isRight()).isTrue()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        coVerify(exactly = 1) { sessionTokenRefresher.refresh() }
     }
 
     @Test
