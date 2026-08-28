@@ -7,11 +7,13 @@ import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 
 internal class SetQuoteResultTransformer(
     private val result: Either<PredictionOrderQuoteError, PredictionOrderQuote>,
+    private val receivedAtMillis: Long,
 ) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM = prevState.copy(
@@ -44,6 +46,7 @@ internal class SetQuoteResultTransformer(
             feeTotal = quote.fees.total,
             total = quote.total,
             minOrderSize = quote.minOrderSize,
+            signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis),
         )
     }
 }
