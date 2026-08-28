@@ -120,7 +120,7 @@ internal class ForYouPortfolioReviewConverter(
                     assetId = assetId,
                     cryptoCurrencyStatus = group,
                     totalFiatBalance = totalFiatBalanceAmount,
-                    index = index,
+                    index = index.takeIf { totalFiatBalance is TotalFiatBalance.Loaded },
                 )
             }
 
@@ -244,7 +244,7 @@ internal class ForYouPortfolioReviewConverter(
             id = assetId,
             headIconUM = TangemIconUM.Currency(iconConverter.convert(asset)),
             titleUM = TangemTokenRowUM.TitleUM.Content(
-                text = stringReference(asset.currency.name),
+                text = stringReference(asset.currency.symbol),
                 badge = badge,
             ),
             subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
@@ -278,7 +278,7 @@ internal class ForYouPortfolioReviewConverter(
                 titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.common_other)),
                 subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
                     text = pluralReference(
-                        id = R.plurals.market_chart_assets_android,
+                        id = R.plurals.common_assets_count,
                         count = otherAssets.count(),
                         formatArgs = wrappedList(otherAssets.count()),
                     ),
