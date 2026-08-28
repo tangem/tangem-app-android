@@ -412,7 +412,7 @@ internal class ValidatePredictionOrderUseCaseTest {
             timestampMillis: Long = NOW_MILLIS - 1_000,
             builder: String = BUILDER_CODE,
         ) = PredictionOrder(
-            salt = BigInteger("1234567890"),
+            salt = 1_234_567_890L,
             maker = maker,
             signer = signer,
             tokenId = tokenId,

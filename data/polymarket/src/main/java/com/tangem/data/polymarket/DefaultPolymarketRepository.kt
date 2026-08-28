@@ -61,6 +61,7 @@ import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.toHexString
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -420,7 +421,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
     private fun PredictionSignedOrder.isSignedFor(isNegRisk: Boolean): Boolean {
         val expected = PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = isNegRisk)
-            .joinToString(separator = "") { byte -> "%02x".format(byte) }
+            .toHexString()
+            .lowercase()
         val tail = signature.removePrefix(PolymarketContracts.HEX_PREFIX)
             .lowercase()
             .drop(n = PolymarketContracts.SIGNATURE_RSV_HEX_LENGTH)
