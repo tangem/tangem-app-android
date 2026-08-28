@@ -284,7 +284,7 @@ internal class IntroductionModelTest {
             model.uiState.value.onCreateWalletClick()
 
             // Act
-            model.uiState.value.bottomSheetConfig?.onDismissRequest?.invoke()
+            model.closeCreateWalletSheet()
 
             // Assert
             val config = model.uiState.value.bottomSheetConfig
@@ -356,7 +356,7 @@ internal class IntroductionModelTest {
             // Arrange
             val model = createModel()
             model.uiState.value.onCreateWalletClick()
-            model.uiState.value.bottomSheetConfig?.onDismissRequest?.invoke()
+            model.closeCreateWalletSheet()
 
             // Act
             model.uiState.value.onCreateWalletClick()
@@ -368,7 +368,8 @@ internal class IntroductionModelTest {
 
         private fun IntroductionModel.openSheet(): CreateWalletUM {
             uiState.value.onCreateWalletClick()
-            return uiState.value.bottomSheetConfig?.content as CreateWalletUM
+            return uiState.value.bottomSheetConfig?.content as? CreateWalletUM
+                ?: error("the Create wallet sheet is not open")
         }
     }
 
@@ -426,7 +427,7 @@ internal class IntroductionModelTest {
             model.openHaveWallet().importWallet.onClick()
 
             // Act
-            (model.haveWalletStep() as HaveWalletUM.Step.Import).onBack()
+            model.currentImportStep().onBack()
 
             // Assert
             assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
@@ -440,7 +441,7 @@ internal class IntroductionModelTest {
             model.uiState.value.onIHaveWalletClick()
 
             // Act
-            model.uiState.value.haveWalletBottomSheetConfig?.onDismissRequest?.invoke()
+            model.closeHaveWalletSheet()
 
             // Assert
             val config = model.uiState.value.haveWalletBottomSheetConfig
@@ -467,11 +468,11 @@ internal class IntroductionModelTest {
             InertRowModel(name = "sign in") { options, _ -> options.signIn.onClick() },
             InertRowModel(name = "recovery phrase") { options, model ->
                 options.importWallet.onClick()
-                (model.haveWalletStep() as HaveWalletUM.Step.Import).onRecoveryPhraseClick()
+                model.currentImportStep().onRecoveryPhraseClick()
             },
             InertRowModel(name = "cloud backup") { options, model ->
                 options.importWallet.onClick()
-                (model.haveWalletStep() as HaveWalletUM.Step.Import).onCloudBackupClick()
+                model.currentImportStep().onCloudBackupClick()
             },
         )
 
@@ -480,7 +481,7 @@ internal class IntroductionModelTest {
             // Arrange
             val model = createModel()
             model.openHaveWallet().importWallet.onClick()
-            model.uiState.value.haveWalletBottomSheetConfig?.onDismissRequest?.invoke()
+            model.closeHaveWalletSheet()
 
             // Act
             model.uiState.value.onIHaveWalletClick()
@@ -497,7 +498,7 @@ internal class IntroductionModelTest {
             model.openHaveWallet().importWallet.onClick()
 
             // Act
-            model.uiState.value.haveWalletBottomSheetConfig?.onDismissRequest?.invoke()
+            model.closeHaveWalletSheet()
 
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
@@ -539,7 +540,8 @@ internal class IntroductionModelTest {
 
         private fun IntroductionModel.openHaveWallet(): HaveWalletUM.Step.Options {
             uiState.value.onIHaveWalletClick()
-            return haveWalletStep() as HaveWalletUM.Step.Options
+            return haveWalletStep() as? HaveWalletUM.Step.Options
+                ?: error("the sheet is not on the Options step")
         }
     }
 
@@ -585,6 +587,17 @@ internal class IntroductionModelTest {
     private fun IntroductionModel.haveWalletStep(): HaveWalletUM.Step? =
         (uiState.value.haveWalletBottomSheetConfig?.content as? HaveWalletUM)?.step
 
+    private fun IntroductionModel.currentImportStep(): HaveWalletUM.Step.Import =
+        haveWalletStep() as? HaveWalletUM.Step.Import ?: error("the sheet is not on the Import step")
+
+    private fun IntroductionModel.closeCreateWalletSheet() {
+        uiState.value.bottomSheetConfig?.onDismissRequest?.invoke()
+    }
+
+    private fun IntroductionModel.closeHaveWalletSheet() {
+        uiState.value.haveWalletBottomSheetConfig?.onDismissRequest?.invoke()
+    }
+
     internal data class LaunchModeModel(val launchMode: InitScreenLaunchMode)
 
     internal data class RunningModel(val isRunning: Boolean)
@@ -610,7 +623,5 @@ internal class IntroductionModelTest {
     private companion object {
         val SHUTTER_DOWN = false to true
         const val LEAST_OS_VERSION = "Android 10"
-
-
     }
 }
