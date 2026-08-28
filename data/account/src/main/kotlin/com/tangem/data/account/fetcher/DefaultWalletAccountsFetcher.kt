@@ -218,7 +218,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
         userWalletId: UserWalletId,
     ): GetWalletAccountsResponse {
-        if (jointAccountFeatureToggles.isJointAccountCreationEnabled) return this
+        if (jointAccountFeatureToggles.isJointAccountEnabled) return this
 
         val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
         if (ownAccounts.size == accounts.size) return this
