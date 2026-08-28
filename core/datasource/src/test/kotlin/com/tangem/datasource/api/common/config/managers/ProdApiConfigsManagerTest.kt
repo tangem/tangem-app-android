@@ -82,9 +82,6 @@ internal class ProdApiConfigsManagerTest {
                 cardAuthHeader = { AuthenticationHeader(appAuthProvider) },
                 appInfoProvider = appInfoProvider,
             ),
-            PolymarketWeb(),
-            PolymarketRelayer(),
-            PolymarketClob(),
         )
 
         return configs.associateBy { it.id.name }
@@ -93,40 +90,7 @@ internal class ProdApiConfigsManagerTest {
 
     private fun provideTestModels() = listOf(
         createTangemTechModel(),
-        createPolymarketWebModel(),
-        createPolymarketRelayerModel(),
-        createPolymarketClobModel(),
     )
-
-    private fun createPolymarketWebModel(): TestModel {
-        return TestModel(
-            id = PolymarketWeb.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://polymarket.com/",
-            ),
-        )
-    }
-
-    private fun createPolymarketRelayerModel(): TestModel {
-        return TestModel(
-            id = PolymarketRelayer.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://relayer-v2.polymarket.com/",
-            ),
-        )
-    }
-
-    private fun createPolymarketClobModel(): TestModel {
-        return TestModel(
-            id = PolymarketClob.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://clob.polymarket.com/",
-            ),
-        )
-    }
 
     private fun createTangemTechModel(): TestModel {
         return TestModel(
