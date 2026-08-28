@@ -35,6 +35,7 @@
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_archiving">Archiving...</string>
+  <string name="account_details_joint_pending_description">The account is still being populated with members.</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
   <string name="account_edit_success_message">Account saved</string>
@@ -87,10 +88,10 @@
   <string name="add_and_manage_sheet_manage_title">Add tokens</string>
   <string name="add_and_manage_sheet_organize_subtitle">Sorting and grouping</string>
   <string name="add_and_manage_sheet_organize_title">Organize tokens</string>
-  <string name="add_crypto_account_subtitle">Organize funds across accounts</string>
+  <string name="add_crypto_account_subtitle">A separate set of addresses for your funds</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
-  <string name="add_joint_account_subtitle">Manage shared funds together</string>
+  <string name="add_joint_account_subtitle">A shared account for managing funds together</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="addfunds_buy_row_description">Credit card or bank account</string>
   <string name="addfunds_fund_token">Fund token</string>
@@ -295,8 +296,8 @@
   <string name="common_approved">Approved</string>
   <string name="common_approving">Approving</string>
   <plurals name="common_assets_count">
-    <item quantity="one">%d asset</item>
-    <item quantity="other">%d assets</item>
+    <item quantity="one">Top %d asset</item>
+    <item quantity="other">Top %d assets</item>
   </plurals>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
@@ -588,11 +589,6 @@
   <string name="custom_token_validation_error_not_found">Note that tokens can be created by anyone. Be aware of adding scam tokens, they can cost nothing.</string>
   <string name="custom_token_validation_error_not_found_description">Be aware of adding scam tokens, they can cost nothing</string>
   <string name="custom_token_validation_error_not_found_title">Note that tokens can be created by anyone</string>
-  <string name="details_add_wallet_selector_add_hardware_wallet_description">Scan a Tangem card to add it</string>
-  <string name="details_add_wallet_selector_add_hardware_wallet_title">Add hardware wallet</string>
-  <string name="details_add_wallet_selector_add_mobile_wallet_description">Create a new wallet on this device</string>
-  <string name="details_add_wallet_selector_add_mobile_wallet_title">Add mobile wallet</string>
-  <string name="details_add_wallet_selector_coming_soon_description">We\'re working on the ability to create more than one mobile wallet.</string>
   <string name="details_buy_wallet">Buy Tangem Wallet</string>
   <string name="details_chat">Chat</string>
   <string name="details_manage_security_access_code">Access code</string>
@@ -762,8 +758,8 @@
   <string name="fee_selector_choose_token_description">Choose which token to use to pay\nthe network fee. %s</string>
   <string name="fee_selector_choose_token_title">Choose token</string>
   <string name="feed_market_and_news">Market &amp; News</string>
-  <string name="feed_search_recent_title">Recent</string>
   <string name="feed_search_recent_clear">Clear</string>
+  <string name="feed_search_recent_title">Recent</string>
   <string name="feed_search_show_all_user_assets">Show All</string>
   <string name="feed_search_show_less_user_assets">Show less</string>
   <string name="feed_tab_crypto">Crypto</string>
@@ -843,7 +839,7 @@
   <string name="hw_backup_alert_title">Are you sure you want to quit activation?</string>
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
-  <string name="hw_backup_cloud_delete_confirm_title">Delete %s backup?</string>
+  <string name="hw_backup_cloud_delete_confirm_title">Delete %s backup?</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
   <string name="hw_backup_google_drive_dialog_message">We\'re working on Google Drive backup to make wallet recovery even easier.</string>
   <string name="hw_backup_google_drive_dialog_title">Google Drive backup is coming soon</string>
@@ -876,7 +872,7 @@
   <string name="hw_cloud_backup_cell_description">Save your wallet to %s for easy recovery. Data is securely encrypted.</string>
   <string name="hw_cloud_backup_completed_description">Your wallet is set up and ready to use!</string>
   <string name="hw_cloud_backup_completed_title">Backup completed</string>
-  <string name="hw_cloud_backup_confirm_password_description">A password is required to encrypt your secret phrase on %s.</string>
+  <string name="hw_cloud_backup_confirm_password_description">A password is required to encrypt your recovery phrase on %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirm password</string>
   <string name="hw_cloud_backup_consent">I understand that if I lose or forget this password I will lose access to my crypto.</string>
   <string name="hw_cloud_backup_delete_confirm_message">You won\'t be able to restore this wallet from %s. You can create a new backup anytime.</string>
@@ -890,7 +886,7 @@
   <string name="hw_cloud_backup_no_access_title">Can\'t access Google Drive</string>
   <string name="hw_cloud_backup_no_backups_description">Please log in to another account or import your recovery phrase.</string>
   <string name="hw_cloud_backup_not_found_create">Create backup</string>
-  <string name="hw_cloud_backup_not_found_description">This wallet was backed up earlier, but we couldn\'t find the backup file in your Google Drive.</string>
+  <string name="hw_cloud_backup_not_found_description">This wallet was backed up earlier, but we couldn\'t find the backup.</string>
   <string name="hw_cloud_backup_not_found_forget">Forget backup</string>
   <string name="hw_cloud_backup_not_found_title">Backup not found</string>
   <string name="hw_cloud_backup_password_hint">Password</string>
@@ -899,14 +895,14 @@
   <string name="hw_cloud_backup_permissions_description">Some permissions are missing. Allow full access so we can save your wallet backup to Google Drive.</string>
   <string name="hw_cloud_backup_permissions_description_v2">Some permissions are missing. Allow full access so we can save your wallet backup to %1$s.</string>
   <string name="hw_cloud_backup_permissions_title">Complete Google Drive access</string>
-  <string name="hw_cloud_backup_permissions_title_v2">Complete %1$s access</string>
+  <string name="hw_cloud_backup_permissions_title_v2">Allow full %1$s access</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s backup</string>
   <string name="hw_cloud_backup_removed">Backup removed</string>
   <string name="hw_cloud_backup_restore_error_title">Something went wrong</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Please try again later or import your recovery phrase.</string>
   <string name="hw_cloud_backup_restore_navtitle">Cloud backup</string>
   <string name="hw_cloud_backup_restore_navtitle_v2">%1$s backup</string>
-  <string name="hw_cloud_backup_restore_passphrase_description">Enter the exact passphrase for this wallet. It\'s case sensitive, so a different one opens a different set of addresses.</string>
+  <string name="hw_cloud_backup_restore_passphrase_description">Enter the exact passphrase for this wallet. It is case sensitive, so a different one opens a different set of addresses.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Enter passphrase</string>
   <string name="hw_cloud_backup_restore_password_button">Restore</string>
   <string name="hw_cloud_backup_restore_password_description">You\'re restoring “%1$s” from a %2$s backup created on %3$s</string>
@@ -924,13 +920,13 @@
   <string name="hw_cloud_backup_show_password">Show password</string>
   <string name="hw_cloud_backup_status_action_required">Action required</string>
   <string name="hw_cloud_backup_status_network_error">Network error</string>
-  <string name="hw_cloud_backup_strength_hint_almost">Almost long enough — just a couple more characters</string>
+  <string name="hw_cloud_backup_strength_hint_almost">Almost long enough, add more characters</string>
   <string name="hw_cloud_backup_strength_hint_keep_going_v2">Keep going, aim for at least %d characters</string>
   <string name="hw_cloud_backup_strength_hint_lowercase">Mix in a lowercase letter</string>
   <string name="hw_cloud_backup_strength_hint_number">Try adding a number</string>
-  <string name="hw_cloud_backup_strength_hint_ok">Nice work! That would take a long time to crack</string>
-  <string name="hw_cloud_backup_strength_hint_symbol">Add a symbol like ! or @ to strengthen it</string>
-  <string name="hw_cloud_backup_strength_hint_uppercase">Mix in an uppercase letter</string>
+  <string name="hw_cloud_backup_strength_hint_ok">Nice work! This would take a long time to crack</string>
+  <string name="hw_cloud_backup_strength_hint_symbol">Add symbols such as ! or @ to strengthen it</string>
+  <string name="hw_cloud_backup_strength_hint_uppercase">Mix in uppercase letters</string>
   <string name="hw_cloud_backup_strength_medium">Average password</string>
   <string name="hw_cloud_backup_strength_none">Password strength</string>
   <string name="hw_cloud_backup_strength_strong">Strong password</string>
@@ -1005,6 +1001,12 @@
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
   <string name="introduction_button_create_wallet">Create wallet</string>
   <string name="introduction_button_i_have_a_wallet">I have a wallet</string>
+  <string name="introduction_create_wallet_hardware_description">If you already have a Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_title">Tangem Card or Ring</string>
+  <string name="introduction_create_wallet_seed_phrase_description">Start without a hardware wallet</string>
+  <string name="introduction_create_wallet_seed_phrase_title">Create seed phrase wallet</string>
+  <string name="introduction_i_have_wallet_hardware_description">Use Tangem Wallet to enter the app</string>
+  <string name="introduction_i_have_wallet_sign_in_google_title">Sign in with Google</string>
   <string name="introduction_legal">By continuing, you agree with %1$s and %2$s</string>
   <string name="introduction_terms_of_service">Terms of service</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
@@ -1098,15 +1100,15 @@
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
   <plurals name="market_chart_assets_android">
-    <item quantity="one">%d asset</item>
-    <item quantity="other">%d assets</item>
+    <item quantity="one">Top %d asset</item>
+    <item quantity="other">Top %d assets</item>
   </plurals>
   <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
   <string name="market_chart_can_not_load_data">Can’t load data</string>
   <string name="market_chart_no_amount">You don’t have any tokens with amount</string>
-  <string name="market_chart_top_holding">Top holding %s</string>
+  <string name="market_chart_top_holding">%s of your portfolio</string>
   <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
@@ -1544,6 +1546,16 @@
   <string name="prediction_onboarding_legal">By using Predictions functionality, you agree with %1$s and %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">Polymarket T&amp;Cs</string>
   <string name="prediction_onboarding_legal_tangem_terms">Tangem T&amp;Cs</string>
+  <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">Same deposit account, same funds. Re-linking never transfers</string>
+  <string name="prediction_onboarding_reconnect_benefit_safe_title">Nothing moves</string>
+  <string name="prediction_onboarding_reconnect_benefit_tap_subtitle">Re-issues the keys that link this phone to your account</string>
+  <string name="prediction_onboarding_reconnect_benefit_tap_title">One card tap</string>
+  <string name="prediction_onboarding_reconnect_button">Continue predicting</string>
+  <string name="prediction_onboarding_reconnect_faq_answer">Access keys are stored only on your device. They are cleared when you reinstall the app, switch to a new phone, or when a session becomes invalid. Your account itself lives on Polymarket and is unaffected.</string>
+  <string name="prediction_onboarding_reconnect_faq_question">Why am I seeing this?</string>
+  <string name="prediction_onboarding_reconnect_legal">No new terms to accept — your agreement with %1$s and %2$s still applies</string>
+  <string name="prediction_onboarding_reconnect_subtitle">Your deposit account, balance and open positions are safe. This device just needs to be re-linked — tap your card once to restore access.</string>
+  <string name="prediction_onboarding_reconnect_title">Reconnect your Polymarket account</string>
   <string name="prediction_onboarding_start_button">Start predicting</string>
   <string name="prediction_onboarding_subtitle">Forecast real-world events — from politics, sports to crypto, culture and more — right from Tangem. You buy shares in the outcome you believe in. Get it right and receive a payout. Close out position anytime while outcome is still non-resolved</string>
   <string name="prediction_onboarding_title">Open your Polymarket account</string>
@@ -1551,6 +1563,10 @@
   <string name="prediction_place_button">Place predict</string>
   <string name="prediction_place_error_description">We couldn\'t place the order. Please try again later.</string>
   <string name="prediction_place_fee">Fee</string>
+  <string name="prediction_place_insufficient_balance_bet">Insufficient Balance – add fund to bet</string>
+  <string name="prediction_place_insufficient_balance_fees">Insufficient Balance – to cover fees</string>
+  <string name="prediction_place_notification_awaiting_funds_description">Your funds are in flight. Your balance updates itself every few seconds so you can stay on this screen.</string>
+  <string name="prediction_place_notification_awaiting_funds_title">Awaiting funds</string>
   <string name="prediction_place_notification_market_closed_description">This market no longer accepts orders</string>
   <string name="prediction_place_notification_market_closed_title">Market is closed</string>
   <string name="prediction_place_notification_min_order_description">Increase the amount to place this prediction</string>
@@ -1572,9 +1588,11 @@
   <string name="prediction_place_result_to_main">To main</string>
   <string name="prediction_place_slippage">Slippage</string>
   <string name="prediction_place_slippage_default">Default %s</string>
+  <string name="prediction_place_slippage_error">Unsupported amount</string>
+  <string name="prediction_place_slippage_max">Max %s</string>
   <string name="prediction_place_slippage_max_error">Slippage above %s may cost you significantly more</string>
   <string name="prediction_place_slippage_min_error">Slippage must be at least %s</string>
-  <string name="prediction_place_slippage_sheet_description">Maximum price change you accept between placing the order and its execution</string>
+  <string name="prediction_place_slippage_sheet_description">Prices can change while your order is being placed. Slippage setting sets the max price change you allow from the price you see in Tangem app vs price of execution that you are willing to accept.</string>
   <string name="prediction_place_summary_account">Polymarket account</string>
   <string name="prediction_place_summary_from">From</string>
   <string name="prediction_place_summary_title">Placing prediction summary</string>
@@ -2112,7 +2130,7 @@
   <string name="tangem_pay_status_pending">Pending</string>
   <string name="tangem_pay_status_reversed">Reversed</string>
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
-  <string name="tangem_pay_terms_limits">Terms and fees</string>
+  <string name="tangem_pay_terms_limits">Terms of use</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Below min trx amount</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Monthly cap reached</string>
@@ -2160,7 +2178,9 @@
   <string name="tangempay_card_activation_in_progress">Activating your card</string>
   <string name="tangempay_card_default_name">Tangem Pay Card 1</string>
   <string name="tangempay_card_delivery_banner_description">Activate it when arrived</string>
+  <string name="tangempay_card_delivery_banner_description_many">Activate them when arrived</string>
   <string name="tangempay_card_delivery_banner_title">Your card on it\'s way for delivery</string>
+  <string name="tangempay_card_delivery_banner_title_many">Your cards on it\'s way for delivery</string>
   <string name="tangempay_card_details_activate">Activate card</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
@@ -2353,6 +2373,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Cards limit reached for this plan</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade plan</string>
   <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
+  <string name="tangempay_multichain_show_qr">Show QR</string>
   <string name="tangempay_multinetwork">Multinetwork</string>
   <string name="tangempay_newonboard_Q1_body">Yes – to operate a regulated Visa card, identity verification is mandatory. KYC is handled by Sumsub (compliance partner).</string>
   <string name="tangempay_newonboard_Q1_title">Do I have to share my docs?</string>
@@ -2436,7 +2457,7 @@
   <string name="tangempay_other_networks_header">Other networks</string>
   <string name="tangempay_other_networks_subtitle">And then swap it to payment account with 1:1 rate and zero fees</string>
   <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
-  <string name="tangempay_pay_support">Pay Support</string>
+  <string name="tangempay_pay_support">Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
@@ -2660,7 +2681,7 @@
   <string name="user_wallet_add_mobile_description">Create a new wallet on this device</string>
   <string name="user_wallet_add_mobile_title">Add mobile wallet</string>
   <string name="user_wallet_add_wallet">Add wallet</string>
-  <string name="user_wallet_coming_soon_dialog_description">We’re working on the ability to create more than one mobile wallet.</string>
+  <string name="user_wallet_coming_soon_dialog_description">We are building support for multiple mobile wallets.</string>
   <string name="user_wallet_list_add_button">Add Wallet</string>
   <string name="user_wallet_list_delete_hw_prompt">If you delete this wallet without a backup, you will permanently lose access to your funds.</string>
   <string name="user_wallet_list_delete_prompt">Are you sure you want to forget this wallet?</string>
