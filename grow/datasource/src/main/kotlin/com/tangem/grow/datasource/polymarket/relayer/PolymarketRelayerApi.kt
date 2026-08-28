@@ -1,7 +1,7 @@
-package com.tangem.datasource.api.polymarket.relayer
+package com.tangem.grow.datasource.polymarket.relayer
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.polymarket.relayer.models.PolymarketNonceResponse
+import com.tangem.grow.datasource.polymarket.relayer.models.PolymarketNonceResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

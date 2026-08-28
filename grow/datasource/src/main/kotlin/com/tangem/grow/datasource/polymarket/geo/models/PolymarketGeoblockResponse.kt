@@ -1,6 +1,6 @@
 @file:Suppress("BooleanPropertyNaming")
 
-package com.tangem.datasource.api.polymarket.geo.models
+package com.tangem.grow.datasource.polymarket.geo.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

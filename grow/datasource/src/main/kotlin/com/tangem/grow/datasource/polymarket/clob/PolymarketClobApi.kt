@@ -1,9 +1,9 @@
-package com.tangem.datasource.api.polymarket.clob
+package com.tangem.grow.datasource.polymarket.clob
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketPlaceOrderResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
