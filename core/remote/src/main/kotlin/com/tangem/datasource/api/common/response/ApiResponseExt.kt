@@ -15,6 +15,15 @@ fun <T : Any, R : Any> ApiResponse<T>.fold(onSuccess: (T) -> R, onError: (ApiRes
     }
 }
 
+/** Transforms the data of a successful response; an error goes through with its headers untouched */
+@Suppress("UNCHECKED_CAST")
+fun <T : Any, R : Any> ApiResponse<T>.map(transform: (T) -> R): ApiResponse<R> {
+    return when (this) {
+        is ApiResponse.Error -> this as ApiResponse<R>
+        is ApiResponse.Success -> ApiResponse.Success(data = transform(data), code = code, headers = headers)
+    }
+}
+
 inline fun <T> catchApiResponseError(onError: (ApiResponseError) -> Unit, block: () -> T): T {
     return try {
         block()
