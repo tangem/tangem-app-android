@@ -20,10 +20,12 @@ import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
+import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -38,6 +40,9 @@ internal class DefaultDeviceRegistrar(
     private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
+    // Lazy to break the DeviceRegistrar ↔ SessionTokenRefresher DI cycle (the refresher depends on
+    // Lazy<DeviceRegistrar> for its "device not found" re-registration path).
+    private val sessionTokenRefresher: Lazy<SessionTokenRefresher>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DeviceRegistrar {
 
@@ -73,6 +78,10 @@ internal class DefaultDeviceRegistrar(
         )
         if (isAlreadyRegistered) {
             TangemLogger.i("Device already registered — skipping /register")
+            // The flag can be set while the session store is empty (e.g. a prior 409 marked the
+            // device registered without issuing tokens, or a crash between the 200 response and the
+            // token write). Recover the session on this launch instead of staying stuck forever.
+            ensureSession()
             return@either
         }
 
@@ -138,11 +147,13 @@ internal class DefaultDeviceRegistrar(
             is ApiResponse.Error -> {
                 val authError = errorConverter.convert(response.cause)
                 if (authError is AuthError.Conflict) {
-                    // Device is already registered server-side (e.g. the local flag was lost on
-                    // reinstall). Persist the flag to stop retrying; session tokens will be minted
-                    // on demand via /authenticate.
+                    // Device is already registered server-side, but a 409 returns no tokens. Persist
+                    // the flag to stop retrying, then mint a session via /authenticate — nothing else
+                    // would (wallet registration now short-circuits without a session), so the device
+                    // would otherwise stay authenticated-but-sessionless indefinitely.
                     TangemLogger.i("Device already registered server-side (409) — marking as registered")
                     markRegistered(onFailureLog = "Failed to persist device-registration flag after 409")
+                    ensureSession()
                     return
                 }
                 TangemLogger.e("/register request failed: $authError")
@@ -158,5 +169,25 @@ internal class DefaultDeviceRegistrar(
             TangemLogger.e(onFailureLog, e)
             raise(DeviceRegistrationError.PersistenceFailed(e))
         }
+    }
+
+    /**
+     * Establishes an authenticated session when the device is known-registered but the session store
+     * is empty (a 409, or a registration flag set on an earlier launch, leaves the device registered
+     * server-side without tokens). Nothing else would recover it — wallet registration short-circuits
+     * without a session — so the device would stay authenticated-but-sessionless indefinitely.
+     * Delegates to the refresher (which falls to `/authenticate`, as there is no refresh token).
+     * Best-effort: a failure here never fails device registration.
+     */
+    private suspend fun ensureSession() {
+        val hasSession = runSuspendCatching { store.get().getOrNull() != null }.getOrElse { e ->
+            TangemLogger.e("Failed to read session tokens while ensuring session", e)
+            return
+        }
+        if (hasSession) return
+
+        TangemLogger.i("Device registered but no session — establishing one")
+        sessionTokenRefresher.get().refresh()
+            .onLeft { TangemLogger.e("Failed to establish session for registered device: $it") }
     }
 }
