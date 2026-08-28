@@ -620,6 +620,42 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a refusal inside a 2xx WHEN placeOrder THEN it is a rejection and not a result`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
+            placeOrderResponse(isSuccess = false, errorMessage = "not enough balance"),
+        )
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+        )
+
+        // Assert
+        assertThat(result.leftOrNull())
+            .isEqualTo(PredictionPlaceOrderError.Rejected(detail = "not enough balance"))
+    }
+
+    @Test
+    fun `GIVEN a 5xx WHEN placeOrder THEN the outcome is ambiguous rather than retryable`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns
+            httpError(code = Code.INTERNAL_SERVER_ERROR, body = "upstream timeout")
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
+    }
+
+    @Test
     fun `GIVEN a filled response WHEN placeOrder THEN the fill amounts come from the exchange`() = runTest {
         // Arrange
         coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
@@ -938,14 +974,16 @@ internal class DefaultPolymarketRepositoryTest {
             status: String? = "live",
             makingAmount: String? = null,
             takingAmount: String? = null,
+            isSuccess: Boolean = true,
+            errorMessage: String? = null,
         ): PolymarketPlaceOrderResponse = PolymarketPlaceOrderResponse(
-            isSuccess = true,
+            isSuccess = isSuccess,
             orderId = "0xorder",
             status = status,
             makingAmount = makingAmount,
             takingAmount = takingAmount,
             transactionHashes = listOf("0xtx"),
-            errorMessage = null,
+            errorMessage = errorMessage,
         )
 
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
