@@ -192,8 +192,8 @@ interface TangemTechApi {
     /**
      * The accounts endpoints exist in two versions: legacy `v1` and `api/v2`, which carries the type of every record
      * and counts the wallet's own accounts as `totalCryptoAccounts` where `v1` says `totalAccounts` — hence a
-     * document shape per version. The archived document is the same in both, so there [version] — `v1` or
-     * `api/v2` — is a path prefix chosen by the caller.
+     * document shape per version. The archived document is the same in both, so [version] — `v1` or `api/v2` — is
+     * a path prefix chosen by the caller.
      */
     @GET("/v1/wallets/{walletId}/accounts")
     suspend fun getWalletAccountsV1(
