@@ -27,7 +27,6 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -71,7 +70,8 @@ internal class AccountDetailsModelTest {
     ) = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
-        givenAccount(account = account, status = AccountStatus.Joint(account = account, value = testModel.statusValue))
+        val status = AccountStatus.Joint(account = account, value = testModel.statusValue)
+        every { singleAccountStatusSupplier(any()) } returns flowOf(status)
         givenWallet(isMultiCurrency = true)
 
         // Act
@@ -90,7 +90,7 @@ internal class AccountDetailsModelTest {
         runTest {
             // Arrange
             val account = MockAccounts.createJointAccount()
-            givenAccount(account = account, status = activeStatus(account))
+            every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
             givenWallet(isMultiCurrency = true)
 
             // Act
@@ -108,7 +108,7 @@ internal class AccountDetailsModelTest {
     fun `GIVEN joint account WHEN status is active and wallet is single-currency THEN manage tokens locked`() = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
-        givenAccount(account = account, status = activeStatus(account))
+        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
         givenWallet(isMultiCurrency = false)
 
         // Act
@@ -126,7 +126,7 @@ internal class AccountDetailsModelTest {
     fun `GIVEN joint account WHEN status has not been emitted yet THEN activation is pending`() = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
-        givenAccount(account = account, statusFlow = emptyFlow())
+        every { singleAccountStatusSupplier(any()) } returns emptyFlow()
         givenWallet(isMultiCurrency = true)
 
         // Act
@@ -149,7 +149,8 @@ internal class AccountDetailsModelTest {
             tokenList = TokenList.Empty,
             priceChangeLce = PriceChange(value = BigDecimal.ZERO, source = StatusSource.ACTUAL).lceContent(),
         )
-        givenAccount(account = account, status = status)
+        every { singleAccountSupplier.filterPersonalAccount(any()) } returns flowOf(account)
+        every { singleAccountStatusSupplier(any()) } returns flowOf(status)
         givenWallet(isMultiCurrency = true)
 
         // Act
@@ -168,15 +169,6 @@ internal class AccountDetailsModelTest {
             account = account,
             value = JointAccountStatusValue.Active(source = StatusSource.ACTUAL),
         )
-    }
-
-    private fun givenAccount(account: Account.CryptoPortfolio, status: AccountStatus) {
-        givenAccount(account = account, statusFlow = flowOf(status))
-    }
-
-    private fun givenAccount(account: Account.CryptoPortfolio, statusFlow: Flow<AccountStatus>) {
-        every { singleAccountSupplier.filterCryptoPortfolioAccount(any()) } returns flowOf(account)
-        every { singleAccountStatusSupplier(any()) } returns statusFlow
     }
 
     private fun givenWallet(isMultiCurrency: Boolean) {
