@@ -30,6 +30,8 @@ dependencies {
 
     implementation(tangemDeps.card.core)
 
+    implementation(projects.libs.auth)
+
     api(projects.core.local)
     api(projects.core.remote)
     api(projects.core.utils)
