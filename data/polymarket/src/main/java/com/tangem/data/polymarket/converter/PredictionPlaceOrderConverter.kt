@@ -1,6 +1,6 @@
 package com.tangem.data.polymarket.converter
 
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketPlaceOrderResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
