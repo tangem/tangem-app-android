@@ -65,7 +65,7 @@ class ResolvePolymarketEntryInteractor(
      * with — either way the backend has to be asked.
      */
     private suspend fun confirmedEntry(userWalletId: UserWalletId): PolymarketEntry? {
-        if (!polymarketOnboardedStore.isOnboarded(userWalletId)) return null
+        if (!polymarketOnboardedStore.isOnboardedSync(userWalletId)) return null
         if (getPolymarketApiCredentialsUseCase(userWalletId) == null) return null
 
         TangemLogger.i("Resolve: $userWalletId is confirmed onboarded")
