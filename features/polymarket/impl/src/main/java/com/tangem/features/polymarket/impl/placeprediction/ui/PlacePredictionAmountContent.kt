@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +29,7 @@ import com.tangem.common.ui.onboarding.OnboardingFooter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -34,8 +37,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
+import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
@@ -88,12 +93,10 @@ internal fun PlacePredictionAmountContent(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
-            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
-                PredictionMarketBlock(state = state.market)
-            }
+            PredictionMarketBlock(state = state.market)
             PredictionAmountBlock(
                 amountValue = state.amountValue,
-                payout = state.quote.payout(),
+                amountCaption = state.amountCaption,
                 payment = state.payment,
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
@@ -112,18 +115,36 @@ internal fun PlacePredictionAmountContent(
 private fun SlippageRow(slippage: SlippageUM, onClick: () -> Unit) {
     TangemSurface(color = TangemTheme.colors3.bg.secondary) {
         TangemRow(
+            verticalAlignment = TangemRowVerticalAlignment.Center,
             titleSlot = {
-                Text(
-                    text = stringResourceSafe(R.string.prediction_place_slippage),
-                    style = TangemTheme.typography3.body.medium,
-                    color = TangemTheme.colors3.text.primary,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResourceSafe(R.string.prediction_place_slippage),
+                        style = TangemTheme.typography3.body.medium,
+                        color = TangemTheme.colors3.text.primary,
+                    )
+                    Icon(
+                        imageVector = Icons.ic_info_16,
+                        contentDescription = null,
+                        tint = TangemTheme.colors3.icon.tertiary,
+                    )
+                }
             },
             valueSlot = {
                 Text(
                     text = slippage.label(),
                     style = TangemTheme.typography3.body.medium,
                     color = TangemTheme.colors3.text.secondary,
+                )
+            },
+            endSlot = {
+                Icon(
+                    imageVector = Icons.ic_chevron_double_vertical_16,
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.tertiary,
                 )
             },
             onClick = onClick,
