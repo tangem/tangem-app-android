@@ -58,6 +58,7 @@ private fun Content(content: AddWalletBS) {
             title = resourceReference(R.string.user_wallet_add_mobile_title),
             subtitle = resourceReference(R.string.user_wallet_add_mobile_description),
             onClick = content.onAddMobileWalletClick,
+            Modifier.testTag(DetailsScreenTestTags.ADD_MOBILE_WALLET_BUTTON)
         )
     }
 }
