@@ -1,5 +1,6 @@
 package com.tangem.data.walletmanager
 
+import com.tangem.blockchain.blockchains.ethereum.ExternalAddressBalanceProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.WalletManager
@@ -69,6 +70,20 @@ internal class WalletManagerFactory(
             }
         } catch (e: Throwable) {
             TangemLogger.w("Failed to create wallet manager for $blockchain", e)
+            null
+        }
+    }
+
+    /** A provider of the balance of [address] in [blockchain] — no key, no derivation; `null` if the SDK cannot serve it */
+    suspend fun createExternalAddressBalanceProvider(
+        blockchain: Blockchain,
+        address: String,
+    ): ExternalAddressBalanceProvider? {
+        return try {
+            blockchainSDKFactory.getWalletManagerFactorySync()
+                ?.createExternalAddressBalanceProvider(blockchain = blockchain, address = address)
+        } catch (e: Throwable) {
+            TangemLogger.e("Failed to create external address balance provider for $blockchain", e)
             null
         }
     }

@@ -5,6 +5,7 @@ import androidx.datastore.dataStoreFile
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.jointaccount.address.DefaultJointAccountSafeAddressResolver
 import com.tangem.data.jointaccount.DefaultJointAccountSupportedNetworksRepository
 import com.tangem.data.jointaccount.cleaner.JointAccountUserWalletDataCleaner
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
@@ -16,6 +17,7 @@ import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
@@ -55,6 +57,12 @@ internal interface JointAccountDataModule {
     @Binds
     @Singleton
     fun bindJointAccountRepository(repository: DefaultJointAccountRepository): JointAccountRepository
+
+    @Binds
+    @Singleton
+    fun bindJointAccountSafeAddressResolver(
+        resolver: DefaultJointAccountSafeAddressResolver,
+    ): JointAccountSafeAddressResolver
 
     @Binds
     @Singleton
