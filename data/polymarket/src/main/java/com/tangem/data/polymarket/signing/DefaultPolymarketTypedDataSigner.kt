@@ -84,7 +84,7 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
     ): Either<PolymarketSigningError, PredictionSignedOrder> = Either
         .catchOn(dispatchers.io) {
             val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
-            val order = payload.toOrder(signerAddress = addressFactory.createAddress(context.ownerKey))
+            val order = payload.toOrder()
             val digest = PolymarketErc7739SignatureBuilder.digest(
                 order = order,
                 isNegRisk = payload.draft.isNegRisk,
@@ -105,10 +105,10 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         }
         .getOrElse { it.toSigningError().left() }
 
-    private fun PredictionOrderPayload.toOrder(signerAddress: String): PredictionOrder = PredictionOrder(
+    private fun PredictionOrderPayload.toOrder(): PredictionOrder = PredictionOrder(
         salt = salt,
         maker = depositWalletAddress,
-        signer = signerAddress,
+        signer = depositWalletAddress,
         tokenId = BigInteger(draft.tokenId),
         makerAmount = draft.makerAmount,
         takerAmount = draft.takerAmount,
