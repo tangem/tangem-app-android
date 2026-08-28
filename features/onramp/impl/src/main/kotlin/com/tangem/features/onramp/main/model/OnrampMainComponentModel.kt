@@ -205,7 +205,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
         if (marketing == MarketingDeeplink.SWAP &&
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED)
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED)
         ) {
             return false
         }
