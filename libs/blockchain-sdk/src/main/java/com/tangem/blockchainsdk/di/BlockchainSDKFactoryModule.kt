@@ -32,7 +32,7 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.build
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
-import com.tangem.store.datasource.api.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.libs.blockchain_sdk.BuildConfig
@@ -64,7 +64,7 @@ internal object BlockchainSDKFactoryModule {
     fun provideBlockchainProvidersApi(factory: RetrofitFactory): BlockchainProvidersApi {
         return factory.build(
             RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
                 shouldApplyTimeoutAnnotations = true,
                 shouldUseSessionAuth = false,
             ),

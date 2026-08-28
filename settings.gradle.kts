@@ -249,7 +249,6 @@ include(":spend:datasource")
 
 // region Store modules
 include(":store:datasource")
-include(":store:datasource:api")
 // endregion Store modules
 
 // region Grow modules
