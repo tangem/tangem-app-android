@@ -116,16 +116,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         safeAddress: String,
     ): UpdateWalletManagerResult {
         val blockchain = network.toBlockchain()
-        val unreachable = UpdateWalletManagerResult.Unreachable(
-            selectedAddress = safeAddress,
-            addresses = setOf(
-                UpdateWalletManagerResult.Address(safeAddress, UpdateWalletManagerResult.Address.Type.Primary),
-            ),
-        )
 
         val provider = getOrCreateExternalAddressBalanceProvider(userWalletId, network, safeAddress) ?: run {
-            TangemLogger.w("Unable to create a balance provider for the joint network ${network.id}")
-            return unreachable
+            TangemLogger.e("Unable to create a balance provider for the joint network ${network.id}")
+            return resultFactory.getUnreachableResult(address = safeAddress)
         }
 
         val tokensToAdd = sdkTokenConverter.convertList(extraTokens).filter { it !in provider.tokens }
@@ -140,13 +134,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     recentTransactions = result.data.recentTransactions,
                 )
                 is Result.Failure -> {
-                    TangemLogger.w("Unable to update the joint network ${network.id}: ${result.error}")
-                    unreachable
+                    TangemLogger.e("Unable to update the joint network ${network.id}: ${result.error}")
+                    resultFactory.getUnreachableResult(address = safeAddress)
                 }
             }
         } catch (e: Throwable) {
-            TangemLogger.w("Unable to update the joint network ${network.id}", e)
-            unreachable
+            TangemLogger.e("Unable to update the joint network ${network.id}", e)
+            resultFactory.getUnreachableResult(address = safeAddress)
         } finally {
             externalAddressBalanceProvidersStore.store(userWalletId, network, provider)
         }
