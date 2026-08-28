@@ -5,7 +5,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import arrow.core.flatMap
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
@@ -19,6 +18,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
@@ -94,11 +94,12 @@ internal class PlacePredictionModel @Inject constructor(
         field = MutableStateFlow(PlacePredictionUM.initial())
 
     private val quoteJobHolder = JobHolder()
-    private val submitJobHolder = JobHolder()
 
     private var isMarketLive = false
 
     private var isNegRiskMarket: Boolean? = null
+
+    private var isScreenShown = false
 
     init {
         uiState.update(SetPaymentCurrencyTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
@@ -131,10 +132,12 @@ internal class PlacePredictionModel @Inject constructor(
      * suspended with the screen and resumed with it, rather than living as long as the model.
      */
     fun onScreenShown() {
+        isScreenShown = true
         restartQuoteLoop(withDebounce = false)
     }
 
     fun onScreenHidden() {
+        isScreenShown = false
         quoteJobHolder.cancel()
     }
 
@@ -170,12 +173,12 @@ internal class PlacePredictionModel @Inject constructor(
 
         val frozen = (state.quote as? QuoteUM.Content)?.signable
         if (frozen == null) {
-            showPlaceFailure()
+            showPlaceFailure(reason = "Place tapped without a priced quote")
             return
         }
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
-        modelScope.launch { place(frozen = frozen) }.saveIn(submitJobHolder)
+        modelScope.launch { place(frozen = frozen) }
     }
 
     private suspend fun place(frozen: SignableQuoteUM) {
@@ -184,13 +187,20 @@ internal class PlacePredictionModel @Inject constructor(
             derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
         }
         if (addresses == null || isNegRisk == null) {
-            showPlaceFailure()
+            showPlaceFailure(reason = "No stored addresses or unknown market kind")
             return
         }
 
-        if (!hasSpendingPower(required = frozen.quote.total)) {
-            uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
-            return
+        when (spendingPower(addresses = addresses, required = frozen.quote.total)) {
+            SpendingPower.Sufficient -> Unit
+            SpendingPower.Insufficient -> {
+                returnToIdle()
+                return
+            }
+            SpendingPower.Unknown -> {
+                showPlaceFailure(reason = "Spending power could not be read")
+                return
+            }
         }
 
         val signedOrder = withContext(dispatchers.default) {
@@ -214,45 +224,56 @@ internal class PlacePredictionModel @Inject constructor(
         withContext(dispatchers.default) {
             placePredictionOrderUseCase(addresses = addresses, signedOrder = signedOrder)
         }
-            .flatMap { result ->
+            .map { result ->
                 PlaceResultUMConverter.convert(
                     result = result,
                     requestedAmount = frozen.quote.notional,
-                    placedAtMillis = System.currentTimeMillis(),
+                    placedAt = System.currentTimeMillis(),
                 )
             }
             .fold(ifLeft = ::onPlaceError, ifRight = ::showResult)
     }
 
-    private suspend fun hasSpendingPower(required: BigDecimal): Boolean {
+    private suspend fun spendingPower(addresses: PolymarketAddresses, required: BigDecimal): SpendingPower {
         val balance = withContext(dispatchers.default) {
-            val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
-                ?: return@withContext null
-
             getPolymarketBalanceInteractor(addresses = addresses).getOrNull()
-        } ?: return false
+        } ?: return SpendingPower.Unknown
 
         uiState.update(SetBalanceTransformer(balance = balance.balance))
 
-        return balance.balance >= required
+        return if (balance.balance >= required) SpendingPower.Sufficient else SpendingPower.Insufficient
     }
+
+    private enum class SpendingPower { Sufficient, Insufficient, Unknown }
 
     private fun onSignFailure(failure: PredictionOrderFailure) {
         val isCancelled = failure is PredictionOrderFailure.Signing &&
             failure.error == PolymarketSigningError.UserCancelled
 
         if (isCancelled) {
-            uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
+            returnToIdle()
         } else {
-            showPlaceFailure()
+            showPlaceFailure(reason = failure.toReason())
         }
     }
 
+    private fun PredictionOrderFailure.toReason(): String = when (this) {
+        is PredictionOrderFailure.Draft -> "Order could not be drafted: $error"
+        is PredictionOrderFailure.Invalid -> "Order failed its own checks: $error"
+        is PredictionOrderFailure.Signing -> "Signing failed: $error"
+    }
+
     private fun onPlaceError(error: PredictionPlaceOrderError) {
-        if (error is PredictionPlaceOrderError.Ambiguous) {
-            showResult(result = PlaceResultUM.Submitted(placedAt = System.currentTimeMillis()))
-        } else {
-            showPlaceFailure()
+        when (error) {
+            is PredictionPlaceOrderError.Ambiguous -> {
+                logger.e("Order outcome unknown, reporting it as submitted: $error")
+                showResult(result = PlaceResultUM.Submitted(placedAt = System.currentTimeMillis()))
+            }
+            is PredictionPlaceOrderError.NoLiquidity -> {
+                logger.e("The exchange found no match for the order: $error")
+                showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
+            }
+            else -> showPlaceFailure(reason = "Order refused: $error")
         }
     }
 
@@ -265,8 +286,9 @@ internal class PlacePredictionModel @Inject constructor(
      * A submission that never reached the book: the same order can still be placed, so this is a dialog over
      * the summary rather than a result screen, and it returns the flow to [SubmitUM.Idle].
      */
-    fun showPlaceFailure() {
-        uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
+    fun showPlaceFailure(reason: String) {
+        logger.e(reason)
+        returnToIdle()
 
         messageSender.send(
             DialogMessage(
@@ -281,6 +303,12 @@ internal class PlacePredictionModel @Inject constructor(
                 secondActionBuilder = { cancelAction() },
             ),
         )
+    }
+
+    private fun returnToIdle() {
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
+
+        if (isScreenShown) restartQuoteLoop(withDebounce = false)
     }
 
     private fun onSupportClick() {
@@ -309,13 +337,19 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     override fun onBackClick() {
+        if (isSubmitting()) return
+
         router.pop()
     }
 
     override fun onCloseClick() {
+        if (isSubmitting()) return
+
         router.popTo(PlacePredictionRoute.Amount)
         router.pop()
     }
+
+    fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }
 
     private fun loadMarket() {
         modelScope.launch {
