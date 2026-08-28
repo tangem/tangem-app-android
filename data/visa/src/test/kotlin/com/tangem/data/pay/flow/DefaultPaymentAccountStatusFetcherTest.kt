@@ -363,6 +363,67 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
             }
 
+        @ParameterizedTest
+        @MethodSource("provideProvisioningStatuses")
+        fun `GIVEN ACCOUNT instance is still provisioning WHEN invoke THEN Processing without fetching credentials`(
+            status: CustomerInfo.ProductInstance.Status,
+        ) = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance, accountProductInstance.copy(status = status)),
+            )
+            stubHappyPath(customerInfo)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Processing)
+            coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
+            coVerify(exactly = 0) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideActivatedStatuses")
+        fun `GIVEN ACCOUNT instance is past activation WHEN invoke THEN Available`(
+            status: CustomerInfo.ProductInstance.Status,
+        ) = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance, accountProductInstance.copy(status = status)),
+            )
+            stubHappyPath(customerInfo)
+            coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(
+                VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
+            )
+        }
+
+        private fun provideProvisioningStatuses() = listOf(
+            CustomerInfo.ProductInstance.Status.NEW,
+            CustomerInfo.ProductInstance.Status.READY_FOR_MANUFACTURING,
+            CustomerInfo.ProductInstance.Status.MANUFACTURING,
+            CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
+            CustomerInfo.ProductInstance.Status.DELIVERED,
+            CustomerInfo.ProductInstance.Status.ACTIVATING,
+        )
+
+        private fun provideActivatedStatuses() = listOf(
+            CustomerInfo.ProductInstance.Status.ACTIVE,
+            CustomerInfo.ProductInstance.Status.BLOCKED,
+            CustomerInfo.ProductInstance.Status.DEACTIVATING,
+            CustomerInfo.ProductInstance.Status.DEACTIVATED,
+            CustomerInfo.ProductInstance.Status.CANCELED,
+            CustomerInfo.ProductInstance.Status.UNKNOWN,
+        )
+
         @Test
         fun `GIVEN toggle on and no ACCOUNT instance and customer is eligible WHEN invoke THEN virtualAccount is Eligible`() =
             runTest {
