@@ -35,10 +35,9 @@ internal val PERCENT_BASE = BigDecimal("100")
 
 /**
  * Cross-network grouping key for the portfolio review: the same asset on different networks (e.g. USDC
- * on Solana and Ethereum) shares its `rawCurrencyId`, so they group under a single item. Custom tokens
- * have no raw id and fall back to their unique currency id, staying in their own group.
+ * on Solana and Ethereum) shares its `symbol`, so they group under a single item.
  */
-internal fun CryptoCurrencyStatus.forYouGroupKey(): String = currency.id.rawCurrencyId?.value ?: currency.id.value
+internal fun CryptoCurrencyStatus.forYouGroupKey(): String = currency.symbol
 
 /**
  * Matching key between a portfolio currency and a top-earn suggestion: the same asset
