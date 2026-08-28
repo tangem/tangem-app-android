@@ -1,6 +1,6 @@
 package com.tangem.tests
 
-import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 
 import com.tangem.grow.datasource.config.Express
 
@@ -23,7 +23,7 @@ import org.junit.Test
 class ScanCardTest : BaseTestCase() {
 
     @ApiEnv(
-        ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD),
+        ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD),
         ApiEnvConfig(Express.KEY, ApiEnvironment.PROD)
     )
     @AllureId("868")
