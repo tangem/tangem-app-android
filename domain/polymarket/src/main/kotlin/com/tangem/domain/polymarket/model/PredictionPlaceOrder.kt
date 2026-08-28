@@ -21,6 +21,8 @@ sealed interface PredictionPlaceOrderError : PolymarketError {
 
     data class Rejected(val detail: String?) : PredictionPlaceOrderError
 
+    data class NoLiquidity(val detail: String?) : PredictionPlaceOrderError
+
     data class Unauthorized(val detail: String?) : PredictionPlaceOrderError
 
     data class Ambiguous(val detail: String?) : PredictionPlaceOrderError
