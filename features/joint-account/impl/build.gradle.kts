@@ -14,6 +14,8 @@ dependencies {
     /** Core */
     api(projects.core.decompose)
     api(projects.core.utils)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.ui)
 
@@ -27,11 +29,17 @@ dependencies {
 
     /** Features */
     implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.wallet.api)
 
     /** Domain */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.common)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
+    implementation(projects.domain.notifications.models)
+    implementation(projects.domain.wallets)
 
     /** SDK */
     implementation(projects.libs.blockchainSdk)
@@ -62,4 +70,5 @@ dependencies {
     /** Tests */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }
