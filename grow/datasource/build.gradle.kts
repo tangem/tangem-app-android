@@ -37,7 +37,6 @@ dependencies {
     api(projects.core.utils)
     api(projects.domain.models)
     implementation(projects.domain.staking.models)
-    implementation(projects.store.datasource.api)
 
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)
