@@ -90,6 +90,10 @@ internal class DefaultSessionTokenRefresher(
         deferred.await()
     }
 
+    override suspend fun ensureSession(): Either<SessionRefreshError, SessionTokens> = withContext(dispatchers.io) {
+        store.get().getOrNull()?.right() ?: refresh()
+    }
+
     private suspend fun runRefresh(current: SessionTokens?): Either<SessionRefreshError, SessionTokens> {
         val now = clock.now()
 
