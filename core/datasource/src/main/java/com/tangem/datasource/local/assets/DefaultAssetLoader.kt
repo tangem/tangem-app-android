@@ -1,44 +1,34 @@
-package com.tangem.datasource.asset.loader
+@file:OptIn(ExperimentalStdlibApi::class)
+
+package com.tangem.datasource.local.assets
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.datasource.asset.reader.AssetReader
+import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import java.lang.reflect.Type
 import javax.inject.Inject
-import javax.inject.Singleton
+import kotlin.reflect.KType
 
-/**
- * Asset file loader
- *
- * @property assetReader asset reader
- * @property moshi       moshi
- *
- * @see <a href = "https://www.notion.so/tangem/Assets-e045dd890413413faf34ce07ae47ff56">Documentation</a>
- *
-[REDACTED_AUTHOR]
- */
-@Singleton
-class AssetLoader @Inject constructor(
-    val assetReader: AssetReader,
-    @NetworkMoshi val moshi: Moshi,
-    val analyticsExceptionHandler: AnalyticsExceptionHandler,
-    val dispatchers: CoroutineDispatcherProvider,
-) {
-    /** Load content [Content] of asset file [fileName] */
+internal class DefaultAssetLoader @Inject constructor(
+    private val assetReader: AssetReader,
+    @NetworkMoshi private val moshi: Moshi,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val dispatchers: CoroutineDispatcherProvider,
+) : AssetLoader {
+
     @Suppress("SuspendFunSwallowedCancellation")
-    @OptIn(ExperimentalStdlibApi::class)
-    suspend inline fun <reified Content> load(fileName: String): Content? = withContext(dispatchers.io) {
+    override suspend fun <T> load(fileName: String, type: KType): T? = withContext(dispatchers.io) {
         val json = runCatching { assetReader.read(fullFileName = "$fileName.json") }.getOrNull()
 
         runCatching {
-            moshi.adapter<Content>().fromJson(json)
+            moshi.adapter<T>(type).fromJson(json)
         }
             .fold(
                 onSuccess = { parsedConfig ->
@@ -70,15 +60,11 @@ class AssetLoader @Inject constructor(
             )
     }
 
-    /** Load list [V] values of asset file [fileName] */
-    suspend inline fun <reified V> loadList(fileName: String): List<V> {
+    override suspend fun <T> loadList(fileName: String, type: Type): List<T> {
         val result = runCatching(dispatchers.io) {
             val json = assetReader.read(fullFileName = "$fileName.json")
 
-            val type = Types.newParameterizedType(List::class.java, V::class.java)
-            val adapter = moshi.adapter<List<V>>(type)
-
-            adapter.fromJson(json)
+            moshi.adapter<List<T>>(type).fromJson(json)
         }
         return result.fold(
             onSuccess = { parsedConfig ->
@@ -97,15 +83,11 @@ class AssetLoader @Inject constructor(
         )
     }
 
-    /** Load map [String] keys and [V] values of asset file [fileName] */
-    suspend inline fun <reified V> loadMap(fileName: String): Map<String, V> {
+    override suspend fun <T> loadMap(fileName: String, type: Type): Map<String, T> {
         val result = runCatching(dispatchers.io) {
             val json = assetReader.read(fullFileName = "$fileName.json")
 
-            val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
-            val adapter = moshi.adapter<Map<String, V>>(type)
-
-            adapter.fromJson(json)
+            moshi.adapter<Map<String, T>>(type).fromJson(json)
         }
         return result.fold(
             onSuccess = { parsedConfig ->
@@ -124,7 +106,7 @@ class AssetLoader @Inject constructor(
         )
     }
 
-    fun sendException(fileName: String, isParsingSuccess: Boolean, json: String?) {
+    private fun sendException(fileName: String, isParsingSuccess: Boolean, json: String?) {
         analyticsExceptionHandler.sendException(
             ExceptionAnalyticsEvent(
                 exception = IllegalStateException("Parsing config is failed"),
