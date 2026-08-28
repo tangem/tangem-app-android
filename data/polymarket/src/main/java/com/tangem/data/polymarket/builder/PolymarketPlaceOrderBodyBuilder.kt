@@ -3,7 +3,6 @@ package com.tangem.data.polymarket.builder
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderRequest
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import kotlinx.serialization.json.Json
-import java.math.BigInteger
 
 internal object PolymarketPlaceOrderBodyBuilder {
 
@@ -14,7 +13,7 @@ internal object PolymarketPlaceOrderBodyBuilder {
 
         val request = PolymarketPlaceOrderRequest(
             order = PolymarketPlaceOrderRequest.Order(
-                salt = order.salt.toJsonNumber(),
+                salt = order.salt,
                 maker = order.maker.lowercase(),
                 signer = order.signer.lowercase(),
                 tokenId = order.tokenId.toString(),
@@ -35,12 +34,5 @@ internal object PolymarketPlaceOrderBodyBuilder {
         )
 
         return Json.encodeToString(PolymarketPlaceOrderRequest.serializer(), request)
-    }
-
-    private fun BigInteger.toJsonNumber(): Long {
-        val value = toLong()
-        require(BigInteger.valueOf(value) == this) { "Salt does not fit a JSON number: $this" }
-
-        return value
     }
 }

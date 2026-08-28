@@ -641,24 +641,6 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
-    fun `GIVEN a salt the body cannot carry WHEN placeOrder THEN nothing is sent`() = runTest {
-        // Arrange
-        val oversizedSalt = BigInteger.TWO.pow(64)
-
-        // Act
-        val result = repository.placeOrder(
-            ownerAddress = OWNER,
-            credentials = SYNC_CREDENTIALS,
-            signedOrder = signedOrder(salt = oversizedSalt),
-            isNegRisk = false,
-        )
-
-        // Assert
-        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.NotSent::class.java)
-        coVerify(exactly = 0) { clobApi.placeOrder(any(), any()) }
-    }
-
-    @Test
     fun `GIVEN a refusal inside a 2xx WHEN placeOrder THEN it is a rejection and not a result`() = runTest {
         // Arrange
         coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
@@ -1023,7 +1005,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         fun signedOrder(
             signature: String = standardExchangeSignature(),
-            salt: BigInteger = BigInteger("1234567890"),
+            salt: Long = 1_234_567_890L,
         ): PredictionSignedOrder =
             PredictionSignedOrder(
             order = PredictionOrder(
