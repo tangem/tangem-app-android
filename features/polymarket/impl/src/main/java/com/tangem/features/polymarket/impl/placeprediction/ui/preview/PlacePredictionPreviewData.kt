@@ -42,6 +42,7 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
                 requestedAmount = BigDecimal("4000"),
             ),
             PlaceResultUM.NotFilled(placedAt = PLACED_AT),
+            PlaceResultUM.Submitted(placedAt = PLACED_AT),
         )
 }
 
