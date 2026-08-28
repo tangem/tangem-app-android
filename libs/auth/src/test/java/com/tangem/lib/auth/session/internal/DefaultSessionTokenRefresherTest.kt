@@ -431,6 +431,35 @@ class DefaultSessionTokenRefresherTest {
         coVerify(exactly = 0) { deviceRegistrar.reregister() }
     }
 
+    @Test
+    fun `ensureSession returns the stored session without refreshing when one exists`() = runTest {
+        val stored = SessionTokens(
+            accessToken = "stored-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "stored-rt",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+
+        val result = refresher.ensureSession()
+
+        assertThat(result.getOrNull()).isEqualTo(stored)
+        coVerify(exactly = 0) { authApi.refresh(any()) }
+        coVerify(exactly = 0) { authApi.authenticate(any<AuthApiRequest>()) }
+    }
+
+    @Test
+    fun `ensureSession authenticates when no session is stored`() = runTest {
+        coEvery { store.get() } returns None
+        stubAuthenticateHappyPath()
+
+        val result = refresher.ensureSession()
+
+        assertThat(result.getOrNull()?.accessToken).isEqualTo("post-auth-access")
+        coVerify(exactly = 1) { authApi.authenticate(any<AuthApiRequest>()) }
+    }
+
     private fun stubAuthenticateHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestAuthNonce(any()) } returns ApiResponse.Success(
