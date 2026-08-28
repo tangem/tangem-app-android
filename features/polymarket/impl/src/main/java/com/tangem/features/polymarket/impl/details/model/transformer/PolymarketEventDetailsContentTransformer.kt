@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
@@ -114,7 +115,7 @@ internal class PolymarketEventDetailsContentTransformer(
     /** An implied probability doubles as the outcome share price: 0.25 → "25¢". */
     private fun BigDecimal.formatCents(): String {
         val cents = multiply(CENTS_IN_DOLLAR).setScale(0, RoundingMode.HALF_UP)
-        return "$cents$CENT_SIGN"
+        return "$cents${PolymarketConst.CENT_SIGN}"
     }
 
     private fun formatChange24h(volume: BigDecimal?, volume24h: BigDecimal?): TextReference? {
@@ -141,7 +142,6 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     companion object {
-        private const val CENT_SIGN = "¢"
         private val CENTS_IN_DOLLAR = BigDecimal(100)
         private const val EASTERN_TIME_ZONE = "America/New_York"
         private const val RESOLUTION_DATE_PATTERN = "MMM d, yyyy, h:mm a"
