@@ -29,6 +29,8 @@ sealed interface PredictionOrderValidationError : PolymarketError {
     data class MarketMismatch(val expectedTokenId: String, val isNegRiskExpected: Boolean) :
         PredictionOrderValidationError
 
+    data class SignerIsNotMaker(val signer: String, val maker: String) : PredictionOrderValidationError
+
     data class SideMismatch(val signed: PredictionOrderSide, val quoted: PredictionOrderSide) :
         PredictionOrderValidationError
 
