@@ -15,6 +15,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.SpecificationDataType
+import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
@@ -558,9 +559,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      * Resolves the Virtual Account on-ramp dimension (VA MVP0, TWI-1638).
      *
      * Resolution order:
-     * 1. A product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted VA order id
-     *    (idempotent) and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank credentials are
-     *    fetched on demand by the deposit screen, not here.
+     * 1. An activated product instance with [SpecificationDataType.ACCOUNT] exists — clears any stale persisted
+     *    VA order id and surfaces [VirtualAccountOnramp.Available] carrying only its id; bank credentials are
+     *    fetched on demand by the deposit screen, not here. A still provisioning one (see [isProvisioning])
+     *    surfaces [VirtualAccountOnramp.Processing].
      * 2. Otherwise, a VA order id is persisted locally — checks its status via `getOrderData`:
      *    NEW/PROCESSING/COMPLETED (or a transient lookup failure) surface [VirtualAccountOnramp.Processing]; CANCELED
      *    or a [VisaApiError.OrderNotFound] (the persisted id went stale) clears the persisted id and falls through
@@ -573,7 +575,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             it.specificationDataType == SpecificationDataType.ACCOUNT
         }
         if (accountInstance != null) {
-            // Order provisioned into an ACCOUNT product instance — drop the in-flight order hint (idempotent).
+            if (accountInstance.isProvisioning()) return VirtualAccountOnramp.Processing
             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
             return VirtualAccountOnramp.Available(productInstanceId = accountInstance.id)
         }
@@ -606,6 +608,23 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
 
         return resolveEligibility(userWalletId)
+    }
+
+    private fun CustomerInfo.ProductInstance.isProvisioning(): Boolean = when (status) {
+        Status.NEW,
+        Status.READY_FOR_MANUFACTURING,
+        Status.MANUFACTURING,
+        Status.SENT_TO_DELIVERY,
+        Status.DELIVERED,
+        Status.ACTIVATING,
+        -> true
+        Status.ACTIVE,
+        Status.BLOCKED,
+        Status.DEACTIVATING,
+        Status.DEACTIVATED,
+        Status.CANCELED,
+        Status.UNKNOWN,
+        -> false
     }
 
     private suspend fun resolveEligibility(userWalletId: UserWalletId): VirtualAccountOnramp? {
