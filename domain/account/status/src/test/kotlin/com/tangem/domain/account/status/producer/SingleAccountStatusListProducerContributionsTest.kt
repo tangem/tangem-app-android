@@ -45,6 +45,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 
 /**
  * Covers the **wiring** of the balance-contributions seam inside the status producer — the part the factory and
@@ -170,6 +171,9 @@ internal class SingleAccountStatusListProducerContributionsTest {
             // getSyncStrict is an extension over this StateFlow, so the flow is what has to be stubbed
             userWalletsListRepository = mockk<UserWalletsListRepository> {
                 every { userWallets } returns MutableStateFlow(listOf(wallet))
+            },
+            singleJointAccountListSupplier = mockk<SingleJointAccountListSupplier> {
+                every { this@mockk.invoke(userWalletId = any()) } returns flowOf(emptyList())
             },
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
                 every { this@mockk.invoke(id) } returns flowOf(accountList(id))
