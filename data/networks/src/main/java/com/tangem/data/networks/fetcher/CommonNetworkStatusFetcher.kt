@@ -59,7 +59,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
         // A pending joint account has no Safe yet: there is nothing to read and no error to store
         val jointSafeAddress = if (network.derivationPath is Network.DerivationPath.Joint) {
             safeAddress ?: run {
-                TangemLogger.w(
+                TangemLogger.i(
                     "Skipping fetch for $userWalletId [${network.id}]: the joint account has no Safe address yet",
                 )
                 return Unit.right()
