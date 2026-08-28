@@ -44,7 +44,7 @@ import com.tangem.grow.datasource.stakekit.addStakeKitEnumFallbackAdapters
 import com.tangem.grow.datasource.yield.local.DefaultYieldMarketsStore
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
-import com.tangem.store.datasource.api.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
@@ -291,7 +291,7 @@ internal object GrowDatasourceModule {
         // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
         return factory.build(
             RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
