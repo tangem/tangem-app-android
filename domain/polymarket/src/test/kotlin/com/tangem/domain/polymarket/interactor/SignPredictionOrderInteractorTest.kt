@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderDraftError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
@@ -115,6 +116,40 @@ internal class SignPredictionOrderInteractorTest {
             PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left(),
         )
         verifyNothingValidated()
+    }
+
+    @Test
+    fun `GIVEN the order fails its checks WHEN signed THEN the failure is returned and not the order`() = runTest {
+        // Arrange
+        val error = PredictionOrderValidationError.StaleQuote(ageMillis = 120_000)
+        every { validateOrder(any(), any(), any(), any(), any(), any(), any()) } returns error.left()
+
+        // Act
+        val actual = interactor(request = createRequest())
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionOrderFailure.Invalid(error = error).left())
+    }
+
+    @Test
+    fun `GIVEN a signed order WHEN checked THEN the checks see that very order and its own market`() = runTest {
+        // Arrange
+        val signedOrder = slot<PredictionSignedOrder>()
+        val draft = slot<PredictionOrderDraft>()
+        val tokenId = slot<String>()
+        val isNegRisk = slot<Boolean>()
+        every {
+            validateOrder(capture(signedOrder), capture(draft), any(), capture(tokenId), capture(isNegRisk), any(), any())
+        } returns Unit.right()
+
+        // Act
+        interactor(request = createRequest())
+
+        // Assert
+        assertThat(signedOrder.captured).isEqualTo(SIGNED_ORDER)
+        assertThat(draft.captured).isEqualTo(DRAFT)
+        assertThat(tokenId.captured).isEqualTo(ASSET_ID)
+        assertThat(isNegRisk.captured).isFalse()
     }
 
     private fun createRequest() = PredictionSignRequest(
