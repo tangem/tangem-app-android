@@ -1,4 +1,4 @@
-package com.tangem.datasource.di.utils
+package com.tangem.datasource.remote
 
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
@@ -10,7 +10,6 @@ import com.tangem.core.remote.Timeouts
 import com.tangem.datasource.BuildConfig
 import com.tangem.core.remote.auth.SessionAuthAuthenticator
 import com.tangem.core.remote.auth.SessionAuthInterceptor
-import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.ApiEnvironmentConfig
@@ -26,7 +25,6 @@ import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
-import com.tangem.datasource.utils.addHeaders
 import com.tangem.utils.JsonStringValuesExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
@@ -55,7 +53,7 @@ import javax.inject.Singleton
  */
 @Suppress("LongParameterList")
 @Singleton
-internal class RetrofitApiBuilder @Inject constructor(
+internal class DefaultRetrofitFactory @Inject constructor(
     private val apiConfigs: ApiConfigs,
     private val apiConfigsManager: ApiConfigsManager,
     @NetworkMoshi private val moshi: Moshi,
@@ -195,17 +193,18 @@ internal class RetrofitApiBuilder @Inject constructor(
                 val readTimeout = tag?.method()?.getAnnotation(ReadTimeout::class.java)
                 val writeTimeout = tag?.method()?.getAnnotation(WriteTimeout::class.java)
 
-                chain
-                    .run {
-                        connectionTimeout?.let { withConnectTimeout(timeout = it.duration, unit = it.unit) } ?: this
-                    }
-                    .run {
-                        readTimeout?.let { withReadTimeout(timeout = it.duration, unit = it.unit) } ?: this
-                    }
-                    .run {
-                        writeTimeout?.let { withWriteTimeout(timeout = it.duration, unit = it.unit) } ?: this
-                    }
-                    .proceed(request)
+                var c = chain
+                if (connectionTimeout != null) {
+                    c = c.withConnectTimeout(timeout = connectionTimeout.duration, unit = connectionTimeout.unit)
+                }
+                if (readTimeout != null) {
+                    c = c.withReadTimeout(timeout = readTimeout.duration, unit = readTimeout.unit)
+                }
+                if (writeTimeout != null) {
+                    c = c.withWriteTimeout(timeout = writeTimeout.duration, unit = writeTimeout.unit)
+                }
+
+                c.proceed(request)
             },
         )
     }
