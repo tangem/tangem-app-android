@@ -31,6 +31,9 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
+    /* Project - Data */
+    implementation(projects.data.account)
+
     /* Project - Domain */
     api(projects.domain.account)
     api(projects.domain.account.status)
