@@ -8,6 +8,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -65,7 +66,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
             val (_, balance) = entry
             val wallet = balance.userWallet
             val filteredNetworks = wallet.filteredAvailableNetworks(availableNetworks)
-            val accounts = balance.accountsBalance.accountStatuses.filterIsInstance<AccountStatus.Personal>()
+            val accounts = balance.accountsBalance.accountStatuses.filterCryptoPortfolio()
             val availableToAddAccounts: Map<AccountId, AvailableToAddAccount> = accounts
                 .mapNotNull { accountStatus ->
                     val availableToAddAccount = accountStatus.getAvailableToAddAccount(wallet) ?: return@mapNotNull null
