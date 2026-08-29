@@ -99,7 +99,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             val (activationWallet, isWalletBackedUp) = activationState
 
             val totalFiatBalance = accountList.totalFiatBalance
-            val flattenCurrencies = accountList.flattenPersonalCurrencies()
+            val flattenCurrencies = accountList.flattenCurrencies()
 
             val paymentAccountStatus = accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Payment>()
