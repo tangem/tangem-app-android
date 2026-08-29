@@ -100,7 +100,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
     }
 
     private fun stakingAvailabilityFlow(): Flow<Map<CryptoCurrency, StakingAvailability>> = getAccountStatusListFlow()
-        .map { accountList -> accountList.flattenCurrencies().map(CryptoCurrencyStatus::currency) }
+        .map { accountList -> accountList.flattenPersonalCurrencies().map(CryptoCurrencyStatus::currency) }
         .distinctUntilChanged()
         .mapLatest { flattenCurrencies ->
             stakingAvailabilityListUseCase.invokeSync(
