@@ -17,7 +17,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -122,7 +122,7 @@ internal class PortfolioBlockModel @Inject constructor(
     }
 
     private fun AccountStatusList.filterByRawId(): List<CryptoCurrencyStatus> {
-        return accountStatuses.filterIsInstance<AccountStatus.Personal>().flatMap { accountStatus ->
+        return accountStatuses.filterCryptoPortfolio().flatMap { accountStatus ->
             accountStatus.tokenList.flattenCurrencies().filter { status ->
                 val statusRawId = status.currency.id.rawCurrencyId ?: return@filter false
                 getTokenIdIfL2Network(statusRawId.value) == currencyRawId.value
