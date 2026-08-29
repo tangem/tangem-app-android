@@ -14,7 +14,8 @@ internal class LoadingAccountTokenItemConverter(
 ) : Converter<AccountStatus.CryptoPortfolio, TokensListItemUM.Portfolio> {
 
     override fun convert(value: AccountStatus.CryptoPortfolio): TokensListItemUM.Portfolio {
-        val (account, currencies) = value
+        val account = value.account
+        val currencies = value.tokenList
 
         return TokensListPortfolioItemConverter(
             tokenItemUM = AccountCryptoPortfolioItemStateConverter(

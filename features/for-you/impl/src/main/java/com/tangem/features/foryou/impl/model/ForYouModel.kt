@@ -349,7 +349,7 @@ internal class ForYouModel @Inject constructor(
             userWalletsListRepository.selectedUserWallet,
             multiAccountStatusListSupplier.invokeAsMap(),
         ) { globalSelectedWallet, accountList ->
-            accountList[globalSelectedWallet?.walletId]?.flattenCurrencies().orEmpty()
+            accountList[globalSelectedWallet?.walletId]?.flattenPersonalCurrencies().orEmpty()
                 .map { it.currency.symbol.uppercase() }
                 .distinct()
                 .sorted()
@@ -438,7 +438,7 @@ internal class ForYouModel @Inject constructor(
 
     private suspend fun isCurrencyInPortfolio(rawCurrencyId: CryptoCurrency.RawID): Boolean {
         return availableAccountStatuses.first().values.any { accountStatusList ->
-            accountStatusList.flattenCurrencies().any { status ->
+            accountStatusList.flattenPersonalCurrencies().any { status ->
                 status.currency.id.rawCurrencyId == rawCurrencyId
             }
         }

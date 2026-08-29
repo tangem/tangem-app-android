@@ -19,7 +19,6 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.managetokens.GetManageTokensAllowedNetworksUseCase
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.AddCustomTokenMode
@@ -221,7 +220,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
                     }
 
                     val accounts = singleAccountStatusListSupplier(mode.userWalletId)
-                        .first().accountStatuses.filterCryptoPortfolio()
+                        .first().accountStatuses.filterIsInstance<AccountStatus.Personal>()
 
                     accounts
                         .find { account -> account.sameNodeAndNotMain() }
