@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.features.send.send.analytics.SendAnalyticEvents
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -29,6 +28,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.R
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -186,7 +187,7 @@ internal class NetworkSelectionModel @Inject constructor(
     ): CurrencyIconState.CryptoPortfolio? {
         if (statusList == null) return null
         val account = statusList.accountStatuses
-            .filterIsInstance<AccountStatus.Personal>()
+            .filterCryptoPortfolio()
             .find { it.accountId == accountId }
             ?.account ?: return null
         return AccountIconItemStateConverter(size = AccountIconSize.ExtraSmall).convert(account)
