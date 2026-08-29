@@ -5,7 +5,7 @@ import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentConverter
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorEntry
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
@@ -49,7 +49,7 @@ internal class UserPortfolioSectionsTransformer(
 
     private fun generateEntries(data: AvailableToAddData): List<TokenSelectorEntry> {
         return data.availableToAddWallets.values.flatMap { wallet ->
-            wallet.accounts.filterCryptoPortfolio().flatMap { accountStatus ->
+            wallet.accounts.filterIsInstance<AccountStatus.Personal>().flatMap { accountStatus ->
                 accountStatus.tokenList.flattenCurrencies()
                     .filter { status -> status.currency.matchesRawId(rawCurrencyId) }
                     .map { status ->
