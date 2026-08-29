@@ -1,4 +1,4 @@
-package com.tangem.datasource.connection
+package com.tangem.core.local.connection
 
 /** Network connection manager */
 interface NetworkConnectionManager {

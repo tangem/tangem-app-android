@@ -1,13 +1,16 @@
-package com.tangem.datasource.connection
+package com.tangem.datasource.local.connection
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import androidx.core.content.ContextCompat
+import com.tangem.core.local.connection.NetworkConnectionManager
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-internal class AndroidNetworkConnectionManager(
-    private val applicationContext: Context,
+internal class AndroidNetworkConnectionManager @Inject constructor(
+    @ApplicationContext private val applicationContext: Context,
 ) : NetworkConnectionManager {
 
     override val isOnline: Boolean
