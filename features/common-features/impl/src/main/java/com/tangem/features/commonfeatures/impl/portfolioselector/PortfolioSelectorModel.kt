@@ -14,7 +14,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
@@ -144,7 +143,7 @@ internal class PortfolioSelectorModel @Inject constructor(
                 isAuthMode = false,
                 endIcon = endIcon,
                 mode = UserWalletItemUMConverter.InfoField.Tokens(
-                    tokensCount = portfolio.accountsBalance.flattenCurrencies().size,
+                    tokensCount = portfolio.accountsBalance.flattenPersonalCurrencies().size,
                 ),
             ).convert(wallet)
             if (walletItemUM.isEnabled) {
@@ -194,7 +193,8 @@ internal class PortfolioSelectorModel @Inject constructor(
                 is PortfolioFetcher.Mode.Wallet -> Unit
                 is PortfolioFetcher.Mode.All -> {
                     if (portfolioData.balances.size > 1) {
-                        val isAllSelected = portfolio.accountsBalance.accountStatuses.filterCryptoPortfolio()
+                        val isAllSelected = portfolio.accountsBalance.accountStatuses
+                            .filterIsInstance<AccountStatus.Personal>()
                             .all { accountStatus -> accountStatus.account.accountId in selectedAccount }
                         val walletTitle = PortfolioSelectorItemUM.GroupTitle(
                             id = "GroupTitle ${wallet.walletId.stringValue}",
@@ -209,7 +209,9 @@ internal class PortfolioSelectorModel @Inject constructor(
                 }
             }
 
-            portfolio.accountsBalance.accountStatuses.filterCryptoPortfolio().forEach { accountStatus ->
+            val personalStatuses = portfolio.accountsBalance.accountStatuses
+                .filterIsInstance<AccountStatus.Personal>()
+            personalStatuses.forEach { accountStatus ->
                 val isEnabledByFeature = isEnabled(wallet, accountStatus)
                 val account = accountStatus.account
                 val accountBalance = accountStatus.tokenList.totalFiatBalance
@@ -260,14 +262,14 @@ internal class PortfolioSelectorModel @Inject constructor(
             innerSelectedAccounts.update { selected ->
                 val isAllSelected = if (isAccountMode) {
                     portfolio.accountsBalance.accountStatuses
-                        .filterCryptoPortfolio()
+                        .filterIsInstance<AccountStatus.Personal>()
                         .all { accountStatus -> accountStatus.account.accountId in selected }
                 } else {
                     portfolio.accountsBalance.mainAccount.account.accountId in selected
                 }
                 val walletAccounts = if (isAccountMode) {
                     portfolio.accountsBalance.accountStatuses
-                        .filterCryptoPortfolio()
+                        .filterIsInstance<AccountStatus.Personal>()
                         .mapTo(mutableSetOf()) { it.account.accountId }
                 } else {
                     mutableSetOf(portfolio.accountsBalance.mainAccount.account.accountId)
