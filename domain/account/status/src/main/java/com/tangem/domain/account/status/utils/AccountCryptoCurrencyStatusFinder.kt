@@ -9,6 +9,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatuses
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -81,7 +82,7 @@ internal object AccountCryptoCurrencyStatusFinder {
 
         return accountStatusList.getExpectedAccountStatuses(networks)
             .asSequence()
-            .filterIsInstance<AccountStatus.Personal>()
+            .filterCryptoPortfolio()
             .associate { accountStatus ->
                 val statuses = accountStatus.flattenCurrencies()
                     .filter { it.currency.id in currencyIds }
@@ -206,7 +207,7 @@ internal object AccountCryptoCurrencyStatusFinder {
 
     private fun AccountStatusList.findStatus(accountCurrency: AccountCryptoCurrency): AccountCryptoCurrencyStatus? {
         val accountStatus = accountStatuses
-            .filterIsInstance<AccountStatus.Personal>()
+            .filterCryptoPortfolio()
             .firstOrNull { it.account.accountId == accountCurrency.account.accountId }
             ?: return null
 

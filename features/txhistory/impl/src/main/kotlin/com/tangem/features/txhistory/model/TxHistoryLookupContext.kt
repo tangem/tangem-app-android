@@ -40,7 +40,7 @@ internal fun buildOwnAccountAddressMapAllNetworks(
     lists.forEach { accountList ->
         accountList.accountStatuses.forEach { status ->
             when (status) {
-                is AccountStatus.Personal -> status.flattenCurrencies().forEach { currencyStatus ->
+                is AccountStatus.CryptoPortfolio -> status.flattenCurrencies().forEach { currencyStatus ->
                     val address = currencyStatus.value.networkAddress?.defaultAddress?.value ?: return@forEach
                     val rawId = currencyStatus.currency.network.id.rawId
                     map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
@@ -55,7 +55,6 @@ internal fun buildOwnAccountAddressMapAllNetworks(
                 }
                 is AccountStatus.Virtual -> Unit
                 is AccountStatus.Prediction -> Unit
-                is AccountStatus.Joint -> Unit
             }
         }
     }

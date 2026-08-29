@@ -15,7 +15,7 @@ internal class LoadingAccountTokenItemConverter(
 
     override fun convert(value: AccountStatus.CryptoPortfolio): TokensListItemUM.Portfolio {
         val account = value.account
-        val currencies = value.tokenList
+        val tokenList = value.tokenList
 
         return TokensListPortfolioItemConverter(
             tokenItemUM = AccountCryptoPortfolioItemStateConverter(
@@ -25,7 +25,7 @@ internal class LoadingAccountTokenItemConverter(
             ).convert(TotalFiatBalance.Failed),
             isExpanded = true,
             isCollapsable = false,
-            tokens = currencies.flattenCurrencies()
+            tokens = tokenList.flattenCurrencies()
                 .map { LoadingTokenListItemConverter.convert(it.currency) }
                 .toPersistentList(),
         ).convert(Unit)
