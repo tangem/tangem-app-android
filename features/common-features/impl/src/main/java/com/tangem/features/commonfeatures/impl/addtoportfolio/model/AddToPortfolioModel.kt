@@ -20,7 +20,7 @@ import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -552,7 +552,7 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
 
 private fun AvailableToAddData.hasAnyAddedCurrency(rawCurrencyId: CryptoCurrency.RawID): Boolean {
     return availableToAddWallets.values.any { wallet ->
-        wallet.accounts.filterCryptoPortfolio().any { accountStatus ->
+        wallet.accounts.filterIsInstance<AccountStatus.Personal>().any { accountStatus ->
             accountStatus.tokenList.flattenCurrencies().any { status ->
                 val id = status.currency.id.rawCurrencyId ?: return@any false
                 getTokenIdIfL2Network(id.value) == rawCurrencyId.value
