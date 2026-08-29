@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.accounts
+package com.tangem.data.account.store
 
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
