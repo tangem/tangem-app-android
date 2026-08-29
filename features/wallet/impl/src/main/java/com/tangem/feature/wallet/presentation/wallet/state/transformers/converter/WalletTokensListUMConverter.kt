@@ -162,7 +162,7 @@ internal class WalletTokensListUMConverter(
     private fun getOrganizeButtonUM(accountList: AccountStatusList): TangemButtonUM? {
         val textRes = R.string.main_add_and_manage_tokens
         val iconRes = R.drawable.ic_filter_default_24
-        return if (accountList.flattenPersonalCurrencies().isNotEmpty() && !selectedWallet.isSingleCurrency()) {
+        return if (accountList.flattenCurrencies().isNotEmpty() && !selectedWallet.isSingleCurrency()) {
             TangemButtonUM(
                 text = resourceReference(textRes),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,

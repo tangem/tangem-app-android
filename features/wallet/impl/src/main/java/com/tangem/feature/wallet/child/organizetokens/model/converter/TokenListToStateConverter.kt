@@ -5,7 +5,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
-import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListUM
@@ -60,7 +60,7 @@ internal class AccountTokenItemConverter(
                 isGrouped = isGrouping,
                 items = value.accountStatuses
                     .asSequence()
-                    .filterIsInstance<AccountStatus.Personal>()
+                    .filterCryptoPortfolio()
                     .flatMap { accountStatus ->
                         if (accountStatus.tokenList != TokenList.Empty) {
                             buildList {
