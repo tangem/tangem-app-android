@@ -82,4 +82,16 @@ internal class TangemPayCashbackDateFormatterTest {
         // Assert
         assertThat(actual).isEqualTo("26.09.2026")
     }
+
+    @Test
+    fun `GIVEN locale with slash date pattern WHEN formatNumericDate THEN dot-separated date`() {
+        // Arrange
+        every { DateFormat.getBestDateTimePattern(any(), "dd.MM.yyyy") } returns "MM/dd/yyyy"
+
+        // Act
+        val actual = formatter.formatNumericDate(DateTime.parse("2026-10-19"))
+
+        // Assert
+        assertThat(actual).isEqualTo("19.10.2026")
+    }
 }
