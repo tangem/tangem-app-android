@@ -3,6 +3,7 @@ package com.tangem.features.commonfeatures.impl.portfolioselector
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
@@ -45,7 +46,7 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
 
             data.balances.forEach { (_, balance) ->
                 val accounts = balance.accountsBalance.accountStatuses
-                    .filterIsInstance<AccountStatus.Personal>()
+                    .filterCryptoPortfolio()
                     .filterTo(mutableSetOf()) { it.account.accountId in accountIds }
                     .map { balance.userWallet to it }
                 result.addAll(accounts)
