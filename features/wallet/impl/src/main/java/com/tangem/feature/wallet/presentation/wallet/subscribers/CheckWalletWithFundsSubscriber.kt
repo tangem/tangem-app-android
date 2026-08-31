@@ -29,7 +29,7 @@ internal class CheckWalletWithFundsSubscriber @AssistedInject constructor(
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
         return getAccountStatusListFlow()
-            .mapNotNull { it.flattenCurrencies() }
+            .mapNotNull { it.flattenPersonalCurrencies() }
             .distinctUntilChanged()
             .onEach { walletWithFundsChecker.check(userWalletId = userWallet.walletId, currencies = it) }
             .flowOn(dispatchers.default)
