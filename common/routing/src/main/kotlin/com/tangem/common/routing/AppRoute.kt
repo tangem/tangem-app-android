@@ -504,9 +504,12 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/joint_account_join/$inviteId")
 
     @Serializable
+    /** [accountId] is null only in navigation state saved before the field existed: the screen falls back
+     * to the wallet's first joint account. */
     data class JointAccountMembers(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}")
+        val accountId: String? = null,
+    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}" + accountId?.let { "/$it" }.orEmpty())
 
     @Serializable
     data object JointSupportedNetworks : AppRoute(path = "/joint_account_supported_networks")
