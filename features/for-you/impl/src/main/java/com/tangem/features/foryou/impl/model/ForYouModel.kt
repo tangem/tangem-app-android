@@ -349,7 +349,7 @@ internal class ForYouModel @Inject constructor(
             userWalletsListRepository.selectedUserWallet,
             multiAccountStatusListSupplier.invokeAsMap(),
         ) { globalSelectedWallet, accountList ->
-            accountList[globalSelectedWallet?.walletId]?.flattenPersonalCurrencies().orEmpty()
+            accountList[globalSelectedWallet?.walletId]?.flattenCurrencies().orEmpty()
                 .map { it.currency.symbol.uppercase() }
                 .distinct()
                 .sorted()

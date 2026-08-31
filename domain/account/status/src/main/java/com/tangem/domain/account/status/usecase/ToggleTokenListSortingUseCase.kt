@@ -35,7 +35,7 @@ class ToggleTokenListSortingUseCase(
     suspend operator fun invoke(
         accountStatusList: AccountStatusList,
     ): Either<TokenListSortingError, AccountStatusList> = eitherOn(dispatchers.default) {
-        ensure(accountStatusList.flattenPersonalCurrencies().isNotEmpty()) {
+        ensure(accountStatusList.flattenCurrencies().isNotEmpty()) {
             raise(TokenListSortingError.TokenListIsEmpty)
         }
 
@@ -45,9 +45,9 @@ class ToggleTokenListSortingUseCase(
 
         accountStatusList.copy(
             accountStatuses = accountStatusList.accountStatuses.map { account ->
-                if (account !is AccountStatus.Personal) return@map account
+                if (account !is AccountStatus.CryptoPortfolio) return@map account
 
-                account.copy(tokenList = account.tokenList.sortByBalance())
+                account.copySealed(tokenList = account.tokenList.sortByBalance())
             },
             sortType = TokensSortType.BALANCE,
         )
