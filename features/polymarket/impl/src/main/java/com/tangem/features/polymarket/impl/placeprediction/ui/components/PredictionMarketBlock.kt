@@ -15,6 +15,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
+import com.tangem.utils.StringsSigns.DASH_SIGN
 
 @Composable
 internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = Modifier) {
@@ -43,5 +44,8 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
     )
 }
 
-private fun MarketHeaderUM.outcomeLabel(): String =
-    outcomePriceCents?.let { cents -> "$outcomeTitle $cents${PolymarketConst.CENT_SIGN}" } ?: outcomeTitle
+private fun MarketHeaderUM.outcomeLabel(): String = when {
+    isPriceUnavailable -> "$outcomeTitle $DASH_SIGN"
+    outcomePriceCents != null -> "$outcomeTitle $outcomePriceCents${PolymarketConst.CENT_SIGN}"
+    else -> outcomeTitle
+}
