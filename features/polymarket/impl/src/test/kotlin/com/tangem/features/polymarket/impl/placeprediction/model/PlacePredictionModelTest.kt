@@ -112,7 +112,7 @@ internal class PlacePredictionModelTest {
         coEvery { getQuoteUseCase(request = any()) } returns createQuote().right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
-        coEvery { placeOrderUseCase(any(), any()) } returns createPlaceResult().right()
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
     }
 
     @AfterEach
@@ -518,7 +518,7 @@ internal class PlacePredictionModelTest {
 
         // Assert
         coVerify(exactly = 1) { signOrderInteractor(request = any()) }
-        coVerify(exactly = 1) { placeOrderUseCase(any(), any()) }
+        coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
 
         model.onDestroy()
     }
@@ -531,7 +531,7 @@ internal class PlacePredictionModelTest {
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         var submitWhilePosting: SubmitUM? = null
-        coEvery { placeOrderUseCase(any(), any()) } answers {
+        coEvery { placeOrderUseCase(any(), any(), any()) } answers {
             submitWhilePosting = model.uiState.value.submit
             createPlaceResult().right()
         }
@@ -569,7 +569,7 @@ internal class PlacePredictionModelTest {
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
             verify(exactly = 0) { messageSender.send(any()) }
-            coVerify(exactly = 0) { placeOrderUseCase(any(), any()) }
+            coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
 
             model.onDestroy()
         }
@@ -593,7 +593,7 @@ internal class PlacePredictionModelTest {
 
         // Assert
         assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-        coVerify(exactly = 0) { placeOrderUseCase(any(), any()) }
+        coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
         verify { messageSender.send(any()) }
 
         model.onDestroy()
@@ -607,7 +607,7 @@ internal class PlacePredictionModelTest {
             advanceUntilIdle()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            coEvery { placeOrderUseCase(any(), any()) } returns
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns
                 PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
 
             // Act
@@ -632,7 +632,7 @@ internal class PlacePredictionModelTest {
             advanceUntilIdle()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            coEvery { placeOrderUseCase(any(), any()) } returns
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns
                 PredictionPlaceOrderError.Ambiguous(detail = "timeout").left()
 
             // Act
@@ -643,7 +643,7 @@ internal class PlacePredictionModelTest {
             assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
             assertThat((model.uiState.value.submit as SubmitUM.Result).result)
                 .isInstanceOf(PlaceResultUM.Submitted::class.java)
-            coVerify(exactly = 1) { placeOrderUseCase(any(), any()) }
+            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
 
             model.onDestroy()
         }
@@ -743,7 +743,7 @@ internal class PlacePredictionModelTest {
         advanceUntilIdle()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        coEvery { placeOrderUseCase(any(), any()) } coAnswers {
+        coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
             // Act
             model.onCloseClick()
             model.onBackClick()
