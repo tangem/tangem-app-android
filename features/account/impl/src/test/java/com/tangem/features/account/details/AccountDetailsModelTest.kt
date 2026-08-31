@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import com.tangem.domain.core.utils.lceLoading
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class AccountDetailsModelTest {
@@ -70,7 +71,12 @@ internal class AccountDetailsModelTest {
     ) = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
-        val status = AccountStatus.Joint(account = account, value = testModel.statusValue)
+        val status = AccountStatus.Joint(
+            account = account,
+            value = testModel.statusValue,
+            tokenList = TokenList.Empty,
+            priceChangeLce = lceLoading(),
+        )
         every { singleAccountStatusSupplier(any()) } returns flowOf(status)
         givenWallet(isMultiCurrency = true)
 
@@ -167,7 +173,9 @@ internal class AccountDetailsModelTest {
     private fun activeStatus(account: Account.Joint): AccountStatus.Joint {
         return AccountStatus.Joint(
             account = account,
-            value = JointAccountStatusValue.Active(source = StatusSource.ACTUAL),
+            value = JointAccountStatusValue.Active(source = StatusSource.ACTUAL, totalMembers = 2, safeAddress = "0x5afe"),
+            tokenList = TokenList.Empty,
+            priceChangeLce = lceLoading(),
         )
     }
 
@@ -215,8 +223,8 @@ internal class AccountDetailsModelTest {
 
     private fun provideTestModels() = listOf(
         InactiveJointModel(statusValue = JointAccountStatusValue.Loading),
-        InactiveJointModel(statusValue = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL)),
-        InactiveJointModel(statusValue = JointAccountStatusValue.Confirming(source = StatusSource.ACTUAL)),
+        InactiveJointModel(statusValue = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2)),
+        InactiveJointModel(statusValue = JointAccountStatusValue.Confirming(source = StatusSource.ACTUAL, totalMembers = 2)),
         InactiveJointModel(statusValue = JointAccountStatusValue.Error.Unavailable),
     )
 }

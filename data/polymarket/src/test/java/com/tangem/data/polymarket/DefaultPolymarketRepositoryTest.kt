@@ -620,6 +620,42 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a refusal inside a 2xx WHEN placeOrder THEN it is a rejection and not a result`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
+            placeOrderResponse(isSuccess = false, errorMessage = "not enough balance"),
+        )
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+        )
+
+        // Assert
+        assertThat(result.leftOrNull())
+            .isEqualTo(PredictionPlaceOrderError.Rejected(detail = "not enough balance"))
+    }
+
+    @Test
+    fun `GIVEN a 5xx WHEN placeOrder THEN the outcome is ambiguous rather than retryable`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns
+            httpError(code = Code.INTERNAL_SERVER_ERROR, body = "upstream timeout")
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
+    }
+
+    @Test
     fun `GIVEN a filled response WHEN placeOrder THEN the fill amounts come from the exchange`() = runTest {
         // Arrange
         coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
@@ -701,7 +737,7 @@ internal class DefaultPolymarketRepositoryTest {
         coEvery {
             clobApi.getBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
         } returns ApiResponse.Success(
-            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = "1000000"),
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowances = mapOf(SPENDER to "1000000")),
         )
 
         // Act
@@ -709,7 +745,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = BigDecimal("1")).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowances = mapOf(SPENDER to BigDecimal("1"))).right(),
         )
         assertThat(assetType.captured).isEqualTo("COLLATERAL")
         assertThat(signatureType.captured).isEqualTo(3)
@@ -721,7 +757,7 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN no allowance reported WHEN getBalanceAllowance THEN leaves it absent rather than zero`() = runTest {
         // Arrange
         coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = null),
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowances = null),
         )
 
         // Act
@@ -729,7 +765,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = null).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowances = null).right(),
         )
     }
 
@@ -738,7 +774,7 @@ internal class DefaultPolymarketRepositoryTest {
         runTest {
             // Arrange
             coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-                PolymarketBalanceAllowanceResponse(balance = "0", allowance = "1000000000"),
+                PolymarketBalanceAllowanceResponse(balance = "0", allowances = mapOf(SPENDER to "1000000000")),
             )
 
             // Act
@@ -746,16 +782,37 @@ internal class DefaultPolymarketRepositoryTest {
 
             // Assert
             assertThat(result).isEqualTo(
-                PolymarketBalanceAllowance(balance = BigDecimal.ZERO, allowance = BigDecimal("1000")).right(),
+                PolymarketBalanceAllowance(
+                    balance = BigDecimal.ZERO,
+                    allowances = mapOf(SPENDER to BigDecimal("1000")),
+                ).right(),
             )
         }
+
+    @Test
+    fun `GIVEN a spender with no allowance WHEN getBalanceAllowance THEN the zero survives as itself`() = runTest {
+        // Arrange
+        coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+            PolymarketBalanceAllowanceResponse(
+                balance = "2950011",
+                allowances = mapOf(SPENDER to "1000000000", "0xD91E80cF" to "0"),
+            ),
+        )
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result.getOrNull()?.allowances)
+            .containsExactly(SPENDER, BigDecimal("1000"), "0xd91e80cf", BigDecimal.ZERO)
+    }
 
     @Test
     fun `GIVEN an unparsable balance WHEN getBalanceAllowance THEN returns Unknown instead of a wrong amount`() =
         runTest {
             // Arrange
             coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowance = null),
+                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowances = null),
             )
 
             // Act
@@ -882,6 +939,7 @@ internal class DefaultPolymarketRepositoryTest {
         ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<T>
 
     private companion object {
+        const val SPENDER = "0xe111180000d2663c0091e4f400237545b87b996b"
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
@@ -938,14 +996,16 @@ internal class DefaultPolymarketRepositoryTest {
             status: String? = "live",
             makingAmount: String? = null,
             takingAmount: String? = null,
+            isSuccess: Boolean = true,
+            errorMessage: String? = null,
         ): PolymarketPlaceOrderResponse = PolymarketPlaceOrderResponse(
-            isSuccess = true,
+            isSuccess = isSuccess,
             orderId = "0xorder",
             status = status,
             makingAmount = makingAmount,
             takingAmount = takingAmount,
             transactionHashes = listOf("0xtx"),
-            errorMessage = null,
+            errorMessage = errorMessage,
         )
 
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
