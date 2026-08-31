@@ -23,10 +23,11 @@ interface SessionTokenRefresher {
     suspend fun refresh(): Either<SessionRefreshError, SessionTokens>
 
     /**
-     * Ensures an authenticated session exists: returns the stored session if present, otherwise
-     * establishes one via [refresh] (which falls to full re-authentication when there is no refresh
-     * token). Unlike [refresh] it does not rotate an already-valid session, so it is safe to call
-     * defensively before a session-authenticated flow or after device registration.
+     * Ensures a usable authenticated session exists: returns the stored session when its access token
+     * is still valid, otherwise establishes a fresh one via [refresh] (which rotates via the refresh
+     * token, or falls to full re-authentication when there is none). Unlike [refresh] it does not
+     * rotate an already-valid session, so it is safe to call defensively before a session-authenticated
+     * flow or after device registration.
      */
     suspend fun ensureSession(): Either<SessionRefreshError, SessionTokens>
 }
