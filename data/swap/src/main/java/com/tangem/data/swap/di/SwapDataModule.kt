@@ -8,6 +8,7 @@ import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.swap.DefaultSwapErrorResolver
 import com.tangem.data.swap.DefaultSwapRepositoryV2
 import com.tangem.data.swap.DefaultSwapTransactionRepository
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
@@ -46,7 +47,7 @@ internal object SwapDataModule {
         tangemExpressApi: TangemExpressApi,
         expressRepository: ExpressRepository,
         coroutineDispatcher: CoroutineDispatcherProvider,
-        appPreferencesStore: AppPreferencesStore,
+        expressUtils: ExpressUtils,
         dataSignatureVerifier: DataSignatureVerifier,
         singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
@@ -57,7 +58,7 @@ internal object SwapDataModule {
             tangemExpressApi = tangemExpressApi,
             expressRepository = expressRepository,
             coroutineDispatcher = coroutineDispatcher,
-            appPreferencesStore = appPreferencesStore,
+            expressUtils = expressUtils,
             dataSignatureVerifier = dataSignatureVerifier,
             moshi = moshi,
             singleQuoteStatusSupplier = singleQuoteStatusSupplier,
