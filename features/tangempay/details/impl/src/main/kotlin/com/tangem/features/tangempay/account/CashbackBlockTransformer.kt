@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.defaultAmount
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -77,16 +78,16 @@ internal class CashbackBlockTransformer(
     private fun buildWidget(enabled: CashbackSummary.Enabled): CashbackBlockUM.Widget {
         val cashback = enabled.cashback
         val currency = getJavaCurrencyByCode(cashback.currency)
+        val isZero = cashback.confirmedAmount.isZero()
         val amount = cashback.confirmedAmount.format {
-            fiat(currency.currencyCode, currency.symbol).defaultAmount()
+            val fiatFormat = fiat(currency.currencyCode, currency.symbol)
+            if (isZero) fiatFormat.anyDecimals(decimals = 0) else fiatFormat.defaultAmount()
         }
         val month = dateFormatter.formatMonth(cashback.period.year, cashback.period.month)
         val isNegative = cashback.confirmedAmount.isNegative()
         val subtitle = when {
             isNegative -> resourceReference(R.string.tangempay_cashback_refund_banner)
-            cashback.confirmedAmount.isZero() -> resourceReference(
-                R.string.tangempay_cashback_widget_empty_description,
-            )
+            isZero -> resourceReference(R.string.tangempay_cashback_widget_empty_description)
             else -> {
                 val window = dateFormatter.formatWindow(cashback.period.payoutStart, cashback.period.payoutEnd)
                 window?.let { resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(it)) }
