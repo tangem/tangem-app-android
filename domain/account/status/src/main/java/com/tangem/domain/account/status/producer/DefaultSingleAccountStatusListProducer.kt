@@ -292,17 +292,17 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     private fun buildCryptoPortfolioStatus(
-        account: Account.CryptoPortfolio,
+        account: Account.Personal,
         currencyStatusMap: Map<AccountCurrencyId, CryptoCurrencyStatus>,
         accountList: AccountList,
-    ): AccountStatus.CryptoPortfolio {
+    ): AccountStatus.Personal {
         if (account.cryptoCurrencies.isEmpty()) return account.toEmptyAccountStatus()
 
         val statuses: List<CryptoCurrencyStatus> = account.cryptoCurrencies.map { currency ->
             val acId = account.accountId to currency.id
             currencyStatusMap[acId] ?: currency.toLoadingCurrencyStatus()
         }
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenListFactory.create(
                 statuses = statuses,
@@ -474,7 +474,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         )
     }
 
-    private fun Account.CryptoPortfolio.toEmptyAccountStatus() = AccountStatus.CryptoPortfolio(
+    private fun Account.Personal.toEmptyAccountStatus() = AccountStatus.Personal(
         account = this,
         tokenList = TokenList.Empty,
         priceChangeLce = PriceChange(
@@ -495,7 +495,6 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
-                is AccountStatus.Joint -> accountStatus.tokenList.totalFiatBalance
             }
         }
     }
@@ -510,7 +509,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                             CryptoCurrencyStatus(currency = it, value = CryptoCurrencyStatus.Loading)
                         }
 
-                        AccountStatus.CryptoPortfolio(
+                        AccountStatus.Personal(
                             account = account,
                             tokenList = TokenListFactory.create(
                                 statuses = currencyStatuses,

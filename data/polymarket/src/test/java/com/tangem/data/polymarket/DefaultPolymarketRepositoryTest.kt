@@ -11,6 +11,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PredictionPlaceOrderErrorResolver
@@ -592,6 +593,7 @@ internal class DefaultPolymarketRepositoryTest {
                 ownerAddress = OWNER,
                 credentials = SYNC_CREDENTIALS,
                 signedOrder = signedOrder(),
+                isNegRisk = false,
             )
 
             // Assert
@@ -613,10 +615,29 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
         assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
+    }
+
+    @Test
+    fun `GIVEN an order signed for the other exchange WHEN placeOrder THEN nothing is sent`() = runTest {
+        // Arrange
+        val standardExchangeOrder = signedOrder(signature = standardExchangeSignature())
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = standardExchangeOrder,
+            isNegRisk = true,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.NotSent::class.java)
+        coVerify(exactly = 0) { clobApi.placeOrder(any(), any()) }
     }
 
     @Test
@@ -631,6 +652,7 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
@@ -649,6 +671,7 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
@@ -667,6 +690,7 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
@@ -975,9 +999,17 @@ internal class DefaultPolymarketRepositoryTest {
             isLive = false,
         )
 
-        fun signedOrder(): PredictionSignedOrder = PredictionSignedOrder(
+        fun standardExchangeSignature(): String = "0x" + "11".repeat(n = 65) +
+            PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = false)
+                .joinToString(separator = "") { byte -> "%02x".format(byte) }
+
+        fun signedOrder(
+            signature: String = standardExchangeSignature(),
+            salt: Long = 1_234_567_890L,
+        ): PredictionSignedOrder =
+            PredictionSignedOrder(
             order = PredictionOrder(
-                salt = BigInteger("1234567890"),
+                salt = salt,
                 maker = "0xMaker",
                 signer = "0xSigner",
                 tokenId = BigInteger("7"),
@@ -989,7 +1021,7 @@ internal class DefaultPolymarketRepositoryTest {
                 metadata = "0xmeta",
                 builder = "0xbuilder",
             ),
-            signature = "0xsig",
+            signature = signature,
         )
 
         fun placeOrderResponse(
