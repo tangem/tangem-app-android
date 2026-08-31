@@ -80,6 +80,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.jointaccount.main.JointAccountMainUM
+import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
@@ -113,7 +114,7 @@ internal fun WalletScreen(
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
@@ -203,7 +204,7 @@ private fun WalletContent(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
@@ -453,7 +454,7 @@ private fun BaseScaffoldWithMarkets(
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -606,7 +607,7 @@ private fun ShtorkaScaffoldWithMarkets(
     state: WalletScreenState,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
@@ -656,6 +657,15 @@ private fun ShtorkaScaffoldWithMarkets(
         val onExpandSheet = remember(shtorkaState) {
             { shtorkaState.animateTo(TangemShtorka.Detent.Full) }
         }
+        val sheetDetent = remember(shtorkaState) {
+            derivedStateOf {
+                when (shtorkaState.targetDetent) {
+                    ShtorkaCollapsedDetent -> FeedSheetDetent.PILL
+                    TangemShtorka.Detent.Full -> FeedSheetDetent.FULL
+                    else -> FeedSheetDetent.PARTIAL
+                }
+            }
+        }
 
         Box(modifier = modifier.fillMaxSize()) {
             content(contentPadding, sheetHandle)
@@ -679,7 +689,7 @@ private fun ShtorkaScaffoldWithMarkets(
                 showDragHandle = false,
                 header = {
                     ShtorkaSheetHeader {
-                        shtorkaHeaderContent(onExpandSheet)
+                        shtorkaHeaderContent(sheetDetent, onExpandSheet)
                     }
                 },
             ) {
@@ -942,7 +952,7 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                 ) {
                 }
             },
-            shtorkaHeaderContent = {},
+            shtorkaHeaderContent = { _, _ -> },
             shtorkaContent = {},
             legacyBottomSheetContent = {
                 Text("Markets Content")
