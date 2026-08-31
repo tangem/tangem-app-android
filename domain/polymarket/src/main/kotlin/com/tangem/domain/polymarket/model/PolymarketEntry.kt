@@ -17,6 +17,13 @@ sealed interface PolymarketEntry {
     data object Onboarded : PolymarketEntry
 
     /**
+     * The account is ready on the backend, but this device holds no credentials to sign with — a new phone, a
+     * reinstalled app, or keys cleared with a session. Nothing has to be built: the run signs once and
+     * re-derives the credentials, leaving the deposit wallet and its funds untouched.
+     */
+    data object Reconnect : PolymarketEntry
+
+    /**
      * Nothing is decided yet, because deciding needs the owner address and this device has not derived it.
      * Deriving opens a card session or unlocks the wallet, and neither may happen unasked — so the Welcome
      * screen is shown and the real decision is taken when the user presses its action button.
