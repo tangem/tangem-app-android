@@ -39,6 +39,7 @@ import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
+import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.feed.nav.FeedTabSet
 import com.tangem.features.feed.ui.v2.FeedSearchBarHeader
 import com.tangem.features.feed.v2.FeedV2Component
@@ -91,7 +92,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     }
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val stackState by stack.subscribeAsState()
         val active = stackState.active
 
@@ -120,7 +121,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 )
             } else {
                 screen.Header(
-                    bottomSheetState = bottomSheetState,
+                    sheetDetent = sheetDetent,
                     onExpandSheet = onExpandSheet,
                     modifier = Modifier,
                 )
