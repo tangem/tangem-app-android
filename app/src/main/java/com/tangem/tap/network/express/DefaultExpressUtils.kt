@@ -1,37 +1,34 @@
-package com.tangem.datasource.exchangeservice.swap
+package com.tangem.tap.network.express
 
 import com.tangem.common.CardIdRangeDec
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.models.wallet.UserWallet
-import kotlinx.coroutines.runBlocking
+import com.tangem.grow.datasource.express.ExpressUtils
+import javax.inject.Inject
 
-object ExpressUtils {
-    private const val BATCH_ID_CHANGENOW = "BB000013"
-    private const val BATCH_ID_PARTNER = "AF990015"
+internal class DefaultExpressUtils @Inject constructor(
+    private val appPreferencesStore: AppPreferencesStore,
+) : ExpressUtils {
 
-    fun getRefCode(userWallet: UserWallet?, appPreferencesStore: AppPreferencesStore): String? {
+    override suspend fun getRefCode(userWallet: UserWallet?): String? {
         return when (userWallet) {
-            is UserWallet.Cold -> {
-                when {
-                    isRing(userWallet, appPreferencesStore) -> "ring"
-                    isChangeNow(userWallet) -> "ChangeNow"
-                    isPartner(userWallet) -> "partner"
-                    else -> null
-                }
+            is UserWallet.Cold -> when {
+                isRing(userWallet) -> "ring"
+                isChangeNow(userWallet) -> "ChangeNow"
+                isPartner(userWallet) -> "partner"
+                else -> null
             }
             else -> null
         }
     }
 
-    private fun isRing(selectedUserWallet: UserWallet.Cold, appPreferencesStore: AppPreferencesStore): Boolean {
-        val addedWalletsWithRings = runBlocking {
-            appPreferencesStore.getSyncOrDefault(
-                key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY,
-                default = emptySet(),
-            )
-        }
+    private suspend fun isRing(selectedUserWallet: UserWallet.Cold): Boolean {
+        val addedWalletsWithRings = appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY,
+            default = emptySet(),
+        )
 
         return addedWalletsWithRings.contains(selectedUserWallet.walletId.stringValue)
     }
@@ -47,5 +44,10 @@ object ExpressUtils {
 
     private fun isPartner(selectedUserWallet: UserWallet.Cold): Boolean {
         return selectedUserWallet.scanResponse.card.batchId == BATCH_ID_PARTNER
+    }
+
+    private companion object {
+        const val BATCH_ID_CHANGENOW = "BB000013"
+        const val BATCH_ID_PARTNER = "AF990015"
     }
 }
