@@ -91,7 +91,7 @@ internal class PolymarketErc7739SignatureBuilderTest {
     }
 
     private fun createOrder(): PredictionOrder = PredictionOrder(
-        salt = BigInteger("1234567890"),
+        salt = 1_234_567_890L,
         maker = DEPOSIT_WALLET,
         signer = "0x4130efa9e628a991520be60f2e948a4f9be52fbc",
         tokenId = BigInteger("1116017998421700000000000000000000000000000000000000000000000000047"),

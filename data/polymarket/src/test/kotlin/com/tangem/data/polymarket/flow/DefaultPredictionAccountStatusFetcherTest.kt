@@ -107,7 +107,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
         coEvery { checkGeoblock.invoke() } returns false.right()
         val store = createStore(testScope = this)
 
@@ -131,7 +131,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
         coEvery { checkGeoblock.invoke() } returns true.right()
         val store = createStore(testScope = this)
 
@@ -313,7 +313,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
         coEvery { checkGeoblock.invoke() } returns PolymarketOnboardingError.Unknown.left()
         val store = createStore(testScope = this)
 
@@ -363,7 +363,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             coEvery { getWalletStatus.invoke(ADDRESSES) } returns
                 walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
             coEvery { getBalance.invoke(ADDRESSES) } returns
-                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
             coEvery { checkGeoblock.invoke() } returns false.right()
 
             // Act
@@ -544,7 +544,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             isTradingAllowed = true,
         )
 
-        // The constructor is internal to the domain module, and the fetcher only passes the pair around
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
 
         fun walletState(status: PolymarketWalletStatus) = PolymarketWalletState(
