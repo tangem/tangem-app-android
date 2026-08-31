@@ -11,12 +11,5 @@ internal sealed interface TangemPayDailyLimitBlockState {
     data class Content(
         val limit: String,
         val onChangeClick: () -> Unit,
-    ) : TangemPayDailyLimitBlockState {
-        companion object {
-            fun stub() = Content(
-                limit = "$5,000",
-                onChangeClick = {},
-            )
-        }
-    }
+    ) : TangemPayDailyLimitBlockState
 }
