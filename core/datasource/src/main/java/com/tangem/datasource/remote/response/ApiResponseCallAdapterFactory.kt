@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.response
+package com.tangem.datasource.remote.response
 
 import com.tangem.core.remote.response.ApiResponse
 
@@ -9,7 +9,7 @@ import retrofit2.Retrofit
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
-class ApiResponseCallAdapterFactory private constructor(
+internal class ApiResponseCallAdapterFactory private constructor(
     private val analyticsErrorHandler: AnalyticsErrorHandler,
 ) : CallAdapter.Factory() {
 
