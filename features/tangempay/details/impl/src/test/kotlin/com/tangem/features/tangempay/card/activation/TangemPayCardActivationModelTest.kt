@@ -273,7 +273,7 @@ internal class TangemPayCardActivationModelTest {
         // Assert
         verify(exactly = testModel.pops) { router.pop() }
         verify(exactly = testModel.accountPops) {
-            router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails::class)
+            router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
         }
     }
 
