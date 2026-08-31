@@ -235,7 +235,7 @@ internal class CashbackBlockTransformerTest {
             amount = BigDecimal("-2.15"),
             expectedAmount = "-$2.15",
             expectedNegative = true,
-            expectedSubtitle = resourceReference(R.string.tangempay_cashback_refund_banner),
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_refund_description),
         ),
         AmountCase(
             description = "zero -> no decimals, start spending subtitle",

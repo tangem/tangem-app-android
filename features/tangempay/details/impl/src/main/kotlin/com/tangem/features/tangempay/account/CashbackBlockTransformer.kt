@@ -86,7 +86,7 @@ internal class CashbackBlockTransformer(
         val month = dateFormatter.formatMonth(cashback.period.year, cashback.period.month)
         val isNegative = cashback.confirmedAmount.isNegative()
         val subtitle = when {
-            isNegative -> resourceReference(R.string.tangempay_cashback_refund_banner)
+            isNegative -> resourceReference(R.string.tangempay_cashback_widget_refund_description)
             isZero -> resourceReference(R.string.tangempay_cashback_widget_empty_description)
             else -> {
                 val window = dateFormatter.formatWindow(cashback.period.payoutStart, cashback.period.payoutEnd)
