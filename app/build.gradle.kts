@@ -250,6 +250,7 @@ dependencies {
     implementation(projects.data.promo)
     implementation(projects.data.hotWallet)
     implementation(projects.data.cloudBackup)
+    implementation(projects.data.socialLogin)
     implementation(projects.data.news)
     implementation(projects.data.earn)
     implementation(projects.data.search)
