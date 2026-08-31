@@ -231,7 +231,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         advanceUntilIdle()
         val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
         val usdcPolygonStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-        val cryptoPortfolioStatus: AccountStatus.CryptoPortfolio = mockk(relaxed = true)
+        val cryptoPortfolioStatus: AccountStatus.Personal = mockk(relaxed = true)
         val btcStatus: CryptoCurrencyStatus = mockk(relaxed = true)
 
         // Act
@@ -324,7 +324,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
-        val cryptoPortfolioStatus: AccountStatus.CryptoPortfolio = mockk(relaxed = true)
+        val cryptoPortfolioStatus: AccountStatus.Personal = mockk(relaxed = true)
         val btcStatus: CryptoCurrencyStatus = mockk(relaxed = true)
 
         // Act
@@ -341,7 +341,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
-        val cryptoPortfolioStatus: AccountStatus.CryptoPortfolio = mockk(relaxed = true)
+        val cryptoPortfolioStatus: AccountStatus.Personal = mockk(relaxed = true)
         val someStatus: CryptoCurrencyStatus = mockk(relaxed = true)
 
         // Act
