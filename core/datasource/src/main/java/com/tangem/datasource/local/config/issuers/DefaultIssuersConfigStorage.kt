@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.config.issuers
 
-import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.core.local.assets.AssetLoader
+import com.tangem.core.local.assets.loadList
 import com.tangem.datasource.local.config.issuers.models.Issuer
 import com.tangem.core.local.datastore.RuntimeStateStore
 
