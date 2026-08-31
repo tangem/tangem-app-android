@@ -101,12 +101,12 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
             params = TangemPayOrderCardDataComponent.Params(
                 userWalletId = params.userWalletId,
                 intent = config.intent,
-                onOrderAccepted = { email, orderedProductInstanceId ->
+                onOrderAccepted = { email ->
+                    model.onOrderAccepted()
                     stackNavigation.pushNew(
                         TangemPayOrderCardInnerRoute.Success(
                             deliveryEtaMaxBusinessDays = config.deliveryEtaMaxBusinessDays,
                             email = email,
-                            orderedProductInstanceId = orderedProductInstanceId,
                         ),
                     )
                 },
@@ -118,7 +118,7 @@ internal class DefaultTangemPayOrderCardComponent @AssistedInject constructor(
             params = TangemPayOrderCardSuccessComponent.Params(
                 deliveryEtaMaxBusinessDays = config.deliveryEtaMaxBusinessDays,
                 email = config.email,
-                onShowCard = { model.onShowOrderedCard(config.orderedProductInstanceId) },
+                onShowCard = { model.onShowOrderedCard() },
             ),
         )
     }
