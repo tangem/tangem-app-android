@@ -8,19 +8,15 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.common.balanceOrNull
-import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -44,6 +40,7 @@ internal class TangemPayOrderCardModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<TangemPayOrderCardNavigation> = SlotNavigation()
 
     private var availableFiatBalance: BigDecimal = BigDecimal.ZERO
+    private var isOrderFlowClosed = false
 
     init {
         modelScope.launch {
@@ -70,23 +67,19 @@ internal class TangemPayOrderCardModel @Inject constructor(
         }.saveIn(issueJobHolder)
     }
 
-    fun onShowOrderedCard(orderedProductInstanceId: String?) {
-        if (showOrderedCardJobHolder.isActive) return
-        modelScope.launch {
-            paymentAccountStatusFetcher.invoke(params.userWalletId)
-            val cards = paymentAccountStatusSupplier(params.userWalletId)
-                .first()
-                .ifLoadedOrNull { loaded -> loaded.cards }
-                .orEmpty()
-            val orderedCard = orderedProductInstanceId
-                ?.let { instanceId -> cards.firstOrNull { it.productInstanceId == instanceId } }
-                ?: cards.firstOrNull { it.state == TangemPayCardState.Delivering }
-            if (orderedCard == null) {
-                router.pop()
-            } else {
-                router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = orderedCard.id))
-            }
-        }.saveIn(showOrderedCardJobHolder)
+    fun onOrderAccepted() {
+        modelScope.launch { paymentAccountStatusFetcher.invoke(params.userWalletId) }.saveIn(showOrderedCardJobHolder)
+    }
+
+    fun onShowOrderedCard() {
+        if (isOrderFlowClosed) return
+        isOrderFlowClosed = true
+        if (!showOrderedCardJobHolder.isActive) {
+            modelScope.launch {
+                paymentAccountStatusFetcher.invoke(params.userWalletId)
+            }.saveIn(showOrderedCardJobHolder)
+        }
+        router.pop()
     }
 
     override fun onIssueAdditionalCardDismissed() {

@@ -5,6 +5,7 @@ import com.tangem.spend.datasource.pay.models.response.CustomerOffersResponse
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.plasticOffer
+import com.tangem.domain.pay.model.virtualOffer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -94,6 +95,50 @@ internal class OfferConverterTest {
 
         // Assert
         assertThat(offers.plasticOffer()).isNull()
+    }
+
+    @Test
+    fun `GIVEN virtual type WHEN convert THEN offer is virtual`() {
+        // Act
+        val actual = OfferConverter.convert(createResponseOffer(type = "CARD_ISSUE_VIRTUAL_RAIN"))
+
+        // Assert
+        assertThat(actual.isVirtual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN non-virtual type WHEN convert THEN offer is not virtual`() {
+        // Act
+        val actual = OfferConverter.convert(createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN"))
+
+        // Assert
+        assertThat(actual.isVirtual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN list with a virtual offer WHEN virtualOffer THEN returns the virtual offer`() {
+        // Arrange
+        val offers = OfferConverter.convertList(
+            listOf(
+                createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN"),
+                createResponseOffer(type = "CARD_ISSUE_VIRTUAL_RAIN"),
+            ),
+        )
+
+        // Act
+        val actual = offers.virtualOffer()
+
+        // Assert
+        assertThat(actual?.isVirtual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN list without a virtual offer WHEN virtualOffer THEN returns null`() {
+        // Arrange
+        val offers = OfferConverter.convertList(listOf(createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN")))
+
+        // Assert
+        assertThat(offers.virtualOffer()).isNull()
     }
 
     private fun provideTestModels() = listOf(
