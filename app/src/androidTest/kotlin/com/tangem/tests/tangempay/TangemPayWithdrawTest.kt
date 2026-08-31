@@ -16,7 +16,6 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -129,8 +128,6 @@ class TangemPayWithdrawTest : BaseTestCase() {
 
     @AllureId("9599")
     @DisplayName("Tangem Pay: withdraw shows insufficient funds error when amount exceeds balance")
-    // App bug: withdraw keeps the Swap button enabled and shows no insufficient-funds state when amount > balance.
-    @Ignore("[REDACTED_JIRA]")
     @Test
     fun withdrawInsufficientFundsShowsErrorTest() {
         val bitcoinScenario = "bitcoin_utxo"

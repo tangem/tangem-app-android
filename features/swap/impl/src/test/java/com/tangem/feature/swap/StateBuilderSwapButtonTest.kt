@@ -138,6 +138,33 @@ internal class StateBuilderSwapButtonTest {
 
             assertThat(result.swapButton.isEnabled).isFalse()
         }
+
+        @Test
+        @DisplayName("should surface insufficient funds when Payment account status is InsufficientAmount")
+        fun `GIVEN payment account and InsufficientAmount WHEN createQuotesLoadedState THEN insufficient funds`() {
+            // Arrange
+            val state = buildQuotesLoadedStateFor(
+                account = Account.Payment(userWalletId),
+                hasOutgoingTransaction = false,
+                permissionState = PermissionDataState.Empty,
+                balanceStatus = SwapBalanceStatus.InsufficientAmount,
+            )
+
+            // Act
+            val result = sut.createQuotesLoadedState(
+                uiStateHolder = buildInputtableHolder(),
+                quoteModel = state,
+                feeCryptoCurrencyStatus = null,
+                swapProvider = buildProvider(ExchangeProviderType.CEX),
+                additionalBadge = ProviderState.AdditionalBadge.Empty,
+                swapFee = null,
+                feeError = null,
+                isHighNetworkFee = false,
+            )
+
+            // Assert
+            assertThat(result.isInsufficientFunds).isTrue()
+        }
     }
 
     @Nested
@@ -319,6 +346,7 @@ internal class StateBuilderSwapButtonTest {
         hasOutgoingTransaction: Boolean,
         permissionState: PermissionDataState,
         isRestricted: Boolean = false,
+        balanceStatus: SwapBalanceStatus = SwapBalanceStatus.Sufficient,
     ): SwapState.QuotesLoadedState {
         val networkRawId = Blockchain.Ethereum.toNetworkId()
 
@@ -373,7 +401,7 @@ internal class StateBuilderSwapButtonTest {
             ),
             priceImpact = PriceImpact.Empty,
             preparedSwapConfigState = PreparedSwapConfigState(
-                balanceStatus = SwapBalanceStatus.Sufficient,
+                balanceStatus = balanceStatus,
                 hasOutgoingTransaction = hasOutgoingTransaction,
             ),
             permissionState = permissionState,
