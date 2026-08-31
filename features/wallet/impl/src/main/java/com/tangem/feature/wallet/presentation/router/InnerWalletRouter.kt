@@ -53,8 +53,8 @@ internal interface InnerWalletRouter {
         source: AppRoute.ManageTokens.Source = AppRoute.ManageTokens.Source.ACCOUNT,
     )
 
-    /** Open the members screen of the wallet's joint account */
-    fun openJointAccountMembers(userWalletId: UserWalletId)
+    /** Open the members screen of the wallet's joint account [accountId] */
+    fun openJointAccountMembers(userWalletId: UserWalletId, accountId: String)
 
     /** Open add and manage tokens bottom sheet */
     fun openAddAndManageBottomSheet(userWalletId: UserWalletId)
