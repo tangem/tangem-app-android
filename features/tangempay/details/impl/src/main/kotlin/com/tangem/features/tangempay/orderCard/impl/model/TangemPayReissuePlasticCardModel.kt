@@ -18,6 +18,7 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM
+import com.tangem.utils.CountryNames
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -84,7 +85,7 @@ internal class TangemPayReissuePlasticCardModel @Inject constructor(
         customerInfo: CustomerInfo?,
     ): TangemPayReissuePlasticCardUM {
         val deliveryEta = offer?.data?.deliveryEta
-        val country = customerInfo?.country.orEmpty().trim()
+        val country = CountryNames.getDisplayName(customerInfo?.country)
         if (deliveryEta == null || fee == null || country.isBlank()) {
             return TangemPayReissuePlasticCardUM.Error(onDismissRequest = ::onDismiss, onRetry = ::loadData)
         }
