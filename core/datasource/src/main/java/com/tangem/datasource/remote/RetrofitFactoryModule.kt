@@ -1,7 +1,6 @@
-package com.tangem.datasource.di
+package com.tangem.datasource.remote
 
 import com.tangem.core.remote.RetrofitFactory
-import com.tangem.datasource.di.utils.RetrofitApiBuilder
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -12,5 +11,5 @@ import dagger.hilt.components.SingletonComponent
 internal interface RetrofitFactoryModule {
 
     @Binds
-    fun bindRetrofitFactory(impl: RetrofitApiBuilder): RetrofitFactory
+    fun bindRetrofitFactory(impl: DefaultRetrofitFactory): RetrofitFactory
 }
