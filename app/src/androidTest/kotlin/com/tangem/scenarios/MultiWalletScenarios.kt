@@ -10,14 +10,18 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-/** 'Add Wallet' scans a card immediately (no type chooser), so [mockContent] must be set before the click. */
+/** 'Add Wallet' opens a wallet type chooser (hardware or mobile). Hardware option scans a card immediately, so
+ * [mockContent] must be set before the click. */
 fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     step("Click 'More' button on TopBar") {
         onMainScreenTopBar { moreButton.clickWithAssertion() }
     }
     MockProvider.setMocks(mockContent)
-    step("Click on 'Add Wallet' button (scans a new hardware wallet)") {
+    step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
+    }
+    step("Click on 'Add new hardware' wallet button (scans a new hardware wallet)") {
+        onDetailsScreen { addHardwareWalletButton.clickWithAssertion() }
     }
     // Gate on the top-bar More button, not the container — the bottom Markets sheet can leave the container un-"displayed".
     step("Assert 'Main' screen is displayed with the new wallet") {
@@ -50,8 +54,11 @@ fun BaseTestCase.addNewCardWalletWithoutSync(mockContent: MockContent) {
         onMainScreenTopBar { moreButton.clickWithAssertion() }
     }
     MockProvider.setMocks(mockContent)
-    step("Click on 'Add Wallet' button (scans a new hardware wallet)") {
+    step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
+    }
+    step("Click on 'Add new hardware' wallet button (scans a new hardware wallet)") {
+        onDetailsScreen { addHardwareWalletButton.clickWithAssertion() }
     }
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
