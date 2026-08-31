@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.child.organizetokens.model
 
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencies
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeRowItemUM
@@ -24,7 +24,7 @@ internal class CryptoCurrenciesIdsResolver {
         }
 
         return accountStatusList.accountStatuses
-            .filterCryptoPortfolio()
+            .filterIsInstance<AccountStatus.Personal>()
             .filter { it.tokenList != TokenList.Empty }
             .associate { accountStatus ->
                 val currenciesById = accountStatus.flattenCurrencies().associateBy { it.currency.id.value }
@@ -43,7 +43,7 @@ internal class CryptoCurrenciesIdsResolver {
         val draggableTokens = tokenList.filterIsInstance<OrganizeRowItemUM.Token>()
 
         return accountStatusList.accountStatuses
-            .filterCryptoPortfolio()
+            .filterIsInstance<AccountStatus.Personal>()
             .filter { it.tokenList != TokenList.Empty }
             .associate { accountStatus ->
                 val currenciesById = accountStatus.flattenCurrencies().associateBy { it.currency.id.value }
