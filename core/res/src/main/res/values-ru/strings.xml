@@ -844,15 +844,22 @@
   <string name="hw_cloud_backup_no_access_description">Войдите в аккаунт Google ещё раз, чтобы сохранить резервную копию кошелька.</string>
   <string name="hw_cloud_backup_no_access_sign_in">Войти</string>
   <string name="hw_cloud_backup_no_backups_description">Пожалуйста, войдите в другой аккаунт или импортируйте фразу восстановления.</string>
+  <string name="hw_cloud_backup_not_found_create">Создать копию</string>
+  <string name="hw_cloud_backup_not_found_description">Резервная копия этого кошелька уже создавалась, но нам не удалось её найти.</string>
+  <string name="hw_cloud_backup_not_found_forget">Забыть копию</string>
+  <string name="hw_cloud_backup_not_found_title">Резервная копия не найдена</string>
   <string name="hw_cloud_backup_password_hint">Пароль</string>
   <string name="hw_cloud_backup_password_rule_v2">Не менее %d символов: прописные и строчные буквы, цифры и специальные символы.</string>
   <string name="hw_cloud_backup_passwords_dont_match">Пароли не совпадают</string>
   <string name="hw_cloud_backup_permissions_description">Нет необходимых разрешений. Предоставьте полный доступ, чтобы сохранить резервную копию кошелька в Google Drive.</string>
+  <string name="hw_cloud_backup_permissions_description_v2">Отсутствуют необходимые разрешения. Предоставьте полный доступ, чтобы сохранить резервную копию кошелька в %1$s.</string>
   <string name="hw_cloud_backup_permissions_title">Полный доступ к Google Drive</string>
+  <string name="hw_cloud_backup_permissions_title_v2">Разрешить полный доступ к %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s: резервная копия «%2$s»</string>
   <string name="hw_cloud_backup_removed">Резервная копия удалена</string>
   <string name="hw_cloud_backup_restore_error_title">Что-то пошло не так</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Пожалуйста, попробуйте позже или импортируйте фразу восстановления.</string>
+  <string name="hw_cloud_backup_restore_navtitle_v2">Резервная копия %1$s</string>
   <string name="hw_cloud_backup_restore_passphrase_description">Введите точную парольную фразу для этого кошелька. Она чувствительна к регистру: другая фраза откроет другой набор адресов.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Введите парольную фразу</string>
   <string name="hw_cloud_backup_restore_password_button">Восстановить</string>
@@ -896,6 +903,7 @@
   <string name="hw_mobile_wallet">Мобильный кошелек</string>
   <string name="hw_remove_wallet_action_forget_title">Забыть кошелек</string>
   <string name="hw_remove_wallet_attention_description">Этот кошелёк будет окончательно удалён с вашего устройства.</string>
+  <string name="hw_remove_wallet_cloud_backup_description">Кошелёк будет удалён с этого устройства. Резервная копия в %s останется в безопасности — вы сможете восстановить этот кошелёк в любой момент с помощью пароля.</string>
   <string name="hw_remove_wallet_cloud_backup_title">Забыть этот кошелёк?</string>
   <string name="hw_remove_wallet_confirmation_title">Вы уверены, что хотите выполнить эту операцию?</string>
   <string name="hw_remove_wallet_forget_and_delete_backup">Забыть кошелёк и удалить копию</string>
@@ -2029,6 +2037,7 @@
   <string name="tangempay_card_edit_name_placeholder">Название карты</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Можно установить от %s</string>
   <string name="tangempay_card_limit_setup_error_message">Не удалось установить лимит. Пожалуйста, попробуйте снова.</string>
+  <string name="tangempay_card_page_activating_banner_title">Активируем вашу карту</string>
   <string name="tangempay_card_page_closing_banner_description">Обычно занимает до 5 минут</string>
   <string name="tangempay_card_page_closing_banner_title">Закрытие вашей карты</string>
   <string name="tangempay_card_page_daily_limit_change">Изменить</string>
@@ -2075,7 +2084,7 @@
   <string name="tangempay_cashback_refund_banner">Мы получили возврат за покупку, за которую ранее был начислен кэшбэк</string>
   <string name="tangempay_cashback_title">Кэшбэк</string>
   <string name="tangempay_cashback_total_earned">%1$s заработали всего</string>
-  <string name="tangempay_cashback_widget_title">%1$s кэшбэк в %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s кэшбэк за %2$s</string>
   <string name="tangempay_change_pin_code">Изменить PIN-код</string>
   <string name="tangempay_changing_plan">Изменение тарифа</string>
   <string name="tangempay_choose_network_fast_way">Быстрые способы</string>
@@ -2186,7 +2195,7 @@
   <string name="tangempay_onboarding_setup_wallet_title">Настроим новый кошелёк</string>
   <string name="tangempay_onboarding_title">Откройте виртуальную\nTangem Pay Card</string>
   <string name="tangempay_other_networks_header">Другие сети</string>
-  <string name="tangempay_other_networks_subtitle">А затем обменяйте на платёжный счёт по курсу 1:1 без комиссии</string>
+  <string name="tangempay_other_networks_subtitle">А затем переведите на платёжный счёт, без комиссии</string>
   <string name="tangempay_other_networks_title">Отправьте USDT / USDC в любой сети на ваш Tangem Wallet</string>
   <string name="tangempay_pay_support">Поддержка</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
@@ -2237,8 +2246,8 @@
   <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Получайте фиатные USD через ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Банковский перевод</string>
+  <string name="tangempay_topup_bank_transfer_body">Получайте USD с банковского счёта через ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">С банковского счёта</string>
   <string name="tangempay_topup_receive_body">Отправьте USDC Polygon на адрес вашего аккаунта</string>
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>
   <string name="tangempay_topup_receive_title">С другого кошелька или биржи</string>
