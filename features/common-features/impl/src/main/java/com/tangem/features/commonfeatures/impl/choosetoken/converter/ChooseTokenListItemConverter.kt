@@ -27,6 +27,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
+import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.impl.R
@@ -38,8 +39,7 @@ internal data class ConverterConfig(
     val clickIntents: ClickIntents,
     val searchQuery: SearchQuery,
     val tokenFilter: (AccountStatus, CryptoCurrencyStatus) -> Boolean,
-    val isShowPaymentAccount: Boolean,
-    val isPaymentAccountMultiTokenEnabled: Boolean,
+    val paymentAccountTokens: PaymentAccountTokens,
     val balanceFilter: BalanceFilter,
 )
 
@@ -135,20 +135,23 @@ internal class ChooseTokenListItemConverter(
             }
     }
 
-    /**
-     * Every token the account is issued on when multi-token is enabled, otherwise only the single currency the
-     * account is represented by.
-     */
-    private fun AccountStatus.Payment.paymentCryptoCurrencies(): List<CryptoCurrencyStatus> {
-        if (!config.isShowPaymentAccount) return emptyList()
-        val isMultiToken = config.isPaymentAccountMultiTokenEnabled
-        return when (val status = value) {
-            is PaymentAccountStatusValue.Deactivated ->
-                if (isMultiToken) status.cryptoCurrencyStatuses else listOfNotNull(status.cryptoCurrencyStatus)
-            is PaymentAccountStatusValue.Loaded ->
-                if (isMultiToken) status.cryptoCurrencyStatuses else listOfNotNull(status.cryptoCurrencyStatus)
-            else -> emptyList()
+    private fun AccountStatus.Payment.paymentCryptoCurrencies(): List<CryptoCurrencyStatus> =
+        when (config.paymentAccountTokens) {
+            is PaymentAccountTokens.Hidden -> emptyList()
+            is PaymentAccountTokens.AccountCurrency -> listOfNotNull(accountCurrencyOrNull())
+            is PaymentAccountTokens.IssuedTokens -> issuedCurrencies()
         }
+
+    private fun AccountStatus.Payment.accountCurrencyOrNull(): CryptoCurrencyStatus? = when (val status = value) {
+        is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
+        is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
+        else -> null
+    }
+
+    private fun AccountStatus.Payment.issuedCurrencies(): List<CryptoCurrencyStatus> = when (val status = value) {
+        is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatuses
+        is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatuses
+        else -> emptyList()
     }
 
     private fun convertAccountList(params: TokenConverterParams.Account): TokenListUMData {
