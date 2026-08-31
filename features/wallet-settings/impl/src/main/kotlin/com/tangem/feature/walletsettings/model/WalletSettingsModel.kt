@@ -42,7 +42,6 @@ import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
-import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction
 import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -407,15 +406,9 @@ internal class WalletSettingsModel @Inject constructor(
                 text = resourceReference(R.string.hw_backup_need_action)
                 onClick {
                     router.push(
-                        AppRoute.CreateWalletBackup(
+                        AppRoute.WalletBackup(
                             userWalletId = params.userWalletId,
-                            isUpgradeFlow = false,
-                            analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
-                            analyticsAction = RecoveryPhraseScreenAction.AccessCode.value,
-                            nextScreen = AppRoute.UpdateAccessCode(
-                                userWalletId = params.userWalletId,
-                                source = AnalyticsParam.ScreensSources.WalletSettings.value,
-                            ),
+                            isColdWalletOptionShown = false,
                         ),
                     )
                     closeBs()
