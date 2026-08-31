@@ -1,5 +1,6 @@
-package com.tangem.datasource.asset.reader
+package com.tangem.datasource.local.assets
 
+import android.content.Context
 import android.content.res.AssetManager
 import com.google.common.truth.Truth
 import io.mockk.every
@@ -8,13 +9,13 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.io.IOException
 
-/**
-[REDACTED_AUTHOR]
- */
-internal class AndroidAssetReaderTest {
+internal class AssetReaderTest {
 
     private val assetManager = mockk<AssetManager>()
-    private val assetReader = AndroidAssetReader(assetManager)
+    private val context = mockk<Context> {
+        every { assets } returns assetManager
+    }
+    private val assetReader = AssetReader(context)
 
     @Test
     fun read_content() = runTest {
