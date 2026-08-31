@@ -22,6 +22,7 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
         modifier = modifier,
         title = stringReference(state.title),
         iconUrl = state.imageUrl,
+        titleMetaSpacing = 8.dp,
         meta = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp),

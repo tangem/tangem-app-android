@@ -90,7 +90,9 @@ private fun PredictionNotificationUM.variant(): TangemMessageBanner.Variant = wh
 }
 
 private fun PredictionNotificationUM.slotEnd(): (@Composable () -> Unit)? = when (this) {
-    PredictionNotificationUM.PartialFill -> {
+    PredictionNotificationUM.PartialFill,
+    PredictionNotificationUM.NoLiquidity,
+    -> {
         {
             Icon(
                 imageVector = Icons.ic_info_24,
