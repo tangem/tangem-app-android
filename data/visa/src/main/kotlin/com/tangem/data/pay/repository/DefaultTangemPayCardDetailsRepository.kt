@@ -326,6 +326,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             },
             orderStep = OrderStep.fromString(result.step),
             orderType = OrderType.fromString(result.type ?: result.data.type),
+            productInstanceId = result.data.productInstanceId,
         )
     }
 
