@@ -16,6 +16,7 @@ class PlacePredictionOrderUseCase(
     suspend operator fun invoke(
         addresses: PolymarketAddresses,
         signedOrder: PredictionSignedOrder,
+        isNegRisk: Boolean,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> {
         val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
             ?: return PredictionPlaceOrderError.Unauthorized(detail = "No stored CLOB credentials").left()
@@ -24,6 +25,7 @@ class PlacePredictionOrderUseCase(
             ownerAddress = addresses.ownerAddress,
             credentials = credentials,
             signedOrder = signedOrder,
+            isNegRisk = isNegRisk,
         )
     }
 }
