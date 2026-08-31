@@ -8,7 +8,7 @@ import org.joda.time.format.DateTimeFormatter
 internal class TangemPayCashbackDateFormatter {
 
     fun formatMonth(year: Int, month: Int): String =
-        DateTimeFormatters.formatDate(DateTime(year, month, 1, 0, 0), DateTimeFormatters.dateMMMM)
+        DateTimeFormatters.formatStandaloneMonth(DateTime(year, month, 1, 0, 0))
 
     fun formatShortMonth(year: Int, month: Int): String =
         DateTimeFormatters.formatStandaloneShortMonth(DateTime(year, month, 1, 0, 0))
