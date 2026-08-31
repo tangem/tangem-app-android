@@ -128,7 +128,7 @@ data class AccountList private constructor(
 
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
         accounts
-            .filterIsInstance<Account.Personal>()
+            .filterIsInstance<Account.CryptoPortfolio>()
             .forEach { account ->
                 account.cryptoCurrencies.forEach { currency ->
                     val key = account.accountId to currency.id
