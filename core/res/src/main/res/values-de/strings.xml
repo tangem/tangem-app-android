@@ -838,7 +838,7 @@
   <string name="hw_backup_alert_title">Möchtest Du den Aktivierungsprozess wirklich abbrechen?</string>
   <string name="hw_backup_banner_description">Hält Deine Kryptowährungen sicher und offline. Schlank wie eine Kreditkarte, sicherer als ein Banktresor.</string>
   <string name="hw_backup_close_description">Wenn dies der Fall ist, musst Du von vorne beginnen.</string>
-  <string name="hw_backup_cloud_delete_confirm_title">%sBackup löschen?</string>
+  <string name="hw_backup_cloud_delete_confirm_title">%s Backup löschen?</string>
   <string name="hw_backup_google_drive_description">Vorhandene Wallet über Google Drive-Backup wiederherstellen</string>
   <string name="hw_backup_google_drive_dialog_message">Wir arbeiten an einer Google Drive-Datensicherung, um die Wiederherstellung der Wallet noch einfacher zu gestalten.</string>
   <string name="hw_backup_google_drive_dialog_title">Google Drive-Sicherung kommt bald</string>
@@ -904,7 +904,7 @@
   <string name="hw_cloud_backup_restore_passphrase_description">Geben Sie die genaue Passphrase für diese Wallet ein. Bei der Eingabe wird zwischen Groß- und Kleinschreibung unterschieden; eine andere Passphrase öffnet daher einen anderen Satz von Adressen.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Passphrase eingeben</string>
   <string name="hw_cloud_backup_restore_password_button">Wiederherstellen</string>
-  <string name="hw_cloud_backup_restore_password_description">Sie stellen „%1$s\" von einer am %3$s erstellten %2$s-Sicherung wieder her</string>
+  <string name="hw_cloud_backup_restore_password_description">Sie stellen „%1$s“ von einer am %3$s erstellten %2$s-Sicherung wieder her</string>
   <string name="hw_cloud_backup_restore_password_navtitle">Wallet wiederherstellen</string>
   <string name="hw_cloud_backup_restore_password_title">Passwort eingeben</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Seed-Phrase importieren</string>
@@ -944,7 +944,7 @@
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_remove_wallet_action_forget_title">Wallet dauerhaft entfernen</string>
   <string name="hw_remove_wallet_attention_description">Diese Wallet wird dauerhaft von Deinem Gerät entfernt.</string>
-  <string name="hw_remove_wallet_cloud_backup_description">Die Wallet wird von diesem Gerät entfernt. Ihr %s-Backup bleibt sicher– Sie können diese Wallet jederzeit mit Ihrem Passwort wiederherstellen.</string>
+  <string name="hw_remove_wallet_cloud_backup_description">Die Wallet wird von diesem Gerät entfernt. Ihr %s-Backup bleibt sicher – Sie können diese Wallet jederzeit mit Ihrem Passwort wiederherstellen.</string>
   <string name="hw_remove_wallet_cloud_backup_title">Diese Wallet entfernen?</string>
   <string name="hw_remove_wallet_confirmation_title">Bist du dir sicher, dass du das tun willst?</string>
   <string name="hw_remove_wallet_confirmation_with_cloud_backup">Wenn Sie diese Wallet löschen, wird auch die Google Drive-Sicherung entfernt. Stellen Sie sicher, dass Sie Zugriff auf Ihre Wiederherstellungsphrase haben – dieser Vorgang kann nicht rückgängig gemacht werden.</string>
@@ -2437,7 +2437,7 @@
   <string name="tangempay_order_type_title">Neue Karte bestellen</string>
   <string name="tangempay_order_type_unavailable">Nicht verfügbar</string>
   <string name="tangempay_other_networks_header">Andere Netzwerke</string>
-  <string name="tangempay_other_networks_subtitle">Und dann zum Kurs 1:1 ohne Gebühren ins Zahlungskonto tauschen</string>
+  <string name="tangempay_other_networks_subtitle">Und dann ohne Gebühren ins Zahlungskonto tauschen</string>
   <string name="tangempay_other_networks_title">USDT/USDC über jede Chain an Ihre Tangem Wallet senden</string>
   <string name="tangempay_pay_support">Betreuung</string>
   <string name="tangempay_payment_account">Zahlungskonto</string>
@@ -2490,8 +2490,8 @@
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Empfangen Sie Fiat-USD per ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Banküberweisung</string>
+  <string name="tangempay_topup_bank_transfer_body">USD per ACH von einem Bankkonto empfangen</string>
+  <string name="tangempay_topup_bank_transfer_title">Von einem Bankkonto</string>
   <string name="tangempay_topup_receive_body">Senden Sie USDC Polygon an die Adresse Ihres Kontos</string>
   <string name="tangempay_topup_receive_body_multichain">USDC oder USDT an Ihre Kontoadresse senden</string>
   <string name="tangempay_topup_receive_title">Von einer anderen Wallet oder Börse</string>

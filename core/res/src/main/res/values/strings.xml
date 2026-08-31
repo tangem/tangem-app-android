@@ -1008,10 +1008,23 @@
   <string name="introduction_i_have_wallet_hardware_description">Use Tangem Wallet to enter the app</string>
   <string name="introduction_i_have_wallet_sign_in_google_title">Sign in with Google</string>
   <string name="introduction_legal">By continuing, you agree with %1$s and %2$s</string>
+  <string name="introduction_stories_button_primary">Scan your wallet</string>
+  <string name="introduction_stories_button_secondary">Learn more or buy</string>
+  <string name="introduction_stories_four_subtitle">Join the self-custody wallet used worldwide</string>
+  <string name="introduction_stories_four_title">Trusted by millions</string>
+  <string name="introduction_stories_one_subtitle">Confirm every action with your Tangem </string>
+  <string name="introduction_stories_one_title">One tap to control crypto</string>
+  <string name="introduction_stories_three_subtitle">Your private keys never leave the card.</string>
+  <string name="introduction_stories_three_title">Your keys, your crypto</string>
+  <string name="introduction_stories_two_subtitle">Use any of your cards to access your wallet</string>
+  <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_terms_of_service">Terms of service</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval.</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
+  <string name="joint_account_invite_invalid_subtitle">Check that you opened the full link, or ask the account owner to send it again.</string>
+  <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
+  <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
@@ -1041,6 +1054,8 @@
     <item quantity="other">%d members</item>
   </plurals>
   <string name="joint_account_members_progress">%1$s of %2$s members</string>
+  <string name="joint_account_members_role_joined">Joined</string>
+  <string name="joint_account_members_role_you">You</string>
   <string name="joint_account_members_signers_subtitle">To approve operations</string>
   <string name="joint_account_members_signers_title">Required to sign</string>
   <string name="joint_account_members_subtitle">Set how many people share the account. Every transaction like send, swap or close waits for %1$s of %2$s to sign. This is locked once.</string>
@@ -2180,7 +2195,7 @@
   <string name="tangempay_card_delivery_banner_description">Activate it when arrived</string>
   <string name="tangempay_card_delivery_banner_description_many">Activate them when arrived</string>
   <string name="tangempay_card_delivery_banner_title">Your card on it\'s way for delivery</string>
-  <string name="tangempay_card_delivery_banner_title_many">Your cards on it\'s way for delivery</string>
+  <string name="tangempay_card_delivery_banner_title_many">Your cards on its\' way for delivery</string>
   <string name="tangempay_card_details_activate">Activate card</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
@@ -2455,7 +2470,7 @@
   <string name="tangempay_order_type_title">Order new card</string>
   <string name="tangempay_order_type_unavailable">Unavailable</string>
   <string name="tangempay_other_networks_header">Other networks</string>
-  <string name="tangempay_other_networks_subtitle">And then swap it to payment account with 1:1 rate and zero fees</string>
+  <string name="tangempay_other_networks_subtitle">And then swap it to payment account zero fees</string>
   <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
   <string name="tangempay_pay_support">Support</string>
   <string name="tangempay_payment_account">Payment account</string>
@@ -2508,8 +2523,8 @@
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Receive fiat USD via ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Bank transfer</string>
+  <string name="tangempay_topup_bank_transfer_body">Receive USD from a bank account via ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">From a bank account</string>
   <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
   <string name="tangempay_topup_receive_body_multichain">Send USDC or USDT to your account’s address</string>
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
