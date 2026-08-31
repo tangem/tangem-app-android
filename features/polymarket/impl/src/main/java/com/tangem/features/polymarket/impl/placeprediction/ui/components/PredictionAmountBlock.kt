@@ -122,7 +122,7 @@ private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, 
         AmountTextField(
             modifier = Modifier.padding(top = CAPTION_GAP),
             value = amountValue,
-            decimals = AMOUNT_INPUT_DECIMALS,
+            decimals = PolymarketConst.COLLATERAL_DECIMALS,
             onValueChange = onAmountChange,
             textStyle = TangemTheme.typography3.display.medium.copy(textAlign = TextAlign.Center),
             colors = AmountTextFieldColors(
@@ -132,7 +132,7 @@ private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, 
             ),
             isAutoResize = true,
             visualTransformation = AmountVisualTransformation(
-                decimals = AMOUNT_INPUT_DECIMALS,
+                decimals = PolymarketConst.COLLATERAL_DECIMALS,
                 symbol = PolymarketConst.USD_SYMBOL,
                 currencyCode = PolymarketConst.USD_CODE,
                 symbolColor = amountColor,
@@ -186,7 +186,5 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
         }
     }
 }
-
-private const val AMOUNT_INPUT_DECIMALS = 2
 
 private val CAPTION_GAP = 12.dp
