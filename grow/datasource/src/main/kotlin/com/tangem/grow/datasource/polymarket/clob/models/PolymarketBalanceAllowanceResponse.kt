@@ -6,5 +6,5 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class PolymarketBalanceAllowanceResponse(
     @Json(name = "balance") val balance: String,
-    @Json(name = "allowance") val allowance: String?,
+    @Json(name = "allowances") val allowances: Map<String, String>?,
 )
