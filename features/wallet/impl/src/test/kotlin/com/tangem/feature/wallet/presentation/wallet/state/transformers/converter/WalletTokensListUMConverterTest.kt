@@ -97,7 +97,7 @@ internal class WalletTokensListUMConverterTest {
         return AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Personal(
                     account = createMainAccount(userWalletId),
                     tokenList = tokenList,
                     priceChangeLce = Unit.lceError(),
