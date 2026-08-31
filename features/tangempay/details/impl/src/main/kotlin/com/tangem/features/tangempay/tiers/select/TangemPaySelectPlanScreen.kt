@@ -88,7 +88,7 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
             }
         }
 
-        ComparePlansBottomSheet(compare = state.compare)
+        ComparePlansBottomSheet(compare = state.compare, onLinkClick = state.onLinkClick)
     }
 }
 
@@ -148,7 +148,7 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
     PlanDetails(
         title = plan.name,
         points = plan.points,
-        onPointLinkClick = state.onPointLinkClick,
+        onLinkClick = state.onLinkClick,
     )
 
     Spacer(modifier = Modifier.weight(1f))
@@ -158,7 +158,7 @@ private fun ColumnScope.SelectContent(state: TangemPaySelectPlanUM) {
 private fun PlanDetails(
     title: TextReference,
     points: ImmutableList<TangemPaySelectPlanUM.PointUM>,
-    onPointLinkClick: (url: String) -> Unit,
+    onLinkClick: (url: String) -> Unit,
 ) {
     Text(
         modifier = Modifier
@@ -176,7 +176,7 @@ private fun PlanDetails(
             .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        points.fastForEach { point -> PlanPoint(point = point, onLinkClick = onPointLinkClick) }
+        points.fastForEach { point -> PlanPoint(point = point, onLinkClick = onLinkClick) }
     }
 }
 
@@ -233,7 +233,7 @@ private fun ColumnScope.ConfirmContent(state: TangemPaySelectPlanUM, content: Ta
     PlanDetails(
         title = content.title,
         points = content.points,
-        onPointLinkClick = state.onPointLinkClick,
+        onLinkClick = state.onLinkClick,
     )
     Spacer(modifier = Modifier.size(24.dp))
 }
@@ -356,7 +356,7 @@ private fun previewState(isConfirm: Boolean) = TangemPaySelectPlanUM(
     onPlanSelected = {},
     onBackClick = {},
     onCloseClick = {},
-    onPointLinkClick = {},
+    onLinkClick = {},
     content = if (isConfirm) {
         TangemPaySelectPlanUM.Content.Confirm(
             title = stringReference("We will issue Visa Plus for you"),
