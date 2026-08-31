@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
