@@ -10,7 +10,7 @@ internal class AssetReader @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
 
-    suspend fun read(fullFileName: String): String {
+    fun read(fullFileName: String): String {
         return context.assets.open(fullFileName, AssetManager.ACCESS_BUFFER).use { inputStream ->
             inputStream.readBytes().toString(Charsets.UTF_8)
         }
