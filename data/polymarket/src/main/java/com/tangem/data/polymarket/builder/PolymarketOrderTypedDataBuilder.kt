@@ -49,7 +49,7 @@ object PolymarketOrderTypedDataBuilder {
      */
     fun hashStruct(order: PredictionOrder): ByteArray = concat(
         orderTypeHash(),
-        word(order.salt),
+        word(BigInteger.valueOf(order.salt)),
         addressWord(order.maker),
         addressWord(order.signer),
         word(order.tokenId),

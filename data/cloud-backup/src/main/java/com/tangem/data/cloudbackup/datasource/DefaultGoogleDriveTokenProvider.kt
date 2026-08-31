@@ -4,7 +4,7 @@ import android.content.Context
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.google.GoogleServicesHelper
 import kotlinx.coroutines.sync.Mutex
