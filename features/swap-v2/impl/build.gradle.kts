@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.core.analytics)
     implementation(projects.core.utils)
 
