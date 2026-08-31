@@ -2176,8 +2176,8 @@
   <string name="tangempay_tangem_visa_card">使用 USDC 进行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">通过 ACH 接收法定美元</string>
-  <string name="tangempay_topup_bank_transfer_title">银行转账</string>
+  <string name="tangempay_topup_bank_transfer_body">通过 ACH 从银行账户接收美元</string>
+  <string name="tangempay_topup_bank_transfer_title">从银行账户</string>
   <string name="tangempay_topup_receive_body">將 USDC Polygon 發送至您帳戶地址</string>
   <string name="tangempay_topup_receive_body_multichain">将 USDC 或 USDT 发送至您账户的地址</string>
   <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>

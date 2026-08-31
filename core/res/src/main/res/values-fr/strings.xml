@@ -2046,7 +2046,7 @@
   <string name="tangempay_onboarding_setup_wallet_title">Nous allons créer un nouveau wallet</string>
   <string name="tangempay_onboarding_title">Obtenez votre carte Tangem Pay en minutes</string>
   <string name="tangempay_other_networks_header">Autres réseaux</string>
-  <string name="tangempay_other_networks_subtitle">Puis échangez-le au taux 1:1 sans frais vers votre compte de paiement</string>
+  <string name="tangempay_other_networks_subtitle">Puis échangez-le sans frais vers votre compte de paiement</string>
   <string name="tangempay_other_networks_title">Envoyez des USDT/USDC sur n\'importe quelle chaîne vers votre Tangem Wallet</string>
   <string name="tangempay_pay_support">Assistance</string>
   <string name="tangempay_payment_account">Compte de paiement</string>
@@ -2097,8 +2097,8 @@
   <string name="tangempay_tangem_visa_card">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Recevez des USD via ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Virement bancaire</string>
+  <string name="tangempay_topup_bank_transfer_body">Recevoir des USD depuis un compte bancaire via ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">Depuis un compte bancaire</string>
   <string name="tangempay_topup_receive_body">Envoyez USDC Polygon à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_body_multichain">Envoyez des USDC ou USDT à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_title">Depuis un autre wallet ou exchange</string>
