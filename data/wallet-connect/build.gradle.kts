@@ -60,6 +60,7 @@ dependencies {
     api(projects.domain.account.status)
     api(projects.domain.blockaid)
     api(projects.domain.common)
+    api(projects.domain.networks)
     api(projects.domain.transaction)
     api(projects.domain.walletConnect)
     api(projects.domain.walletConnect.models)
