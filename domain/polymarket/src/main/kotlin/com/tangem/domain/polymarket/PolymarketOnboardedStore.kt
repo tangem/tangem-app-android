@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket
 
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Records which wallets the backend has confirmed as ready to trade, so opening the feature again does not have
@@ -13,8 +14,15 @@ import com.tangem.domain.models.wallet.UserWalletId
  */
 interface PolymarketOnboardedStore {
 
-    /** Whether the backend has confirmed [userWalletId] as ready to trade */
-    suspend fun isOnboarded(userWalletId: UserWalletId): Boolean
+    /**
+     * Whether the backend has confirmed [userWalletId] as ready to trade, re-emitting as the record changes.
+     *
+     * @return `false` while nothing is recorded, and `false` instead of failing when the record cannot be read
+     */
+    fun isOnboarded(userWalletId: UserWalletId): Flow<Boolean>
+
+    /** Whether the backend has confirmed [userWalletId] as ready to trade, answered once */
+    suspend fun isOnboardedSync(userWalletId: UserWalletId): Boolean
 
     /** Records [userWalletId] as confirmed ready to trade */
     suspend fun markOnboarded(userWalletId: UserWalletId)
