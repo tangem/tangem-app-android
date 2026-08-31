@@ -44,6 +44,7 @@ dependencies {
     api(projects.domain.wallets)
     implementation(projects.domain.card)
     implementation(projects.domain.core)
+    implementation(projects.domain.jointAccount)
     runtimeOnly(projects.domain.account)
     // endregion
 

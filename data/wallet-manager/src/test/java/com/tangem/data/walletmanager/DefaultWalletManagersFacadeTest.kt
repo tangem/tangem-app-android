@@ -16,7 +16,8 @@ import org.junit.jupiter.api.Test
 
 /**
  * A joint account is a Safe contract: the facade never derives a key or builds a wallet manager for its network.
- * A tester build crashes on the attempt, a release one refuses quietly — the tests follow the build they run in.
+ * An update attempt crashes a tester build and is refused quietly in a release one — that test follows the build
+ * it runs in; a read-only lookup gets `null` in every build, so that staking or WalletConnect cannot bring the app down.
  */
 internal class DefaultWalletManagersFacadeTest {
 
@@ -25,6 +26,7 @@ internal class DefaultWalletManagersFacadeTest {
 
     private val facade = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
+        externalAddressBalanceProvidersStore = ExternalAddressBalanceProvidersStore(),
         userWalletsListRepository = userWalletsListRepository,
         assetLoader = mockk(),
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -63,16 +65,12 @@ internal class DefaultWalletManagersFacadeTest {
 
     @Suppress("DEPRECATION")
     @Test
-    fun `GIVEN joint network WHEN getOrCreateWalletManager THEN refused before any lookup`() = runTest {
+    fun `GIVEN joint network WHEN getOrCreateWalletManager THEN null without a lookup in any build`() = runTest {
         // Act
-        val actual = runCatching { facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork) }
+        val actual = facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork)
 
         // Assert
-        if (BuildConfig.TESTER_MENU_ENABLED) {
-            assertThat(actual.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
-        } else {
-            assertThat(actual.getOrNull()).isNull()
-        }
+        assertThat(actual).isNull()
         verify {
             userWalletsListRepository wasNot Called
             walletManagersStore wasNot Called

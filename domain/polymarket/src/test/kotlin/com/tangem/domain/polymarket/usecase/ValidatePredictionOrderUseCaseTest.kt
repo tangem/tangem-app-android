@@ -314,6 +314,13 @@ internal class ValidatePredictionOrderUseCaseTest {
             ),
         ),
         ValidationModel(
+            input = Input(order = order(signer = SOMEONE_ELSE)),
+            expected = PredictionOrderValidationError.SignerIsNotMaker(
+                signer = SOMEONE_ELSE,
+                maker = DEPOSIT_WALLET,
+            ),
+        ),
+        ValidationModel(
             input = Input(order = order(side = PredictionOrderSide.SELL)),
             expected = PredictionOrderValidationError.SideMismatch(
                 signed = PredictionOrderSide.SELL,
@@ -396,6 +403,7 @@ internal class ValidatePredictionOrderUseCaseTest {
         @Suppress("LongParameterList")
         fun order(
             maker: String = DEPOSIT_WALLET,
+            signer: String = maker,
             tokenId: BigInteger = BigInteger(TOKEN_ID),
             makerAmount: BigInteger = MAKER_AMOUNT,
             takerAmount: BigInteger = TAKER_AMOUNT,
@@ -406,7 +414,7 @@ internal class ValidatePredictionOrderUseCaseTest {
         ) = PredictionOrder(
             salt = BigInteger("1234567890"),
             maker = maker,
-            signer = SOMEONE_ELSE,
+            signer = signer,
             tokenId = tokenId,
             makerAmount = makerAmount,
             takerAmount = takerAmount,
