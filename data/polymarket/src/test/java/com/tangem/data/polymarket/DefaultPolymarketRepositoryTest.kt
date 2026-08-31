@@ -11,6 +11,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PredictionPlaceOrderErrorResolver
@@ -592,6 +593,7 @@ internal class DefaultPolymarketRepositoryTest {
                 ownerAddress = OWNER,
                 credentials = SYNC_CREDENTIALS,
                 signedOrder = signedOrder(),
+                isNegRisk = false,
             )
 
             // Assert
@@ -613,10 +615,29 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
         assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
+    }
+
+    @Test
+    fun `GIVEN an order signed for the other exchange WHEN placeOrder THEN nothing is sent`() = runTest {
+        // Arrange
+        val standardExchangeOrder = signedOrder(signature = standardExchangeSignature())
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = standardExchangeOrder,
+            isNegRisk = true,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.NotSent::class.java)
+        coVerify(exactly = 0) { clobApi.placeOrder(any(), any()) }
     }
 
     @Test
@@ -631,6 +652,7 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
@@ -649,6 +671,7 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
@@ -667,6 +690,7 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
+            isNegRisk = false,
         )
 
         // Assert
@@ -737,7 +761,7 @@ internal class DefaultPolymarketRepositoryTest {
         coEvery {
             clobApi.getBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
         } returns ApiResponse.Success(
-            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = "1000000"),
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowances = mapOf(SPENDER to "1000000")),
         )
 
         // Act
@@ -745,7 +769,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = BigDecimal("1")).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowances = mapOf(SPENDER to BigDecimal("1"))).right(),
         )
         assertThat(assetType.captured).isEqualTo("COLLATERAL")
         assertThat(signatureType.captured).isEqualTo(3)
@@ -757,7 +781,7 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN no allowance reported WHEN getBalanceAllowance THEN leaves it absent rather than zero`() = runTest {
         // Arrange
         coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = null),
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowances = null),
         )
 
         // Act
@@ -765,7 +789,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = null).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowances = null).right(),
         )
     }
 
@@ -774,7 +798,7 @@ internal class DefaultPolymarketRepositoryTest {
         runTest {
             // Arrange
             coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-                PolymarketBalanceAllowanceResponse(balance = "0", allowance = "1000000000"),
+                PolymarketBalanceAllowanceResponse(balance = "0", allowances = mapOf(SPENDER to "1000000000")),
             )
 
             // Act
@@ -782,16 +806,37 @@ internal class DefaultPolymarketRepositoryTest {
 
             // Assert
             assertThat(result).isEqualTo(
-                PolymarketBalanceAllowance(balance = BigDecimal.ZERO, allowance = BigDecimal("1000")).right(),
+                PolymarketBalanceAllowance(
+                    balance = BigDecimal.ZERO,
+                    allowances = mapOf(SPENDER to BigDecimal("1000")),
+                ).right(),
             )
         }
+
+    @Test
+    fun `GIVEN a spender with no allowance WHEN getBalanceAllowance THEN the zero survives as itself`() = runTest {
+        // Arrange
+        coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+            PolymarketBalanceAllowanceResponse(
+                balance = "2950011",
+                allowances = mapOf(SPENDER to "1000000000", "0xD91E80cF" to "0"),
+            ),
+        )
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result.getOrNull()?.allowances)
+            .containsExactly(SPENDER, BigDecimal("1000"), "0xd91e80cf", BigDecimal.ZERO)
+    }
 
     @Test
     fun `GIVEN an unparsable balance WHEN getBalanceAllowance THEN returns Unknown instead of a wrong amount`() =
         runTest {
             // Arrange
             coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowance = null),
+                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowances = null),
             )
 
             // Act
@@ -918,6 +963,7 @@ internal class DefaultPolymarketRepositoryTest {
         ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<T>
 
     private companion object {
+        const val SPENDER = "0xe111180000d2663c0091e4f400237545b87b996b"
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
@@ -953,9 +999,17 @@ internal class DefaultPolymarketRepositoryTest {
             isLive = false,
         )
 
-        fun signedOrder(): PredictionSignedOrder = PredictionSignedOrder(
+        fun standardExchangeSignature(): String = "0x" + "11".repeat(n = 65) +
+            PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = false)
+                .joinToString(separator = "") { byte -> "%02x".format(byte) }
+
+        fun signedOrder(
+            signature: String = standardExchangeSignature(),
+            salt: Long = 1_234_567_890L,
+        ): PredictionSignedOrder =
+            PredictionSignedOrder(
             order = PredictionOrder(
-                salt = BigInteger("1234567890"),
+                salt = salt,
                 maker = "0xMaker",
                 signer = "0xSigner",
                 tokenId = BigInteger("7"),
@@ -967,7 +1021,7 @@ internal class DefaultPolymarketRepositoryTest {
                 metadata = "0xmeta",
                 builder = "0xbuilder",
             ),
-            signature = "0xsig",
+            signature = signature,
         )
 
         fun placeOrderResponse(

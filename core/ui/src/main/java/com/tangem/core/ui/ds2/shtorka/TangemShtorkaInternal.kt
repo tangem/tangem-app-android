@@ -19,8 +19,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.util.lerp
 import kotlin.math.abs
 import kotlin.math.min
@@ -82,11 +84,14 @@ internal val ShtorkaOverdragLimit = 56.dp
  * so at partial detents the card floats above the system bar and at full it extends beneath it.
  * [TangemShtorka.Detent.Full] stops at [windowInsets]' top (the status bar).
  *
+ * The card never grows wider than [maxWidth] and stays centered, so on tablets and unfolded
+ * foldables the content keeps a phone-sized column instead of stretching across the window.
+ *
  * The rendered offset is clamped at the top anchor: settle-spring overshoot past full would
  * otherwise slide the height-capped card up and reveal a gap under its bottom edge.
  */
 @OptIn(ExperimentalFoundationApi::class)
-internal fun Modifier.shtorkaLayout(state: TangemShtorkaState, windowInsets: WindowInsets): Modifier {
+internal fun Modifier.shtorkaLayout(state: TangemShtorkaState, windowInsets: WindowInsets, maxWidth: Dp): Modifier {
     return layout { measurable, constraints ->
         val layoutWidth = constraints.maxWidth
         val layoutHeight = constraints.maxHeight
@@ -111,9 +116,12 @@ internal fun Modifier.shtorkaLayout(state: TangemShtorkaState, windowInsets: Win
         state.collapseProgress = collapseProgress(geometry = geometry, offset = offset)
 
         val baseInset = interpolatedBaseInset(geometry = geometry, offset = offset)
-        val horizontalInset = baseInset
         val bottomInset = baseInset + bottomSafeInset * (1f - progress)
-        val cardWidth = (layoutWidth - 2 * horizontalInset).roundToInt().coerceIn(0, layoutWidth)
+        val maxCardWidth = if (maxWidth.isSpecified) maxWidth.roundToPx() else Int.MAX_VALUE
+        val cardWidth = (layoutWidth - 2 * baseInset)
+            .roundToInt()
+            .coerceIn(0, layoutWidth)
+            .coerceAtMost(maxCardWidth)
         val cardHeight = (layoutHeight - offset - bottomInset).roundToInt().coerceIn(0, layoutHeight)
         val placeable = measurable.measure(Constraints.fixed(cardWidth, cardHeight))
 
