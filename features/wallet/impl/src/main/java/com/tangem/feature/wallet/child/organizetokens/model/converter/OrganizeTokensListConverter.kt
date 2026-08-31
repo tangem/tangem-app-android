@@ -4,7 +4,6 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeRowItemUM
@@ -34,7 +33,7 @@ internal class OrganizeTokensListConverter(
     override fun convert(value: AccountStatusList): PersistentList<OrganizeRowItemUM> {
         return value.accountStatuses
             .asSequence()
-            .filterCryptoPortfolio()
+            .filterIsInstance<AccountStatus.Personal>()
             .filter { it.tokenList !is TokenList.Empty }
             .flatMap { accountStatus ->
                 buildList {

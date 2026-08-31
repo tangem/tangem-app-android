@@ -94,18 +94,19 @@ internal class PolymarketOnboardingModel @Inject constructor(
         when (entry) {
             is PolymarketEntry.Onboard -> uiState.value = welcome(
                 isInProgress = false,
-                startButtonText = startButtonText(status = entry.status),
+                actionButtonText = startButtonText(status = entry.status),
             )
             PolymarketEntry.Undetermined -> uiState.value = welcome(isInProgress = false)
+            PolymarketEntry.Reconnect -> uiState.value = reconnect()
             PolymarketEntry.Onboarded -> openFeed()
         }
     }
 
     private fun startOnboarding() {
-        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
+        val current = uiState.value as? PolymarketOnboardingUM.Action ?: return
         if (current.isInProgress) return
 
-        uiState.value = current.copy(isInProgress = true)
+        uiState.value = current.copyInProgress(isInProgress = true)
 
         modelScope.launch {
             val result = resolvePolymarketEntryInteractor(userWalletId)
@@ -121,6 +122,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             when (entry) {
                 is PolymarketEntry.Onboard,
                 PolymarketEntry.Undetermined,
+                PolymarketEntry.Reconnect,
                 -> runOnboarding()
                 PolymarketEntry.Onboarded -> openFeed()
             }
@@ -135,6 +137,8 @@ internal class PolymarketOnboardingModel @Inject constructor(
         updateWelcome { it.copy(isRegionRestrictionsShown = false) }
     }
 
+    private fun isRegionRestrictionsApplicable(): Boolean = uiState.value is PolymarketOnboardingUM.Welcome
+
     private suspend fun CoroutineScope.runOnboarding() {
         runPolymarketOnboardingInteractor(userWalletId).collect { progress ->
             ensureActive()
@@ -147,10 +151,10 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.Deriving,
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
-            -> updateWelcome { it.copy(isInProgress = true) }
+            -> updateAction { it.copyInProgress(isInProgress = true) }
             PolymarketOnboardingProgress.Ready -> openFeed()
             is PolymarketOnboardingProgress.Failed ->
-                if (progress.error == PolymarketOnboardingError.RegionBlocked) {
+                if (progress.error == PolymarketOnboardingError.RegionBlocked && isRegionRestrictionsApplicable()) {
                     showRegionRestrictions()
                 } else {
                     stopStarting()
@@ -160,7 +164,12 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun stopStarting() {
-        updateWelcome { it.copy(isInProgress = false) }
+        updateAction { it.copyInProgress(isInProgress = false) }
+    }
+
+    private fun updateAction(update: (PolymarketOnboardingUM.Action) -> PolymarketOnboardingUM.Action) {
+        val current = uiState.value as? PolymarketOnboardingUM.Action ?: return
+        uiState.value = update(current)
     }
 
     /** Leaves the state alone unless the gate is showing Welcome — the only state these updates apply to. */
@@ -175,16 +184,24 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun welcome(
         isInProgress: Boolean,
-        startButtonText: TextReference = resourceReference(R.string.prediction_onboarding_start_button),
+        actionButtonText: TextReference = resourceReference(R.string.prediction_onboarding_start_button),
         isRegionRestrictionsShown: Boolean = false,
     ) = PolymarketOnboardingUM.Welcome(
         isInProgress = isInProgress,
-        startButtonText = startButtonText,
-        onStartClick = ::startOnboarding,
+        actionButtonText = actionButtonText,
+        onActionClick = ::startOnboarding,
         onPolymarketTermsClick = onPolymarketTermsClick,
         onTangemTermsClick = onTangemTermsClick,
         isRegionRestrictionsShown = isRegionRestrictionsShown,
         onRegionRestrictionsDismiss = ::dismissRegionRestrictions,
+    )
+
+    private fun reconnect() = PolymarketOnboardingUM.Reconnect(
+        isInProgress = false,
+        actionButtonText = resourceReference(R.string.prediction_onboarding_reconnect_button),
+        onActionClick = ::startOnboarding,
+        onPolymarketTermsClick = onPolymarketTermsClick,
+        onTangemTermsClick = onTangemTermsClick,
     )
 
     private fun startButtonText(status: PolymarketWalletStatus): TextReference = when (status) {

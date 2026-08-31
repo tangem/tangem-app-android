@@ -20,7 +20,7 @@ import retrofit2.http.Query
 /**
  * Polymarket predictions BFF Discovery API (`api/predictions/v1`).
  *
- * Provided in [com.tangem.datasource.di.NetworkModule] via the [ApiConfig.ID.Predictions] config.
+ * Provided in [com.tangem.grow.datasource.di.GrowDatasourceModule].
  */
 interface PolymarketApi {
 

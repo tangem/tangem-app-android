@@ -22,7 +22,6 @@ dependencies {
 
     /* Project - Core */
     api(projects.core.analytics)
-    api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.utils)
@@ -30,6 +29,9 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
+
+    /* Project - Data */
+    implementation(projects.data.account)
 
     /* Project - Domain */
     api(projects.domain.account)

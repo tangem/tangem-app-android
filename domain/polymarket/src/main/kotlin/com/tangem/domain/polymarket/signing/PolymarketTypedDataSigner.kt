@@ -7,7 +7,6 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingSignatures
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
-import java.math.BigInteger
 
 interface PolymarketTypedDataSigner {
 
@@ -38,7 +37,7 @@ data class PolymarketClobAuthData(
 data class PredictionOrderPayload(
     val draft: PredictionOrderDraft,
     val depositWalletAddress: String,
-    val salt: BigInteger,
+    val salt: Long,
     val timestampMillis: Long,
 )
 
