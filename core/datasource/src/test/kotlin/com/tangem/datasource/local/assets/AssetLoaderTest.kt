@@ -1,4 +1,4 @@
-package com.tangem.datasource.asset.loader
+package com.tangem.datasource.local.assets
 
 import com.google.common.truth.Truth
 import com.squareup.moshi.JsonAdapter
@@ -6,8 +6,10 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.local.assets.load
+import com.tangem.core.local.assets.loadList
+import com.tangem.core.local.assets.loadMap
 import com.tangem.grow.datasource.express.models.response.Asset
-import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
@@ -16,16 +18,13 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
-/**
-[REDACTED_AUTHOR]
- */
 @OptIn(ExperimentalStdlibApi::class)
 class AssetLoaderTest {
 
     private val assetReader = mockk<AssetReader>()
     private val moshi = mockk<Moshi>()
     private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>()
-    private val assetLoader = AssetLoader(
+    private val assetLoader = DefaultAssetLoader(
         assetReader = assetReader,
         moshi = moshi,
         analyticsExceptionHandler = analyticsExceptionHandler,
