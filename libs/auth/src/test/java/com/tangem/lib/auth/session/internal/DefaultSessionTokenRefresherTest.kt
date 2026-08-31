@@ -460,6 +460,33 @@ class DefaultSessionTokenRefresherTest {
         coVerify(exactly = 1) { authApi.authenticate(any<AuthApiRequest>()) }
     }
 
+    @Test
+    fun `ensureSession refreshes when the stored access token has expired`() = runTest {
+        val expired = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = Instant.fromEpochSeconds(1_699_999_000), // before fixedClock.now()
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(expired)
+        coEvery { authApi.refresh(RefreshApiRequest("rt-1")) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "new-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "rt-2",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+
+        val result = refresher.ensureSession()
+
+        // Stale access token must not be returned as-is — refresh rotates it via the refresh token.
+        assertThat(result.getOrNull()?.accessToken).isEqualTo("new-access")
+        coVerify(exactly = 1) { authApi.refresh(any()) }
+    }
+
     private fun stubAuthenticateHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
         coEvery { authApi.requestAuthNonce(any()) } returns ApiResponse.Success(
