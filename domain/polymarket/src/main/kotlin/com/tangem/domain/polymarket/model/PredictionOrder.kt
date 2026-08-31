@@ -3,7 +3,7 @@ package com.tangem.domain.polymarket.model
 import java.math.BigInteger
 
 data class PredictionOrder(
-    val salt: BigInteger,
+    val salt: Long,
     val maker: String,
     val signer: String,
     val tokenId: BigInteger,
