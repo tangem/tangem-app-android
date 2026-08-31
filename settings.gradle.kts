@@ -577,4 +577,5 @@ include(":data:earn")
 include(":data:search")
 include(":data:joint-account")
 include(":data:feed:search")
+include(":data:collectibles")
 // endregion Data modules
