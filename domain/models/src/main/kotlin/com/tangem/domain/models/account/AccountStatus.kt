@@ -40,6 +40,17 @@ sealed interface AccountStatus {
         fun flattenCurrencies(): List<CryptoCurrencyStatus> {
             return tokenList.flattenCurrencies()
         }
+
+        /** Returns a copy of the status with the given fields replaced, whichever kind it is */
+        fun copySealed(
+            tokenList: TokenList = this.tokenList,
+            priceChangeLce: Lce<Unit, PriceChange> = this.priceChangeLce,
+        ): CryptoPortfolio {
+            return when (this) {
+                is Personal -> copy(tokenList = tokenList, priceChangeLce = priceChangeLce)
+                is Joint -> copy(tokenList = tokenList, priceChangeLce = priceChangeLce)
+            }
+        }
     }
 
     /** The status of a crypto portfolio account of the wallet itself */
