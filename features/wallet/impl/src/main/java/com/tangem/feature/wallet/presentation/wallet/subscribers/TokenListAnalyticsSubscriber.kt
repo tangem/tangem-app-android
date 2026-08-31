@@ -33,7 +33,7 @@ internal class TokenListAnalyticsSubscriber @AssistedInject constructor(
     private suspend fun sendTokenListAnalytics(accountStatusList: AccountStatusList) {
         val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
 
-        val flattenCurrencies = accountStatusList.flattenCurrencies()
+        val flattenCurrencies = accountStatusList.flattenPersonalCurrencies()
         tokenListAnalyticsSender.send(
             displayedUiState = displayedState,
             userWallet = userWallet,
