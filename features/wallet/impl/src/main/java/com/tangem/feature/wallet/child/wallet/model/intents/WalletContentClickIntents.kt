@@ -76,7 +76,7 @@ internal interface WalletContentClickIntents {
 
     fun onManageTokensClick(accountId: AccountId)
 
-    fun onJointAccountClick(userWalletId: UserWalletId)
+    fun onJointAccountClick(userWalletId: UserWalletId, accountId: String)
 
     fun onManageTokensClick(userWalletId: UserWalletId)
 
@@ -254,8 +254,8 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         router.openManageTokensScreen(accountId)
     }
 
-    override fun onJointAccountClick(userWalletId: UserWalletId) {
-        router.openJointAccountMembers(userWalletId)
+    override fun onJointAccountClick(userWalletId: UserWalletId, accountId: String) {
+        router.openJointAccountMembers(userWalletId = userWalletId, accountId = accountId)
     }
 
     override fun onManageTokensClick(userWalletId: UserWalletId) {
