@@ -1,7 +1,7 @@
-package com.tangem.datasource.di
+package com.tangem.data.account.di
 
-import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
-import com.tangem.datasource.local.accounts.DefaultAccountTokenMigrationStore
+import com.tangem.data.account.store.AccountTokenMigrationStore
+import com.tangem.data.account.store.DefaultAccountTokenMigrationStore
 import com.tangem.core.local.datastore.RuntimeStateStore
 import dagger.Module
 import dagger.Provides

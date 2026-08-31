@@ -15,7 +15,7 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
-import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
