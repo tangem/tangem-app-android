@@ -866,7 +866,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
-        fun `GIVEN an active plastic issue order WHEN invoke THEN no issuing placeholder is added`() = runTest {
+        fun `GIVEN an active plastic issue order WHEN invoke THEN a delivering placeholder is added`() = runTest {
             // Arrange
             val customerInfo = buildCustomerInfo(productInstances = emptyList())
             stubHappyPath(customerInfo)
@@ -887,9 +887,56 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             fetcher.invoke(params)
 
             // Assert
-            assertThat(storedStatuses.last().value)
-                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+            val placeholder = storedStatuses.lastLoaded().cards.single()
+            assertThat(placeholder.id).isEqualTo("plastic_order")
+            assertThat(placeholder.state).isEqualTo(TangemPayCardState.Delivering)
+            assertThat(placeholder.cardType).isEqualTo(TangemPayCardType.PHYSICAL)
+            assertThat(placeholder.isPlaceholder).isTrue()
             coVerify(exactly = 0) { issueCardRepository.removeIssueOrderId(userWalletId, "plastic_order") }
+        }
+
+        @Test
+        fun `GIVEN the ordered plastic card surfaced WHEN invoke THEN no delivering placeholder is added`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance),
+                cards = listOf(
+                    createCardInfo(
+                        cardStatus = TangemPayCard.Status.INACTIVE,
+                        cardType = TangemPayCardType.PHYSICAL,
+                    ),
+                ),
+            )
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("plastic_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "plastic_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "plastic_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+                    productInstanceId = cardProductInstance.id,
+                ),
+            )
+            coEvery {
+                customerOrderRepository.findOrders(
+                    userWalletId = any(),
+                    types = setOf(OrderType.CARD_ACTIVATION_PLASTIC_RAIN),
+                    statuses = OrderStatus.activeStatuses,
+                )
+            } returns Either.Right(emptyList())
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val cards = storedStatuses.lastLoaded().cards
+            assertThat(cards).hasSize(1)
+            assertThat(cards.single().isPlaceholder).isFalse()
+            assertThat(cards.single().state).isEqualTo(TangemPayCardState.Delivering)
         }
 
         @Test
