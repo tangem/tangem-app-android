@@ -517,7 +517,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
                 builderCode = "0x00000000000000000000000000000000000000000000000000000000000000aa",
             ),
             depositWalletAddress = DEPOSIT_WALLET,
-            salt = BigInteger("1234567890"),
+            salt = 1_234_567_890L,
             timestampMillis = TIMESTAMP_MILLIS,
         )
     }
