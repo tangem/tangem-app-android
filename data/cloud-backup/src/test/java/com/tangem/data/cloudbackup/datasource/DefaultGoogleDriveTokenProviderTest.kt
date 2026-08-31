@@ -4,7 +4,7 @@ import android.content.Context
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.test.core.ProvideTestModels

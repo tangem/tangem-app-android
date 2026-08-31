@@ -129,7 +129,7 @@ internal class ManageCryptoCurrenciesUseCaseTest {
     }
 
     private fun createAccountStatusList(
-        account: Account.CryptoPortfolio,
+        account: Account.Personal,
         currencies: List<CryptoCurrency>,
     ): com.tangem.domain.account.models.AccountStatusList {
         val statuses = currencies.map { createStatus(currency = it, fiatAmount = BigDecimal.ONE) }
@@ -137,7 +137,7 @@ internal class ManageCryptoCurrenciesUseCaseTest {
         return com.tangem.domain.account.models.AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Personal(
                     account = account,
                     tokenList = createUngrouped(statuses = statuses),
                     priceChangeLce = com.tangem.domain.core.utils.lceLoading(),

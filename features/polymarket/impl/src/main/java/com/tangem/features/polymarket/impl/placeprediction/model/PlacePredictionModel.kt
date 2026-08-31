@@ -236,7 +236,7 @@ internal class PlacePredictionModel @Inject constructor(
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Posting))
 
         withContext(dispatchers.default) {
-            placePredictionOrderUseCase(addresses = addresses, signedOrder = signedOrder)
+            placePredictionOrderUseCase(addresses = addresses, signedOrder = signedOrder, isNegRisk = isNegRisk)
         }
             .map { result ->
                 PlaceResultUMConverter.convert(

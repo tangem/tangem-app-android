@@ -296,8 +296,8 @@
   <string name="common_approved">Approved</string>
   <string name="common_approving">Approving</string>
   <plurals name="common_assets_count">
-    <item quantity="one">%d asset</item>
-    <item quantity="other">%d assets</item>
+    <item quantity="one">Top %d asset</item>
+    <item quantity="other">Top %d assets</item>
   </plurals>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
@@ -1008,6 +1008,16 @@
   <string name="introduction_i_have_wallet_hardware_description">Use Tangem Wallet to enter the app</string>
   <string name="introduction_i_have_wallet_sign_in_google_title">Sign in with Google</string>
   <string name="introduction_legal">By continuing, you agree with %1$s and %2$s</string>
+  <string name="introduction_stories_button_primary">Scan your wallet</string>
+  <string name="introduction_stories_button_secondary">Learn more or buy</string>
+  <string name="introduction_stories_four_subtitle">Join the self-custody wallet used worldwide</string>
+  <string name="introduction_stories_four_title">Trusted by millions</string>
+  <string name="introduction_stories_one_subtitle">Confirm every action with your Tangem </string>
+  <string name="introduction_stories_one_title">One tap to control crypto</string>
+  <string name="introduction_stories_three_subtitle">Your private keys never leave the card.</string>
+  <string name="introduction_stories_three_title">Your keys, your crypto</string>
+  <string name="introduction_stories_two_subtitle">Use any of your cards to access your wallet</string>
+  <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_terms_of_service">Terms of service</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval.</string>
@@ -1041,6 +1051,8 @@
     <item quantity="other">%d members</item>
   </plurals>
   <string name="joint_account_members_progress">%1$s of %2$s members</string>
+  <string name="joint_account_members_role_joined">Joined</string>
+  <string name="joint_account_members_role_you">You</string>
   <string name="joint_account_members_signers_subtitle">To approve operations</string>
   <string name="joint_account_members_signers_title">Required to sign</string>
   <string name="joint_account_members_subtitle">Set how many people share the account. Every transaction like send, swap or close waits for %1$s of %2$s to sign. This is locked once.</string>
@@ -1100,15 +1112,15 @@
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
   <plurals name="market_chart_assets_android">
-    <item quantity="one">%d asset</item>
-    <item quantity="other">%d assets</item>
+    <item quantity="one">Top %d asset</item>
+    <item quantity="other">Top %d assets</item>
   </plurals>
   <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
   <string name="market_chart_can_not_load_data">Can’t load data</string>
   <string name="market_chart_no_amount">You don’t have any tokens with amount</string>
-  <string name="market_chart_top_holding">Top holding %s</string>
+  <string name="market_chart_top_holding">%s of your portfolio</string>
   <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
@@ -2180,7 +2192,7 @@
   <string name="tangempay_card_delivery_banner_description">Activate it when arrived</string>
   <string name="tangempay_card_delivery_banner_description_many">Activate them when arrived</string>
   <string name="tangempay_card_delivery_banner_title">Your card on it\'s way for delivery</string>
-  <string name="tangempay_card_delivery_banner_title_many">Your cards on it\'s way for delivery</string>
+  <string name="tangempay_card_delivery_banner_title_many">Your cards on its\' way for delivery</string>
   <string name="tangempay_card_details_activate">Activate card</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>

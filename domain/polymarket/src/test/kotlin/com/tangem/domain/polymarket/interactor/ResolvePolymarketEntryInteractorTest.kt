@@ -115,7 +115,7 @@ internal class ResolvePolymarketEntryInteractorTest {
             depositWalletAddress = "0xDeposit",
             status = PolymarketWalletStatus.READY_TO_TRADE,
             hasCredentials = false,
-            expected = PolymarketEntry.Onboard(PolymarketWalletStatus.READY_TO_TRADE),
+            expected = PolymarketEntry.Reconnect,
         ),
     )
 
@@ -163,6 +163,23 @@ internal class ResolvePolymarketEntryInteractorTest {
                 assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Undetermined)
                 coVerify(exactly = 0) { deriveAddresses(userWalletId) }
                 coVerify(exactly = 0) { getWalletStatus(addresses) }
+            }
+
+        @Test
+        fun `GIVEN a recorded wallet with no stored address WHEN withoutPrompting THEN Reconnect without asking`() =
+            runTest {
+                // Arrange
+                coEvery { onboardedStore.isOnboardedSync(userWalletId) } returns true
+                coEvery { getApiCredentials(any()) } returns null
+                coEvery { deriveAddresses.stored(userWalletId) } returns null
+
+                // Act
+                val actual = useCase.withoutPrompting(userWalletId)
+
+                // Assert
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Reconnect)
+                coVerify(exactly = 0) { deriveAddresses(userWalletId) }
+                coVerify(exactly = 0) { getWalletStatus(any()) }
             }
 
         @Test
@@ -231,8 +248,7 @@ internal class ResolvePolymarketEntryInteractorTest {
                 val actual = useCase.withoutPrompting(userWalletId)
 
                 // Assert
-                assertThat(actual.getOrNull())
-                    .isEqualTo(PolymarketEntry.Onboard(status = PolymarketWalletStatus.READY_TO_TRADE))
+                assertThat(actual.getOrNull()).isEqualTo(PolymarketEntry.Reconnect)
                 coVerify(exactly = 1) { getWalletStatus(addresses) }
             }
 

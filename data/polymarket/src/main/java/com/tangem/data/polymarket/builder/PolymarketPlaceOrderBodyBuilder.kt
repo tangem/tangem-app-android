@@ -13,7 +13,7 @@ internal object PolymarketPlaceOrderBodyBuilder {
 
         val request = PolymarketPlaceOrderRequest(
             order = PolymarketPlaceOrderRequest.Order(
-                salt = order.salt.toLong(),
+                salt = order.salt,
                 maker = order.maker.lowercase(),
                 signer = order.signer.lowercase(),
                 tokenId = order.tokenId.toString(),

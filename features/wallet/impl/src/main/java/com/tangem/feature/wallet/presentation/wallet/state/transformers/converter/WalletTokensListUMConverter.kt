@@ -73,13 +73,13 @@ internal class WalletTokensListUMConverter(
 
     override fun convert(value: AccountStatusList): WalletTokensListUM {
         val promoCryptoCurrency = yieldSupplyPromoBannerConverter.convert2(value = value)
-        return if (value.flattenCurrencies().isEmpty()) {
+        return if (value.flattenPersonalCurrencies().isEmpty()) {
             WalletTokensListUM.Empty(
                 onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
             )
         } else {
             val tokenListUM = value.accountStatuses
-                .filterIsInstance<AccountStatus.CryptoPortfolio>()
+                .filterIsInstance<AccountStatus.Personal>()
                 .asSequence()
                 .flatMap { accountStatus ->
                     if (isAccountsModeEnabled) {
@@ -162,7 +162,7 @@ internal class WalletTokensListUMConverter(
     private fun getOrganizeButtonUM(accountList: AccountStatusList): TangemButtonUM? {
         val textRes = R.string.main_add_and_manage_tokens
         val iconRes = R.drawable.ic_filter_default_24
-        return if (accountList.flattenCurrencies().isNotEmpty() && !selectedWallet.isSingleCurrency()) {
+        return if (accountList.flattenPersonalCurrencies().isNotEmpty() && !selectedWallet.isSingleCurrency()) {
             TangemButtonUM(
                 text = resourceReference(textRes),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
