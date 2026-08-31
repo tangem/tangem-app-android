@@ -11,7 +11,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
-@Immutable
 internal data class SlippagePickerUM(
     val value: String,
     val error: TextReference?,
