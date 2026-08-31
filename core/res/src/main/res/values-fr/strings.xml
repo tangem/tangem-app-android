@@ -766,13 +766,13 @@
   <string name="hw_cloud_backup_error_title">Une erreur est survenue</string>
   <string name="hw_cloud_backup_error_unavailable">La sauvegarde via le cloud n\'est pas disponible sur cet appareil.</string>
   <string name="hw_cloud_backup_error_write">Impossible d\'enregistrer votre sauvegarde. Veuillez réessayer.</string>
-  <string name="hw_cloud_backup_hide_password">Masquer mot de passe</string>
+  <string name="hw_cloud_backup_hide_password">Masquer le mot de passe</string>
   <string name="hw_cloud_backup_no_access_description">Reconnectez-vous à votre compte Google pour sauvegarder votre portefeuille.</string>
   <string name="hw_cloud_backup_no_access_sign_in">Se connecter</string>
   <string name="hw_cloud_backup_no_backups_description">Connectez-vous à un autre compte ou importez votre phrase de récupération.</string>
   <string name="hw_cloud_backup_not_found_create">Créer une sauvegarde</string>
   <string name="hw_cloud_backup_not_found_description">Ce portefeuille a été sauvegardé par le passé, mais nous n\'avons pas pu trouver la sauvegarde.</string>
-  <string name="hw_cloud_backup_not_found_forget">Oublier sauvegarde</string>
+  <string name="hw_cloud_backup_not_found_forget">Oublier la sauvegarde</string>
   <string name="hw_cloud_backup_not_found_title">Sauvegarde introuvable</string>
   <string name="hw_cloud_backup_password_hint">Mot de passe</string>
   <string name="hw_cloud_backup_password_rule_v2">Utilisez %d caractères ou plus, avec majuscules, minuscules, chiffres et symboles.</string>
@@ -788,7 +788,7 @@
   <string name="hw_cloud_backup_restore_passphrase_title">Saisir la passphrase</string>
   <string name="hw_cloud_backup_restore_password_button">Restaurer</string>
   <string name="hw_cloud_backup_restore_password_description">Vous restaurez \"%1$s\" depuis une sauvegarde %2$s créée le %3$s</string>
-  <string name="hw_cloud_backup_restore_password_navtitle">Restaurer le wallet</string>
+  <string name="hw_cloud_backup_restore_password_navtitle">Restaurer le portefeuille</string>
   <string name="hw_cloud_backup_restore_password_title">Saisir le mot de passe</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Importer la phrase de récupération</string>
   <string name="hw_cloud_backup_restore_wrong_password">Mot de passe incorrect. Veuillez réessayer.</string>
@@ -2046,7 +2046,7 @@
   <string name="tangempay_onboarding_setup_wallet_title">Nous allons créer un nouveau wallet</string>
   <string name="tangempay_onboarding_title">Obtenez votre carte Tangem Pay en minutes</string>
   <string name="tangempay_other_networks_header">Autres réseaux</string>
-  <string name="tangempay_other_networks_subtitle">Puis échangez-le au taux 1:1 sans frais vers votre compte de paiement</string>
+  <string name="tangempay_other_networks_subtitle">Puis échangez-le sans frais vers votre compte de paiement</string>
   <string name="tangempay_other_networks_title">Envoyez des USDT/USDC sur n\'importe quelle chaîne vers votre Tangem Wallet</string>
   <string name="tangempay_pay_support">Assistance</string>
   <string name="tangempay_payment_account">Compte de paiement</string>
@@ -2097,8 +2097,8 @@
   <string name="tangempay_tangem_visa_card">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Recevez des USD via ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Virement bancaire</string>
+  <string name="tangempay_topup_bank_transfer_body">Recevoir des USD depuis un compte bancaire via ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">Depuis un compte bancaire</string>
   <string name="tangempay_topup_receive_body">Envoyez USDC Polygon à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_body_multichain">Envoyez des USDC ou USDT à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_title">Depuis un autre wallet ou exchange</string>
