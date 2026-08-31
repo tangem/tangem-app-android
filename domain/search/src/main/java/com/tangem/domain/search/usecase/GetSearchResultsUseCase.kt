@@ -3,7 +3,7 @@ package com.tangem.domain.search.usecase
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -92,7 +92,7 @@ class GetSearchResultsUseCase(
 
         val totalAccounts = statusLists
             .filter { sl -> unlockedWallets.any { it.walletId == sl.userWalletId } }
-            .sumOf { it.accountStatuses.filterCryptoPortfolio().size }
+            .sumOf { it.accountStatuses.filterIsInstance<AccountStatus.Personal>().size }
 
         return totalAccounts > 1
     }
@@ -139,7 +139,7 @@ class GetSearchResultsUseCase(
     ): List<UserAssetEntry> {
         val wallet = wallets[statusList.userWalletId] ?: return emptyList()
         return statusList.accountStatuses
-            .filterCryptoPortfolio()
+            .filterIsInstance<AccountStatus.Personal>()
             .flatMap { accountStatus ->
                 accountStatus.flattenCurrencies()
                     .filter { currencyStatus ->
