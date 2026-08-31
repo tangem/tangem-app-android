@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -96,7 +97,7 @@ internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 internal data class SlippageUM(val percent: BigDecimal, val isDefault: Boolean)
 
 internal fun SlippageUM.label(): TextReference {
-    val formatted = "$percent%"
+    val formatted = percent.formatSlippagePercent()
 
     return if (isDefault) {
         resourceReference(R.string.prediction_place_slippage_default, wrappedList(formatted))
