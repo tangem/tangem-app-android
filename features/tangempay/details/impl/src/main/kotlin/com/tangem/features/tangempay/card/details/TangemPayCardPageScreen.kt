@@ -37,6 +37,7 @@ import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletBlock
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueBlock
 import com.tangem.features.tangempay.card.view.DisplayNameState
@@ -427,13 +428,51 @@ private fun previewDeliveryState(email: String) = TangemPayCardDeliveryUM(
     onActivateCardClick = {},
 )
 
+private fun previewCardPageState(
+    cardState: TangemPayCardState = TangemPayCardState.Active,
+    addToWalletBlockState: AddToWalletBlockState? = AddToWalletBlockState(onClick = {}, onClickClose = {}),
+    settings: ImmutableList<TangemPayCardPageSetting> = previewSettings(),
+    delivery: TangemPayCardDeliveryUM? = null,
+) = TangemPayCardPageUM(
+    settings = settings,
+    onBackClick = {},
+    dailyLimitState = TangemPayDailyLimitBlockState.Content(limit = "$5,000", onChangeClick = {}),
+    addToWalletBlockState = addToWalletBlockState,
+    cardState = cardState,
+    menuItems = persistentListOf(),
+    delivery = delivery,
+)
+
+private fun previewSettings(): ImmutableList<TangemPayCardPageSetting> = persistentListOf(
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.Details,
+        title = resourceReference(R.string.details_title),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+    ),
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.Freeze,
+        title = resourceReference(R.string.tangem_pay_freeze_card_freeze),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_freeze_24,
+        isLoading = true,
+    ),
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.ChangePin,
+        title = resourceReference(R.string.tangem_pay_pin_code_title),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_card_pin_24,
+        isEnabled = false,
+    ),
+)
+
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun TangemPayCardPageScreenPreview() {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
-            state = TangemPayCardPageUM.stub(),
+            state = previewCardPageState(),
             cardSection = {
                 TangemPayCard(
                     state = previewCardDetailsState(),
@@ -452,11 +491,11 @@ private fun TangemPayCardPageScreenDeliveryPreview(
 ) {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
-            state = TangemPayCardPageUM.stub(
+            state = previewCardPageState(
                 cardState = TangemPayCardState.Delivering,
-                delivery = delivery,
                 addToWalletBlockState = null,
                 settings = persistentListOf(),
+                delivery = delivery,
             ),
             cardSection = {
                 TangemPayCard(
@@ -477,7 +516,7 @@ private fun TangemPayCardPageScreenDeliveryPreview(
 private fun TangemPayCardPageScreenActivatingPreview() {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
-            state = TangemPayCardPageUM.stub(
+            state = previewCardPageState(
                 cardState = TangemPayCardState.Activating,
                 addToWalletBlockState = null,
                 settings = persistentListOf(),
