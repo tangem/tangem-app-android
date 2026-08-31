@@ -59,7 +59,7 @@ internal class JointAccountCreationModel @Inject constructor(
             creatorName = displayName,
         ).fold(
             ifLeft = ::onCreationError,
-            ifRight = { openMembers(userWalletId = config.walletId) },
+            ifRight = { account -> openMembers(userWalletId = config.walletId, accountId = account.cryptoAccountId) },
         )
     }
 
@@ -78,8 +78,8 @@ internal class JointAccountCreationModel @Inject constructor(
         }
     }
 
-    private fun openMembers(userWalletId: UserWalletId) {
-        router.replaceAll(AppRoute.JointAccountMembers(userWalletId = userWalletId))
+    private fun openMembers(userWalletId: UserWalletId, accountId: String) {
+        router.replaceAll(AppRoute.JointAccountMembers(userWalletId = userWalletId, accountId = accountId))
     }
 
     private fun showError() {

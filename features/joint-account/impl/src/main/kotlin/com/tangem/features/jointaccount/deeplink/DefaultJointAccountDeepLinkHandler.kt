@@ -76,7 +76,10 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
                 DeepLinkRoute.JointAccount.ENTRY_MEMBERS -> {
                     analyticsEventHandler.send(PushNotificationAnalyticEvents.NotificationOpened(type.name))
                     appRouter.push(
-                        route = AppRoute.JointAccountMembers(userWalletId = userWallet.walletId),
+                        route = AppRoute.JointAccountMembers(
+                            userWalletId = userWallet.walletId,
+                            accountId = account.accountId.value,
+                        ),
                         onComplete = { walletDeepLinkActionTrigger.selectWallet(userWallet.walletId) },
                     )
                 }
