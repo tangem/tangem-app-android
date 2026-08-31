@@ -132,7 +132,7 @@ internal class TangemPayCardActivationModel @Inject constructor(
             )
             VisaApiError.CardActivationCardNotPhysical -> showRejectionSheet(
                 title = resourceReference(R.string.tangempay_card_activation_error_not_physical),
-                onClose = { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails::class) },
+                onClose = { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) },
             )
             VisaApiError.CardActivationCardAlreadyActive -> {
                 paymentAccountStatusFetcher.invoke(params.userWalletId)

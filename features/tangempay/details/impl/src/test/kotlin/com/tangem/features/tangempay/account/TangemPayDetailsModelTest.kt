@@ -8,6 +8,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.StatusSource
@@ -28,6 +30,10 @@ import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.pay.model.CardIssueOffers
+import com.tangem.domain.pay.model.Offer
+import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -71,6 +77,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import java.util.Currency
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class TangemPayDetailsModelTest {
@@ -83,6 +90,8 @@ internal class TangemPayDetailsModelTest {
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase = mockk(relaxed = true)
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase = mockk(relaxed = true)
+    private val getCustomerOffers: GetCustomerOffersUseCase = mockk(relaxed = true)
+    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     @BeforeEach
     fun resetCashbackMocks() {
@@ -665,6 +674,69 @@ internal class TangemPayDetailsModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN the offers request fails WHEN add card clicked THEN a message is shown and nothing is opened`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
+            coEvery { getCustomerOffers.cardIssueOffers(any()) } returns VisaApiError.ServerUnavailable.left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onAddCardClick(tariffState = null)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+            verify(exactly = 0) { router.push(any<TangemPayAccountDetailsInnerRoute.OrderCard>()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no offers WHEN add card clicked THEN a message is shown and nothing is opened`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
+        coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
+            CardIssueOffers(virtual = null, plastic = null).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAddCardClick(tariffState = null)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+        verify(exactly = 0) { router.push(any<TangemPayAccountDetailsInnerRoute.OrderCard>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN only a plastic offer WHEN add card clicked THEN the order screen is opened`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
+        coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
+            CardIssueOffers(virtual = null, plastic = plasticOffer()).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAddCardClick(tariffState = null)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
+        verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
+        model.onDestroy()
+    }
+
+    private fun plasticOffer() = Offer(
+        type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
+        fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
+        data = Offer.Data(specificationName = "spec", orderType = OrderType.UNKNOWN),
+    )
+
     private fun createModel(
         testScope: TestScope,
         statusSource: StatusSource = StatusSource.ACTUAL,
@@ -702,7 +774,7 @@ internal class TangemPayDetailsModelTest {
             router = router,
             urlOpener = mockk(relaxed = true),
             getBalanceHidingSettingsUseCase = mockk(relaxed = true),
-            uiMessageSender = mockk(relaxed = true),
+            uiMessageSender = uiMessageSender,
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = mockk(relaxed = true),
             sendFeedbackEmailUseCase = mockk(relaxed = true),
@@ -710,7 +782,7 @@ internal class TangemPayDetailsModelTest {
             paymentAccountStatusFetcher = mockk(relaxed = true),
             produceTangemPayInitialDataUseCase = mockk(relaxed = true),
             onboardingRepository = mockk(relaxed = true),
-            getCustomerOffers = mockk(relaxed = true),
+            getCustomerOffers = getCustomerOffers,
             getCashbackSummaryUseCase = getCashbackSummaryUseCase,
             getBankCredentialsUseCase = getBankCredentialsUseCase,
             getCashbackDeactivationDismissedUseCase = mockk(relaxed = true),

@@ -186,9 +186,9 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
                         createSubmitFailedMessage(error) { submitOrder(order, email, idempotencyKey) },
                     )
                 },
-                ifRight = { createdOrder ->
+                ifRight = {
                     setSubmitting(isSubmitting = false)
-                    params.onOrderAccepted(email, createdOrder.productInstanceId)
+                    params.onOrderAccepted(email)
                 },
             )
         }.saveIn(submitJobHolder)
