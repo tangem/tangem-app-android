@@ -1,7 +1,7 @@
 package com.tangem.data.common.wallet
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
