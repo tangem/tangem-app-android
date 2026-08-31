@@ -120,6 +120,7 @@ import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
+import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
@@ -216,12 +217,22 @@ internal class SwapModel @Inject constructor(
 
     val chooseFromTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
         modelScope = modelScope,
-        settings = if (isTangemPayWithdrawFlow) {
-            ChooseTokenBridge.Settings.WithdrawFrom.withAccountFlowTokenSelection()
-        } else {
-            ChooseTokenBridge.Settings.SwapFrom
-                .copy(isHideZeroBalanceFilterEnabled = swapFeatureToggles.isHideZeroBalanceSourceEnabled)
-                .withAccountFlowTokenSelection()
+        settings = when {
+            // Withdrawal draws from the account itself, so the selector lists all of its issued tokens.
+            isTangemPayWithdrawFlow ->
+                ChooseTokenBridge.Settings.WithdrawFrom.copy(
+                    paymentAccountTokens = PaymentAccountTokens.IssuedTokens,
+                )
+            // Funding the account from itself is not an operation the user can make.
+            isAccountTopUp ->
+                ChooseTokenBridge.Settings.SwapFrom.copy(
+                    isHideZeroBalanceFilterEnabled = swapFeatureToggles.isHideZeroBalanceSourceEnabled,
+                    paymentAccountTokens = PaymentAccountTokens.Hidden,
+                )
+            else ->
+                ChooseTokenBridge.Settings.SwapFrom.copy(
+                    isHideZeroBalanceFilterEnabled = swapFeatureToggles.isHideZeroBalanceSourceEnabled,
+                )
         },
         analyticsPayload = setOf(
             ChooseTokenAnalyticsPayload.ScreensSources(ScreensSources.Swap.value),
@@ -229,7 +240,15 @@ internal class SwapModel @Inject constructor(
     )
     val chooseToTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
         modelScope = modelScope,
-        settings = ChooseTokenBridge.Settings.SwapTo.withAccountFlowTokenSelection(),
+        settings = when {
+            // Withdrawing into the account the funds are leaving is not an operation the user can make.
+            isTangemPayWithdrawFlow ->
+                ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.Hidden)
+            // Topping up targets the account, so its issued tokens are the destinations.
+            isAccountTopUp ->
+                ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.IssuedTokens)
+            else -> ChooseTokenBridge.Settings.SwapTo
+        },
         analyticsPayload = setOf(
             ChooseTokenAnalyticsPayload.ScreensSources(ScreensSources.Swap.value),
         ),
@@ -2598,13 +2617,6 @@ internal class SwapModel @Inject constructor(
     }
 
     /**
-     * In an account flow the payment account is the flow's subject, so its section lists every token the
-     * account is issued on instead of the single account currency.
-     */
-    private fun ChooseTokenBridge.Settings.withAccountFlowTokenSelection(): ChooseTokenBridge.Settings =
-        if (isAccountFlowActive) copy(isPaymentAccountMultiTokenEnabled = true) else this
-
-    /**
      * Applied here rather than in [StateBuilder] so every state it produces gets the same treatment. The main
      * button is deliberately left alone: it keeps its dynamic Transfer/Swap label in account flows too.
      */
@@ -2632,7 +2644,7 @@ internal class SwapModel @Inject constructor(
         return if (swapFeatureToggles.isAccountSwapFlowEnabled) {
             // Mode-based detection (accountFlow is Withdraw) covers the Tangem Pay withdraw-via-swap entry
             // point, but a regular swap entry (accountFlow == null) still lets the user manually pick the
-            // Payment account as FROM (Settings.SwapFrom keeps isShowPaymentAccount = true) — preserve the
+            // Payment account as FROM (Settings.SwapFrom keeps the payment account visible) — preserve the
             // legacy slot-based safety net for that case so it still routes through CEX-only/withdrawal
             // handling instead of being treated as an ordinary swap.
             accountFlow is AccountFlow.Withdraw || fromSwapCurrencyStatus?.account is Account.Payment
