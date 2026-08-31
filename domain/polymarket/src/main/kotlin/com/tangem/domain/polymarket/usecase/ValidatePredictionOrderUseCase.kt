@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.Raise
 import arrow.core.raise.ensure
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -33,8 +34,8 @@ class ValidatePredictionOrderUseCase {
         ensureIdentity(order = order, draft = draft, depositWalletAddress = depositWalletAddress)
         ensureTimestamp(order = order, nowMillis = nowMillis)
 
-        val signatureLength = signedOrder.signature.removePrefix(HEX_PREFIX).length
-        ensure(signatureLength > BARE_SIGNATURE_HEX_LENGTH) {
+        val signatureLength = signedOrder.signature.removePrefix(PolymarketContracts.HEX_PREFIX).length
+        ensure(signatureLength > PolymarketContracts.SIGNATURE_RSV_HEX_LENGTH) {
             PredictionOrderValidationError.SignatureNotWrapped(length = signatureLength)
         }
 
@@ -112,7 +113,7 @@ class ValidatePredictionOrderUseCase {
         draft: PredictionOrderDraft,
         depositWalletAddress: String,
     ) {
-        ensure(order.signatureType == SIGNATURE_TYPE_DEPOSIT_WALLET) {
+        ensure(order.signatureType == PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET) {
             PredictionOrderValidationError.WrongSignatureType(signatureType = order.signatureType)
         }
         ensure(order.maker.equals(depositWalletAddress, ignoreCase = true)) {
@@ -120,6 +121,9 @@ class ValidatePredictionOrderUseCase {
                 maker = order.maker,
                 expected = depositWalletAddress,
             )
+        }
+        ensure(order.signer.equals(order.maker, ignoreCase = true)) {
+            PredictionOrderValidationError.SignerIsNotMaker(signer = order.signer, maker = order.maker)
         }
         ensure(order.side == draft.side) {
             PredictionOrderValidationError.SideMismatch(signed = order.side, quoted = draft.side)
@@ -145,13 +149,7 @@ class ValidatePredictionOrderUseCase {
     }
 
     private companion object {
-        const val SIGNATURE_TYPE_DEPOSIT_WALLET = 3
-
         const val MILLIS_THRESHOLD = 1_000_000_000_000L
-
-        const val HEX_PREFIX = "0x"
-
-        const val BARE_SIGNATURE_HEX_LENGTH = 130
 
         const val MAX_QUOTE_AGE_MILLIS = 60_000L
 
