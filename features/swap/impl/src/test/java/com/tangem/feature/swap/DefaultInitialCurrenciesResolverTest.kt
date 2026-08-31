@@ -1440,6 +1440,37 @@ internal class DefaultInitialCurrenciesResolverTest {
     // region helpers
 
     @Test
+    fun `GIVEN top up and the account currency is not an issued network WHEN resolve THEN TO is an account token`() =
+        runTest {
+            // Arrange — Add funds passes the account's legacy currency into the TO slot; a multichain account
+            // may not hold it at all.
+            val legacyCurrency = mockCryptoCurrency()
+            val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal.ZERO)
+            val issuedStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("40"))
+            val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+            setupSupplier(
+                listOf(
+                    createPaymentAccountStatus(legacyStatus, listOf(issuedStatus)),
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+            coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(issuedStatus)
+
+            // Act
+            val (_, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = legacyCurrency,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = AccountFlow.TopUp,
+                isAccountFlowEnabled = true,
+            )
+
+            // Assert
+            assertThat(to?.status).isSameInstanceAs(issuedStatus)
+        }
+
+    @Test
     fun `GIVEN withdraw and account issued on several networks WHEN resolve THEN most funded account token is FROM`() =
         runTest {
             // Arrange — the entry point passes the account's legacy currency, which no issued network provides.
