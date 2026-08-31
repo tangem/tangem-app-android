@@ -12,10 +12,6 @@ import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
 import com.tangem.data.cloudbackup.crypto.CloudBackupFileData
 import com.tangem.data.cloudbackup.crypto.CloudBackupSecret
-import com.tangem.data.cloudbackup.datasource.DriveFile
-import com.tangem.data.cloudbackup.datasource.DriveFileMetadata
-import com.tangem.data.cloudbackup.datasource.GoogleDriveApi
-import com.tangem.data.cloudbackup.datasource.GoogleDriveTokenProvider
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
@@ -23,6 +19,11 @@ import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
+import com.tangem.google.auth.GoogleAuthError
+import com.tangem.google.drive.DriveFile
+import com.tangem.google.drive.DriveFileMetadata
+import com.tangem.google.drive.GoogleDriveApi
+import com.tangem.google.drive.GoogleDriveTokenProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -287,7 +288,7 @@ internal class DefaultCloudBackupRepository(
     }
 
     private suspend fun Raise<CloudBackupError>.authHeader(interactive: Boolean = true): String {
-        val token = tokenProvider.getAccessToken(interactive = interactive).bind()
+        val token = tokenProvider.getAccessToken(interactive).mapLeft(GoogleAuthError::toDomainError).bind()
         return "Bearer $token"
     }
 
@@ -501,4 +502,13 @@ private suspend fun hasSupportedContent(
 private fun CloudBackupCryptoError.toDomainError(): CloudBackupError = when (this) {
     CloudBackupCryptoError.WrongPassword -> CloudBackupError.WrongPassword
     is CloudBackupCryptoError.InvalidFormat -> CloudBackupError.InvalidBackupFile
+}
+
+private fun GoogleAuthError.toDomainError(): CloudBackupError = when (this) {
+    GoogleAuthError.AuthCanceled -> CloudBackupError.AuthCanceled
+    GoogleAuthError.AuthRequired -> CloudBackupError.AuthRequired
+    GoogleAuthError.PermissionsMissing -> CloudBackupError.AuthPermissionsMissing
+    GoogleAuthError.Unavailable -> CloudBackupError.CloudUnavailable
+    GoogleAuthError.NetworkError -> CloudBackupError.NetworkError
+    is GoogleAuthError.Unknown -> CloudBackupError.Unknown(cause)
 }
