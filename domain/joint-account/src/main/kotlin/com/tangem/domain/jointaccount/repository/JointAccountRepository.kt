@@ -74,4 +74,13 @@ interface JointAccountRepository {
         walletId: UserWalletId,
         inviteId: String,
     ): Either<JointAccountInvitePreviewError, JointAccountInvitePreview>
+
+    /**
+     * The unused invites of the joint account [cryptoAccountId] that live on this device.
+     *
+
+     * list also answers "this device is not the creator's". Never throws: a store that cannot be read is an
+     * empty list, so a screen built on this keeps rendering everything else.
+     */
+    suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String>
 }
