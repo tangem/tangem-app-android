@@ -2253,8 +2253,8 @@
   <string name="tangempay_tangem_visa_card">日常の支払いにUSDCを利用</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">ACHで米ドル（フィアット）を受け取る</string>
-  <string name="tangempay_topup_bank_transfer_title">銀行振込</string>
+  <string name="tangempay_topup_bank_transfer_body">ACH経由で銀行口座からUSDを受け取る</string>
+  <string name="tangempay_topup_bank_transfer_title">銀行口座から</string>
   <string name="tangempay_topup_receive_body">USDC Polygon をアカウントのアドレスに送信</string>
   <string name="tangempay_topup_receive_body_multichain">USDCまたはUSDTをアカウントのアドレスに送金してください</string>
   <string name="tangempay_topup_receive_title">別のウォレットまたは取引所から</string>

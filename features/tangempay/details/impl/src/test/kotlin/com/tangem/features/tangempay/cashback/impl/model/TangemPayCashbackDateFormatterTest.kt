@@ -54,6 +54,18 @@ internal class TangemPayCashbackDateFormatterTest {
     }
 
     @Test
+    fun `GIVEN russian locale WHEN formatMonth THEN nominative month name`() {
+        // Arrange
+        Locale.setDefault(Locale("ru"))
+
+        // Act
+        val actual = formatter.formatMonth(year = 2026, month = 8)
+
+        // Assert
+        assertThat(actual).isEqualTo("август")
+    }
+
+    @Test
     fun `GIVEN russian locale WHEN formatShortMonth THEN nominative month name`() {
         // Arrange
         Locale.setDefault(Locale("ru"))
