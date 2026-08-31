@@ -66,6 +66,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
+import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
+import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationFactory
 
 @Stable
 @ModelScoped
@@ -92,11 +94,14 @@ internal class SendDestinationModel @Inject constructor(
     private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
+    getJointAccountSupportedNetworksUseCase: GetJointAccountSupportedNetworksUseCase,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
+
+    private val jointAccountSupportedNetworks = getJointAccountSupportedNetworksUseCase()
 
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
@@ -387,8 +392,12 @@ internal class SendDestinationModel @Inject constructor(
                                 is AccountStatus.Virtual -> emptyList()
                                 is AccountStatus.Prediction -> emptyList()
                                 is AccountStatus.Collectibles -> emptyList()
-                                // while it is not applicable
-                                is AccountStatus.Joint -> emptyList()
+                                is AccountStatus.Joint -> JointAccountDestinationFactory.create(
+                                    accountStatus = accountStatus,
+                                    wallet = wallet,
+                                    cryptoCurrency = cryptoCurrency,
+                                    supportedNetworks = jointAccountSupportedNetworks,
+                                )
                             }
                         }
                     }
