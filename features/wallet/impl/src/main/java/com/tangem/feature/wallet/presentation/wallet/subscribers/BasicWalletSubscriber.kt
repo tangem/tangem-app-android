@@ -4,6 +4,8 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
@@ -46,7 +48,7 @@ internal abstract class BasicWalletSubscriber : WalletSubscriber() {
         return getAccountStatusListFlow()
             .mapNotNull { accountStatusList ->
                 accountStatusList.accountStatuses
-                    .filterIsInstance<AccountStatus.Personal>()
+                    .filterCryptoPortfolio()
                     .find { accountStatus -> accountStatus.account.isMainAccount }
             }
             .distinctUntilChanged()
