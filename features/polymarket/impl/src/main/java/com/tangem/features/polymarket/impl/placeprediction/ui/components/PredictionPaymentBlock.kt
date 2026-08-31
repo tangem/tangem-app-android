@@ -20,6 +20,8 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
@@ -77,7 +79,8 @@ private fun AmountRow(amountValue: String, payout: PayoutUM?, payment: PaymentSo
             verticalArrangement = Arrangement.spacedBy(space = 4.dp),
         ) {
             Text(
-                text = amountValue.toBigDecimalOrNull()?.formatPolymarketEnteredAmount().orEmpty(),
+                text = amountValue.parseToBigDecimal(PolymarketConst.COLLATERAL_DECIMALS)
+                    .formatPolymarketEnteredAmount(),
                 style = TangemTheme.typography3.heading.medium,
                 color = TangemTheme.colors3.text.primary,
             )
