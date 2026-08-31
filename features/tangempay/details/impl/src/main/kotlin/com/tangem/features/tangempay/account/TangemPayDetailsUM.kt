@@ -104,7 +104,9 @@ internal sealed interface CardsProgressBannerUM {
 
     data object Activating : CardsProgressBannerUM
 
-    data class Delivering(val onActivateClick: () -> Unit) : CardsProgressBannerUM
+    data class Delivering(val onActivateClick: (() -> Unit)?) : CardsProgressBannerUM
+
+    data object DeliveringMultiple : CardsProgressBannerUM
 }
 
 internal fun TangemPayCardState.toUiState(): TangemPayCardUiState = when (this) {

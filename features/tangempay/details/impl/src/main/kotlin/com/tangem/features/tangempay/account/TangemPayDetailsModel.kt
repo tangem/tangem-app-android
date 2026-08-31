@@ -782,7 +782,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun sendDeliveryBannerAnalytics() {
         val banner = uiState.value.balanceBlockState.cardsBlockState?.progressBanner
-        val isShown = banner is CardsProgressBannerUM.Delivering
+        val isShown = banner is CardsProgressBannerUM.Delivering || banner is CardsProgressBannerUM.DeliveringMultiple
 
         if (isShown == isDeliveryBannerShown) return
         isDeliveryBannerShown = isShown
