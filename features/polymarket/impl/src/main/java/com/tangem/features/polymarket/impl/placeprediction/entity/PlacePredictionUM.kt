@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -118,6 +119,7 @@ internal sealed interface QuoteUM {
         val feeTotal: BigDecimal,
         val total: BigDecimal,
         val minOrderSize: BigDecimal,
+        val signable: SignableQuoteUM,
     ) : QuoteUM
 
     data class Unavailable(val status: PredictionQuoteStatus) : QuoteUM
@@ -126,6 +128,9 @@ internal sealed interface QuoteUM {
 }
 
 internal enum class QuoteErrorUM { Network, Unknown }
+
+@Immutable
+internal data class SignableQuoteUM(val quote: PredictionOrderQuote, val receivedAtMillis: Long)
 
 @Immutable
 internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecimal)
