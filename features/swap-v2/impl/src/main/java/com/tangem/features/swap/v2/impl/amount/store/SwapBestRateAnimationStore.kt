@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.swap
+package com.tangem.features.swap.v2.impl.amount.store
 
 /**
  * Stores flag indicating whether should show best rate animation in current session.
@@ -6,6 +6,6 @@ package com.tangem.datasource.local.swap
  *
  * If true, reset flag to false
  */
-interface SwapBestRateAnimationStore {
+internal interface SwapBestRateAnimationStore {
     suspend fun getSyncOrNull(): Boolean
 }

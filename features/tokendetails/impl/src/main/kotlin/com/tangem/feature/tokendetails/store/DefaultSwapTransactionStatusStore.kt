@@ -1,5 +1,6 @@
-package com.tangem.datasource.local.swap
+package com.tangem.feature.tokendetails.store
 
+import com.tangem.core.analytics.models.ExpressAnalyticsStatus
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 
 internal class DefaultSwapTransactionStatusStore(
