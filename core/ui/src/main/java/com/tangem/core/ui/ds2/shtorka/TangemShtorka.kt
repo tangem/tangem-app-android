@@ -78,6 +78,8 @@ import kotlinx.coroutines.flow.drop
  *   clear of the bottom inset (navigation bar), and [TangemShtorka.Detent.Full] stops below the
  *   top inset (status bar). Pass [WindowInsets.Companion.systemBars] (default) for edge-to-edge
  *   screens or zero insets if the parent already applies padding
+ * @param maxWidth widest the card is laid out; it is centered in the parent once the parent is
+ *   wider. Pass [Dp.Unspecified] to let the card span the full parent width
  * @param showDragHandle whether the grabber pill is shown at the top of the card
  * @param dragHandleContentDescription accessibility label announced by TalkBack for the grabber
  * @param header optional pinned overlay at the top of the card (below the grabber), typically a
@@ -94,6 +96,7 @@ fun TangemShtorka(
     color: Color = TangemTheme.colors3.bg.primary,
     isSwipeEnabled: Boolean = true,
     windowInsets: WindowInsets = WindowInsets.systemBars,
+    maxWidth: Dp = TangemShtorka.MaxWidth,
     showDragHandle: Boolean = true,
     dragHandleContentDescription: String? = null,
     header: (@Composable ColumnScope.() -> Unit)? = null,
@@ -116,7 +119,7 @@ fun TangemShtorka(
 
     TangemSurface(
         modifier = modifier
-            .shtorkaLayout(state = state, windowInsets = windowInsets)
+            .shtorkaLayout(state = state, windowInsets = windowInsets, maxWidth = maxWidth)
             .graphicsLayer {
                 translationY = rubberBandOffset(raw = state.rawOverdrag, limit = ShtorkaOverdragLimit.toPx())
             }
@@ -166,6 +169,13 @@ fun TangemShtorka(
 
 /** Public namespace of the shtorka component. */
 object TangemShtorka {
+
+    /**
+     * Default cap on the card's width, matching the Material bottom-sheet cap. Keeps the card a
+     * readable column on tablets and unfolded foldables instead of a window-wide sheet.
+     */
+    @Suppress("MagicNumber")
+    val MaxWidth: Dp = 640.dp
 
     /**
      * A position the shtorka can rest at, expressed as the visible height of the card. The card

@@ -16,11 +16,24 @@ internal class PolymarketPlaceOrderBodyBuilderTest {
 
         // Assert
         assertThat(actual).isEqualTo(
-            """{"order":{"salt":"1234567890","maker":"0xMaker","signer":"0xSigner","tokenId":"7","""" +
+            """{"order":{"salt":1234567890,"maker":"0xmaker","signer":"0xsigner","tokenId":"7","""" +
                 """makerAmount":"72000000","takerAmount":"97959180","side":"BUY","signatureType":3,""" +
-                """"timestamp":"1787300000000","metadata":"0xmeta","builder":"0xbuilder",""" +
-                """"signature":"0xsig"},"owner":"$API_KEY","orderType":"FAK"}""",
+                """"timestamp":"1787300000000","expiration":"0","metadata":"0xmeta","builder":"0xbuilder",""" +
+                """"signature":"0xsig"},"owner":"$API_KEY","orderType":"FAK",""" +
+                """"postOnly":false,"deferExec":false}""",
         )
+    }
+
+    @Test
+    fun `GIVEN checksummed addresses WHEN serialised THEN they are lowercased`() {
+        // Act
+        val actual = PolymarketPlaceOrderBodyBuilder.build(
+            signedOrder = createSignedOrder(maker = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20"),
+            apiKey = API_KEY,
+        )
+
+        // Assert
+        assertThat(actual).contains(""""maker":"0x5a057dc6394196fba51d84457da3fb8fa241fc20"""")
     }
 
     @Test
@@ -36,6 +49,25 @@ internal class PolymarketPlaceOrderBodyBuilderTest {
     }
 
     @Test
+    fun `GIVEN a fill-and-kill order WHEN serialised THEN the salt is a number and not a string`() {
+        // Act
+        val actual = PolymarketPlaceOrderBodyBuilder.build(signedOrder = createSignedOrder(), apiKey = API_KEY)
+
+        // Assert
+        assertThat(actual).contains(""""salt":1234567890,""")
+        assertThat(actual).doesNotContain(""""salt":"""")
+    }
+
+    @Test
+    fun `GIVEN a fill-and-kill order WHEN serialised THEN it carries no deadline`() {
+        // Act
+        val actual = PolymarketPlaceOrderBodyBuilder.build(signedOrder = createSignedOrder(), apiKey = API_KEY)
+
+        // Assert
+        assertThat(actual).contains(""""expiration":"0"""")
+    }
+
+    @Test
     fun `GIVEN any order WHEN serialised THEN it is fill-and-kill`() {
         // Act
         val actual = PolymarketPlaceOrderBodyBuilder.build(signedOrder = createSignedOrder(), apiKey = API_KEY)
@@ -44,11 +76,14 @@ internal class PolymarketPlaceOrderBodyBuilderTest {
         assertThat(actual).contains(""""orderType":"FAK"""")
     }
 
-    private fun createSignedOrder(side: PredictionOrderSide = PredictionOrderSide.BUY): PredictionSignedOrder =
+    private fun createSignedOrder(
+        side: PredictionOrderSide = PredictionOrderSide.BUY,
+        maker: String = "0xMaker",
+    ): PredictionSignedOrder =
         PredictionSignedOrder(
             order = PredictionOrder(
                 salt = BigInteger("1234567890"),
-                maker = "0xMaker",
+                maker = maker,
                 signer = "0xSigner",
                 tokenId = BigInteger("7"),
                 makerAmount = BigInteger("72000000"),

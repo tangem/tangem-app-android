@@ -83,6 +83,8 @@ internal class PlacePredictionComponent(
     }
 
     private fun onChildBack() {
+        if (model.isSubmitting()) return
+
         if (childStack.value.backStack.isEmpty()) {
             router.pop()
         } else {
