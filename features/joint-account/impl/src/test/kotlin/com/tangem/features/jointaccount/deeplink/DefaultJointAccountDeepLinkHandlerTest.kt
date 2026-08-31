@@ -81,7 +81,13 @@ class DefaultJointAccountDeepLinkHandlerTest {
         advanceUntilIdle()
 
         verify {
-            appRouter.push(route = AppRoute.JointAccountMembers(userWalletId = userWalletId), onComplete = any())
+            appRouter.push(
+                route = AppRoute.JointAccountMembers(
+                    userWalletId = userWalletId,
+                    accountId = jointAccount.accountId.value,
+                ),
+                onComplete = any(),
+            )
         }
         verify { walletDeepLinkActionTrigger.selectWallet(userWalletId) }
     }
