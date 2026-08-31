@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.config.testnet
 
-import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.core.local.assets.AssetLoader
+import com.tangem.core.local.assets.load
 import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
 
 /**

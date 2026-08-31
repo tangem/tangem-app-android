@@ -55,6 +55,24 @@ internal class SignPredictionOrderInteractorTest {
     }
 
     @Test
+    fun `GIVEN repeated signing WHEN salt generated THEN it always fits a JSON number`() = runTest {
+        // Arrange
+        val payload = slot<PredictionOrderPayload>()
+        coEvery { signer.signOrder(any(), capture(payload)) } returns SIGNED_ORDER.right()
+        val salts = mutableSetOf<Long>()
+
+        // Act
+        repeat(times = SALT_DRAWS) {
+            interactor(request = createRequest())
+            salts += payload.captured.salt
+        }
+
+        // Assert
+        assertThat(salts.all { it in 0..MAX_JS_SAFE_INTEGER }).isTrue()
+        assertThat(salts.size).isGreaterThan(1)
+    }
+
+    @Test
     fun `GIVEN a quote WHEN signed THEN the order is built from it and signed for the deposit wallet`() = runTest {
         // Arrange
         val payload = slot<PredictionOrderPayload>()
@@ -166,6 +184,9 @@ internal class SignPredictionOrderInteractorTest {
     }
 
     private companion object {
+        const val SALT_DRAWS = 64
+        const val MAX_JS_SAFE_INTEGER = 9_007_199_254_740_991L
+
         const val ASSET_ID = "1116017998421700000000000000000000000000000000000000000000000000047"
         const val DEPOSIT_WALLET = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20"
         const val RECEIVED_AT = 1_787_300_000_000L
