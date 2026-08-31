@@ -20,5 +20,6 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(deps.kotlin.coroutines)
     // endregion
 }
