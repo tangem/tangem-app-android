@@ -234,10 +234,33 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
                         .testTag(TangemPayTestTags.DELIVERY_BANNER),
                     showGlowRing = false,
                     description = resourceReference(R.string.tangempay_card_delivery_banner_description),
-                    secondaryButton = TangemMessageBanner.Button(
-                        text = resourceReference(R.string.tangempay_card_details_activate),
-                        onClick = progressBanner.onActivateClick,
-                    ),
+                    secondaryButton = progressBanner.onActivateClick?.let { onActivateClick ->
+                        TangemMessageBanner.Button(
+                            text = resourceReference(R.string.tangempay_card_details_activate),
+                            onClick = onActivateClick,
+                        )
+                    },
+                    slotStart = {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.icon.primary,
+                        )
+                    },
+                )
+            }
+        }
+        CardsProgressBannerUM.DeliveringMultiple -> {
+            item("deliveringBannerBlock") {
+                SpacerH12()
+                TangemMessageBanner(
+                    title = resourceReference(R.string.tangempay_card_delivery_banner_title_many),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .testTag(TangemPayTestTags.DELIVERY_BANNER),
+                    showGlowRing = false,
+                    description = resourceReference(R.string.tangempay_card_delivery_banner_description_many),
                     slotStart = {
                         Icon(
                             modifier = Modifier.size(20.dp),
