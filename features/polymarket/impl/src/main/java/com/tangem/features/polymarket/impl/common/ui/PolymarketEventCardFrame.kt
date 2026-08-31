@@ -28,8 +28,6 @@ import com.tangem.core.ui.res.TangemTheme
 
 private val CardShape = RoundedCornerShape(16.dp)
 
-private val DefaultTitleMetaSpacing = 4.dp
-
 /**
  * The chrome every Polymarket card shares: a surface with a title, a round icon on the right, an optional
  * [meta] line under the title and an arbitrary [content] block below the header. The card itself carries no
@@ -41,7 +39,7 @@ internal fun PolymarketEventCardFrame(
     iconUrl: String?,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    titleMetaSpacing: Dp = DefaultTitleMetaSpacing,
+    titleMetaSpacing: Dp = 4.dp,
     meta: (@Composable () -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
