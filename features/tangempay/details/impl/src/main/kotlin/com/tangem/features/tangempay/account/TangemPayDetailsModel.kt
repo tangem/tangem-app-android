@@ -678,34 +678,44 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onAddCardClick(tariffState: TangemPayTariffPlanState?) {
         analytics.send(TangemPayAnalyticsEvents.AddExtraCardClicked())
         modelScope.launch {
-            val offer = getCustomerOffers.additionalCardOffer(userWalletId).getOrNull()
-            if (offer == null) {
-                val message = if (tariffState != null && tariffState.tariff.plan.isBasicTier) {
-                    TangemPayMessagesFactory.createMaximumCardsForPlanIssuedMessage(
-                        onUpgradeClick = { onClickCurrentPlan(tariffState) }
-                            .takeIf { !tariffState.isPlanTransitioningState },
-                    )
-                } else {
-                    TangemPayMessagesFactory.createMaximumCardsIssuedMessage()
-                }
-                uiMessageSender.send(message)
-                return@launch
-            }
+            val offers = getCustomerOffers.cardIssueOffers(userWalletId).getOrNull()
+
             if (tangemPayFeatureToggles.isPlasticCardOrderEnabled) {
-                router.push(TangemPayAccountDetailsInnerRoute.OrderCard())
+                if (offers?.hasAny == true) {
+                    router.push(TangemPayAccountDetailsInnerRoute.OrderCard())
+                } else {
+                    uiMessageSender.send(createNoAvailableOffersMessage(tariffState))
+                }
                 return@launch
             }
+
+            val virtualOffer = offers?.virtual
+            if (virtualOffer == null) {
+                uiMessageSender.send(createNoAvailableOffersMessage(tariffState))
+                return@launch
+            }
+
             analytics.send(TangemPayAnalyticsEvents.IssueAdditionalCardPopupShown())
             bottomSheetNavigation.activate(
                 TangemPayDetailsNavigation.IssueAdditionalCard(
                     walletId = userWalletId,
-                    feeAmount = offer.fee.amount,
-                    feeCurrency = offer.fee.currency,
+                    feeAmount = virtualOffer.fee.amount,
+                    feeCurrency = virtualOffer.fee.currency,
                     fiatBalance = currentStatus.value.balanceOrNull()?.fiatBalance?.availableBalance ?: BigDecimal.ZERO,
                 ),
             )
         }
     }
+
+    private fun createNoAvailableOffersMessage(tariffState: TangemPayTariffPlanState?) =
+        if (tariffState != null && tariffState.tariff.plan.isBasicTier) {
+            TangemPayMessagesFactory.createMaximumCardsForPlanIssuedMessage(
+                onUpgradeClick = { onClickCurrentPlan(tariffState) }
+                    .takeIf { !tariffState.isPlanTransitioningState },
+            )
+        } else {
+            TangemPayMessagesFactory.createMaximumCardsIssuedMessage()
+        }
 
     override fun onIssueAdditionalCardDismissed() {
         bottomSheetNavigation.dismiss()
