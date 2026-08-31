@@ -172,9 +172,12 @@ internal class TangemPayDetailsStateFactory(
             any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
             any { it.state == TangemPayCardState.Activating } -> CardsProgressBannerUM.Activating
             deliveringCards.size == 1 -> {
-                val cardId = deliveringCards.first().id
-                CardsProgressBannerUM.Delivering(onActivateClick = { intents.onActivateCardClick(cardId) })
+                val card = deliveringCards.first()
+                CardsProgressBannerUM.Delivering(
+                    onActivateClick = { intents.onActivateCardClick(card.id) }.takeUnless { card.isPlaceholder },
+                )
             }
+            deliveringCards.size > 1 -> CardsProgressBannerUM.DeliveringMultiple
             else -> null
         }
     }
