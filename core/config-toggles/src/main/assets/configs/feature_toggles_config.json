@@ -150,5 +150,9 @@
     {
         "name": "TWI_1356_INTRODUCTION_REDESIGN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1555_SOCIAL_LOGIN_ENABLED",
+        "version": "undefined"
     }
 ]
