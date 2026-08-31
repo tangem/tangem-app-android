@@ -1,12 +1,9 @@
-package com.tangem.datasource.di
+package com.tangem.datasource.remote.config.managers
 
 import com.tangem.datasource.BuildConfig
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
-import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
-import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
@@ -17,7 +14,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object NetworkModule {
+internal object ApiConfigsManagerModule {
 
     @Provides
     @Singleton
