@@ -283,17 +283,16 @@ internal class DefaultOnboardingRepository @Inject constructor(
     override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> {
         val response = requestHelper.performWithStaticToken {
             tangemPayApi.getEligibilityChannels()
-        }.getOrNull()
+        }.getOrNull() ?: return emptyList()
 
-        val channels = response?.result?.channels
-        val eligibility = channels.orEmpty().toSet()
+        val eligibility = response.result.channels.toSet()
         tangemPayStorage.storeTangemPayEligibility(eligibility = eligibility)
 
         return eligibility.map(TangemPayEligibilityType::fromString)
     }
 
-    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> {
-        return tangemPayStorage.getTangemPayEligibility().map(TangemPayEligibilityType::fromString)
+    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>? {
+        return tangemPayStorage.getTangemPayEligibility()?.map(TangemPayEligibilityType::fromString)
     }
 
     override suspend fun fetchCustomerEligibility(
