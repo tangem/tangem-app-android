@@ -29,7 +29,6 @@ dependencies {
 
     // region Project - Core
     api(projects.core.utils)
-    implementation(projects.core.datasource)
     // endregion
 
     // region Project - Domain

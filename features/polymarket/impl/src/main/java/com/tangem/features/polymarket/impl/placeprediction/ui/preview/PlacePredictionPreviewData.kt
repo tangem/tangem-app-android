@@ -1,6 +1,9 @@
 package com.tangem.features.polymarket.impl.placeprediction.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.domain.polymarket.model.PredictionOrderFees
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
@@ -10,6 +13,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
@@ -115,6 +119,27 @@ private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.F
     feeTotal = BigDecimal("1.4"),
     total = BigDecimal("4001.4"),
     minOrderSize = BigDecimal("5"),
+    signable = SignableQuoteUM(quote = previewSignableQuote(status = status), receivedAtMillis = PLACED_AT),
+)
+
+private fun previewSignableQuote(status: PredictionQuoteStatus): PredictionOrderQuote = PredictionOrderQuote(
+    status = status,
+    side = PredictionOrderSide.BUY,
+    shares = BigDecimal("4612.54"),
+    notional = BigDecimal("4000"),
+    expectedExecutionAmount = BigDecimal("4705.88"),
+    averagePrice = BigDecimal("0.85"),
+    worstCasePrice = BigDecimal("0.8672"),
+    fees = PredictionOrderFees(
+        market = BigDecimal.ZERO,
+        builder = BigDecimal("1.4"),
+        total = BigDecimal("1.4"),
+    ),
+    total = BigDecimal("4001.4"),
+    builderCode = "0x" + "00".repeat(n = 32),
+    minOrderSize = BigDecimal("5"),
+    tickSize = BigDecimal("0.01"),
+    isLive = false,
 )
 
 private const val PLACED_AT = 1_787_000_000_000L
