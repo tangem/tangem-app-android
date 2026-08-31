@@ -13,6 +13,7 @@ import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.model.plasticOffer
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
+import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
 import com.tangem.domain.pay.util.OrderResolver
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 class IssuePlasticCardUseCase(
     private val customerOffersRepository: CustomerOffersRepository,
     private val customerOrderRepository: CustomerOrderRepository,
+    private val issueCardRepository: TangemPayIssueCardRepository,
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
@@ -66,10 +68,17 @@ class IssuePlasticCardUseCase(
             catch = { handleError(it) },
         )
 
+        issueCardRepository.storeIssueOrderId(userWalletId = userWalletId, orderId = order.id)
+
         appCoroutineScope.launch {
             startTangemPayOrderPollingUseCase(
                 order = TangemPayOrderInfo.fromOrder(order),
                 userWalletId = userWalletId,
+                onOrderStateChange = { newOrder ->
+                    if (newOrder.orderStatus.isTerminal) {
+                        issueCardRepository.removeIssueOrderId(userWalletId, order.id)
+                    }
+                },
             )
         }
 
