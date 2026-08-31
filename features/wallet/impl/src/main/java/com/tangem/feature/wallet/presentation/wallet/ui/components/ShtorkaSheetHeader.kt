@@ -11,10 +11,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds2.shtorka.TangemShtorka
 import com.tangem.core.ui.res.TangemTheme
+import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 
 /** Height of the whole sheet header — exactly what the collapsed shtorka shows. */
 internal val ShtorkaSheetHeaderHeight = 76.dp
@@ -42,6 +47,21 @@ internal fun ShtorkaSheetHeader(modifier: Modifier = Modifier, content: @Composa
         modifier = modifier
             .fillMaxWidth()
             .height(ShtorkaSheetHeaderHeight)
+            .hazeEffectTangem(
+                style = HazeStyle(
+                    backgroundColor = Color.Transparent,
+                    tints = listOf(HazeTint(Color.Transparent)),
+                    blurRadius = 16.dp,
+                    noiseFactor = 0f,
+                ),
+            ) {
+                fallbackTint = HazeTint(Color.Transparent)
+                progressive = HazeProgressive.verticalGradient(
+                    startIntensity = 1f,
+                    endIntensity = 0f,
+                    preferPerformance = true,
+                )
+            }
             .padding(top = DragTipTopPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

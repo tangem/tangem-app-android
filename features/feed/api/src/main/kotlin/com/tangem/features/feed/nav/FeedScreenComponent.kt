@@ -18,11 +18,12 @@ interface FeedScreenComponent {
      * empty: screens whose header is the shared search bar (home, search) don't override it — the
      * host renders the search bar itself for those.
      *
-     * @param bottomSheetState expanded/collapsed state of the hosting shtorka
+     * @param sheetDetent resting position of the hosting shtorka; lets a navbar adapt to the
+     * collapsed pill, where its screen's content is off screen
      * @param onExpandSheet raises the hosting shtorka to full
      */
     @Composable
-    fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
     }
 
     /**

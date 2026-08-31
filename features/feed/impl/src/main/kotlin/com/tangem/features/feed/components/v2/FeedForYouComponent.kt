@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.foryou.ForYouComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -40,16 +41,12 @@ internal class FeedForYouComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
         TangemTopNavigation(
             title = resourceReference(R.string.for_you_title),
             contentAlign = TangemTopNavigation.ContentAlign.Center,
-            // rendered inside the shtorka's fixed-height sheet header: no system insets and no
-            // vertical padding, the host centers the bar vertically
             windowInsets = WindowInsets(0.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            // the sheet header is an opaque capsule (the search bar draws no fade either), and the
-            // haze blur re-renders every frame of the header animation — both stay off
             fadeEnabled = false,
             blurBackground = false,
             onBack = { router.pop() },

@@ -26,6 +26,7 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import dagger.assisted.Assisted
@@ -53,17 +54,13 @@ internal class FeedNewsDetailsComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val state by legacyComponent.state.collectAsStateWithLifecycle()
 
         TangemTopNavigation(
             contentAlign = TangemTopNavigation.ContentAlign.Center,
-            // rendered inside the shtorka's fixed-height sheet header: no system insets and no
-            // vertical padding, the host centers the bar vertically
             windowInsets = WindowInsets(0.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            // the sheet header is an opaque capsule (the search bar draws no fade either), and the
-            // haze blur re-renders every frame of the header animation — both stay off
             fadeEnabled = false,
             blurBackground = false,
             isEndButtonsGroupBackgroundShown = false,

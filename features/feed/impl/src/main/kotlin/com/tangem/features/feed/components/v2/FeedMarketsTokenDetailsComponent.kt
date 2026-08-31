@@ -1,5 +1,7 @@
 package com.tangem.features.feed.components.v2
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -31,6 +33,7 @@ import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDet
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.features.foryou.TokenSummaryBlockComponent
@@ -60,7 +63,6 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
 ) : FeedScreenComponent, AppComponentContext by context {
 
     private val title = stringReference(params.token.name)
-    private val subtitle = stringReference(params.token.symbol)
 
     private val legacyComponent = DefaultMarketsTokenDetailsComponent(
         appComponentContext = context.child(key = "legacy"),
@@ -90,17 +92,14 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val state by legacyComponent.state.collectAsStateWithLifecycle()
+        val isPriceShown = state.shouldShowPriceSubtitle || sheetDetent.value == FeedSheetDetent.PILL
 
         TangemTopNavigation(
             contentAlign = TangemTopNavigation.ContentAlign.Center,
-            // rendered inside the shtorka's fixed-height sheet header: no system insets and no
-            // vertical padding, the host centers the bar vertically
             windowInsets = WindowInsets(0.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            // the sheet header is an opaque capsule (the search bar draws no fade either), and the
-            // haze blur re-renders every frame of the header animation — both stay off
             fadeEnabled = false,
             blurBackground = false,
             isEndButtonsGroupBackgroundShown = false,
@@ -122,8 +121,15 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             },
             contentColumn = {
                 TangemNavigationText(text = title, role = TangemNavigationText.Role.Title)
-                Spacer(Modifier.height(4.dp))
-                TangemNavigationText(text = subtitle, role = TangemNavigationText.Role.Subtitle)
+                AnimatedVisibility(visible = isPriceShown) {
+                    Column {
+                        Spacer(Modifier.height(4.dp))
+                        TangemNavigationText(
+                            text = stringReference(state.priceText),
+                            role = TangemNavigationText.Role.Subtitle,
+                        )
+                    }
+                }
             },
             modifier = modifier,
         )
