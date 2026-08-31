@@ -91,7 +91,11 @@ internal class DefaultSessionTokenRefresher(
     }
 
     override suspend fun ensureSession(): Either<SessionRefreshError, SessionTokens> = withContext(dispatchers.io) {
-        store.get().getOrNull()?.right() ?: refresh()
+        val current = store.get().getOrNull()
+        // Only treat the stored session as usable when its access token is still valid; otherwise
+        // refresh, so the caller doesn't immediately 401 on a stale token. refresh() then rotates via
+        // /refresh (valid refresh token) or /authenticate (none).
+        if (current != null && current.accessTokenExpiresAt > clock.now()) current.right() else refresh()
     }
 
     private suspend fun runRefresh(current: SessionTokens?): Either<SessionRefreshError, SessionTokens> {
