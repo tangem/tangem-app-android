@@ -9,6 +9,7 @@ import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsV2Response
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1Request
@@ -189,23 +190,22 @@ interface TangemTechApi {
 
     // region account
     /**
-     * The accounts endpoints exist in two versions with the same document shape: legacy `v1` and `api/v2`, which
-     * carries the type of every record. [version] is that path prefix — `v1` or `api/v2` — chosen by the caller.
+     * The accounts endpoints exist in two versions: legacy `v1` and `api/v2`, which carries the type of every record
+     * and counts the wallet's own accounts as `totalCryptoAccounts` where `v1` says `totalAccounts` — hence a
+     * document shape per version. The archived document is the same in both, so [version] — `v1` or `api/v2` — is
+     * a path prefix chosen by the caller.
      */
-    @GET("/{version}/wallets/{walletId}/accounts")
-    suspend fun getWalletAccounts(
-        @Path(value = "version", encoded = true) version: String,
+    @GET("/v1/wallets/{walletId}/accounts")
+    suspend fun getWalletAccountsV1(
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletAccountsResponse>
 
-    @PUT("/{version}/wallets/{walletId}/accounts")
-    suspend fun saveWalletAccounts(
-        @Path(value = "version", encoded = true) version: String,
+    @GET("/api/v2/wallets/{walletId}/accounts")
+    suspend fun getWalletAccountsV2(
         @Path("walletId") walletId: String,
-        @Header("If-Match") eTag: String,
-        @Body body: SaveWalletAccountsResponse,
-    ): ApiResponse<GetWalletAccountsResponse>
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetWalletAccountsV2Response>
 
     /** `v1` accepts no record type, so its body is a separate shape; goes away with `v1` itself. */
     @PUT("/v1/wallets/{walletId}/accounts")
@@ -214,6 +214,13 @@ interface TangemTechApi {
         @Header("If-Match") eTag: String,
         @Body body: SaveWalletAccountsV1Request,
     ): ApiResponse<GetWalletAccountsResponse>
+
+    @PUT("/api/v2/wallets/{walletId}/accounts")
+    suspend fun saveWalletAccountsV2(
+        @Path("walletId") walletId: String,
+        @Header("If-Match") eTag: String,
+        @Body body: SaveWalletAccountsResponse,
+    ): ApiResponse<GetWalletAccountsV2Response>
 
     @GET("/{version}/wallets/{walletId}/accounts/archived")
     suspend fun getWalletArchivedAccounts(

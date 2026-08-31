@@ -5,7 +5,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 /**
  * Total by design: every operation degrades to "not recorded" instead of throwing. The record is only ever an
@@ -16,7 +20,15 @@ internal class DefaultPolymarketOnboardedStore(
     private val dataStore: DataStore<Set<String>>,
 ) : PolymarketOnboardedStore {
 
-    override suspend fun isOnboarded(userWalletId: UserWalletId): Boolean =
+    override fun isOnboarded(userWalletId: UserWalletId): Flow<Boolean> = dataStore.data
+        .map { stored -> userWalletId.stringValue in stored }
+        .distinctUntilChanged()
+        .catch { error ->
+            TangemLogger.e("Failed to observe the onboarded record of $userWalletId", error)
+            emit(false)
+        }
+
+    override suspend fun isOnboardedSync(userWalletId: UserWalletId): Boolean =
         runSuspendCatching { userWalletId.stringValue in dataStore.data.first() }
             .onFailure { TangemLogger.e("Failed to read the onboarded record of $userWalletId", it) }
             .getOrDefault(false)
