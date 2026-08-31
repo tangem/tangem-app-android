@@ -4,11 +4,9 @@ import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.optionalDecimals
+import com.tangem.core.ui.format.bigdecimal.percent
 import java.math.BigDecimal
-import java.math.RoundingMode
-import java.text.NumberFormat
-import java.util.Currency
-import java.util.Locale
 
 /**
  * Formats a traded volume as Polymarket states it: in USD, regardless of the currency selected in the app,
@@ -24,17 +22,17 @@ internal fun BigDecimal.formatPolymarketMoney(): String = format {
 }
 
 /** Formats the sum the user entered, keeping cents only when they were typed: "$4,000", but "$25.50". */
-internal fun BigDecimal.formatPolymarketEnteredAmount(): String = NumberFormat
-    .getCurrencyInstance(Locale.getDefault())
-    .apply {
-        currency = Currency.getInstance(PolymarketConst.USD_CODE)
-        minimumFractionDigits = 0
-        maximumFractionDigits = PolymarketConst.COLLATERAL_DECIMALS
-        roundingMode = RoundingMode.HALF_UP
-    }
-    .format(this)
+internal fun BigDecimal.formatPolymarketEnteredAmount(): String = format {
+    fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL)
+        .optionalDecimals()
+}
 
 /** Formats a collateral balance as the token it is held in, e.g. "1,000.00 USDC". */
 internal fun BigDecimal.formatPolymarketBalance(tokenSymbol: String): String = format {
     crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DECIMALS, ignoreSymbolPosition = true)
+}
+
+/** Formats a slippage tolerance the way the screens state it, e.g. "0.25%". */
+internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).format {
+    percent(minFractionDigits = 0)
 }
