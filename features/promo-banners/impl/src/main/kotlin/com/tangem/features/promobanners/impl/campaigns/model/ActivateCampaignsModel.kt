@@ -29,6 +29,7 @@ import com.tangem.domain.promo.usecase.EnrollPromoCampaignUseCase
 import com.tangem.domain.promo.usecase.GetPromoCampaignStateUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
+import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PredefinedTokenToAdd
@@ -90,7 +91,7 @@ internal class ActivateCampaignsModel @Inject constructor(
         settings = ChooseTokenBridge.Settings(
             title = resourceReference(R.string.common_choose_token),
             chooserBlock = ChooserBlock.Predefined(predefinedTokensFlow),
-            isShowPaymentAccount = false,
+            paymentAccountTokens = PaymentAccountTokens.Hidden,
             isShowSingleCurrencyWallets = true,
         ),
     )
