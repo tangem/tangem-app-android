@@ -20,6 +20,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.transactionhistory.TransactionHistoryProvider
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -34,6 +35,7 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -51,6 +53,7 @@ import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -68,6 +71,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
+    private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -251,6 +255,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         contractAddress: String?,
     ): String {
         val blockchain = network.toBlockchain()
+        if (network.derivationPath is Network.DerivationPath.Joint) {
+            val provider = requireNotNull(getJointAddressProvider(userWalletId, network)) {
+                "Unable to serve the joint network ${network.id}: no Safe address or no provider for it"
+            }
+            return blockchain.getExploreUrl(provider.address, contractAddress)
+        }
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
@@ -272,30 +282,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = currency.network,
-        )
-
-        requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: ${currency.network}"
+        val source = requireNotNull(getTransactionHistorySource(userWalletId, currency.network)) {
+            "Unable to get a transaction history source for blockchain: ${currency.network}"
         }
 
-        val transactionHistoryState = walletManager.getTransactionHistoryState(
-            address = walletManager.wallet.address,
-            filterType = when (currency) {
-                is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                is CryptoCurrency.Token -> {
-                    val blockchainToken = Token(
-                        name = currency.name,
-                        symbol = currency.symbol,
-                        contractAddress = currency.contractAddress,
-                        decimals = currency.decimals,
-                        id = currency.id.rawCurrencyId?.value,
-                    )
-                    TransactionHistoryRequest.FilterType.Contract(blockchainToken)
-                }
-            },
+        val transactionHistoryState = source.provider.getTransactionHistoryState(
+            address = source.address,
+            filterType = currency.toTransactionHistoryFilterType(),
         )
 
         return txHistoryStateConverter.convert(transactionHistoryState)
@@ -307,34 +300,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         page: Page,
         pageSize: Int,
     ): PaginationWrapper<TxInfo> {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = currency.network,
-        )
-
-        requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: ${currency.network}"
+        val source = requireNotNull(getTransactionHistorySource(userWalletId, currency.network)) {
+            "Unable to get a transaction history source for blockchain: ${currency.network}"
         }
 
-        val itemsResult = walletManager.getTransactionsHistory(
+        val itemsResult = source.provider.getTransactionsHistory(
             request = TransactionHistoryRequest(
-                address = walletManager.wallet.address,
+                address = source.address,
                 decimals = currency.decimals,
                 page = page,
                 pageSize = pageSize,
-                filterType = when (currency) {
-                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> {
-                        val blockchainToken = Token(
-                            name = currency.name,
-                            symbol = currency.symbol,
-                            contractAddress = currency.contractAddress,
-                            decimals = currency.decimals,
-                            id = currency.id.rawCurrencyId?.value,
-                        )
-                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
-                    }
-                },
+                filterType = currency.toTransactionHistoryFilterType(),
             ),
         )
 
@@ -361,7 +337,59 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet? =
         userWalletsListRepository.getSyncOrNull(userWalletId)
 
-    /** The Safe address of an account is fixed once it is active, so a cached provider on another address is stale */
+    /** What a wallet manager knows about its wallet, the provider of a joint network knows about the Safe address */
+    private class TransactionHistorySource(val provider: TransactionHistoryProvider, val address: String)
+
+    private suspend fun getTransactionHistorySource(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): TransactionHistorySource? {
+        if (network.derivationPath is Network.DerivationPath.Joint) {
+            return getJointAddressProvider(userWalletId, network)
+                ?.let { TransactionHistorySource(provider = it, address = it.address) }
+        }
+
+        return getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            ?.let { TransactionHistorySource(provider = it, address = it.wallet.address) }
+    }
+
+    /**
+     * The balance fetch caches the provider first; until it runs, the Safe address is resolved from the accounts.
+     * The resolver is lazy: it sits behind the accounts fetcher, which reaches this facade through the tokens saver.
+     */
+    private suspend fun getJointAddressProvider(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): ExternalAddressBalanceProvider? {
+        externalAddressBalanceProvidersStore.getSyncOrNull(userWalletId, network)?.let { return it }
+
+        val safeAddress = jointAccountSafeAddressResolver.get().resolve(userWalletId, setOf(network))[network] ?: run {
+            TangemLogger.i("No Safe address for the joint network ${network.id} yet")
+            return null
+        }
+
+        return getOrCreateExternalAddressBalanceProvider(userWalletId, network, safeAddress)
+    }
+
+    private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
+        return when (this) {
+            is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+            is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(
+                Token(
+                    name = name,
+                    symbol = symbol,
+                    contractAddress = contractAddress,
+                    decimals = decimals,
+                    id = id.rawCurrencyId?.value,
+                ),
+            )
+        }
+    }
+
+    /**
+     * The Safe address of an account is fixed once it is active, so a cached provider on another address is stale.
+     * A new provider is cached under the same lock, so concurrent callers share one instance.
+     */
     private suspend fun getOrCreateExternalAddressBalanceProvider(
         userWalletId: UserWalletId,
         network: Network,
@@ -373,6 +401,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             externalAddressBalanceProvidersStore.getSyncOrNull(userWalletId, network)
                 ?.takeIf { it.address == safeAddress }
                 ?: walletManagerFactory.createExternalAddressBalanceProvider(blockchain, safeAddress)
+                    ?.also { externalAddressBalanceProvidersStore.store(userWalletId, network, it) }
         }
     }
 
@@ -679,6 +708,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     }
 
     override suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address> {
+        if (network.derivationPath is Network.DerivationPath.Joint) {
+            return getJointAddressProvider(userWalletId, network)
+                ?.let { setOf(Address(value = it.address, type = AddressType.Default)) }
+                .orEmpty()
+        }
+
         val manager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
@@ -828,6 +863,21 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     }
 
     override suspend fun getRecentTransactions(userWalletId: UserWalletId, currency: CryptoCurrency): List<TxInfo> {
+        if (currency.network.derivationPath is Network.DerivationPath.Joint) {
+            val provider = getJointAddressProvider(userWalletId, currency.network) ?: return emptyList()
+
+            return provider.recentTransactions.toTxInfos(
+                currency = currency,
+                ownAddresses = setOf(
+                    UpdateWalletManagerResult.Address(
+                        value = provider.address,
+                        type = UpdateWalletManagerResult.Address.Type.Primary,
+                    ),
+                ),
+                feePaidCurrency = provider.blockchain.feePaidCurrency(),
+            )
+        }
+
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
 
         if (walletManager == null) {
@@ -835,12 +885,24 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             return emptyList()
         }
 
-        val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
-            walletAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
+        return walletManager.wallet.recentTransactions.toTxInfos(
+            currency = currency,
+            ownAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
             feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
         )
+    }
 
-        return walletManager.wallet.recentTransactions
+    private fun List<TransactionData.Uncompiled>.toTxInfos(
+        currency: CryptoCurrency,
+        ownAddresses: Set<UpdateWalletManagerResult.Address>,
+        feePaidCurrency: FeePaidCurrency,
+    ): List<TxInfo> {
+        val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
+            walletAddresses = ownAddresses,
+            feePaidCurrency = feePaidCurrency,
+        )
+
+        return this
             .filter { transaction ->
                 when (currency) {
                     is CryptoCurrency.Coin -> transaction.amount.type is AmountType.Coin
