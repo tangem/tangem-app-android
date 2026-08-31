@@ -22,7 +22,6 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     // endregion
