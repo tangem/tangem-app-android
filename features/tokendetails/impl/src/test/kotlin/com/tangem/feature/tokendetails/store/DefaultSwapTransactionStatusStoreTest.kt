@@ -1,6 +1,7 @@
-package com.tangem.datasource.local.swap
+package com.tangem.feature.tokendetails.store
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.models.ExpressAnalyticsStatus
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
