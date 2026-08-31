@@ -1623,7 +1623,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         currencies: List<CryptoCurrencyStatus>,
     ): AccountStatus.CryptoPortfolio {
         val account = Account.Personal.createMainAccount(userWalletId = userWalletId)
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(
@@ -1661,7 +1661,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
         )
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(

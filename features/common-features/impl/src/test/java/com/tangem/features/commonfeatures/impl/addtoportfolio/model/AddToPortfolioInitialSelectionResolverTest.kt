@@ -7,6 +7,7 @@ import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -661,8 +662,11 @@ class AddToPortfolioInitialSelectionResolverTest {
     ): AvailableToAddAccount = mockk {
         every { this@mockk.isAvailableToAdd } returns isAvailableToAdd
         every { this@mockk.availableToAddNetworks } returns availableToAddNetworks
-        every { account.account } returns mockk<Account.Personal> {
-            every { this@mockk.derivationIndex } returns derivationIndex
+        // The status is a sealed interface: MockK would mock it through an arbitrary subtype, so pin the personal one
+        every { this@mockk.account } returns mockk<AccountStatus.Personal> {
+            every { this@mockk.account } returns mockk<Account.Personal> {
+                every { this@mockk.derivationIndex } returns derivationIndex
+            }
         }
     }
 
