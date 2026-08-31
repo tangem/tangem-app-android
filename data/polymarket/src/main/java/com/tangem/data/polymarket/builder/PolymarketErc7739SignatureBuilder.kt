@@ -8,8 +8,6 @@ import com.tangem.utils.extensions.toHexString
 
 internal object PolymarketErc7739SignatureBuilder {
 
-    private const val HEX_PREFIX = "0x"
-
     private const val WALLET_DOMAIN_NAME = "DepositWallet"
     private const val WALLET_DOMAIN_VERSION = "1"
 
@@ -45,7 +43,7 @@ internal object PolymarketErc7739SignatureBuilder {
         val description = PolymarketOrderTypedDataBuilder.orderTypeString().toByteArray()
 
         return (
-            innerSignature.removePrefix(HEX_PREFIX).lowercase() +
+            innerSignature.removePrefix(PolymarketContracts.HEX_PREFIX).lowercase() +
                 concat(
                     PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk),
                     PolymarketOrderTypedDataBuilder.hashStruct(order),
@@ -72,7 +70,7 @@ internal object PolymarketErc7739SignatureBuilder {
     }
 
     private fun addressWord(address: String): ByteArray {
-        val hex = address.removePrefix(HEX_PREFIX)
+        val hex = address.removePrefix(PolymarketContracts.HEX_PREFIX)
         require(hex.length == ADDRESS_SIZE * HEX_CHARS_PER_BYTE) { "Address must be $ADDRESS_SIZE bytes: $address" }
 
         val bytes = hex.chunked(size = HEX_CHARS_PER_BYTE).map { it.toInt(radix = HEX_RADIX).toByte() }.toByteArray()
