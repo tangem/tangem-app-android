@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -70,5 +71,3 @@ internal fun SlippagePresetUM.label(): TextReference = when (role) {
         formatArgs = wrappedList(percent.formatSlippagePercent()),
     )
 }
-
-internal fun BigDecimal.formatSlippagePercent(): String = "$this%"
