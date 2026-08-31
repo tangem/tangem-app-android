@@ -120,13 +120,6 @@ object DateTimeFormatters {
     }
 
     /**
-     * Example: "June"
-     */
-    val dateMMMM: DateTimeFormatter by lazy {
-        getBestFormatterBySkeleton("MMMM")
-    }
-
-    /**
      * Example: "31.06.2020 12:00", "06/31/2020 12:00", "06/31/2020 12:00 PM"
      */
     val dateTimeFormatter: DateTimeFormatter by lazy {
@@ -155,6 +148,11 @@ object DateTimeFormatters {
     
     fun formatStandaloneShortMonth(date: DateTime): String {
         return Month.of(date.monthOfYear).getDisplayName(TextStyle.SHORT_STANDALONE, Locale.getDefault())
+    }
+
+    
+    fun formatStandaloneMonth(date: DateTime): String {
+        return Month.of(date.monthOfYear).getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
     }
 
     
