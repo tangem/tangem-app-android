@@ -839,7 +839,7 @@
   <string name="hw_backup_alert_title">Are you sure you want to quit activation?</string>
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
-  <string name="hw_backup_cloud_delete_confirm_title">Delete %s backup?</string>
+  <string name="hw_backup_cloud_delete_confirm_title">Delete %s backup?</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
   <string name="hw_backup_google_drive_dialog_message">We\'re working on Google Drive backup to make wallet recovery even easier.</string>
   <string name="hw_backup_google_drive_dialog_title">Google Drive backup is coming soon</string>
@@ -1001,7 +1001,7 @@
   <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
   <string name="introduction_button_create_wallet">Create wallet</string>
   <string name="introduction_button_i_have_a_wallet">I have a wallet</string>
-  <string name="introduction_create_wallet_hardware_description">If you already have Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_description">If you already have a Tangem Wallet</string>
   <string name="introduction_create_wallet_hardware_title">Tangem Card or Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Start without a hardware wallet</string>
   <string name="introduction_create_wallet_seed_phrase_title">Create seed phrase wallet</string>
