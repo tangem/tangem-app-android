@@ -4,6 +4,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -40,6 +41,16 @@ interface PolymarketClobApi {
         @HeaderMap headers: Map<String, String>,
         @Body body: RequestBody,
     ): ApiResponse<PolymarketPlaceOrderResponse>
+
+    /**
+     * Best price on one [side] of the asset's book. Public market data — the only CLOB call that needs
+     * no auth headers. A 404 means no orderbook exists for the token, i.e. the market is closed.
+     */
+    @GET("price")
+    suspend fun getPrice(
+        @Query("token_id") tokenId: String,
+        @Query("side") side: String,
+    ): ApiResponse<PolymarketPriceResponse>
 
     @GET("balance-allowance")
     suspend fun getBalanceAllowance(
