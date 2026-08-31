@@ -62,7 +62,7 @@ private fun ComponentPreview(state: TangemStatusScreenStory) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .height(420.dp)
+            .height(600.dp)
             .clip(RoundedCornerShape(16.dp)),
     ) {
         key(state.replayKey) {
