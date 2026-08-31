@@ -7,7 +7,7 @@
 
 tangemBlockchainSdk = "releases-6.2-1651"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "releases-6.2-656"
+tangemCardSdk = "releases-6.2-660"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemVico = "tangem-master-21"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
