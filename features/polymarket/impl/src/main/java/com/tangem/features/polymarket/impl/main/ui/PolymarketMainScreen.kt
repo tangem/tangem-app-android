@@ -42,10 +42,12 @@ import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
@@ -62,6 +64,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import java.math.BigDecimal
 import kotlin.time.Duration.Companion.milliseconds
 
 // Feed layout: the scrolling header is item 0, the tab band — when there are categories — is item 1.
@@ -219,9 +222,14 @@ private fun FeedList(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // Placeholder for the scrolling header (balance, "My Predictions", "Explore Events").
         item(key = KEY_HEADER) {
-            HeaderPlaceholder()
+            PolymarketMainHeader(
+                balance = placeholderBalance(),
+                isWithdrawEnabled = false,
+                onBalanceClick = {},
+                onAddFundsClick = {},
+                onWithdrawClick = {},
+            )
         }
 
         // The tabs outlive the events they filter: they stay put while a category reloads or fails.
@@ -328,22 +336,9 @@ private fun LazyListState.isTabBandPinned(): Boolean {
     return firstVisibleIndex > TAB_BAND_INDEX
 }
 
-@Composable
-private fun HeaderPlaceholder() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 320.dp)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "Header placeholder\n(balance, My Predictions, Explore Events)",
-            color = TangemTheme.colors3.text.tertiary,
-            style = TangemTheme.typography3.body.medium,
-        )
-    }
-}
+private fun placeholderBalance(): TextReference = BigDecimal.ZERO.formatPolymarketMoneyStyled(
+    fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
+)
 
 @Composable
 private fun CategoryTabBar(
