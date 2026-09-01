@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -41,9 +40,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -51,7 +50,6 @@ import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -76,13 +74,13 @@ import kotlin.math.roundToInt
 
 private const val TEXT_WIDTH_PADDING = 2
 private const val FREEZE_ANIMATION_DURATION_MS = 600
-private const val CARD_WIDTH_RATIO = 328f
-private const val CARD_HEIGHT_RATIO = 212f
+private const val CARD_ASPECT_RATIO = 370f / 238f
 private val CustomCardBlockColor = Color(0x1F828282)
 private val CardBackgroundColor = Color(0xFF171A27)
 private val CardSeparatorColor = Color(0x1AFFFFFF)
 private val SeparatorThickness = 0.5.dp
 private val DetailsFieldSpacing = 12.dp
+private val CardContentPadding = 20.dp
 
 @Suppress("MagicNumber")
 @Composable
@@ -105,7 +103,6 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
         rotateCardY = rotateCardY,
         zAxisDistance = zAxisDistance,
         shouldShowDetails = shouldShowDetails,
-        flipProgress = rotateCardY / 180f,
         backgroundImageUrl = state.cardBackgroundImageUrl,
         modifier = modifier,
         front = { TangemPayCardDetailsHiddenBlock(state = state) },
@@ -154,8 +151,8 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 ConstraintLayout(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 8.dp)
+                        .padding(horizontal = CardContentPadding)
+                        .padding(bottom = CardContentPadding)
                         .fillMaxWidth(),
                 ) {
                     val (displayNameRef, cardNumberRef, frozenIconRef, buttonRef) = createRefs()
@@ -165,7 +162,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                             state = state.displayNameState,
                             modifier = Modifier.constrainAs(displayNameRef) {
                                 start.linkTo(parent.start)
-                                bottom.linkTo(cardNumberRef.top)
+                                bottom.linkTo(cardNumberRef.top, margin = 2.dp)
                                 width = Dimension.wrapContent
                             },
                         )
@@ -185,7 +182,6 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                     top.linkTo(cardNumberRef.top)
                                     bottom.linkTo(cardNumberRef.bottom)
                                 }
-                                .padding(bottom = 8.dp)
                                 .size(16.dp)
                                 .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
                             color = TangemTheme.colors.text.constantWhite,
@@ -257,13 +253,12 @@ private fun TangemPayCardBackground(
     }
 }
 
-@Suppress("MagicNumber", "LongMethod", "LongParameterList")
+@Suppress("MagicNumber", "LongParameterList")
 @Composable
 private fun CardBgWrapper(
     rotateCardY: Float,
     zAxisDistance: Float,
     shouldShowDetails: Boolean,
-    flipProgress: Float,
     backgroundImageUrl: String?,
     modifier: Modifier = Modifier,
     back: @Composable () -> Unit,
@@ -272,6 +267,7 @@ private fun CardBgWrapper(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .aspectRatio(CARD_ASPECT_RATIO)
             .graphicsLayer {
                 rotationY = rotateCardY
                 cameraDistance = zAxisDistance
@@ -280,89 +276,45 @@ private fun CardBgWrapper(
             .border(
                 width = 1.dp,
                 shape = RoundedCornerShape(TangemTheme.dimens2.x5),
-                color = TangemTheme.colors3.border.secondary,
+                color = TangemTheme.colors3.border.primary,
             )
             .background(CardBackgroundColor),
     ) {
-        CardSidesLayout(
-            modifier = Modifier.fillMaxWidth(),
-            placeBackOnTop = shouldShowDetails,
-            flipProgress = flipProgress,
-            front = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = if (shouldShowDetails) 0f else 1f },
-                ) { front() }
-            },
-            back = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = if (shouldShowDetails) 1f else 0f },
-                ) {
-                    AsyncImage(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .graphicsLayer { rotationY = 180f },
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(backgroundImageUrl)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = painterResource(R.drawable.img_tangem_pay_details_placeholder),
-                        error = painterResource(R.drawable.img_tangem_pay_details_placeholder),
-                        fallback = painterResource(R.drawable.img_tangem_pay_details_placeholder),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                    )
-                    back()
-                }
-            },
-        )
-    }
-}
-
-@Composable
-private fun CardSidesLayout(
-    placeBackOnTop: Boolean,
-    flipProgress: Float,
-    modifier: Modifier = Modifier,
-    back: @Composable () -> Unit,
-    front: @Composable () -> Unit,
-) {
-    SubcomposeLayout(modifier) { constraints ->
-        val width = constraints.maxWidth
-        val frontHeight = if (width == Constraints.Infinity) {
-            0
-        } else {
-            (width * CARD_HEIGHT_RATIO / CARD_WIDTH_RATIO).roundToInt()
-        }
-
-        val naturalConstraints = constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity)
-        val backNaturalHeight = subcompose(CardSide.BackMeasure, back)
-            .maxOfOrNull { it.measure(naturalConstraints).height } ?: 0
-        val backHeight = maxOf(frontHeight, backNaturalHeight)
-        val finalHeight = lerp(frontHeight, backHeight, flipProgress.coerceIn(0f, 1f))
-        val sizeConstraints = constraints.copy(minHeight = finalHeight, maxHeight = finalHeight)
-        val frontPlaceables = subcompose(CardSide.Front, front).map { it.measure(sizeConstraints) }
-        val backPlaceables = subcompose(CardSide.Back, back).map { it.measure(sizeConstraints) }
-        layout(width, finalHeight) {
-            val ordered = if (placeBackOnTop) {
-                frontPlaceables + backPlaceables
-            } else {
-                backPlaceables + frontPlaceables
-            }
-            ordered.forEach { it.place(0, 0) }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .zIndex(if (shouldShowDetails) 0f else 1f)
+                .graphicsLayer { alpha = if (shouldShowDetails) 0f else 1f },
+        ) { front() }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .zIndex(if (shouldShowDetails) 1f else 0f)
+                .graphicsLayer { alpha = if (shouldShowDetails) 1f else 0f },
+        ) {
+            AsyncImage(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer { rotationY = 180f },
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(backgroundImageUrl)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                error = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                fallback = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+            )
+            back()
         }
     }
 }
-
-private enum class CardSide { BackMeasure, Front, Back }
 
 @Composable
 private fun CardTopBlock(modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier.padding(CardContentPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -400,7 +352,6 @@ private fun ConstraintLayoutScope.CardNumberBlock(
                 start.linkTo(parent.start)
                 bottom.linkTo(parent.bottom)
             }
-            .padding(bottom = 8.dp)
             .testTag(TangemPayTestTags.CARD_NUMBER_SHORT),
     )
 }
@@ -505,7 +456,8 @@ private fun TangemPayCardDetailsShownBlock(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(20.dp),
+            .padding(CardContentPadding),
+        verticalArrangement = CardDetailsArrangement,
     ) {
         CardDetailsField(
             modifier = Modifier.fillMaxWidth(),
@@ -551,8 +503,6 @@ private fun TangemPayCardDetailsShownBlock(
                 copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CVC,
             )
         }
-        SpacerH(10.dp)
-        Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
             // Must use dark theme locally for button cause card is dark
@@ -562,12 +512,32 @@ private fun TangemPayCardDetailsShownBlock(
                         modifier = Modifier.testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
                         variant = TangemButton.Variant.Secondary,
                         size = TangemButton.Size.X8,
-                        text = resourceReference(R.string.common_done),
+                        text = resourceReference(R.string.common_close),
                         onClick = onHideDetails,
                     )
                 }
             }
         }
+    }
+}
+
+private object CardDetailsArrangement : Arrangement.Vertical {
+
+    override val spacing: Dp = DetailsFieldSpacing
+
+    override fun Density.arrange(totalSize: Int, sizes: IntArray, outPositions: IntArray) {
+        if (sizes.isEmpty()) return
+        val gapCount = sizes.lastIndex.coerceAtLeast(1)
+        val freeSpace = totalSize - sizes.sum()
+        val squeezedGap = (freeSpace.toFloat() / gapCount).coerceIn(0f, spacing.toPx())
+
+        var offset = 0f
+        sizes.forEachIndexed { index, size ->
+            outPositions[index] = offset.roundToInt()
+            offset += size + squeezedGap
+        }
+        val lastIndex = sizes.lastIndex
+        outPositions[lastIndex] = maxOf(outPositions[lastIndex], totalSize - sizes[lastIndex])
     }
 }
 
@@ -626,7 +596,6 @@ private fun CardDetailsField(
 private fun CardDetailsFieldSeparator(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(vertical = DetailsFieldSpacing)
             .fillMaxWidth()
             .height(SeparatorThickness)
             .background(CardSeparatorColor),
