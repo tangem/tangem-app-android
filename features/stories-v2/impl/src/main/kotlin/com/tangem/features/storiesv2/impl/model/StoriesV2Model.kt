@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -203,14 +204,20 @@ internal class StoriesV2Model @Inject constructor(
             .launchIn(modelScope)
     }
 
+    /** Decodes on IO; the snapshot state map is only touched from the model's main-immediate dispatcher. */
     private fun prefetchPosters(composition: StoryV2Composition) {
-        modelScope.launch(dispatchers.io) {
-            composition.slides.forEach { slide ->
-                val poster = slide.asset.poster as? StoryV2MediaRef.DrawableResource ?: return@forEach
-                if (posterPainters.containsKey(poster.id)) return@forEach
-                val bitmap = BitmapFactory.decodeResource(context.resources, poster.id) ?: return@forEach
-                posterPainters[poster.id] = BitmapPainter(bitmap.asImageBitmap())
+        modelScope.launch {
+            val ids = composition.slides
+                .mapNotNull { (it.asset.poster as? StoryV2MediaRef.DrawableResource)?.id }
+                .distinct()
+                .filterNot(posterPainters::containsKey)
+            val painters = withContext(dispatchers.io) {
+                ids.mapNotNull { id ->
+                    val bitmap = BitmapFactory.decodeResource(context.resources, id) ?: return@mapNotNull null
+                    id to BitmapPainter(bitmap.asImageBitmap())
+                }
             }
+            posterPainters.putAll(painters)
         }
     }
 
