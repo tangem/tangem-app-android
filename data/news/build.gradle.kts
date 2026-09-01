@@ -24,7 +24,6 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.datasource)
     implementation(projects.core.local)
     api(projects.core.utils)
     implementation(projects.core.pagination)
@@ -32,6 +31,7 @@ dependencies {
 
     // region Project - Store
     implementation(projects.store.datasource)
+    runtimeOnly(deps.room.runtime)
     // endregion
 
     // region Project - Domain
