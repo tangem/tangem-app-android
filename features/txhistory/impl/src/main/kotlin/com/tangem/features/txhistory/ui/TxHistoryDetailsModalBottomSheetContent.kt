@@ -179,6 +179,7 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         subtitle = stringReference("Jan 20 2026, 9:24 PM"),
         menu = previewMenu(),
     ),
+    isBalanceHidden = false,
     amountBlock = TxHistoryDetailsUM.AmountBlockUM(
         icon = TxHistoryDetailsUM.AmountIconUM.Single(
             CurrencyIconState.CoinIcon(
@@ -201,7 +202,11 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         onCopyClick = {},
     ),
     rows = persistentListOf(
-        TxHistoryDetailsUM.InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+        TxHistoryDetailsUM.InfoRowUM(
+            label = stringReference("Network fee"),
+            value = stringReference("0.00056 ETH"),
+            isValueHideable = true,
+        ),
     ),
 )
 
@@ -214,6 +219,7 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
         subtitle = stringReference("Jan 20 2026, 9:24 PM"),
         menu = previewMenu(),
     ),
+    isBalanceHidden = false,
     from = TxHistoryDetailsUM.AssetUM(
         label = stringReference("You send"),
         owner = null,
@@ -251,7 +257,11 @@ private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(
             trailingIconRes = R.drawable.ic_arrow_top_right_24,
             onClick = {},
         ),
-        TxHistoryDetailsUM.InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
+        TxHistoryDetailsUM.InfoRowUM(
+            label = stringReference("Network fee"),
+            value = stringReference("0.00056 ETH"),
+            isValueHideable = true,
+        ),
     ),
     providerButton = TxHistoryDetailsUM.ProviderButtonUM(
         text = stringReference("Go to provider"),
@@ -292,12 +302,12 @@ private fun previewMenu() = persistentListOf(
     TxHistoryDetailsUM.MenuItemUM(
         icon = Icons.ic_copy_24,
         title = stringReference("Transaction ID"),
-        onClick = {},
+        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
     ),
     TxHistoryDetailsUM.MenuItemUM(
         icon = Icons.ic_globe_24,
         title = stringReference("Explore"),
-        onClick = {},
+        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
     ),
 )
 

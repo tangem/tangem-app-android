@@ -1,6 +1,6 @@
 package com.tangem.data.staking.converters.ethpool
 
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolUnsignedTxDTO
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolUnsignedTxDTO
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal

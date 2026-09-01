@@ -1,8 +1,10 @@
 package com.tangem.data.account.converter
 
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.utils.converter.Converter
 
 /**
@@ -14,19 +16,41 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
 
     override fun convert(value: AccountList): SaveWalletAccountsResponse {
         return SaveWalletAccountsResponse(
-            accounts = value.accounts
-                .filterIsInstance<Account.CryptoPortfolio>()
-                .map(::toDTO),
+            accounts = value.accounts.mapNotNull { account ->
+                when (account) {
+                    is Account.Personal -> account.toDTO(
+                        icon = account.icon,
+                        derivationIndex = account.derivationIndex.value,
+                        type = WalletAccountDTO.Type.CRYPTO,
+                    )
+                    is Account.Joint -> account.toDTO(
+                        icon = account.icon,
+                        derivationIndex = account.ownerKeyIndex.value,
+                        type = WalletAccountDTO.Type.JOINT,
+                    )
+                    // The special accounts are the app's own: the backend neither stores nor counts them
+                    else -> null
+                }
+            },
         )
     }
 
-    private fun toDTO(account: Account.CryptoPortfolio): SaveWalletAccountsResponse.AccountDTO {
+    /**
+     * The two account kinds the backend stores differ only in their [type] — the icon and the derivation index are
+     * passed in because they live on the concrete account rather than on [Account].
+     */
+    private fun Account.toDTO(
+        icon: CryptoPortfolioIcon,
+        derivationIndex: Int,
+        type: WalletAccountDTO.Type,
+    ): SaveWalletAccountsResponse.AccountDTO {
         return SaveWalletAccountsResponse.AccountDTO(
-            id = account.accountId.value,
-            name = AccountNameConverter.convert(value = account.accountName),
-            derivationIndex = account.derivationIndex.value,
-            icon = account.icon.value.name,
-            iconColor = account.icon.color.name,
+            id = accountId.value,
+            name = AccountNameConverter.convert(value = accountName),
+            derivationIndex = derivationIndex,
+            icon = icon.value.name,
+            iconColor = icon.color.name,
+            type = type.value,
         )
     }
 }

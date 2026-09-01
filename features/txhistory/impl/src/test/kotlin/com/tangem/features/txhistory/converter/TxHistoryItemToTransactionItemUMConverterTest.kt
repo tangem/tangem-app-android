@@ -13,7 +13,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
+import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -54,7 +54,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN Pill TransactionType WHEN convert THEN result is Pill with expected kind`() {
         val cases = listOf(
-            TransactionType.Approve to TransactionItemUM.PillKind.APPROVE,
+            TransactionType.Approve(amount = null, address = USER_ADDRESS) to TransactionItemUM.PillKind.APPROVE,
             TransactionType.Staking.Stake to TransactionItemUM.PillKind.STAKING,
             TransactionType.Staking.Unstake to TransactionItemUM.PillKind.STAKING,
             TransactionType.Staking.Restake to TransactionItemUM.PillKind.STAKING,
@@ -115,7 +115,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN Swap failed WHEN convert THEN Content with composed failed title and directional icon`() {
+    fun `GIVEN Swap failed WHEN convert THEN Content with swap failed title and directional icon`() {
         val tx = txInfo(
             type = TransactionType.Swap,
             status = TxInfo.TransactionStatus.Failed,
@@ -124,9 +124,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(
-            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_swapping))),
-        )
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_swap_failed))
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
     }
 
@@ -166,7 +164,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_staking_reward))
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_rewards_claimed))
         assertThat(result.subtitle).isEqualTo(
             ContentSubtitle.Plain(resRef(R.string.transaction_history_earned_from_stake)),
         )
@@ -183,7 +181,19 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_claiming_reward))
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_claiming_rewards))
+    }
+
+    @Test
+    fun `GIVEN ClaimRewards failed WHEN convert THEN Content with rewards claim failed title`() {
+        val tx = txInfo(
+            type = TransactionType.Staking.ClaimRewards,
+            status = TxInfo.TransactionStatus.Failed,
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_rewards_claim_failed))
     }
 
     // endregion
@@ -224,7 +234,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN outgoing Transfer failed WHEN convert THEN composed failed title`() {
+    fun `GIVEN outgoing Transfer failed WHEN convert THEN send failed title`() {
         val tx = txInfo(
             type = TransactionType.Transfer,
             isOutgoing = true,
@@ -234,9 +244,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(
-            resRef(R.string.common_action_failed, listOf(resRef(R.string.common_sending))),
-        )
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_send_failed))
     }
 
     @Test
@@ -268,6 +276,20 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_receiving))
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer failed WHEN convert THEN receive failed title`() {
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            status = TxInfo.TransactionStatus.Failed,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_status_receive_failed))
     }
 
     @Test
@@ -470,7 +492,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Send Coin not withdraw and incoming WHEN convert THEN transfer title`() {
+    fun `GIVEN YieldSupply Send not withdraw and incoming WHEN convert THEN received title`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
             isOutgoing = false,
@@ -478,23 +500,11 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.common_transfer))
+        assertThat(result.title).isEqualTo(resRef(R.string.common_received))
     }
 
     @Test
-    fun `GIVEN YieldSupply Send Coin withdraw WHEN convert THEN withdraw title`() {
-        val tx = txInfo(
-            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
-            isOutgoing = false,
-        )
-
-        val result = coinConverter.convert(tx) as TransactionItemUM.Content
-
-        assertThat(result.title).isEqualTo(resRef(R.string.yield_module_transaction_withdraw))
-    }
-
-    @Test
-    fun `GIVEN YieldSupply Send not withdraw and outgoing WHEN convert THEN transfer title`() {
+    fun `GIVEN YieldSupply Send not withdraw and outgoing WHEN convert THEN sent title`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
             isOutgoing = true,
@@ -502,39 +512,101 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.common_transfer))
+        assertThat(result.title).isEqualTo(resRef(R.string.common_sent))
     }
 
     @Test
-    fun `GIVEN YieldSupply Send withdraw and outgoing WHEN convert THEN withdraw title`() {
+    fun `GIVEN YieldSupply Send not withdraw and unconfirmed WHEN convert THEN receiving title`() {
         val tx = txInfo(
-            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
-            isOutgoing = true,
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            status = TxInfo.TransactionStatus.Unconfirmed,
+            isOutgoing = false,
         )
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.yield_module_transaction_withdraw))
+        assertThat(result.title).isEqualTo(resRef(R.string.common_receiving))
     }
 
     @Test
-    fun `GIVEN YieldSupply Send Token incoming WHEN convert THEN amount and symbol hidden`() {
+    fun `GIVEN YieldSupply Send withdraw WHEN convert THEN withdrawn title and Aave provider subtitle`() {
         val tx = txInfo(
-            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
             isOutgoing = false,
         )
 
-        val result = tokenConverter.convert(tx) as TransactionItemUM.Content
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.amount).isEmpty()
-        assertThat(result.currencySymbol).isEmpty()
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_withdrawn))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.FROM,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
     }
 
     @Test
-    fun `GIVEN YieldSupply Send Token outgoing WHEN convert THEN amount and symbol shown`() {
+    fun `GIVEN YieldSupply Send withdraw and unconfirmed WHEN convert THEN withdrawing title`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
+            status = TxInfo.TransactionStatus.Unconfirmed,
+            isOutgoing = false,
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_withdrawing))
+    }
+
+    @Test
+    fun `GIVEN YieldSupply Send not withdraw to external address WHEN convert THEN ExternalAddress subtitle`() {
+        // A non-withdraw Send is an ordinary transfer: an unresolved counterparty renders as the external address.
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
             isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        val subtitle = result.subtitle as ContentSubtitle.ExternalAddress
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+        assertThat(subtitle.rawAddress).isEqualTo(USER_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN YieldSupply Send not withdraw to own account WHEN convert THEN OwnAccount subtitle`() {
+        // The reported bug: a non-withdraw Send to the user's own account must resolve the owner in the list too,
+        // matching the details screen — not fall back to a raw address.
+        val ownAccount = createMainAccount(UserWalletId(stringValue = "00"))
+        val converter = TxHistoryItemToTransactionItemUMConverter(
+            currency = coin,
+            txHistoryUiActions = txHistoryUiActions,
+            lookupContext = TxHistoryLookupContext(
+                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+                isAccountsModeEnabled = true,
+                walletInfoById = emptyMap(),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        val subtitle = result.subtitle as ContentSubtitle.OwnAccount
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+    }
+
+    @Test
+    fun `GIVEN YieldSupply Send Token incoming WHEN convert THEN amount and symbol shown`() {
+        val tx = txInfo(
+            type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = false),
+            isOutgoing = false,
         )
 
         val result = tokenConverter.convert(tx) as TransactionItemUM.Content
@@ -585,7 +657,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN YieldSupply Send Token withdraw incoming WHEN convert THEN exit subtitle`() {
+    fun `GIVEN YieldSupply Send Token withdraw incoming WHEN convert THEN Aave provider subtitle`() {
         val tx = txInfo(
             type = TransactionType.YieldSupply.Send(address = USER_ADDRESS, isYieldSupplyWithdraw = true),
             isOutgoing = false,
@@ -593,9 +665,13 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = tokenConverter.convert(tx) as TransactionItemUM.Content
 
-        val subtitle = result.subtitle as ContentSubtitle.Plain
-        val res = subtitle.text as TextReference.Res
-        assertThat(res.id).isEqualTo(R.string.yield_module_transaction_exit_subtitle)
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Provider(
+                direction = ContentSubtitle.Direction.FROM,
+                name = resRef(R.string.yield_module_provider),
+                iconResId = R.drawable.img_aave_22,
+            ),
+        )
     }
 
     @Test

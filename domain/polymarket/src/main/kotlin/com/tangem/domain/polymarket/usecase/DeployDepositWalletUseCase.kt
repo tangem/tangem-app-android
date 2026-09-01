@@ -10,6 +10,10 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
  * Asks the backend to deploy the deposit wallet, passing the address derived locally so the backend can
  * cross-check it against its own derivation. The returned status is the starting point, not the outcome —
  * deployment completes asynchronously.
+ *
+ * `walletId` is the Tangem wallet id, sent exactly as stored. It correlates the deposit wallet with the
+ * wallet across Tangem's applications and is bound to the owner on first deploy; it is not an input to any
+ * derivation, and the backend computes the deposit wallet from the owner alone.
  */
 class DeployDepositWalletUseCase(
     private val polymarketRepository: PolymarketRepository,
@@ -20,7 +24,7 @@ class DeployDepositWalletUseCase(
     ): Either<PolymarketOnboardingError, PolymarketWalletStatus> = polymarketRepository
         .deployWallet(
             ownerAddress = addresses.ownerAddress,
-            userWalletId = addresses.userWalletId,
+            walletId = addresses.userWalletId.stringValue,
             depositWalletAddress = addresses.depositWalletAddress,
         )
         .mapLeft { it.toOnboardingError() }

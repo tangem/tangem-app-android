@@ -62,14 +62,14 @@ internal class StakeKitFeeLoader @AssistedInject constructor(
     ) {
         val state = stateController.value
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
-            ?: error("Illegal state")
+            ?: return onStakingFeeError(StakingError.DomainError("Illegal state"))
 
         val targetAddress = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenTarget?.address
             ?: state.balanceState?.targetAddress
-            ?: error("No target address provided")
+            ?: return onStakingFeeError(StakingError.DomainError("No target address provided"))
 
         val amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-            ?: error("No amount provided")
+            ?: return onStakingFeeError(StakingError.DomainError("No amount provided"))
 
         getStakeKitFee(
             confirmationState = confirmationState,

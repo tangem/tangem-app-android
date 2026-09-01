@@ -327,6 +327,8 @@ interface WalletManagersFacade {
 
     suspend fun hasDynamicAddressesNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean
 
+    suspend fun usedDynamicAddresses(userWalletId: UserWalletId, network: Network): List<String>?
+
     /**
      * Silently probes the xpub for balances on non-base derived addresses.
      * Does not mutate wallet manager state; can be called when dynamic addresses mode is disabled.

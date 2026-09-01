@@ -18,8 +18,9 @@ internal fun createWalletAccountDTO(
     iconColor: String? = null,
     derivationIndex: Int? = null,
     tokens: List<UserTokensResponse.Token>? = emptyList(),
+    type: String? = null,
 ): WalletAccountDTO {
-    val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+    val mainAccount = Account.Personal.createMainAccount(userWalletId = userWalletId)
 
     return WalletAccountDTO(
         id = accountId ?: mainAccount.accountId.value,
@@ -27,12 +28,13 @@ internal fun createWalletAccountDTO(
         derivationIndex = derivationIndex ?: mainAccount.derivationIndex.value,
         icon = icon ?: mainAccount.icon.value.name,
         iconColor = iconColor ?: mainAccount.icon.color.name,
+        type = type,
         tokens = tokens,
     )
 }
 
-internal fun createCryptoPortfolio(userWalletId: UserWalletId): Account.CryptoPortfolio {
-    return Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+internal fun createCryptoPortfolio(userWalletId: UserWalletId): Account.Personal {
+    return Account.Personal.createMainAccount(userWalletId = userWalletId)
 }
 
 internal fun createGetWalletAccountsResponse(

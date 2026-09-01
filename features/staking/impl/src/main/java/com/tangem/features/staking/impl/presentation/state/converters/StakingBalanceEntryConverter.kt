@@ -13,6 +13,7 @@ import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
@@ -83,7 +84,7 @@ internal class StakingBalanceEntryConverter(
         return if (isIncludeStakingTotalBalance) {
             amount
         } else {
-            val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
+            val stakingBalance = cryptoCurrencyStatus.value.stakingBalanceData
             if (stakingBalance is StakingBalance.Data.StakeKit) {
                 amount - stakingBalance.totalRewards
             } else {

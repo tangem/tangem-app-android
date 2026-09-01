@@ -19,7 +19,11 @@ internal class GoogleWalletUtil @Inject constructor(
     fun openWallet() {
         val intent = getWalletIntent()
         if (intent != null) {
-            context.startActivity(intent)
+            try {
+                context.startActivity(intent)
+            } catch (exception: Exception) {
+                TangemLogger.withTag(TAG).e("Error", exception)
+            }
         }
     }
 

@@ -24,7 +24,7 @@ enum class CashbackProgramStatus {
     companion object {
         fun fromString(value: String?): CashbackProgramStatus = when (value?.lowercase()) {
             "enabled" -> ENABLED
-            "deactivated" -> DEACTIVATED
+            "fraud", "deactivated" -> DEACTIVATED
             "disabled", "unavailable" -> DISABLED
             else -> UNKNOWN
         }

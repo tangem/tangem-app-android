@@ -81,6 +81,11 @@ internal class AllOffersModel @Inject constructor(
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM) {
+        if (onrampOfferAdvantagesUM is OnrampOfferAdvantagesUM.Unavailable ||
+            onrampOfferAdvantagesUM == OnrampOfferAdvantagesUM.Restricted
+        ) {
+            return
+        }
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.OnBuyClick(
                 providerName = quote.provider.info.name,

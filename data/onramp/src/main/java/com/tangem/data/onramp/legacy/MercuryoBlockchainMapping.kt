@@ -169,5 +169,6 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.Gonka -> null
             Blockchain.Robinhood, Blockchain.RobinhoodTestnet -> null
             Blockchain.Igra, Blockchain.IgraTestnet -> null
+            Blockchain.Electroneum, Blockchain.ElectroneumTestnet -> null
         }
     }

@@ -72,12 +72,14 @@ internal class PaymentAccountStatusValueMultichainTest {
                 PaymentNetworkStatus.Available(
                     network = mockk(),
                     depositAddress = "0xDEPOSIT",
+                    chainId = 137L,
                     cryptoCurrencyStatuses = listOf(s1, s2),
                 ),
                 PaymentNetworkStatus.NotIssued(network = mockk(), cryptoCurrencies = listOf(mockk())),
                 PaymentNetworkStatus.Available(
                     network = mockk(),
                     depositAddress = "0xDEPOSIT",
+                    chainId = 137L,
                     cryptoCurrencyStatuses = listOf(s3),
                 ),
             ),
@@ -103,6 +105,7 @@ internal class PaymentAccountStatusValueMultichainTest {
                 PaymentNetworkStatus.Available(
                     network = mockk(),
                     depositAddress = "0xDEPOSIT",
+                    chainId = 137L,
                     cryptoCurrencyStatuses = listOf(networkStatus),
                 ),
             ),

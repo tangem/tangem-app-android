@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.features.send.impl.R
+import com.tangem.utils.annotations.RemoveWithToggle
 import javax.inject.Inject
 
 @ModelScoped
@@ -35,6 +36,7 @@ internal class SendDestinationAlertFactory @Inject constructor(
         )
     }
 
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
     fun showRecipientBackupErrorAlert(onContactSupport: () -> Unit) {
         messageSender.send(
             DialogMessage(

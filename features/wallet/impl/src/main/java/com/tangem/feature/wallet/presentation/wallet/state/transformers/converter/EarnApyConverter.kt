@@ -15,6 +15,7 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.optionOrNull
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -82,7 +83,7 @@ internal class EarnApyConverter(
         val option = availability?.optionOrNull
             ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
-        val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
+        val stakingBalance = currencyStatus.value.stakingBalanceData
         val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
         val p2pEthPoolBalance = stakingBalance as? StakingBalance.Data.P2PEthPool
         val isActive = stakeKitBalance != null || p2pEthPoolBalance != null
@@ -92,32 +93,34 @@ internal class EarnApyConverter(
             return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
         }
 
-        val rateInfo = when (val stakingOptions = option) {
+        val rateInfo = when (option) {
             is StakingOption.P2PEthPool -> {
                 RewardInfo(
-                    rate = stakingOptions.apy,
+                    rate = option.apy,
                     type = RewardType.APY,
                 )
             }
-            is StakingOption.StakeKit -> if (stakeKitBalance != null) {
-                val validatorsByAddress = stakingOptions.yield.validators.associateBy { it.address }
-                stakeKitBalance.balance.items
-                    .mapNotNull { it.validatorAddress }
-                    .firstNotNullOfOrNull { address ->
-                        validatorsByAddress[address]?.rewardInfo
-                    } ?: stakingOptions.yield.validators
-                    .filter { it.preferred }
-                    .mapNotNull { validator ->
-                        validator.rewardInfo
-                    }
-                    .maxByOrNull { it.rate }
-            } else {
-                stakingOptions.yield.validators
-                    .filter { it.preferred }
-                    .mapNotNull { validator ->
-                        validator.rewardInfo
-                    }
-                    .maxByOrNull { it.rate }
+            is StakingOption.StakeKit -> {
+                if (stakeKitBalance != null) {
+                    val validatorsByAddress = option.yield.validators.associateBy { it.address }
+                    stakeKitBalance.balance.items
+                        .mapNotNull { it.validatorAddress }
+                        .firstNotNullOfOrNull { address ->
+                            validatorsByAddress[address]?.rewardInfo
+                        } ?: option.yield.validators
+                        .filter { it.preferred }
+                        .mapNotNull { validator ->
+                            validator.rewardInfo
+                        }
+                        .maxByOrNull { it.rate }
+                } else {
+                    option.yield.validators
+                        .filter { it.preferred }
+                        .mapNotNull { validator ->
+                            validator.rewardInfo
+                        }
+                        .maxByOrNull { it.rate }
+                }
             }
         }
 

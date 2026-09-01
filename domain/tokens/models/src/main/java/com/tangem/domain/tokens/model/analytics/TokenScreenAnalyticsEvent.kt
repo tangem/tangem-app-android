@@ -6,10 +6,14 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BALANCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.CURRENCY
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.VALUE
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+
+private const val WALLET_ID = "Wallet Id"
 
 /**
 [REDACTED_AUTHOR]
@@ -50,10 +54,28 @@ sealed class TokenScreenAnalyticsEvent(
         params = mapOf("Token" to token),
     )
 
-    class ButtonExplore(token: String) : TokenScreenAnalyticsEvent(
+    class ButtonExplore(
+        token: String,
+        source: ExploreActionSource,
+        blockchain: String? = null,
+        type: String? = null,
+        walletId: String? = null,
+    ) : TokenScreenAnalyticsEvent(
         event = "Button - Explore",
-        params = mapOf("Token" to token),
-    )
+        params = buildMap {
+            put(TOKEN_PARAM, token)
+            put(SOURCE, source.value)
+            blockchain?.let { put(BLOCKCHAIN, it) }
+            type?.let { put(TYPE, it) }
+            walletId?.let { put(WALLET_ID, it) }
+        },
+    ) {
+        enum class ExploreActionSource(val value: String) {
+            Main("Main"),
+            Token("Token"),
+            TransactionDetail("Transaction Detail"),
+        }
+    }
 
     class ButtonReload(token: String) : TokenScreenAnalyticsEvent(
         event = "Button - Reload",
@@ -177,10 +199,47 @@ sealed class TokenScreenAnalyticsEvent(
         ),
     )
 
-    class ButtonCopyAddress(token: String) : TokenScreenAnalyticsEvent(
+    class ButtonCopyAddress(
+        walletId: String,
+        token: String,
+        blockchain: String,
+        type: String,
+        source: CopyAddressActionSource,
+    ) : TokenScreenAnalyticsEvent(
         event = "Button - Copy Address",
-        params = mapOf("Token" to token),
-    )
+        params = mapOf(
+            WALLET_ID to walletId,
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+            TYPE to type,
+            SOURCE to source.value,
+        ),
+    ) {
+        enum class CopyAddressActionSource(val value: String) {
+            TransactionDetail("Transaction Detail"),
+        }
+    }
+
+    class ButtonShare(
+        walletId: String,
+        token: String,
+        blockchain: String,
+        type: String,
+        source: ShareActionSource,
+    ) : TokenScreenAnalyticsEvent(
+        event = "Button - Share",
+        params = mapOf(
+            WALLET_ID to walletId,
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+            TYPE to type,
+            SOURCE to source.value,
+        ),
+    ) {
+        enum class ShareActionSource(val value: String) {
+            TransactionDetail("Transaction Detail"),
+        }
+    }
 
     class Bought(token: String) : TokenScreenAnalyticsEvent(
         event = "Token Bought",

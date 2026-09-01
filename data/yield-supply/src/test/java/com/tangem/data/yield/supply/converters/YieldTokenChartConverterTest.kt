@@ -1,7 +1,7 @@
 package com.tangem.data.yield.supply.converters
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.api.tangemTech.models.YieldTokenChartResponse
+import com.tangem.grow.datasource.yield.models.YieldTokenChartResponse
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal

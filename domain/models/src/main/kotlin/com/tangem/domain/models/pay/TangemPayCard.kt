@@ -1,7 +1,6 @@
 package com.tangem.domain.models.pay
 
 import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -17,8 +16,12 @@ import kotlinx.serialization.Serializable
  * @property limit spending limit configuration for the card; `null` if not configured or not yet loaded.
  * @property frozenState whether the card is currently frozen (blocked for payments).
  * @property lastDigits The last four digits of the card number.
- * @property images card artwork images provided by the backend, keyed by [TangemPayTariffPlan.Image.Type].
+ * @property images card artwork images provided by the backend; read them via [mainImageUrl] and friends.
  * @property state current lifecycle state of the card (reissuing / closing / active).
+ * @property embossName cardholder name embossed on the card
+ * @property cardType whether the card is a digital (virtual) or a physical one.
+ * @property isPlaceholder `true` for a synthetic card built from a locally tracked in-flight order
+ *           (its [id] and [productInstanceId] carry the order id, not backend identifiers).
  */
 @Serializable
 data class TangemPayCard(
@@ -30,9 +33,13 @@ data class TangemPayCard(
     @SerialName("limit") val limit: TangemPayCardLimitData?,
     @SerialName("frozen_state") val frozenState: TangemPayCardFrozenState,
     @SerialName("last_digits") val lastDigits: String,
-    @SerialName("images") val images: List<TangemPayTariffPlan.Image>,
+    @SerialName("images") val images: List<TangemPayImage>,
     @SerialName("state") val state: TangemPayCardState,
+    @SerialName("emboss_name") val embossName: String?,
+    @SerialName("card_type") val cardType: TangemPayCardType,
+    @SerialName("is_placeholder") val isPlaceholder: Boolean = false,
 ) {
+
     @Serializable
     enum class Status {
         @SerialName("ACTIVE")
@@ -68,11 +75,19 @@ data class TangemPayCard(
 val TangemPayCard.isFrozen
     get() = frozenState == TangemPayCardFrozenState.Frozen
 
+private const val THUMBNAIL_IMAGE = "THUMBNAIL"
+private const val MAIN_IMAGE = "MAIN"
+private const val BACKGROUND_IMAGE = "BACKGROUND"
+private const val ACTIVATION_IMAGE = "ACTIVATION"
+
 val TangemPayCard.thumbnailUrl: String?
-    get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.THUMBNAIL }?.url
+    get() = images.urlOfType(THUMBNAIL_IMAGE)
 
 val TangemPayCard.mainImageUrl: String?
-    get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url
+    get() = images.urlOfType(MAIN_IMAGE)
 
 val TangemPayCard.backgroundImageUrl: String?
-    get() = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.BACKGROUND }?.url
+    get() = images.urlOfType(BACKGROUND_IMAGE)
+
+val TangemPayCard.activationImageUrl: String?
+    get() = images.urlOfType(ACTIVATION_IMAGE)

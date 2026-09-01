@@ -59,6 +59,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -102,6 +103,7 @@ internal fun LazyListScope.tokensListItems(
  */
 internal fun LazyListScope.tokensListItems2(
     walletTokensListUM: WalletTokensListUM,
+    jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
 ) {
@@ -121,15 +123,16 @@ internal fun LazyListScope.tokensListItems2(
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
-                    is TokensListItemUM2.Prediction -> predictionItem(
+                    is TokensListItemUM2.Portfolio -> portfolioItem(
                         listItem = listItem,
                         index = index,
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
-                    is TokensListItemUM2.Portfolio -> portfolioItem(
+                    is TokensListItemUM2.JointPending -> jointPendingItem(
                         listItem = listItem,
                         index = index,
+                        jointAccountComponent = jointAccountComponent,
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
@@ -187,37 +190,22 @@ private fun LazyListScope.tokenItem(
     }
 }
 
-private fun LazyListScope.predictionItem(
-    listItem: TokensListItemUM2.Prediction,
+private fun LazyListScope.jointPendingItem(
+    listItem: TokensListItemUM2.JointPending,
     index: Int,
+    jointAccountComponent: JointAccountMainBlockComponent,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    item(
-        key = listItem.tokenRowUM.id,
-        contentType = listItem.tokenRowUM::class.java,
-    ) {
-        val tokenRowUM = listItem.tokenRowUM
-        val itemModifier = modifier
-            .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
-            .semantics { lazyListItemPosition = index }
-            .padding(top = if (index == 0) TangemTheme.dimens2.x3 else TangemTheme.dimens2.x2)
-            // Standalone fully-rounded card, matching the account rows above/below it.
-            .roundedShapeItemDecoration(
-                radius = TangemTheme.dimens2.x5,
-                currentIndex = 0,
-                addDefaultPadding = false,
-                lastIndex = 0,
-                backgroundColor = TangemTheme.colors2.surface.level3,
-            )
-            .combinedClickable(
-                enabled = tokenRowUM.onItemClick != null,
-                onClick = tokenRowUM.onItemClick ?: {},
-            )
-        TangemTokenRow(
-            tokenRowUM = tokenRowUM,
+    with(jointAccountComponent) {
+        jointAccountMainContent(
+            key = listItem.accountId,
+            state = listItem.state,
             isBalanceHidden = isBalanceHidden,
-            modifier = itemModifier,
+            modifier = modifier
+                .padding(top = if (index == 0) 12.dp else 8.dp)
+                .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+                .semantics { lazyListItemPosition = index },
         )
     }
 }

@@ -1,22 +1,12 @@
 plugins {
-    alias(deps.plugins.android.library)
-    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.jvm)
     id("configuration")
-}
-
-android {
-    namespace = "com.tangem.domain.promo"
 }
 
 dependencies {
 
     // region Kotlin
-    api(deps.kotlin.coroutines)
     api(deps.arrow.core)
-    // endregion
-
-    // region Core modules
-    api(projects.core.utils)
     // endregion
 
     // region Domain models

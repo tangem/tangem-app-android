@@ -30,7 +30,6 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
-    api(projects.core.pagination)
 
     /** Tangem SDK */
     implementation(tangemDeps.blockchain)
@@ -44,7 +43,6 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.offramp)
-    implementation(projects.domain.card)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.wallets.models)
@@ -66,11 +64,12 @@ dependencies {
     implementation(projects.domain.nft.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.notifications)
-    implementation(projects.domain.swap.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
     implementation(projects.domain.addressBook)
     implementation(projects.domain.transaction)
+    implementation(projects.core.analytics.models)
+    implementation(projects.domain.core)
 
 
     /** Compose libraries */
@@ -80,16 +79,26 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
-    implementation(deps.androidx.paging.runtime)
 
     /** Other dependencies */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.androidx.paging.runtime)
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
+    implementation(deps.compose.reorderable)
+    implementation(deps.jodatime)
+    implementation(deps.kotlin.serialization.core)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
     
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(deps.arrow.core)
+    testImplementation(deps.kotlin.coroutines)
+    api(deps.kotlin.coroutines)
+    api(projects.domain.quotes)
 }

@@ -23,22 +23,14 @@ import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.haptic.TangemHapticEffect
-import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_copy_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyAvatar
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyUM
 import com.tangem.features.txhistory.impl.R
@@ -46,8 +38,8 @@ import com.tangem.features.txhistory.impl.R
 /**
  * Counterparty ("Recipient" / "From") card of the single-asset detail, built on the DS3 [TangemRow] inside a tinted
  * `bg.opaque.primary` cell. The layout is identical across counterparty kinds — only the leading
- * [avatar][CounterpartyUM.avatar] varies (see [CounterpartyAvatar]) and the trailing copy button is shown only when
- * [CounterpartyUM.onCopyClick] is non-null.
+ * [avatar][CounterpartyUM.avatar] varies (see [CounterpartyAvatar]). The whole row is clickable and triggers
+ * [CounterpartyUM.onCopyClick] when it is non-null.
  *
  * The section [label][CounterpartyUM.label] sits above the counterparty value. [TangemRow] renders its `titleSlot`
  * above the `subtitleSlot`, so the slots are filled inverted to their semantic role: the small caption label goes in
@@ -69,9 +61,7 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
             startSlot = { CounterpartyAvatar(counterparty.avatar) },
             titleSlot = { TangemRowText(text = counterparty.label, role = TangemRowTextRole.Subtitle) },
             subtitleSlot = { TangemRowText(text = counterparty.title, role = TangemRowTextRole.Title) },
-            endSlot = counterparty.onCopyClick?.let { onCopyClick ->
-                { CounterpartyCopyButton(onClick = onCopyClick) }
-            },
+            onClick = counterparty.onCopyClick,
         )
     }
 }
@@ -106,22 +96,6 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
             modifier = avatarModifier,
         )
     }
-}
-
-@Composable
-private fun CounterpartyCopyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val hapticManager = LocalHapticManager.current
-    TangemButton(
-        modifier = modifier,
-        variant = TangemButton.Variant.Secondary,
-        size = TangemButton.Size.X9,
-        iconStart = TangemIconUM.Icon(Icons.ic_copy_20),
-        contentDescription = resourceReference(R.string.common_copy).resolveReference(),
-        onClick = {
-            hapticManager.perform(TangemHapticEffect.OneTime.Click)
-            onClick()
-        },
-    )
 }
 
 // region Preview

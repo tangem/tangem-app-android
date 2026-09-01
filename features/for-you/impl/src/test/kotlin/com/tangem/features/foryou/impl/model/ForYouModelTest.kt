@@ -41,6 +41,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.*
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
@@ -55,6 +56,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.createLoadedValue
 import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
@@ -198,7 +200,7 @@ internal class ForYouModelTest {
 
             // Assert
             val content = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
-            assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
+            assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("BTC")
             assertThat(content.marketChartUM).isInstanceOf(MarketChartUM.Loaded::class.java)
             assertThat(model.uiState.value.notifications).isEmpty()
         }
@@ -319,7 +321,7 @@ internal class ForYouModelTest {
                 val state = model.uiState.value
                 assertThat(state.portfolioFilter).isInstanceOf(TangemFilterItemUM.Inactive::class.java)
                 val content = state.portfolioReviewUM as PortfolioReviewUM.Content
-                assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
+                assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("BTC")
             }
     }
 
@@ -329,7 +331,7 @@ internal class ForYouModelTest {
         @Test
         fun `GIVEN multi-network asset clicked twice THEN isExpanded toggles back to false`() = runTest {
             // Arrange — a single-network row navigates instead of expanding, so use one asset spanning two
-            // networks (same rawCurrencyId, different networks) to exercise the expand/collapse toggle wiring
+            // networks (same symbol, different networks) to exercise the expand/collapse toggle wiring
             val onFirstNetwork = createCoin(
                 rawCurrencyId = "btc",
                 symbol = "BTC",
@@ -1138,18 +1140,13 @@ internal class ForYouModelTest {
     private fun loadedValue(
         fiatAmount: BigDecimal,
         source: StatusSource = StatusSource.ACTUAL,
-    ): CryptoCurrencyStatus.Loaded = mockk {
-        every { amount } returns BigDecimal.ONE
-        every { this@mockk.fiatAmount } returns fiatAmount
-        every { isError } returns false
-        every { sources } returns CryptoCurrencyStatus.Sources(
-            networkSource = source,
-            quoteSource = source,
-            stakingBalanceSource = source,
-        )
-        every { yieldSupplyStatus } returns null
-        every { stakingBalance } returns null
-    }
+        staking: StakingBalance? = null,
+    ): CryptoCurrencyStatus.Loaded = createLoadedValue(
+        amount = BigDecimal.ONE,
+        fiatAmount = fiatAmount,
+        staking = staking,
+        source = source,
+    )
 
     private fun createCoin(
         rawCurrencyId: String,

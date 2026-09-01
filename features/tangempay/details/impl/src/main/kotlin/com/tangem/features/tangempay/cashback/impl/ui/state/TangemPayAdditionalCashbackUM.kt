@@ -8,22 +8,24 @@ import kotlinx.collections.immutable.ImmutableList
  * State for the "Additional cashback" section on the Cashback screen.
  *
  * @property items one card per active additional/bonus promotion, ordered as returned by the BFF
+ * @property onLinkClick called with the destination of a link tapped inside a promotion description
  */
 @Immutable
 internal data class TangemPayAdditionalCashbackUM(
     val items: ImmutableList<Item>,
+    val onLinkClick: (url: String) -> Unit,
 ) {
 
     /**
      * @property name short promotion name shown above the description
-     * @property description one-line promotion description
+     * @property description one-line promotion description in markdown; `null` hides the line
      * @property badge validity badge — permanent or time-limited
      */
     @Immutable
     data class Item(
         val id: String,
         val name: TextReference,
-        val description: TextReference,
+        val description: TextReference?,
         val badge: Badge,
     )
 

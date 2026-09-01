@@ -8,7 +8,6 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.assertClipboardIsEmpty
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openManageTokens
@@ -44,9 +43,7 @@ class ManageTokensTest : BaseTestCase() {
         val bep20 = "BEP20"
         val trc20 = "TRC20"
 
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -85,9 +82,7 @@ class ManageTokensTest : BaseTestCase() {
         val tickerQuery = "USDT"
         val emptyQuery = "Zzqnotoken"
 
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -127,9 +122,7 @@ class ManageTokensTest : BaseTestCase() {
     @DisplayName("Manage tokens: enabling Solana network on a modern card shows no warning")
     @Test
     fun solanaNetworkNoWarningTest() {
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -155,9 +148,7 @@ class ManageTokensTest : BaseTestCase() {
         val coinNetworkTitle = "BITCOIN"
         val contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7"
 
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -207,9 +198,7 @@ class ManageTokensTest : BaseTestCase() {
     fun solanaFirmwareLimitationWarningTest() {
         val warningMessage = getResourceString(CoreResR.string.alert_manage_tokens_unsupported_message, solanaName)
 
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }
@@ -231,9 +220,7 @@ class ManageTokensTest : BaseTestCase() {
         val warningMessage =
             getResourceString(CoreResR.string.alert_manage_tokens_unsupported_curve_message, solanaName)
 
-        setupHooks(
-            additionalAfterSection = { resetWireMockScenarioState(COINS_API_SCENARIO) },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$COINS_API_SCENARIO' to state: '$richState'") {
                 setWireMockScenarioState(COINS_API_SCENARIO, richState)
             }

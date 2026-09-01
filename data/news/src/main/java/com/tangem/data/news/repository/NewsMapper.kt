@@ -1,9 +1,9 @@
 package com.tangem.data.news.repository
 
-import com.tangem.datasource.api.news.models.response.NewsArticleDto
-import com.tangem.datasource.api.news.models.response.NewsDetailsResponse
-import com.tangem.datasource.api.news.models.response.NewsRelatedArticleDto
-import com.tangem.datasource.api.news.models.response.NewsRelatedTokenDto
+import com.tangem.store.datasource.news.models.response.NewsArticleDto
+import com.tangem.store.datasource.news.models.response.NewsDetailsResponse
+import com.tangem.store.datasource.news.models.response.NewsRelatedArticleDto
+import com.tangem.store.datasource.news.models.response.NewsRelatedTokenDto
 import com.tangem.domain.models.news.*
 
 internal fun NewsDetailsResponse.toDomainDetailedArticle(isLiked: Boolean): DetailedArticle {

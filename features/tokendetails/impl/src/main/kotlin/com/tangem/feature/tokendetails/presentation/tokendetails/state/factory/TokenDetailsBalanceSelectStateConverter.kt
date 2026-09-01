@@ -1,12 +1,11 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
-import com.tangem.common.getTotalWithRewardsStakingBalance
+import com.tangem.common.getExtraBalanceOrNull
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
 import com.tangem.utils.Provider
@@ -29,10 +28,7 @@ internal class TokenDetailsBalanceSelectStateConverter(
                 return this
             }
 
-            val stakingBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data
-            val stakingCryptoAmount = stakingBalance?.getTotalWithRewardsStakingBalance(
-                cryptoCurrencyStatus.currency.network.rawId,
-            )
+            val stakingCryptoAmount = cryptoCurrencyStatus.getExtraBalanceOrNull()
             val stakingFiatAmount = stakingCryptoAmount?.let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }
             copy(
                 tokenBalanceBlockState = if (tokenBalanceBlockState is TokenDetailsBalanceBlockState.Content) {

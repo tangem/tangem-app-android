@@ -1,0 +1,72 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_banknote_arrow_horizontal_28: ImageVector? = null
+
+val Icons.ic_banknote_arrow_horizontal_28: ImageVector
+    get() {
+        if (_ic_banknote_arrow_horizontal_28 != null) return _ic_banknote_arrow_horizontal_28!!
+        _ic_banknote_arrow_horizontal_28 = ImageVector.Builder(
+            name = "ic_banknote_arrow_horizontal_28",
+            defaultWidth = 28.dp,
+            defaultHeight = 28.dp,
+            viewportWidth = 28f,
+            viewportHeight = 28f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M22.8447 17.6055C22.8685 17.6059 22.8923 17.6066 22.916 17.6084C22.937 17.6099 22.9578 17.6117 22.9785 17.6143C22.9942 17.6162 23.0097 17.6195 23.0254 17.6221C23.049 17.6259 23.0725 17.6296 23.0957 17.6348C23.1059 17.637 23.1159 17.6401 23.126 17.6426C23.1918 17.659 23.2561 17.6787 23.3174 17.7051C23.3261 17.7088 23.3342 17.7138 23.3428 17.7178C23.484 17.7825 23.6107 17.8726 23.7178 17.9824L25.1328 19.3955C25.621 19.8832 25.6222 20.6746 25.1348 21.1631C24.8456 21.4525 24.4496 21.5682 24.0732 21.5146V22.0869C24.0728 23.6155 22.8252 24.8564 21.3008 24.8564H19.0264C18.3363 24.8564 17.7768 24.2965 17.7764 23.6064C17.7764 22.9161 18.336 22.3564 19.0264 22.3564H21.3008C21.449 22.3564 21.5728 22.2303 21.5732 22.0869V21.5146C21.1964 21.5691 20.7996 21.4532 20.5098 21.1631C20.0222 20.6746 20.0235 19.8833 20.5117 19.3955L21.9385 17.9697L22.0342 17.8848C22.0457 17.8754 22.0576 17.8663 22.0693 17.8574C22.1382 17.8052 22.213 17.7608 22.292 17.7236C22.34 17.7011 22.3885 17.6802 22.4385 17.6641C22.4571 17.6581 22.4762 17.6536 22.4951 17.6484C22.5175 17.6424 22.5399 17.6366 22.5625 17.6318C22.5764 17.6289 22.5904 17.6265 22.6045 17.624C22.6269 17.6201 22.6493 17.616 22.6719 17.6133C22.6922 17.6108 22.7128 17.6099 22.7334 17.6084C22.7562 17.6068 22.7789 17.6059 22.8018 17.6055C22.8089 17.6053 22.8161 17.6045 22.8232 17.6045C22.8304 17.6045 22.8376 17.6053 22.8447 17.6055Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M19.9785 15.7041C20.6687 15.7043 21.2285 16.2639 21.2285 16.9541C21.2284 17.6442 20.6686 18.2039 19.9785 18.2041H17.7031C17.5548 18.2043 17.4317 18.3301 17.4316 18.4736V19.043C17.8082 18.9896 18.2049 19.1078 18.4941 19.3975C18.981 19.8861 18.9804 20.6776 18.4922 21.165L17.0752 22.5781C16.9845 22.6711 16.8795 22.7494 16.7637 22.8105C16.7594 22.8128 16.7553 22.8152 16.751 22.8174C16.5801 22.9051 16.3869 22.9561 16.1816 22.9561C15.9897 22.9561 15.809 22.9103 15.6465 22.833C15.6273 22.8239 15.6077 22.8158 15.5889 22.8057C15.5721 22.7966 15.5563 22.7861 15.54 22.7764C15.5236 22.7665 15.5063 22.7578 15.4902 22.7471C15.4656 22.7307 15.4423 22.7124 15.4189 22.6943C15.3772 22.6621 15.3362 22.6281 15.2979 22.5898L13.8711 21.165C13.3827 20.6774 13.3817 19.886 13.8691 19.3975C14.1588 19.1074 14.5548 18.99 14.9316 19.0439V18.4736C14.9317 16.9449 16.1786 15.7043 17.7031 15.7041H19.9785Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M21.0254 5.25C22.7131 5.25026 24.083 6.61586 24.083 8.30566V14.1025C24.083 14.7929 23.5234 15.3525 22.833 15.3525C22.1428 15.3524 21.583 14.7928 21.583 14.1025V8.30566C21.583 8.00006 21.3359 7.75025 21.0254 7.75H6.55859C6.24787 7.75 6 7.99991 6 8.30566V16.9541C6.00019 17.2597 6.24799 17.5098 6.55859 17.5098H11.4121C12.1025 17.5098 12.6621 18.0694 12.6621 18.7598C12.6619 19.45 12.1023 20.0098 11.4121 20.0098H6.55859C4.87077 20.0098 3.50019 18.6439 3.5 16.9541V8.30566C3.5 6.61571 4.87065 5.25 6.55859 5.25H21.0254Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M8.75 14.5127C9.44036 14.5127 10 15.0723 10 15.7627C10 16.4531 9.44036 17.0127 8.75 17.0127H7.75C7.05964 17.0127 6.5 16.4531 6.5 15.7627C6.5 15.0723 7.05964 14.5127 7.75 14.5127H8.75Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M11.4404 10.2148C12.8185 8.97153 14.9456 9.01264 16.2734 10.3398L16.3975 10.4707C17.6429 11.8474 17.6008 13.9728 16.2734 15.2998C14.9029 16.6683 12.6814 16.6681 11.3105 15.3008C9.939 13.9312 9.93918 11.7097 11.3096 10.3398L11.4404 10.2148ZM14.5059 12.1084C14.1366 11.7393 13.551 11.7153 13.1533 12.0391L13.0762 12.1084C12.6825 12.5024 12.6835 13.139 13.0762 13.5312L13.1523 13.6006C13.5502 13.9243 14.1374 13.9001 14.5068 13.5312C14.8989 13.1385 14.8995 12.5048 14.5107 12.1123C14.5093 12.1108 14.5073 12.1099 14.5059 12.1084Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M19.8301 8.25293C20.5204 8.25293 21.0801 8.81257 21.0801 9.50293C21.0799 10.1932 20.5204 10.7529 19.8301 10.7529H18.8301C18.1398 10.7529 17.5802 10.1932 17.5801 9.50293C17.5801 8.81257 18.1397 8.25293 18.8301 8.25293H19.8301Z"),
+            )
+        }.build()
+        return _ic_banknote_arrow_horizontal_28!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcBanknoteArrowHorizontal28Preview() {
+    Icon(
+        imageVector = Icons.ic_banknote_arrow_horizontal_28,
+        contentDescription = null,
+    )
+}

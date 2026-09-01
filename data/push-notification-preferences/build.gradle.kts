@@ -22,6 +22,7 @@ dependencies {
 
     // region DI
     implementation(deps.hilt.android)
+    implementation(deps.androidx.datastore.core)
     kapt(deps.hilt.kapt)
     // endregion
 
@@ -43,5 +44,6 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.turbine)
+    testImplementation(deps.moshi)
     // endregion
 }

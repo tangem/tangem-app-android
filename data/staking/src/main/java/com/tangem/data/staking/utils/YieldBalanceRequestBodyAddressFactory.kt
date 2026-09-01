@@ -1,6 +1,6 @@
 package com.tangem.data.staking.utils
 
-import com.tangem.datasource.api.stakekit.models.request.Address
+import com.tangem.grow.datasource.stakekit.models.request.Address
 import com.tangem.domain.models.staking.StakingID
 
 /**

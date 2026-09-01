@@ -1,12 +1,9 @@
 package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.XRP_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_NON_ACTIVATED_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openSendScreen
 import com.tangem.screens.onSendAddressScreen
@@ -36,29 +33,7 @@ class XRPWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: check warning, when sending less than reserve")
     @Test
     fun checkWarningWhenSendingLessThanReserve() {
-        // Other tests leave ripple_custom_derivation in a state where the non-activated address is funded.
-        val rippleCustomDerivationScenario = "ripple_custom_derivation"
-        val rippleAccountInfoScenario = "ripple_account_info"
-        val rippleAccountLinesScenario = "ripple_account_lines"
-
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(rippleCustomDerivationScenario)
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-                resetWireMockScenarioState(rippleAccountLinesScenario)
-            }
-        ).run {
-            step("Reset WireMock scenario: '$rippleCustomDerivationScenario' to its initial state") {
-                resetWireMockScenarioState(rippleCustomDerivationScenario)
-            }
-            step("Reset WireMock scenario: '$rippleAccountInfoScenario' to its initial state") {
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-            }
-            step("Reset WireMock scenario: '$rippleAccountLinesScenario' to its initial state") {
-                resetWireMockScenarioState(rippleAccountLinesScenario)
-            }
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName, mockStateName)
             }
@@ -106,29 +81,7 @@ class XRPWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: check warning when sending amount equal to reserve")
     @Test
     fun checkWarningWhenSendingAmountEqualToReserve() {
-        // Other tests leave ripple_custom_derivation in a state where the non-activated address is funded.
-        val rippleCustomDerivationScenario = "ripple_custom_derivation"
-        val rippleAccountInfoScenario = "ripple_account_info"
-        val rippleAccountLinesScenario = "ripple_account_lines"
-
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(rippleCustomDerivationScenario)
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-                resetWireMockScenarioState(rippleAccountLinesScenario)
-            }
-        ).run {
-            step("Reset WireMock scenario: '$rippleCustomDerivationScenario' to its initial state") {
-                resetWireMockScenarioState(rippleCustomDerivationScenario)
-            }
-            step("Reset WireMock scenario: '$rippleAccountInfoScenario' to its initial state") {
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-            }
-            step("Reset WireMock scenario: '$rippleAccountLinesScenario' to its initial state") {
-                resetWireMockScenarioState(rippleAccountLinesScenario)
-            }
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName, mockStateName)
             }
@@ -177,29 +130,7 @@ class XRPWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: check warning when sending greater than reserve")
     @Test
     fun checkWarningWhenSendingGreaterThanReserve() {
-        // Other tests leave ripple_custom_derivation in a state where the non-activated address is funded.
-        val rippleCustomDerivationScenario = "ripple_custom_derivation"
-        val rippleAccountInfoScenario = "ripple_account_info"
-        val rippleAccountLinesScenario = "ripple_account_lines"
-
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(rippleCustomDerivationScenario)
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-                resetWireMockScenarioState(rippleAccountLinesScenario)
-            }
-        ).run {
-            step("Reset WireMock scenario: '$rippleCustomDerivationScenario' to its initial state") {
-                resetWireMockScenarioState(rippleCustomDerivationScenario)
-            }
-            step("Reset WireMock scenario: '$rippleAccountInfoScenario' to its initial state") {
-                resetWireMockScenarioState(rippleAccountInfoScenario)
-            }
-            step("Reset WireMock scenario: '$rippleAccountLinesScenario' to its initial state") {
-                resetWireMockScenarioState(rippleAccountLinesScenario)
-            }
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName, mockStateName)
             }

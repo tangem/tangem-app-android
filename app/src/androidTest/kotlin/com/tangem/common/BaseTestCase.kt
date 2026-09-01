@@ -20,7 +20,8 @@ import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.rules.ApiEnvironmentRule
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.common.utils.resetWireMockScenarios
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
@@ -102,9 +103,13 @@ abstract class BaseTestCase : TestCase(
 
     /**
      * Initialization order is important:
-     * – DI dependencies must be injected first,
+     * – all WireMock scenarios are reset first, so a test never inherits state from its predecessor,
+     * – DI dependencies must be injected next,
      * – then the API environment should be set up,
      * – and only after that the activity should be launched.
+     *
+     * Because of the leading reset, tests declare only the scenario states they need and never roll them
+     * back: [additionalAfterSection] is for non-WireMock cleanup (system properties, clipboard, network).
      */
     protected fun setupHooks(
         additionalBeforeAppLaunchSection: () -> Unit = {},
@@ -119,6 +124,14 @@ abstract class BaseTestCase : TestCase(
         // Setup WireMock redirect for CI with local WireMock instances
         val wiremockUrl = InstrumentationRegistry.getArguments().getString(WIREMOCK_BASE_URL_ARG)
         WireMockRedirectInterceptor.overriddenBaseUrl = wiremockUrl
+        // Every test starts from a clean WireMock: all scenarios back to their initial state. This runs before
+        // `additionalBeforeAppLaunchSection` and the activity launch, because scenarios read at app start
+        // (`/v1/networks/providers`, stories) must already be reset by the time the app boots. Tests therefore
+        // only declare the states they need — they never have to roll them back afterwards.
+        check(resetWireMockScenarios()) {
+            "Failed to reset WireMock scenarios at ${wiremockUrl ?: "the remote instance"}. Every test depends " +
+                "on a clean scenario state, so continuing would fail later for an unrelated-looking reason."
+        }
         additionalBeforeAppLaunchSection()
         hiltRule.inject()
         runBlocking {

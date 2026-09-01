@@ -5,7 +5,7 @@ import com.tangem.spend.datasource.config.TangemPay
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackDocument
@@ -57,10 +57,10 @@ internal class MockAwareCashbackRepository @Inject constructor(
 
     override suspend fun getCashbackHistory(
         userWalletId: UserWalletId,
-        months: Int,
+        monthsNumber: Int,
     ): Either<VisaApiError, CashbackHistory> {
-        if (isMockMode) return MOCK_HISTORY.copy(months = MOCK_HISTORY.months.takeLast(months)).right()
-        return real.getCashbackHistory(userWalletId, months)
+        if (isMockMode) return MOCK_HISTORY.copy(months = MOCK_HISTORY.months.takeLast(monthsNumber)).right()
+        return real.getCashbackHistory(userWalletId, monthsNumber)
     }
 
     override suspend fun getCashbackDetails(
@@ -82,58 +82,78 @@ internal class MockAwareCashbackRepository @Inject constructor(
             displayMode = CashbackDisplayMode.FULL,
             cashback = TangemPayCashback(
                 confirmedAmount = BigDecimal("22.54"),
-                pendingAmount = BigDecimal("13.65"),
+                totalEarnedAmount = BigDecimal("132.15"),
                 currency = "USD",
                 payoutCurrency = "USDC",
-                payoutNetwork = "Polygon",
                 period = TangemPayCashback.Period(
                     year = 2026,
                     month = 6,
                     payoutStart = DateTime.parse("2026-07-02"),
                     payoutEnd = DateTime.parse("2026-07-05"),
                 ),
+                previousPayout = TangemPayCashback.PreviousPayout(
+                    endDate = DateTime.parse("2026-06-05"),
+                    amount = BigDecimal("18.00"),
+                ),
             ),
         )
 
         val MOCK_PROMOTIONS = CashbackPromotions(
-            cardTiers = listOf(
-                CashbackPromotions.CardTier(
-                    tier = "basic",
-                    label = "Basic",
-                    scope = "All purchases",
+            cards = listOf(
+                CashbackPromotions.CardPromotion(
+                    cardType = "basic",
+                    title = "Basic Card",
+                    cashbackRate = BigDecimal("1.0"),
                     minTransactionAmount = BigDecimal("30"),
-                    monthlyCapAmount = BigDecimal("100"),
+                    promotionId = "2553142c-19b2-4843-b39d-7882e0b8a6e7",
                 ),
-                CashbackPromotions.CardTier(
-                    tier = "plus",
-                    label = "Plus",
-                    scope = "All purchases",
+                CashbackPromotions.CardPromotion(
+                    cardType = "plus",
+                    title = "Plus Card",
+                    cashbackRate = BigDecimal("2.0"),
                     minTransactionAmount = BigDecimal("30"),
-                    monthlyCapAmount = BigDecimal("300"),
+                    promotionId = "997d42ca-892c-4918-92ef-f852d1feb2c4",
                 ),
             ),
-            monthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("150"), currency = "USD"),
+            accountMonthlyCap = CashbackPromotions.MonthlyCap(amount = BigDecimal("300"), currency = "USD"),
             additionalCashback = listOf(
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-permanent",
+                    cardType = null,
                     name = "Groceries increase",
                     description = "+1% cashback for groceries stores",
-                    isPermanent = true,
                     endDate = null,
+                    promoCap = null,
+                    minTransactionAmount = null,
+                    priority = 99,
                 ),
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-groceries-2026",
+                    cardType = "plus",
                     name = "Groceries increase",
                     description = "+1% cashback for groceries stores. Max \$10/month",
-                    isPermanent = false,
                     endDate = DateTime.parse("2026-09-26"),
+                    promoCap = CashbackPromotions.PromoCap(
+                        amount = BigDecimal("10"),
+                        period = CashbackPromotions.PromoCap.Period.MONTHLY,
+                        currency = "USD",
+                    ),
+                    minTransactionAmount = BigDecimal("30"),
+                    priority = 98,
                 ),
                 CashbackPromotions.AdditionalCashback(
                     id = "promo-cashback-2026",
+                    cardType = "basic",
                     name = "Cashback increase",
-                    description = "+2% cashback for groceries stores. Max \$10/month",
-                    isPermanent = false,
+                    description = null,
                     endDate = DateTime.parse("2026-09-26"),
+                    promoCap = CashbackPromotions.PromoCap(
+                        amount = BigDecimal("20"),
+                        period = CashbackPromotions.PromoCap.Period.MONTHLY,
+                        currency = "USD",
+                    ),
+                    minTransactionAmount = null,
+                    priority = 50,
                 ),
             ),
         )
@@ -152,14 +172,20 @@ internal class MockAwareCashbackRepository @Inject constructor(
         )
 
         val MOCK_HISTORY = CashbackHistory(
-            currency = "USD",
             months = listOf(
-                CashbackHistory.MonthlyCashback(year = 2026, month = 2, confirmedAmount = BigDecimal("12.02")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 3, confirmedAmount = BigDecimal("44.22")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 4, confirmedAmount = BigDecimal("38.52")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 5, confirmedAmount = BigDecimal("26.10")),
-                CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
+                mockMonth(month = 2, amount = "12.02"),
+                mockMonth(month = 3, amount = "44.22"),
+                mockMonth(month = 4, amount = "38.52"),
+                mockMonth(month = 5, amount = "26.10"),
+                mockMonth(month = 6, amount = "22.54"),
             ),
+        )
+
+        private fun mockMonth(month: Int, amount: String) = CashbackHistory.MonthlyCashback(
+            year = 2026,
+            month = month,
+            confirmedAmount = BigDecimal(amount),
+            currency = "USD",
         )
 
         private val USD: Currency = Currency.getInstance("USD")
@@ -206,7 +232,6 @@ internal class MockAwareCashbackRepository @Inject constructor(
                 currency = value?.let { USD },
                 isCapTrimmed = isCapTrimmed,
                 exclusionReason = exclusionReason,
-                promotionIds = emptyList(),
             )
         }
     }

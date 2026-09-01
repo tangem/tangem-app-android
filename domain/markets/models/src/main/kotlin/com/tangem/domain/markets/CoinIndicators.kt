@@ -73,4 +73,14 @@ data class CoinIndicators(
             NOT_AVAILABLE,
         }
     }
+
+    /**
+     * Whether the sentiment badge must be suppressed because nothing in the readings can be interpreted:
+     * either there are no readings at all, or every one of them is [Reading.Signal.NOT_AVAILABLE].
+     * Judged over all readings, not per timeframe — an asset the backend has nothing to say about
+     * (a stablecoin, say) is badge-less on every timeframe, rather than showing a misleading "Neutral"
+     */
+    fun shouldHideBadge(): Boolean {
+        return readings.all { reading -> reading.signal == Reading.Signal.NOT_AVAILABLE }
+    }
 }

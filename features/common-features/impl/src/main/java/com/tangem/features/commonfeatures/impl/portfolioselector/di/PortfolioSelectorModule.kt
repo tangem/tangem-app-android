@@ -3,6 +3,7 @@ package com.tangem.features.commonfeatures.impl.portfolioselector.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorFeatureToggles
@@ -11,6 +12,7 @@ import com.tangem.features.commonfeatures.impl.portfolioselector.DefaultPortfoli
 import com.tangem.features.commonfeatures.impl.portfolioselector.PortfolioSelectorModel
 import com.tangem.features.commonfeatures.impl.portfolioselector.featuretoggles.DefaultPortfolioSelectorFeatureToggles
 import com.tangem.features.commonfeatures.impl.portfolioselector.fetcher.DefaultPortfolioFetcher
+import com.tangem.features.commonfeatures.impl.portfolioselector.fetcher.DefaultPortfolioSelectorBridge
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -35,6 +37,11 @@ internal interface PortfolioSelectorSingletonModule {
 
     @Binds
     fun bindPortfolioFetcherFactory(impl: DefaultPortfolioFetcher.Factory): PortfolioFetcher.Factory
+
+    @Binds
+    fun bindPortfolioSelectorBridgeFactory(
+        impl: DefaultPortfolioSelectorBridge.Factory,
+    ): PortfolioSelectorBridge.Factory
 
     @Binds
     fun bindPortfolioSelectorController(impl: DefaultPortfolioSelectorController): PortfolioSelectorController

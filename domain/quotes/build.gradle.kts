@@ -8,6 +8,7 @@ dependencies {
     // region Domain
     api(projects.domain.core)
     api(projects.domain.models)
+    api(deps.kotlin.coroutines)
     // endregion
 
     // region Tests

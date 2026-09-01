@@ -12,9 +12,11 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
@@ -713,6 +715,49 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             // Then
             assertThat(result).hasSize(1)
             assertThat(result[cexProvider]).isNotNull()
+        }
+
+        @Test
+        fun `GIVEN restricted quote WHEN findBestQuote THEN loaded state carries restricted flag`() = runTest {
+            // Given
+            val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                isCoin = true,
+                amount = BigDecimal("10"),
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel(isRestricted = true)
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
+                )
+            } returns quoteModel.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(cexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — the quote loads as a regular loaded state (amounts + fee pipeline intact),
+            // restriction is carried as a flag
+            val state = result[cexProvider]
+            assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+            assertThat((state as SwapState.QuotesLoadedState).isRestricted).isTrue()
         }
     }
 
@@ -1761,6 +1806,130 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             amountToSwap = "1.0",
             reduceBalanceBy = BigDecimal.ZERO,
         )
+    }
+
+    @Nested
+    inner class CexPaymentAccountBalance {
+
+        private val userWalletId = UserWalletId(stringValue = "deadbeef")
+        private val paymentAccount = Account.Payment(userWalletId)
+        private val portfolioAccount = Account.Personal.createMainAccount(userWalletId)
+        private val usdcContract = "0xUsdcContract"
+        private val usdcDecimals = 6
+
+        @Test
+        fun `GIVEN payment account amount over balance WHEN findBestQuote THEN InsufficientAmount`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = paymentAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "20")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.InsufficientAmount)
+        }
+
+        @Test
+        fun `GIVEN payment account amount within balance WHEN findBestQuote THEN Pending`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = paymentAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "10")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        }
+
+        @Test
+        fun `GIVEN payment account amount equal to balance WHEN findBestQuote THEN Pending`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10.000001"), account = paymentAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "10.000001")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        }
+
+        @Test
+        fun `GIVEN portfolio account amount over balance WHEN findBestQuote THEN Pending`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = portfolioAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "20")
+
+            // Assert
+            assertThat(loaded.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
+        }
+
+        @Test
+        fun `GIVEN payment account amount over balance WHEN findBestQuote THEN quote still requested`() = runTest {
+            // Arrange
+            val fromStatus = buildFromStatus(balance = BigDecimal("10"), account = paymentAccount)
+
+            // Act
+            val loaded = findCexQuote(fromStatus = fromStatus, amountToSwap = "20")
+
+            // Assert
+            assertThat(loaded.toTokenInfo.tokenAmount.value).isEqualTo(BigDecimal("0.5"))
+            coVerify(exactly = 1) {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = "20000000",
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = any(),
+                    rateType = any(),
+                )
+            }
+        }
+
+        private fun buildFromStatus(balance: BigDecimal, account: Account): SwapCurrencyStatus =
+            buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = usdcContract,
+                isCoin = false,
+                amount = balance,
+                decimals = usdcDecimals,
+            ).copy(account = account)
+
+        private suspend fun findCexQuote(
+            fromStatus: SwapCurrencyStatus,
+            amountToSwap: String,
+        ): SwapState.QuotesLoadedState {
+            val cexProvider = buildSwapProvider(ExchangeProviderType.CEX)
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = cexProvider.providerId,
+                    rateType = any(),
+                )
+            } returns buildQuoteModel().right()
+
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
+                providers = listOf(cexProvider),
+                amountToSwap = amountToSwap,
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            return result[cexProvider] as SwapState.QuotesLoadedState
+        }
     }
 }
 

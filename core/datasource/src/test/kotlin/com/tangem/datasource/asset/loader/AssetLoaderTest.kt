@@ -6,7 +6,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.datasource.api.express.models.response.Asset
+import com.tangem.grow.datasource.express.models.response.Asset
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery

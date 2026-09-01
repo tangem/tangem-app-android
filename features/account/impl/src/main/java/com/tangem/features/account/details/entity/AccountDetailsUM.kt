@@ -10,8 +10,10 @@ internal data class AccountDetailsUM(
     val archiveMode: ArchiveMode,
     val isManageTokensAvailable: Boolean,
     val onCloseClick: () -> Unit,
-    val onAccountEditClick: () -> Unit,
     val onManageTokensClick: () -> Unit,
+    val onAccountEditClick: (() -> Unit)?,
+    val members: MembersRowUM? = null,
+    val networksInfo: NetworksInfoUM? = null,
 ) {
 
     @Immutable
@@ -22,4 +24,16 @@ internal data class AccountDetailsUM(
             val isLoading: Boolean,
         ) : ArchiveMode
     }
+
+    data class MembersRowUM(
+        val title: TextReference,
+        val membersCount: TextReference,
+        val onClick: () -> Unit,
+    )
+
+    data class NetworksInfoUM(
+        val text: TextReference,
+        val linkText: TextReference,
+        val onLinkClick: () -> Unit,
+    )
 }

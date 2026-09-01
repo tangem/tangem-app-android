@@ -1,6 +1,6 @@
 package com.tangem.tap.di
 
-import com.tangem.datasource.api.moonpay.MoonPayApi
+import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository

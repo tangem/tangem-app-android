@@ -142,6 +142,35 @@ internal class CloudBackupCipherTest {
     }
 
     @Test
+    fun `GIVEN payload of another backup under this header WHEN decrypt THEN WrongPassword returned`() {
+        // Arrange
+        val password = "shared password".toCharArray()
+        val header = cipher.encrypt("first wallet phrase".toByteArray(), password, METADATA, LIGHT_PARAMS)
+        val donor = cipher.encrypt("second wallet phrase".toByteArray(), password, METADATA, LIGHT_PARAMS)
+        val glued = header.copy(crypto = donor.crypto)
+
+        // Act
+        val actual = cipher.decrypt(glued, password)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(CloudBackupCryptoError.WrongPassword)
+    }
+
+    @Test
+    fun `GIVEN tampered id WHEN decrypt THEN WrongPassword returned`() {
+        // Arrange
+        val password = "password".toCharArray()
+        val encrypted = cipher.encrypt(byteArrayOf(1, 2, 3), password, METADATA, LIGHT_PARAMS)
+        val tampered = encrypted.copy(id = "6bd9b1a2-0000-4000-8000-000000000000")
+
+        // Act
+        val actual = cipher.decrypt(tampered, password)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(CloudBackupCryptoError.WrongPassword)
+    }
+
+    @Test
     fun `GIVEN two encryptions of same secret WHEN encrypt THEN salt nonce and id differ`() {
         // Arrange
         val secret = byteArrayOf(1, 2, 3)
@@ -194,12 +223,13 @@ internal class CloudBackupCipherTest {
         val actual = deterministicCipher.encrypt(secret, password, METADATA, LIGHT_PARAMS)
 
         // Assert
+        assertThat(actual.id).isEqualTo("1c1d1e1f-2021-4223-a425-262728292a2b")
         assertThat(actual.crypto).isEqualTo(
             CloudBackupFileData.CryptoData(
                 cipher = "aes-256-gcm",
                 cipherparams = CloudBackupFileData.CipherParams(nonce = "101112131415161718191a1b"),
                 ciphertext = "a1b6d2aba89a9a59bb02b594528c",
-                tag = "5affe455a7b932c1123bbadcf77778cf",
+                tag = "0850d82b4354910be8db161eefff6f3e",
                 kdf = "argon2id",
                 kdfparams = CloudBackupFileData.KdfParams(
                     version = 19,
@@ -211,6 +241,37 @@ internal class CloudBackupCipherTest {
                 ),
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN encrypted file data WHEN isSupportedFormat THEN true`() {
+        // Arrange
+        val encrypted = cipher.encrypt(byteArrayOf(1, 2, 3), "password".toCharArray(), METADATA, LIGHT_PARAMS)
+
+        // Act & Assert
+        assertThat(cipher.isSupportedFormat(encrypted)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN unsupported version WHEN isSupportedFormat THEN false`() {
+        // Arrange
+        val encrypted = cipher.encrypt(byteArrayOf(1, 2, 3), "password".toCharArray(), METADATA, LIGHT_PARAMS)
+        val broken = encrypted.copy(version = 2)
+
+        // Act & Assert
+        assertThat(cipher.isSupportedFormat(broken)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN malformed salt WHEN isSupportedFormat THEN false`() {
+        // Arrange
+        val encrypted = cipher.encrypt(byteArrayOf(1, 2, 3), "password".toCharArray(), METADATA, LIGHT_PARAMS)
+        val broken = encrypted.copy(
+            crypto = encrypted.crypto.copy(kdfparams = encrypted.crypto.kdfparams.copy(salt = "not hex")),
+        )
+
+        // Act & Assert
+        assertThat(cipher.isSupportedFormat(broken)).isFalse()
     }
 
     private class SequentialRandom : SecureRandom() {

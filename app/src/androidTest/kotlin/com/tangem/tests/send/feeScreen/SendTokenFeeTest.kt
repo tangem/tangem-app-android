@@ -6,7 +6,6 @@ import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.TERRA_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -31,12 +30,7 @@ class SendTokenFeeTest : BaseTestCase() {
         val tokenName = "VeThor"
         val scenarioState = "Vechain"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
             }
@@ -64,12 +58,7 @@ class SendTokenFeeTest : BaseTestCase() {
         val tokenName = "TerraClassicUSD"
         val scenarioState = "Terra"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
             }

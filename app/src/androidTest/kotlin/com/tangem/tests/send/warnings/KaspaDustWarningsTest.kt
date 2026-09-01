@@ -2,10 +2,7 @@ package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.KASPA_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openSendScreen
@@ -42,13 +39,7 @@ class KaspaDustWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: invalid amount warning is displayed, when sending less than minimum amount (Kaspa)")
     @Test
     fun warningIsDisplayedWhenSendingLessThanMinimum() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$dustState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = dustState)
             }
@@ -83,13 +74,7 @@ class KaspaDustWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: invalid amount warning is NOT displayed, when sending exactly minimum amount (Kaspa)")
     @Test
     fun warningIsNotDisplayedWhenSendingExactlyMinimum() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$dustState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = dustState)
             }
@@ -125,13 +110,7 @@ class KaspaDustWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: invalid amount warning is NOT displayed, when sending more than minimum amount (Kaspa)")
     @Test
     fun warningIsNotDisplayedWhenSendingMoreThanMinimum() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$dustState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = dustState)
             }
@@ -167,13 +146,7 @@ class KaspaDustWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: invalid amount warning is NOT displayed, when change is more than minimum amount (Kaspa)")
     @Test
     fun warningIsNotDisplayedWhenChangeIsMoreThanMinimum() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$dustState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = dustState)
             }
@@ -209,13 +182,7 @@ class KaspaDustWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: invalid amount warning is displayed, when change is less than minimum amount (Kaspa)")
     @Test
     fun warningIsDisplayedWhenChangeIsLessThanMinimum() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$dustState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = dustState)
             }
@@ -250,13 +217,7 @@ class KaspaDustWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: invalid amount warning is NOT displayed, when change is exactly minimum amount (Kaspa)")
     @Test
     fun warningIsNotDisplayedWhenChangeIsExactlyMinimum() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(kaspaUTXOScenarioName)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$kaspaUTXOScenarioName' to state: '$dustState'") {
                 setWireMockScenarioState(scenarioName = kaspaUTXOScenarioName, state = dustState)
             }

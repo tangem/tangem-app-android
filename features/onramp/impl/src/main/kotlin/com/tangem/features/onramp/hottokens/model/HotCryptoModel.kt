@@ -18,6 +18,7 @@ import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.common.currency.isCustomToken
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet

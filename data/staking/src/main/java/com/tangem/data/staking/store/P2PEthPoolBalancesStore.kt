@@ -1,6 +1,6 @@
 package com.tangem.data.staking.store
 
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
+import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 

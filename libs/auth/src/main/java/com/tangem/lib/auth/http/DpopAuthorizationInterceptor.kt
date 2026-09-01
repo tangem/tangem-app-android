@@ -1,7 +1,7 @@
 package com.tangem.lib.auth.http
 
-import com.tangem.datasource.api.auth.RequiresDpopProof
-import com.tangem.datasource.api.auth.RequiresSessionAuth
+import com.tangem.lib.auth.api.RequiresDpopProof
+import com.tangem.lib.auth.api.RequiresSessionAuth
 import com.tangem.lib.auth.dpop.DpopProofFactory
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.logging.TangemLogger

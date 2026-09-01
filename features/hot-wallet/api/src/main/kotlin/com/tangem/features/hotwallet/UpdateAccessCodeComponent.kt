@@ -11,6 +11,7 @@ interface UpdateAccessCodeComponent : ComposableContentComponent {
         val source: String,
         val nextScreen: AppRoute? = null,
         val shouldShowBackButton: Boolean = true,
+        val canSkip: Boolean = false,
     )
     interface Factory : ComponentFactory<Params, UpdateAccessCodeComponent>
 }

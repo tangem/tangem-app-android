@@ -18,6 +18,9 @@ sealed interface PolymarketOnboardingError : PolymarketError {
     /** The backend knows a deposit wallet that is not the one derived locally. */
     data class AddressMismatch(val expected: String, val actual: String) : PolymarketOnboardingError
 
+    /** The region forbids opening a new account. Existing ones stay usable, so this only stops a deploy. */
+    data object RegionBlocked : PolymarketOnboardingError
+
     /** The deploy transaction failed or timed out on-chain. */
     data object DeploymentFailed : PolymarketOnboardingError
 

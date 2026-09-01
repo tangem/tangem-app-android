@@ -4,7 +4,7 @@ import com.tangem.domain.pay.model.OrderType.Companion.fromString
 import com.tangem.domain.pay.model.OrderType.Companion.issueCardTypes
 
 /**
- * Order type used for findOrders filtering and order-conflict checks.
+ * Order type used for findOrders filtering.
  *
  * Backend wire values are mapped via [fromString]; unknown values resolve to [UNKNOWN]
  * so the app never crashes on a new server-side type.
@@ -14,7 +14,10 @@ enum class OrderType(val wireValue: String) {
     CARD_ISSUE_VIRTUAL_RAIN("CARD_ISSUE_VIRTUAL_RAIN"),
     CARD_ISSUE_VIRTUAL_RAIN_KYC("CARD_ISSUE_VIRTUAL_RAIN_KYC"),
     CARD_ISSUE_VIRTUAL_RAIN_KYC_V2("CARD_ISSUE_VIRTUAL_RAIN_KYC_V2"),
+    CARD_ISSUE_PLASTIC_RAIN("CARD_ISSUE_PLASTIC_RAIN"),
+    CARD_ACTIVATION_PLASTIC_RAIN("CARD_ACTIVATION_PLASTIC_RAIN"),
     CARD_REISSUE("CARD_REISSUE"),
+    CARD_REISSUE_PLASTIC_RAIN("CARD_REISSUE_PLASTIC_RAIN"),
     CARD_FREEZE("CARD_FREEZE"),
     CARD_UNFREEZE("CARD_UNFREEZE"),
     WITHDRAW("WITHDRAW"),
@@ -26,22 +29,17 @@ enum class OrderType(val wireValue: String) {
     /** `true` for any card-issuance order type — see [issueCardTypes]. */
     val isIssuing: Boolean get() = issueCardTypes.contains(this)
 
-    /** `true` for card freeze / unfreeze orders. */
-    val isFreezingUnfreezing: Boolean get() = this == CARD_FREEZE || this == CARD_UNFREEZE
-
-    /** `true` for card reissue orders. */
-    val isReissuing: Boolean get() = this == CARD_REISSUE
-
     companion object {
 
         /**
-         * All order types that represent issuing a card: the virtual card and its KYC variants.
-         * Used both to filter `findOrders` and to detect issue-card conflicts.
+         * All order types that represent issuing a card: the virtual card, its KYC variants, and the
+         * plastic one. Used to filter `findOrders` and to restore in-flight issuance.
          */
         val issueCardTypes = setOf(
             CARD_ISSUE_VIRTUAL_RAIN,
             CARD_ISSUE_VIRTUAL_RAIN_KYC,
             CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+            CARD_ISSUE_PLASTIC_RAIN,
         )
 
         fun fromString(value: String?): OrderType {

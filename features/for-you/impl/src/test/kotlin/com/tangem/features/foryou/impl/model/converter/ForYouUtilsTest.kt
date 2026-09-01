@@ -6,13 +6,18 @@ import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.markets.CoinIndicators
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -27,37 +32,51 @@ internal class ForYouUtilsTest {
     inner class ForYouGroupKey {
 
         @Test
-        fun `GIVEN standard currency with raw id WHEN forYouGroupKey THEN returns rawCurrencyId value`() {
+        fun `GIVEN currency WHEN forYouGroupKey THEN returns the symbol`() {
             // Arrange
-            val id: CryptoCurrency.ID = mockk {
-                every { rawCurrencyId } returns CryptoCurrency.RawID("bitcoin")
-                every { value } returns "coin-id-value"
-            }
-            val currency: CryptoCurrency = mockk { every { this@mockk.id } returns id }
-            val status = createStatus(currency)
+            val status = createStatus(createCurrency(symbol = "BTC", idValue = "coin-btc-bitcoin"))
 
             // Act
             val result = status.forYouGroupKey()
 
             // Assert
-            assertThat(result).isEqualTo("bitcoin")
+            assertThat(result).isEqualTo("BTC")
         }
 
         @Test
-        fun `GIVEN custom token with no raw id WHEN forYouGroupKey THEN falls back to currency id value`() {
-            // Arrange
-            val id: CryptoCurrency.ID = mockk {
-                every { rawCurrencyId } returns null
-                every { value } returns "custom-currency-id"
-            }
-            val currency: CryptoCurrency = mockk { every { this@mockk.id } returns id }
-            val status = createStatus(currency)
+        fun `GIVEN the same symbol on different networks WHEN forYouGroupKey THEN keys match`() {
+            // Arrange — one asset held on two chains has two distinct currency ids, and collapsing it into
+            // a single portfolio-review row is the whole reason the key is the symbol
+            val onEthereum = createStatus(createCurrency(symbol = "USDC", idValue = "token-usdc-ethereum"))
+            val onSolana = createStatus(createCurrency(symbol = "USDC", idValue = "token-usdc-solana"))
 
             // Act
-            val result = status.forYouGroupKey()
+            val ethereumKey = onEthereum.forYouGroupKey()
+            val solanaKey = onSolana.forYouGroupKey()
 
             // Assert
-            assertThat(result).isEqualTo("custom-currency-id")
+            assertThat(ethereumKey).isEqualTo(solanaKey)
+        }
+
+        @Test
+        fun `GIVEN different symbols WHEN forYouGroupKey THEN keys differ`() {
+            // Arrange
+            val btc = createStatus(createCurrency(symbol = "BTC", idValue = "coin-btc-bitcoin"))
+            val eth = createStatus(createCurrency(symbol = "ETH", idValue = "coin-eth-ethereum"))
+
+            // Act
+            val keys = listOf(btc.forYouGroupKey(), eth.forYouGroupKey())
+
+            // Assert
+            assertThat(keys).containsExactly("BTC", "ETH").inOrder()
+        }
+
+        private fun createCurrency(symbol: String, idValue: String): CryptoCurrency {
+            val currencyId: CryptoCurrency.ID = mockk { every { value } returns idValue }
+            return mockk {
+                every { this@mockk.symbol } returns symbol
+                every { id } returns currencyId
+            }
         }
 
         private fun createStatus(currency: CryptoCurrency): CryptoCurrencyStatus = CryptoCurrencyStatus(
@@ -209,9 +228,19 @@ internal class ForYouUtilsTest {
         private fun provideTestModels() = listOf(
             // No entry for the symbol at all → no badge
             BadgeModel(coinIndicators = null, expected = null),
-            // Entry present but without readings → score 0 → Neutral (summary shows "Neutral outlook" too)
-            BadgeModel(coinIndicators = createIndicators(), expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue),
-            // Only non-actionable signals → score 0 → Neutral, matching the summary's "Neutral outlook"
+            // Entry present but without a single reading → nothing to interpret → no badge
+            BadgeModel(coinIndicators = createIndicators(), expected = null),
+            // Every reading unavailable (stablecoin, or no fresh data) → no badge rather than a misleading "Neutral"
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NOT_AVAILABLE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.NOT_AVAILABLE),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NOT_AVAILABLE),
+                ),
+                expected = null,
+            ),
+            // One INSUFFICIENT_DATA reading among unavailable ones is still data → badge stays, scoring 0
+            // → Neutral, matching the summary's "Neutral outlook"
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.INSUFFICIENT_DATA, Timeframe.DAY),
@@ -220,7 +249,16 @@ internal class ForYouUtilsTest {
                 ),
                 expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
             ),
-            // Net-positive score → Positive
+            // Hiding is decided over every reading, not the selected timeframe: a WEEK signal keeps the
+            // badge for DAY, where the only reading is unavailable → score 0 → Neutral
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NOT_AVAILABLE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.WEEK),
+                ),
+                expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
+            ),
+            // 3 loaded → band 0, so even a net score of +1 is already decisive → Positive
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
@@ -229,10 +267,28 @@ internal class ForYouUtilsTest {
                 ),
                 expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
             ),
-            // Net-negative score → Negative
+            // …and a net score of -1 on the same 3-wide scale likewise → Negative
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NEGATIVE),
+                ),
+                expected = resourceReference(R.string.common_negative) to TangemBadgeColor.Red,
+            ),
+            // A unanimous 3-wide scale is Positive too — the badge follows the sign, not the margin
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE),
+                ),
+                expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
+            ),
+            // Three negatives likewise → Negative
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NEGATIVE, Timeframe.DAY),
                     createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
                     createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NEGATIVE),
                 ),
@@ -303,6 +359,75 @@ internal class ForYouUtilsTest {
     }
 
     @Nested
+    inner class AvailableAccountIds {
+
+        @Test
+        fun `GIVEN wallet with non-portfolio accounts WHEN availableAccountIds THEN only crypto portfolios returned`() {
+            // Arrange — the selector renders a row only for crypto portfolios, so only their ids may be offered
+            val portfolio = MockAccounts.createAccount(derivationIndex = 1)
+            val statuses = mapOf(
+                WALLET_ID to createAccountStatusList(
+                    cryptoPortfolioStatus(portfolio),
+                    paymentStatus(),
+                    predictionStatus(),
+                ),
+            )
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).containsExactly(portfolio.accountId)
+        }
+
+        @Test
+        fun `GIVEN several wallets WHEN availableAccountIds THEN portfolios of every wallet are collected`() {
+            // Arrange
+            val onFirst = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET_ID)
+            val onSecond = MockAccounts.createAccount(derivationIndex = 1, userWalletId = OTHER_WALLET_ID)
+            val statuses = mapOf(
+                WALLET_ID to createAccountStatusList(cryptoPortfolioStatus(onFirst)),
+                OTHER_WALLET_ID to createAccountStatusList(cryptoPortfolioStatus(onSecond), predictionStatus()),
+            )
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).containsExactly(onFirst.accountId, onSecond.accountId)
+        }
+
+        @Test
+        fun `GIVEN only non-portfolio accounts WHEN availableAccountIds THEN result is empty`() {
+            // Arrange — nothing selectable, so the caller must not seed a selection at all
+            val statuses = mapOf(WALLET_ID to createAccountStatusList(paymentStatus(), predictionStatus()))
+
+            // Act
+            val actual = statuses.availableAccountIds()
+
+            // Assert
+            assertThat(actual).isEmpty()
+        }
+
+        private fun createAccountStatusList(vararg statuses: AccountStatus): AccountStatusList = mockk {
+            every { accountStatuses } returns statuses.toList()
+        }
+
+        private fun cryptoPortfolioStatus(account: Account.CryptoPortfolio): AccountStatus.CryptoPortfolio = mockk {
+            every { this@mockk.account } returns account
+            every { accountId } returns account.accountId
+        }
+
+        private fun paymentStatus(): AccountStatus.Payment = mockk {
+            every { account } returns mockk<Account.Payment> { every { accountId } returns mockk() }
+        }
+
+        private fun predictionStatus(): AccountStatus.Prediction = mockk {
+            every { account } returns mockk<Account.Prediction> { every { accountId } returns mockk() }
+        }
+    }
+
+    @Nested
     inner class ForYouPeriodFromId {
 
         @Test
@@ -361,6 +486,12 @@ internal class ForYouUtilsTest {
         signal = signal,
         updatedAt = null,
     )
+
+    private companion object {
+        /** UserWalletId parses its value as hex, so the ids must be valid hex strings. */
+        val WALLET_ID = UserWalletId("01")
+        val OTHER_WALLET_ID = UserWalletId("02")
+    }
 }
 
 private typealias Signal = CoinIndicators.Reading.Signal

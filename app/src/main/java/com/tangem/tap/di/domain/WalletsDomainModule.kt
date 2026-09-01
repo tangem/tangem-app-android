@@ -170,6 +170,18 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun providesResolveAndSelectUserWalletUseCase(
+        getUserWalletUseCase: GetUserWalletUseCase,
+        userWalletsListRepository: UserWalletsListRepository,
+    ): ResolveAndSelectUserWalletUseCase {
+        return ResolveAndSelectUserWalletUseCase(
+            getUserWalletUseCase = getUserWalletUseCase,
+            userWalletsListRepository = userWalletsListRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun providesUserWalletSelectedHandler(handler: DefaultUserWalletSelectedHandler): UserWalletSelectedHandler {
         return handler
     }
@@ -440,6 +452,14 @@ internal object WalletsDomainModule {
         walletCardsBackupRepository: WalletCardsBackupRepository,
     ): ReportWalletCardsBackupUseCase {
         return ReportWalletCardsBackupUseCase(walletCardsBackupRepository = walletCardsBackupRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSendPendingWalletCardsBackupUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+    ): SendPendingWalletCardsBackupUseCase {
+        return SendPendingWalletCardsBackupUseCase(walletCardsBackupRepository = walletCardsBackupRepository)
     }
 
     @Provides

@@ -136,7 +136,7 @@ class ApplyTokenListSortingUseCase(
                     return@map account
                 }
 
-            account.copy(cryptoCurrencies = accountCurrencies)
+            account.copySealed(cryptoCurrencies = accountCurrencies)
         }
     }
 

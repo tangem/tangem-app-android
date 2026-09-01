@@ -28,6 +28,7 @@ object MockProvider {
         MockOption("Wallet 2 (No Backup, No Wallets)") { Wallet2NoBackupNoWalletsMockContent },
         MockOption("Wallet 2 (Seed Phrase)") { Wallet2WithSeedPhraseMockContent },
         MockOption("Wallet 2 (With derivations)") { Wallet2WithDerivationsMockContent },
+        MockOption("Wallet 3 (FW8)") { Wallet3MockContent },
         MockOption("Shiba") { ShibaMockContent },
         MockOption("Shiba (No Backup)") { ShibaNoBackupMockContent },
         MockOption("Shiba (No Backup, No Wallets)") { ShibaNoBackupNoWalletsMockContent },

@@ -19,8 +19,8 @@ import com.tangem.utils.converter.Converter
  * - several accounts — [TangemFilterItemUM.Active] showing the generic "Accounts" label with the
  *   number of picked accounts as the counter, since no single name would describe the selection.
  *
- * "Every available account picked" is decided against [ForYouSelectedPortfolio.totalAccountsCount],
- * which counts the crypto-portfolio accounts across all wallets before the selection filter.
+ * "Every available account picked" is decided by comparing [ForYouSelectedPortfolio.selectedAccounts] with
+ * [ForYouSelectedPortfolio.totalAccountsCount].
  *
  * @property onClick invoked when the chip is tapped — opens the portfolio selector
  * @property onClearClick invoked when the trailing cross of an active chip is tapped — resets the
@@ -32,12 +32,17 @@ internal class ForYouPortfolioFilterConverter(
 ) : Converter<ForYouSelectedPortfolio, TangemFilterItemUM> {
 
     override fun convert(value: ForYouSelectedPortfolio): TangemFilterItemUM {
-        val selectedAccounts = value.accountCryptoCurrencyStatuses
-            .map { it.account }
-            .distinct()
+        val selectedAccounts = value.selectedAccounts
 
         return when {
-            selectedAccounts.isEmpty() || selectedAccounts.size == value.totalAccountsCount -> {
+            selectedAccounts.isEmpty() -> {
+                TangemFilterItemUM.Inactive(
+                    id = ID,
+                    label = resourceReference(R.string.common_select_account),
+                    onClick = onClick,
+                )
+            }
+            selectedAccounts.size == value.totalAccountsCount -> {
                 TangemFilterItemUM.Inactive(
                     id = ID,
                     label = resourceReference(R.string.common_all_accounts),

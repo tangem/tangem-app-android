@@ -1,0 +1,23 @@
+[
+  { "query": "На экране Order → Type у пластиковой карты надо подписать серым «Beta» рядом с названием таба", "should_trigger": true },
+  { "query": "need a new string for the delivery ETA, something like \"3–5 business days\" with two numbers inside — how do I write the args?", "should_trigger": true },
+  { "query": "the delivery-time label should read \"Up to N business days\" and must not render \"1 days\"", "should_trigger": true },
+  { "query": "заведи ключ в локалайзе на ошибку активации карты", "should_trigger": true },
+  { "query": "поменяй текст кнопки заказа на Order card", "should_trigger": true },
+  { "query": "я добавил R.string.tangempay_order_type_select, а он не резолвится и сборка падает", "should_trigger": true },
+  { "query": "в моём диффе core/res/src/main/res/values/strings.xml куча чужих строк, выкинуть их перед ревью?", "should_trigger": true },
+  { "query": "проверь, нет ли уже готовой строки с текстом Unavailable, прежде чем плодить новую", "should_trigger": true },
+  { "query": "надо добавить надпис «Country of residence» под страной, тлько серым и помельче", "should_trigger": true },
+  { "query": "доделай экран Order → Data: инвертируй маркер обязательности на « · Optional», прогони detekt и открой PR", "should_trigger": true },
+
+  { "query": "поправь опечатку в логе: Timber.e(\"faild to load offers\")", "should_trigger": false },
+  { "query": "add a debug-menu entry to core/res/src/main/res/values/strings_special.xml", "should_trigger": false },
+  { "query": "локализуй числа в графике под текущую локаль, там NumberFormat нужен", "should_trigger": false },
+  { "query": "stringResource падает на detekt-правиле UnsafeStringResourceUsage, поправь вызовы", "should_trigger": false },
+  { "query": "переименуй orderCardTitle в orderTypeTitle по всему модулю", "should_trigger": false },
+  { "query": "переведи мне вот этот абзац на английский, надо коллеге написать", "should_trigger": false },
+  { "query": "добавь иконку ic_beta_16 в drawable и подключи её в бейдж", "should_trigger": false },
+  { "query": "изменения строк уже закоммичены — запушь ветку и открой PR", "should_trigger": false },
+  { "query": "напиши UI-тест, который проверяет, что на экране виден текст «Order new card»", "should_trigger": false },
+  { "query": "создай в Jira таску на экраны заказа пластиковой карты", "should_trigger": false }
+]

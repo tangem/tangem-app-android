@@ -13,9 +13,12 @@ class GetSupportedNetworksUseCase(
     private val repository: CustomTokensRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<SupportedBlockchainException, List<Network>> {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        allowedNetworkIds: Set<Network.RawID>? = null,
+    ): Either<SupportedBlockchainException, List<Network>> {
         return either {
-            val networks = catch({ repository.getSupportedNetworks(userWalletId) }) {
+            val networks = catch({ repository.getSupportedNetworks(userWalletId, allowedNetworkIds) }) {
                 raise(SupportedBlockchainException.DataError(it))
             }
 

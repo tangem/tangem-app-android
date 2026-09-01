@@ -10,9 +10,15 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
-import javax.inject.Inject
 
-internal class PolymarketEventConverter @Inject constructor() : Converter<PolymarketEventDto, PolymarketEvent> {
+internal object PolymarketEventConverter : Converter<PolymarketEventDto, PolymarketEvent> {
+
+    private const val STATUS_ACTIVE = "active"
+    private const val STATUS_CLOSED = "closed"
+    private const val STATUS_ARCHIVED = "archived"
+
+    private const val DISPLAY_MODE_GROUPED_OUTCOMES = "grouped_outcomes"
+    private const val DISPLAY_MODE_PLAIN_MARKETS = "plain_markets"
 
     override fun convert(value: PolymarketEventDto): PolymarketEvent {
         return PolymarketEvent(
@@ -84,14 +90,5 @@ internal class PolymarketEventConverter @Inject constructor() : Converter<Polyma
             DISPLAY_MODE_PLAIN_MARKETS -> PolymarketDisplayMode.PLAIN_MARKETS
             else -> if (isNegRisk) PolymarketDisplayMode.GROUPED_OUTCOMES else PolymarketDisplayMode.PLAIN_MARKETS
         }
-    }
-
-    private companion object {
-        const val STATUS_ACTIVE = "active"
-        const val STATUS_CLOSED = "closed"
-        const val STATUS_ARCHIVED = "archived"
-
-        const val DISPLAY_MODE_GROUPED_OUTCOMES = "grouped_outcomes"
-        const val DISPLAY_MODE_PLAIN_MARKETS = "plain_markets"
     }
 }

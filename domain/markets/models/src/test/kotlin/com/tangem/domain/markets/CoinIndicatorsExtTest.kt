@@ -5,6 +5,7 @@ import com.tangem.domain.markets.CoinIndicators.Reading
 import com.tangem.domain.markets.CoinIndicators.Reading.Signal
 import com.tangem.domain.markets.CoinIndicators.Reading.Timeframe
 import com.tangem.domain.markets.CoinIndicators.Reading.Type
+import com.tangem.domain.markets.SentimentOutlook as Outlook
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -229,6 +230,202 @@ internal class CoinIndicatorsExtTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ShouldHideBadge {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun shouldHideBadge(model: HideBadgeModel) {
+            // Arrange
+            val indicators = coinIndicators(readings = model.readings)
+
+            // Act
+            val actual = indicators.shouldHideBadge()
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedHidden)
+        }
+
+        private fun provideTestModels() = listOf(
+            HideBadgeModel(
+                description = "no readings at all leaves nothing to interpret",
+                readings = emptyList(),
+                expectedHidden = true,
+            ),
+            HideBadgeModel(
+                description = "every reading unavailable leaves nothing to interpret",
+                readings = Type.entries.map { reading(it, Timeframe.DAY, Signal.NOT_AVAILABLE) },
+                expectedHidden = true,
+            ),
+            HideBadgeModel(
+                description = "one INSUFFICIENT_DATA reading among unavailable ones still counts as data",
+                readings = listOf(
+                    reading(Type.RSI, Timeframe.DAY, Signal.INSUFFICIENT_DATA),
+                    reading(Type.MACD, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.MA_CROSS, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                ),
+                expectedHidden = false,
+            ),
+            HideBadgeModel(
+                description = "a NEUTRAL reading counts as data",
+                readings = listOf(reading(Type.GALAXY_SCORE, Timeframe.DAY, Signal.NEUTRAL)),
+                expectedHidden = false,
+            ),
+            HideBadgeModel(
+                description = "readings of any timeframe count, so a WEEK signal alone keeps the badge",
+                readings = listOf(
+                    reading(Type.RSI, Timeframe.DAY, Signal.NOT_AVAILABLE),
+                    reading(Type.RSI, Timeframe.WEEK, Signal.POSITIVE),
+                ),
+                expectedHidden = false,
+            ),
+        )
+    }
+
+    internal data class HideBadgeModel(
+        val description: String,
+        val readings: List<Reading>,
+        val expectedHidden: Boolean,
+    ) {
+        override fun toString(): String = description
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SentimentOutlook {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun sentimentOutlook(model: OutlookModel) {
+            // Arrange
+            val indicators = coinIndicators(readings = model.readings)
+
+            // Act
+            val actual = indicators.sentimentOutlook(model.timeframe)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedOutlook)
+        }
+
+        private fun provideTestModels() = listOf(
+            OutlookModel(
+                description = "M=5, score +2 sits inside the band of 2 -> neutral",
+                readings = signals(Signal.POSITIVE, Signal.POSITIVE, Signal.POSITIVE, Signal.NEGATIVE, Signal.NEUTRAL),
+                expectedOutlook = Outlook.NEUTRAL,
+            ),
+            OutlookModel(
+                description = "M=5, score +3 clears the band of 2 -> positive",
+                readings = signals(
+                    Signal.POSITIVE,
+                    Signal.POSITIVE,
+                    Signal.POSITIVE,
+                    Signal.POSITIVE,
+                    Signal.NEGATIVE,
+                ),
+                expectedOutlook = Outlook.POSITIVE,
+            ),
+            OutlookModel(
+                description = "M=5, score -2 sits inside the band of 2 -> neutral",
+                readings = signals(Signal.NEGATIVE, Signal.NEGATIVE, Signal.NEGATIVE, Signal.POSITIVE, Signal.NEUTRAL),
+                expectedOutlook = Outlook.NEUTRAL,
+            ),
+            OutlookModel(
+                description = "M=5, score -3 clears the band of 2 -> negative",
+                readings = signals(
+                    Signal.NEGATIVE,
+                    Signal.NEGATIVE,
+                    Signal.NEGATIVE,
+                    Signal.NEGATIVE,
+                    Signal.POSITIVE,
+                ),
+                expectedOutlook = Outlook.NEGATIVE,
+            ),
+            OutlookModel(
+                description = "M=4 (one NOT_AVAILABLE), score +2 still inside the band of 2 -> neutral",
+                readings = signals(
+                    Signal.POSITIVE,
+                    Signal.POSITIVE,
+                    Signal.POSITIVE,
+                    Signal.NEGATIVE,
+                    Signal.NOT_AVAILABLE,
+                ),
+                expectedOutlook = Outlook.NEUTRAL,
+            ),
+            OutlookModel(
+                description = "M=4 (one NOT_AVAILABLE), score +3 clears the band of 2 -> positive",
+                readings = signals(
+                    Signal.POSITIVE,
+                    Signal.POSITIVE,
+                    Signal.POSITIVE,
+                    Signal.NEUTRAL,
+                    Signal.NOT_AVAILABLE,
+                ),
+                expectedOutlook = Outlook.POSITIVE,
+            ),
+            OutlookModel(
+                description = "M=3 (two readings absent), score +1 is decisive — no band below 4 loaded indicators",
+                readings = signals(Signal.POSITIVE, Signal.POSITIVE, Signal.NEGATIVE),
+                expectedOutlook = Outlook.POSITIVE,
+            ),
+            OutlookModel(
+                description = "M=3 (two readings absent), score -1 is decisive — no band below 4 loaded indicators",
+                readings = signals(Signal.NEGATIVE, Signal.NEGATIVE, Signal.POSITIVE),
+                expectedOutlook = Outlook.NEGATIVE,
+            ),
+            OutlookModel(
+                description = "M=3 (two readings absent), a wider score of +2 is positive all the same",
+                readings = signals(Signal.POSITIVE, Signal.POSITIVE, Signal.NEUTRAL),
+                expectedOutlook = Outlook.POSITIVE,
+            ),
+            OutlookModel(
+                description = "M=3 (two readings absent), a wider score of -2 is negative all the same",
+                readings = signals(Signal.NEGATIVE, Signal.NEGATIVE, Signal.NEUTRAL),
+                expectedOutlook = Outlook.NEGATIVE,
+            ),
+            OutlookModel(
+                description = "M=3, a score of exactly 0 is the only neutral left below 4 loaded indicators",
+                readings = signals(Signal.POSITIVE, Signal.NEGATIVE, Signal.NEUTRAL),
+                expectedOutlook = Outlook.NEUTRAL,
+            ),
+            OutlookModel(
+                description = "M=2, score +1 is decisive — no band below 4 loaded indicators",
+                readings = signals(Signal.POSITIVE, Signal.NEUTRAL),
+                expectedOutlook = Outlook.POSITIVE,
+            ),
+            OutlookModel(
+                description = "M=2, score -1 is decisive — no band below 4 loaded indicators",
+                readings = signals(Signal.NEGATIVE, Signal.NEUTRAL),
+                expectedOutlook = Outlook.NEGATIVE,
+            ),
+            OutlookModel(
+                description = "M=1, the single loaded indicator decides on its own",
+                readings = signals(Signal.POSITIVE),
+                expectedOutlook = Outlook.POSITIVE,
+            ),
+            OutlookModel(
+                description = "only non-actionable signals: nothing loaded, nothing scored -> neutral",
+                readings = signals(Signal.INSUFFICIENT_DATA, Signal.NOT_AVAILABLE, Signal.NOT_AVAILABLE),
+                expectedOutlook = Outlook.NEUTRAL,
+            ),
+            OutlookModel(
+                description = "no readings at all -> neutral",
+                readings = emptyList(),
+                expectedOutlook = Outlook.NEUTRAL,
+            ),
+            OutlookModel(
+                description = "readings of another timeframe do not count towards the selected one",
+                readings = Type.entries.map { reading(it, Timeframe.DAY, Signal.POSITIVE) },
+                timeframe = Timeframe.WEEK,
+                expectedOutlook = Outlook.NEUTRAL,
+            ),
+        )
+
+        /** Assigns [signals] to the indicator types in declaration order; the rest of the types stay absent. */
+        private fun signals(vararg signals: Signal): List<Reading> =
+            Type.entries.zip(signals.toList()) { type, signal -> reading(type, Timeframe.DAY, signal) }
+    }
+
     internal data class ScoreModel(
         val description: String,
         val readings: List<Reading>,
@@ -243,6 +440,15 @@ internal class CoinIndicatorsExtTest {
         val readings: List<Reading>,
         val timeframe: Timeframe,
         val expectedMax: Int,
+    ) {
+        override fun toString(): String = description
+    }
+
+    internal data class OutlookModel(
+        val description: String,
+        val readings: List<Reading>,
+        val timeframe: Timeframe = Timeframe.DAY,
+        val expectedOutlook: Outlook,
     ) {
         override fun toString(): String = description
     }

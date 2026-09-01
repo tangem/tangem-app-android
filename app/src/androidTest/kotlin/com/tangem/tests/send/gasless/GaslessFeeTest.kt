@@ -2,11 +2,8 @@ package com.tangem.tests.send.gasless
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.enterAmountAndOpenSendConfirm
@@ -40,12 +37,7 @@ class GaslessFeeTest : BaseTestCase() {
     @DisplayName("Gasless: Network fee on summary is selectable and the stablecoin is available for the fee")
     @Test
     fun checkNetworkFeeTokenSelectionAvailableTest() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen for '$tokenName'") {
                 openSendScreen(tokenName = tokenName, mockState = scenarioState)
             }
@@ -86,12 +78,7 @@ class GaslessFeeTest : BaseTestCase() {
     fun checkFeeCalculatedInStablecoinTest() {
         val marketSpeed = getResourceString(R.string.common_fee_selector_option_market)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen for '$tokenName'") {
                 openSendScreen(tokenName = tokenName, mockState = scenarioState)
             }
@@ -128,12 +115,7 @@ class GaslessFeeTest : BaseTestCase() {
         val fastSpeed = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSpeed = getResourceString(R.string.common_fee_selector_option_slow)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen for '$tokenName'") {
                 openSendScreen(tokenName = tokenName, mockState = scenarioState)
             }
@@ -190,12 +172,7 @@ class GaslessFeeTest : BaseTestCase() {
         val nativeSymbol = "POL"
         val feeCoverageTitle = getResourceString(R.string.send_network_fee_warning_title)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send' screen for '$tokenName'") {
                 openSendScreen(tokenName = tokenName, mockState = scenarioState)
             }
@@ -239,13 +216,7 @@ class GaslessFeeTest : BaseTestCase() {
         val usdcBalanceScenario = "polygon_usdc_balance"
         val lowBalanceState = "LowBalance"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(usdcBalanceScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$usdcBalanceScenario' to '$lowBalanceState'") {
                 setWireMockScenarioState(scenarioName = usdcBalanceScenario, state = lowBalanceState)
             }
@@ -289,13 +260,7 @@ class GaslessFeeTest : BaseTestCase() {
             .substringAfter("X ")
             .trim()
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(coinBalanceScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$coinBalanceScenario' to '$zeroBalanceState'") {
                 setWireMockScenarioState(scenarioName = coinBalanceScenario, state = zeroBalanceState)
             }

@@ -1,13 +1,14 @@
 package com.tangem.domain.pay.model
 
+import com.tangem.domain.models.pay.TangemPayImage
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
+import com.tangem.domain.models.pay.TangemPayCardType
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -144,7 +145,9 @@ data class CustomerInfo(
         val cardStatus: TangemPayCard.Status,
         val lastFourDigits: String,
         val isPinSet: Boolean,
-        val images: List<TangemPayTariffPlan.Image>,
+        val images: List<TangemPayImage>,
+        val embossName: String?,
+        val cardType: TangemPayCardType,
     )
 
     /**
@@ -176,9 +179,14 @@ data class CustomerInfo(
             }
         }
 
+        /**
+         * @property contractAddress the token's contract on this network, or `null` when the backend does not
+         * report one yet (possible while the network's contract is not issued). Such a token cannot be turned
+         * into a [com.tangem.domain.models.currency.CryptoCurrency], but its network still gets a row.
+         */
         data class Token(
             val symbol: String,
-            val contractAddress: String,
+            val contractAddress: String?,
             val availableForWithdrawal: BigDecimal?,
         )
     }

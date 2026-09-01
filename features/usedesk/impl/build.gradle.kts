@@ -17,6 +17,8 @@ dependencies {
     api(projects.core.decompose)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.domain.feedback.models)
+    implementation(projects.domain.models)
 
     /** Features api */
     api(projects.features.usedesk.api)

@@ -108,7 +108,7 @@
   <string name="tangem_pay_status_pending">In sospeso</string>
   <string name="tangem_pay_status_reversed">Stornata</string>
   <string name="tangem_pay_terms_fees_limits">Termini, commissioni e limiti</string>
-  <string name="tangem_pay_terms_limits">Termini e limiti</string>
+  <string name="tangem_pay_terms_limits">Termini del servizio</string>
   <string name="tangem_pay_transaction_declined_notification_text">La banca ha rifiutato questa richiesta di transazione.</string>
   <string name="tangem_pay_transaction_details_cashback_below_min">Importo min.</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Limite mensile raggiunto</string>
@@ -355,9 +355,9 @@
   <string name="tangempay_onboarding_setup_wallet_title">Creeremo un nuovo wallet</string>
   <string name="tangempay_onboarding_title">Ottieni la tua carta Tangem Pay in pochi minuti</string>
   <string name="tangempay_other_networks_header">Altre reti</string>
-  <string name="tangempay_other_networks_subtitle">Poi convertilo sul conto di pagamento a 1:1 senza commissioni</string>
+  <string name="tangempay_other_networks_subtitle">Poi convertilo sul conto di pagamento senza commissioni</string>
   <string name="tangempay_other_networks_title">Invia USDT/USDC su qualsiasi rete al tuo Tangem Wallet</string>
-  <string name="tangempay_pay_support">Assistenza Pay</string>
+  <string name="tangempay_pay_support">Assistenza</string>
   <string name="tangempay_payment_account">Conto di pagamento</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sessione scaduta</string>
   <string name="tangempay_pin_validation_error_message">PIN non valido: evitare sequenze o ripetizioni</string>
@@ -406,8 +406,8 @@
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Ricevi USD tramite ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Bonifico bancario</string>
+  <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario tramite ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">Da un conto bancario</string>
   <string name="tangempay_topup_receive_body">Invia USDC Polygon all\'indirizzo del tuo account</string>
   <string name="tangempay_topup_receive_body_multichain">Invia USDC o USDT all\'indirizzo del tuo conto</string>
   <string name="tangempay_topup_receive_title">Da un altro wallet o exchange</string>

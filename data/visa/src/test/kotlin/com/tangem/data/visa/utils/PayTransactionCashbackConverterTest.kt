@@ -5,6 +5,7 @@ import com.tangem.spend.datasource.pay.models.response.TransactionCashbackRespon
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.ExclusionReason
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem.Cashback.Status
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -24,6 +25,69 @@ internal class PayTransactionCashbackConverterTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertSpendCashback {
+
+        @ParameterizedTest
+        @MethodSource("provideTestModels")
+        fun convertSpendCashback(model: SpendCashbackModel) {
+            // Act
+            val actual = PayTransactionCashbackConverter.convertSpendCashback(
+                status = model.status,
+                amount = model.amount,
+                currencyCode = model.currencyCode,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            // No status — cashback is absent for the transaction.
+            SpendCashbackModel(status = null, expected = null),
+            SpendCashbackModel(
+                status = "confirmed",
+                amount = BigDecimal("3.00"),
+                currencyCode = "EUR",
+                expected = cashback(
+                    status = Status.CONFIRMED,
+                    amount = BigDecimal("3.00"),
+                    currency = Currency.getInstance("EUR"),
+                ),
+            ),
+            SpendCashbackModel(
+                status = "estimated",
+                expected = cashback(status = Status.ESTIMATED),
+            ),
+            // Awaiting calculation — amount and currency are null (not "0.00").
+            SpendCashbackModel(
+                status = "awaiting_calculation",
+                amount = null,
+                currencyCode = null,
+                expected = cashback(status = Status.AWAITING_CALCULATION, amount = null, currency = null),
+            ),
+            // Unknown status string maps to UNKNOWN rather than throwing.
+            SpendCashbackModel(
+                status = "brand_new_status",
+                expected = cashback(status = Status.UNKNOWN),
+            ),
+            // Invalid ISO code degrades to null currency instead of throwing.
+            SpendCashbackModel(
+                status = "confirmed",
+                currencyCode = "NOT_A_CODE",
+                expected = cashback(status = Status.CONFIRMED, currency = null),
+            ),
+        )
+    }
+
+    data class SpendCashbackModel(
+        val status: String?,
+        val amount: BigDecimal? = BigDecimal("1.00"),
+        val currencyCode: String? = "USD",
+        val expected: TangemPayTxHistoryItem.Cashback?,
+    )
+
     data class ConvertModel(
         val dto: TransactionCashbackResponse?,
         val expected: TangemPayTxHistoryItem.Cashback?,
@@ -36,13 +100,11 @@ internal class PayTransactionCashbackConverterTest {
                 status = "confirmed",
                 amount = BigDecimal("3.00"),
                 isCapTrimmed = true,
-                promotionIds = listOf("promo-1", "promo-2"),
             ),
             expected = cashback(
                 status = Status.CONFIRMED,
                 amount = BigDecimal("3.00"),
                 isCapTrimmed = true,
-                promotionIds = listOf("promo-1", "promo-2"),
             ),
         ),
         ConvertModel(
@@ -54,10 +116,10 @@ internal class PayTransactionCashbackConverterTest {
             dto = dto(status = "awaiting_calculation", amount = null, currency = null),
             expected = cashback(status = Status.AWAITING_CALCULATION, amount = null, currency = null),
         ),
-        // Absent cap_trimmed defaults to false; absent promotion_ids defaults to empty.
+        // Absent cap_trimmed defaults to false.
         ConvertModel(
-            dto = dto(status = "confirmed", isCapTrimmed = null, promotionIds = null),
-            expected = cashback(status = Status.CONFIRMED, isCapTrimmed = false, promotionIds = emptyList()),
+            dto = dto(status = "confirmed", isCapTrimmed = null),
+            expected = cashback(status = Status.CONFIRMED, isCapTrimmed = false),
         ),
         // Unknown status string maps to UNKNOWN rather than throwing.
         ConvertModel(
@@ -71,10 +133,6 @@ internal class PayTransactionCashbackConverterTest {
         ConvertModel(
             dto = dto(status = "excluded", exclusionReason = "monthly_cap_reached"),
             expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.MONTHLY_CAP_REACHED),
-        ),
-        ConvertModel(
-            dto = dto(status = "excluded", exclusionReason = "customer_blocklisted"),
-            expected = cashback(status = Status.EXCLUDED, exclusionReason = ExclusionReason.CUSTOMER_BLOCKLISTED),
         ),
         ConvertModel(
             dto = dto(status = "excluded", exclusionReason = "merchant_country_excluded"),
@@ -97,14 +155,12 @@ internal class PayTransactionCashbackConverterTest {
         currency: String? = "USD",
         isCapTrimmed: Boolean? = null,
         exclusionReason: String? = null,
-        promotionIds: List<String>? = null,
     ) = TransactionCashbackResponse(
         status = status,
         amount = amount,
         currency = currency,
         isCapTrimmed = isCapTrimmed,
         exclusionReason = exclusionReason,
-        promotionIds = promotionIds,
     )
 
     private fun cashback(
@@ -113,13 +169,11 @@ internal class PayTransactionCashbackConverterTest {
         currency: Currency? = Currency.getInstance("USD"),
         isCapTrimmed: Boolean = false,
         exclusionReason: ExclusionReason? = null,
-        promotionIds: List<String> = emptyList(),
     ) = TangemPayTxHistoryItem.Cashback(
         status = status,
         amount = amount,
         currency = currency,
         isCapTrimmed = isCapTrimmed,
         exclusionReason = exclusionReason,
-        promotionIds = promotionIds,
     )
 }

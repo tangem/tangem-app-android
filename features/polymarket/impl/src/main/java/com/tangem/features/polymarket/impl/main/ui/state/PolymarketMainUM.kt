@@ -2,20 +2,18 @@ package com.tangem.features.polymarket.impl.main.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import kotlinx.collections.immutable.ImmutableList
 
 /**
  * State of the Discovery feed screen.
  *
- * @property accessMode what the user may do here. Nothing on this screen reads it yet — the feed looks the
- *  same in every region. It is carried so the account screen, which renders the region-restrictions banner,
- *  inherits it without re-deriving the decision.
- * @property content the loading phase, which changes independently of [accessMode]
+ * @property categories category tabs, shown above [content] and kept visible while the events of the selected
+ *  category reload or fail. Empty when the backend could not serve them — the feed then runs unfiltered.
+ * @property content the events area, which changes independently of [categories]
  */
 @Immutable
 internal data class PolymarketMainUM(
-    val accessMode: PolymarketAccessMode,
+    val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
 ) {
 
@@ -25,27 +23,31 @@ internal data class PolymarketMainUM(
         data object Loading : ContentUM
 
         /**
-         * @property categories category tabs shown above the feed, with the active one selected
-         * @property events event cards of the selected category
+         * @property events events of the selected category, accumulated over the loaded pages
+         * @property isLoadingNextPage whether the next page is on its way, shown as a footer loader
          */
         data class Content(
-            val categories: ImmutableList<PolymarketCategoryTabUM>,
             val events: ImmutableList<PolymarketEventUM>,
+            val isLoadingNextPage: Boolean,
         ) : ContentUM
 
-        data object Empty : ContentUM
-
-        data class Error(val onRetryClick: () -> Unit) : ContentUM
+        /**
+         * Events could not be served: the request failed, or the category came back empty — the design shows
+         * one and the same reload prompt for both.
+         *
+         * @property onReloadClick retries the events (and the categories, when those failed too)
+         */
+        data class Error(val onReloadClick: () -> Unit) : ContentUM
     }
 }
 
 /**
- * A category tab.
+ * A single category tab of the Discovery feed.
  *
- * @property id category id used to filter the feed
- * @property label tab caption
- * @property isSelected whether this is the active tab
- * @property onClick selects this category
+ * @property id category id, used to filter the events feed
+ * @property label localized display name, as provided by the backend
+ * @property isSelected whether the tab's category is the one currently shown
+ * @property onClick selects the tab and reloads the feed for its category
  */
 @Immutable
 internal data class PolymarketCategoryTabUM(

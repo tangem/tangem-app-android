@@ -1,99 +1,55 @@
 package com.tangem.features.polymarket.impl.details
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.childByContext
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
-import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionConfig
+import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
+import com.tangem.features.polymarket.impl.details.ui.PolymarketEventDetailsScreen
 
 /**
- * Placeholder event-details screen. Real UI arrives in a later task.
+ * Event details screen, pushed onto the feature stack over the Discovery feed.
  *
- * Hosts a `childSlot` for the Place-prediction bottom sheet; its [SlotNavigation] lives directly in the component
- * since this stub has no dedicated model yet.
+
+ * factory — its model is resolved from the model map by [getOrCreateModel].
  *
- * @param userWalletId wallet the feature was opened for. Carried for the real screen, which will need it for
- *  balances and signing. Nothing reads it yet — this stub has no model.
+ * An outcome tap opens the place-prediction flow as a route on the feature stack rather than as a sheet
+ * hosted here: its screens are full-screen, and hosting them under a screen that is itself a stack entry
+ * would nest one flow inside another for no reason.
  */
 internal class PolymarketEventDetailsComponent(
     appComponentContext: AppComponentContext,
-    private val eventId: String,
-    @Suppress("UnusedPrivateProperty") private val userWalletId: UserWalletId,
-    private val marketId: String? = null,
-    private val assetId: String? = null,
+    params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val slotNavigation = SlotNavigation<PlacePredictionConfig>()
-
-    private val bottomSheetSlot = childSlot(
-        key = "polymarketPlacePredictionSlot",
-        source = slotNavigation,
-        serializer = null,
-        handleBackButton = true,
-        childFactory = { config, factoryContext ->
-            createBottomSheet(
-                config = config,
-                factoryContext = childByContext(componentContext = factoryContext),
-            )
-        },
-    )
+    private val model: PolymarketEventDetailsModel = getOrCreateModel(params = params)
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val slotState by bottomSheetSlot.subscribeAsState()
+        val state by model.uiState.collectAsStateWithLifecycle()
 
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(text = "Event details: $eventId")
-            if (marketId != null) {
-                Text(text = "Preselected: $marketId / $assetId")
-            }
-            Text(
-                text = "Place prediction",
-                modifier = Modifier.clickable(onClick = ::onPlacePrediction),
-            )
-        }
-
-        slotState.child?.instance?.BottomSheet()
-    }
-
-    private fun onPlacePrediction() {
-        slotNavigation.activate(
-            PlacePredictionConfig(eventId = eventId, marketId = marketId, side = assetId),
+        PolymarketEventDetailsScreen(
+            state = state,
+            onBackClick = model::onBackClick,
+            modifier = modifier,
         )
     }
 
-    private fun createBottomSheet(
-        config: PlacePredictionConfig,
-        factoryContext: AppComponentContext,
-    ): ComposableBottomSheetComponent = PlacePredictionComponent(
-        appComponentContext = factoryContext,
-        params = PlacePredictionComponent.Params(
-            eventId = config.eventId,
-            marketId = config.marketId,
-            side = config.side,
-        ),
-        onDismiss = { slotNavigation.dismiss() },
+    /**
+     * @property eventId event to show
+     * @property userWalletId wallet the feature was opened for, carried into the place-prediction flow the
+     *  screen starts.
+     * @property marketId market preselected by the caller, e.g. by tapping an outcome on the feed card
+     * @property assetId outcome preselected by the caller
+     */
+    data class Params(
+        val eventId: String,
+        val userWalletId: UserWalletId,
+        val marketId: String? = null,
+        val assetId: String? = null,
     )
 }

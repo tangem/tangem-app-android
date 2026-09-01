@@ -45,18 +45,22 @@ fun BaseTestCase.openSendScreen(
     }
 }
 
+/**
+ * The block renders progressively as the fee loads, so every part waits on its own — bare assertions
+ * pass locally and fail under CI load, where the data arrives later than the first check.
+ */
 fun BaseTestCase.checkNetworkFeeBlock(currentFeeAmount: String, withFeeSelector: Boolean) {
     step("Assert fee selector block is displayed") {
-        onSendConfirmScreen { feeSelectorBlock.assertIsDisplayed() }
+        awaitSuccess { onSendConfirmScreen { feeSelectorBlock.assertIsDisplayed() } }
     }
     step("Assert fee selector icon is displayed") {
-        onSendConfirmScreen { feeSelectorIcon.assertIsDisplayed() }
+        awaitSuccess { onSendConfirmScreen { feeSelectorIcon.assertIsDisplayed() } }
     }
     step("Assert fee selector title is displayed") {
-        onSendConfirmScreen { feeSelectorTitle.assertIsDisplayed() }
+        awaitSuccess { onSendConfirmScreen { feeSelectorTitle.assertIsDisplayed() } }
     }
     step("Assert fee selector tooltip icon is displayed") {
-        onSendConfirmScreen { feeSelectorTooltipIcon.assertIsDisplayed() }
+        awaitSuccess { onSendConfirmScreen { feeSelectorTooltipIcon.assertIsDisplayed() } }
     }
     step("Assert fee amount = '$currentFeeAmount'") {
         onSendConfirmScreen { feeAmount.assertTextContains(currentFeeAmount) }

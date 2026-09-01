@@ -27,6 +27,8 @@ import com.tangem.core.ui.res.TangemTheme
  * @param text Label text.
  * @param role Semantic role. See [TangemNavigationText.Role].
  * @param modifier Modifier applied to the underlying [Text].
+ * @param color Label color. Defaults to the [role]'s theme color; override it for a label drawn on
+ *   artwork whose brightness does not follow the theme.
  * @param maxLines Maximum visible lines before truncation.
  * @param overflow Overflow behavior. Defaults to ellipsis.
  */
@@ -35,6 +37,7 @@ fun TangemNavigationText(
     text: String,
     role: TangemNavigationText.Role,
     modifier: Modifier = Modifier,
+    color: Color = navigationTextColor(role),
     maxLines: Int = 1,
     overflow: TextOverflow = TextOverflow.Ellipsis,
 ) {
@@ -46,7 +49,7 @@ fun TangemNavigationText(
         Text(
             text = text,
             modifier = modifier,
-            color = navigationTextColor(role),
+            color = color,
             style = navigationTextStyle(role),
             textAlign = TextAlign.Start,
             maxLines = maxLines,
@@ -60,6 +63,7 @@ fun TangemNavigationText(
     text: AnnotatedString,
     role: TangemNavigationText.Role,
     modifier: Modifier = Modifier,
+    color: Color = navigationTextColor(role),
     maxLines: Int = 1,
     overflow: TextOverflow = TextOverflow.Ellipsis,
 ) {
@@ -71,7 +75,7 @@ fun TangemNavigationText(
         Text(
             text = text,
             modifier = modifier,
-            color = navigationTextColor(role),
+            color = color,
             style = navigationTextStyle(role),
             textAlign = TextAlign.Start,
             maxLines = maxLines,
@@ -86,6 +90,7 @@ fun TangemNavigationText(
     text: TextReference,
     role: TangemNavigationText.Role,
     modifier: Modifier = Modifier,
+    color: Color = navigationTextColor(role),
     maxLines: Int = 1,
     overflow: TextOverflow = TextOverflow.Ellipsis,
 ) {
@@ -93,6 +98,7 @@ fun TangemNavigationText(
         text = text.resolveAnnotatedReference(),
         role = role,
         modifier = modifier,
+        color = color,
         maxLines = maxLines,
         overflow = overflow,
     )

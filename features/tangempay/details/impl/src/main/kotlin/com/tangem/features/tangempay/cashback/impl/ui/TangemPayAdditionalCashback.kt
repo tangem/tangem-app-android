@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.extensions.formatAnnotatedWithLinks
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -50,14 +51,18 @@ internal fun TangemPayAdditionalCashback(state: TangemPayAdditionalCashbackUM, m
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             state.items.forEach { item ->
-                AdditionalCashbackCard(item = item)
+                AdditionalCashbackCard(item = item, onLinkClick = state.onLinkClick)
             }
         }
     }
 }
 
 @Composable
-private fun AdditionalCashbackCard(item: TangemPayAdditionalCashbackUM.Item, modifier: Modifier = Modifier) {
+private fun AdditionalCashbackCard(
+    item: TangemPayAdditionalCashbackUM.Item,
+    onLinkClick: (url: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -73,11 +78,16 @@ private fun AdditionalCashbackCard(item: TangemPayAdditionalCashbackUM.Item, mod
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
-            Text(
-                text = item.description.resolveReference(),
-                style = TangemTheme.typography3.subheading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
+            item.description?.let { description ->
+                Text(
+                    text = formatAnnotatedWithLinks(
+                        rawString = description.resolveReference(),
+                        onLinkClick = onLinkClick,
+                    ),
+                    style = TangemTheme.typography3.subheading.medium,
+                    color = TangemTheme.colors3.text.primary,
+                )
+            }
         }
     }
 }
@@ -128,17 +138,21 @@ private class TangemPayAdditionalCashbackPreviewProvider :
                     ),
                     TangemPayAdditionalCashbackUM.Item(
                         id = "2",
-                        name = stringReference("Groceries increase"),
-                        description = stringReference("+1% cashback for groceries stores. Max \$10/month"),
+                        name = stringReference("Subscriptions increase"),
+                        description = stringReference(
+                            "+50% cashback for Netflix, Spotify, ChatGPT, Claude and other selected " +
+                                "media & work subscriptions. [Learn more](https://tangem.com)",
+                        ),
                         badge = TangemPayAdditionalCashbackUM.Badge.Until(stringReference("Until 09.26.2026")),
                     ),
                     TangemPayAdditionalCashbackUM.Item(
                         id = "3",
                         name = stringReference("Cashback increase"),
-                        description = stringReference("+2% cashback for groceries stores. Max \$10/month"),
+                        description = null,
                         badge = TangemPayAdditionalCashbackUM.Badge.Until(stringReference("Until 09.26.2026")),
                     ),
                 ),
+                onLinkClick = {},
             ),
         ),
     )

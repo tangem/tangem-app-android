@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.domain.models.ui
 
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -24,7 +23,6 @@ sealed class SwapTransactionState {
 
     data class TangemPayWithdrawalData(
         val cryptoAmount: BigDecimal,
-        val cryptoCurrencyId: CryptoCurrency.RawID,
         val cexAddress: String,
         val fromAmount: String?,
         val fromAmountValue: BigDecimal?,

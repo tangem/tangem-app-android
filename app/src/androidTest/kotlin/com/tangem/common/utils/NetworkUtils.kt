@@ -257,37 +257,3 @@ fun getAddressesFromApi(
         }
     }
 }
-
-fun checkServiceHealth(
-    baseUrl: String = "[REDACTED_ENV_URL]"
-): String? {
-    TangemLogger.i("Checking service health")
-
-    val client = diagnosticClient(connectSec = 15, readSec = 30, callSec = 45)
-    val request = Request.Builder()
-        .url("$baseUrl/health")
-        .get()
-        .build()
-
-    return retryWithBackoff { attempt ->
-        TangemLogger.i("Checking service health, attempt $attempt")
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                // Transient (network/Access 302/5xx) — throw so retryWithBackoff retries.
-                logHttpFailure("checkServiceHealth", response, response.body?.string() ?: "")
-                throw IOException("checkServiceHealth: HTTP ${response.code}")
-            }
-
-            val body = response.body?.string() ?: ""
-            val status = if (body.isEmpty()) "" else JSONObject(body).optString("status", "")
-            if (status.isNotEmpty()) {
-                TangemLogger.i("Got status successfully: $status")
-                status
-            } else {
-                // Empty/malformed body from a 2xx — treat as transient and retry.
-                logHttpFailure("checkServiceHealth (empty status)", response, body)
-                throw IOException("checkServiceHealth: missing 'status' field")
-            }
-        }
-    }
-}

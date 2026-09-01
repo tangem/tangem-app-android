@@ -23,17 +23,27 @@ internal class SetAssetsDiscoveryProgressTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        val additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet, syncProgress = progress)
         return when (walletUM) {
-            is WalletUM.Content -> walletUM.copy(
-                walletsBalanceUM = walletUM.walletsBalanceUM.copySealed(additionalInfo = additionalInfo),
-            )
+            is WalletUM.Content -> {
+                val additionalInfo = WalletAdditionalInfoFactory.resolve(
+                    wallet = userWallet,
+                    syncProgress = progress,
+                    isHotBackedUp = walletUM.walletsBalanceUM.additionalInfo?.isHotBackedUp,
+                )
+                walletUM.copy(
+                    walletsBalanceUM = walletUM.walletsBalanceUM.copySealed(additionalInfo = additionalInfo),
+                )
+            }
             is WalletUM.Locked -> walletUM
         }
     }
 
     private fun updateCardState(cardState: WalletCardState): WalletCardState {
-        val additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet, syncProgress = progress)
+        val additionalInfo = WalletAdditionalInfoFactory.resolve(
+            wallet = userWallet,
+            syncProgress = progress,
+            isHotBackedUp = cardState.additionalInfo?.isHotBackedUp,
+        )
         return when (cardState) {
             is WalletCardState.Loading -> cardState.copy(additionalInfo = additionalInfo)
             is WalletCardState.Content -> cardState.copy(additionalInfo = additionalInfo)

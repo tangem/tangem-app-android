@@ -1,10 +1,11 @@
 package com.tangem.data.staking.converters
 
-import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
-import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.AddressArgumentDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
+import com.tangem.datasource.local.txhistory.db.entity.staking.StakingValidatorEntity
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.AddressArgument
@@ -14,6 +15,7 @@ import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal object YieldConverter : Converter<YieldDTO, Yield> {
@@ -136,7 +138,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             name = validatorDTO.name.asMandatory("name"),
             image = validatorDTO.image,
             website = validatorDTO.website,
-            rewardInfo = createRewardInfo(validatorDTO, rewardType),
+            rewardInfo = createRewardInfo(apr = validatorDTO.apr, commission = validatorDTO.commission, rewardType),
             commission = validatorDTO.commission,
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
@@ -145,12 +147,38 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
         )
     }
 
-    private fun createRewardInfo(validatorDTO: YieldDTO.ValidatorDTO, rewardType: RewardType): RewardInfo? {
-        val aprOrApy = validatorDTO.apr
-        val commission = validatorDTO.commission
+    /**
+     * Maps a persisted [StakingValidatorEntity] back into a domain [Yield.Validator], for validators resolved from
+     * the database instead of a live `yields/enabled` response (e.g. historical validators no longer returned by
+     * StakeKit). The entity has no [RewardType] of its own (that's a property of the parent yield, not the
+     * validator), so [RewardInfo.type] falls back to [RewardType.UNKNOWN].
+     */
+    fun convertFromEntity(entity: StakingValidatorEntity): Yield.Validator {
+        val name = entity.name ?: entity.address
+
+        return Yield.Validator(
+            address = entity.address,
+            status = convertValidatorStatus(entity.status),
+            name = name,
+            image = entity.image,
+            website = entity.website,
+            rewardInfo = createRewardInfo(
+                apr = entity.apr?.toBigDecimalOrNull(),
+                commission = entity.commission,
+                rewardType = RewardType.UNKNOWN,
+            ),
+            commission = entity.commission,
+            stakedBalance = entity.stakedBalance,
+            votingPower = entity.votingPower,
+            preferred = entity.isPreferred == true,
+            isStrategicPartner = isStrategicPartner(entity.address, name),
+        )
+    }
+
+    private fun createRewardInfo(apr: BigDecimal?, commission: Double?, rewardType: RewardType): RewardInfo? {
         // gross = net / (1 - commission)
         return try {
-            val netApy = aprOrApy
+            val netApy = apr
             val grossAprOrApy = if (netApy != null && commission != null) {
                 val commissionFraction = commission.toBigDecimal()
                 if (commissionFraction < 1.toBigDecimal()) {
@@ -167,7 +195,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             }
             grossAprOrApy?.let { RewardInfo(rate = it, type = rewardType) }
         } catch (_: Exception) {
-            aprOrApy?.let { RewardInfo(rate = it, type = rewardType) }
+            apr?.let { RewardInfo(rate = it, type = rewardType) }
         }
     }
 
@@ -188,6 +216,10 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             ValidatorStatusDTO.FULL -> ValidatorStatus.FULL
             else -> ValidatorStatus.UNKNOWN
         }
+    }
+
+    private fun convertValidatorStatus(statusName: String?): ValidatorStatus {
+        return ValidatorStatus.entries.find { it.name == statusName } ?: ValidatorStatus.UNKNOWN
     }
 
     private fun convertRewardSchedule(rewardTypeDTO: RewardScheduleDTO): RewardSchedule {

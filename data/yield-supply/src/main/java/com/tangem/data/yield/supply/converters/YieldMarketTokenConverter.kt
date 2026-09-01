@@ -1,6 +1,6 @@
 package com.tangem.data.yield.supply.converters
 
-import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
+import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero

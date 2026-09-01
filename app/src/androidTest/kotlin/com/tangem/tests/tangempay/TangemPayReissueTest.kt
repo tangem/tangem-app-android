@@ -7,8 +7,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.onTokenReceiveWarningBottomSheet
@@ -43,16 +41,10 @@ class TangemPayReissueTest : BaseTestCase() {
     fun reissueBottomSheetDisplaysReplaceCardDetailsTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(cardReissueScenario, cardReissueStartedState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(cardReissueScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay card page") { openTangemPayCardPage() }
             step("Open the 'Replace card' reissue bottom sheet") { openReissueSheet() }
@@ -77,14 +69,9 @@ class TangemPayReissueTest : BaseTestCase() {
     fun reissueFeeErrorShowsErrorWhenFeeRequestFailsTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(cardReissueScenario, cardReissueFeeErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(cardReissueScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay card page") { openTangemPayCardPage() }
             step("Open the 'Replace card' reissue bottom sheet") { openReissueSheet() }
@@ -107,20 +94,12 @@ class TangemPayReissueTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(cardReissueScenario, cardReissueStartedState)
                 setWireMockScenarioState(reissueOrderScenario, reissueOrderStartedState)
                 setWireMockScenarioState(historyScenario, historyInitialEmptyState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(cardReissueScenario)
-                resetWireMockScenarioState(reissueOrderScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay card page") { openTangemPayCardPage() }
             step("Open the 'Replace card' reissue bottom sheet") { openReissueSheet() }
@@ -177,19 +156,11 @@ class TangemPayReissueTest : BaseTestCase() {
         // AfterWithdraw funds the fee check without a customer/me stub, so reissued customer/me wins.
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceAfterWithdrawState)
                 setWireMockScenarioState(cardReissueScenario, cardReissueStartedState)
                 setWireMockScenarioState(reissueOrderScenario, reissueOrderStartedState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(cardReissueScenario)
-                resetWireMockScenarioState(reissueOrderScenario)
-                resetWireMockScenarioState(reissueScenario)
-            },
+            }
         ).run {
             var oldCardNumber = ""
             step("Open Tangem Pay card page") { openTangemPayCardPage() }
@@ -256,14 +227,9 @@ class TangemPayReissueTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(cardReissueScenario, cardReissueStartedState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(cardReissueScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay card page") { openTangemPayCardPage() }
             step("Open the 'Replace card' reissue bottom sheet") { openReissueSheet() }

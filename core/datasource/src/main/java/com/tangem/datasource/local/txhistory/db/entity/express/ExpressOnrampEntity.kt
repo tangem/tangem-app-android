@@ -5,7 +5,7 @@ import androidx.room.*
 /**
  * Persisted representation of a single onramp transaction.
  *
- * Mirrors [com.tangem.datasource.api.onramp.models.response.OnrampItemResponse].
+ * Mirrors [com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse].
  */
 @Entity(
     tableName = "express_onramp",

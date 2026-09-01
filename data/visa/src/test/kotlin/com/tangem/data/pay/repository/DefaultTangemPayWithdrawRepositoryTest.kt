@@ -7,11 +7,13 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.WithdrawDataRequest
+import com.tangem.spend.datasource.pay.models.request.WithdrawRequest
 import com.tangem.spend.datasource.pay.models.response.WithdrawDataResponse
 import com.tangem.spend.datasource.pay.models.response.WithdrawResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.data.pay.store.TangemPayStorage
-import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
@@ -19,16 +21,20 @@ import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.test.mock.MockAccounts
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -53,7 +59,11 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         every { walletId } returns userWalletId
     }
 
-    private val cryptoCurrencyId = CryptoCurrency.RawID(CURRENCY_ID)
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val sourceCurrency = MockAccounts.createPaymentAccountToken(
+        rawId = CURRENCY_ID,
+        contractAddress = CONTRACT_ADDRESS,
+    )
     private val exchangeData = TangemPayWithdrawExchangeState(
         txId = "txId",
         fromNetwork = "ETH",
@@ -104,6 +114,21 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
             authDataSource.getWithdrawalSignature(any(), any())
         } returns WithdrawalSignatureResult.Success(SIGNATURE).right()
         coEvery { swapRepository.exchangeSent(any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
+
+        every { paymentAccountStatusSupplier.invoke(userWalletId) } returns flowOf(
+            MockAccounts.createPaymentAccountStatus(
+                userWalletId = userWalletId,
+                cryptoCurrency = sourceCurrency,
+                networks = listOf(
+                    PaymentNetworkStatus.Available(
+                        network = sourceCurrency.network,
+                        depositAddress = "0xDeposit",
+                        chainId = CHAIN_ID,
+                        cryptoCurrencyStatuses = emptyList(),
+                    ),
+                ),
+            ),
+        )
     }
 
     // region withdrawWithSwap
@@ -352,11 +377,152 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         txHash = txHash,
     )
 
+    @Test
+    fun `GIVEN source network is enabled WHEN withdrawWithSwap THEN chain id and contract are sent in both requests`() =
+        runTest {
+            // Arrange
+            val dataRequest = slot<WithdrawDataRequest>()
+            val withdrawRequest = slot<WithdrawRequest>()
+            coEvery { tangemPayApi.getWithdrawData(any(), capture(dataRequest)) } returns ApiResponse.Success(
+                WithdrawDataResponse(
+                    result = WithdrawDataResponse.Result(hash = "hash", salt = "salt", senderAddress = "sender"),
+                ),
+            )
+            coEvery { tangemPayApi.withdraw(any(), capture(withdrawRequest)) } returns ApiResponse.Success(
+                WithdrawResponse(
+                    result = WithdrawResponse.Result(orderId = ORDER_ID, status = "NEW", type = "withdraw"),
+                ),
+            )
+            coEvery { orderRepository.getOrderData(any(), any()) } returns orderWithHash.right()
+
+            // Act
+            createRepository().withdrawWithSwap()
+            advanceUntilIdle()
+
+            // Assert
+            Assertions.assertEquals(CHAIN_ID, dataRequest.captured.chainId)
+            Assertions.assertEquals(CONTRACT_ADDRESS, dataRequest.captured.tokenContractAddress)
+            Assertions.assertEquals(CHAIN_ID, withdrawRequest.captured.chainId)
+            Assertions.assertEquals(CONTRACT_ADDRESS, withdrawRequest.captured.tokenContractAddress)
+        }
+
+    @Test
+    fun `GIVEN source network is missing from an issued account WHEN withdrawWithSwap THEN nothing is attempted`() =
+        runTest {
+            // Arrange
+            every { paymentAccountStatusSupplier.invoke(userWalletId) } returns flowOf(
+                MockAccounts.createPaymentAccountStatus(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = sourceCurrency,
+                    networks = listOf(
+                        PaymentNetworkStatus.Available(
+                            network = MockAccounts.createPaymentAccountToken(networkId = "tron").network,
+                            depositAddress = "0xDeposit",
+                            chainId = 728126428L,
+                            cryptoCurrencyStatuses = emptyList(),
+                        ),
+                    ),
+                ),
+            )
+
+            // Act
+            val result = createRepository().withdrawWithSwap()
+
+            // Assert
+            Assertions.assertEquals(VisaApiError.WithdrawalDataError.left(), result)
+            coVerify(exactly = 0) { tangemPayApi.getWithdrawData(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN source network is enabled WHEN withdraw THEN chain id and contract are sent in both requests`() =
+        runTest {
+            // Arrange
+            val dataRequest = slot<WithdrawDataRequest>()
+            val withdrawRequest = slot<WithdrawRequest>()
+            coEvery { tangemPayApi.getWithdrawData(any(), capture(dataRequest)) } returns ApiResponse.Success(
+                WithdrawDataResponse(
+                    result = WithdrawDataResponse.Result(hash = "hash", salt = "salt", senderAddress = "sender"),
+                ),
+            )
+            coEvery { tangemPayApi.withdraw(any(), capture(withdrawRequest)) } returns ApiResponse.Success(
+                WithdrawResponse(
+                    result = WithdrawResponse.Result(orderId = ORDER_ID, status = "NEW", type = "withdraw"),
+                ),
+            )
+            coEvery { orderRepository.getOrderData(any(), any()) } returns orderWithHash.right()
+
+            // Act
+            createRepository().withdraw()
+            advanceUntilIdle()
+
+            // Assert
+            Assertions.assertEquals(CHAIN_ID, dataRequest.captured.chainId)
+            Assertions.assertEquals(CONTRACT_ADDRESS, dataRequest.captured.tokenContractAddress)
+            Assertions.assertEquals(CHAIN_ID, withdrawRequest.captured.chainId)
+            Assertions.assertEquals(CONTRACT_ADDRESS, withdrawRequest.captured.tokenContractAddress)
+        }
+
+    @Test
+    fun `GIVEN account without issued networks WHEN withdraw THEN backend picks the default network`() =
+        runTest {
+            // Arrange — a pre-multichain account: its only network is the one the backend defaults to.
+            every { paymentAccountStatusSupplier.invoke(userWalletId) } returns flowOf(
+                MockAccounts.createPaymentAccountStatus(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = sourceCurrency,
+                    networks = emptyList(),
+                ),
+            )
+            val dataRequest = slot<WithdrawDataRequest>()
+            coEvery { tangemPayApi.getWithdrawData(any(), capture(dataRequest)) } returns ApiResponse.Success(
+                WithdrawDataResponse(
+                    result = WithdrawDataResponse.Result(hash = "hash", salt = "salt", senderAddress = "sender"),
+                ),
+            )
+            coEvery { orderRepository.getOrderData(any(), any()) } returns orderWithHash.right()
+
+            // Act
+            createRepository().withdraw()
+            advanceUntilIdle()
+
+            // Assert
+            Assertions.assertEquals(null, dataRequest.captured.chainId)
+            Assertions.assertEquals(null, dataRequest.captured.tokenContractAddress)
+        }
+
+    @Test
+    fun `GIVEN source network is missing from an issued account WHEN withdraw THEN no withdrawal is attempted`() =
+        runTest {
+            // Arrange — the account has issued networks, but none matches the source: withdrawing anyway would
+            // debit whatever network the backend defaults to.
+            every { paymentAccountStatusSupplier.invoke(userWalletId) } returns flowOf(
+                MockAccounts.createPaymentAccountStatus(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = sourceCurrency,
+                    networks = listOf(
+                        PaymentNetworkStatus.Available(
+                            network = MockAccounts.createPaymentAccountToken(networkId = "tron").network,
+                            depositAddress = "0xDeposit",
+                            chainId = 728126428L,
+                            cryptoCurrencyStatuses = emptyList(),
+                        ),
+                    ),
+                ),
+            )
+
+            // Act
+            val result = createRepository().withdraw()
+
+            // Assert
+            Assertions.assertEquals(VisaApiError.WithdrawalDataError.left(), result)
+            coVerify(exactly = 0) { tangemPayApi.getWithdrawData(any(), any()) }
+        }
+
     private suspend fun DefaultTangemPayWithdrawRepository.withdrawWithSwap() = withdrawWithSwap(
         userWallet = userWallet,
         receiverAddress = RECEIVER_ADDRESS,
         cryptoAmount = BigDecimal("1.5"),
-        cryptoCurrencyId = cryptoCurrencyId,
+        sourceCurrency = sourceCurrency,
         exchangeData = exchangeData,
     )
 
@@ -364,7 +530,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         userWallet = userWallet,
         receiverAddress = RECEIVER_ADDRESS,
         cryptoAmount = BigDecimal("1.5"),
-        cryptoCurrencyId = cryptoCurrencyId,
+        sourceCurrency = sourceCurrency,
     )
 
     private fun TestScope.createRepository() = DefaultTangemPayWithdrawRepository(
@@ -375,6 +541,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         tangemPayStorage = tangemPayStorage,
         swapRepository = swapRepository,
         orderRepository = orderRepository,
+        withdrawSourceResolver = WithdrawSourceResolver(paymentAccountStatusSupplier),
         withdrawPollingScope = TestAppCoroutineScope(this),
     )
 
@@ -385,5 +552,7 @@ internal class DefaultTangemPayWithdrawRepositoryTest {
         const val SIGNATURE = "0xSignature"
         const val AUTH_HEADER = "auth-header"
         const val RECEIVER_ADDRESS = "0xReceiver"
+        const val CONTRACT_ADDRESS = "0xContract"
+        const val CHAIN_ID = 137L
     }
 }

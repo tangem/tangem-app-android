@@ -129,9 +129,15 @@ internal class ReportMissingWalletCardsBackupUseCaseTest {
             expected = Unit.right(),
         ),
         ReportModel(
-            name = "unreachable backend reports nothing and fails",
+            name = "offline backend still gets the report, queued for retry",
             backendCards = WalletCardsBackupError.NoInternetConnection.left(),
+            reportResult = WalletCardsBackupError.NoInternetConnection.left(),
             expected = WalletCardsBackupError.NoInternetConnection.left(),
+        ),
+        ReportModel(
+            name = "backend that fails for any other reason reports nothing",
+            backendCards = WalletCardsBackupError.Unexpected(cause = null).left(),
+            expected = WalletCardsBackupError.Unexpected(cause = null).left(),
         ),
         ReportModel(
             name = "backend that already knows the wallet is left alone",

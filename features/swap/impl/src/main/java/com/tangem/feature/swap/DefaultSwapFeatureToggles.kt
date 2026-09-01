@@ -9,6 +9,11 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : SwapFeatureToggles {
 
+    override val isYieldDexTransferEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED,
+        )
+
     override val isTronDexSwapEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_16080_TRON_DEX_SWAP_ENABLED,
@@ -17,5 +22,25 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     override val isChooseTokenPulseEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION,
+        )
+
+    override val isHideZeroBalanceSourceEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_16358_HIDE_ZERO_BALANCE_SWAP_SOURCE,
+        )
+
+    override val isSwapDeeplinkEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED,
+        )
+
+    override val isAccountSwapFlowEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_16356_ACCOUNT_SWAP_FLOW,
+        )
+
+    override val isExpressCategoriesGeoBlockingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
         )
 }

@@ -1,6 +1,7 @@
 package com.tangem.feature.referral.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.domain.models.account.derivationIndex
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue

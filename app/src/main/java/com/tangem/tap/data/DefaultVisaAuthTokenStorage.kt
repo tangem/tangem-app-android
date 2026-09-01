@@ -3,7 +3,7 @@ package com.tangem.tap.data
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.datasource.local.visa.VisaAuthTokenStorage
+import com.tangem.spend.datasource.visa.storage.VisaAuthTokenStorage
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

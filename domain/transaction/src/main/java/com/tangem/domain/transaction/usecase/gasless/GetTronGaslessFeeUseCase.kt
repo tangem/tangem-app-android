@@ -37,10 +37,7 @@ class GetTronGaslessFeeUseCase(
         catch(
             block = {
                 val uncompiled = transactionData.requireUncompiled()
-                val amountBaseUnits = uncompiled.amount.value
-                    ?.movePointRight(uncompiled.amount.decimals)
-                    ?.toBigInteger()
-                    ?.toString()
+                val amountBaseUnits = uncompiled.amount.toTronGaslessBaseUnits()
                     ?: raiseIllegalStateError("Tron gasless: transaction amount is null")
 
                 val quote = tronGaslessTransactionRepository.estimate(

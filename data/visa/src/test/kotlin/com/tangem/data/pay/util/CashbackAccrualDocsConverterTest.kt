@@ -46,7 +46,18 @@ internal class CashbackAccrualDocsConverterTest {
     @Test
     fun `GIVEN null docs WHEN convert THEN empty list`() {
         // Act
-        val result = CashbackAccrualDocsConverter.convert(CashbackAccrualDocsResponse(docs = null))
+        val result = CashbackAccrualDocsConverter.convert(
+            CashbackAccrualDocsResponse(result = CashbackAccrualDocsResponse.Result(docs = null)),
+        )
+
+        // Assert
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN missing result envelope WHEN convert THEN empty list`() {
+        // Act
+        val result = CashbackAccrualDocsConverter.convert(CashbackAccrualDocsResponse(result = null))
 
         // Assert
         assertThat(result).isEmpty()
@@ -58,7 +69,9 @@ internal class CashbackAccrualDocsConverterTest {
         doc(url = null),
     )
 
-    private fun response(vararg docs: Doc) = CashbackAccrualDocsResponse(docs = docs.toList())
+    private fun response(vararg docs: Doc) = CashbackAccrualDocsResponse(
+        result = CashbackAccrualDocsResponse.Result(docs = docs.toList()),
+    )
 
     private fun doc(id: String? = "1", title: String? = "Title", url: String? = "https://a") =
         Doc(id = id, title = title, url = url)

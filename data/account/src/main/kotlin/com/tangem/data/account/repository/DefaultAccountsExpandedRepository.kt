@@ -2,13 +2,13 @@ package com.tangem.data.account.repository
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.tangem.data.account.converter.toAccountId
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
@@ -75,9 +75,10 @@ internal class DefaultAccountsExpandedRepository constructor(
         @NetworkMoshi private val moshi: Moshi,
         @ApplicationContext private val context: Context,
         private val appScope: AppCoroutineScope,
+        private val dataStoreFactory: AppDataStoreFactory,
     ) : AccountsExpandedRepository.Factory {
         override fun create(storeFileName: String): DefaultAccountsExpandedRepository {
-            val store = DataStoreFactory.create<Map<String, Set<AccountsExpandedDTO>>>(
+            val store = dataStoreFactory.create<Map<String, Set<AccountsExpandedDTO>>>(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = mapWithStringKeyTypes(valueTypes = setTypes<AccountsExpandedDTO>()),

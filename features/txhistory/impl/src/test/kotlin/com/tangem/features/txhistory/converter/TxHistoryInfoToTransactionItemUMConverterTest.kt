@@ -65,7 +65,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN on-chain pill row WHEN row clicked THEN routes the incoming OnChainTx through onTransactionClick`() {
         // Arrange
-        val item = OnChainTx.BSDK(txInfo(type = TransactionType.Approve))
+        val item = OnChainTx.BSDK(txInfo(type = TransactionType.Approve(amount = null, address = USER_ADDRESS)))
 
         // Act
         val result = converter.convert(item) as TransactionItemUM.Pill

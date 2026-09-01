@@ -1,7 +1,9 @@
 package com.tangem.feature.walletsettings.di
 
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.feature.walletsettings.component.impl.DefaultAddAccountTypeComponent
 import com.tangem.feature.walletsettings.component.impl.DefaultNetworksAvailableForNotificationsComponent
 import com.tangem.feature.walletsettings.component.impl.DefaultRenameWalletComponent
 import com.tangem.feature.walletsettings.component.impl.DefaultWalletSettingsComponent
@@ -31,4 +33,10 @@ internal interface WalletSettingsComponentModule {
     fun bindNetworksComponentFactory(
         factory: DefaultNetworksAvailableForNotificationsComponent.Factory,
     ): NetworksAvailableForNotificationsComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindAddAccountTypeComponentFactory(
+        factory: DefaultAddAccountTypeComponent.Factory,
+    ): AddAccountTypeComponent.Factory
 }

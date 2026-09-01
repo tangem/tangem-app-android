@@ -1,6 +1,6 @@
 package com.tangem.data.staking.converters.transaction
 
-import com.tangem.datasource.api.stakekit.models.response.model.transaction.StakingTransactionDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.transaction.StakingTransactionDTO
 import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.utils.converter.Converter

@@ -8,8 +8,20 @@ import org.json.JSONException
 import org.json.JSONObject
 import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 private const val DEFAULT_WIREMOCK_URL = "[REDACTED_ENV_URL]"
+private const val ADMIN_TIMEOUT_SECONDS = 3L
+
+/**
+ * Shared client for the WireMock admin API. The timeouts are short on purpose: these calls run before and
+ * during every test, so the default 10s connect + 10s read would add minutes to a suite whenever the
+ * instance is unreachable — and an admin call that slow is a broken instance, not a slow one.
+ */
+private val adminClient: OkHttpClient = OkHttpClient.Builder()
+    .connectTimeout(ADMIN_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+    .readTimeout(ADMIN_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+    .build()
 
 /**
  * Returns the WireMock base URL to use.
@@ -31,7 +43,6 @@ fun setWireMockScenarioState(
 ): Boolean {
     TangemLogger.i("=== WireMock Scenario Set ===")
     TangemLogger.i("Setting scenario '$scenarioName' to state: $state")
-    val client = OkHttpClient()
     val json = JSONObject().put("state", state).toString()
     val mediaType = "application/json".toMediaType()
 
@@ -41,7 +52,7 @@ fun setWireMockScenarioState(
         .build()
 
     return try {
-        client.newCall(request).execute().use { response ->
+        adminClient.newCall(request).execute().use { response ->
             val body = response.body?.string() ?: ""
             TangemLogger.d("WireMock scenario request URL: ${request.url}")
             TangemLogger.d("WireMock scenario request body: $json")
@@ -67,7 +78,6 @@ fun getWireMockRequestCount(
     urlPathPattern: String,
     baseUrl: String = getWireMockBaseUrl(),
 ): Int {
-    val client = OkHttpClient()
     // Build via JSONObject so a regex urlPathPattern with quotes/backslashes stays valid JSON.
     val json = JSONObject()
         .put("method", method)
@@ -81,7 +91,7 @@ fun getWireMockRequestCount(
         .build()
 
     return try {
-        client.newCall(request).execute().use { response ->
+        adminClient.newCall(request).execute().use { response ->
             val body = response.body?.string() ?: ""
             TangemLogger.d("WireMock request count response: ${response.code} - $body")
             if (response.isSuccessful) JSONObject(body).getInt("count") else 0
@@ -116,7 +126,6 @@ fun getWireMockRequestCountByQueryParam(
     queryValue: String,
     baseUrl: String = getWireMockBaseUrl(),
 ): Int {
-    val client = OkHttpClient()
     // A queryParameters matcher instead of a urlPattern regex: no backslash escaping to get wrong.
     val json = JSONObject()
         .put("method", method)
@@ -131,7 +140,7 @@ fun getWireMockRequestCountByQueryParam(
         .build()
 
     return try {
-        client.newCall(request).execute().use { response ->
+        adminClient.newCall(request).execute().use { response ->
             val body = response.body?.string() ?: ""
             TangemLogger.d("WireMock request count ($queryParam=$queryValue): ${response.code} - $body")
             if (response.isSuccessful) JSONObject(body).getInt("count") else 0
@@ -150,14 +159,13 @@ fun getWireMockRequestCountByQueryParam(
  * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  */
 fun checkWireMockStatus(baseUrl: String = getWireMockBaseUrl()): Boolean {
-    val client = OkHttpClient()
     val request = Request.Builder()
         .url("$baseUrl/__admin/scenarios")
         .get()
         .build()
 
     return try {
-        client.newCall(request).execute().use { response ->
+        adminClient.newCall(request).execute().use { response ->
             val body = response.body?.string() ?: ""
             TangemLogger.d("WireMock status check: ${response.code}")
             TangemLogger.d("Available scenarios: $body")
@@ -177,7 +185,6 @@ fun resetWireMockScenarios(baseUrl: String = getWireMockBaseUrl()): Boolean {
     TangemLogger.i("=== WireMock Scenarios Reset ===")
     TangemLogger.i("Base URL: $baseUrl")
 
-    val client = OkHttpClient()
     val url = "$baseUrl/__admin/scenarios/reset"
     TangemLogger.i("Request URL: $url")
 
@@ -188,7 +195,7 @@ fun resetWireMockScenarios(baseUrl: String = getWireMockBaseUrl()): Boolean {
 
     return try {
         TangemLogger.d("Sending reset request...")
-        client.newCall(request).execute().use { response ->
+        adminClient.newCall(request).execute().use { response ->
             TangemLogger.d("Response code: ${response.code}")
             TangemLogger.d("Response message: ${response.message}")
             val responseBody = response.body?.string() ?: ""
@@ -220,14 +227,13 @@ fun resetWireMockScenarioState(scenarioName: String, baseUrl: String = getWireMo
     TangemLogger.i("=== WireMock Scenario Reset ===")
     TangemLogger.i("Resetting scenario '$scenarioName' to its initial state")
 
-    val client = OkHttpClient()
     val request = Request.Builder()
         .url("$baseUrl/__admin/scenarios/$scenarioName/state")
         .put("".toRequestBody())
         .build()
 
     return try {
-        client.newCall(request).execute().use { response ->
+        adminClient.newCall(request).execute().use { response ->
             TangemLogger.d("WireMock scenario reset response: ${response.code} - ${response.message}")
             if (!response.isSuccessful) {
                 TangemLogger.e("Failed to reset scenario '$scenarioName': ${response.code}")
