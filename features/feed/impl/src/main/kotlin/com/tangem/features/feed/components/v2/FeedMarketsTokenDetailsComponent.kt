@@ -20,6 +20,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.stringReference
@@ -33,7 +34,6 @@ import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDet
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
-import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.features.foryou.TokenSummaryBlockComponent
@@ -92,9 +92,9 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val state by legacyComponent.state.collectAsStateWithLifecycle()
-        val isPriceShown = state.shouldShowPriceSubtitle || sheetDetent.value == FeedSheetDetent.PILL
+        val isPriceShown = state.shouldShowPriceSubtitle || sheetExpansion.value == ShtorkaExpansion.PILL
 
         TangemTopNavigation(
             contentAlign = TangemTopNavigation.ContentAlign.Center,
