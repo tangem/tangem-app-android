@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.news.trending
+package com.tangem.data.news.store.trending
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.news.TrendingNews
