@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -17,7 +18,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
-import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.foryou.ForYouComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,7 +41,7 @@ internal class FeedForYouComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         TangemTopNavigation(
             title = resourceReference(R.string.for_you_title),
             contentAlign = TangemTopNavigation.ContentAlign.Center,
