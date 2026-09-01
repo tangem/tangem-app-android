@@ -90,7 +90,8 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
         // edge-to-edge ones (which manage insets themselves) keeps the usual system bars padding.
         val isEdgeToEdgePage = storyState is TangemShtorkaStory ||
             storyState is TangemModalStory ||
-            storyState is StoriesV2Story
+            storyState is StoriesV2Story ||
+            storyState is TangemStatusScreenStory
         val insetsModifier = if (isEdgeToEdgePage) Modifier else Modifier.systemBarsPadding()
         Box(modifier = insetsModifier) {
             when (storyState) {

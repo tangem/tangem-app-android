@@ -13,6 +13,7 @@ internal fun StateUpdater<TangemStatusScreenStory>.build(): TangemStatusScreenSt
         hasExtraBottom = false,
         hasDetails = true,
         hasFooter = true,
+        isFullscreen = false,
         replayKey = 0,
         onVariantChange = { variant -> updateStory { it.copy(variant = variant, replayKey = it.replayKey + 1) } },
         onDescriptionToggle = { updateStory { it.copy(hasDescription = !it.hasDescription) } },
@@ -20,6 +21,9 @@ internal fun StateUpdater<TangemStatusScreenStory>.build(): TangemStatusScreenSt
         onExtraBottomToggle = { updateStory { it.copy(hasExtraBottom = !it.hasExtraBottom) } },
         onDetailsToggle = { updateStory { it.copy(hasDetails = !it.hasDetails) } },
         onFooterToggle = { updateStory { it.copy(hasFooter = !it.hasFooter) } },
+        onFullscreenToggle = {
+            updateStory { it.copy(isFullscreen = !it.isFullscreen, replayKey = it.replayKey + 1) }
+        },
         onReplayClick = { updateStory { it.copy(replayKey = it.replayKey + 1) } },
     )
 }
