@@ -1,11 +1,11 @@
-package com.tangem.datasource.di
+package com.tangem.data.walletconnect.di
 
 import android.content.Context
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.local.walletconnect.DefaultWalletConnectStore
-import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.data.walletconnect.store.DefaultWalletConnectStore
+import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.setTypes
@@ -21,7 +21,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object WalletConnectModule {
+internal object WalletConnectModule {
 
     @Provides
     @Singleton
