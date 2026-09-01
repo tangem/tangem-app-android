@@ -1,10 +1,10 @@
-package com.tangem.datasource.local.nft.converter
+package com.tangem.data.nft.converter
 
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 
-object NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, NFTAsset.Identifier> {
+internal object NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, NFTAsset.Identifier> {
     override fun convert(value: SdkNFTAsset.Identifier): NFTAsset.Identifier = when (value) {
         is SdkNFTAsset.Identifier.EVM -> NFTAsset.Identifier.EVM(
             tokenId = value.tokenId,
