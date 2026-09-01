@@ -431,16 +431,13 @@ internal class PlacePredictionModel @Inject constructor(
     private fun startPriceLoop() {
         modelScope.launch {
             while (isActive && uiState.value.submit is SubmitUM.Idle && uiState.value.enteredAmount() == null) {
-                if (!requestPrice()) return@launch
+                val canKeepPolling = requestPrice()
+                if (!canKeepPolling) return@launch
                 delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)
     }
 
-    /**
-     * Applies one book-price read to the header; `false` when the failure is terminal and polling must stop.
-     * A transport or server failure changes nothing on purpose — the header keeps the last known price.
-     */
     private suspend fun requestPrice(): Boolean {
         val result = withContext(dispatchers.default) {
             // A buy executes against the SELL side of the book, so the fair price to show is the best ask.
