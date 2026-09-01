@@ -16,6 +16,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
@@ -26,7 +27,6 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
-import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import dagger.assisted.Assisted
@@ -54,7 +54,7 @@ internal class FeedNewsDetailsComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val state by legacyComponent.state.collectAsStateWithLifecycle()
 
         TangemTopNavigation(
