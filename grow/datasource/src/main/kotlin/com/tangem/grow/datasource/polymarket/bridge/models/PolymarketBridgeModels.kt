@@ -2,6 +2,7 @@ package com.tangem.grow.datasource.polymarket.bridge.models
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import java.math.BigDecimal
 
 /** Response of `GET https://bridge.polymarket.com/supported-assets`. */
 @JsonClass(generateAdapter = true)
@@ -19,7 +20,7 @@ data class PolymarketSupportedAssetDto(
     @Json(name = "chainId") val chainId: Long,
     @Json(name = "chainName") val chainName: String,
     @Json(name = "token") val token: PolymarketBridgeTokenDto,
-    @Json(name = "minCheckoutUsd") val minCheckoutUsd: Double,
+    @Json(name = "minCheckoutUsd") val minCheckoutUsd: BigDecimal,
 )
 
 @JsonClass(generateAdapter = true)
@@ -44,7 +45,9 @@ data class PolymarketDepositRequest(
  * Addresses the bridge issues, one per chain family.
  *
  * @property evm the only field this flow consumes, and the only one guaranteed to be present
- * @property tron nullable because Polymarket's own pages disagree on whether the field is `tron` or `tvm`
+ * @property tron null whenever the payload names the field `tvm`, which Polymarket's own pages do
+ *  inconsistently. Left unmapped rather than bridged, because nothing reads the Tron address; a payload
+ *  under either name still decodes.
  */
 @JsonClass(generateAdapter = true)
 data class PolymarketBridgeAddressesDto(
