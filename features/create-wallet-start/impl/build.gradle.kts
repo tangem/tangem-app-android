@@ -17,6 +17,7 @@ dependencies {
 
     /** Project - Domain */
     api(projects.domain.card)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.common)
     api(projects.domain.hotWallet)
     api(projects.domain.settings)
