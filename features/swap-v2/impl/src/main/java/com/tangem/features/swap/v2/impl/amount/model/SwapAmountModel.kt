@@ -14,7 +14,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
+import com.tangem.features.swap.v2.impl.amount.store.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
