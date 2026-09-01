@@ -1,14 +1,6 @@
 package com.tangem.features.jointaccount.common.displayname.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,7 +22,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
@@ -47,10 +38,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.jointaccount.common.displayname.ui.state.JointAccountDisplayNameUM
-
-/** Matches the feel of the design-system v2 components: the same snappy spring for alpha and for size. */
-private val ALPHA_SPEC: FiniteAnimationSpec<Float> = spring(stiffness = Spring.StiffnessMediumLow)
-private val SIZE_SPEC: FiniteAnimationSpec<IntSize> = spring(stiffness = Spring.StiffnessMediumLow)
 
 @Composable
 internal fun JointAccountDisplayNameScreen(
@@ -152,29 +139,10 @@ private fun NameField(state: JointAccountDisplayNameUM, modifier: Modifier = Mod
 
         SpacerH(12.dp)
 
-        Underline(isError = state.isError, isFocused = isFocused)
-
-        SupportingText(isError = state.isError, modifier = Modifier.padding(vertical = 8.dp))
-    }
-}
-
-@Composable
-private fun SupportingText(isError: Boolean, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        AnimatedVisibility(
-            visible = isError,
-            enter = fadeIn(animationSpec = ALPHA_SPEC) + expandVertically(animationSpec = SIZE_SPEC),
-            exit = fadeOut(animationSpec = ALPHA_SPEC) + shrinkVertically(animationSpec = SIZE_SPEC),
-        ) {
-            Text(
-                modifier = Modifier.padding(bottom = 12.dp),
-                text = stringResourceSafe(R.string.joint_account_name_fill_validation_error),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.status.error,
-            )
-        }
+        Underline(isFocused = isFocused)
 
         Text(
+            modifier = Modifier.padding(vertical = 8.dp),
             text = stringResourceSafe(R.string.joint_account_name_hint),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
@@ -183,15 +151,11 @@ private fun SupportingText(isError: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Underline(isError: Boolean, isFocused: Boolean, modifier: Modifier = Modifier) {
+private fun Underline(isFocused: Boolean, modifier: Modifier = Modifier) {
     HorizontalDivider(
         modifier = modifier,
         thickness = 1.dp,
-        color = when {
-            isError -> TangemTheme.colors3.border.status.error
-            isFocused -> TangemTheme.colors3.border.status.info
-            else -> TangemTheme.colors3.border.tertiary
-        },
+        color = if (isFocused) TangemTheme.colors3.border.status.info else TangemTheme.colors3.border.tertiary,
     )
 }
 
@@ -235,24 +199,20 @@ private fun Preview_JointAccountDisplayNameScreen(
 private class JointAccountDisplayNameStateProvider : CollectionPreviewParameterProvider<JointAccountDisplayNameUM>(
     collection = listOf(
         // Empty input: the button is disabled
-        createPreviewState(name = "", isError = false, isButtonEnabled = false),
-        createPreviewState(name = "Ivan Zolo", isError = false, isButtonEnabled = true),
-        // A forbidden character highlights the field
-        createPreviewState(name = "Ivan Zolo!", isError = true, isButtonEnabled = false),
+        createPreviewState(name = "", isButtonEnabled = false),
+        createPreviewState(name = "Ivan Zolo", isButtonEnabled = true),
         // The signature session is in progress
-        createPreviewState(name = "Ivan Zolo", isError = false, isButtonEnabled = true, isButtonLoading = true),
+        createPreviewState(name = "Ivan Zolo", isButtonEnabled = true, isButtonLoading = true),
     ),
 )
 
 private fun createPreviewState(
     name: String,
-    isError: Boolean,
     isButtonEnabled: Boolean,
     isButtonLoading: Boolean = false,
 ): JointAccountDisplayNameUM {
     return JointAccountDisplayNameUM(
         name = name,
-        isError = isError,
         buttonText = resourceReference(R.string.common_create_account),
         buttonIconRes = R.drawable.ic_tangem_24,
         isButtonEnabled = isButtonEnabled,
