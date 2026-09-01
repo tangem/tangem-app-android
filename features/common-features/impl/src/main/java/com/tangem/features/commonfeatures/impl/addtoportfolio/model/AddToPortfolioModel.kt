@@ -22,6 +22,7 @@ import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.account.derivationIndex
+import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
