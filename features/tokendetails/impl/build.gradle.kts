@@ -41,7 +41,6 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.datasource)
     implementation(projects.core.local)
     implementation(projects.store.datasource)
     implementation(projects.core.decompose)
