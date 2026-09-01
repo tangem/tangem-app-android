@@ -354,12 +354,14 @@ internal interface TangemPayDataModule {
         fun provideIssuePlasticCardUseCase(
             customerOffersRepository: CustomerOffersRepository,
             customerOrderRepository: CustomerOrderRepository,
+            issueCardRepository: TangemPayIssueCardRepository,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
             appCoroutineScope: AppCoroutineScope,
         ): IssuePlasticCardUseCase {
             return IssuePlasticCardUseCase(
                 customerOffersRepository = customerOffersRepository,
                 customerOrderRepository = customerOrderRepository,
+                issueCardRepository = issueCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
                 appCoroutineScope = appCoroutineScope,
             )

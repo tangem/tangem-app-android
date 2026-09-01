@@ -28,6 +28,7 @@ import com.tangem.grow.datasource.config.YieldSupply
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
+import com.tangem.grow.datasource.express.DefaultExpressAuthProvider
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
@@ -64,6 +65,13 @@ internal object GrowDatasourceModule {
 
     private const val TIMEOUT_60_SECONDS = 60L
     private const val TIMEOUT_90_SECONDS = 90L
+    private const val TIMEOUT_120_SECONDS = 120L
+
+    @Provides
+    @Singleton
+    fun provideExpressAuthProvider(): ExpressAuthProvider {
+        return DefaultExpressAuthProvider()
+    }
 
     @Provides
     @IntoMap
@@ -112,7 +120,7 @@ internal object GrowDatasourceModule {
     @Provides
     @Singleton
     fun provideTronGaslessApi(factory: RetrofitFactory): TronGaslessApi {
-        return factory.build(gaslessApiSpec())
+        return factory.build(tronGaslessApiSpec())
     }
 
     private fun gaslessApiSpec() = RetrofitApiSpec(
@@ -121,6 +129,18 @@ internal object GrowDatasourceModule {
         shouldUseSessionAuth = false,
         timeouts = Timeouts(
             callTimeoutSeconds = TIMEOUT_60_SECONDS,
+            connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+            readTimeoutSeconds = TIMEOUT_60_SECONDS,
+            writeTimeoutSeconds = TIMEOUT_60_SECONDS,
+        ),
+    )
+
+    private fun tronGaslessApiSpec() = RetrofitApiSpec(
+        apiConfigId = GaslessTxService.ID,
+        shouldApplyTimeoutAnnotations = true,
+        shouldUseSessionAuth = false,
+        timeouts = Timeouts(
+            callTimeoutSeconds = TIMEOUT_120_SECONDS,
             connectTimeoutSeconds = TIMEOUT_60_SECONDS,
             readTimeoutSeconds = TIMEOUT_60_SECONDS,
             writeTimeoutSeconds = TIMEOUT_60_SECONDS,
