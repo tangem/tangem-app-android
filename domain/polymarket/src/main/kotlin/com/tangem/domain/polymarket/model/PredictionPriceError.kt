@@ -1,6 +1,5 @@
 package com.tangem.domain.polymarket.model
 
-/** Why the book price could not be read. */
 sealed interface PredictionPriceError : PolymarketError {
 
     /** Transport failure (no connection / timeout) — poll on and keep the last known value. */
