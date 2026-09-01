@@ -1,11 +1,14 @@
 package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketBridgeAddressesDto
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositRequest
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketSupportedAssetsResponse
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 /**
  * Pins the wire format of the Polymarket bridge, which is Polymarket's own service rather than the BFF and
@@ -15,7 +18,15 @@ import org.junit.jupiter.api.Test
  */
 internal class PolymarketBridgeWireFormatTest {
 
-    private val moshi = Moshi.Builder().build()
+    private class BigDecimalAdapter {
+        @FromJson
+        fun fromJson(value: String) = BigDecimal(value)
+
+        @ToJson
+        fun toJson(value: BigDecimal) = value.toString()
+    }
+
+    private val moshi = Moshi.Builder().add(BigDecimalAdapter()).build()
 
     @Test
     fun `GIVEN the bridge's asset list WHEN decoded THEN the minimum is read as a number`() {
@@ -37,7 +48,7 @@ internal class PolymarketBridgeWireFormatTest {
         assertThat(asset.token.symbol).isEqualTo("USDC")
         assertThat(asset.token.address).isEqualTo("0x3c499c542cef5e3811e1192ce70d8cc03d5c3359")
         assertThat(asset.token.decimals).isEqualTo(6)
-        assertThat(asset.minCheckoutUsd).isEqualTo(2.0)
+        assertThat(asset.minCheckoutUsd).isEqualTo(BigDecimal("2.0"))
     }
 
     @Test
