@@ -2,6 +2,7 @@
 
 package com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,16 +37,24 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemStatusScree
 
 @Composable
 internal fun TangemStatusScreenStory(state: TangemStatusScreenStory, modifier: Modifier = Modifier) {
+    if (state.isFullscreen) {
+        BackHandler(onBack = state.onFullscreenToggle)
+        Box(modifier = modifier.fillMaxSize()) {
+            key(state.replayKey) {
+                StatusScreen(state = state)
+            }
+        }
+        return
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(TangemTheme.colors.background.primary)
+            .systemBarsPadding()
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Preview stays pinned at the top.
         ComponentPreview(state = state)
-        // Only the controls scroll.
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -52,6 +62,7 @@ internal fun TangemStatusScreenStory(state: TangemStatusScreenStory, modifier: M
             VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
             SlotToggles(state = state)
             ReplayRow(onClick = state.onReplayClick)
+            FullscreenRow(onClick = state.onFullscreenToggle)
         }
     }
 }
@@ -66,57 +77,62 @@ private fun ComponentPreview(state: TangemStatusScreenStory) {
             .clip(RoundedCornerShape(16.dp)),
     ) {
         key(state.replayKey) {
-            TangemStatusScreen(
-                variant = state.variant,
-                title = stringReference(value = "Prediction placed"),
-                description = if (state.hasDescription) {
-                    stringReference(value = "Aug 12, 13:24. We are not sorry for that.")
-                } else {
-                    null
-                },
-                asset = if (state.hasAsset) {
-                    { PreviewAsset(variant = state.variant) }
-                } else {
-                    null
-                },
-                extraBottom = if (state.hasExtraBottom) {
-                    {
-                        TangemBadge(
-                            text = stringReference(value = "Current 5.5% net APY"),
-                            status = TangemBadge.Status.Success,
-                            size = TangemBadge.Size.X6,
-                        )
-                    }
-                } else {
-                    null
-                },
-                details = if (state.hasDetails) {
-                    {
-                        DetailsRow(title = "Tokens bought", value = "500", divider = true)
-                        DetailsRow(title = "Resolution Date", value = "22.03.2026", divider = true)
-                        DetailsRow(title = "Fee", value = "$0.02", divider = false)
-                    }
-                } else {
-                    null
-                },
-                footer = if (state.hasFooter) {
-                    {
-                        TangemButton(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 16.dp),
-                            variant = TangemButton.Variant.Primary,
-                            size = TangemButton.Size.X12,
-                            text = stringReference(value = "To main"),
-                            onClick = {},
-                        )
-                    }
-                } else {
-                    null
-                },
-            )
+            StatusScreen(state = state)
         }
     }
+}
+
+@Composable
+private fun StatusScreen(state: TangemStatusScreenStory) {
+    TangemStatusScreen(
+        variant = state.variant,
+        title = stringReference(value = "Prediction placed"),
+        description = if (state.hasDescription) {
+            stringReference(value = "Aug 12, 13:24. We are not sorry for that.")
+        } else {
+            null
+        },
+        asset = if (state.hasAsset) {
+            { PreviewAsset(variant = state.variant) }
+        } else {
+            null
+        },
+        extraBottom = if (state.hasExtraBottom) {
+            {
+                TangemBadge(
+                    text = stringReference(value = "Current 5.5% net APY"),
+                    status = TangemBadge.Status.Success,
+                    size = TangemBadge.Size.X6,
+                )
+            }
+        } else {
+            null
+        },
+        details = if (state.hasDetails) {
+            {
+                DetailsRow(title = "Tokens bought", value = "500", divider = true)
+                DetailsRow(title = "Resolution Date", value = "22.03.2026", divider = true)
+                DetailsRow(title = "Fee", value = "$0.02", divider = false)
+            }
+        } else {
+            null
+        },
+        footer = if (state.hasFooter) {
+            {
+                TangemButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    variant = TangemButton.Variant.Primary,
+                    size = TangemButton.Size.X12,
+                    text = stringReference(value = "To main"),
+                    onClick = {},
+                )
+            }
+        } else {
+            null
+        },
+    )
 }
 
 @Composable
@@ -214,6 +230,34 @@ private fun ReplayRow(onClick: () -> Unit) {
                 text = "▶",
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.accent,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FullscreenRow(onClick: () -> Unit) {
+    Section(label = "Fullscreen") {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(TangemTheme.colors2.surface.level2)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = "Open fullscreen",
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            Text(
+                text = "back to exit",
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.secondary,
             )
         }
     }
