@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
-@Suppress("CyclomaticComplexMethod")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
     return when (val unavailabilityReason = this) {
         is ScenarioUnavailabilityReason.StakingUnavailable -> {
@@ -39,6 +39,7 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
         ScenarioUnavailabilityReason.SingleWallet,
         is ScenarioUnavailabilityReason.ExpressUnreachable,
         ScenarioUnavailabilityReason.Unreachable,
+        ScenarioUnavailabilityReason.JointAccount,
         -> {
             resourceReference(
                 id = R.string.token_button_unavailability_generic_description,

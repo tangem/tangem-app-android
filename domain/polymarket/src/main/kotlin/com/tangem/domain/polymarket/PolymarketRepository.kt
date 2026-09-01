@@ -18,8 +18,11 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import java.math.BigInteger
 
 interface PolymarketRepository {
@@ -58,6 +61,13 @@ interface PolymarketRepository {
      * The result is only as good as the book at the moment it was served, so callers re-request it on a
      * timer rather than caching it.
      */
+    suspend fun placeOrder(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        signedOrder: PredictionSignedOrder,
+        isNegRisk: Boolean,
+    ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult>
+
     suspend fun getOrderQuote(
         request: PredictionOrderQuoteRequest,
     ): Either<PredictionOrderQuoteError, PredictionOrderQuote>
