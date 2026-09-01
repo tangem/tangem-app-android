@@ -952,29 +952,29 @@
   <string name="joint_account_invite_members_new_member">新しいメンバー</string>
   <string name="joint_account_invite_members_not_invited">未招待</string>
   <string name="joint_account_invite_members_other_members">その他のメンバー</string>
-  <string name="joint_account_invite_members_safety_first_point_subtitle">このリンクを開いた人は、誰でも参加して署名できます。必ず招待する本人にのみ送り、公開しないでください。</string>
+  <string name="joint_account_invite_members_safety_first_point_subtitle">このリンクを開いた人は、誰でも参加して署名できます。必ず招待する本人にのみ送り、公開しないでください</string>
   <string name="joint_account_invite_members_safety_first_point_title">リンクは鍵のようなものです</string>
-  <string name="joint_account_invite_members_safety_second_point_subtitle">各メンバーは、他のメンバーと共同で取引を承認できます。信頼できる人だけを招待してください。</string>
+  <string name="joint_account_invite_members_safety_second_point_subtitle">各メンバーは、他のメンバーと共同で取引を承認できます。信頼できる人だけを招待してください</string>
   <string name="joint_account_invite_members_safety_second_point_title">共同署名者は資金を移動できます</string>
   <string name="joint_account_invite_members_safety_subtitle">リンクを知っている人は、誰でも参加して署名できます。信頼できる人にのみ共有してください。</string>
-  <string name="joint_account_invite_members_safety_third_point_subtitle">メンバーが参加したら、アドレスが本人のものであることを、本人に直接確認してください。</string>
+  <string name="joint_account_invite_members_safety_third_point_subtitle">メンバーが参加したら、アドレスが本人のものであることを、本人に直接確認してください</string>
   <string name="joint_account_invite_members_safety_third_point_title">参加したメンバーを確認</string>
   <string name="joint_account_invite_members_safety_title">招待リンクを安全に共有</string>
   <string name="joint_account_invite_members_subtitle">あなたを含む%2$s人中%1$s人が参加済み</string>
   <string name="joint_account_invite_members_title">メンバーを招待</string>
   <string name="joint_account_invite_members_to_join">メンバーを招待して参加してもらう</string>
-  <string name="joint_account_join_confirm_sheet_subtitle">このアカウントでは、全員が1つの残高を共有します。メンバーは誰でも、あなたの承認なしでも、いつでも資金を使用または出金できます。</string>
+  <string name="joint_account_join_confirm_sheet_subtitle">このアカウントでは、全員が1つの残高を共有します。メンバーは誰でも、あなたの承認なしでも、いつでも資金を使用または出金できます</string>
   <string name="joint_account_join_confirm_sheet_title">共有アカウントに参加しようとしています</string>
-  <string name="joint_account_join_subtitle">これは共同アカウントです。このアカウントからのすべての取引には、%1$sの署名が必要です。</string>
+  <string name="joint_account_join_subtitle">これは共同アカウントです。このアカウントからのすべての取引には、%1$sの署名が必要です</string>
   <string name="joint_account_join_subtitle_value">%1$s / %2$s人のメンバー</string>
   <string name="joint_account_join_title">%1$sから招待されています</string>
   <string name="joint_account_join_to_account_btn_text">アカウントに参加</string>
-  <string name="joint_account_members_subtitle">アカウントを共有する人数を設定します。送金、スワップ、アカウントの閉鎖など、すべての取引には%2$s人中%1$s人の署名が必要です。一度設定すると変更できません。</string>
+  <string name="joint_account_members_subtitle">アカウントを共有する人数を設定します。送金、スワップ、アカウントの閉鎖など、すべての取引には%2$s人中%1$s人の署名が必要です。一度設定すると変更できません</string>
   <string name="joint_account_members_subtitle_helper_part">%1$s / %2$s人の署名が必要</string>
-  <string name="joint_account_members_subtitle_main_part">アカウントを共有する人数を設定します。送金、スワップ、アカウントの閉鎖など、すべての取引には%1$sの承認が必要です。一度設定すると変更できません。</string>
+  <string name="joint_account_members_subtitle_main_part">アカウントを共有する人数を設定します。送金、スワップ、アカウントの閉鎖など、すべての取引には%1$sの承認が必要です。一度設定すると変更できません</string>
   <string name="joint_account_members_total_subtitle">あなたを含め、最大%1$s人まで</string>
   <string name="joint_account_name_display_name">表示名</string>
-  <string name="joint_account_name_hint">他のメンバーがあなたを確認できるよう、氏名または署名者の種類を入力してください。</string>
+  <string name="joint_account_name_hint">他のメンバーがあなたを確認できるよう、氏名または署名者の種類を入力してください</string>
   <string name="key_invalidated_warning_description">生体認証を更新しました。カードまたはリングをスキャンして入ってください。</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">送金するには、残高が手数料額より高くなければなりません。</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">残高不足</string>
@@ -1015,9 +1015,6 @@
   <string name="manage_tokens_unavailable_description">選択したトークンは現在、暗号資産ウォレット内でのアクションには利用できません。しかし、心配しないでください。賛成票を投じることで関心を表明できます。</string>
   <string name="manage_tokens_unavailable_vote">賛成票を投じる</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
-  <plurals name="market_chart_assets_android">
-    <item quantity="other">%d種類</item>
-  </plurals>
   <string name="market_chart_top_holding">トップ資産比率%s</string>
   <string name="markets_about_coin_header">コインについて</string>
   <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
@@ -2267,8 +2264,6 @@
   <string name="tangempay_va_banking_details_error_title">銀行情報を読み込めませんでした</string>
   <string name="tangempay_va_limit_resetting_everyday">上限は毎日リセットされます</string>
   <string name="tangempay_visa_benefits">Visa特典</string>
-  <string name="tangempay_withdrawal_note_description">返金分はオンチェーンのPolygon残高には戻らず、出金にも利用できません。ただし、カード残高として残り、支払いに利用できます。</string>
-  <string name="tangempay_withdrawal_note_title">ご注意ください</string>
   <string name="tangempay_your_pin_code">PINコード</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
@@ -2323,6 +2318,9 @@
   <string name="tokens_list_unavailable_to_sell_header">売却できません</string>
   <string name="tokens_list_unavailable_to_swap_header">%sからのスワップは利用できません</string>
   <string name="tokens_list_unavailable_to_swap_source_header">スワップはできません</string>
+  <plurals name="top_assets_count">
+    <item quantity="other">%d種類</item>
+  </plurals>
   <string name="transaction_history_claiming_reward">報酬受け取り中</string>
   <string name="transaction_history_contract_address">コントラクト: %s</string>
   <string name="transaction_history_disabling_yield_mode">利息モードを無効化中</string>
