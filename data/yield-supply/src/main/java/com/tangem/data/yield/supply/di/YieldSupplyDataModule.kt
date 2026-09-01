@@ -7,10 +7,10 @@ import com.tangem.data.yield.supply.DefaultYieldSupplyErrorResolver
 import com.tangem.data.yield.supply.DefaultYieldSupplyTransactionRepository
 import com.tangem.data.yield.supply.promo.DefaultYieldPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.YieldSupplyApi
+import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.promotion.PromotionsSupplier
-import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
+import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
 import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
 import com.tangem.domain.transaction.GaslessYieldRepository

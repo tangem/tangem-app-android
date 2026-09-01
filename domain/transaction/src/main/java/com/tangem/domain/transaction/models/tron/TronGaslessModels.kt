@@ -7,12 +7,13 @@ data class TronGaslessEstimateParams(
     val fromAddress: String,
     val toAddress: String,
     val tokenContract: String,
-    val amount: String,
+    val amount: BigInteger,
     val feeTokenContract: String?,
 )
 
 data class TronGaslessQuote(
     val quoteId: String,
+    val quotedAmountRaw: BigInteger,
     val feeRecipient: String,
     val compensationToken: String,
     val compensationAmountRaw: BigInteger,

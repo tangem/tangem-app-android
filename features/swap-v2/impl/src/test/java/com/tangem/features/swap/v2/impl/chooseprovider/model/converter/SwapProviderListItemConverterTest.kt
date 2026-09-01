@@ -113,13 +113,95 @@ internal class SwapProviderListItemConverterTest {
         assertSymbolUsed(errorText, expectedSymbol = FROM_SYMBOL, otherSymbol = TO_SYMBOL)
     }
 
-    private fun buildConverter(amountType: SwapAmountType): SwapProviderListItemConverter {
+    /**
+     * `isRestricted` is plumbed into [SwapQuoteUM.Content] but deliberately not read here: the provider
+     * list renders a region-restricted quote exactly like a purchasable one, and the restriction only
+     * surfaces as a blocking notification on Confirm (SwapNotificationsModelTest). The four tests below
+     * pin that contract as pairs — same assertion, only the flag differs — so adding an indicator to
+     * `getExtras` cannot land silently.
+     */
+    @Test
+    fun `GIVEN restricted content quote WHEN convert THEN extra is empty`() {
+        // GIVEN
+        val converter = buildConverter(amountType = SwapAmountType.From)
+        val restrictedQuote = contentQuote(isRestricted = true)
+
+        // WHEN
+        val item = converter.convert(restrictedQuote)
+
+        // THEN
+        assertThat(item).isNotNull()
+        assertThat(item!!.providerUM.extraUM).isEqualTo(ProviderChooseUM.ExtraUM.Empty)
+    }
+
+    @Test
+    fun `GIVEN non-restricted content quote WHEN convert THEN extra is empty`() {
+        // GIVEN
+        val converter = buildConverter(amountType = SwapAmountType.From)
+        val contentQuote = contentQuote(isRestricted = false)
+
+        // WHEN
+        val item = converter.convert(contentQuote)
+
+        // THEN
+        assertThat(item).isNotNull()
+        assertThat(item!!.providerUM.extraUM).isEqualTo(ProviderChooseUM.ExtraUM.Empty)
+    }
+
+    @Test
+    fun `GIVEN restricted FCA provider WHEN convert THEN FCA warning action still shown`() {
+        // GIVEN — the FCA branch is the only one guarding Content, so the restriction flag cannot pre-empt it
+        val converter = buildConverter(amountType = SwapAmountType.From, isNeedApplyFCARestrictions = true)
+        val restrictedQuote = contentQuote(isRestricted = true, provider = FCA_PROVIDER)
+
+        // WHEN
+        val item = converter.convert(restrictedQuote)
+
+        // THEN
+        assertThat(item).isNotNull()
+        assertThat(item!!.providerUM.extraUM).isInstanceOf(ProviderChooseUM.ExtraUM.Action::class.java)
+    }
+
+    @Test
+    fun `GIVEN purchasable FCA provider WHEN convert THEN FCA warning action shown`() {
+        // GIVEN — same provider, only the restriction flag differs
+        val converter = buildConverter(amountType = SwapAmountType.From, isNeedApplyFCARestrictions = true)
+        val contentQuote = contentQuote(isRestricted = false, provider = FCA_PROVIDER)
+
+        // WHEN
+        val item = converter.convert(contentQuote)
+
+        // THEN
+        assertThat(item).isNotNull()
+        assertThat(item!!.providerUM.extraUM).isInstanceOf(ProviderChooseUM.ExtraUM.Action::class.java)
+    }
+
+    private fun contentQuote(
+        isRestricted: Boolean,
+        provider: ExpressProvider = this.provider,
+    ): SwapQuoteUM.Content = SwapQuoteUM.Content(
+        provider = provider,
+        toAmount = BigDecimal.ONE,
+        fromAmount = BigDecimal.ONE,
+        toAmountValue = TextReference.EMPTY,
+        fromAmountValue = TextReference.EMPTY,
+        diffPercent = SwapQuoteUM.Content.DifferencePercent.Empty,
+        isSingleProvider = false,
+        rate = TextReference.EMPTY,
+        quoteId = null,
+        isRestricted = isRestricted,
+    )
+
+    private fun buildConverter(
+        amountType: SwapAmountType,
+        isNeedApplyFCARestrictions: Boolean = false,
+    ): SwapProviderListItemConverter {
         return SwapProviderListItemConverter(
             fromCryptoCurrency = fromCurrency,
             toCryptoCurrency = toCurrency,
             amountType = amountType,
             selectedProvider = provider,
-            isNeedApplyFCARestrictions = false,
+            isNeedApplyFCARestrictions = isNeedApplyFCARestrictions,
             needBestRateBadge = false,
         )
     }
@@ -139,5 +221,16 @@ internal class SwapProviderListItemConverterTest {
     private companion object {
         const val FROM_SYMBOL = "ETH"
         const val TO_SYMBOL = "BTC"
+
+        /** `providerId` must be one of `FCA_RESTRICTED_PROVIDER_IDS` for `isRestrictedByFCA()` to hold. */
+        val FCA_PROVIDER = ExpressProvider(
+            providerId = "changelly",
+            name = "Changelly",
+            type = ExpressProviderType.CEX,
+            imageLarge = "",
+            termsOfUse = null,
+            privacyPolicy = null,
+            slippage = null,
+        )
     }
 }

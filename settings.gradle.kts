@@ -247,6 +247,15 @@ include(":libs:tangem-sdk-api")
 include(":spend:datasource")
 // endregion Spend modules
 
+// region Store modules
+include(":store:datasource")
+include(":store:datasource:api")
+// endregion Store modules
+
+// region Grow modules
+include(":grow:datasource")
+// endregion Grow modules
+
 // region Feature modules
 include(":features:address-book:api")
 include(":features:address-book:impl")
@@ -256,6 +265,8 @@ include(":features:onboarding-v2:impl")
 
 include(":features:home:api")
 include(":features:home:impl")
+include(":features:introduction:api")
+include(":features:introduction:impl")
 
 include(":features:referral:api")
 include(":features:referral:data")
@@ -325,6 +336,9 @@ include(":features:rating:impl")
 include(":features:stories:api")
 include(":features:stories:impl")
 
+include(":features:stories-v2:api")
+include(":features:stories-v2:impl")
+
 include(":features:survey:api")
 include(":features:survey:impl")
 
@@ -383,6 +397,11 @@ include(":features:approval:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+include(":features:feed:crypto:api")
+include(":features:feed:crypto:impl")
+include(":features:feed:earn:impl")
+include(":features:feed:search:api")
+include(":features:feed:search:impl")
 
 include(":features:promo-banners:api")
 include(":features:promo-banners:impl")
@@ -392,6 +411,10 @@ include(":features:marketing:impl")
 
 include(":features:payment:api")
 include(":features:payment:impl")
+
+/* Joint Accounts */
+include(":features:joint-account:api")
+include(":features:joint-account:impl")
 
 /* Virtual Accounts */
 include(":features:virtual-accounts:onboarding:api")
@@ -408,6 +431,9 @@ include(":features:common-features:impl")
 
 include(":features:for-you:api")
 include(":features:for-you:impl")
+
+include(":features:collectibles:api")
+include(":features:collectibles:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -426,6 +452,7 @@ include(":domain:demo")
 include(":domain:demo:models")
 include(":domain:dynamic-addresses")
 include(":domain:dynamic-addresses:models")
+include(":domain:joint-account")
 include(":domain:settings")
 include(":domain:tokens")
 include(":domain:tokens:models")
@@ -496,6 +523,7 @@ include(":domain:promo:models")
 include(":domain:news")
 include(":domain:earn")
 include(":domain:search")
+include(":domain:feed:search")
 // endregion Domain modules
 
 // region Data modules
@@ -546,4 +574,6 @@ include(":data:promo")
 include(":data:news")
 include(":data:earn")
 include(":data:search")
+include(":data:joint-account")
+include(":data:feed:search")
 // endregion Data modules

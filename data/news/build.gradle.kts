@@ -29,6 +29,10 @@ dependencies {
     implementation(projects.core.pagination)
     // endregion
 
+    // region Project - Store
+    implementation(projects.store.datasource)
+    // endregion
+
     // region Project - Domain
     api(projects.domain.news)
     implementation(projects.domain.models)
