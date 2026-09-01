@@ -599,7 +599,7 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield active WHEN getPairs THEN any DEX kept with CEX`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED) } returns true
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(
@@ -647,7 +647,7 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield active and transfer flag off WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED) } returns false
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns false
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(
@@ -697,7 +697,7 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield active and flag on WHEN getPairs THEN DEX_BRIDGE kept with CEX`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED) } returns true
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
@@ -733,7 +733,7 @@ internal class DefaultSwapRepositoryV2Test {
     @Test
     fun `GIVEN yield active and flag on WHEN getPairs THEN ONRAMP provider filtered out`() = runTest {
         // Arrange
-        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED) } returns true
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())

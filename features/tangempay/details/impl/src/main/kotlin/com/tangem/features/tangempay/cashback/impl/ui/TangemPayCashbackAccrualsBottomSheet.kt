@@ -68,7 +68,9 @@ private fun AccrualsContent(state: TangemPayCashbackAccrualsUM) {
                         tint = TangemTheme.colors3.icon.primary,
                     )
                 },
-                titleSlot = { TangemRowText(text = row.title, role = TangemRowTextRole.Title) },
+                titleSlot = {
+                    TangemRowText(text = row.title, role = TangemRowTextRole.Title, maxLines = Int.MAX_VALUE)
+                },
                 endSlot = {
                     Icon(
                         modifier = Modifier.size(24.dp),

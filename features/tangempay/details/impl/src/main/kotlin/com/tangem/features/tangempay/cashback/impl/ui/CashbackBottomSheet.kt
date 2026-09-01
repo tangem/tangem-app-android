@@ -25,6 +25,7 @@ internal fun CashbackBottomSheet(title: TextReference, onDismiss: () -> Unit, co
                 title = title,
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 windowInsets = WindowInsets(0),
+                blurBackground = false,
                 onClose = onDismiss,
             )
         },

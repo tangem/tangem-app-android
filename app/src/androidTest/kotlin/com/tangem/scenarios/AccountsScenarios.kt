@@ -162,8 +162,9 @@ fun BaseTestCase.restoreArchivedAccount(accountName: String) {
 }
 
 /**
- * Polls [singleAccountListSupplier] for the selected wallet until a [Account.CryptoPortfolio] with the given
- * [derivationIndex] appears with a non-empty token list, then returns it.
+ * Polls [singleAccountListSupplier] for the selected wallet until a [Account.Personal] with the given
+ * [derivationIndex] appears with a non-empty token list, then returns it. Only [Account.Personal] carries a
+ * derivation index — [Account.Joint] is keyed by an owner key index instead.
  *
  * Per-account token derivation paths live in the domain account model
  * ([Account.CryptoPortfolio.cryptoCurrencies] → [com.tangem.domain.models.network.Network.derivationPath]),
