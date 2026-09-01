@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.cashback.impl.ui.state
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
@@ -12,7 +12,7 @@ data class TangemPayCashbackInfoTilesUM(
 
     @Immutable
     data class Tile(
-        @DrawableRes val iconRes: Int,
+        val icon: ImageVector,
         val title: TextReference,
         val subtitle: TextReference,
         val onClick: () -> Unit,

@@ -23,7 +23,7 @@ internal class PaymentReceiveUMConverter(
     private val onDismiss: () -> Unit,
 ) : Converter<PaymentReceiveUMConverter.Input, PaymentReceiveUM> {
 
-    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
+    private val iconStateConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
 
     /**
      * @property networkName human-readable network name, e.g. "Solana".

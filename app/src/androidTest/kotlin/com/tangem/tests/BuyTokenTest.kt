@@ -3,7 +3,6 @@ package com.tangem.tests
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -23,14 +22,7 @@ class BuyTokenTest : BaseTestCase() {
         val scenarioName = "payment_methods"
         val tokenTitle = "Bitcoin"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
-            step("Reset WireMock scenario '$scenarioName'") {
-                resetWireMockScenarioState(scenarioName)
-            }
+        setupHooks().run {
             step("Setup WireMock scenario '$scenarioName' for 'Error' state") {
                 setWireMockScenarioState(scenarioName, "Error")
             }
@@ -75,11 +67,6 @@ class BuyTokenTest : BaseTestCase() {
             val australianDollar = "AUD"
             val fiatAmount = "1"
             val tokenAmount = "POL 488.24938338"
-            val scenarioName = "payment_methods"
-
-            step("Reset WireMock scenario '$scenarioName'") {
-                resetWireMockScenarioState(scenarioName)
-            }
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -149,11 +136,6 @@ class BuyTokenTest : BaseTestCase() {
             val euro = "EUR"
             val fiatAmount = "1"
             val tokenAmount = "POL 488.24938338"
-            val scenarioName = "payment_methods"
-
-            step("Reset WireMock scenario '$scenarioName'") {
-                resetWireMockScenarioState(scenarioName)
-            }
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -235,11 +217,6 @@ class BuyTokenTest : BaseTestCase() {
             val tokenTitle = "Polygon"
             val country = "Albania"
             val unavailableCountry = "Lebanon"
-            val scenarioName = "payment_methods"
-
-            step("Reset WireMock scenario '$scenarioName'") {
-                resetWireMockScenarioState(scenarioName)
-            }
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -320,11 +297,6 @@ class BuyTokenTest : BaseTestCase() {
             val fiatAmount = "1"
             val providerNameMercuryo = "Mercuryo"
             val tokenAmount = "POL 488.24938338"
-            val scenarioName = "payment_methods"
-
-            step("Reset WireMock scenario '$scenarioName'") {
-                resetWireMockScenarioState(scenarioName)
-            }
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -409,11 +381,6 @@ class BuyTokenTest : BaseTestCase() {
             val sepa = "Sepa"
             val fiatAmount = "1"
             val tokenAmount = "POL 488.24938338"
-            val scenarioName = "payment_methods"
-
-            step("Reset WireMock scenario '$scenarioName'") {
-                resetWireMockScenarioState(scenarioName)
-            }
 
             step("Open 'Main Screen'") {
                 openMainScreen()

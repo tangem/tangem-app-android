@@ -4,7 +4,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 
 interface TxHistoryFetcher<T : TxHistoryFetchTrigger> {
-    suspend fun invoke(params: T)
+    operator fun invoke(params: T)
     fun close()
 }
 
@@ -20,5 +20,5 @@ interface AccountTxHistoryFetcher : TxHistoryFetcher<TxHistoryFetchTrigger> {
 }
 
 interface ExpressTxHistoryFetcher : TxHistoryFetcher<TxHistoryExpressTrigger> {
-    val address: String
+    val walletId: UserWalletId
 }

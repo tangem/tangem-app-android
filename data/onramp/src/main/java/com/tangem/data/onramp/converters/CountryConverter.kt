@@ -1,6 +1,6 @@
 package com.tangem.data.onramp.converters
 
-import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
+import com.tangem.grow.datasource.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.utils.converter.TwoWayConverter
 

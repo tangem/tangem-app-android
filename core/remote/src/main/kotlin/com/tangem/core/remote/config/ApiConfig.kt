@@ -23,6 +23,12 @@ abstract class ApiConfig {
     abstract val id: ID
 
     /**
+     * Whether this API's requests may be written to network logs. Defaults to `true`; override to `false`
+     * when the requests carry a secret (e.g. an `apiKey` query param) that must not be logged.
+     */
+    open val isLoggable: Boolean get() = true
+
+    /**
      * Type-safe config identifier, backed by a stable string [name] that is also the DI map key.
      * Each config declares its own key and id next to itself (e.g. `Express.KEY` / `Express.ID`).
      */

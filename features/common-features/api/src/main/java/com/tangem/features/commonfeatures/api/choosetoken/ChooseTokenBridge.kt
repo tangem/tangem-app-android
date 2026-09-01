@@ -26,39 +26,55 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
 
     fun selectWalletTab(walletId: UserWalletId)
 
+    /** Resets the balance filter to its per-feature default. Called when the chooser (re)opens. */
+    fun resetBalanceFilter()
+
     data class Settings(
         val title: TextReference,
         val chooserBlock: ChooserBlock,
-        val isShowPaymentAccount: Boolean,
+        val paymentAccountTokens: PaymentAccountTokens,
         val isAppBarShown: Boolean = true,
         /**
          * When `true`, single-currency wallets (and single-currency-with-token wallets like NODL)
          * are shown as selectable tabs. Swap flows keep this `false` — only multi-currency wallets apply there.
          */
         val isShowSingleCurrencyWallets: Boolean = false,
+        /** When `true`, the FROM selector shows the zero-balance filter (default HideZero). Swap FROM only. */
+        val isHideZeroBalanceFilterEnabled: Boolean = false,
     ) {
         companion object {
             val SwapFrom = Settings(
                 title = resourceReference(R.string.swapping_from_title),
                 chooserBlock = ChooserBlock.Market,
-                isShowPaymentAccount = true,
+                paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
+            )
+
+            /**
+             * FROM selector for the withdraw-via-swap account flow (Tangem Pay "Withdraw"). Same title as
+             * [SwapFrom], but hides the Markets search — withdrawal only ever draws from the Payment
+             * account's own tokens, so there is nothing to search for.
+             */
+            val WithdrawFrom = Settings(
+                title = resourceReference(R.string.swapping_from_title),
+                chooserBlock = ChooserBlock.None,
+                paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
             )
             val SwapTo = Settings(
                 title = resourceReference(R.string.swapping_to_title),
                 chooserBlock = ChooserBlock.Market,
-                isShowPaymentAccount = true,
+                paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
             )
             val AddFunds = Settings(
                 title = resourceReference(R.string.swapping_to_title),
                 chooserBlock = ChooserBlock.Market,
-                isShowPaymentAccount = false,
+                paymentAccountTokens = PaymentAccountTokens.Hidden,
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
             )
             val Transfer = Settings(
                 title = resourceReference(R.string.common_transfer),
                 chooserBlock = ChooserBlock.None,
-                isShowPaymentAccount = false,
+                paymentAccountTokens = PaymentAccountTokens.Hidden,
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
             )
@@ -114,6 +130,21 @@ data class ChooseTokenResult(
         get() = analyticsPayload
             .filterIsInstance<ChooseTokenAnalyticsPayload.IsMarketTokenSelected>()
             .any { it.value }
+}
+
+/**
+ * Which tokens of the user's payment account the chooser lists.
+ */
+sealed interface PaymentAccountTokens {
+
+    /** The account has no section in the list. */
+    data object Hidden : PaymentAccountTokens
+
+    /** Only the currency the account is represented by. */
+    data object AccountCurrency : PaymentAccountTokens
+
+    /** Every token the account is issued on, one per token per `ENABLED` network. */
+    data object IssuedTokens : PaymentAccountTokens
 }
 
 /**

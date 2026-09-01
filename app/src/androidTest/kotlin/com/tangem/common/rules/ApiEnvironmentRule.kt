@@ -2,20 +2,20 @@ package com.tangem.common.rules
 
 import com.tangem.spend.datasource.config.TangemPay
 
-import com.tangem.datasource.api.common.config.News
+import com.tangem.store.datasource.config.News
 
 import com.tangem.datasource.api.common.config.TangemTech
 
-import com.tangem.datasource.api.common.config.StakeKit
+import com.tangem.grow.datasource.config.StakeKit
 
-import com.tangem.datasource.api.common.config.Express
+import com.tangem.grow.datasource.config.Express
 
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
+import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.managers.MutableApiConfigsManager
 import com.tangem.wallet.test.BuildConfig
 import kotlinx.coroutines.runBlocking
 import org.junit.rules.TestRule

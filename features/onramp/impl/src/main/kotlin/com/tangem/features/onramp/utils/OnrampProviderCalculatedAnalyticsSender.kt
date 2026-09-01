@@ -17,5 +17,7 @@ internal fun AnalyticsEventHandler.sendProviderCalculatedEvent(quotes: List<Onra
 }
 
 private fun List<OnrampQuote>.findBestRateQuote(): OnrampQuote.Data? {
-    return filterIsInstance<OnrampQuote.Data>().maxByOrNull { it.toAmount.value }
+    return filterIsInstance<OnrampQuote.Data>()
+        .filterNot { it.isRestricted }
+        .maxByOrNull { it.toAmount.value }
 }

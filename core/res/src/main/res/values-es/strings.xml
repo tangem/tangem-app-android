@@ -794,8 +794,8 @@
   <string name="hw_backup_to_upgrade_description">Para actualizar a una billetera de hardware, complete el proceso de copia de seguridad.</string>
   <string name="hw_backup_upgrade_description">Actualice su billetera móvil a una billetera de hardware Tangem para obtener la máxima seguridad. Importe su billetera o transfiera fondos a una nueva.</string>
   <string name="hw_backup_upgrade_title">Actualizar a billetera fría</string>
-  <string name="hw_cloud_backup_access_unavailable_description">Permite que Tangem utilice %1$s en la configuración de su dispositivo y, a continuación, vuelva a intentar guardar su copia de seguridad.</string>
-  <string name="hw_cloud_backup_access_unavailable_title">No puedo acceder %1$s</string>
+  <string name="hw_cloud_backup_access_unavailable_description">Permita que Tangem utilice %1$s en la configuración de su dispositivo y, a continuación, vuelva a intentar guardar su copia de seguridad.</string>
+  <string name="hw_cloud_backup_access_unavailable_title">Acceso no disponible a %1$s</string>
   <string name="hw_cloud_backup_cancel_setup_cancel">Cancelar copia de seguridad</string>
   <string name="hw_cloud_backup_cancel_setup_continue">Continuar con la copia de seguridad</string>
   <string name="hw_cloud_backup_cancel_setup_description">Su billetera no se respaldará en %s. Puede configurarlo más adelante en los ajustes de la billetera.</string>
@@ -817,7 +817,7 @@
   <string name="hw_cloud_backup_no_access_title">No puedo acceder a Google Drive.</string>
   <string name="hw_cloud_backup_no_backups_description">Inicie sesión en otra cuenta o importe su frase de recuperación.</string>
   <string name="hw_cloud_backup_not_found_create">Crear copia de seguridad</string>
-  <string name="hw_cloud_backup_not_found_description">Ya se había realizado una copia de seguridad de esta billetera, pero no hemos podido encontrar el archivo de copia de seguridad en su Google Drive.</string>
+  <string name="hw_cloud_backup_not_found_description">Ya se había hecho una copia de seguridad de esta billetera, pero no hemos podido encontrarla.</string>
   <string name="hw_cloud_backup_not_found_forget">Olvidar la copia de seguridad</string>
   <string name="hw_cloud_backup_not_found_title">No se encontró ninguna copia de seguridad</string>
   <string name="hw_cloud_backup_password_hint">Contraseña</string>
@@ -826,7 +826,7 @@
   <string name="hw_cloud_backup_permissions_description">Faltan algunos permisos. Concédenos acceso completo para que podamos guardar la copia de seguridad de su billetera en Google Drive.</string>
   <string name="hw_cloud_backup_permissions_description_v2">Faltan algunos permisos. Otorgue acceso completo para que podamos guardar la copia de seguridad de su billetera en %1$s.</string>
   <string name="hw_cloud_backup_permissions_title">Acceso completo a Google Drive</string>
-  <string name="hw_cloud_backup_permissions_title_v2">Acceso completo a %1$s</string>
+  <string name="hw_cloud_backup_permissions_title_v2">Permitir acceso completo a %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s copia de seguridad</string>
   <string name="hw_cloud_backup_removed">Copia de seguridad eliminada</string>
   <string name="hw_cloud_backup_restore_error_title">Ha surgido un problema</string>
@@ -836,7 +836,7 @@
   <string name="hw_cloud_backup_restore_passphrase_description">Introduzca la passphrase exacta para esta billetera. Se distingue entre mayúsculas y minúsculas, una frase diferente abre un conjunto diferente de direcciones.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Introduzca la passphrase</string>
   <string name="hw_cloud_backup_restore_password_button">Restaurar</string>
-  <string name="hw_cloud_backup_restore_password_description">Está restaurando %1$s desde una copia de seguridad de %2$s creada el %3$s</string>
+  <string name="hw_cloud_backup_restore_password_description">Está restaurando \"%1$s\" desde una copia de seguridad de %2$s creada en %3$s</string>
   <string name="hw_cloud_backup_restore_password_navtitle">Restaurar billetera</string>
   <string name="hw_cloud_backup_restore_password_title">Introduzca la contraseña</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Importar frase de recuperación</string>
@@ -869,14 +869,14 @@
   <string name="hw_create_upgrade_description">Transfiera su billetera móvil a una tarjeta o anillo Tangem en cualquier momento, de forma segura.</string>
   <string name="hw_create_upgrade_title">Actualización a billetera de hardware</string>
   <string name="hw_import_existing_wallet">Importar billetera existente</string>
-  <string name="hw_import_existing_wallet_description">Siga utilizando una cartera que ya tenga importándola o restaurándola</string>
+  <string name="hw_import_existing_wallet_description">Siga utilizando una billetera que ya tenga importándola o restaurándola</string>
   <string name="hw_import_restore_cloud_backup">Restaurar una copia de seguridad de %s</string>
   <string name="hw_import_restore_cloud_backup_not_found">%s No se encontró ninguna copia de seguridad</string>
   <string name="hw_import_seed_phrase_already_imported">Esta frase de recuperación ya ha sido importada</string>
   <string name="hw_mobile_wallet">Billetera móvil</string>
   <string name="hw_remove_wallet_action_forget_title">Olvidar billetera</string>
   <string name="hw_remove_wallet_attention_description">Esta billetera se eliminará permanentemente de su dispositivo.</string>
-  <string name="hw_remove_wallet_cloud_backup_description">La billetera se eliminará de este dispositivo. %s La copia de seguridad permanece a salvo: puede restaurar esta billetera en cualquier momento con su contraseña.</string>
+  <string name="hw_remove_wallet_cloud_backup_description">La billetera se eliminará de este dispositivo. La copia de seguridad %s permanece a salvo: puede restaurar esta billetera en cualquier momento con su contraseña.</string>
   <string name="hw_remove_wallet_cloud_backup_title">¿Olvidar esta billetera?</string>
   <string name="hw_remove_wallet_confirmation_title">¿Está seguro que desea hacer esto?</string>
   <string name="hw_remove_wallet_confirmation_with_cloud_backup">Si olvida esta billetera, también se eliminará su copia de seguridad de Google Drive. Asegúrese de poder acceder a su frase de recuperación; esta acción es irreversible.</string>
@@ -891,7 +891,7 @@
   <string name="hw_remove_wallet_notification_description_has_backup_v2">Existe una copia de seguridad de esta billetera. Revísela antes de olvidarla para asegurarse de poder recuperarla más adelante.</string>
   <string name="hw_remove_wallet_notification_description_without_backup">Si olvida esta billetera sin una copia de seguridad, perderá permanentemente el acceso a sus fondos.</string>
   <string name="hw_remove_wallet_notification_title">¿Estás seguro de que desea olvidar esta billetera?</string>
-  <string name="hw_remove_wallet_notification_title_v2">¿Olvidaste esta billetera?</string>
+  <string name="hw_remove_wallet_notification_title_v2">¿Olvidar esta billetera?</string>
   <string name="hw_remove_wallet_warning_access">Entiendo que si no he hecho una copia de seguridad de mi billetera antes de eliminarla, perderé el acceso a ella.</string>
   <string name="hw_remove_wallet_warning_device">Entiendo que quitar mi billetera no la borra, solo la elimina de mi dispositivo.</string>
   <string name="hw_upgrade">Actualizar</string>
@@ -908,7 +908,7 @@
   <string name="hw_upgrade_key_migration_description">Las claves privadas se transferirán de la aplicación a su billetera de hardware Tangem</string>
   <string name="hw_upgrade_key_migration_title">Migración de claves</string>
   <string name="hw_upgrade_save_seed_action">Guardar frase de recuperación</string>
-  <string name="hw_upgrade_save_seed_description">Tras la actualización, ya no podrá volver a verlo. Su billetera móvil y la copia de seguridad en la nube se borrarán, así que anótelo ahora como método de recuperación de la copia de seguridad.</string>
+  <string name="hw_upgrade_save_seed_description">Tras la actualización, ya no podrá volver a verla. Su billetera móvil y la copia de seguridad en la nube se borrarán, así que anótela ahora como método de recuperación.</string>
   <string name="hw_upgrade_save_seed_title">Guarde su frase de recuperación antes de actualizar.</string>
   <string name="hw_upgrade_scan_device">Escanear dispositivo</string>
   <string name="hw_upgrade_start_action">Iniciar actualización</string>
@@ -2137,9 +2137,9 @@
   <string name="tangempay_onboarding_setup_wallet_title">Crearemos una nueva wallet</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay en minutos</string>
   <string name="tangempay_other_networks_header">Otras redes</string>
-  <string name="tangempay_other_networks_subtitle">Luego cámbielo a la cuenta de pago a 1:1 sin comisiones</string>
+  <string name="tangempay_other_networks_subtitle">Luego cámbielo a la cuenta de pago sin comisiones</string>
   <string name="tangempay_other_networks_title">Envíe USDT/USDC en cualquier red a su Tangem Wallet</string>
-  <string name="tangempay_pay_support">Soporte Pay</string>
+  <string name="tangempay_pay_support">Soporte</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
@@ -2188,8 +2188,8 @@
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Reciba USD vía ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Transferencia bancaria</string>
+  <string name="tangempay_topup_bank_transfer_body">Recibir USD desde una cuenta bancaria mediante ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">Desde una cuenta bancaria</string>
   <string name="tangempay_topup_receive_body">Envía USDC Polygon a la dirección de tu cuenta</string>
   <string name="tangempay_topup_receive_body_multichain">Envíe USDC o USDT a la dirección de su cuenta</string>
   <string name="tangempay_topup_receive_title">Desde otra billetera o exchange</string>
@@ -2323,6 +2323,11 @@
   <string name="user_push_notification_agreement_header">¿Quiere utilizar\nnotificaciones push?</string>
   <string name="user_push_notification_banner_subtitle">Active las notificaciones push y le avisaremos al instante cuando le lleguen fondos.</string>
   <string name="user_push_notification_banner_title">No se pierda ninguna transacción</string>
+  <string name="user_wallet_add_hardware_description">Escanee una tarjeta Tangem para añadirla.</string>
+  <string name="user_wallet_add_hardware_title">Agregar billetera de hardware</string>
+  <string name="user_wallet_add_mobile_description">Cree una nueva billetera en este dispositivo.</string>
+  <string name="user_wallet_add_mobile_title">Agregar billetera móvil</string>
+  <string name="user_wallet_coming_soon_dialog_description">Estamos trabajando en la posibilidad de crear más de una billetera móvil.</string>
   <string name="user_wallet_list_add_button">Agregar billetera</string>
   <string name="user_wallet_list_delete_hw_prompt">Si olvida esta billetera sin una copia de seguridad, perderá permanentemente el acceso a sus fondos.</string>
   <string name="user_wallet_list_delete_prompt">¿Estás seguro de que deseas olvidar esta billetera?</string>

@@ -81,10 +81,7 @@ dependencies {
     api(projects.domain.visa)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
-    implementation(projects.domain.legacy)
     implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.walletManager)
     runtimeOnly(projects.domain.tokens)
     // endregion
 
@@ -95,7 +92,6 @@ dependencies {
 
     // region Project - Features
     api(projects.features.swap.domain)
-    api(projects.features.virtualAccounts.details.api)
     api(projects.features.tangempay.details.api)
     // endregion
 
@@ -107,6 +103,7 @@ dependencies {
 
     // region Test
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(deps.moshi.kotlin)
     // endregion
 }
