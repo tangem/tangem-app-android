@@ -17,4 +17,9 @@ dependencies {
     // region Domain models
     api(projects.domain.collectibles.models)
     // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
+    testImplementation(deps.kotlin.coroutines)
+    // endregion
 }
