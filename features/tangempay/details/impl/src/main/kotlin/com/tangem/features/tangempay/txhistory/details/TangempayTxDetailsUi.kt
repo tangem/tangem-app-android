@@ -275,6 +275,7 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUM, modifier
                 title = resourceReference(R.string.tangempay_common_card),
                 value = detail.cardNumber,
                 subvalue = detail.cardName,
+                modifier = Modifier.testTag(TangemPayTestTags.TRANSACTION_DETAILS_CARD_ROW),
             )
             is TransactionDetailUM.Error -> DetailRowError(
                 title = resourceReference(R.string.tangempay_common_card),
