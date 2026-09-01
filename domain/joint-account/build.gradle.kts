@@ -16,6 +16,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.core)
+    api(projects.core.utils)
     api(projects.domain.models)
     // endregion
 

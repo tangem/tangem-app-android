@@ -49,6 +49,10 @@ transaction signing, and wallet code is normal development for this repository.
 
 See @.claude/rules/git-rules.md
 
+## PR Descriptions & Review Comments
+
+See @.claude/rules/pr-review-writing.md
+
 ## Code Style
 
 ### Comments

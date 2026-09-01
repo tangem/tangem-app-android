@@ -14,9 +14,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -33,26 +37,43 @@ import javax.inject.Inject
 @ModelScoped
 internal class AccountDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    singleAccountSupplier: SingleAccountSupplier,
+    getUserWalletUseCase: GetUserWalletUseCase,
+    singleAccountStatusSupplier: SingleAccountStatusSupplier,
     private val messageSender: UiMessageSender,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
-    singleAccountSupplier: SingleAccountSupplier,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountDetailsComponent.Params>()
 
-    val uiState: StateFlow<AccountDetailsUM>
-        field = MutableStateFlow(buildUI(params.account))
+    private val isMultiCurrency: Boolean = getUserWalletUseCase(params.account.accountId.userWalletId)
+        .getOrNull()
+        ?.isMultiCurrency == true
 
     private val accountId = params.account.accountId
 
+    val uiState: StateFlow<AccountDetailsUM>
+        field = MutableStateFlow(
+            when (val account = params.account) {
+                is Account.Personal -> buildPersonalUI(account)
+                is Account.Joint -> buildJointUI(account, status = null)
+            },
+        )
+
     init {
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.AccountSettingsScreenOpened())
-        singleAccountSupplier.filterCryptoPortfolioAccount(accountId)
-            .onEach { account -> uiState.update { buildUI(account) } }
+
+        when (params.account) {
+            is Account.Personal -> singleAccountSupplier.filterPersonalAccount(accountId)
+                .map { account -> buildPersonalUI(account) }
+            is Account.Joint -> singleAccountStatusSupplier(SingleAccountStatusProducer.Params(accountId))
+                .filterIsInstance<AccountStatus.Joint>()
+                .map { status -> buildJointUI(status.account, status) }
+        }
+            .onEach { newState -> uiState.update { newState } }
             .launchIn(modelScope)
     }
 
@@ -152,11 +173,6 @@ internal class AccountDetailsModel @Inject constructor(
         messageSender.send(dialogMessage)
     }
 
-    private fun buildUI(account: Account.CryptoPortfolio): AccountDetailsUM = when (account) {
-        is Account.Personal -> buildPersonalUI(account)
-        is Account.Joint -> buildJointUI(account)
-    }
-
     private fun buildPersonalUI(account: Account.Personal): AccountDetailsUM {
         val archiveMode = when (account.isMainAccount) {
             true -> ArchiveMode.None
@@ -172,11 +188,12 @@ internal class AccountDetailsModel @Inject constructor(
             onAccountEditClick = { onEditAccountClick(account) },
             onManageTokensClick = { onManageTokensClick(account) },
             archiveMode = archiveMode,
-            isManageTokensAvailable = isMultiCurrency(account),
+            isManageTokensAvailable = isMultiCurrency,
         )
     }
 
-    private fun buildJointUI(account: Account.Joint): AccountDetailsUM {
+    private fun buildJointUI(account: Account.Joint, status: AccountStatus.Joint?): AccountDetailsUM {
+        val isActive = status?.value is JointAccountStatusValue.Active
         return AccountDetailsUM(
             accountName = account.accountName.toUM().value,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
@@ -184,13 +201,9 @@ internal class AccountDetailsModel @Inject constructor(
             onAccountEditClick = null,
             onManageTokensClick = { onManageTokensClick(account) },
             archiveMode = ArchiveMode.None,
-            isManageTokensAvailable = isMultiCurrency(account),
+            isManageTokensAvailable = isActive && isMultiCurrency,
+            isPendingActivation = !isActive,
         )
-    }
-
-    private fun isMultiCurrency(account: Account.CryptoPortfolio): Boolean {
-        return getUserWalletUseCase(account.accountId.userWalletId).getOrNull()
-            ?.isMultiCurrency == true
     }
 
     private fun AccountDetailsUM.toggleProgress(isLoading: Boolean): AccountDetailsUM {
