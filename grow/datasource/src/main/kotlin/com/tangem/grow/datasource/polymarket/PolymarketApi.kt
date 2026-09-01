@@ -2,6 +2,7 @@ package com.tangem.grow.datasource.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventsResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
@@ -13,6 +14,7 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketWalletOperationRes
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -85,6 +87,15 @@ interface PolymarketApi {
     suspend fun getWalletStatusByWalletId(
         @Query("walletId") walletId: String,
     ): ApiResponse<PolymarketWalletStatusResponse>
+
+    /**
+     * Configuration owned by the BFF. Touches no upstream, so it answers `200`, `400` or `401` and never
+     * `502`, and its value may be cached for the session.
+     *
+     * @param walletId Tangem wallet id, 64 hex without the `0x` prefix
+     */
+    @GET("api/predictions/v1/configuration")
+    suspend fun getConfiguration(@Header("wallet-id") walletId: String): ApiResponse<PolymarketConfigurationResponse>
 
     /**
      * Initiate deposit-wallet deployment via the relayer (gasless, unsigned). Returns as soon as the
