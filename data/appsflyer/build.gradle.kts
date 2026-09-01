@@ -19,8 +19,8 @@ dependencies {
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
     implementation(projects.core.local)
+    implementation(projects.core.utils)
     // endregion
 
     // region Domain
@@ -30,7 +30,9 @@ dependencies {
 
     // region Other
     api(deps.moshi)
+    implementation(deps.androidx.datastore.core)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.kotlin.coroutines)
+    runtimeOnly(deps.room.runtime)
     // endregion
 }
