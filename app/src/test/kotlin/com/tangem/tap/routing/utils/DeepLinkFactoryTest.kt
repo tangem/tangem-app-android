@@ -13,6 +13,7 @@ import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
 import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
@@ -135,6 +136,10 @@ internal class DeepLinkFactoryTest {
         every { create(any(), any(), any()) } returns mockk()
     }
 
+    private val jointAccountInviteDeepLinkFactory = mockk<JointAccountInviteDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
     private val urlOpener = mockk<UrlOpener>(relaxed = true)
 
     private val mockedUri = mockk<Uri>(relaxed = true)
@@ -169,6 +174,7 @@ internal class DeepLinkFactoryTest {
         surveyDeepLink = surveyDeepLinkFactory,
         promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
         jointAccountDeepLink = jointAccountDeepLinkFactory,
+        jointAccountInviteDeepLink = jointAccountInviteDeepLinkFactory,
         urlOpener = urlOpener,
     )
 

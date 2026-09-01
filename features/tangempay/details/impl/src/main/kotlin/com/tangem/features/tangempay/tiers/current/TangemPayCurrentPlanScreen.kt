@@ -23,6 +23,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.extensions.formatAnnotatedWithLinks
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -51,7 +52,9 @@ internal fun TangemPayCurrentPlanScreen(state: TangemPayCurrentPlanUM, modifier:
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
                 state.notification?.let { PlanNotification(notification = it) }
-                state.sections.fastForEach { section -> PlanSection(section = section) }
+                state.sections.fastForEach { section ->
+                    PlanSection(section = section, onLinkClick = state.onLinkClick)
+                }
             }
 
             PlanFooter(state = state)
@@ -117,7 +120,11 @@ private fun PlanNotification(notification: TangemPayCurrentPlanUM.Notification, 
 }
 
 @Composable
-private fun PlanSection(section: TangemPayCurrentPlanUM.Section, modifier: Modifier = Modifier) {
+private fun PlanSection(
+    section: TangemPayCurrentPlanUM.Section,
+    onLinkClick: (url: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             modifier = Modifier.padding(
@@ -135,7 +142,7 @@ private fun PlanSection(section: TangemPayCurrentPlanUM.Section, modifier: Modif
                 .background(TangemTheme.colors3.bg.secondary),
         ) {
             section.items.fastForEachIndexed { index, item ->
-                PlanInfoRow(item = item)
+                PlanInfoRow(item = item, onLinkClick = onLinkClick)
                 if (index != section.items.lastIndex) {
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -149,7 +156,11 @@ private fun PlanSection(section: TangemPayCurrentPlanUM.Section, modifier: Modif
 }
 
 @Composable
-private fun PlanInfoRow(item: TangemPayCurrentPlanUM.InfoItem, modifier: Modifier = Modifier) {
+private fun PlanInfoRow(
+    item: TangemPayCurrentPlanUM.InfoItem,
+    onLinkClick: (url: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -157,14 +168,14 @@ private fun PlanInfoRow(item: TangemPayCurrentPlanUM.InfoItem, modifier: Modifie
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            text = item.label.resolveReference(),
+            text = formatAnnotatedWithLinks(rawString = item.label.resolveReference(), onLinkClick = onLinkClick),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = item.value.resolveReference(),
+            text = formatAnnotatedWithLinks(rawString = item.value.resolveReference(), onLinkClick = onLinkClick),
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
         )
@@ -239,12 +250,13 @@ private fun previewState() = TangemPayCurrentPlanUM(
                 TangemPayCurrentPlanUM.InfoItem(stringReference("Max cards issued"), stringReference("5")),
                 TangemPayCurrentPlanUM.InfoItem(
                     label = stringReference("Additional benefits"),
-                    value = stringReference("Benefit 1, Benefit 2, Benefit 3"),
+                    value = stringReference("Airport perks and other [Visa benefits](https://tangem.com)"),
                 ),
             ),
         ),
     ),
     onBackClick = {},
     onChangePlanClick = {},
+    onLinkClick = {},
     onFullTermsClick = {},
 )

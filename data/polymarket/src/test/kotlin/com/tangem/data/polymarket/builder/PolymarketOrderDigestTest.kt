@@ -88,7 +88,7 @@ internal class PolymarketOrderDigestTest {
     }
 
     private fun createOrder(side: PredictionOrderSide = PredictionOrderSide.BUY): PredictionOrder = PredictionOrder(
-        salt = BigInteger("1234567890"),
+        salt = 1_234_567_890L,
         maker = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20",
         signer = "0x4130efa9e628a991520be60f2e948a4f9be52fbc",
         tokenId = BigInteger("1116017998421700000000000000000000000000000000000000000000000000047"),
