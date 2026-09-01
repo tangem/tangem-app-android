@@ -7,6 +7,7 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.account.PaymentNetworkStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -18,6 +19,7 @@ import io.mockk.unmockkAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.util.Locale
 
 internal class DefaultTangemPayCurrencyFactoryNetworksTest {
 
@@ -37,6 +39,7 @@ internal class DefaultTangemPayCurrencyFactoryNetworksTest {
         mockkStatic("com.tangem.domain.common.wallets.UserWalletsListRepositoryExtKt")
         every { userWalletsListRepository.getSyncStrict(any()) } returns userWallet
         every { network.rawId } returns "polygon"
+        every { network.derivationPath } returns Network.DerivationPath.None
         every {
             networkFactory.create(
                 blockchain = any<Blockchain>(),
@@ -104,20 +107,48 @@ internal class DefaultTangemPayCurrencyFactoryNetworksTest {
         assertThat(statuses.single()).isInstanceOf(PaymentNetworkStatus.NotIssued::class.java)
     }
 
+    @Test
+    fun `GIVEN checksum cased contract WHEN createNetworkStatuses THEN the token carries it lowercased`() {
+        // Arrange — the backend returns EIP-55 checksummed addresses, while Express and the rest of the app
+        // compare contracts as plain lowercase strings.
+        val networks = listOf(
+            networkInfo(
+                depositAddress = "0xDEPOSIT",
+                tokens = listOf(
+                    CustomerInfo.NetworkInfo.Token(
+                        symbol = "USDC",
+                        contractAddress = CHECKSUM_CONTRACT,
+                        availableForWithdrawal = null,
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val statuses = factory.createNetworkStatuses(USER_WALLET_ID, networks, fiatRate = null)
+
+        // Assert
+        val available = statuses.single() as PaymentNetworkStatus.Available
+        val token = available.cryptoCurrencyStatuses.single().currency as CryptoCurrency.Token
+        assertThat(token.contractAddress).isEqualTo(CHECKSUM_CONTRACT.lowercase(Locale.US))
+    }
+
     private fun networkInfo(
         depositAddress: String?,
         status: CustomerInfo.NetworkInfo.Status = CustomerInfo.NetworkInfo.Status.ENABLED,
+        tokens: List<CustomerInfo.NetworkInfo.Token> = emptyList(),
     ) = CustomerInfo.NetworkInfo(
         name = "polygon",
         chainId = POLYGON_CHAIN_ID,
         isTestnet = false,
         status = status,
         depositAddress = depositAddress,
-        tokens = emptyList(),
+        tokens = tokens,
     )
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
         const val POLYGON_CHAIN_ID = 137L
+        const val CHECKSUM_CONTRACT = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
     }
 }

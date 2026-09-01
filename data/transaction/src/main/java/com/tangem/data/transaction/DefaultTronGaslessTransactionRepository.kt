@@ -47,7 +47,7 @@ internal class DefaultTronGaslessTransactionRepository(
                 fromAddress = params.fromAddress,
                 toAddress = params.toAddress,
                 tokenContract = params.tokenContract,
-                amount = params.amount,
+                amount = params.amount.toString(),
                 feeTokenContract = params.feeTokenContract,
             ),
         ).getOrThrow()
@@ -56,6 +56,7 @@ internal class DefaultTronGaslessTransactionRepository(
         val res = response.result
         TronGaslessQuote(
             quoteId = res.quoteId,
+            quotedAmountRaw = params.amount,
             feeRecipient = res.feeRecipient,
             compensationToken = res.compensationToken,
             compensationAmountRaw = BigInteger(res.compensationAmountRaw),

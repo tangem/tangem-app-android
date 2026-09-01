@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -44,7 +43,7 @@ internal fun TangemPayCashbackInfoTiles(state: TangemPayCashbackInfoTilesUM, mod
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Tile(
             tile = state.rate,
@@ -66,21 +65,21 @@ private fun Tile(tile: TangemPayCashbackInfoTilesUM.Tile, modifier: Modifier = M
     TangemSurface(
         modifier = modifier,
         color = TangemTheme.colors3.bg.secondary,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         onClick = tile.onClick,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(16.dp)
+                .heightIn(min = 100.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(TangemTheme.colors3.bg.tertiary),
-                contentAlignment = Alignment.Center,
+                    .background(TangemTheme.colors3.bg.opaque.primary)
+                    .padding(6.dp),
             ) {
                 Icon(
                     modifier = Modifier.size(20.dp),
@@ -89,11 +88,13 @@ private fun Tile(tile: TangemPayCashbackInfoTilesUM.Tile, modifier: Modifier = M
                     tint = TangemTheme.colors3.icon.primary,
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                modifier = Modifier.padding(top = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
                 Text(
                     text = tile.title.resolveReference(),
-                    style = TangemTheme.typography3.body.medium,
+                    style = TangemTheme.typography3.subheading.medium,
                     color = TangemTheme.colors3.text.primary,
                 )
                 Text(

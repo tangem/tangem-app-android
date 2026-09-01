@@ -355,7 +355,7 @@
   <string name="tangempay_onboarding_setup_wallet_title">Creeremo un nuovo wallet</string>
   <string name="tangempay_onboarding_title">Ottieni la tua carta Tangem Pay in pochi minuti</string>
   <string name="tangempay_other_networks_header">Altre reti</string>
-  <string name="tangempay_other_networks_subtitle">Poi convertilo sul conto di pagamento a 1:1 senza commissioni</string>
+  <string name="tangempay_other_networks_subtitle">Poi convertilo sul conto di pagamento senza commissioni</string>
   <string name="tangempay_other_networks_title">Invia USDT/USDC su qualsiasi rete al tuo Tangem Wallet</string>
   <string name="tangempay_pay_support">Assistenza</string>
   <string name="tangempay_payment_account">Conto di pagamento</string>
@@ -406,8 +406,8 @@
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Ricevi USD tramite ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Bonifico bancario</string>
+  <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario tramite ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">Da un conto bancario</string>
   <string name="tangempay_topup_receive_body">Invia USDC Polygon all\'indirizzo del tuo account</string>
   <string name="tangempay_topup_receive_body_multichain">Invia USDC o USDT all\'indirizzo del tuo conto</string>
   <string name="tangempay_topup_receive_title">Da un altro wallet o exchange</string>
@@ -420,8 +420,6 @@
   <string name="tangempay_va_banking_details_error_title">Impossibile caricare i dati bancari</string>
   <string name="tangempay_va_limit_resetting_everyday">Limite azzerato ogni giorno</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
-  <string name="tangempay_withdrawal_note_description">I fondi degli acquisti rimborsati non verranno restituiti al tuo saldo on-chain Polygon né saranno disponibili per il prelievo, ma rimarranno sul saldo della tua carta per gli acquisti</string>
-  <string name="tangempay_withdrawal_note_title">Attenzione</string>
   <string name="tangempay_your_pin_code">Il tuo codice PIN</string>
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="visa_onboarding_pin_code_description">Imposta un codice di 4 cifre.\nVerrà utilizzato per i pagamenti.</string>

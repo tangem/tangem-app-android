@@ -6,8 +6,6 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -172,9 +170,12 @@ internal class TangemPayDetailsStateFactory(
             any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
             any { it.state == TangemPayCardState.Activating } -> CardsProgressBannerUM.Activating
             deliveringCards.size == 1 -> {
-                val cardId = deliveringCards.first().id
-                CardsProgressBannerUM.Delivering(onActivateClick = { intents.onActivateCardClick(cardId) })
+                val card = deliveringCards.first()
+                CardsProgressBannerUM.Delivering(
+                    onActivateClick = { intents.onActivateCardClick(card.id) }.takeUnless { card.isPlaceholder },
+                )
             }
+            deliveringCards.size > 1 -> CardsProgressBannerUM.DeliveringMultiple
             else -> null
         }
     }
@@ -304,28 +305,6 @@ internal class TangemPayDetailsStateFactory(
                     ),
                 )
             }
-            if (isTiersPlusPlanEnabled && tariffPlan != null && !tariffPlan.tariff.plan.isBasicTier) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = resourceReference(R.string.tangempay_visa_benefits),
-                        onClick = intents::onClickVisaBenefits,
-                        icon = TangemIconUM.Icon(
-                            iconRes = CoreUiR.drawable.ic_heart_20,
-                            tintReference = { TangemTheme.colors3.icon.primary },
-                        ),
-                    ),
-                )
-            }
-            add(
-                TangemPayDropDownItemUM(
-                    title = resourceReference(R.string.tangem_pay_terms_limits),
-                    onClick = intents::onClickTermsAndLimits,
-                    icon = TangemIconUM.Icon(
-                        imageVector = Icons.ic_document_20,
-                        tintReference = { TangemTheme.colors3.icon.primary },
-                    ),
-                ),
-            )
             add(
                 TangemPayDropDownItemUM(
                     title = resourceReference(R.string.tangempay_pay_support),

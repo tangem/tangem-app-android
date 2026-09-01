@@ -35,6 +35,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
@@ -91,7 +92,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     }
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val stackState by stack.subscribeAsState()
         val active = stackState.active
 
@@ -120,7 +121,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 )
             } else {
                 screen.Header(
-                    bottomSheetState = bottomSheetState,
+                    sheetExpansion = sheetExpansion,
                     onExpandSheet = onExpandSheet,
                     modifier = Modifier,
                 )

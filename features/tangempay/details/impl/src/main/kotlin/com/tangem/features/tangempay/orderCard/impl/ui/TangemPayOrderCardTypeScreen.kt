@@ -3,10 +3,12 @@ package com.tangem.features.tangempay.orderCard.impl.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -29,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -123,7 +126,7 @@ private fun OrderTypeContent(
         Column(modifier = Modifier.fillMaxSize()) {
             OrderTypeTopBar(onCloseClick = state.onBackClick)
             if (state.isError) {
-                OrderTypeErrorState()
+                OrderTypeErrorState(onRetryClick = state.onRetry)
             } else {
                 OrderTypeBody(
                     state = state,
@@ -554,12 +557,39 @@ private fun SelectButton(
 }
 
 @Composable
-private fun ColumnScope.OrderTypeErrorState() {
-    Box(
+private fun ColumnScope.OrderTypeErrorState(onRetryClick: () -> Unit) {
+    Column(
         modifier = Modifier
             .weight(1f)
-            .fillMaxWidth(),
-    )
+            .fillMaxWidth()
+            .padding(horizontal = 64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(TangemTheme.colors3.bg.inverse)
+                .clickable(role = Role.Button, onClick = onRetryClick)
+                .padding(10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(CoreUiR.drawable.ic_refresh_24),
+                contentDescription = resourceReference(CoreUiR.string.common_reload).resolveReference(),
+                tint = TangemTheme.colors3.icon.inverse,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = resourceReference(CoreUiR.string.tangempay_cashback_error_title).resolveReference(),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 private fun TangemPayOrderCardTypeUM.DeliveryEta.asTextReference(): TextReference {
@@ -610,13 +640,14 @@ private fun previewOrderTypeState(
     isLoading: Boolean = false,
     isError: Boolean = false,
     isPlasticEnabled: Boolean = true,
+    isVirtualAvailable: Boolean = true,
     cardImageUrl: String? = null,
     issueFee: String = "$5",
     plastic: Plastic = previewPlasticAvailable(),
 ) = TangemPayOrderCardTypeUM(
     isLoading = isLoading,
     isError = isError,
-    availableTypes = availableTypesOf(isPlasticEnabled),
+    availableTypes = availableTypesOf(isPlasticEnabled, isVirtualAvailable),
     cardImageUrl = cardImageUrl,
     virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = issueFee),
     plastic = plastic,

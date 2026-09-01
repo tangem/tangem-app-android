@@ -200,7 +200,7 @@ internal class ForYouModelTest {
 
             // Assert
             val content = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
-            assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
+            assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("BTC")
             assertThat(content.marketChartUM).isInstanceOf(MarketChartUM.Loaded::class.java)
             assertThat(model.uiState.value.notifications).isEmpty()
         }
@@ -321,7 +321,7 @@ internal class ForYouModelTest {
                 val state = model.uiState.value
                 assertThat(state.portfolioFilter).isInstanceOf(TangemFilterItemUM.Inactive::class.java)
                 val content = state.portfolioReviewUM as PortfolioReviewUM.Content
-                assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
+                assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("BTC")
             }
     }
 
@@ -331,7 +331,7 @@ internal class ForYouModelTest {
         @Test
         fun `GIVEN multi-network asset clicked twice THEN isExpanded toggles back to false`() = runTest {
             // Arrange — a single-network row navigates instead of expanding, so use one asset spanning two
-            // networks (same rawCurrencyId, different networks) to exercise the expand/collapse toggle wiring
+            // networks (same symbol, different networks) to exercise the expand/collapse toggle wiring
             val onFirstNetwork = createCoin(
                 rawCurrencyId = "btc",
                 symbol = "BTC",
@@ -1120,13 +1120,14 @@ internal class ForYouModelTest {
             userWalletId = walletId,
             cryptoCurrencies = currencies.map { it.currency },
         )
-        val cryptoPortfolioStatus = mockk<AccountStatus.CryptoPortfolio> {
+        val cryptoPortfolioStatus = mockk<AccountStatus.Personal> {
             every { flattenCurrencies() } returns currencies
             every { account } returns portfolioAccount
             every { accountId } returns portfolioAccount.accountId
         }
         return mockk {
             every { flattenCurrencies() } returns currencies
+            every { flattenPersonalCurrencies() } returns currencies
             every { userWalletId } returns walletId
             every { accountStatuses } returns listOf(cryptoPortfolioStatus)
         }

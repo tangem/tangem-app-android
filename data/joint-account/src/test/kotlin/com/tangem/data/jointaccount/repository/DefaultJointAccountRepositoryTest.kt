@@ -1,20 +1,26 @@
 package com.tangem.data.jointaccount.repository
 
+import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.jointaccount.FIXTURE_CRYPTO_ACCOUNT_ID
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
+import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
 import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
+import com.tangem.data.jointaccount.createJointAccountInvitePreview
+import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.StatusSource
@@ -44,6 +50,7 @@ internal class DefaultJointAccountRepositoryTest {
         walletAccountsFetcher = walletAccountsFetcher,
         invitesStore = invitesStore,
         converter = JointAccountDtoConverter(),
+        previewConverter = JointAccountInvitePreviewDtoConverter(),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -170,6 +177,62 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo((response as ApiResponse.Error).cause)
     }
 
+    @Test
+    fun `GIVEN successful response WHEN getInvitePreview THEN the converted preview is returned`() = runTest {
+        // Arrange
+        val dto = createJointAccountInvitePreviewDto()
+        coEvery {
+            jointAccountApi.getJointAccountInvite(walletId = WALLET_ID.stringValue, inviteId = INVITE_A)
+        } returns ApiResponse.Success(dto)
+
+        // Act
+        val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Right(createJointAccountInvitePreview()))
+    }
+
+    @Test
+    fun `GIVEN conflict response WHEN getInvitePreview THEN InvalidLink`() = runTest {
+        // Arrange
+        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns
+            invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.CONFLICT)
+
+        // Act
+        val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
+    }
+
+    @Test
+    fun `GIVEN not found response WHEN getInvitePreview THEN LoadFailed`() = runTest {
+        // Arrange
+        val response = invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.NOT_FOUND)
+        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns response
+
+        // Act
+        val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
+
+        // Assert
+        val expectedCause = (response as ApiResponse.Error).cause
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.LoadFailed(cause = expectedCause)))
+    }
+
+    @Test
+    fun `GIVEN server error WHEN getInvitePreview THEN LoadFailed`() = runTest {
+        // Arrange
+        val response = invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
+        coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns response
+
+        // Act
+        val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
+
+        // Assert
+        val expectedCause = (response as ApiResponse.Error).cause
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.LoadFailed(cause = expectedCause)))
+    }
+
     private fun createPayload() = JointAccountCreationPayload(
         config = JointAccountConfig(
             name = " Family ",
@@ -185,6 +248,15 @@ internal class DefaultJointAccountRepositoryTest {
             derivation = 7,
         ),
     )
+
+    @Suppress("UNCHECKED_CAST")
+    private fun invitePreviewErrorResponse(
+        code: ApiResponseError.HttpException.Code,
+    ): ApiResponse<JointAccountInvitePreviewDto> {
+        val cause = ApiResponseError.HttpException(code = code, message = null, errorBody = null)
+
+        return ApiResponse.Error(cause = cause) as ApiResponse<JointAccountInvitePreviewDto>
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun errorResponse(code: ApiResponseError.HttpException.Code): ApiResponse<JointAccountDto> {

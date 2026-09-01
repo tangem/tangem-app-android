@@ -132,7 +132,7 @@ internal class AccountStatusListExtTest {
         }
     }
 
-    private fun cryptoPortfolioWithCurrencies(count: Int): AccountStatus.CryptoPortfolio {
+    private fun cryptoPortfolioWithCurrencies(count: Int): AccountStatus.Personal {
         val tokenList = mockk<TokenList> {
             every { flattenCurrencies() } returns List(count) { mockk<CryptoCurrencyStatus>() }
         }
@@ -140,4 +140,5 @@ internal class AccountStatusListExtTest {
             every { this@mockk.tokenList } returns tokenList
         }
     }
+
 }

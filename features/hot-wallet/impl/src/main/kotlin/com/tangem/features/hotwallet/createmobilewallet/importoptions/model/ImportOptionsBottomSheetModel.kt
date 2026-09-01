@@ -60,7 +60,7 @@ internal class ImportOptionsBottomSheetModel @Inject constructor(
 
     private suspend fun resolveBackups() {
         cloudBackupRepository.signOut()
-        cloudBackupRepository.findBackups(interactive = true).fold(
+        cloudBackupRepository.findBackups(interactive = true, validateContent = true).fold(
             ifLeft = ::onLoadError,
             ifRight = { backups -> onBackupsLoaded(backups) },
         )

@@ -10,6 +10,7 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
 internal class TangemPayAdditionalCashbackConverter(
+    private val onLinkClick: (url: String) -> Unit,
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
 ) : Converter<List<CashbackPromotions.AdditionalCashback>, TangemPayAdditionalCashbackUM> {
 
@@ -23,6 +24,7 @@ internal class TangemPayAdditionalCashbackConverter(
                     badge = promo.toBadge(),
                 )
             }.toImmutableList(),
+            onLinkClick = onLinkClick,
         )
     }
 
