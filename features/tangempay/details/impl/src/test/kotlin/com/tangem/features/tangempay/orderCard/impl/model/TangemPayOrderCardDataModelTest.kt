@@ -83,7 +83,6 @@ internal class TangemPayOrderCardDataModelTest {
     private var submitted: PlasticCardOrder? = null
     private val submittedKeys = mutableListOf<String>()
     private var acceptedEmail: String? = null
-    private var acceptedProductInstanceId: String? = null
     private var isClosed: Boolean = false
     private var model: TangemPayOrderCardDataModel? = null
 
@@ -489,7 +488,6 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         assertThat(acceptedEmail).isEqualTo(EMAIL)
-        assertThat(acceptedProductInstanceId).isEqualTo(ORDERED_PRODUCT_INSTANCE_ID)
         assertThat(model.form.isSubmitting).isFalse()
     }
 
@@ -527,7 +525,6 @@ internal class TangemPayOrderCardDataModelTest {
         }
         coVerify(exactly = 0) { issuePlasticCard(any(), any(), any()) }
         assertThat(acceptedEmail).isEqualTo(EMAIL)
-        assertThat(acceptedProductInstanceId).isEqualTo(REISSUED_PRODUCT_INSTANCE_ID)
     }
 
     @Test
@@ -936,10 +933,7 @@ internal class TangemPayOrderCardDataModelTest {
             TangemPayOrderCardDataComponent.Params(
                 userWalletId = userWalletId,
                 intent = intent,
-                onOrderAccepted = { email, productInstanceId ->
-                    acceptedEmail = email
-                    acceptedProductInstanceId = productInstanceId
-                },
+                onOrderAccepted = { email -> acceptedEmail = email },
                 onClose = { isClosed = true },
             ),
         ),
