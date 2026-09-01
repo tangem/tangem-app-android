@@ -1,8 +1,8 @@
 package com.tangem.data.jointaccount.converter
 
-import com.tangem.datasource.api.jointaccount.models.CreateJointAccountRequest
-import com.tangem.datasource.api.jointaccount.models.JointAccountConfigDto
-import com.tangem.datasource.api.jointaccount.models.JointAccountParticipantDto
+import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.JointAccountConfigDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountParticipantDto
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 
 /**

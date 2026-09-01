@@ -55,8 +55,6 @@ object PreferencesKeys {
 
     val APP_THEME_MODE_KEY by lazy { stringPreferencesKey(name = "appThemeMode") }
 
-    val SELECTED_APP_CURRENCY_KEY by lazy { stringPreferencesKey(name = "selectedAppCurrency") }
-
     val BALANCE_HIDING_SETTINGS_KEY by lazy { stringPreferencesKey(name = "balanceHidingSettings") }
 
     val SWAP_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "swapTransactions") }
