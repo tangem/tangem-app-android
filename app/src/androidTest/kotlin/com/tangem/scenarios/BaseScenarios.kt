@@ -85,7 +85,16 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
     step("Click on 'Import existing wallet' button") {
         onCreateMobileWalletScreen { importExistingWalletButton.performClick() }
     }
+    step("Choose 'Import recovery phrase' when the import-options sheet is shown") {
+        waitForIdle()
+        onCreateMobileWalletScreen {
+            if (useRecoveryPhraseButton.isDisplayedSafely()) {
+                useRecoveryPhraseButton.performClick()
+            }
+        }
+    }
     step("Click on 'Phrase text field'") {
+        waitForIdle()
         onImportWalletScreen { phraseTextField.performClick() }
     }
     step("Type seed phrase in 'Phrase text field'") {
