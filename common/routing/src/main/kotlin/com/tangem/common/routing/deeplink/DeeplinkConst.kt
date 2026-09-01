@@ -21,6 +21,7 @@ object DeeplinkConst {
     const val ORDER_KEY = "order"
     const val INTERVAL_KEY = "interval"
     const val SECTION_KEY = "section"
+    const val SCREEN_KEY = "screen"
     const val CATEGORY_ID_KEY = "category_id"
     const val NEWS_ID_KEY = "news_id"
     const val EARN_TYPE_KEY = "earn_type"

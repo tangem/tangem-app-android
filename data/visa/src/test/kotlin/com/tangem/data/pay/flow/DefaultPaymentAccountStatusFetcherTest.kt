@@ -363,6 +363,67 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
             }
 
+        @ParameterizedTest
+        @MethodSource("provideProvisioningStatuses")
+        fun `GIVEN ACCOUNT instance is still provisioning WHEN invoke THEN Processing without fetching credentials`(
+            status: CustomerInfo.ProductInstance.Status,
+        ) = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance, accountProductInstance.copy(status = status)),
+            )
+            stubHappyPath(customerInfo)
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(VirtualAccountOnramp.Processing)
+            coVerify(exactly = 0) { onboardingRepository.getBankCredentials(any(), any()) }
+            coVerify(exactly = 0) { onboardingRepository.clearVirtualAccountOrderId(userWalletId) }
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideActivatedStatuses")
+        fun `GIVEN ACCOUNT instance is past activation WHEN invoke THEN Available`(
+            status: CustomerInfo.ProductInstance.Status,
+        ) = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance, accountProductInstance.copy(status = status)),
+            )
+            stubHappyPath(customerInfo)
+            coEvery { onboardingRepository.clearVirtualAccountOrderId(userWalletId) } just Runs
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().virtualAccount).isEqualTo(
+                VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
+            )
+        }
+
+        private fun provideProvisioningStatuses() = listOf(
+            CustomerInfo.ProductInstance.Status.NEW,
+            CustomerInfo.ProductInstance.Status.READY_FOR_MANUFACTURING,
+            CustomerInfo.ProductInstance.Status.MANUFACTURING,
+            CustomerInfo.ProductInstance.Status.SENT_TO_DELIVERY,
+            CustomerInfo.ProductInstance.Status.DELIVERED,
+            CustomerInfo.ProductInstance.Status.ACTIVATING,
+        )
+
+        private fun provideActivatedStatuses() = listOf(
+            CustomerInfo.ProductInstance.Status.ACTIVE,
+            CustomerInfo.ProductInstance.Status.BLOCKED,
+            CustomerInfo.ProductInstance.Status.DEACTIVATING,
+            CustomerInfo.ProductInstance.Status.DEACTIVATED,
+            CustomerInfo.ProductInstance.Status.CANCELED,
+            CustomerInfo.ProductInstance.Status.UNKNOWN,
+        )
+
         @Test
         fun `GIVEN toggle on and no ACCOUNT instance and customer is eligible WHEN invoke THEN virtualAccount is Eligible`() =
             runTest {
@@ -805,7 +866,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         }
 
         @Test
-        fun `GIVEN an active plastic issue order WHEN invoke THEN no issuing placeholder is added`() = runTest {
+        fun `GIVEN an active plastic issue order WHEN invoke THEN a delivering placeholder is added`() = runTest {
             // Arrange
             val customerInfo = buildCustomerInfo(productInstances = emptyList())
             stubHappyPath(customerInfo)
@@ -826,9 +887,56 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             fetcher.invoke(params)
 
             // Assert
-            assertThat(storedStatuses.last().value)
-                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
+            val placeholder = storedStatuses.lastLoaded().cards.single()
+            assertThat(placeholder.id).isEqualTo("plastic_order")
+            assertThat(placeholder.state).isEqualTo(TangemPayCardState.Delivering)
+            assertThat(placeholder.cardType).isEqualTo(TangemPayCardType.PHYSICAL)
+            assertThat(placeholder.isPlaceholder).isTrue()
             coVerify(exactly = 0) { issueCardRepository.removeIssueOrderId(userWalletId, "plastic_order") }
+        }
+
+        @Test
+        fun `GIVEN the ordered plastic card surfaced WHEN invoke THEN no delivering placeholder is added`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(
+                productInstances = listOf(cardProductInstance),
+                cards = listOf(
+                    createCardInfo(
+                        cardStatus = TangemPayCard.Status.INACTIVE,
+                        cardType = TangemPayCardType.PHYSICAL,
+                    ),
+                ),
+            )
+            stubHappyPath(customerInfo)
+            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+            coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("plastic_order")
+            coEvery {
+                cardDetailsRepository.getOrderInfo(userWalletId, "plastic_order")
+            } returns Either.Right(
+                TangemPayOrderInfo(
+                    orderId = "plastic_order",
+                    orderStatus = OrderStatus.PROCESSING,
+                    orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+                    productInstanceId = cardProductInstance.id,
+                ),
+            )
+            coEvery {
+                customerOrderRepository.findOrders(
+                    userWalletId = any(),
+                    types = setOf(OrderType.CARD_ACTIVATION_PLASTIC_RAIN),
+                    statuses = OrderStatus.activeStatuses,
+                )
+            } returns Either.Right(emptyList())
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val cards = storedStatuses.lastLoaded().cards
+            assertThat(cards).hasSize(1)
+            assertThat(cards.single().isPlaceholder).isFalse()
+            assertThat(cards.single().state).isEqualTo(TangemPayCardState.Delivering)
         }
 
         @Test

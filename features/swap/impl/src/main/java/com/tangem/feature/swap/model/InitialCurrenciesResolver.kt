@@ -124,20 +124,28 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 cryptoPortfolioAccounts = cryptoPortfolioAccounts,
                 cryptoCurrencyList = cryptoCurrencyList,
             )
-            accountFlow is AccountFlow.Withdraw -> resolveAccountWithdrawFrom(cryptoPaymentAccounts) ?: from
+            accountFlow is AccountFlow.Withdraw -> mostFundedAccountCurrency(cryptoPaymentAccounts) ?: from
             else -> from
         }
 
-        return prioritizedFrom to resolvedTo
+        // Add funds anchors TO to the account, but passes in its legacy currency, which a multichain account
+        // may not hold: fall back to the account's own tokens instead of leaving the slot empty.
+        val anchoredTo = if (isAccountFlowEnabled && accountFlow is AccountFlow.TopUp) {
+            resolvedTo ?: mostFundedAccountCurrency(cryptoPaymentAccounts)
+        } else {
+            resolvedTo
+        }
+
+        return prioritizedFrom to anchoredTo
     }
 
     /**
-     * Withdraw FROM: the account's own token holding the most funds, preferring one the user can actually swap.
-     * Falls back to the crypto amount because a token whose quote has not arrived reports no fiat value at all.
-     * The currency the entry point passes is only an intent — it is the account's hardcoded legacy currency,
-     * which a multichain account may not hold at all.
+     * The account's own token holding the most funds, preferring one the user can actually swap. Falls back to
+     * the crypto amount because a token whose quote has not arrived reports no fiat value at all. Used wherever
+     * the entry point's currency is only an intent: it is the account's hardcoded legacy currency, which a
+     * multichain account may not hold at all.
      */
-    private fun resolveAccountWithdrawFrom(
+    private fun mostFundedAccountCurrency(
         cryptoPaymentAccounts: Map<AccountStatus, List<SwapCurrencyStatus>>,
     ): SwapCurrencyStatus? = cryptoPaymentAccounts.values.flatten()
         .maxWithOrNull(

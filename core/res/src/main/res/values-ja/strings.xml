@@ -1015,9 +1015,6 @@
   <string name="manage_tokens_unavailable_description">選択したトークンは現在、暗号資産ウォレット内でのアクションには利用できません。しかし、心配しないでください。賛成票を投じることで関心を表明できます。</string>
   <string name="manage_tokens_unavailable_vote">賛成票を投じる</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">ウォレットは複数のネットワークをサポートしていません。</string>
-  <plurals name="market_chart_assets_android">
-    <item quantity="other">%d種類</item>
-  </plurals>
   <string name="market_chart_top_holding">トップ資産比率%s</string>
   <string name="markets_about_coin_header">コインについて</string>
   <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
@@ -2267,8 +2264,6 @@
   <string name="tangempay_va_banking_details_error_title">銀行情報を読み込めませんでした</string>
   <string name="tangempay_va_limit_resetting_everyday">上限は毎日リセットされます</string>
   <string name="tangempay_visa_benefits">Visa特典</string>
-  <string name="tangempay_withdrawal_note_description">返金分はオンチェーンのPolygon残高には戻らず、出金にも利用できません。ただし、カード残高として残り、支払いに利用できます。</string>
-  <string name="tangempay_withdrawal_note_title">ご注意ください</string>
   <string name="tangempay_your_pin_code">PINコード</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
@@ -2323,6 +2318,9 @@
   <string name="tokens_list_unavailable_to_sell_header">売却できません</string>
   <string name="tokens_list_unavailable_to_swap_header">%sからのスワップは利用できません</string>
   <string name="tokens_list_unavailable_to_swap_source_header">スワップはできません</string>
+  <plurals name="top_assets_count">
+    <item quantity="other">%d種類</item>
+  </plurals>
   <string name="transaction_history_claiming_reward">報酬受け取り中</string>
   <string name="transaction_history_contract_address">コントラクト: %s</string>
   <string name="transaction_history_disabling_yield_mode">利息モードを無効化中</string>
