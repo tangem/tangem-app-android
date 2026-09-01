@@ -54,7 +54,7 @@ internal class DefaultWalletAccountsResponseFactory @Inject constructor(
 
     private fun createDefaultAccountDTOs(userWallet: UserWallet): List<WalletAccountDTO> {
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
 
         val converter = cryptoPortfolioCF.create(userWallet = userWallet)
 

@@ -135,7 +135,7 @@ class ManageCryptoCurrenciesUseCase(
             }
 
             saveAccount(
-                account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total),
+                account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total),
             )
 
             syncTokensAndLaunchUpdates(
@@ -180,7 +180,7 @@ class ManageCryptoCurrenciesUseCase(
             val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = listOf(tokenToAdd))
 
-            saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total))
+            saveAccount(account = accountStatus.account.copySealed(cryptoCurrencies = modifiedCurrencyList.total))
 
             syncTokensAndLaunchUpdates(
                 userWalletId = userWalletId,

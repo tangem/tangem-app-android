@@ -1,6 +1,6 @@
 package com.tangem.data.markets.converters
 
-import com.tangem.datasource.api.markets.models.response.TokenMarketChartResponse
+import com.tangem.store.datasource.markets.models.response.TokenMarketChartResponse
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenChart
 

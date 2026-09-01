@@ -16,11 +16,14 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
+import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
 import com.tangem.features.polymarket.impl.main.PolymarketMainComponent
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import dagger.assisted.Assisted
@@ -30,6 +33,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultPolymarketComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: PolymarketComponent.Params,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : PolymarketComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<PolymarketRoute>()
@@ -78,24 +82,43 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         configuration: PolymarketRoute,
         factoryContext: AppComponentContext,
     ): ComposableContentComponent = when (configuration) {
-        is PolymarketRoute.Onboarding -> PolymarketOnboardingComponent(
+        is PolymarketRoute.Entry -> PolymarketEntryComponent(
             appComponentContext = factoryContext,
             params = params,
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+        )
+        is PolymarketRoute.Onboarding -> PolymarketOnboardingComponent(
+            appComponentContext = factoryContext,
+            userWalletId = configuration.userWalletId,
         )
         is PolymarketRoute.Main -> PolymarketMainComponent(
             appComponentContext = factoryContext,
-            userWalletId = params.userWalletId,
-            accessMode = configuration.accessMode,
+            userWalletId = configuration.userWalletId,
         )
         is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
             appComponentContext = factoryContext,
-            eventId = configuration.eventId,
-            userWalletId = params.userWalletId,
-            marketId = configuration.marketId,
-            assetId = configuration.assetId,
+            params = PolymarketEventDetailsComponent.Params(
+                eventId = configuration.eventId,
+                // The route carries the wallet the feed was opened for; the feature's own params
+                // hold none until the entry gate picks one.
+                userWalletId = configuration.userWalletId,
+                marketId = configuration.marketId,
+                assetId = configuration.assetId,
+            ),
+        )
+        is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
+            appComponentContext = factoryContext,
+            params = PlacePredictionComponent.Params(
+                userWalletId = configuration.userWalletId,
+                eventId = configuration.eventId,
+                marketId = configuration.marketId,
+                assetId = configuration.assetId,
+                side = configuration.side,
+            ),
         )
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
+            params = PolymarketSearchComponent.Params(userWalletId = configuration.userWalletId),
         )
     }
 

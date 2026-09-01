@@ -1,6 +1,6 @@
 package com.tangem.data.yield.supply.converters
 
-import com.tangem.datasource.api.tangemTech.models.YieldTokenChartResponse
+import com.tangem.grow.datasource.yield.models.YieldTokenChartResponse
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 
 internal object YieldTokenChartConverter {

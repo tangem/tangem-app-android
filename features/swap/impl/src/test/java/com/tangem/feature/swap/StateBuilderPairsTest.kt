@@ -447,7 +447,7 @@ internal class StateBuilderPairsTest {
     // endregion
 
     private fun buildCoinSwapCurrencyStatus(userWallet: UserWallet, networkId: Network.ID): SwapCurrencyStatus {
-        val account = Account.CryptoPortfolio.createMainAccount(userWallet.walletId)
+        val account = Account.Personal.createMainAccount(userWallet.walletId)
         val coin: CryptoCurrency.Coin = mockk(relaxed = true) {
             every { decimals } returns 18
             every { symbol } returns "ETH"

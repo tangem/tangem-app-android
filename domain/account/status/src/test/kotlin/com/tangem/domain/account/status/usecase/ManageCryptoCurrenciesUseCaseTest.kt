@@ -115,8 +115,8 @@ internal class ManageCryptoCurrenciesUseCaseTest {
         }
     }
 
-    private fun createAccount(currencies: List<CryptoCurrency>): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio(
+    private fun createAccount(currencies: List<CryptoCurrency>): Account.Personal {
+        return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = AccountName("Account 1").getOrNull()!!,
             icon = CryptoPortfolioIcon.ofCustomAccount(

@@ -10,6 +10,7 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
 internal class TangemPayAdditionalCashbackConverter(
+    private val onLinkClick: (url: String) -> Unit,
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
 ) : Converter<List<CashbackPromotions.AdditionalCashback>, TangemPayAdditionalCashbackUM> {
 
@@ -19,16 +20,17 @@ internal class TangemPayAdditionalCashbackConverter(
                 TangemPayAdditionalCashbackUM.Item(
                     id = promo.id,
                     name = stringReference(promo.name),
-                    description = stringReference(promo.description),
+                    description = promo.description?.let(::stringReference),
                     badge = promo.toBadge(),
                 )
             }.toImmutableList(),
+            onLinkClick = onLinkClick,
         )
     }
 
     private fun CashbackPromotions.AdditionalCashback.toBadge(): TangemPayAdditionalCashbackUM.Badge {
         val expiry = endDate
-        return if (isPermanent || expiry == null) {
+        return if (expiry == null) {
             TangemPayAdditionalCashbackUM.Badge.Permanent
         } else {
             TangemPayAdditionalCashbackUM.Badge.Until(

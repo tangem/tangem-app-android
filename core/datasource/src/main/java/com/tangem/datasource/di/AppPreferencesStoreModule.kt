@@ -2,6 +2,7 @@ package com.tangem.datasource.di
 
 import android.content.Context
 import com.squareup.moshi.Moshi
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.datasource.local.preferences.*
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,10 +23,15 @@ internal object AppPreferencesStoreModule {
         @ApplicationContext appContext: Context,
         dispatchers: CoroutineDispatcherProvider,
         appScope: AppCoroutineScope,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
         @SdkMoshi moshi: Moshi,
     ): AppPreferencesStore {
         return DefaultAppPreferencesStore(
-            preferencesDataStore = PreferencesDataStore.getInstance(context = appContext, appScope = appScope),
+            preferencesDataStore = PreferencesDataStore.getInstance(
+                context = appContext,
+                appScope = appScope,
+                analyticsExceptionHandler = analyticsExceptionHandler,
+            ),
             moshi = moshi,
             dispatchers = dispatchers,
         )

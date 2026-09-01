@@ -165,6 +165,7 @@ class MockTangemSdkManager(
         initialMessage: Message?,
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
+        registerColdWallet: Boolean,
     ): CompletionResult<T> = error("This method is deprecated")
 
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
