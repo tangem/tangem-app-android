@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.token
+package com.tangem.data.tokens.store
 
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.firstOrNull
