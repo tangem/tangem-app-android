@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.wallet
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -30,16 +31,21 @@ import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.ui.components.ShtorkaSheetHeaderHeight
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
+import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.api.NetworkSelectionComponent
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -51,13 +57,17 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalDecomposeApi::class)
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
+    private val feedFeatureToggles: FeedFeatureToggles,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
+    feedV2ComponentFactory: FeedV2Component.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     virtualAccountMainBlockComponentFactory: VirtualAccountMainBlockComponent.Factory,
+    jointAccountMainBlockComponentFactory: JointAccountMainBlockComponent.Factory,
+    polymarketWalletBlockComponentFactory: PolymarketWalletBlockComponent.Factory,
     private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
@@ -79,6 +89,12 @@ internal class WalletComponent @AssistedInject constructor(
             entryRoute = null,
         )
     }
+    private val feedV2Component by lazy {
+        feedV2ComponentFactory.create(
+            context = child("feedV2Component"),
+            params = Unit,
+        )
+    }
     private val tangemPayMainBlockComponent by lazy {
         tangemPayMainBlockComponentFactory.create(
             context = child("tangemPayMainBlockComponent"),
@@ -88,6 +104,18 @@ internal class WalletComponent @AssistedInject constructor(
     private val virtualAccountMainBlockComponent by lazy {
         virtualAccountMainBlockComponentFactory.create(
             context = child("virtualAccountMainBlockComponent"),
+            params = Unit,
+        )
+    }
+    private val polymarketWalletBlockComponent by lazy {
+        polymarketWalletBlockComponentFactory.create(
+            context = child("polymarketWalletBlockComponent"),
+            params = Unit,
+        )
+    }
+    private val jointAccountMainBlockComponent by lazy {
+        jointAccountMainBlockComponentFactory.create(
+            context = child("jointAccountMainBlockComponent"),
             params = Unit,
         )
     }
@@ -297,8 +325,27 @@ internal class WalletComponent @AssistedInject constructor(
             promoBannersBlockComponent = promoBannersBlockComponent,
             tangemPayComponent = tangemPayMainBlockComponent,
             virtualAccountComponent = virtualAccountMainBlockComponent,
+            jointAccountComponent = jointAccountMainBlockComponent,
+            polymarketComponent = polymarketWalletBlockComponent,
             modifier = modifier,
-            bottomSheetContent = { onExpandSheet ->
+            isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
+            shtorkaHeaderContent = { onExpandSheet ->
+                feedV2Component.Header(
+                    bottomSheetState = bottomSheetState,
+                    onExpandSheet = onExpandSheet,
+                    modifier = Modifier,
+                )
+            },
+            shtorkaContent = { onExpandSheet ->
+                feedV2Component.Content(
+                    bottomSheetState = bottomSheetState,
+                    // The shtorka pins the grabber + search bar over the content
+                    contentPadding = PaddingValues(top = ShtorkaSheetHeaderHeight),
+                    onExpandSheet = onExpandSheet,
+                    modifier = Modifier,
+                )
+            },
+            legacyBottomSheetContent = { onExpandSheet ->
                 BottomSheetContent(
                     bottomSheetState = bottomSheetState,
                     onHeaderSizeChange = { headerSize = it },

@@ -3,12 +3,14 @@ package com.tangem.data.swap
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.request.LeastTokenInfo
-import com.tangem.datasource.api.express.models.request.PairsRequestBody
-import com.tangem.datasource.api.express.models.response.*
-import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
+import com.tangem.grow.datasource.express.models.request.PairsRequestBody
+import com.tangem.grow.datasource.express.models.response.*
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.*
@@ -42,6 +44,7 @@ internal class DefaultSwapRepositoryV2Test {
     private val dataSignatureVerifier: DataSignatureVerifier = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
+    private val featureTogglesManager: FeatureTogglesManager = mockk()
     private val moshi: Moshi = Moshi.Builder().build()
 
     private val repository = DefaultSwapRepositoryV2(
@@ -52,6 +55,7 @@ internal class DefaultSwapRepositoryV2Test {
         dataSignatureVerifier = dataSignatureVerifier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
+        featureTogglesManager = featureTogglesManager,
         moshi = moshi,
     )
 
@@ -64,6 +68,7 @@ internal class DefaultSwapRepositoryV2Test {
             dataSignatureVerifier,
             singleQuoteStatusSupplier,
             singleQuoteStatusFetcher,
+            featureTogglesManager,
         )
     }
 
@@ -317,7 +322,117 @@ internal class DefaultSwapRepositoryV2Test {
         assertThat(result.fromTokenAmount).isEqualTo(BigDecimal("1.000000000000000000"))
         assertThat(result.allowanceContract).isEqualTo("0xAllowance")
         assertThat(result.quoteId).isEqualTo("quote-123")
+        assertThat(result.isRestricted).isFalse()
     }
+
+    @Test
+    fun `GIVEN restricted response WHEN getSwapQuote THEN quote model carries restricted flag with amounts`() =
+        runTest {
+            // Arrange
+            val quoteResponse = ExchangeQuoteResponse(
+                fromAmount = "1000000000000000000",
+                fromDecimals = 18,
+                toAmount = "100000000",
+                toDecimals = 8,
+                allowanceContract = null,
+                minAmount = BigDecimal.ONE,
+                quoteId = "quote-123",
+                isRestricted = true,
+            )
+
+            coEvery {
+                tangemExpressApi.getExchangeQuote(
+                    fromAmount = any(),
+                    toAmount = any(),
+                    fromNetwork = any(),
+                    fromContractAddress = any(),
+                    fromDecimals = any(),
+                    toNetwork = any(),
+                    toContractAddress = any(),
+                    toDecimals = any(),
+                    providerId = any(),
+                    rateType = any(),
+                    userWalletId = any(),
+                    refCode = any(),
+                )
+            } returns ApiResponse.Success(quoteResponse)
+
+            every {
+                featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+                )
+            } returns true
+
+            // Act
+            val result = repository.getSwapQuote(
+                userWallet = userWallet,
+                fromCryptoCurrency = primaryCoin,
+                toCryptoCurrency = secondaryCoin,
+                amount = BigDecimal.ONE,
+                amountType = SwapAmountType.From,
+                provider = expressProvider,
+                rateType = ExpressRateType.Float,
+            )
+
+            // Assert — the quote still loads with amounts, restriction is a flag, not a failure
+            assertThat(result.isRestricted).isTrue()
+            assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
+        }
+
+    @Test
+    fun `GIVEN geo blocking toggle disabled WHEN getSwapQuote THEN restricted response is not propagated`() =
+        runTest {
+            // Arrange
+            val quoteResponse = ExchangeQuoteResponse(
+                fromAmount = "1000000000000000000",
+                fromDecimals = 18,
+                toAmount = "100000000",
+                toDecimals = 8,
+                allowanceContract = null,
+                minAmount = BigDecimal.ONE,
+                quoteId = "quote-123",
+                isRestricted = true,
+            )
+
+            coEvery {
+                tangemExpressApi.getExchangeQuote(
+                    fromAmount = any(),
+                    toAmount = any(),
+                    fromNetwork = any(),
+                    fromContractAddress = any(),
+                    fromDecimals = any(),
+                    toNetwork = any(),
+                    toContractAddress = any(),
+                    toDecimals = any(),
+                    providerId = any(),
+                    rateType = any(),
+                    userWalletId = any(),
+                    refCode = any(),
+                )
+            } returns ApiResponse.Success(quoteResponse)
+
+            every {
+                featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
+                )
+            } returns false
+
+            // Act
+            val result = repository.getSwapQuote(
+                userWallet = userWallet,
+                fromCryptoCurrency = primaryCoin,
+                toCryptoCurrency = secondaryCoin,
+                amount = BigDecimal.ONE,
+                amountType = SwapAmountType.From,
+                provider = expressProvider,
+                rateType = ExpressRateType.Float,
+            )
+
+            // Assert — pre-geo-blocking behaviour: the flag is dropped, the quote is unchanged otherwise
+            assertThat(result.isRestricted).isFalse()
+            assertThat(result.toTokenAmount).isEqualTo(BigDecimal("1.00000000"))
+            assertThat(result.quoteId).isEqualTo("quote-123")
+        }
 
     @Test
     fun `getSwapQuote sends fromAmount when amountType is From`() = runTest {
@@ -482,8 +597,9 @@ internal class DefaultSwapRepositoryV2Test {
     // region filterYieldSupplyProvider
 
     @Test
-    fun `GIVEN yield active WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
+    fun `GIVEN yield active WHEN getPairs THEN any DEX kept with CEX`() = runTest {
         // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(
@@ -522,33 +638,47 @@ internal class DefaultSwapRepositoryV2Test {
             swapTxType = SwapTxType.Swap,
         )
 
-        // Assert — non-allowlisted DEX (dex-provider-1) dropped, only CEX remains
+        // Assert
         assertThat(result).hasSize(2)
         val providers = result.first().providers
-        assertThat(providers).hasSize(1)
-        assertThat(providers.first().type).isEqualTo(ExpressProviderType.CEX)
+        assertThat(providers.map { it.providerId }).containsExactly(PROVIDER_ID, CEX_PROVIDER_ID)
     }
 
     @Test
-    fun `GIVEN yield active and flag on WHEN getPairs THEN allowlisted DEX kept with CEX`() = runTest {
+    fun `GIVEN yield active and transfer flag off WHEN getPairs THEN non-allowlisted DEX filtered out`() = runTest {
         // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns false
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
-        val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
-        val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
+        val primarySwapCurrencyStatus = SwapCurrencyStatus(
+            userWallet = userWallet,
+            status = primaryStatus,
+            account = mockk(),
+        )
+        val secondarySwapCurrencyStatus = SwapCurrencyStatus(
+            userWallet = userWallet,
+            status = secondaryStatus,
+            account = mockk(),
+        )
 
-        val allowedDexProvider = dexProvider.copy(providerId = "1inch")
+        val allowedDexProvider = dexProvider.copy(providerId = ALLOWED_DEX_PROVIDER_ID)
         val swapPair = SwapPair(
             from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
             to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
             providers = listOf(
-                SwapPairProvider(providerId = "1inch", rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = ALLOWED_DEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
                 SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
             ),
         )
 
-        coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
-        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(allowedDexProvider, cexProvider)
+        coEvery {
+            tangemExpressApi.getPairs(any(), any(), any())
+        } returns ApiResponse.Success(listOf(swapPair))
+
+        coEvery {
+            expressRepository.getProviders(any(), any())
+        } returns listOf(dexProvider, allowedDexProvider, cexProvider)
 
         // Act
         val result = repository.getPairs(
@@ -558,32 +688,33 @@ internal class DefaultSwapRepositoryV2Test {
             swapTxType = SwapTxType.Swap,
         )
 
-        // Assert — allow-listed DEX (1inch) + CEX both kept
+        // Assert
         assertThat(result).hasSize(2)
         val providers = result.first().providers
-        assertThat(providers.map { it.providerId }).containsExactly("1inch", CEX_PROVIDER_ID)
+        assertThat(providers.map { it.providerId }).containsExactly(ALLOWED_DEX_PROVIDER_ID, CEX_PROVIDER_ID)
     }
 
     @Test
-    fun `GIVEN yield active and flag on WHEN getPairs THEN allowlisted DEX_BRIDGE kept with CEX`() = runTest {
+    fun `GIVEN yield active and flag on WHEN getPairs THEN DEX_BRIDGE kept with CEX`() = runTest {
         // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
         val secondarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = secondaryStatus, account = mockk())
 
-        val lifiProvider = dexProvider.copy(providerId = "li-fi", type = ExpressProviderType.DEX_BRIDGE)
+        val bridgeProvider = dexProvider.copy(providerId = BRIDGE_PROVIDER_ID, type = ExpressProviderType.DEX_BRIDGE)
         val swapPair = SwapPair(
             from = LeastTokenInfo(contractAddress = "0", network = ETH_BACKEND_ID),
             to = LeastTokenInfo(contractAddress = "0", network = BTC_BACKEND_ID),
             providers = listOf(
-                SwapPairProvider(providerId = "li-fi", rateTypes = listOf(RateType.FLOAT)),
+                SwapPairProvider(providerId = BRIDGE_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
                 SwapPairProvider(providerId = CEX_PROVIDER_ID, rateTypes = listOf(RateType.FLOAT)),
             ),
         )
 
         coEvery { tangemExpressApi.getPairs(any(), any(), any()) } returns ApiResponse.Success(listOf(swapPair))
-        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(lifiProvider, cexProvider)
+        coEvery { expressRepository.getProviders(any(), any()) } returns listOf(bridgeProvider, cexProvider)
 
         // Act
         val result = repository.getPairs(
@@ -593,15 +724,16 @@ internal class DefaultSwapRepositoryV2Test {
             swapTxType = SwapTxType.Swap,
         )
 
-        // Assert — allow-listed DEX_BRIDGE (li-fi) + CEX both kept
+        // Assert — DEX_BRIDGE + CEX both kept
         assertThat(result).hasSize(2)
         val providers = result.first().providers
-        assertThat(providers.map { it.providerId }).containsExactly("li-fi", CEX_PROVIDER_ID)
+        assertThat(providers.map { it.providerId }).containsExactly(BRIDGE_PROVIDER_ID, CEX_PROVIDER_ID)
     }
 
     @Test
     fun `GIVEN yield active and flag on WHEN getPairs THEN ONRAMP provider filtered out`() = runTest {
         // Arrange
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED) } returns true
         val primaryStatus = createCryptoCurrencyStatusWithActiveYield(primaryCoin)
         val secondaryStatus = createCryptoCurrencyStatus(secondaryCoin)
         val primarySwapCurrencyStatus = SwapCurrencyStatus(userWallet = userWallet, status = primaryStatus, account = mockk())
@@ -739,6 +871,8 @@ internal class DefaultSwapRepositoryV2Test {
         const val BTC_BACKEND_ID = "bitcoin"
         const val PROVIDER_ID = "dex-provider-1"
         const val CEX_PROVIDER_ID = "cex-provider-1"
+        const val BRIDGE_PROVIDER_ID = "bridge-provider-1"
+        const val ALLOWED_DEX_PROVIDER_ID = "1inch"
 
         val userWallet: UserWallet = MockUserWalletFactory.create()
 

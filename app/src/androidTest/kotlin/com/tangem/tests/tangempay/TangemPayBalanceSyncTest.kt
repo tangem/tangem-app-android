@@ -6,8 +6,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWireMockRequestCount
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.tangempay.*
@@ -36,14 +34,9 @@ class TangemPayBalanceSyncTest : BaseTestCase() {
     fun balanceRefreshesViaPullToRefreshAndSyncsToMainTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Assert initial balance contains '$initialBalance'") {
@@ -85,14 +78,9 @@ class TangemPayBalanceSyncTest : BaseTestCase() {
     fun balanceRefreshesOnLeavingDetailsTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Assert initial balance contains '$initialBalance'") {
@@ -126,14 +114,9 @@ class TangemPayBalanceSyncTest : BaseTestCase() {
     fun balanceStaysInSyncBetweenDetailsAndMainTest() {
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Assert initial balance contains '$initialBalance'") {

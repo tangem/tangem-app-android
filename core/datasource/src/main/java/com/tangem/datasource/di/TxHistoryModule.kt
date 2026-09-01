@@ -6,6 +6,8 @@ import com.tangem.datasource.local.txhistory.db.TxHistoryDatabase
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
 import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
+import com.tangem.datasource.local.txhistory.db.dao.P2PEthPoolVaultDao
+import com.tangem.datasource.local.txhistory.db.dao.StakingValidatorDao
 import com.tangem.datasource.local.txhistory.db.dao.TokenInfoDao
 import dagger.Module
 import dagger.Provides
@@ -45,5 +47,12 @@ internal interface TxHistoryModule {
 
         @Provides
         fun provideHistoryIndexDao(database: TxHistoryDatabase): HistoryIndexDao = database.historyIndexDao()
+
+        @Provides
+        fun provideStakingValidatorDao(database: TxHistoryDatabase): StakingValidatorDao =
+            database.stakingValidatorDao()
+
+        @Provides
+        fun provideP2PEthPoolVaultDao(database: TxHistoryDatabase): P2PEthPoolVaultDao = database.p2pEthPoolVaultDao()
     }
 }

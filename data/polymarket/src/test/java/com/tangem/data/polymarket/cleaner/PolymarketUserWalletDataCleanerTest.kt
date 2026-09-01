@@ -1,36 +1,56 @@
 package com.tangem.data.polymarket.cleaner
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.polymarket.store.PredictionAccountStatusStore
+import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.datastore.MockStateDataStore
 import io.mockk.mockk
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 internal class PolymarketUserWalletDataCleanerTest {
 
     private val credentialsStore: PolymarketCredentialsStore = mockk(relaxUnitFun = true)
+    private val statusStore: PredictionAccountStatusStore = mockk(relaxUnitFun = true)
+    private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
 
-    private val cleaner = PolymarketUserWalletDataCleaner(credentialsStore = credentialsStore)
+    private val cleaner = PolymarketUserWalletDataCleaner(
+        credentialsStore = credentialsStore,
+        predictionAccountStatusStore = statusStore,
+        onboardedStore = onboardedStore,
+    )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(credentialsStore)
+        clearMocks(credentialsStore, statusStore, onboardedStore)
     }
 
     @Test
-    fun `GIVEN two removed wallets WHEN clear THEN the store is cleared for both`() = runTest {
+    fun `GIVEN two removed wallets WHEN clear THEN both stores are cleared for both`() = runTest {
         // Act
         cleaner.clear(listOf(WALLET_A, WALLET_B))
 
         // Assert
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_A) }
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
+        coVerify(exactly = 1) { statusStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { statusStore.clear(WALLET_B) }
+        coVerify(exactly = 1) { onboardedStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { onboardedStore.clear(WALLET_B) }
     }
 
     @Test
@@ -64,6 +84,18 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { credentialsStore.clear(WALLET_B) }
     }
 
+    @Test
+    fun `GIVEN one store fails to clear WHEN clear THEN the other store is still cleared`() = runTest {
+        // Arrange
+        coEvery { credentialsStore.clear(WALLET_A) } throws IllegalStateException("keystore unavailable")
+
+        // Act
+        cleaner.clear(listOf(WALLET_A))
+
+        // Assert
+        coVerify(exactly = 1) { statusStore.clear(WALLET_A) }
+    }
+
     /**
      * The defect this task exists for: TangemPay's credentials survived deletion because no test asserted
      * their absence afterwards.
@@ -85,15 +117,49 @@ internal class PolymarketUserWalletDataCleanerTest {
         }
 
         // Act
-        PolymarketUserWalletDataCleaner(credentialsStore = store).clear(listOf(WALLET_A))
+        PolymarketUserWalletDataCleaner(
+            credentialsStore = store,
+            predictionAccountStatusStore = statusStore,
+            onboardedStore = onboardedStore,
+        ).clear(listOf(WALLET_A))
 
         // Assert
         assertThat(store.get(WALLET_A)).isNull()
     }
 
+    @Test
+    fun `GIVEN a cached account status WHEN clear THEN a subsequent read returns null`() = runTest {
+        // Arrange — a store that actually holds entries, so a re-added wallet cannot inherit the balance
+        val store = createStatusStore(testScope = this)
+        store.store(userWalletId = WALLET_A, value = ACTIVE)
+
+        // Act
+        PolymarketUserWalletDataCleaner(
+            credentialsStore = credentialsStore,
+            predictionAccountStatusStore = store,
+            onboardedStore = onboardedStore,
+        ).clear(listOf(WALLET_A))
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isNull()
+    }
+
+    private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
+        runtimeStore = RuntimeSharedStore(),
+        persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
+        scope = TestAppCoroutineScope(testScope),
+    )
+
     private companion object {
         val WALLET_A = UserWalletId("011")
         val WALLET_B = UserWalletId("022")
+
+        val ACTIVE = PredictionAccountStatusValue.Active(
+            source = StatusSource.ACTUAL,
+            balance = BigDecimal("12.5"),
+            fiatRate = null,
+            isTradingAllowed = true,
+        )
 
         val CREDENTIALS = PolymarketApiCredentials(
             apiKey = "key",

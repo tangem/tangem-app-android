@@ -28,7 +28,6 @@ import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
-import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
@@ -41,7 +40,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     @Assisted private val params: TangemPayDetailsContainerComponent.Params,
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
@@ -64,18 +62,26 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     )
 
     private fun resolveInitialConfiguration(): TangemPayAccountDetailsInnerRoute {
-        val tariffPlan = params.initialStatus.tariffPlan
         return when (params.initialRoute) {
             TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
             TangemPayDetailsInitialRoute.ADD_FUNDS,
+            TangemPayDetailsInitialRoute.VA_ONRAMP,
+            TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
+            TangemPayDetailsInitialRoute.CURRENT_PLAN,
+            TangemPayDetailsInitialRoute.CHANGE_PLAN,
+            TangemPayDetailsInitialRoute.CASHBACK,
+            TangemPayDetailsInitialRoute.ORDER_CARD,
             -> TangemPayAccountDetailsInnerRoute.AccountDetails
-            TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> if (tariffPlan != null) {
-                TangemPayAccountDetailsInnerRoute.SelectPlan(
-                    tariffPlan = tariffPlan,
-                    source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-                )
-            } else {
-                TangemPayAccountDetailsInnerRoute.AccountDetails
+            TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> {
+                val tariffPlan = params.initialStatus.tariffPlan
+                if (tariffPlan != null) {
+                    TangemPayAccountDetailsInnerRoute.SelectPlan(
+                        tariffPlan = tariffPlan,
+                        source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
+                    )
+                } else {
+                    TangemPayAccountDetailsInnerRoute.AccountDetails
+                }
             }
         }
     }
@@ -98,7 +104,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-            expressTransactionsComponentFactory = expressTransactionsComponentFactory,
             promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
             virtualAccountAddFundsComponentFactory = virtualAccountAddFundsComponentFactory,
         )
@@ -107,6 +112,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPayCardPageComponent.Params(
                 initialStatus = params.initialStatus,
                 cardId = config.cardId,
+                shouldOpenActivation = config.shouldOpenActivation,
             ),
         )
         is TangemPayAccountDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
@@ -141,10 +147,11 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 userWalletId = params.initialStatus.userWalletId,
             ),
         )
-        TangemPayAccountDetailsInnerRoute.OrderCard -> orderCardComponentFactory.create(
+        is TangemPayAccountDetailsInnerRoute.OrderCard -> orderCardComponentFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayOrderCardComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
+                intent = config.intent,
             ),
         )
     }

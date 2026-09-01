@@ -13,6 +13,7 @@ import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
@@ -149,7 +150,7 @@ internal class StakingInfoNotificationsFactory(
     private fun MutableList<NotificationUM>.addTronRevoteNotification() {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val isTron = isTron(cryptoCurrencyStatus.currency.network.rawId)
-        val hasStakedBalance = (cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit)?.balance
+        val hasStakedBalance = (cryptoCurrencyStatus.value.stakingBalanceData as? StakingBalance.Data.StakeKit)?.balance
             ?.items?.any { item ->
                 item.type == BalanceType.PREPARING ||
                     item.type == BalanceType.STAKED ||

@@ -3,9 +3,11 @@ package com.tangem.common.routing.deeplink
 import android.os.Bundle
 import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.common.routing.deeplink.DeeplinkConst.ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.ENTRY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NAME_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
@@ -13,6 +15,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
+import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.visa.model.TangemPayPushNotificationType
 import com.tangem.utils.converter.Converter
 
@@ -20,8 +23,9 @@ import com.tangem.utils.converter.Converter
  * Converts a push payload to a deeplink, in this precedence order:
  * 1. [DEEPLINK_KEY] — a ready-made deeplink, passed through verbatim.
  * 2. Tangem Pay flat keys ([CUSTOMER_WALLET_ID_KEY] + a known [TangemPayPushNotificationType]).
- * 3. Token flat keys ([TYPE_KEY] + [NETWORK_ID_KEY] + [TOKEN_ID_KEY] + [WALLET_ID_KEY]).
- * 4. [WEBLINK_KEY] — the destination of a marketing / Customer.io push (`link` is also Customer.io's own
+ * 3. Joint account flat keys ([TYPE_KEY] ∈ [jointAccountTypes] + [WALLET_ID_KEY] + [ACCOUNT_ID_KEY]).
+ * 4. Token flat keys ([TYPE_KEY] + [NETWORK_ID_KEY] + [TOKEN_ID_KEY] + [WALLET_ID_KEY]).
+ * 5. [WEBLINK_KEY] — the destination of a marketing / Customer.io push (`link` is also Customer.io's own
  *    deeplink key). It is deliberately last, so it can never preempt a backend-generated transactional push.
  *
  * The result is not validated here — the caller applies [PushDeeplinkPolicy] and decides how to dispatch it.
@@ -30,10 +34,13 @@ import com.tangem.utils.converter.Converter
  */
 object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
 
+    private val jointAccountTypes = setOf(NotificationType.JointMembers.type, NotificationType.JointOverview.type)
+
     override fun convert(value: Map<String, String>): String? {
         return when {
             value[DEEPLINK_KEY] != null -> value[DEEPLINK_KEY]
             isTangemPayPushNotificationPayload(value) -> buildTangemPayNotificationDeeplink(value)
+            isJointAccountPushNotificationPayload(value) -> buildJointAccountNotificationDeeplink(value)
             isTangemPushNotificationPayload(value) -> buildNotificationDeeplink(value)
             else -> value[WEBLINK_KEY]
         }
@@ -60,6 +67,7 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
         val derivationPath = payload[DERIVATION_PATH_KEY].orEmpty()
         val transactionId = payload[TRANSACTION_ID_KEY]
         val name = payload[NAME_KEY]
+        val accountId = payload[ACCOUNT_ID_KEY]?.takeIf(String::isNotBlank)
 
         return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
             setAction(DeepLinkRoute.TokenDetails.host)
@@ -77,6 +85,9 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             if (name != null) {
                 addQueryParam(NAME_KEY, name)
             }
+            if (accountId != null) {
+                addQueryParam(ACCOUNT_ID_KEY, accountId)
+            }
         }.build()
     }
 
@@ -85,6 +96,31 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
             payload.containsKey(NETWORK_ID_KEY) &&
             payload.containsKey(TOKEN_ID_KEY) &&
             payload.containsKey(WALLET_ID_KEY)
+    }
+
+    private fun isJointAccountPushNotificationPayload(payload: Map<String, String>): Boolean {
+        return payload[TYPE_KEY] in jointAccountTypes &&
+            !payload[WALLET_ID_KEY].isNullOrBlank() &&
+            !payload[ACCOUNT_ID_KEY].isNullOrBlank()
+    }
+
+    private fun buildJointAccountNotificationDeeplink(payload: Map<String, String>): String? {
+        val type = payload[TYPE_KEY] ?: return null
+        val walletId = payload[WALLET_ID_KEY]?.takeIf(String::isNotBlank) ?: return null
+        val accountId = payload[ACCOUNT_ID_KEY]?.takeIf(String::isNotBlank) ?: return null
+        val entry = when (type) {
+            NotificationType.JointMembers.type -> DeepLinkRoute.JointAccount.ENTRY_MEMBERS
+            NotificationType.JointOverview.type -> DeepLinkRoute.JointAccount.ENTRY_OVERVIEW
+            else -> return null
+        }
+
+        return DeepLinkBuilder().setScheme(DeepLinkScheme.Tangem.scheme).apply {
+            setAction(DeepLinkRoute.JointAccount.host)
+            addQueryParam(ENTRY_KEY, entry)
+            addQueryParam(WALLET_ID_KEY, walletId)
+            addQueryParam(ACCOUNT_ID_KEY, accountId)
+            addQueryParam(TYPE_KEY, type)
+        }.build()
     }
 
     private fun isTangemPayPushNotificationPayload(payload: Map<String, String>): Boolean {

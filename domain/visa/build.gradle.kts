@@ -40,6 +40,7 @@ dependencies {
 
     // region Libs
     implementation(projects.libs.blockchainSdk)
+    implementation(tangemDeps.blockchain)
     // endregion
 
     // region Runtime

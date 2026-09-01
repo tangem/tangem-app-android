@@ -126,6 +126,7 @@ internal class PaymentChooseNetworkModelTest {
             val available = PaymentNetworkStatus.Available(
                 network = polygon,
                 depositAddress = "0xDEPOSIT",
+                chainId = 137L,
                 cryptoCurrencyStatuses = listOf(CryptoCurrencyStatus(currency = currency("USDC"), value = mockk())),
             )
             statusFlow.emit(paymentStatus(listOf(available)))
@@ -199,6 +200,7 @@ internal class PaymentChooseNetworkModelTest {
     private fun currency(symbol: String): CryptoCurrency.Token {
         val token: CryptoCurrency.Token = mockk()
         every { token.symbol } returns symbol
+        every { token.id } returns mockk { every { rawCurrencyId } returns CryptoCurrency.RawID(symbol) }
         return token
     }
 

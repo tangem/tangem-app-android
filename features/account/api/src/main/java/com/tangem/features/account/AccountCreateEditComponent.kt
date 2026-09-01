@@ -15,7 +15,7 @@ interface AccountCreateEditComponent : ComposableContentComponent {
         ) : Params
 
         data class Edit(
-            val account: Account.CryptoPortfolio,
+            val account: Account.Personal,
         ) : Params
     }
 }

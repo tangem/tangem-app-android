@@ -173,7 +173,7 @@ internal class SwapInteractorImplTangemPayTest : SwapInteractorImplTestBase() {
                 fromAmount = SwapAmount(BigDecimal("1"), 18),
                 isCoin = true,
                 fromBalance = BigDecimal("10"),
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                account = Account.Personal.createMainAccount(userWalletId),
             )
             val swapFee = buildTestSwapFee(feeValue = BigDecimal("0.001"))
 
@@ -192,7 +192,7 @@ internal class SwapInteractorImplTangemPayTest : SwapInteractorImplTestBase() {
                 fromAmount = SwapAmount(BigDecimal("1"), 18),
                 isCoin = false, // token → fee paid from native
                 fromBalance = BigDecimal("10"),
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                account = Account.Personal.createMainAccount(userWalletId),
             )
             val swapFee = buildTestSwapFee(feeValue = BigDecimal("0.01"))
 
@@ -215,7 +215,7 @@ internal class SwapInteractorImplTangemPayTest : SwapInteractorImplTestBase() {
                     fromAmount = SwapAmount(amount, 18),
                     isCoin = false,
                     fromBalance = fromBalance,
-                    account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                    account = Account.Personal.createMainAccount(userWalletId),
                 )
                 val fromCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus.status
                 val swapFee = buildTestSwapFeeWithToken(

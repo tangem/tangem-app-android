@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.utils.Provider
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
@@ -37,8 +38,9 @@ internal class TokenActionsHandlerUnavailabilityTest {
         onHandleQuickAction = { handled, _ -> handledActions.add(handled) },
         coroutineScope = CoroutineScope(UnconfinedTestDispatcher()),
         isDemoCardUseCase = mockk(relaxed = true),
-        isWalletBackupProblematicUseCase = mockk(relaxed = true),
-        sendBackupProblemEmailUseCase = mockk(relaxed = true),
+        backupErrorWarningSender = mockk {
+            every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
+        },
         messageSender = mockk(relaxed = true),
     )
 

@@ -5,6 +5,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.hotwallet.addexistingwallet.entry.AddExistingWalletModel
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
+import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
@@ -27,6 +28,12 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 context = childContext,
                 params = AddExistingWalletImportComponent.Params(
                     callbacks = model.addExistingWalletImportModelCallbacks,
+                ),
+            )
+            is AddExistingWalletRoute.RestoreCloudBackup -> RestoreCloudBackupComponent(
+                context = childContext,
+                params = RestoreCloudBackupComponent.Params(
+                    callbacks = model.restoreCloudBackupModelCallbacks,
                 ),
             )
             is AddExistingWalletRoute.BackupCompleted -> ManualBackupCompletedComponent(
