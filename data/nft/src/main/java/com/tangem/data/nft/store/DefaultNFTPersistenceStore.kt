@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.nft
+package com.tangem.data.nft.store
 
 import androidx.datastore.core.DataStore
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
-import com.tangem.datasource.local.nft.custom.NFTPriceId
+import com.tangem.data.nft.custom.NFTPriceId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
