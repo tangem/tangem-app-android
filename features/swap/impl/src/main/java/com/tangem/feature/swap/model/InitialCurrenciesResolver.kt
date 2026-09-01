@@ -223,7 +223,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
 
         return walletAccountCurrencyStatuses.associateWith { accountStatus ->
             val currencyStatuses = when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> accountStatus.flattenCurrencies()
+                is AccountStatus.Personal -> accountStatus.flattenCurrencies()
                 is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus, isAccountFlowEnabled)
                 // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
                 is AccountStatus.Virtual -> emptyList()

@@ -15,7 +15,7 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
-import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -218,7 +218,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
         userWalletId: UserWalletId,
     ): GetWalletAccountsResponse {
-        if (jointAccountFeatureToggles.isJointAccountCreationEnabled) return this
+        if (jointAccountFeatureToggles.isJointAccountEnabled) return this
 
         val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
         if (ownAccounts.size == accounts.size) return this

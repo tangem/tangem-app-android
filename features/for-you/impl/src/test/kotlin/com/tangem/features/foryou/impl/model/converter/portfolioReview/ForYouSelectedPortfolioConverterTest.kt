@@ -271,7 +271,7 @@ internal class ForYouSelectedPortfolioConverterTest {
     // region Fixtures
     /** An account paired with the statuses of the currencies it holds. */
     private class PortfolioAccount(
-        val account: Account.CryptoPortfolio,
+        val account: Account.Personal,
         val statuses: List<CryptoCurrencyStatus>,
     )
 
@@ -292,7 +292,7 @@ internal class ForYouSelectedPortfolioConverterTest {
 
     private fun createAccountStatusList(accounts: List<PortfolioAccount>): AccountStatusList = mockk {
         every { accountStatuses } returns accounts.map { portfolioAccount ->
-            mockk<AccountStatus.CryptoPortfolio> {
+            mockk<AccountStatus.Personal> {
                 every { account } returns portfolioAccount.account
                 every { accountId } returns portfolioAccount.account.accountId
                 every { flattenCurrencies() } returns portfolioAccount.statuses

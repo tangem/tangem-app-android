@@ -11,7 +11,7 @@ import com.tangem.domain.markets.SentimentOutlook
 import com.tangem.domain.markets.sentimentOutlook
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -93,7 +93,9 @@ internal fun forYouSentimentBadge(
  * disable.
  */
 internal fun Map<UserWalletId, AccountStatusList>.availableAccountIds(): Set<AccountId> = values
-    .flatMap { statusList -> statusList.accountStatuses.filterCryptoPortfolio().map { it.accountId } }
+    .flatMap { statusList ->
+        statusList.accountStatuses.filterIsInstance<AccountStatus.Personal>().map { it.accountId }
+    }
     .toSet()
 
 /**
