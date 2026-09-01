@@ -14,12 +14,14 @@ import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
+import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -30,17 +32,19 @@ internal class IssuePlasticCardUseCaseTest {
 
     private val offersRepository: CustomerOffersRepository = mockk()
     private val orderRepository: CustomerOrderRepository = mockk()
+    private val issueCardRepository: TangemPayIssueCardRepository = mockk(relaxed = true)
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase = mockk(relaxed = true)
     private val useCase = IssuePlasticCardUseCase(
         customerOffersRepository = offersRepository,
         customerOrderRepository = orderRepository,
+        issueCardRepository = issueCardRepository,
         startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
         appCoroutineScope = TestAppCoroutineScope(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(offersRepository, orderRepository, startTangemPayOrderPollingUseCase)
+        clearMocks(offersRepository, orderRepository, issueCardRepository, startTangemPayOrderPollingUseCase)
     }
 
     @Test
@@ -84,12 +88,44 @@ internal class IssuePlasticCardUseCaseTest {
 
         // Assert
         assertThat(result).isEqualTo(created.right())
+        coVerify(exactly = 1) { issueCardRepository.storeIssueOrderId(USER_WALLET_ID, "created") }
         coVerify(exactly = 1) {
             startTangemPayOrderPollingUseCase(
                 order = TangemPayOrderInfo.fromOrder(created),
                 userWalletId = USER_WALLET_ID,
+                onOrderStateChange = any(),
             )
         }
+    }
+
+    @Test
+    fun `GIVEN order created WHEN polling reaches terminal THEN the stored order id is removed`() = runTest {
+        // Arrange
+        givenNoActiveOrders()
+        val created = order(id = "created", status = OrderStatus.PROCESSING)
+        coEvery {
+            orderRepository.createPlasticIssueOrder(any(), any(), any(), any())
+        } returns created.right()
+        val onOrderStateChange = slot<suspend (TangemPayOrderInfo) -> Unit>()
+        coEvery {
+            startTangemPayOrderPollingUseCase(
+                order = any(),
+                userWalletId = USER_WALLET_ID,
+                onOrderStateChange = capture(onOrderStateChange),
+                timeout = any(),
+            )
+        } returns true
+
+        // Act
+        useCase(
+            userWalletId = USER_WALLET_ID,
+            plasticCardOrder = plasticCardOrder(),
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
+        onOrderStateChange.captured.invoke(TangemPayOrderInfo(orderId = "created", orderStatus = OrderStatus.COMPLETED))
+
+        // Assert
+        coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(USER_WALLET_ID, "created") }
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
@@ -43,6 +44,7 @@ internal class SwapDataModule {
         errorsDataConverter: ErrorsDataConverter,
         @NetworkMoshi moshi: Moshi,
         appPreferencesStore: AppPreferencesStore,
+        expressUtils: ExpressUtils,
         expressHistoryRepository: ExpressHistoryRepository,
         txHistoryFeatureToggles: TxHistoryFeatureToggles,
         swapFeatureToggles: SwapFeatureToggles,
@@ -54,6 +56,7 @@ internal class SwapDataModule {
             dataSignatureVerifier = dataSignature,
             moshi = moshi,
             appPreferencesStore = appPreferencesStore,
+            expressUtils = expressUtils,
             expressHistoryRepository = expressHistoryRepository,
             txHistoryFeatureToggles = txHistoryFeatureToggles,
             swapFeatureToggles = swapFeatureToggles,
