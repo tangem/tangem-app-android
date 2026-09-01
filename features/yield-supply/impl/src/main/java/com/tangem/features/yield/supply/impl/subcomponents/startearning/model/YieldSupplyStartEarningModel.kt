@@ -293,6 +293,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 Basic.TransactionSent(
                     sentFrom = event,
                     memoType = Basic.TransactionSent.MemoType.Null,
+                    isCustomToken = cryptoCurrency.isCustom,
+                    isCustomFeeToken = feeCurrency.isCustom,
                 ),
             )
         }
