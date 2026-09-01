@@ -688,7 +688,7 @@ private fun ShtorkaScaffoldWithMarkets(
                 // The header draws its own small drag tip with the search bar centered around it
                 showDragHandle = false,
                 header = {
-                    ShtorkaSheetHeader {
+                    ShtorkaSheetHeader(expansion = sheetExpansion) {
                         shtorkaHeaderContent(sheetExpansion, onExpandSheet)
                     }
                 },
