@@ -1,7 +1,7 @@
 package com.tangem.data.card
 
 import androidx.datastore.preferences.core.MutablePreferences
-import com.tangem.datasource.local.card.UsedCardInfo
+import com.tangem.data.card.model.UsedCardInfo
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
