@@ -1,8 +1,8 @@
-package com.tangem.datasource.local.nft.custom
+package com.tangem.data.nft.custom
 
 import com.tangem.blockchain.nft.models.NFTAsset
 
-data class NFTPriceKeyValue(
+internal data class NFTPriceKeyValue(
     val key: NFTAsset.Identifier,
     val value: NFTAsset.SalePrice,
 )
