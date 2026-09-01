@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.swap
+package com.tangem.features.swap.v2.impl.amount.store
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
 
