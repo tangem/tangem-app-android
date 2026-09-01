@@ -654,6 +654,7 @@ internal data class TangemStatusScreenStory(
     val hasExtraBottom: Boolean,
     val hasDetails: Boolean,
     val hasFooter: Boolean,
+    val isFullscreen: Boolean,
     val replayKey: Int,
     val onVariantChange: (TangemStatusScreen.Variant) -> Unit,
     val onDescriptionToggle: () -> Unit,
@@ -661,5 +662,6 @@ internal data class TangemStatusScreenStory(
     val onExtraBottomToggle: () -> Unit,
     val onDetailsToggle: () -> Unit,
     val onFooterToggle: () -> Unit,
+    val onFullscreenToggle: () -> Unit,
     val onReplayClick: () -> Unit,
 ) : DsStoryBookPage
