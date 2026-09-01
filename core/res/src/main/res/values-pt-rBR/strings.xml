@@ -35,7 +35,7 @@
   <string name="account_details_archive_action">Arquivo</string>
   <string name="account_details_archive_description">Você está arquivando esta conta, mas poderá recuperá-la a qualquer momento.</string>
   <string name="account_details_archiving">Arquivando...</string>
-  <string name="account_details_joint_pending_description">A conta ainda está sendo preenchida com membros.</string>
+  <string name="account_details_joint_pending_description">A conta ainda está sendo preenchida com membros</string>
   <string name="account_details_title">Conta</string>
   <string name="account_edit_failure_dialog_title">Não consigo editar a conta.</string>
   <string name="account_edit_success_message">Conta salva</string>
@@ -1004,9 +1004,17 @@
   <string name="introduction_stories_two_title">Uma carteira, vários cartões</string>
   <string name="introduction_terms_of_service">Termos de serviço</string>
   <string name="joint_account_activation_account_button_title">Ativar conta</string>
-  <string name="joint_account_activation_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Qualquer membro pode gastar ou sacar os fundos a qualquer momento — inclusive sem a sua aprovação.</string>
+  <string name="joint_account_activation_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Qualquer membro pode gastar ou sacar os fundos a qualquer momento — inclusive sem a sua aprovação</string>
   <string name="joint_account_activation_title">Você está ativando uma conta compartilhada</string>
+  <string name="joint_account_invite_members_member_info">Informações do membro</string>
   <string name="joint_account_invite_members_safety_sheet_title">Compartilhamento seguro</string>
+  <string name="joint_account_invite_members_to_join">Convide membros para participar</string>
+  <string name="joint_account_join_confirm_sheet_subtitle">Todos os membros desta conta compartilham um único saldo. Qualquer membro pode gastar ou sacar os fundos a qualquer momento — inclusive sem a sua aprovação</string>
+  <string name="joint_account_join_confirm_sheet_title">Você está entrando em uma conta compartilhada</string>
+  <string name="joint_account_join_subtitle">Esta é uma conta conjunta. Todas as transações desta conta exigirão %1$s assinatura</string>
+  <string name="joint_account_join_subtitle_value">%1$s de %2$s membros</string>
+  <string name="joint_account_join_title">Você foi convidado a participar de %1$s</string>
+  <string name="joint_account_join_to_account_btn_text">Participar da conta</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">Membro</item>
     <item quantity="other">Membros</item>
@@ -1057,10 +1065,6 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">A carteira não suporta mais de uma rede.</string>
   <string name="market_chart_ai_total">Total de IA:</string>
   <string name="market_chart_ask_for_ai_summary_button">Solicite um resumo de IA</string>
-  <plurals name="market_chart_assets_android">
-    <item quantity="one">%d ativo</item>
-    <item quantity="other">%d ativos</item>
-  </plurals>
   <string name="market_chart_bubble_no_amount">Nenhum valor em fichas</string>
   <string name="market_chart_bubble_no_data">Sem dados</string>
   <string name="market_chart_bubble_total_value">Valor total</string>
@@ -2080,10 +2084,15 @@
   <string name="tangempay_bank_transfer_success_title">Preparando seus dados bancários</string>
   <string name="tangempay_bank_transfer_swift_warning">Transferências SWIFT não são aceitas e serão devolvidas</string>
   <string name="tangempay_cancel_kyc">Ocultar KYC da tela principal</string>
+  <string name="tangempay_card_activation_attempts_exceeded_description">Entre em contato com o suporte</string>
+  <string name="tangempay_card_activation_attempts_exceeded_title">Você excedeu o número de tentativas de ativação</string>
+  <string name="tangempay_card_activation_description">Digite os 4 últimos dígitos do número do seu cartão</string>
+  <string name="tangempay_card_activation_error">Últimos dígitos inválidos. Tente novamente</string>
   <string name="tangempay_card_activation_error_already_active">Este cartão já está ativo.</string>
   <string name="tangempay_card_activation_error_in_progress">A ativação já está em andamento. Por favor, aguarde.</string>
   <string name="tangempay_card_activation_error_not_physical">Este não é um cartão físico.</string>
   <string name="tangempay_card_activation_error_not_ready">Este cartão ainda não está pronto para ser ativado. Tente novamente depois de recebê-lo.</string>
+  <string name="tangempay_card_activation_in_progress">Ativando seu cartão</string>
   <string name="tangempay_card_default_name">Cartão Tangem Pay 1</string>
   <string name="tangempay_card_delivery_banner_description_many">Ative-os quando chegarem</string>
   <string name="tangempay_card_delivery_banner_title_many">Seu cartão está a caminho para entrega</string>
@@ -2190,6 +2199,7 @@
   <string name="tangempay_cashback_title">Cashback</string>
   <string name="tangempay_cashback_total_earned">%1$s ganhos no total</string>
   <string name="tangempay_cashback_widget_empty_description">Comece a gastar e ganhe cashback</string>
+  <string name="tangempay_cashback_widget_refund_description">Reduzido devido à devolução de compras</string>
   <string name="tangempay_cashback_widget_title">%1$s cashback em %2$s</string>
   <string name="tangempay_change_pin_code">Alterar código PIN</string>
   <string name="tangempay_changing_plan">Alterar seu plano</string>
@@ -2271,6 +2281,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Plano de atualização</string>
   <string name="tangempay_maximum_cards_issued_title">Número máximo de cartões emitidos</string>
   <string name="tangempay_multichain_show_qr">Mostrar QR</string>
+  <string name="tangempay_multinetwork">Múltiplas redes</string>
   <string name="tangempay_newonboard_Q1_body">Sim — para usar um cartão Visa regulado, a verificação de identidade é obrigatória. O KYC é feito pela Sumsub, parceira de compliance.</string>
   <string name="tangempay_newonboard_Q1_title">Preciso enviar meus documentos?</string>
   <string name="tangempay_newonboard_Q2_body">Não. O KYC se aplica apenas à conta Tangem Pay. Sua Tangem Wallet continua sendo um ambiente separado, de autocustódia e sem KYC.</string>
@@ -2380,8 +2391,6 @@
   <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários.</string>
   <string name="tangempay_va_limit_resetting_everyday">O limite é reiniciado todos os dias.</string>
   <string name="tangempay_visa_benefits">Benefícios do visto</string>
-  <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
-  <string name="tangempay_withdrawal_note_title">Observe</string>
   <string name="tangempay_your_pin_code">Seu código PIN</string>
   <string name="this_is_my_wallet_title">Esta é a minha carteira.</string>
   <string name="toast_balances_hidden">Saldos ocultos</string>
@@ -2437,6 +2446,10 @@
   <string name="tokens_list_unavailable_to_sell_header">Não disponível para venda</string>
   <string name="tokens_list_unavailable_to_swap_header">Não disponível para troca a partir de %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Indisponível para troca</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">%d ativo</item>
+    <item quantity="other">%d ativos</item>
+  </plurals>
   <string name="transaction_history_approve_high_risk_subtitle">Você está conectado. Seus fundos podem estar em risco. Considere revogar o acesso.</string>
   <string name="transaction_history_approve_high_risk_title">Alto Risco</string>
   <string name="transaction_history_approved_amount">Valor Aprovado</string>
