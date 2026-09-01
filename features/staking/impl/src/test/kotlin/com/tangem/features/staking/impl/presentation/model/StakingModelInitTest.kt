@@ -36,6 +36,8 @@ internal class StakingModelInitTest : StakingModelTestBase() {
     fun `GIVEN currency status emitted WHEN model created THEN analytics sent and fee status fetched`() = runTest {
         val (testCryptoCurrencyStatus, testAccountCurrencyStatus) = createMockedAccountCurrencyStatus()
         every { testCryptoCurrencyStatus.value } returns mockk {
+            // The staking accessor reads contributions first; empty is the toggle-off shape under test here.
+            every { contributions } returns emptyList()
             every { stakingBalance } returns mockk<StakingBalance.Data.StakeKit> {
                 every { balance } returns YieldBalanceItem(
                     items = listOf(
@@ -77,6 +79,48 @@ internal class StakingModelInitTest : StakingModelTestBase() {
 
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN the staking balance arrives as a contribution WHEN model created THEN validators are still counted`() =
+        runTest {
+            // Arrange — toggle-on shape: the typed field is null and the balance is in `contributions`
+            val (testCryptoCurrencyStatus, testAccountCurrencyStatus) = createMockedAccountCurrencyStatus()
+            val stakeKit = mockk<StakingBalance.Data.StakeKit> {
+                every { balance } returns YieldBalanceItem(
+                    items = listOf(
+                        mockk { every { validatorAddress } returns "address1" },
+                        mockk { every { validatorAddress } returns "address2" },
+                    ),
+                    integrationId = "test",
+                )
+            }
+            every { testCryptoCurrencyStatus.value } returns mockk {
+                every { contributions } returns listOf(stakeKit)
+                every { stakingBalance } returns null
+            }
+            every {
+                getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency)
+            } returns flowOf(testAccountCurrencyStatus)
+            coEvery {
+                getFeePaidCryptoCurrencyStatusSyncUseCase(testUserWalletId, testCryptoCurrencyStatus)
+            } returns Either.Right(mockk(relaxed = true))
+            coEvery {
+                getMinimumTransactionAmountSyncUseCase(testUserWalletId, testCryptoCurrencyStatus)
+            } returns Either.Left(mockk())
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert — a reader stuck on the typed field would report zero validators
+            verify {
+                analyticsEventHandler.send(
+                    StakingAnalyticsEvent.StakingInfoScreenOpened(validatorsCount = 2),
+                )
+            }
+
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN currency status emitted twice WHEN model created THEN analytics sent only once`() = runTest {

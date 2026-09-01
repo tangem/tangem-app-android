@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.AddressBookOpenMode
+import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -52,6 +53,7 @@ import com.tangem.features.send.subcomponents.destination.analytics.EnterAddress
 import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
 import com.tangem.features.send.subcomponents.destination.model.transformers.*
 import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -87,6 +89,7 @@ internal class SendDestinationModel @Inject constructor(
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
     private val sendDestinationAlertFactory: SendDestinationAlertFactory,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
@@ -146,6 +149,7 @@ internal class SendDestinationModel @Inject constructor(
 
     private val validationJobHolder = JobHolder()
 
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
@@ -380,6 +384,9 @@ internal class SendDestinationModel @Inject constructor(
                                 is AccountStatus.CryptoPortfolio -> accountStatus.getDestinationWalletUM(wallet)
                                 is AccountStatus.Payment -> listOfNotNull(accountStatus.getDestinationWalletUM(wallet))
                                 is AccountStatus.Virtual -> emptyList()
+                                is AccountStatus.Prediction -> emptyList()
+                                // while it is not applicable
+                                is AccountStatus.Joint -> emptyList()
                             }
                         }
                     }
@@ -427,22 +434,11 @@ internal class SendDestinationModel @Inject constructor(
         }
     }
 
-    private suspend fun resolveBackupProblematicWallet(address: String): UserWalletId? {
-        backupProblematicWalletCache.get()?.let { if (it.first == address) return it.second }
-
-        return getBackupProblematicWalletForAddressUseCase(address)
-            .also { backupProblematicWalletCache.set(address to it) }
-    }
-
-    private fun contactBackupSupport(userWalletId: UserWalletId) {
-        modelScope.launch { sendBackupProblemEmailUseCase(userWalletId) }
-    }
-
     private fun validate(address: String, memo: String?, type: EnterAddressSource? = null) {
         modelScope.launch {
             _uiState.update(SendDestinationValidationStartedTransformer)
 
-            var addressValidationResult = validateWalletAddressUseCase(
+            val validationResult = validateWalletAddressUseCase(
                 userWalletId = userWalletId,
                 network = cryptoCurrency.network,
                 address = address,
@@ -450,19 +446,13 @@ internal class SendDestinationModel @Inject constructor(
                 allowSelfSend = params.isAllowSelfSend,
             )
 
-            notifyIfQrCodeUnrecognized(type = type, addressValidationResult = addressValidationResult)
+            notifyIfQrCodeUnrecognized(type = type, addressValidationResult = validationResult)
 
-            if (addressValidationResult.isRight()) {
-                val problematicWalletId = resolveBackupProblematicWallet(address)
-                if (problematicWalletId != null) {
-                    addressValidationResult = AddressValidation.Error.RecipientWalletBackupError.left()
-                    if (type != null) {
-                        sendDestinationAlertFactory.showRecipientBackupErrorAlert(
-                            onContactSupport = { contactBackupSupport(problematicWalletId) },
-                        )
-                    }
-                }
-            }
+            val addressValidationResult = rejectRecipientWithBackupError(
+                address = address,
+                type = type,
+                validationResult = validationResult,
+            )
 
             val memoValidationResult = validateWalletMemoUseCase(
                 userWalletId = userWalletId,
@@ -525,6 +515,38 @@ internal class SendDestinationModel @Inject constructor(
         if (addressValidationResult.leftOrNull() != AddressValidation.Error.InvalidAddress) return
 
         sendDestinationAlertFactory.showUnrecognizedQrCodeAlert()
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private suspend fun rejectRecipientWithBackupError(
+        address: String,
+        type: EnterAddressSource?,
+        validationResult: AddressValidationResult,
+    ): AddressValidationResult {
+        if (backupErrorFeatureToggles.isTopUpWarningEnabled || validationResult.isLeft()) return validationResult
+
+        val problematicWalletId = resolveBackupProblematicWallet(address) ?: return validationResult
+
+        if (type != null) {
+            sendDestinationAlertFactory.showRecipientBackupErrorAlert(
+                onContactSupport = { contactBackupSupport(problematicWalletId) },
+            )
+        }
+
+        return AddressValidation.Error.RecipientWalletBackupError.left()
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private suspend fun resolveBackupProblematicWallet(address: String): UserWalletId? {
+        backupProblematicWalletCache.get()?.let { if (it.first == address) return it.second }
+
+        return getBackupProblematicWalletForAddressUseCase(address)
+            .also { backupProblematicWalletCache.set(address to it) }
+    }
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    private fun contactBackupSupport(userWalletId: UserWalletId) {
+        modelScope.launch { sendBackupProblemEmailUseCase(userWalletId) }
     }
 
     private fun recognizeContact(type: EnterAddressSource?, isValidAddress: Boolean, address: String) {

@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.PredictionAccountIcon
 import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.extensions.TextReference
@@ -69,6 +70,12 @@ fun AccountIcon(name: TextReference, icon: AccountIconUM, size: AccountIconSize,
         is AccountIconUM.Virtual -> AccountResIcon(
             resId = icon.icon.getResId(),
             color = icon.color.getUiColor(),
+            size = size,
+            modifier = modifier,
+        )
+        is AccountIconUM.Prediction -> AccountResIcon(
+            resId = PredictionAccountIcon.resId,
+            color = PredictionAccountIcon.color,
             size = size,
             modifier = modifier,
         )

@@ -598,7 +598,7 @@
   <string name="tangempay_other_networks_header">其他網路</string>
   <string name="tangempay_other_networks_subtitle">然後以 1:1 匯率、零手續費兌換到支付帳戶</string>
   <string name="tangempay_other_networks_title">在任意鏈上將 USDT / USDC 傳送至您的 Tangem 錢包</string>
-  <string name="tangempay_pay_support">Pay 客服</string>
+  <string name="tangempay_pay_support">客服</string>
   <string name="tangempay_payment_account">付款帳戶</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay 工作階段已過期</string>
   <string name="tangempay_pin_validation_error_message">無效 PIN 碼：請避免使用連續或重複的號碼</string>
@@ -647,8 +647,8 @@
   <string name="tangempay_tangem_visa_card">使用 USDC 進行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">透過 ACH 接收法定美元</string>
-  <string name="tangempay_topup_bank_transfer_title">銀行轉帳</string>
+  <string name="tangempay_topup_bank_transfer_body">透過 ACH 從銀行帳戶接收美元</string>
+  <string name="tangempay_topup_bank_transfer_title">從銀行帳戶</string>
   <string name="tangempay_topup_receive_body">将 USDC Polygon 发送至您账户地址</string>
   <string name="tangempay_topup_receive_body_multichain">將 USDC 或 USDT 傳送至您帳戶的地址</string>
   <string name="tangempay_topup_receive_title">从其他钱包或交易所</string>

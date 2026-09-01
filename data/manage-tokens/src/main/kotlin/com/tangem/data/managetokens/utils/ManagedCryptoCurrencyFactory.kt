@@ -7,6 +7,7 @@ import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.getCoinId
 import com.tangem.data.common.currency.getTokenId
 import com.tangem.data.common.network.NetworkFactory
@@ -34,6 +35,7 @@ internal class ManagedCryptoCurrencyFactory(
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet?,
         accountIndex: DerivationIndex,
+        allowedNetworkIds: Set<Network.RawID>? = null,
     ): List<ManagedCryptoCurrency> {
         return coinsResponse.coins.mapNotNull { coin ->
             createToken(
@@ -42,6 +44,7 @@ internal class ManagedCryptoCurrencyFactory(
                 imageHost = coinsResponse.imageHost,
                 userWallet = userWallet,
                 accountIndex = accountIndex,
+                allowedNetworkIds = allowedNetworkIds,
             )
         }
     }
@@ -51,13 +54,19 @@ internal class ManagedCryptoCurrencyFactory(
         tokensResponse: UserTokensResponse,
         userWallet: UserWallet,
         accountIndex: DerivationIndex,
+        allowedNetworkIds: Set<Network.RawID>? = null,
     ): List<ManagedCryptoCurrency> {
-        val customTokens = createCustomTokens(tokensResponse, userWallet, accountIndex)
+        val customTokens = createCustomTokens(
+            tokensResponse = tokensResponse,
+            userWallet = userWallet,
+            accountIndex = accountIndex,
+        )
         val tokens = create(
             coinsResponse = coinsResponse,
             tokensResponse = tokensResponse,
             userWallet = userWallet,
             accountIndex = accountIndex,
+            allowedNetworkIds = allowedNetworkIds,
         )
 
         return customTokens + tokens
@@ -68,11 +77,26 @@ internal class ManagedCryptoCurrencyFactory(
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet,
         accountIndex: DerivationIndex,
+        allowedNetworkIds: Set<Network.RawID>? = null,
     ): List<ManagedCryptoCurrency> {
         val customTokens = tokensResponse
-            ?.let { createCustomTokens(it, userWallet, accountIndex) }
+            ?.let { userTokensResponse ->
+                createCustomTokens(
+                    tokensResponse = userTokensResponse,
+                    userWallet = userWallet,
+                    accountIndex = accountIndex,
+                )
+            }
             .orEmpty()
         val testnetTokens = testnetTokensConfig.tokens.map { testnetToken ->
+            val addedInNetworks = findAddedInNetworks(
+                currencyId = testnetToken.id,
+                tokensResponse = tokensResponse,
+                userWallet = userWallet,
+                accountIndex = accountIndex,
+            )
+            val addedNetworkIds = addedInNetworks.mapTo(hashSetOf()) { it.id.rawId }
+
             ManagedCryptoCurrency.Token(
                 id = ManagedCryptoCurrency.ID(testnetToken.id),
                 name = testnetToken.name,
@@ -85,27 +109,29 @@ internal class ManagedCryptoCurrencyFactory(
                         decimals = network.decimalCount,
                         userWallet = userWallet,
                         accountIndex = accountIndex,
+                        allowedNetworkIds = allowedNetworkIds,
+                        addedNetworkIds = addedNetworkIds,
                     )
                 }.orEmpty(),
-                addedIn = findAddedInNetworks(
-                    currencyId = testnetToken.id,
-                    tokensResponse = tokensResponse,
-                    userWallet = userWallet,
-                    accountIndex = accountIndex,
-                ),
+                addedIn = addedInNetworks,
             )
         }
 
         return customTokens + testnetTokens
     }
 
+    /** [tokensResponse] already reflects the user's added tokens, so it is never filtered by [allowedNetworkIds]. */
     private fun createCustomTokens(
         tokensResponse: UserTokensResponse,
         userWallet: UserWallet,
         accountIndex: DerivationIndex,
     ): List<ManagedCryptoCurrency> = tokensResponse.tokens
         .mapNotNull { token ->
-            maybeCreateCustomToken(token, userWallet, accountIndex)
+            maybeCreateCustomToken(
+                token = token,
+                userWallet = userWallet,
+                accountIndex = accountIndex,
+            )
         }
 
     private fun maybeCreateCustomToken(
@@ -155,14 +181,24 @@ internal class ManagedCryptoCurrencyFactory(
         }
     }
 
+    @Suppress("LongParameterList")
     private fun createToken(
         coinResponse: CoinsResponse.Coin,
         tokensResponse: UserTokensResponse?,
         imageHost: String?,
         userWallet: UserWallet?,
         accountIndex: DerivationIndex,
+        allowedNetworkIds: Set<Network.RawID>?,
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
+
+        val addedInNetworks = findAddedInNetworks(
+            currencyId = coinResponse.id,
+            tokensResponse = tokensResponse,
+            userWallet = userWallet,
+            accountIndex = accountIndex,
+        )
+        val addedNetworkIds = addedInNetworks.mapTo(hashSetOf()) { it.id.rawId }
 
         val availableNetworks = coinResponse.networks
             .applyL2Compatibility(coinResponse.id)
@@ -174,6 +210,8 @@ internal class ManagedCryptoCurrencyFactory(
                     decimals = network.decimalCount?.toInt(),
                     userWallet = userWallet,
                     accountIndex = accountIndex,
+                    allowedNetworkIds = allowedNetworkIds,
+                    addedNetworkIds = addedNetworkIds,
                 )
             }
             .ifEmpty { return null }
@@ -184,15 +222,16 @@ internal class ManagedCryptoCurrencyFactory(
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
             availableNetworks = availableNetworks,
-            addedIn = findAddedInNetworks(
-                currencyId = coinResponse.id,
-                tokensResponse = tokensResponse,
-                userWallet = userWallet,
-                accountIndex = accountIndex,
-            ),
+            addedIn = addedInNetworks,
         )
     }
 
+    /**
+     * [addedNetworkIds] (networks the currency is already added on) bypass [allowedNetworkIds] filtering —
+     * otherwise a network dropped from the allowlist would silently disappear from the list with no way
+     * to remove it.
+     */
+    @Suppress("LongParameterList")
     private fun createSource(
         networkId: String,
         contractAddress: String?,
@@ -200,10 +239,17 @@ internal class ManagedCryptoCurrencyFactory(
         userWallet: UserWallet?,
         extraDerivationPath: String? = null,
         accountIndex: DerivationIndex,
+        allowedNetworkIds: Set<Network.RawID>?,
+        addedNetworkIds: Set<Network.RawID> = emptySet(),
     ): SourceNetwork? {
         val blockchain = Blockchain.fromNetworkId(networkId)
             ?.takeUnless { it in excludedBlockchains }
             ?: return null
+
+        val isAlreadyAdded = Network.RawID(blockchain.toNetworkId()) in addedNetworkIds
+        if (!isAlreadyAdded && !blockchain.isAllowedIn(allowedNetworkIds)) {
+            return null
+        }
 
         val network = networkFactory.create(
             blockchain = blockchain,
