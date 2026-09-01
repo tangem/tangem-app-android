@@ -20,6 +20,7 @@ import com.tangem.grow.datasource.config.GaslessTxService
 import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import com.tangem.grow.datasource.config.MoonPay
 import com.tangem.grow.datasource.config.P2PEthPool
+import com.tangem.grow.datasource.config.PolymarketBridge
 import com.tangem.grow.datasource.config.PolymarketClob
 import com.tangem.grow.datasource.config.PolymarketRelayer
 import com.tangem.grow.datasource.config.PolymarketWeb
@@ -37,6 +38,7 @@ import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.grow.datasource.onramp.OnrampApi
 import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
@@ -58,7 +60,7 @@ import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object GrowDatasourceModule {
@@ -303,6 +305,25 @@ internal object GrowDatasourceModule {
     @StringKey(PolymarketClob.KEY)
     fun providePolymarketClobConfig(): ApiConfig {
         return PolymarketClob()
+    }
+
+    @Provides
+    @IntoMap
+    @StringKey(PolymarketBridge.KEY)
+    fun providePolymarketBridgeConfig(): ApiConfig {
+        return PolymarketBridge()
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketBridgeApi(factory: RetrofitFactory): PolymarketBridgeApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketBridge.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
     }
 
     @Provides
