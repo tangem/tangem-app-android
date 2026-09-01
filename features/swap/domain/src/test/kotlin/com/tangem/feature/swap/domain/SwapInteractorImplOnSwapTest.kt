@@ -174,19 +174,7 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
             // Arrange — yield-active token swap is routed through the yield module proxy: the swap tx is
             // addressed to the proxy, but the Express status must be tracked by the original dex router (txTo).
             // [REDACTED_TASK_KEY] / [REDACTED_TASK_KEY]: otherwise the "Supplying to Aave" status never resolves.
-            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
-            coEvery {
-                createTransactionExtrasUseCase(callData = any(), network = any(), gasLimit = any())
-            } returns mockk<TransactionExtras>(relaxed = true).right()
-            coEvery {
-                createTransactionUseCase(
-                    amount = any(), fee = any(), memo = any(),
-                    destination = any(), userWalletId = any(), network = any(), txExtras = any(),
-                )
-            } returns yieldSwapTxUncompiled().right()
-            coEvery {
-                sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
-            } returns listOf(APPROVAL_HASH, SWAP_HASH).right()
+            stubYieldSwapSend()
             val payInSlot = slot<String>()
             coEvery {
                 repository.exchangeSent(
@@ -213,6 +201,88 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
             assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
             assertThat(payInSlot.captured).isEqualTo(DEX_ROUTER)
         }
+
+    @Test
+    fun `GIVEN yield swap WHEN onSwap THEN exchangeSent reports the module as sender not the wallet`() = runTest {
+        // [REDACTED_TASK_KEY]: the route was issued with the module as `fromAddress`, and the signed response echoes
+        // it back as `txFrom`. Express has to see the same sender it created the route for.
+        // Arrange
+        stubYieldSwapSend()
+        val fromAddressSlot = slot<String>()
+        coEvery {
+            repository.exchangeSent(
+                userWallet = any(), txId = any(), fromNetwork = any(),
+                fromAddress = capture(fromAddressSlot),
+                payInAddress = any(), txHash = any(), payInExtraId = any(),
+            )
+        } returns Unit.right()
+
+        // Act
+        val result = sut.onSwap(
+            fromSwapCurrencyStatus = yieldTokenStatus(),
+            toSwapCurrencyStatus = hotStatus(),
+            swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+            swapData = yieldDexSwapData(),
+            amountToSwap = "1.0",
+            balanceStatus = SwapBalanceStatus.Sufficient,
+            fee = buildSwapFee(),
+            expressOperationType = ExpressOperationType.SWAP,
+            isTangemPayWithdrawal = false,
+            integratedApproval = integratedApproval(approvalFee = singleFee()),
+        )
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        assertThat(fromAddressSlot.captured).isEqualTo(YIELD_PROXY)
+    }
+
+    @Test
+    fun `GIVEN yield swap AND response without txFrom WHEN onSwap THEN exchangeSent falls back to the wallet`() =
+        runTest {
+            // Arrange
+            stubYieldSwapSend()
+            val fromAddressSlot = slot<String>()
+            coEvery {
+                repository.exchangeSent(
+                    userWallet = any(), txId = any(), fromNetwork = any(),
+                    fromAddress = capture(fromAddressSlot),
+                    payInAddress = any(), txHash = any(), payInExtraId = any(),
+                )
+            } returns Unit.right()
+
+            // Act
+            sut.onSwap(
+                fromSwapCurrencyStatus = yieldTokenStatus(),
+                toSwapCurrencyStatus = hotStatus(),
+                swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+                swapData = yieldDexSwapData(txFrom = ""),
+                amountToSwap = "1.0",
+                balanceStatus = SwapBalanceStatus.Sufficient,
+                fee = buildSwapFee(),
+                expressOperationType = ExpressOperationType.SWAP,
+                isTangemPayWithdrawal = false,
+                integratedApproval = integratedApproval(approvalFee = singleFee()),
+            )
+
+            // Assert
+            assertThat(fromAddressSlot.captured).isEqualTo(WALLET_ADDRESS)
+        }
+
+    private fun stubYieldSwapSend() {
+        coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
+        coEvery {
+            createTransactionExtrasUseCase(callData = any(), network = any(), gasLimit = any())
+        } returns mockk<TransactionExtras>(relaxed = true).right()
+        coEvery {
+            createTransactionUseCase(
+                amount = any(), fee = any(), memo = any(),
+                destination = any(), userWalletId = any(), network = any(), txExtras = any(),
+            )
+        } returns yieldSwapTxUncompiled().right()
+        coEvery {
+            sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+        } returns listOf(APPROVAL_HASH, SWAP_HASH).right()
+    }
 
     @Test
     fun `GIVEN Choosable approval fee AND SLOW bucket THEN approval tx fee is the minimum`() = runTest {
@@ -334,7 +404,8 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
         ).let { SwapCurrencyStatus(userWallet = hotWallet, status = it.status, account = it.account) }
     }
 
-    private fun yieldDexSwapData(): SwapDataModel = SwapDataModel(
+    /** [txFrom] mirrors what Express echoes back: for a yield swap that is the module proxy. */
+    private fun yieldDexSwapData(txFrom: String = YIELD_PROXY): SwapDataModel = SwapDataModel(
         toTokenAmount = SwapAmount(BigDecimal("0.5"), 18),
         transaction = ExpressTransactionModel.DEX(
             fromAmount = SwapAmount(BigDecimal("1.0"), 18),
@@ -343,7 +414,7 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
             txId = "tx-id",
             txTo = DEX_ROUTER,
             txExtraId = null,
-            txFrom = "0xFrom",
+            txFrom = txFrom,
             txData = "0xdata",
             otherNativeFeeWei = null,
             gas = BigInteger.valueOf(21_000L),
@@ -452,6 +523,7 @@ internal class SwapInteractorImplOnSwapTest : SwapInteractorImplTestBase() {
         const val SWAP_HASH = "0xSwapHash"
         const val DEX_ROUTER = "0xDexRouter"
         const val YIELD_PROXY = "0xYieldProxy"
+        const val WALLET_ADDRESS = "0xTestAddress"
 
         val MIN_FEE: Fee = feeOf(BigDecimal("0.001"))
         val NORMAL_FEE: Fee = feeOf(BigDecimal("0.002"))

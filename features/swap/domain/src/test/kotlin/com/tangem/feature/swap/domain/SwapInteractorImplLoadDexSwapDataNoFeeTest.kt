@@ -197,25 +197,71 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
             stubAllowance(AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE))
 
             val dexProvider = stubDexQuoteAndExchangeData()
-            val result = sut.findBestQuote(
-                fromSwapCurrencyStatus = buildSwapCurrencyStatus(
-                    networkRawId = ethNetwork,
-                    isCoin = false,
-                    contractAddress = "0xToken",
-                    amount = BigDecimal("10"),
-                    yieldSupplyActive = true,
-                ),
-                toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork),
-                providers = listOf(dexProvider),
-                amountToSwap = "1.0",
-                reduceBalanceBy = BigDecimal.ZERO,
-            )
+            val result = invokeFindBestQuote(dexProvider, yieldSupplyActive = true)
             val state = result[dexProvider] as SwapState.QuotesLoadedState
 
             assertThat(state.permissionState)
                 .isNotInstanceOf(PermissionDataState.PermissionSettings::class.java)
             assertThat(state.permissionState).isEqualTo(PermissionDataState.Empty)
         }
+
+    // endregion
+
+    // region from / refund address
+
+    @Test
+    fun `GIVEN yield swap WHEN findBestQuote THEN exchange data is requested for the module with a wallet refund`() =
+        runTest {
+            // Arrange
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
+            val dexProvider = stubDexQuoteAndExchangeData()
+
+            // Act
+            invokeFindBestQuote(dexProvider, yieldSupplyActive = true)
+
+            // Assert
+            verifyExchangeDataRequested(fromAddress = YIELD_PROXY, refundAddress = WALLET_ADDRESS)
+        }
+
+    @Test
+    fun `GIVEN non-yield swap WHEN findBestQuote THEN both from and refund address are the wallet address`() = runTest {
+        // Arrange
+        val dexProvider = stubDexQuoteAndExchangeData()
+
+        // Act
+        invokeFindBestQuote(dexProvider)
+
+        // Assert
+        verifyExchangeDataRequested(fromAddress = WALLET_ADDRESS, refundAddress = WALLET_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN yield swap AND no module address WHEN findBestQuote THEN wallet address is used as from address`() =
+        runTest {
+            // Arrange
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns null
+            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
+            val dexProvider = stubDexQuoteAndExchangeData()
+
+            // Act
+            invokeFindBestQuote(dexProvider, yieldSupplyActive = true)
+
+            // Assert
+            verifyExchangeDataRequested(fromAddress = WALLET_ADDRESS, refundAddress = WALLET_ADDRESS)
+        }
+
+    private fun verifyExchangeDataRequested(fromAddress: String, refundAddress: String) {
+        coVerify(exactly = 1) {
+            repository.getExchangeData(
+                userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                toContractAddress = any(), fromAddress = fromAddress, toNetwork = any(),
+                fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                providerId = any(), rateType = any(), toAddress = any(),
+                expressOperationType = any(), refundAddress = refundAddress,
+            )
+        }
+    }
 
     // endregion
 
@@ -278,12 +324,14 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
 
     private suspend fun invokeFindBestQuote(
         dexProvider: com.tangem.feature.swap.domain.models.domain.SwapProvider,
+        yieldSupplyActive: Boolean = false,
     ) = sut.findBestQuote(
         fromSwapCurrencyStatus = buildSwapCurrencyStatus(
             networkRawId = ethNetwork,
             isCoin = false,
             contractAddress = "0xToken",
             amount = BigDecimal("10"),
+            yieldSupplyActive = yieldSupplyActive,
         ),
         toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork),
         providers = listOf(dexProvider),
@@ -294,5 +342,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
     private companion object {
         const val SPENDER = "0xSpender"
         const val YIELD_PROXY = "0xYieldProxy"
+        const val WALLET_ADDRESS = "0xTestAddress"
     }
 }
