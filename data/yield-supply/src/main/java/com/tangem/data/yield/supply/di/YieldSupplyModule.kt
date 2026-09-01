@@ -1,10 +1,10 @@
-package com.tangem.datasource.di
+package com.tangem.data.yield.supply.di
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostPromoStore
-import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostStatusStore
-import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
-import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
+import com.tangem.data.yield.supply.store.DefaultYieldBoostPromoStore
+import com.tangem.data.yield.supply.store.DefaultYieldBoostStatusStore
+import com.tangem.data.yield.supply.store.YieldBoostPromoStore
+import com.tangem.data.yield.supply.store.YieldBoostStatusStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object YieldSupplyModule {
+internal object YieldSupplyModule {
 
     @Provides
     @Singleton
