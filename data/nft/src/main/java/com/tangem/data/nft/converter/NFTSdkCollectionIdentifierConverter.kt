@@ -1,10 +1,11 @@
-package com.tangem.datasource.local.nft.converter
+package com.tangem.data.nft.converter
 
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
-object NFTSdkCollectionIdentifierConverter : TwoWayConverter<SdkNFTCollection.Identifier, NFTCollection.Identifier> {
+internal object NFTSdkCollectionIdentifierConverter :
+    TwoWayConverter<SdkNFTCollection.Identifier, NFTCollection.Identifier> {
     override fun convert(value: SdkNFTCollection.Identifier): NFTCollection.Identifier = when (value) {
         is SdkNFTCollection.Identifier.EVM -> NFTCollection.Identifier.EVM(
             tokenAddress = value.tokenAddress,
