@@ -4,17 +4,11 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
-/** Response of `GET https://bridge.polymarket.com/supported-assets`. */
 @JsonClass(generateAdapter = true)
 data class PolymarketSupportedAssetsResponse(
     @Json(name = "supportedAssets") val supportedAssets: List<PolymarketSupportedAssetDto>,
 )
 
-/**
- * One chain-and-token combination the bridge accepts right now.
- *
- * @property minCheckoutUsd the minimum **deposit** for this asset in USD; it says nothing about withdrawals
- */
 @JsonClass(generateAdapter = true)
 data class PolymarketSupportedAssetDto(
     @Json(name = "chainId") val chainId: Long,
@@ -31,24 +25,11 @@ data class PolymarketBridgeTokenDto(
     @Json(name = "decimals") val decimals: Int,
 )
 
-/**
- * Body of `POST https://bridge.polymarket.com/deposit`.
- *
- * @property address the user's deposit wallet, never the owner address
- */
 @JsonClass(generateAdapter = true)
 data class PolymarketDepositRequest(
     @Json(name = "address") val address: String,
 )
 
-/**
- * Addresses the bridge issues, one per chain family.
- *
- * @property evm the only field this flow consumes, and the only one guaranteed to be present
- * @property tron null whenever the payload names the field `tvm`, which Polymarket's own pages do
- *  inconsistently. Left unmapped rather than bridged, because nothing reads the Tron address; a payload
- *  under either name still decodes.
- */
 @JsonClass(generateAdapter = true)
 data class PolymarketBridgeAddressesDto(
     @Json(name = "evm") val evm: String,
