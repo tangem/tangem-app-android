@@ -2260,8 +2260,6 @@
   <string name="tangempay_va_banking_details_error_title">Не удалось загрузить банковские реквизиты</string>
   <string name="tangempay_va_limit_resetting_everyday">Лимит обновляется каждый день</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
-  <string name="tangempay_withdrawal_note_description">При возвратах покупок средства не возвращаются на ончейн-баланс Polygon и недоступны для вывода, но отображаются на карте и могут быть использованы для покупок</string>
-  <string name="tangempay_withdrawal_note_title">Обратите внимание</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>
   <string name="this_is_my_wallet_title">Это мой кошелек</string>
   <string name="toast_balances_hidden">Балансы скрыты</string>
