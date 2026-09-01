@@ -51,7 +51,7 @@ internal class TangemPayCashbackModel @Inject constructor(
     private val cashbackConverter = TangemPayCashbackUmConverter()
     private val histogramConverter = TangemPayCashbackHistogramConverter()
     private val cardsConverter = TangemPayCashbackCardsConverter()
-    private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter()
+    private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter(onLinkClick = urlOpener::openUrl)
     private val infoTilesConverter = TangemPayCashbackInfoTilesConverter(
         onRateClick = ::onConditionsTileClick,
         onAccrualsClick = ::onAccrualsTileClick,
