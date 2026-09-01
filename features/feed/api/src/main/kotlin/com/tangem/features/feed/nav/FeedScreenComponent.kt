@@ -19,8 +19,9 @@ interface FeedScreenComponent {
      * empty: screens whose header is the shared search bar (home, search) don't override it — the
      * host renders the search bar itself for those.
      *
-     * @param sheetExpansion resting position of the hosting shtorka; lets a navbar adapt to the
-     * collapsed pill, where its screen's content is off screen
+     * @param sheetExpansion position the hosting shtorka is settling towards, so a navbar leads
+     * the motion rather than snapping after it; lets it adapt to the collapsed pill, where its
+     * screen's content is off screen
      * @param onExpandSheet raises the hosting shtorka to full
      */
     @Composable

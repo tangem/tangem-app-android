@@ -22,7 +22,7 @@ interface FeedV2Component {
      * screen's own navbar when one covers the feed (e.g. token details). The host renders it
      * next to its grabber; the composable applies its own horizontal insets.
      *
-     * @param sheetExpansion resting position of the hosting shtorka
+     * @param sheetExpansion position the hosting shtorka is settling towards
      * @param onExpandSheet raises the hosting shtorka to full; invoked when the search bar is focused
      */
     @Composable
