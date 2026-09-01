@@ -14,8 +14,11 @@ import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.test.core.ProvideTestModels
 import com.google.common.truth.Truth.assertThat
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -24,6 +27,11 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class TangemPayMainBlockConverterTest {
 
     private val tangemPayIntents: TangemPayIntents = mockk(relaxed = true)
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(tangemPayIntents)
+    }
 
     @ParameterizedTest
     @ProvideTestModels
@@ -90,6 +98,24 @@ internal class TangemPayMainBlockConverterTest {
 
         // Assert
         assertThat(result).isEqualTo(TangemPayMainUM.TemporaryUnavailable)
+    }
+
+    @Test
+    fun `GIVEN card issue failed WHEN convert THEN block click opens the payment account`() {
+        // Arrange
+        val converter = TangemPayMainBlockConverter(
+            tangemPayClickIntents = tangemPayIntents,
+            isAccountMultichainEnabled = false,
+        )
+        val status = paymentAccount(PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer"))
+
+        // Act
+        val result = converter.convert(status)
+
+        // Assert
+        assertThat(result).isInstanceOf(TangemPayMainUM.FailedToIssue::class.java)
+        (result as TangemPayMainUM.FailedToIssue).onClick()
+        verify(exactly = 1) { tangemPayIntents.openDetails(status) }
     }
 
     private fun provideTestModels() = listOf(
