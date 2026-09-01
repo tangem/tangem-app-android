@@ -12,6 +12,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoU
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.combine8
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -33,6 +34,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
     override val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,
+    override val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
@@ -93,7 +95,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
                 yieldSupplyApyMap = yieldSupplyApyMap,
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
-                isMultipleCardsEnabled = true,
                 isHotBackedUp = isHotBackedUp,
             )
         }
