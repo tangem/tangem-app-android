@@ -130,6 +130,7 @@ internal class ChooseTokenListItemConverter(
                         account.paymentCryptoCurrencies().map { account to it }
                     is AccountStatus.Virtual -> emptyList()
                     is AccountStatus.Prediction -> emptyList()
+                    is AccountStatus.Collectibles -> emptyList()
                     // Joint currencies belong to the Safe contract, never to a spendable EOA
                     is AccountStatus.Joint -> emptyList()
                 }
@@ -164,6 +165,7 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
                     is AccountStatus.Virtual -> null
                     is AccountStatus.Prediction -> null
+                    is AccountStatus.Collectibles -> null
                     is AccountStatus.Joint -> null
                 }
             }
