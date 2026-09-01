@@ -58,6 +58,7 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.shtorka.TangemShtorka
 import com.tangem.core.ui.ds2.shtorka.TangemShtorkaState
 import com.tangem.core.ui.ds2.shtorka.rememberTangemShtorkaState
@@ -80,7 +81,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.jointaccount.main.JointAccountMainUM
-import com.tangem.features.feed.nav.FeedSheetDetent
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
@@ -114,7 +114,7 @@ internal fun WalletScreen(
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
-    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
@@ -204,7 +204,7 @@ private fun WalletContent(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
@@ -454,7 +454,7 @@ private fun BaseScaffoldWithMarkets(
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -607,7 +607,7 @@ private fun ShtorkaScaffoldWithMarkets(
     state: WalletScreenState,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (sheetDetent: State<FeedSheetDetent>, onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
@@ -657,12 +657,12 @@ private fun ShtorkaScaffoldWithMarkets(
         val onExpandSheet = remember(shtorkaState) {
             { shtorkaState.animateTo(TangemShtorka.Detent.Full) }
         }
-        val sheetDetent = remember(shtorkaState) {
+        val sheetExpansion = remember(shtorkaState) {
             derivedStateOf {
                 when (shtorkaState.targetDetent) {
-                    ShtorkaCollapsedDetent -> FeedSheetDetent.PILL
-                    TangemShtorka.Detent.Full -> FeedSheetDetent.FULL
-                    else -> FeedSheetDetent.PARTIAL
+                    ShtorkaCollapsedDetent -> ShtorkaExpansion.PILL
+                    TangemShtorka.Detent.Full -> ShtorkaExpansion.FULL
+                    else -> ShtorkaExpansion.PARTIAL
                 }
             }
         }
@@ -689,7 +689,7 @@ private fun ShtorkaScaffoldWithMarkets(
                 showDragHandle = false,
                 header = {
                     ShtorkaSheetHeader {
-                        shtorkaHeaderContent(sheetDetent, onExpandSheet)
+                        shtorkaHeaderContent(sheetExpansion, onExpandSheet)
                     }
                 },
             ) {
