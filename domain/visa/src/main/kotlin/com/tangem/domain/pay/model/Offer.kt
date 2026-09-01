@@ -19,6 +19,8 @@ data class Offer(
 
     val isPlastic: Boolean get() = type == Type.CARD_ISSUE_PLASTIC_RAIN
 
+    val isVirtual: Boolean get() = type == Type.CARD_ISSUE_VIRTUAL_RAIN
+
     data class Data(
         val specificationName: String,
         val orderType: OrderType,
@@ -50,3 +52,5 @@ data class Offer(
 }
 
 fun List<Offer>.plasticOffer(): Offer? = firstOrNull(Offer::isPlastic)
+
+fun List<Offer>.virtualOffer(): Offer? = firstOrNull(Offer::isVirtual)

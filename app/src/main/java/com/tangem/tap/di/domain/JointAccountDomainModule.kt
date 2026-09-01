@@ -6,6 +6,7 @@ import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRe
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.tap.domain.jointaccount.DefaultJointAccountSigner
 import dagger.Module
@@ -44,5 +45,13 @@ internal object JointAccountDomainModule {
             fetcher = fetcher,
             supplier = supplier,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetJointAccountInvitePreviewUseCase(
+        repository: JointAccountRepository,
+    ): GetJointAccountInvitePreviewUseCase {
+        return GetJointAccountInvitePreviewUseCase(repository)
     }
 }

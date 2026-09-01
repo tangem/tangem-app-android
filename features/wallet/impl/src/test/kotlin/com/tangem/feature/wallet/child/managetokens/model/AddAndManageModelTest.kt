@@ -134,7 +134,7 @@ internal class AddAndManageModelTest {
             val tokenList = mockk<TokenList> {
                 every { flattenCurrencies() } returns List(count) { mockk<CryptoCurrencyStatus>() }
             }
-            mockk<AccountStatus.CryptoPortfolio> {
+            mockk<AccountStatus.Personal> {
                 every { this@mockk.tokenList } returns tokenList
             }
         }
