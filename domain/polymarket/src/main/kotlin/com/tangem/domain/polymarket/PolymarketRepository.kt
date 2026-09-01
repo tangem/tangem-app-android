@@ -105,12 +105,6 @@ interface PolymarketRepository {
      */
     suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
 
-    /**
-     * Tangem's builder code at Polymarket, attached as `X-Builder-Code` to the bridge deposit and withdraw
-     * calls. Cached for the process lifetime, as the contract allows.
-     *
-     * @param walletId Tangem wallet id, 64 hex without the `0x` prefix
-     */
     suspend fun getBuilderCode(walletId: String): Either<DataError, String>
 
     /**

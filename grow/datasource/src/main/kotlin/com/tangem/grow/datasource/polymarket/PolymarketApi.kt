@@ -88,12 +88,7 @@ interface PolymarketApi {
         @Query("walletId") walletId: String,
     ): ApiResponse<PolymarketWalletStatusResponse>
 
-    /**
-     * Configuration owned by the BFF. Touches no upstream, so it answers `200`, `400` or `401` and never
-     * `502`, and its value may be cached for the session.
-     *
-     * @param walletId Tangem wallet id, 64 hex without the `0x` prefix
-     */
+    /** @param walletId Tangem wallet id, 64 hex without the `0x` prefix. */
     @GET("api/predictions/v1/configuration")
     suspend fun getConfiguration(@Header("wallet-id") walletId: String): ApiResponse<PolymarketConfigurationResponse>
 
