@@ -1,10 +1,10 @@
-package com.tangem.datasource.local.card
+package com.tangem.data.card.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class UsedCardInfo(
+internal data class UsedCardInfo(
     @Json(name = "cardId")
     val cardId: String,
     @Json(name = "isScanned")
