@@ -200,7 +200,7 @@ internal class ForYouModelTest {
 
             // Assert
             val content = model.uiState.value.portfolioReviewUM as PortfolioReviewUM.Content
-            assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("BTC")
+            assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
             assertThat(content.marketChartUM).isInstanceOf(MarketChartUM.Loaded::class.java)
             assertThat(model.uiState.value.notifications).isEmpty()
         }
@@ -321,7 +321,7 @@ internal class ForYouModelTest {
                 val state = model.uiState.value
                 assertThat(state.portfolioFilter).isInstanceOf(TangemFilterItemUM.Inactive::class.java)
                 val content = state.portfolioReviewUM as PortfolioReviewUM.Content
-                assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("BTC")
+                assertThat(content.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
             }
     }
 
@@ -438,7 +438,12 @@ internal class ForYouModelTest {
                         createStatus(createCoin(rawCurrencyId = "eth", symbol = "eth"), loadedValue(BigDecimal("50"))),
                         createStatus(createCoin(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("100"))),
                         createStatus(
-                            createCoin(rawCurrencyId = "btc2", symbol = "BTC", networkRawId = "bitcoin-2"),
+                            createCoin(
+                                rawCurrencyId = "btc",
+                                symbol = "BTC",
+                                networkRawId = "bitcoin-2",
+                                idValue = "coin-btc-2",
+                            ),
                             loadedValue(BigDecimal("10")),
                         ),
                     ),
@@ -1148,6 +1153,11 @@ internal class ForYouModelTest {
         source = source,
     )
 
+    /**
+     * A real [CryptoCurrency.Coin] rather than a mock: the portfolio-review converter rebuilds the asset
+     * row's head icon with `copy(iconUrl = ...)`, and a mock answers no generated member it was not
+     * stubbed with.
+     */
     private fun createCoin(
         rawCurrencyId: String,
         symbol: String,
@@ -1155,40 +1165,31 @@ internal class ForYouModelTest {
         networkRawId: String = rawCurrencyId,
         decimals: Int = 8,
         idValue: String = "coin-$rawCurrencyId",
-    ): CryptoCurrency.Coin {
-        val network = createNetwork(networkRawId)
-        val currencyId: CryptoCurrency.ID = mockk {
-            every { value } returns idValue
-            every { this@mockk.rawCurrencyId } returns CryptoCurrency.RawID(rawCurrencyId)
-        }
-        return mockk<CryptoCurrency.Coin> {
-            every { this@mockk.id } returns currencyId
-            every { this@mockk.symbol } returns symbol
-            every { this@mockk.name } returns name
-            every { this@mockk.network } returns network
-            every { this@mockk.decimals } returns decimals
-            every { isCustom } returns false
-            every { iconUrl } returns null
-        }
-    }
+    ): CryptoCurrency.Coin = CryptoCurrency.Coin(
+        id = createCurrencyId(idValue = idValue, rawCurrencyId = rawCurrencyId),
+        network = createNetwork(networkRawId),
+        name = name,
+        symbol = symbol,
+        decimals = decimals,
+        iconUrl = null,
+        isCustom = false,
+    )
 
     /** A token whose `yieldSupplyKey()` resolves to `"ethereum_0xabc"`. */
-    private fun createYieldToken(): CryptoCurrency.Token {
-        val network = createNetwork(networkRawId = "ethereum")
-        val currencyId: CryptoCurrency.ID = mockk {
-            every { value } returns "token-usdc"
-            every { rawCurrencyId } returns CryptoCurrency.RawID("usd-coin")
-        }
-        return mockk {
-            every { id } returns currencyId
-            every { symbol } returns "USDC"
-            every { name } returns "USD Coin"
-            every { this@mockk.network } returns network
-            every { decimals } returns 6
-            every { isCustom } returns false
-            every { iconUrl } returns null
-            every { contractAddress } returns "0xabc"
-        }
+    private fun createYieldToken(): CryptoCurrency.Token = CryptoCurrency.Token(
+        id = createCurrencyId(idValue = "token-usdc", rawCurrencyId = "usd-coin"),
+        network = createNetwork(networkRawId = "ethereum"),
+        name = "USD Coin",
+        symbol = "USDC",
+        decimals = 6,
+        iconUrl = null,
+        isCustom = false,
+        contractAddress = "0xabc",
+    )
+
+    private fun createCurrencyId(idValue: String, rawCurrencyId: String): CryptoCurrency.ID = mockk {
+        every { value } returns idValue
+        every { this@mockk.rawCurrencyId } returns CryptoCurrency.RawID(rawCurrencyId)
     }
 
     private fun createNetwork(networkRawId: String): Network {
