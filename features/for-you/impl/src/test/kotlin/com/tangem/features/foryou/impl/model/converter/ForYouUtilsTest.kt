@@ -32,37 +32,51 @@ internal class ForYouUtilsTest {
     inner class ForYouGroupKey {
 
         @Test
-        fun `GIVEN standard currency with raw id WHEN forYouGroupKey THEN returns rawCurrencyId value`() {
+        fun `GIVEN currency WHEN forYouGroupKey THEN returns the symbol`() {
             // Arrange
-            val id: CryptoCurrency.ID = mockk {
-                every { rawCurrencyId } returns CryptoCurrency.RawID("bitcoin")
-                every { value } returns "coin-id-value"
-            }
-            val currency: CryptoCurrency = mockk { every { this@mockk.id } returns id }
-            val status = createStatus(currency)
+            val status = createStatus(createCurrency(symbol = "BTC", idValue = "coin-btc-bitcoin"))
 
             // Act
             val result = status.forYouGroupKey()
 
             // Assert
-            assertThat(result).isEqualTo("bitcoin")
+            assertThat(result).isEqualTo("BTC")
         }
 
         @Test
-        fun `GIVEN custom token with no raw id WHEN forYouGroupKey THEN falls back to currency id value`() {
-            // Arrange
-            val id: CryptoCurrency.ID = mockk {
-                every { rawCurrencyId } returns null
-                every { value } returns "custom-currency-id"
-            }
-            val currency: CryptoCurrency = mockk { every { this@mockk.id } returns id }
-            val status = createStatus(currency)
+        fun `GIVEN the same symbol on different networks WHEN forYouGroupKey THEN keys match`() {
+            // Arrange — one asset held on two chains has two distinct currency ids, and collapsing it into
+            // a single portfolio-review row is the whole reason the key is the symbol
+            val onEthereum = createStatus(createCurrency(symbol = "USDC", idValue = "token-usdc-ethereum"))
+            val onSolana = createStatus(createCurrency(symbol = "USDC", idValue = "token-usdc-solana"))
 
             // Act
-            val result = status.forYouGroupKey()
+            val ethereumKey = onEthereum.forYouGroupKey()
+            val solanaKey = onSolana.forYouGroupKey()
 
             // Assert
-            assertThat(result).isEqualTo("custom-currency-id")
+            assertThat(ethereumKey).isEqualTo(solanaKey)
+        }
+
+        @Test
+        fun `GIVEN different symbols WHEN forYouGroupKey THEN keys differ`() {
+            // Arrange
+            val btc = createStatus(createCurrency(symbol = "BTC", idValue = "coin-btc-bitcoin"))
+            val eth = createStatus(createCurrency(symbol = "ETH", idValue = "coin-eth-ethereum"))
+
+            // Act
+            val keys = listOf(btc.forYouGroupKey(), eth.forYouGroupKey())
+
+            // Assert
+            assertThat(keys).containsExactly("BTC", "ETH").inOrder()
+        }
+
+        private fun createCurrency(symbol: String, idValue: String): CryptoCurrency {
+            val currencyId: CryptoCurrency.ID = mockk { every { value } returns idValue }
+            return mockk {
+                every { this@mockk.symbol } returns symbol
+                every { id } returns currencyId
+            }
         }
 
         private fun createStatus(currency: CryptoCurrency): CryptoCurrencyStatus = CryptoCurrencyStatus(
@@ -244,7 +258,7 @@ internal class ForYouUtilsTest {
                 ),
                 expected = resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue,
             ),
-            // Net-positive score → Positive
+            // 3 loaded → band 0, so even a net score of +1 is already decisive → Positive
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
@@ -253,10 +267,28 @@ internal class ForYouUtilsTest {
                 ),
                 expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
             ),
-            // Net-negative score → Negative
+            // …and a net score of -1 on the same 3-wide scale likewise → Negative
             BadgeModel(
                 coinIndicators = createIndicators(
                     createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NEGATIVE),
+                ),
+                expected = resourceReference(R.string.common_negative) to TangemBadgeColor.Red,
+            ),
+            // A unanimous 3-wide scale is Positive too — the badge follows the sign, not the margin
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.MACD, Signal.POSITIVE, Timeframe.DAY),
+                    createReading(CoinIndicators.Reading.Type.SENTIMENT, Signal.POSITIVE),
+                ),
+                expected = resourceReference(R.string.common_positive) to TangemBadgeColor.Green,
+            ),
+            // Three negatives likewise → Negative
+            BadgeModel(
+                coinIndicators = createIndicators(
+                    createReading(CoinIndicators.Reading.Type.RSI, Signal.NEGATIVE, Timeframe.DAY),
                     createReading(CoinIndicators.Reading.Type.MACD, Signal.NEGATIVE, Timeframe.DAY),
                     createReading(CoinIndicators.Reading.Type.MA_CROSS, Signal.NEGATIVE),
                 ),

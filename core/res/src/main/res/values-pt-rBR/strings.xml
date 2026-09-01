@@ -1065,10 +1065,6 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">A carteira não suporta mais de uma rede.</string>
   <string name="market_chart_ai_total">Total de IA:</string>
   <string name="market_chart_ask_for_ai_summary_button">Solicite um resumo de IA</string>
-  <plurals name="market_chart_assets_android">
-    <item quantity="one">%d ativo</item>
-    <item quantity="other">%d ativos</item>
-  </plurals>
   <string name="market_chart_bubble_no_amount">Nenhum valor em fichas</string>
   <string name="market_chart_bubble_no_data">Sem dados</string>
   <string name="market_chart_bubble_total_value">Valor total</string>
@@ -2395,8 +2391,6 @@
   <string name="tangempay_va_banking_details_error_title">Não foi possível carregar os dados bancários.</string>
   <string name="tangempay_va_limit_resetting_everyday">O limite é reiniciado todos os dias.</string>
   <string name="tangempay_visa_benefits">Benefícios do visto</string>
-  <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
-  <string name="tangempay_withdrawal_note_title">Observe</string>
   <string name="tangempay_your_pin_code">Seu código PIN</string>
   <string name="this_is_my_wallet_title">Esta é a minha carteira.</string>
   <string name="toast_balances_hidden">Saldos ocultos</string>
@@ -2452,6 +2446,10 @@
   <string name="tokens_list_unavailable_to_sell_header">Não disponível para venda</string>
   <string name="tokens_list_unavailable_to_swap_header">Não disponível para troca a partir de %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Indisponível para troca</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">%d ativo</item>
+    <item quantity="other">%d ativos</item>
+  </plurals>
   <string name="transaction_history_approve_high_risk_subtitle">Você está conectado. Seus fundos podem estar em risco. Considere revogar o acesso.</string>
   <string name="transaction_history_approve_high_risk_title">Alto Risco</string>
   <string name="transaction_history_approved_amount">Valor Aprovado</string>
