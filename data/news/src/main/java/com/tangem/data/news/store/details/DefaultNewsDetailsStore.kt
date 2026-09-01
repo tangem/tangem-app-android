@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.news.details
+package com.tangem.data.news.store.details
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.news.DetailedArticle
