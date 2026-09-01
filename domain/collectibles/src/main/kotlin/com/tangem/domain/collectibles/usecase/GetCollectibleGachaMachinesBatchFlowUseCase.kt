@@ -1,0 +1,17 @@
+package com.tangem.domain.collectibles.usecase
+
+import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchFlow
+import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchingContext
+import com.tangem.domain.collectibles.repository.CollectiblesRepository
+
+class GetCollectibleGachaMachinesBatchFlowUseCase(private val repository: CollectiblesRepository) {
+
+    operator fun invoke(
+        context: CollectibleGachaMachinesBatchingContext,
+        batchSize: Int = DEFAULT_BATCH_SIZE,
+    ): CollectibleGachaMachinesBatchFlow = repository.getMachinesBatchFlow(context = context, batchSize = batchSize)
+
+    private companion object {
+        const val DEFAULT_BATCH_SIZE = 20
+    }
+}
