@@ -16,6 +16,7 @@ import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -72,6 +73,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
     private val promoCampaignsDeepLink: CampaignsDeepLinkHandler.Factory,
     private val jointAccountDeepLink: JointAccountDeepLinkHandler.Factory,
+    private val jointAccountInviteDeepLink: JointAccountInviteDeepLinkHandler.Factory,
     private val urlOpener: UrlOpener,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
@@ -207,6 +209,10 @@ internal class DeepLinkFactory @Inject constructor(
                 } else {
                     newsDeepLink.create(getQueryParams(deeplinkUri))
                 }
+                true
+            }
+            path.matchesPathSegment("/joint-account/join") -> {
+                jointAccountInviteDeepLink.create(coroutineScope, deeplinkUri)
                 true
             }
             else -> false
