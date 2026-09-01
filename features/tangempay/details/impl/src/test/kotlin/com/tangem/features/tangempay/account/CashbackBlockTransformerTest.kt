@@ -128,7 +128,7 @@ internal class CashbackBlockTransformerTest {
     }
 
     @Test
-    fun `GIVEN menu without current plan WHEN transform THEN cashback menu item inserted above terms`() {
+    fun `GIVEN menu without current plan WHEN transform THEN cashback menu item inserted first`() {
         // Arrange
         val transformer = createTransformer(summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK))
         val stateWithoutPlan = contentState().let { state ->
@@ -148,9 +148,7 @@ internal class CashbackBlockTransformerTest {
         val cashbackIndex = items.indexOfFirst {
             (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_menu_item_title
         }
-        val termsIndex = items.indexOfFirst { it.title == resourceReference(R.string.tangem_pay_terms_limits) }
-        assertThat(cashbackIndex).isAtLeast(0)
-        assertThat(termsIndex).isEqualTo(cashbackIndex + 1)
+        assertThat(cashbackIndex).isEqualTo(0)
     }
 
     @Test
@@ -306,8 +304,6 @@ internal class CashbackBlockTransformerTest {
             onOpenMenu = {},
             items = persistentListOf(
                 menuItem(R.string.tangempay_current_plan_title),
-                menuItem(R.string.tangempay_visa_benefits),
-                menuItem(R.string.tangem_pay_terms_limits),
                 menuItem(R.string.tangempay_pay_support),
             ),
             subtitle = TextReference.EMPTY,
