@@ -24,7 +24,7 @@ import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -61,7 +61,7 @@ abstract class BaseTestCase : TestCase(
     lateinit var appPreferencesStore: AppPreferencesStore
 
     @Inject
-    lateinit var walletManagersStore: WalletManagersStore
+    lateinit var walletManagersFacade: WalletManagersFacade
 
     @Inject
     lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
