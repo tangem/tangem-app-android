@@ -29,8 +29,14 @@ import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.audits.AuditLabel
 import com.tangem.core.ui.components.audits.AuditLabelUM
-import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationConfig
+import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.notifications.MessageBanner
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.message.TangemMessageButtonUM
+import com.tangem.core.ui.ds.message.TangemMessageUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -39,6 +45,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.res.R
 import com.tangem.core.ui.R as CoreR
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.dynamicaddresses.DynamicAddressesBottomSheetConfig.DisableFeeState
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetConfig.Enable) {
@@ -153,18 +160,26 @@ internal fun DynamicAddressesDisableWithConsolidationContent(
         if (content.feeState is DisableFeeState.Error) {
             Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing12))
 
-            Notification(
-                config = NotificationConfig(
+            MessageBanner(
+                messageUM = TangemMessageUM(
+                    id = "dynamic_addresses_fee_unreachable",
+                    variant = TangemMessageBanner.Variant.Default,
+                    shouldShowGlowRing = true,
                     title = resourceReference(R.string.send_fee_unreachable_error_title),
                     subtitle = resourceReference(R.string.send_fee_unreachable_error_text),
-                    iconResId = CoreR.drawable.ic_alert_24,
-                    iconTint = NotificationConfig.IconTint.Warning,
-                    buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                        text = resourceReference(R.string.warning_button_refresh),
-                        onClick = content.onRefreshFee,
+                    iconUM = TangemIconUM.Icon(
+                        imageVector = Icons.ic_warning_20_filled,
+                        tintReference = { TangemTheme.colors3.icon.status.warning },
+                    ),
+                    iconSize = 20.dp,
+                    buttonsUM = persistentListOf(
+                        TangemMessageButtonUM(
+                            text = resourceReference(R.string.warning_button_refresh),
+                            type = TangemButtonType.Secondary,
+                            onClick = content.onRefreshFee,
+                        ),
                     ),
                 ),
-                containerColor = TangemTheme.colors.background.action,
             )
         }
 

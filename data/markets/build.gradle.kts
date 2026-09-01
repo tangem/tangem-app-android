@@ -49,6 +49,7 @@ dependencies {
     // region Domain
     api(projects.domain.common)
     api(projects.domain.markets)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
     runtimeOnly(projects.domain.tokens)
     // endregion

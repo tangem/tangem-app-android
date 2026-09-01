@@ -144,6 +144,18 @@ internal class TangemPayCurrentPlanModelTest {
     }
 
     @Test
+    fun `GIVEN markdown link WHEN onLinkClick THEN url is opened in app`() {
+        // GIVEN
+        val model = createModel(planState = tariffPlanState())
+
+        // WHEN
+        model.state.value.onLinkClick("https://tangem.com/visa-benefits")
+
+        // THEN
+        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/visa-benefits") }
+    }
+
+    @Test
     fun `GIVEN awaiting deposit AND next billing date WHEN model created THEN awaiting deposit notification wins`() {
         // GIVEN
         val planState = tariffPlanState(

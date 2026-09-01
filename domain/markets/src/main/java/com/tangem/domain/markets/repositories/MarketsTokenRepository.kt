@@ -1,7 +1,7 @@
 package com.tangem.domain.markets.repositories
 
 import com.tangem.domain.markets.*
-import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -44,7 +44,7 @@ interface MarketsTokenRepository {
         userWalletId: UserWalletId,
         token: RawMarketToken,
         network: TokenMarketInfo.Network,
-        accountIndex: DerivationIndex? = null,
+        account: Account.CryptoPortfolio,
     ): CryptoCurrency?
 
     /**

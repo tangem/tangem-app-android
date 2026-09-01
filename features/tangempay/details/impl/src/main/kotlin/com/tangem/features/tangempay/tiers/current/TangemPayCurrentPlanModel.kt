@@ -49,8 +49,8 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private val cancelTariffTransition: CancelTariffTransitionUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val uiMessageSender: UiMessageSender,
-    private val urlOpener: UrlOpener,
     private val analytics: AnalyticsEventHandler,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayCurrentPlanComponent.Params>()
@@ -91,6 +91,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
             planState.tariff.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING &&
                 !planState.isPlanTransitioningState
         },
+        onLinkClick = urlOpener::openUrl,
         onFullTermsClick = ::onFullTermsClick,
     )
 
