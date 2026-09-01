@@ -124,7 +124,8 @@ internal class ChooseTokenListItemConverter(
         is TokenConverterParams.Account ->
             params.accountList.accountStatuses.flatMap { account ->
                 when (account) {
-                    is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().map { account to it }
+                    is AccountStatus.Personal ->
+                        account.tokenList.flattenCurrencies().map { account to it }
                     is AccountStatus.Payment ->
                         account.paymentCryptoCurrencies().map { account to it }
                     is AccountStatus.Virtual -> emptyList()
@@ -156,7 +157,7 @@ internal class ChooseTokenListItemConverter(
         val accountItems = accountList.accountStatuses
             .mapNotNull { accountStatus ->
                 when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.toPortfolioItem(params)
+                    is AccountStatus.Personal -> accountStatus.toPortfolioItem(params)
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
                     is AccountStatus.Virtual -> null
                     is AccountStatus.Prediction -> null
@@ -205,12 +206,17 @@ internal class ChooseTokenListItemConverter(
 
     private fun AccountStatus.CryptoPortfolio.filterForDisplay(): AccountStatus.CryptoPortfolio {
         val filteredTokenList = filterTokenList(tokenList, this)
-        return copy(
-            account = account.copySealed(
-                cryptoCurrencies = filteredTokenList.flattenCurrencies().map { it.currency },
-            ),
-            tokenList = filteredTokenList,
-        )
+        val filteredCurrencies = filteredTokenList.flattenCurrencies().map { it.currency }
+        return when (this) {
+            is AccountStatus.Personal -> copy(
+                account = account.copy(cryptoCurrencies = filteredCurrencies),
+                tokenList = filteredTokenList,
+            )
+            is AccountStatus.Joint -> copy(
+                account = account.copy(cryptoCurrencies = filteredCurrencies),
+                tokenList = filteredTokenList,
+            )
+        }
     }
 
     private fun TokenList.recalculateBalance(): TokenList {

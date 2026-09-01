@@ -74,11 +74,6 @@ sealed class TangemPayAnalyticsEvents(
         event = "Button - Card Settings",
     )
 
-    class TermsAndLimitsClicked : TangemPayAnalyticsEvents(
-        categoryName = "Visa Screen",
-        event = "Button - Terms And Limits",
-    )
-
     class FreezeCardClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Freeze Card",

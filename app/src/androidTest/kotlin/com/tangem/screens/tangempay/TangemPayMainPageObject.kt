@@ -61,10 +61,6 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
-    val termsAndFeesMenuItem: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangem_pay_terms_limits))
-    }
-
     fun transactionRowWithText(text: String): KNode = child {
         hasText(text)
         useUnmergedTree = true
