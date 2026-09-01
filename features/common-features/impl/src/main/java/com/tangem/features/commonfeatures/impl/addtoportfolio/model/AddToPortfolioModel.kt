@@ -279,6 +279,10 @@ internal class AddToPortfolioModel @Inject constructor(
             val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
             middleNavigationJob?.cancel()
             val selectedPortfolioSnapshot = selectedPortfolio.first()
+            analyticsEventHandler.send(eventBuilder.tokenAdded(addedToken.currency.network.name))
+            if (!selectedPortfolioSnapshot.account.account.account.isMainAccount) {
+                analyticsEventHandler.send(eventBuilder.addToNotMainAccount())
+            }
             val result = AddToPortfolioManager.Result(
                 wallet = selectedPortfolioSnapshot.userWallet,
                 account = selectedPortfolioSnapshot.account.account,
