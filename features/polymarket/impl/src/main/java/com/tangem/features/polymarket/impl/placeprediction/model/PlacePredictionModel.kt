@@ -36,6 +36,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
@@ -46,7 +48,6 @@ import com.tangem.features.polymarket.impl.placeprediction.model.transformers.Se
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPaymentCurrencyTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSlippageTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSubmitTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -57,6 +58,7 @@ import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -146,13 +148,25 @@ internal class PlacePredictionModel @Inject constructor(
         restartQuoteLoop(withDebounce = true)
     }
 
-    override fun onSlippageSelected(percent: BigDecimal) {
-        uiState.update(SetSlippageTransformer(percent = percent))
-        restartQuoteLoop(withDebounce = false)
+    override fun onSlippageClick() {
+        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = it.slippage.percent.toPlainString())) }
+        router.push(PlacePredictionRoute.Slippage)
     }
 
-    override fun onSlippageClick() {
-        showComingLater(part = "Choosing the slippage")
+    override fun onSlippageValueChange(value: String) {
+        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = value)) }
+    }
+
+    override fun onSlippagePresetClick(percent: BigDecimal) {
+        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = percent.toPlainString())) }
+    }
+
+    override fun onSlippageConfirmClick() {
+        val percent = uiState.value.slippagePicker.value.toBigDecimalOrNull() ?: return
+
+        uiState.update { it.copy(slippage = SlippageUM.of(percent = percent)) }
+        restartQuoteLoop(withDebounce = false)
+        router.pop()
     }
 
     override fun onAddFundsClick() {
