@@ -82,7 +82,7 @@ internal class PolymarketPlaceOrderBodyBuilderTest {
     ): PredictionSignedOrder =
         PredictionSignedOrder(
             order = PredictionOrder(
-                salt = BigInteger("1234567890"),
+                salt = 1_234_567_890L,
                 maker = maker,
                 signer = "0xSigner",
                 tokenId = BigInteger("7"),
