@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.Locale
 import javax.inject.Inject
@@ -91,21 +92,34 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         network: Network,
         blockchain: Blockchain,
         fiatRate: BigDecimal?,
-    ): PaymentNetworkStatus {
-        val currencies = tokens.map { token -> createToken(network, blockchain, token) }
+    ): PaymentNetworkStatus? {
+        val tokensWithCurrency = tokens.mapNotNull { token ->
+            val currency = createToken(network, blockchain, token) ?: return@mapNotNull null
+            token to currency
+        }
+        val currencies = tokensWithCurrency.map { (_, currency) -> currency }
         return when (status) {
-            CustomerInfo.NetworkInfo.Status.ENABLED -> PaymentNetworkStatus.Available(
-                network = network,
-                depositAddress = depositAddress.orEmpty(),
-                cryptoCurrencyStatuses = tokens.zip(currencies).map { (token, currency) ->
-                    buildStatus(
-                        currency = currency,
-                        amount = token.availableForWithdrawal.orZero(),
-                        fiatRate = fiatRate,
-                        depositAddress = depositAddress.orEmpty(),
-                    )
-                },
-            )
+            // The backend may report a network ENABLED before its deposit address is provisioned.
+            CustomerInfo.NetworkInfo.Status.ENABLED -> {
+                val address = depositAddress
+                if (address.isNullOrEmpty()) {
+                    TangemLogger.e("Payment network ${network.rawId} is enabled without a deposit address")
+                    return null
+                }
+                PaymentNetworkStatus.Available(
+                    network = network,
+                    depositAddress = address,
+                    chainId = chainId,
+                    cryptoCurrencyStatuses = tokensWithCurrency.map { (token, currency) ->
+                        buildStatus(
+                            currency = currency,
+                            amount = token.availableForWithdrawal.orZero(),
+                            fiatRate = fiatRate,
+                            depositAddress = address,
+                        )
+                    },
+                )
+            }
             CustomerInfo.NetworkInfo.Status.NOT_ISSUED -> PaymentNetworkStatus.NotIssued(
                 network = network,
                 cryptoCurrencies = currencies,
@@ -117,17 +131,26 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         }
     }
 
+    /**
+     * `null` when the backend entry cannot describe a currency: [CryptoCurrency.Token] rejects a blank symbol or
+     * contract address, and the contract address is absent for a network that has not issued one yet. Dropping
+     * just that token keeps its network in the list instead of throwing and losing the whole mapping.
+     */
     private fun createToken(
         network: Network,
         blockchain: Blockchain,
         token: CustomerInfo.NetworkInfo.Token,
-    ): CryptoCurrency.Token {
+    ): CryptoCurrency.Token? {
+        val symbol = token.symbol.takeIf(String::isNotBlank) ?: return null
+        // The backend returns EIP-55 checksummed addresses; Express and the account's own legacy currency both
+        // carry plain lowercase ones, and swap pairs are matched by exact string comparison.
+        val contractAddress = token.contractAddress?.takeIf(String::isNotBlank)?.lowercase(Locale.US) ?: return null
         return cryptoCurrencyFactory.createToken(
             network = network,
-            rawId = rawIdFor(token.symbol),
-            name = token.symbol,
-            symbol = token.symbol,
-            contractAddress = token.contractAddress,
+            rawId = rawIdFor(symbol),
+            name = symbol,
+            symbol = symbol,
+            contractAddress = contractAddress,
             decimals = PaymentTokenDecimalsResolver.decimalsFor(blockchain),
         )
     }

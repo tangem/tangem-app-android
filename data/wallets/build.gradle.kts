@@ -2,6 +2,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.ksp)
     id("configuration")
@@ -14,6 +15,7 @@ dependencies {
 
     // region Kotlin
     api(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
     // endregion
 
     // region Other deps
@@ -37,7 +39,6 @@ dependencies {
     // region Core
     api(projects.core.datasource)
     api(projects.core.utils)
-    implementation(projects.domain.demo)
     // endregion
 
     // region Data
@@ -58,6 +59,7 @@ dependencies {
     // region Libs
     api(projects.libs.tangemSdkApi)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.demo.models)
     // endregion
 
     /** tests */

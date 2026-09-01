@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -83,6 +84,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val alertFactory: SendConfirmAlertFactory,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -168,6 +170,14 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     override fun onSendClick() {
+        backupErrorWarningSender.forAddress(
+            scope = modelScope,
+            address = { confirmData.enteredDestination },
+            onProceed = ::startSending,
+        )
+    }
+
+    private fun startSending() {
         _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = true))
         if (SystemClock.elapsedRealtime() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
             verifyAndSendTransaction()

@@ -2,11 +2,12 @@ package com.tangem.data.markets
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.local.datastore.RuntimeStateStore
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
@@ -14,11 +15,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.*
-import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
-import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.markets.*
@@ -28,6 +25,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
+import com.tangem.store.datasource.markets.TangemTechMarketsApi
+import com.tangem.store.datasource.markets.models.response.CoinCategoriesResponse
+import com.tangem.store.datasource.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
@@ -42,6 +42,7 @@ internal class DefaultMarketsTokenRepository(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
+    private val coinCategoriesStore: RuntimeStateStore<List<CoinCategoriesResponse.Category>>,
     private val networkFactory: NetworkFactory,
     excludedBlockchains: ExcludedBlockchains,
 ) : MarketsTokenRepository {
@@ -74,6 +75,8 @@ internal class DefaultMarketsTokenRepository(
                         limit = request.limit,
                         timestamp = if (isFirstBatchFetching) null else requestTimeStamp.get(),
                         showNetworks = request.params.shouldNetworks,
+                        categoryId = request.params.categoryId,
+                        sectorId = request.params.sectorId,
                     ).getOrThrow()
                 }
 
@@ -289,6 +292,18 @@ internal class DefaultMarketsTokenRepository(
             }
 
             TokenMarketExchangeConverter.convertList(input = tokenExchangesStore.get().value)
+        }
+    }
+
+    override suspend fun getCoinCategories(): List<CoinCategory> {
+        return withContext(dispatcherProvider.io) {
+            cacheRegistry.invokeOnExpire(key = "coins/categories", skipCache = false) {
+                val response = marketsApi.getCoinCategories().getOrThrow()
+
+                coinCategoriesStore.store(value = response.categories)
+            }
+
+            CoinCategoryConverter.convertList(input = coinCategoriesStore.get().value)
         }
     }
 

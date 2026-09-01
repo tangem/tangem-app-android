@@ -5,6 +5,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -16,6 +17,9 @@ import kotlinx.coroutines.flow.Flow
  * status is persisted locally and does not require network.
  */
 interface CloudBackupRepository {
+
+    /** Whether the cloud backup feature is enabled; while disabled the feature must not surface anywhere */
+    val isCloudBackupEnabled: Boolean
 
     /**
      * Encrypts [secret] with [password] and uploads the resulting backup file. If a backup for
@@ -38,8 +42,14 @@ interface CloudBackupRepository {
     /**
      * Finds all Tangem backup files in the cloud account. With [interactive] `false` (default) never
      * triggers the account picker, failing with [CloudBackupError.AuthRequired] when not authorized.
+     * With [validateContent] `true` additionally downloads every found file and drops the ones whose
+     * content is not a structurally valid backup; a file whose content cannot be downloaded is kept,
+     * so a transient transport failure never hides a valid backup.
      */
-    suspend fun findBackups(interactive: Boolean = false): Either<CloudBackupError, List<CloudBackupInfo>>
+    suspend fun findBackups(
+        interactive: Boolean = false,
+        validateContent: Boolean = false,
+    ): Either<CloudBackupError, List<CloudBackupInfo>>
 
     /**
      * Returns the currently authorized cloud account (email, name). With [interactive] `false` (default)
@@ -55,10 +65,10 @@ interface CloudBackupRepository {
 
     /**
      * Downloads the backup file with [fileId] and decrypts it with [password], returning the wallet
-     * secret. Fails with [CloudBackupError.WrongPassword] on a bad password and
-     * [CloudBackupError.InvalidBackupFile] on a malformed/unsupported file.
+     * secret and the wallet name stored in the file. Fails with [CloudBackupError.WrongPassword] on a
+     * bad password and [CloudBackupError.InvalidBackupFile] on a malformed/unsupported file.
      */
-    suspend fun readBackup(fileId: String, password: CharArray): Either<CloudBackupError, CloudBackupSecretData>
+    suspend fun readBackup(fileId: String, password: CharArray): Either<CloudBackupError, RestoredCloudBackup>
 
     /** Deletes the backup file with [fileId]. Deleting an already absent file is a success */
     suspend fun deleteBackup(fileId: String): Either<CloudBackupError, Unit>

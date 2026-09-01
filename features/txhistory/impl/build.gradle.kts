@@ -18,6 +18,8 @@ android {
 }
 dependencies {
     /** Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     api(projects.core.configToggles)
     api(projects.core.decompose)
     api(projects.core.navigation)
@@ -27,10 +29,12 @@ dependencies {
 
     /** Common */
     api(projects.common.ui)
+    implementation(projects.common.routing)
     implementation(projects.common)
 
     /** Features api */
     api(projects.features.txhistory.api)
+    implementation(projects.features.tokendetails.api)
     implementation(projects.features.rating.api)
 
     /** Domain */
@@ -48,6 +52,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.visa.models)
     runtimeOnly(projects.domain.card)
     runtimeOnly(projects.domain.tokens)
 
@@ -72,15 +77,16 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Test */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(projects.domain.express.models)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
+    testImplementation(tangemDeps.blockchain)
 }

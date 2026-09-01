@@ -5,8 +5,9 @@ import com.tangem.data.common.converter.ExpressProviderConverter
 import com.tangem.data.txhistory.repository.converter.ExpressOnrampConverter
 import com.tangem.data.txhistory.repository.converter.ExpressStatusMapper
 import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
-import com.tangem.data.txhistory.repository.converter.OnrampCountryConverter
+import com.tangem.data.txhistory.repository.converter.OnrampCurrencyConverter
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
+import com.tangem.data.txhistory.repository.factory.ExpressTxByIdFactory
 import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.data.txhistory.repository.factory.toRefundAssetId
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
@@ -16,9 +17,10 @@ import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCountryEntity
+import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCurrencyEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -42,6 +44,7 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.ISODateTimeFormat
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.hours
 
 @Suppress("LongParameterList")
 internal class RefactoredTxHistoryRepository @Inject constructor(
@@ -50,6 +53,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     private val expressHistoryDao: ExpressHistoryDao,
     private val historyIndexDao: HistoryIndexDao,
     private val expressTransactionAssetFactory: ExpressTransactionAssetFactory,
+    private val expressTxByIdFactory: ExpressTxByIdFactory,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TxHistoryRepositoryV2 {
@@ -58,50 +62,67 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     private val expressProviderConverter = ExpressProviderConverter()
     private val swapConverter = ExpressSwapConverter()
     private val onrampConverter = ExpressOnrampConverter()
-    private val onrampCountryConverter = OnrampCountryConverter()
+    private val onrampCurrencyConverter = OnrampCurrencyConverter()
     private val TxHistoryListConfig.storeKey get() = TxHistoryItemsStore.Key(userWalletId, currency)
 
     override fun getExpressHistory(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
+        fromOnChainTimestampMillis: Long,
+    ): Flow<List<ExpressTx>> = observeExpressHistory(
+        userWalletId = userWalletId,
+        currency = currency,
+        fromCreatedAtMillis = fromOnChainTimestampMillis.toCreatedAtBound(),
+    )
+
+    /**
+
+     * produced it — a finished swap drops out of the query the moment its payout becomes the oldest loaded tx.
+     */
+    private fun Long.toCreatedAtBound(): Long = when (this) {
+        NO_LOWER_BOUND -> NO_LOWER_BOUND
+        else -> (this - EXPRESS_CREATED_AT_SKEW).coerceAtLeast(NO_LOWER_BOUND)
+    }
+
+    private fun observeExpressHistory(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
         fromCreatedAtMillis: Long,
     ): Flow<List<ExpressTx>> = flow {
-        val network = currency.network
-        val rawNetwork = network.rawId
+        val rawNetwork = currency.network.rawId
         val contract = (currency as? CryptoCurrency.Token)?.contractAddress
             ?: ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE
 
         // bound filters the window directly in SQL. Generated in the same UTC/'Z' shape as stored values.
         val fromCreatedAtIso = DateTime(fromCreatedAtMillis, DateTimeZone.UTC)
             .toString(ISODateTimeFormat.dateTimeNoMillis())
-
-        val address = walletManagersFacade.getDefaultAddress(userWalletId, network).orEmpty()
+        val addresses = getAddresses(userWalletId, currency.network)
 
         val flow = combine(
             flow = expressHistoryDao.observeOutgoingSwaps(
-                fromAddress = address,
+                fromAddresses = addresses,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
             ).distinctUntilChanged(),
             flow2 = expressHistoryDao.observeIncomingSwaps(
-                payoutAddress = address,
+                payoutAddresses = addresses,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
             ).distinctUntilChanged(),
             flow3 = expressHistoryDao.observeIncomingOnramps(
-                payoutAddress = address,
+                payoutAddresses = addresses,
                 network = rawNetwork,
                 contract = contract,
                 fromCreatedAtIso = fromCreatedAtIso,
                 activeStatuses = ExpressStatusMapper.activeOnrampStatuses,
             ).distinctUntilChanged(),
             flow4 = expressHistoryDao.getProvidersById().distinctUntilChanged(),
-            flow5 = expressHistoryDao.getCountriesByCode().distinctUntilChanged(),
-            transform = { outgoingSwaps, incomingSwaps, onramps, providers, countries ->
+            flow5 = expressHistoryDao.getCurrenciesByCode().distinctUntilChanged(),
+            transform = { outgoingSwaps, incomingSwaps, onramps, providers, fiatCurrencies ->
                 buildExpressHistory(
                     userWalletId = userWalletId,
                     sources = ExpressHistorySources(
@@ -109,7 +130,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                         incomingSwaps = incomingSwaps,
                         onramps = onramps,
                         providers = providers,
-                        countries = countries,
+                        fiatCurrencies = fiatCurrencies,
                     ),
                 )
             },
@@ -123,22 +144,59 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
         currency: CryptoCurrency,
         limit: Int,
     ): Flow<ExpressHistoryPage> = flow {
-        val address = walletManagersFacade.getDefaultAddress(userWalletId, currency.network).orEmpty()
+        val addresses = getAddresses(userWalletId, currency.network)
         val pages = historyIndexDao
-            .observePage(addresses = listOf(address), cursor = null, limit = limit)
+            .observePage(addresses = addresses, cursor = null, limit = limit)
             .map { page ->
                 IndexWindow(
-                    fromCreatedAtMillis = page.lastOrNull()?.sortTimeMillis ?: 0L,
+                    fromCreatedAtMillis = page.lastOrNull()?.sortTimeMillis ?: NO_LOWER_BOUND,
                     hasMore = page.size >= limit,
                 )
             }
             .distinctUntilChanged()
             .flatMapLatest { window ->
-                getExpressHistory(userWalletId, currency, window.fromCreatedAtMillis)
+                observeExpressHistory(userWalletId, currency, window.fromCreatedAtMillis)
                     .map { express -> ExpressHistoryPage(items = express, hasMore = window.hasMore) }
             }
         emitAll(pages)
     }.flowOn(dispatchers.io)
+
+    override fun getExpressTxById(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        txId: String,
+    ): Flow<ExpressTx> = flow {
+        val addresses = getAddresses(userWalletId, currency.network)
+
+        val flow = combine(
+            flow = expressHistoryDao.observeExchangeById(txId).distinctUntilChanged(),
+            flow2 = expressHistoryDao.observeOnrampById(txId).distinctUntilChanged(),
+            flow3 = expressHistoryDao.getProvidersById().distinctUntilChanged(),
+            flow4 = expressHistoryDao.getCurrenciesByCode().distinctUntilChanged(),
+            transform = { exchange, onramp, providers, fiatCurrencies ->
+                expressTxByIdFactory.create(
+                    userWalletId = userWalletId,
+                    outgoingAddresses = addresses,
+                    sources = ExpressTxByIdFactory.Sources(
+                        exchange = exchange,
+                        onramp = onramp,
+                        providers = providers,
+                        fiatCurrencies = fiatCurrencies,
+                    ),
+                )
+            },
+        )
+        emitAll(flow.filterNotNull())
+    }.flowOn(dispatchers.io)
+
+    /**
+     * the default one plus the dynamic (UTXO) addresses already used,
+     */
+    private suspend fun getAddresses(userWalletId: UserWalletId, network: Network): List<String> {
+        val defaultAddress = walletManagersFacade.getDefaultAddress(userWalletId, network)
+        val dynamicAddresses = walletManagersFacade.usedDynamicAddresses(userWalletId, network).orEmpty()
+        return (listOfNotNull(defaultAddress) + dynamicAddresses).distinct()
+    }
 
     private data class IndexWindow(val fromCreatedAtMillis: Long, val hasMore: Boolean)
 
@@ -148,7 +206,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
         val incomingSwaps: List<ExpressExchangeEntity>,
         val onramps: List<ExpressOnrampEntity>,
         val providers: Map<String, ExpressProviderEntity>,
-        val countries: Map<String, OnrampCountryEntity>,
+        val fiatCurrencies: Map<String, OnrampCurrencyEntity>,
     )
 
     private suspend fun buildExpressHistory(
@@ -162,7 +220,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             onramps = sources.onramps,
         )
         fun String.expressProvider() = sources.providers[this]?.let(expressProviderConverter::convert)
-        fun String.onrampCountry() = sources.countries[this]?.let(onrampCountryConverter::convert)
+        fun String.onrampFiatCurrency() = sources.fiatCurrencies[this]?.let(onrampCurrencyConverter::convert)
         return buildList {
             sources.outgoingSwaps.forEach { entity ->
                 val input = ExpressSwapConverter.Input(
@@ -191,7 +249,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
                     entity = entity,
                     provider = entity.providerId.expressProvider(),
                     toCurrency = currencies[entity.to.toAssetId()],
-                    country = entity.countryCode.onrampCountry(),
+                    fiatCurrency = entity.fromCurrencyCode.onrampFiatCurrency(),
                 )
                 add(onrampConverter.convert(input))
             }
@@ -296,5 +354,16 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
 
     private fun getTxHistoryPageKey(page: Page, config: TxHistoryListConfig): String {
         return "tx_history_page_${config.currency}_${config.userWalletId}_$page"
+    }
+
+    private companion object {
+        /** No on-chain page to window by: load the whole express history of the asset. */
+        const val NO_LOWER_BOUND = 0L
+
+        /**
+
+         * the query must not be narrower than the matching it feeds. Long-stuck refunds can still fall outside it.
+         */
+        val EXPRESS_CREATED_AT_SKEW = 24.hours.inWholeMilliseconds
     }
 }
