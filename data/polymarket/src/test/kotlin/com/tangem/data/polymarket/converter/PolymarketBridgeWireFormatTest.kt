@@ -10,12 +10,6 @@ import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketSupportedAs
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
-/**
- * Pins the wire format of the Polymarket bridge, which is Polymarket's own service rather than the BFF and
- * so is not covered by the backend's OpenAPI spec. Two of its shapes are load-bearing and neither is checked
- * by the compiler: the deposit minimum arrives as a number while everything else on this endpoint is a
- * string, and the address payload names its Tron field inconsistently across Polymarket's own pages.
- */
 internal class PolymarketBridgeWireFormatTest {
 
     private class BigDecimalAdapter {
