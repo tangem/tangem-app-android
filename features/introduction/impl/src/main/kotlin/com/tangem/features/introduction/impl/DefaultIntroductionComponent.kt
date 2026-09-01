@@ -69,7 +69,7 @@ internal class DefaultIntroductionComponent @AssistedInject constructor(
         // touches for itself as long as it stayed composed.
         val player = stories.child?.instance
         if (player != null) {
-            player.Content(Modifier.fillMaxSize())
+            player.Content(modifier.fillMaxSize())
         } else {
             IntroductionScreen(
                 state = state,
