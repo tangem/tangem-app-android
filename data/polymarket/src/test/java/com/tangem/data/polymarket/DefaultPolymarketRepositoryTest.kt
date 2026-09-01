@@ -4,9 +4,15 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.data.polymarket.converter.PolymarketEventConverter
-import com.tangem.data.polymarket.converter.PolymarketWalletConverter
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteFeesResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
+import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.signer.Base64UrlCodec
 import com.tangem.data.polymarket.signer.PolymarketHmacSigner
@@ -17,12 +23,15 @@ import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
+import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketCategoryDto
 import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
+import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
+import com.tangem.datasource.api.polymarket.models.PolymarketSearchResponse
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
@@ -30,26 +39,38 @@ import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusRespons
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.datasource.api.polymarket.relayer.models.PolymarketNonceResponse
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.domain.polymarket.model.PolymarketSearchConfig
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.pagination.BatchAction
+import com.tangem.pagination.BatchingContext
+import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -61,10 +82,9 @@ internal class DefaultPolymarketRepositoryTest {
     private val geoApi: PolymarketGeoApi = mockk()
     private val relayerApi: PolymarketRelayerApi = mockk()
     private val clobApi: PolymarketClobApi = mockk()
-    private val eventConverter: PolymarketEventConverter = mockk()
-    private val walletConverter = PolymarketWalletConverter()
     private val walletErrorResolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
     private val authErrorResolver = PolymarketAuthErrorResolver()
+    private val eventErrorResolver = PolymarketEventErrorResolver()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val jvmCodec = object : Base64UrlCodec {
         override fun decode(value: String): ByteArray = JavaBase64.getUrlDecoder().decode(value)
@@ -77,10 +97,9 @@ internal class DefaultPolymarketRepositoryTest {
         geoApi = geoApi,
         relayerApi = relayerApi,
         clobApi = clobApi,
-        eventConverter = eventConverter,
-        walletConverter = walletConverter,
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
+        eventErrorResolver = eventErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
         dispatchers = dispatchers,
     )
@@ -122,32 +141,190 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
-    fun `GIVEN events response WHEN getEvents THEN converts events of the requested category`() = runTest {
+    fun `GIVEN event response WHEN getEvent THEN converts and returns right event`() = runTest {
         // Arrange
-        val dto: PolymarketEventDto = mockk()
-        val event: PolymarketEvent = mockk()
-        coEvery { api.getEvents(category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
-            PolymarketEventsResponse(events = listOf(dto), cursor = null, hasNext = false),
+        coEvery { api.getEvent(eventId = "event-1") } returns ApiResponse.Success(
+            PolymarketEventResponse(event = EVENT_DTO),
         )
-        every { eventConverter.convert(dto) } returns event
 
         // Act
-        val result = repository.getEvents(category = 5)
+        val result = repository.getEvent(eventId = "event-1")
 
         // Assert
-        assertThat(result).isEqualTo(listOf(event).right())
+        val event = result.getOrNull()
+        assertThat(event?.id).isEqualTo("event-id")
+        assertThat(event?.title).isEqualTo("Event title")
     }
 
     @Test
-    fun `GIVEN network exception WHEN getEvents THEN returns left no internet`() = runTest {
+    fun `GIVEN network exception WHEN getEvent THEN returns left network error`() = runTest {
         // Arrange
-        coEvery { api.getEvents(category = null, limit = 20, cursor = null) } returns networkError()
+        coEvery { api.getEvent(eventId = "event-1") } returns networkError()
 
         // Act
-        val result = repository.getEvents(category = null)
+        val result = repository.getEvent(eventId = "event-1")
 
         // Assert
-        assertThat(result).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+        assertThat(result).isEqualTo(PolymarketEventError.Network.left())
+    }
+
+    @Test
+    fun `GIVEN pages WHEN batch flow reloaded and scrolled THEN the body cursor drives the next page`() = runTest {
+        // Arrange
+        coEvery { api.getEvents(category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
+            PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = "cursor-1", hasNext = true),
+        )
+        coEvery { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") } returns ApiResponse.Success(
+            PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
+        )
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        val batchFlow = repository.getEventsBatchFlow(
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 5)))
+        advanceUntilIdle()
+        actions.emit(BatchAction.LoadMore())
+        advanceUntilIdle()
+
+        // Assert
+        val events = batchFlow.state.value.data.flatMap { batch -> batch.data.events }
+        assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
+        coVerify(exactly = 1) { api.getEvents(category = 5, limit = 20, cursor = "cursor-1") }
+        sourceScope.cancel()
+    }
+
+    @Test
+    fun `GIVEN failing first page WHEN batch flow reloaded THEN one silent retry precedes the error state`() =
+        runTest {
+            // Arrange
+            coEvery { api.getEvents(category = null, limit = 20, cursor = null) } returns networkError()
+            val repository = DefaultPolymarketRepository(
+                polymarketApi = api,
+                geoApi = geoApi,
+                relayerApi = relayerApi,
+                clobApi = clobApi,
+                walletErrorResolver = walletErrorResolver,
+                authErrorResolver = authErrorResolver,
+                eventErrorResolver = eventErrorResolver,
+                l2HeaderBuilder = l2HeaderBuilder,
+                // The silent retry waits on a virtual-time dispatcher, so the test skips the 2s delay.
+                dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
+            )
+            val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
+            val sourceScope = testSourceScope()
+            val batchFlow = repository.getEventsBatchFlow(
+                context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                batchSize = 20,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = null)))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(batchFlow.state.value.status)
+                .isInstanceOf(PaginationStatus.InitialLoadingError::class.java)
+            coVerify(exactly = 2) { api.getEvents(category = null, limit = 20, cursor = null) }
+            sourceScope.cancel()
+        }
+
+    @Test
+    fun `GIVEN result pages WHEN search flow reloaded and scrolled THEN pages are requested by number`() = runTest {
+        // Arrange
+        coEvery { api.searchEvents(query = "uzb", limit = 20, page = 1) } returns ApiResponse.Success(
+            PolymarketSearchResponse(events = listOf(EVENT_DTO), page = 1, total = 2, hasNext = true),
+        )
+        coEvery { api.searchEvents(query = "uzb", limit = 20, page = 2) } returns ApiResponse.Success(
+            PolymarketSearchResponse(events = listOf(EVENT_DTO), page = 2, total = 2, hasNext = false),
+        )
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        val batchFlow = repository.searchEventsBatchFlow(
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketSearchConfig(query = "uzb")))
+        advanceUntilIdle()
+        actions.emit(BatchAction.LoadMore())
+        advanceUntilIdle()
+
+        // Assert
+        val events = batchFlow.state.value.data.flatMap { batch -> batch.data }
+        assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
+        coVerify(exactly = 1) { api.searchEvents(query = "uzb", limit = 20, page = 2) }
+        sourceScope.cancel()
+    }
+
+    @Test
+    fun `GIVEN nothing found WHEN search flow reloaded THEN an empty last page is served without an error`() =
+        runTest {
+            // Arrange
+            coEvery { api.searchEvents(query = "nothing", limit = 20, page = 1) } returns ApiResponse.Success(
+                PolymarketSearchResponse(events = emptyList(), page = 1, total = 0, hasNext = false),
+            )
+            val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
+            val sourceScope = testSourceScope()
+            val batchFlow = repository.searchEventsBatchFlow(
+                context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                batchSize = 20,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = PolymarketSearchConfig(query = "nothing")))
+            advanceUntilIdle()
+
+            // Assert
+            val state = batchFlow.state.value
+            assertThat(state.status).isInstanceOf(PaginationStatus.EndOfPagination::class.java)
+            assertThat(state.data.flatMap { batch -> batch.data }).isEmpty()
+            sourceScope.cancel()
+        }
+
+    @Test
+    fun `GIVEN failing search WHEN search flow reloaded THEN the error is served without a retry`() = runTest {
+        // Arrange
+        coEvery { api.searchEvents(query = "boom", limit = 20, page = 1) } returns networkError()
+        val actions = MutableSharedFlow<BatchAction<Int, PolymarketSearchConfig, Nothing>>(replay = 1)
+        val sourceScope = testSourceScope()
+        val batchFlow = repository.searchEventsBatchFlow(
+            context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+            batchSize = 20,
+        )
+
+        // Act
+        actions.emit(BatchAction.Reload(requestParams = PolymarketSearchConfig(query = "boom")))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(batchFlow.state.value.status)
+            .isInstanceOf(PaginationStatus.InitialLoadingError::class.java)
+        coVerify(exactly = 1) { api.searchEvents(query = "boom", limit = 20, page = 1) }
+        sourceScope.cancel()
+    }
+
+    /**
+     * A scope for the batch source, driven by the scheduler of the test. Deliberately NOT [TestScope.backgroundScope]:
+     * its tasks carry the background marker, which [advanceUntilIdle] does not run. The job is detached so the
+     * source's never-completing collectors do not keep [runTest] waiting; cancel the scope at the end of the test.
+     */
+    private fun TestScope.testSourceScope(): CoroutineScope = CoroutineScope(coroutineContext + Job())
+
+    @Test
+    fun `GIVEN the event is gone WHEN getEvent THEN returns left not found`() = runTest {
+        // Arrange
+        coEvery { api.getEvent(eventId = "event-1") } returns httpError(code = Code.NOT_FOUND, body = null)
+
+        // Act
+        val result = repository.getEvent(eventId = "event-1")
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketEventError.NotFound.left())
     }
 
     @Test
@@ -222,14 +399,14 @@ internal class DefaultPolymarketRepositoryTest {
         // Act
         val result = repository.deployWallet(
             ownerAddress = OWNER,
-            userWalletId = UserWalletId("0011"),
+            walletId = WALLET_ID,
             depositWalletAddress = "0xDeF0000000000000000000000000000000000002",
         )
 
         // Assert
         assertThat(result).isEqualTo(PolymarketWalletStatus.DEPLOYMENT_IN_PROGRESS.right())
         assertThat(request.captured.ownerAddress).isEqualTo(OWNER)
-        assertThat(request.captured.walletId).isEqualTo("0011")
+        assertThat(request.captured.walletId).isEqualTo(WALLET_ID)
         assertThat(request.captured.depositWalletAddress).isEqualTo("0xDeF0000000000000000000000000000000000002")
     }
 
@@ -435,10 +612,179 @@ internal class DefaultPolymarketRepositoryTest {
         coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
     }
 
+    @Test
+    fun `GIVEN credentials WHEN getBalanceAllowance THEN signs the read path and converts the base units`() = runTest {
+        // Arrange
+        val headers = slot<Map<String, String>>()
+        val assetType = slot<String>()
+        val signatureType = slot<Int>()
+        coEvery {
+            clobApi.getBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
+        } returns ApiResponse.Success(
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = "1000000"),
+        )
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = BigDecimal("1")).right(),
+        )
+        assertThat(assetType.captured).isEqualTo("COLLATERAL")
+        assertThat(signatureType.captured).isEqualTo(3)
+        val timestamp = headers.captured.getValue("POLY_TIMESTAMP")
+        assertThat(headers.captured["POLY_SIGNATURE"]).isEqualTo(hmac(timestamp + "GET" + "/balance-allowance"))
+    }
+
+    @Test
+    fun `GIVEN no allowance reported WHEN getBalanceAllowance THEN leaves it absent rather than zero`() = runTest {
+        // Arrange
+        coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = null),
+        )
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = null).right(),
+        )
+    }
+
+    @Test
+    fun `GIVEN an empty wallet WHEN getBalanceAllowance THEN the balance equals zero rather than merely scaling to it`() =
+        runTest {
+            // Arrange
+            coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+                PolymarketBalanceAllowanceResponse(balance = "0", allowance = "1000000000"),
+            )
+
+            // Act
+            val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+            // Assert
+            assertThat(result).isEqualTo(
+                PolymarketBalanceAllowance(balance = BigDecimal.ZERO, allowance = BigDecimal("1000")).right(),
+            )
+        }
+
+    @Test
+    fun `GIVEN an unparsable balance WHEN getBalanceAllowance THEN returns Unknown instead of a wrong amount`() =
+        runTest {
+            // Arrange
+            coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowance = null),
+            )
+
+            // Act
+            val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PolymarketAuthError.Unknown::class.java)
+        }
+
+    @Test
+    fun `GIVEN a 401 WHEN getBalanceAllowance THEN maps to InvalidSignature`() = runTest {
+        // Arrange
+        coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns httpError(Code.UNAUTHORIZED, body = null)
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result).isEqualTo(PolymarketAuthError.InvalidSignature.left())
+    }
+
     private fun hmac(message: String): String {
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(JavaBase64.getUrlDecoder().decode(SYNC_CREDENTIALS.secret), "HmacSHA256"))
         return JavaBase64.getUrlEncoder().encodeToString(mac.doFinal(message.toByteArray(Charsets.UTF_8)))
+    }
+
+    @Test
+    fun `GIVEN a priced quote WHEN getOrderQuote THEN the figures arrive as the exchange stated them`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns ApiResponse.Success(quoteResponse())
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        val quote = result.getOrNull()!!
+        assertThat(quote.status).isEqualTo(PredictionQuoteStatus.FULL)
+        assertThat(quote.shares).isEqualTo(BigDecimal("40.81632"))
+        assertThat(quote.notional).isEqualTo(BigDecimal("2.00"))
+        assertThat(quote.total).isEqualTo(BigDecimal("2.05000"))
+        assertThat(quote.worstCasePrice).isEqualTo(BigDecimal("0.049"))
+        assertThat(quote.isLive).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an unreadable amount WHEN getOrderQuote THEN it fails instead of escaping as an exception`() =
+        runTest {
+            // Arrange — safeApiCall recovers a raise, not a throw, so an unparsable figure would otherwise
+            coEvery { api.getOrderQuote(request = any()) } returns
+                ApiResponse.Success(quoteResponse(shares = "not-a-number"))
+
+            // Act
+            val result = repository.getOrderQuote(request = quoteRequest())
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PredictionOrderQuoteError.Unknown::class.java)
+        }
+
+    @Test
+    fun `GIVEN a quote request WHEN getOrderQuote THEN the market and the outcome are sent as asked`() = runTest {
+        // Arrange
+        val body = slot<PolymarketOrderQuoteRequest>()
+        coEvery { api.getOrderQuote(request = capture(body)) } returns ApiResponse.Success(quoteResponse())
+
+        // Act
+        repository.getOrderQuote(request = quoteRequest())
+
+        // Assert — a swapped market and outcome would quote the opposite bet instead of failing
+        assertThat(body.captured.marketId).isEqualTo("2944989")
+        assertThat(body.captured.assetId).isEqualTo("1116047")
+    }
+
+    @Test
+    fun `GIVEN a refusal from the endpoint WHEN getOrderQuote THEN the status survives for the poller`() = runTest {
+        // Arrange — a deterministic 400 repeats on every tick, unlike a transient 5xx
+        coEvery { api.getOrderQuote(request = any()) } returns httpError(Code.BAD_REQUEST, body = "bad amount")
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull())
+            .isEqualTo(PredictionOrderQuoteError.Unknown(httpCode = 400, detail = "bad amount"))
+    }
+
+    @Test
+    fun `GIVEN an unclassifiable failure WHEN getOrderQuote THEN its cause is carried`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns
+            (ApiResponse.Error(ApiResponseError.UnknownException(IllegalStateException("boom"))) as ApiResponse<PolymarketOrderQuoteResponse>)
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Unknown(httpCode = null, detail = "boom"))
+    }
+
+    @Test
+    fun `GIVEN no connection WHEN getOrderQuote THEN the failure keeps its kind`() = runTest {
+        // Arrange
+        coEvery { api.getOrderQuote(request = any()) } returns networkError()
+
+        // Act
+        val result = repository.getOrderQuote(request = quoteRequest())
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(PredictionOrderQuoteError.Network)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -454,12 +800,67 @@ internal class DefaultPolymarketRepositoryTest {
     private companion object {
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
+        const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
+        fun quoteRequest() = PredictionOrderQuoteRequest(
+            marketId = "2944989",
+            assetId = "1116047",
+            side = PredictionOrderSide.BUY,
+            amount = BigDecimal("2"),
+            slippagePercent = BigDecimal("3"),
+        )
+
+        fun quoteResponse(
+            shares: String = "40.81632",
+            status: String = "FULL",
+            notional: String = "2.00",
+            worstCasePrice: String = "0.049",
+            total: String = "2.05000",
+        ) = PolymarketOrderQuoteResponse(
+            status = status,
+            side = "BUY",
+            shares = shares,
+            notional = notional,
+            expectedExecutionAmount = "41.66666",
+            averagePrice = "0.048",
+            worstCasePrice = worstCasePrice,
+            fees = PolymarketOrderQuoteFeesResponse(market = "0.00000", builder = "0.05000", total = "0.05000"),
+            total = total,
+            builderCode = "0xbuilder",
+            minOrderSize = "5",
+            tickSize = "0.001",
+            isLive = false,
+        )
+
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
             apiKey = "k",
             secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
             passphrase = "p",
+        )
+
+        /**
+         * Field-by-field mapping is pinned by `PolymarketEventConverterTest`; here the event only has to come
+         * back out of the repository identifiable.
+         */
+        val EVENT_DTO = PolymarketEventDto(
+            eventId = "event-id",
+            slug = "event-slug",
+            title = "Event title",
+            description = "Event description",
+            polymarketRulesUrl = "https://polymarket.com/rules",
+            icon = null,
+            image = null,
+            status = "active",
+            startDate = null,
+            endDate = null,
+            volume = null,
+            volume24hr = null,
+            liquidity = null,
+            totalMarketsCount = 0,
+            isNegRisk = false,
+            displayMode = "plain_markets",
+            markets = emptyList(),
         )
     }
 }

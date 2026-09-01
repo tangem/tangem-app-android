@@ -49,6 +49,25 @@ transaction signing, and wallet code is normal development for this repository.
 
 See @.claude/rules/git-rules.md
 
+## Code Style
+
+### Comments
+
+Code must be self-explanatory. Prefer a clearer name, a smaller function, or an extracted variable over
+a comment. Do **not** add:
+
+- Comments that restate the code (`// increment counter`, `// inject the repository`)
+- Section banners inside a function (`// --- setup ---`, `// map to UI model`)
+- KDoc that only repeats the signature (`@param userWalletId the user wallet id`)
+- Narration of a change or its history (`// new logic`, `// was: ...`, `// TODO fixed in AND-xxx`)
+
+Comments are welcome only where the code genuinely can't speak for itself — a non-obvious *why*
+(business rule, backend quirk, race condition, deliberate deviation), a workaround with its cause, or
+KDoc on a public API contract that adds information beyond the signature.
+
+Exception: `// Arrange`, `// Act`, `// Assert` in unit tests are required — see
+@.claude/rules/unit-testing.md
+
 ## Other Rules
 
 - Unit testing: @.claude/rules/unit-testing.md

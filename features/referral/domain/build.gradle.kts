@@ -18,7 +18,6 @@ dependencies {
     /** Domain modules */
     api(projects.domain.account)
     api(projects.domain.account.status)
-    api(projects.domain.common)
     api(projects.domain.models)
     api(projects.domain.walletManager)
     implementation(projects.domain.core)
@@ -26,7 +25,6 @@ dependencies {
     /** Dependencies */
     api(deps.arrow.core)
     api(deps.jodatime)
-    implementation(deps.kotlin.coroutines)
     implementation(tangemDeps.card.core)
 
     /** DI */

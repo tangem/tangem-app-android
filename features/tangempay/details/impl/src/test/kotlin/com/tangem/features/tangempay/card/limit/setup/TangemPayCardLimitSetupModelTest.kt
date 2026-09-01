@@ -49,6 +49,8 @@ internal class TangemPayCardLimitSetupModelTest {
         limit = null,
         images = emptyList(),
         state = TangemPayCardState.Active,
+        embossName = null,
+        cardType = TangemPayCardType.VIRTUAL,
     )
 
     private val params = TangemPayCardLimitSetupComponent.Params(card = initialCard, userWalletId = userWalletId)
@@ -75,6 +77,8 @@ internal class TangemPayCardLimitSetupModelTest {
             ),
             images = emptyList(),
             state = TangemPayCardState.Active,
+            embossName = null,
+            cardType = TangemPayCardType.VIRTUAL,
         )
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL

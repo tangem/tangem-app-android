@@ -5,6 +5,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.*
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorBridge
 import com.tangem.features.commonfeatures.impl.addtoportfolio.converter.AvailableToAddDataConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -14,11 +15,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 
+@Suppress("LongParameterList")
 internal class DefaultAddToPortfolioManager @AssistedInject constructor(
     private val availableToAddDataConverter: AvailableToAddDataConverter,
     @Assisted override val settings: Settings,
     @Assisted override val analyticsParams: AnalyticsParams,
     @Assisted val scope: CoroutineScope,
+    @Assisted portfolioSelectorBridge: PortfolioSelectorBridge?,
     dispatchers: CoroutineDispatcherProvider,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
 ) : AddToPortfolioManager {
@@ -27,10 +30,11 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
     override val onSuccessAdded: Channel<Result> = Channel()
     override val onAddedTokenClick: Channel<Result> = Channel()
 
-    override val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
-        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
-        scope = scope,
-    )
+    override val portfolioFetcher: PortfolioFetcher = portfolioSelectorBridge
+        ?: portfolioFetcherFactory.create(
+            mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
+            scope = scope,
+        )
 
     private val internalParamsFlow = MutableStateFlow(ParamsInternal())
 
@@ -114,6 +118,7 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
             scope: CoroutineScope,
             settings: Settings,
             analyticsParams: AnalyticsParams,
+            portfolioSelectorBridge: PortfolioSelectorBridge?,
         ): DefaultAddToPortfolioManager
     }
 

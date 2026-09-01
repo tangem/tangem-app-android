@@ -4,10 +4,13 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.CoinIndicators
@@ -17,9 +20,14 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.createLoadedValue
+import com.tangem.features.foryou.impl.createStakedBalance
+import com.tangem.features.foryou.impl.createUnreachableValue
 import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
@@ -50,7 +58,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(statuses, totalFiatBalance = BigDecimal("100"))
 
             // Assert — only the ETH asset survives; the zero-fiat BTC is dropped
-            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("eth")
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("ETH")
         }
 
         @Test
@@ -68,12 +76,12 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(statuses, totalFiatBalance = BigDecimal("100"))
 
             // Assert — both assets kept, ranked by summed fiat (eth 100 > btc 0)
-            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("eth", "btc").inOrder()
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("ETH", "BTC").inOrder()
         }
 
         @Test
         fun `GIVEN same asset across networks WHEN convert THEN aggregated into one asset ranked by summed fiat`() {
-            // Arrange — the same asset (shared rawCurrencyId "usdc") aggregates into one asset
+            // Arrange — the same asset (shared symbol "USDC") aggregates into one asset
             val onEth = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "ethereum")
             val onSol = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "solana")
             val other = createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin")
@@ -87,7 +95,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val result = convert(statuses, totalFiatBalance = BigDecimal("120"))
 
             // Assert — 2 ranked assets: usdc (110 total) ahead of btc (10)
-            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("usdc", "btc").inOrder()
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("USDC", "BTC").inOrder()
         }
 
         @Test
@@ -143,7 +151,7 @@ internal class ForYouPortfolioReviewConverterTest {
             val otherRow = result.tokenList.last().tokenRowUM as TangemTokenRowUM.Content
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
             assertThat(subtitle.text).isEqualTo(
-                pluralReference(R.plurals.market_chart_assets_android, count = 1, formatArgs = wrappedList(1)),
+                pluralReference(R.plurals.common_assets_count, count = 1, formatArgs = wrappedList(1)),
             )
         }
 
@@ -164,8 +172,34 @@ internal class ForYouPortfolioReviewConverterTest {
             val otherRow = result.tokenList.last().tokenRowUM as TangemTokenRowUM.Content
             val subtitle = otherRow.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
             assertThat(subtitle.text).isEqualTo(
-                pluralReference(R.plurals.market_chart_assets_android, count = 3, formatArgs = wrappedList(3)),
+                pluralReference(R.plurals.common_assets_count, count = 3, formatArgs = wrappedList(3)),
             )
+        }
+
+        @Test
+        fun `GIVEN staking outranks a larger bare balance WHEN convert THEN assets ordered by their totals`() {
+            // Arrange — BTC holds more on-chain, but ETH's staked balance puts it ahead on the total
+            val statuses = listOf(
+                createStatus(
+                    createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
+                    loadedValue(BigDecimal.ONE, BigDecimal("100")),
+                ),
+                createStatus(
+                    createCoin(rawCurrencyId = "eth", symbol = "ETH", networkId = "ethereum"),
+                    loadedValue(
+                        amount = BigDecimal.ONE,
+                        fiatAmount = BigDecimal("50"),
+                        fiatRate = BigDecimal("25"),
+                        staking = createStakedBalance(BigDecimal("4")),
+                    ),
+                ),
+            )
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal("250"))
+
+            // Assert — 50 + 25 x 4 staked beats the bare 100
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("ETH", "BTC").inOrder()
         }
 
         @Test
@@ -214,7 +248,7 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
-        fun `GIVEN asset row WHEN convert THEN title text is the currency name`() {
+        fun `GIVEN asset row WHEN convert THEN title text is the currency symbol`() {
             // Arrange — name differs from symbol so the assertion pins which field the title uses
             val currency = createCoin(rawCurrencyId = "bitcoin", symbol = "BTC", networkId = "bitcoin", name = "Bitcoin")
             val statuses = listOf(createStatus(currency, loadedValue(BigDecimal.ONE, BigDecimal("100"))))
@@ -225,7 +259,7 @@ internal class ForYouPortfolioReviewConverterTest {
             // Assert
             val row = result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content
             val title = row.titleUM as TangemTokenRowUM.TitleUM.Content
-            assertThat(title.text).isEqualTo(stringReference("Bitcoin"))
+            assertThat(title.text).isEqualTo(stringReference("BTC"))
         }
 
         @Test
@@ -324,6 +358,33 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
+        fun `GIVEN multi-network asset with staking WHEN convert THEN asset total sums the staked fiat`() {
+            // Arrange — the same asset on two networks, staked on one of them
+            val onEth = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "ethereum")
+            val onSol = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "solana")
+            val statuses = listOf(
+                createStatus(
+                    onEth,
+                    loadedValue(
+                        amount = BigDecimal.ONE,
+                        fiatAmount = BigDecimal("100"),
+                        fiatRate = BigDecimal("50"),
+                        staking = createStakedBalance(BigDecimal("2")),
+                    ),
+                ),
+                createStatus(onSol, loadedValue(BigDecimal.ONE, BigDecimal("100"))),
+            )
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal("300"))
+
+            // Assert — (100 + 50 x 2 staked) on Ethereum plus 100 on Solana
+            val row = result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content
+            val topEnd = row.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            assertThat(topEnd.text).isEqualTo(BigDecimal("300").expectedFiatText())
+        }
+
+        @Test
         fun `GIVEN multi-network asset clicked WHEN convert THEN expand callback receives the asset id`() {
             // Arrange — the same asset on two networks: a click expands to reveal the per-network breakdown
             val onEth = createToken(rawCurrencyId = "usdc", symbol = "USDC", networkId = "ethereum")
@@ -346,7 +407,7 @@ internal class ForYouPortfolioReviewConverterTest {
             (result.tokenList.single().tokenRowUM as TangemTokenRowUM.Content).onItemClick?.invoke()
 
             // Assert
-            assertThat(clickedAssetId).isEqualTo("usdc")
+            assertThat(clickedAssetId).isEqualTo("USDC")
             assertThat(tokenClicked).isFalse()
         }
     }
@@ -418,6 +479,33 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
+        fun `GIVEN non-loaded total balance WHEN convert THEN rows carry no segment colour`() {
+            // Arrange — the segment colour is the row's dot keying it to a donut slice, and the donut is
+            // NoData until the total resolves, so a coloured dot here would point at a segment never drawn
+            val portfolio = selectedPortfolio(
+                currencies = twoRankedAssets(),
+                totalFiatBalance = TotalFiatBalance.Loading,
+            )
+
+            // Act
+            val result = createConverter().convert(portfolio) as PortfolioReviewUM.Content
+
+            // Assert
+            assertThat(result.tokenList.map { it.segmentColor }).containsExactly(null, null)
+        }
+
+        @Test
+        fun `GIVEN loaded total balance WHEN convert THEN rows carry segment colours in rank order`() {
+            // Act
+            val result = convert(twoRankedAssets(), totalFiatBalance = BigDecimal("300"))
+
+            // Assert — colours are assigned by rank, so the larger holding takes the first donut colour
+            assertThat(result.tokenList.map { it.segmentColor })
+                .containsExactly(DonutSegmentColor.Blue, DonutSegmentColor.Violet)
+                .inOrder()
+        }
+
+        @Test
         fun `GIVEN empty portfolio WHEN convert THEN market chart is NoData`() {
             // Act
             val result = createConverter()
@@ -427,6 +515,17 @@ internal class ForYouPortfolioReviewConverterTest {
             // Assert
             assertThat(result.marketChartUM).isInstanceOf(MarketChartUM.NoData::class.java)
         }
+
+        private fun twoRankedAssets(): List<CryptoCurrencyStatus> = listOf(
+            createStatus(
+                createCoin(rawCurrencyId = "btc", symbol = "BTC", networkId = "bitcoin"),
+                loadedValue(BigDecimal.ONE, BigDecimal("200")),
+            ),
+            createStatus(
+                createCoin(rawCurrencyId = "eth", symbol = "ETH", networkId = "ethereum"),
+                loadedValue(BigDecimal.ONE, BigDecimal("100")),
+            ),
+        )
     }
 
     @Nested
@@ -533,8 +632,31 @@ internal class ForYouPortfolioReviewConverterTest {
 
             // Assert
             assertThat(result.tokenList.map { it.tokenRowUM.id })
-                .containsExactly("asset-1", "asset-2", "asset-3", "asset-4", "asset-5")
+                .containsExactly("A1", "A2", "A3", "A4", "A5")
                 .inOrder()
+        }
+
+        @Test
+        fun `GIVEN zero network balance but staked balance WHEN convert THEN portfolio is not treated as empty`() {
+            // Arrange — nothing left on-chain, the whole holding is staked
+            val statuses = listOf(
+                createStatus(
+                    createCoin(rawCurrencyId = "eth", symbol = "ETH", networkId = "ethereum"),
+                    loadedValue(
+                        amount = BigDecimal.ZERO,
+                        fiatAmount = BigDecimal.ZERO,
+                        fiatRate = BigDecimal("200"),
+                        staking = createStakedBalance(BigDecimal("3")),
+                    ),
+                ),
+            )
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = BigDecimal("600"))
+
+            // Assert — the staked fiat keeps it out of the no-amount / add-funds treatment
+            assertThat(result.marketChartUM).isInstanceOf(MarketChartUM.Loaded::class.java)
+            assertThat(result.onAddFundsClick).isNull()
         }
 
         @Test
@@ -552,7 +674,7 @@ internal class ForYouPortfolioReviewConverterTest {
 
             // Assert
             val item = result.tokenList.single()
-            assertThat(item.tokenRowUM.id).isEqualTo("usdc")
+            assertThat(item.tokenRowUM.id).isEqualTo("USDC")
             assertThat(item.tokenList).hasSize(2)
             assertThat(item.isExpandable).isTrue()
         }
@@ -596,7 +718,7 @@ internal class ForYouPortfolioReviewConverterTest {
             // Assert — falls through to the ranked branch: no add-funds action, the resolved zero is
             // dropped, the unknown-balance holding stays visible
             assertThat(result.onAddFundsClick).isNull()
-            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("btc")
+            assertThat(result.tokenList.map { it.tokenRowUM.id }).containsExactly("BTC")
         }
     }
 
@@ -813,11 +935,15 @@ internal class ForYouPortfolioReviewConverterTest {
     private fun selectedPortfolio(
         currencies: List<CryptoCurrencyStatus>,
         totalFiatBalance: TotalFiatBalance,
-    ): ForYouSelectedPortfolio = ForYouSelectedPortfolio(
-        accountCryptoCurrencyStatuses = currencies.map(::accountCryptoCurrencyStatus),
-        totalAccountsCount = 1,
-        totalFiatBalance = totalFiatBalance,
-    )
+    ): ForYouSelectedPortfolio {
+        val accountStatuses = currencies.map(::accountCryptoCurrencyStatus)
+        return ForYouSelectedPortfolio(
+            accountCryptoCurrencyStatuses = accountStatuses,
+            selectedAccounts = accountStatuses.map { it.account }.distinct(),
+            totalAccountsCount = 1,
+            totalFiatBalance = totalFiatBalance,
+        )
+    }
 
     private fun accountCryptoCurrencyStatus(
         currencyStatus: CryptoCurrencyStatus,
@@ -830,24 +956,30 @@ internal class ForYouPortfolioReviewConverterTest {
         }
     }
 
+    /** Mirrors the production fiat rendering used by [ForYouPortfolioReviewTokenRowConverter] for a resolved row. */
+    private fun BigDecimal.expectedFiatText(): TextReference = stringReference(
+        format { fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol) },
+    )
+
     private fun createStatus(currency: CryptoCurrency, value: CryptoCurrencyStatus.Value) = CryptoCurrencyStatus(
         currency = currency,
         value = value,
     )
 
-    private fun loadedValue(amount: BigDecimal, fiatAmount: BigDecimal): CryptoCurrencyStatus.Loaded = mockk {
-        every { this@mockk.amount } returns amount
-        every { this@mockk.fiatAmount } returns fiatAmount
-        every { isError } returns false
-        every { sources } returns CryptoCurrencyStatus.Sources()
-    }
+    private fun loadedValue(
+        amount: BigDecimal,
+        fiatAmount: BigDecimal,
+        fiatRate: BigDecimal = BigDecimal.ONE,
+        staking: StakingBalance? = null,
+    ): CryptoCurrencyStatus.Loaded = createLoadedValue(
+        amount = amount,
+        fiatAmount = fiatAmount,
+        fiatRate = fiatRate,
+        staking = staking,
+    )
 
     /** A non-content status: carries a null fiatAmount (unknown balance), not a resolved zero. */
-    private fun unreachableValue(): CryptoCurrencyStatus.Unreachable = CryptoCurrencyStatus.Unreachable(
-        priceChange = null,
-        fiatRate = null,
-        networkAddress = null,
-    )
+    private fun unreachableValue(): CryptoCurrencyStatus.Unreachable = createUnreachableValue()
 
     private fun createCoin(
         rawCurrencyId: String,
@@ -903,6 +1035,8 @@ internal class ForYouPortfolioReviewConverterTest {
             }
             every { name } returns networkId
             every { isTestnet } returns false
+            // Read by the staking accessors to decide whether the staked principal sits outside the balance.
+            every { rawId } returns networkId
             every { this@mockk.standardType } returns standardType
         }
     }

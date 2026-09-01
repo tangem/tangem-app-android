@@ -14,6 +14,10 @@ sealed interface TxHistoryFetchTrigger {
         val walletId: UserWalletId,
         val currency: CryptoCurrency,
     ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger, TxHistoryGatewayTrigger
+
+    data class WalletSelected(
+        val walletId: UserWalletId,
+    ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger
 }
 
 sealed interface TxHistoryExpressTrigger : TxHistoryFetchTrigger
