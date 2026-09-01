@@ -1,7 +1,11 @@
 package com.tangem.data.jointaccount
 
+import com.tangem.store.datasource.jointaccount.models.JointAccountConfigDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountConfig
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.models.StatusSource
 
 internal const val FIXTURE_CRYPTO_ACCOUNT_ID = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"
@@ -48,4 +52,42 @@ internal fun createJointAccountDto(
     status = status,
     members = members,
     invites = invites,
+)
+
+internal fun createJointAccountInvitePreviewDto(
+    name: String = "Family savings",
+    icon: String = "Family",
+    iconColor: String = "Azure",
+    membersCount: Int = 3,
+    threshold: Int = 2,
+    creatorName: String = "Alice",
+    creatorAddress: String = FIXTURE_ALICE_ADDRESS,
+): JointAccountInvitePreviewDto = JointAccountInvitePreviewDto(
+    config = JointAccountConfigDto(
+        name = name,
+        icon = icon,
+        iconColor = iconColor,
+        membersCount = membersCount,
+        threshold = threshold,
+    ),
+    creator = JointAccountInvitePreviewDto.Creator(name = creatorName, address = creatorAddress),
+)
+
+internal fun createJointAccountInvitePreview(
+    name: String = "Family savings",
+    icon: String = "Family",
+    iconColor: String = "Azure",
+    membersCount: Int = 3,
+    threshold: Int = 2,
+    creatorName: String = "Alice",
+    creatorAddress: String = FIXTURE_ALICE_ADDRESS,
+): JointAccountInvitePreview = JointAccountInvitePreview(
+    config = JointAccountConfig(
+        name = name,
+        icon = icon,
+        iconColor = iconColor,
+        membersCount = membersCount,
+        threshold = threshold,
+    ),
+    creator = JointAccountInvitePreview.Creator(name = creatorName, address = creatorAddress),
 )
