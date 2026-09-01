@@ -296,8 +296,8 @@
   <string name="common_approved">Approved</string>
   <string name="common_approving">Approving</string>
   <plurals name="common_assets_count">
-    <item quantity="one">Top %d asset</item>
-    <item quantity="other">Top %d assets</item>
+    <item quantity="one">%d asset</item>
+    <item quantity="other">%d assets</item>
   </plurals>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
@@ -1118,10 +1118,6 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
-  <plurals name="market_chart_assets_android">
-    <item quantity="one">Top %d asset</item>
-    <item quantity="other">Top %d assets</item>
-  </plurals>
   <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
@@ -2325,6 +2321,7 @@
   <string name="tangempay_current_plan_awaiting_deposit_notification">We are in process of moving you to %s plan and awaiting payment for plan fee</string>
   <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_current_plan_fee_charged_notification">%1$s monthly fee will be charged on %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Full terms</string>
   <string name="tangempay_current_plan_section_card">Card related</string>
   <string name="tangempay_current_plan_section_plan">Plan related</string>
   <string name="tangempay_current_plan_stay_button">Stay on %1$s</string>
@@ -2541,8 +2538,6 @@
   <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
   <string name="tangempay_va_limit_resetting_everyday">Limit is resetting every day</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
-  <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
-  <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
@@ -2603,6 +2598,10 @@
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Unavailable for swap</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">Top %d asset</item>
+    <item quantity="other">Top %d assets</item>
+  </plurals>
   <string name="transaction_history_approve_high_risk_subtitle">You\'re connected. Funds may be at risk. Consider revoking access.</string>
   <string name="transaction_history_approve_high_risk_title">High Risk</string>
   <string name="transaction_history_approved_amount">Approved amount</string>

@@ -603,10 +603,12 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromSwapCurrencyStatus.currency
         val toToken = toSwapCurrencyStatus.currency
 
-        // Always request the user-entered amount. The real balance/fee decision is deferred to the fee
-        // selector (`computeBalanceStatus` / `applySwapFee`), which correctly handles gasless (token) fee
-        // payment even when the native coin balance is zero. Do NOT derive the quote amount from the native
+        // Always request the user-entered amount. The fee decision is deferred to the fee selector
+        // (`computeBalanceStatus` / `applySwapFee`), which correctly handles gasless (token) fee payment
+        // even when the native coin balance is zero. Do NOT derive the quote amount from the native
         // balance here — that discards the entered amount ([REDACTED_TASK_KEY] regression: CEX always sent max).
+        // The amount-vs-balance part cannot be deferred for a Tangem Pay withdrawal: it is the one flow
+        // that keeps the fee selector hidden, so nothing would ever resolve a `Pending` ([REDACTED_TASK_KEY]).
         val quotes = repository.findBestQuote(
             userWallet = fromSwapCurrencyStatus.userWallet,
             fromContractAddress = fromToken.getContractAddress(),
@@ -620,6 +622,14 @@ internal class SwapInteractorImpl @Inject constructor(
             rateType = RateType.FLOAT,
         )
 
+        val isWithdrawOverBalance = fromSwapCurrencyStatus.account is Account.Payment &&
+            !isBalanceEnough(fromSwapCurrencyStatus, amount, null)
+        val quoteBalanceStatus = if (isWithdrawOverBalance) {
+            SwapBalanceStatus.InsufficientAmount
+        } else {
+            SwapBalanceStatus.Pending
+        }
+
         return provider to getQuotesState(
             provider = provider,
             quoteDataModel = quotes,
@@ -627,7 +637,7 @@ internal class SwapInteractorImpl @Inject constructor(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             isAllowedToSpend = true,
-            quoteBalanceStatus = SwapBalanceStatus.Pending,
+            quoteBalanceStatus = quoteBalanceStatus,
         )
     }
 

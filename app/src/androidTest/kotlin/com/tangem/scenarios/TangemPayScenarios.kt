@@ -200,7 +200,7 @@ fun BaseTestCase.openReissueSheet() {
     }
 }
 
-/** Imports the hot wallet, opens Withdraw, dismisses the note + stories, and lands on the Swap screen. */
+/** Imports the hot wallet, opens Withdraw, dismisses the stories, and lands on the Swap screen. */
 fun BaseTestCase.openTangemPayWithdrawSwapScreen() {
     openTangemPay()
     step("Assert initial balance contains '10'") {
@@ -208,12 +208,6 @@ fun BaseTestCase.openTangemPayWithdrawSwapScreen() {
     }
     step("Click on 'Withdraw' action chip") {
         onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
-    }
-    step("Acknowledge withdrawal note sheet") {
-        onTangemPayWithdrawNoteSheet {
-            title.assertIsDisplayed()
-            gotItButton.clickWithAssertion()
-        }
     }
     // Stories auto-advance; a tap can miss mid-animation — retry the close until the Swap screen shows.
     step("Close 'Swap stories' and land on the 'Swap' screen (USDC pre-filled as source)") {

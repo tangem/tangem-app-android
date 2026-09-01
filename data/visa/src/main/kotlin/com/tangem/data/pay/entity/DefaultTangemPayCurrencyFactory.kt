@@ -142,7 +142,9 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
         token: CustomerInfo.NetworkInfo.Token,
     ): CryptoCurrency.Token? {
         val symbol = token.symbol.takeIf(String::isNotBlank) ?: return null
-        val contractAddress = token.contractAddress?.takeIf(String::isNotBlank) ?: return null
+        // The backend returns EIP-55 checksummed addresses; Express and the account's own legacy currency both
+        // carry plain lowercase ones, and swap pairs are matched by exact string comparison.
+        val contractAddress = token.contractAddress?.takeIf(String::isNotBlank)?.lowercase(Locale.US) ?: return null
         return cryptoCurrencyFactory.createToken(
             network = network,
             rawId = rawIdFor(symbol),

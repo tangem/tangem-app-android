@@ -55,10 +55,10 @@ private fun InfoTilesShimmer(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TangemShimmer(modifier = Modifier.weight(1f).height(108.dp), radius = 16.dp)
-        TangemShimmer(modifier = Modifier.weight(1f).height(108.dp), radius = 16.dp)
+        TangemShimmer(modifier = Modifier.weight(1f).height(132.dp), radius = 24.dp)
+        TangemShimmer(modifier = Modifier.weight(1f).height(132.dp), radius = 24.dp)
     }
 }
 

@@ -23,6 +23,7 @@ import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
 import com.tangem.features.virtualaccount.onboarding.deeplink.OnboardVirtualAccountsDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
@@ -99,6 +100,10 @@ internal class DeepLinkFactoryTest {
         every { create(any(), any()) } returns mockk()
     }
 
+    private val tangemPayAccountDeepLink = mockk<TangemPayAccountDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
     private val cardSdkProvider = mockk<CardSdkProvider>(relaxed = true) {
         every { sdk.uiVisibility() } returns MutableStateFlow(false)
     }
@@ -167,6 +172,7 @@ internal class DeepLinkFactoryTest {
         onboardVisaDeepLink = onboardVisaDeepLink,
         onboardVirtualAccountsDeepLink = onboardVirtualAccountsDeepLink,
         tangemPayMainDeepLink = tangemPayMainDeepLink,
+        tangemPayAccountDeepLink = tangemPayAccountDeepLink,
         newsDetailsDeepLink = newsDeeplink,
         newsDeepLink = newsDeepLinkFactory,
         earnDeepLink = earnDeepLinkFactory,
@@ -411,6 +417,23 @@ internal class DeepLinkFactoryTest {
     }
 
     @Test
+    fun `GIVEN pay-account host WHEN handleDeeplink THEN screen param reaches the account handler`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "pay-account"
+        every { mockedUri.queryParameterNames } returns setOf("screen")
+        every { mockedUri.getQueryParameter("screen") } returns "cashback"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { tangemPayAccountDeepLink.create(eq(testScope), eq(mapOf("screen" to "cashback"))) }
+    }
+
+    @Test
     fun `GIVEN joint_account deeplink WHEN handle THEN joint account handler created with params`() = runTest {
         every { mockedUri.scheme } returns "tangem"
         every { mockedUri.host } returns "joint_account"
@@ -455,6 +478,7 @@ internal class DeepLinkFactoryTest {
             swapDeepLinkFactory.create(any(), any())
             promoDeepLinkFactory.create(any(), any())
             tangemPayMainDeepLink.create(any(), any())
+            tangemPayAccountDeepLink.create(any(), any())
         }
     }
 
