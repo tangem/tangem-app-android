@@ -24,6 +24,7 @@ import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.presentation.R
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
+import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -110,7 +111,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         runTest {
             // Arrange — even with the account-swap-flow toggle ON, a regular (non-Tangem-Pay)
             // swap entry (accountFlow == null) still lets the user manually pick the Payment account as FROM
-            // (Settings.SwapFrom keeps isShowPaymentAccount = true). The legacy slot-based check must still
+            // (Settings.SwapFrom keeps the payment account visible). The legacy slot-based check must still
             // catch that case so it is routed through withdrawal handling (CEX-only providers), matching
             // legacy (toggle-OFF) behaviour.
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
@@ -282,15 +283,41 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN Withdraw flow WHEN selector settings THEN payment account lists every issued token`() = runTest {
+    fun `GIVEN Withdraw flow WHEN from selector settings THEN payment account lists every issued token`() = runTest {
         // Arrange & Act
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         val model = createModel(accountFlow = AccountFlow.Withdraw)
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.chooseToTokenBridge.settings.isPaymentAccountMultiTokenEnabled).isTrue()
-        assertThat(model.chooseFromTokenBridge.settings.isPaymentAccountMultiTokenEnabled).isTrue()
+        assertThat(model.chooseFromTokenBridge.settings.paymentAccountTokens)
+            .isEqualTo(PaymentAccountTokens.IssuedTokens)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN Withdraw flow WHEN to selector settings THEN the payment account is hidden`() = runTest {
+        // Arrange & Act — withdrawing into the same account is not an operation the user can make.
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.chooseToTokenBridge.settings.paymentAccountTokens)
+            .isEqualTo(PaymentAccountTokens.Hidden)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN TopUp flow WHEN from selector settings THEN the payment account is hidden`() = runTest {
+        // Arrange & Act — funding the account from itself is not an operation the user can make.
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.TopUp)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.chooseFromTokenBridge.settings.paymentAccountTokens)
+            .isEqualTo(PaymentAccountTokens.Hidden)
         model.onDestroy()
     }
 

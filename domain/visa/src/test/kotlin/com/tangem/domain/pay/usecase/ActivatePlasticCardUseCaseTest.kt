@@ -162,6 +162,7 @@ internal class ActivatePlasticCardUseCaseTest {
                     orderId = ORDER_ID,
                     orderStatus = OrderStatus.COMPLETED,
                     orderType = OrderType.CARD_ACTIVATION_PLASTIC_RAIN,
+                    productInstanceId = PRODUCT_INSTANCE_ID,
                 ),
                 userWalletId = USER_WALLET_ID,
                 onOrderStateChange = null,

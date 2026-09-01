@@ -61,8 +61,8 @@ internal fun TangemPayOrderCardTypeUM.imageUrlFor(type: OrderCardType): String? 
     }
 } ?: cardImageUrl
 
-internal fun availableTypesOf(isPlasticEnabled: Boolean): List<OrderCardType> = if (isPlasticEnabled) {
-    listOf(OrderCardType.Virtual, OrderCardType.Plastic)
-} else {
-    listOf(OrderCardType.Virtual)
-}
+internal fun availableTypesOf(isPlasticEnabled: Boolean, isVirtualAvailable: Boolean = true): List<OrderCardType> =
+    buildList {
+        if (isVirtualAvailable || !isPlasticEnabled) add(OrderCardType.Virtual)
+        if (isPlasticEnabled) add(OrderCardType.Plastic)
+    }
