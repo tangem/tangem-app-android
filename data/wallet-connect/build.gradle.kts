@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.ksp)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -39,7 +40,7 @@ dependencies {
     // endregion
 
     // region DI
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
@@ -47,6 +48,8 @@ dependencies {
     api(projects.core.analytics)
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
     // endregion
