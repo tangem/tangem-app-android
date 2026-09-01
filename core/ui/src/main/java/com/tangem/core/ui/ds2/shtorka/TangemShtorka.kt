@@ -109,6 +109,13 @@ fun TangemShtorka(
         )
     }
     val nestedScrollConnection = remember(state) { state.shtorkaNestedScrollConnection() }
+    val surfaceOpacity: () -> Float = remember(state, isMaterial) {
+        if (isMaterial) {
+            { state.expandProgress }
+        } else {
+            OpaqueShtorkaSurface
+        }
+    }
 
     val haptic = LocalHapticFeedback.current
     LaunchedEffect(state) {
@@ -153,7 +160,9 @@ fun TangemShtorka(
                     }
                     .hazeSourceTangem(state = contentHazeState),
             ) {
-                content()
+                CompositionLocalProvider(LocalShtorkaSurfaceOpacity provides surfaceOpacity) {
+                    content()
+                }
             }
             CompositionLocalProvider(LocalHazeState provides contentHazeState) {
                 Column(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter)) {
