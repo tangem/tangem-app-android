@@ -76,6 +76,8 @@ internal class StakingAnalyticSender(
                     feeAssetType = AnalyticsParam.FeeAssetType.Coin,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = tokenCryptoCurrency.isCustom,
+                isCustomFeeToken = tokenCryptoCurrency.isCustom,
             ),
         )
     }
@@ -94,6 +96,8 @@ internal class StakingAnalyticSender(
                     feeAssetType = feeAssetType,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = cryptoCurrencyStatus.currency.isCustom,
+                isCustomFeeToken = cryptoCurrencyStatus.currency.isCustom,
             ),
         )
         analyticsEventHandler.send(
