@@ -4,7 +4,8 @@ import com.tangem.core.remote.config.ApiConfig
 
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.utils.AuthenticationHeader
+import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
@@ -22,7 +23,6 @@ class ApiConfigTest {
 
     private val appAuthProvider = mockk<AuthProvider>()
     private val apiKeyProvider = mockk<ProviderSuspend<String>>()
-    private val environmentConfig = mockk<EnvironmentConfig>()
 
     @BeforeEach
     fun setup() {
@@ -48,34 +48,11 @@ class ApiConfigTest {
 
     private fun createApiConfigs(): List<ApiConfig> {
         return listOf(
-            Express(
-                environmentConfig = environmentConfig,
-                expressAuthProvider = mockk(),
-                appInfoProvider = mockk(),
-            ),
-            YieldSupply(
-                environmentConfig = environmentConfig,
-                authProvider = appAuthProvider,
-                appInfoProvider = mockk(),
-            ),
             TangemTech(
-                authProvider = appAuthProvider,
+                apiKeyHeader = { environment -> TangemApiKeyHeader(appAuthProvider, environment) },
+                cardAuthHeader = { AuthenticationHeader(appAuthProvider) },
                 appInfoProvider = mockk(),
             ),
-            StakeKit(stakeKitAuthProvider = mockk()),
-            BlockAid(environmentConfig = environmentConfig),
-            MoonPay(),
-            P2PEthPool(p2pAuthProvider = mockk()),
-            News(
-                authProvider = appAuthProvider,
-                appInfoProvider = mockk(),
-            ),
-            GaslessTxService(
-                authProvider = appAuthProvider,
-                appInfoProvider = mockk(),
-            ),
-            SurveySparrow(environmentConfig = environmentConfig),
-            Auth(),
         )
     }
 }

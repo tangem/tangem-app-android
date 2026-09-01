@@ -34,6 +34,7 @@ internal class PaymentNetworkPresentationTest {
         val status = PaymentNetworkStatus.Available(
             network = network(networkName = "Polygon", networkRawId = "polygon"),
             depositAddress = "0xDEPOSIT",
+            chainId = 137L,
             cryptoCurrencyStatuses = listOf(status(currency("USDC")), status(currency("USDT"))),
         )
 
@@ -82,7 +83,80 @@ internal class PaymentNetworkPresentationTest {
     }
 
     @Test
-    fun `GIVEN status with no currencies WHEN toRowData THEN returns null`() {
+    fun `GIVEN a token absent from the Tangem catalogue WHEN toRowData THEN it is left out of the token label`() {
+        // Arrange
+        // A payment account also carries the backend's internal settlement stablecoin (no raw id, hence no name
+        // or icon to show); it is not part of the receive offering.
+        val status = PaymentNetworkStatus.Available(
+            network = network(networkName = "Base", networkRawId = "base/test"),
+            depositAddress = "0xDEPOSIT",
+            chainId = 137L,
+            cryptoCurrencyStatuses = listOf(
+                status(currency("USDC")),
+                status(currency("rUSD", rawCurrencyId = null)),
+            ),
+        )
+
+        // Act
+        val result = status.toRowData()
+
+        // Assert
+        assertThat(result?.tokensLabel).isEqualTo("USDC")
+    }
+
+    @Test
+    fun `GIVEN only catalogue-unknown tokens WHEN toRowData THEN the Available network gets no row`() {
+        // Arrange
+        val status = PaymentNetworkStatus.Available(
+            network = network(networkName = "Base", networkRawId = "base/test"),
+            depositAddress = "0xDEPOSIT",
+            chainId = 137L,
+            cryptoCurrencyStatuses = listOf(status(currency("rUSD", rawCurrencyId = null))),
+        )
+
+        // Act
+        val result = status.toRowData()
+
+        // Assert
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `GIVEN Available status with no currencies WHEN toRowData THEN returns null`() {
+        // Arrange
+        val status = PaymentNetworkStatus.Available(
+            network = network(networkName = "Polygon", networkRawId = "polygon"),
+            depositAddress = "0xDEPOSIT",
+            chainId = 137L,
+            cryptoCurrencyStatuses = emptyList(),
+        )
+
+        // Act
+        val result = status.toRowData()
+
+        // Assert
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `GIVEN NotIssued status with no currencies WHEN toRowData THEN keeps the row with an empty label`() {
+        // Arrange
+        val status = PaymentNetworkStatus.NotIssued(
+            network = network(networkName = "Base", networkRawId = "base"),
+            cryptoCurrencies = emptyList(),
+        )
+
+        // Act
+        val result = status.toRowData()
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PaymentNetworkRowData(id = "base", name = "Base", tokensLabel = "", iconResId = ICON_RES_ID),
+        )
+    }
+
+    @Test
+    fun `GIVEN Disabled status with no currencies WHEN toRowData THEN keeps the row with an empty label`() {
         // Arrange
         val status = PaymentNetworkStatus.Disabled(
             network = network(networkName = "TRON", networkRawId = "tron"),
@@ -93,7 +167,9 @@ internal class PaymentNetworkPresentationTest {
         val result = status.toRowData()
 
         // Assert
-        assertThat(result).isNull()
+        assertThat(result).isEqualTo(
+            PaymentNetworkRowData(id = "tron", name = "TRON", tokensLabel = "", iconResId = ICON_RES_ID),
+        )
     }
 
     private fun network(networkName: String, networkRawId: String): Network {
@@ -105,9 +181,13 @@ internal class PaymentNetworkPresentationTest {
         return network
     }
 
-    private fun currency(symbol: String): CryptoCurrency.Token {
+    private fun currency(
+        symbol: String,
+        rawCurrencyId: CryptoCurrency.RawID? = CryptoCurrency.RawID(symbol),
+    ): CryptoCurrency.Token {
         val token: CryptoCurrency.Token = mockk()
         every { token.symbol } returns symbol
+        every { token.id } returns mockk { every { this@mockk.rawCurrencyId } returns rawCurrencyId }
         return token
     }
 

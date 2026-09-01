@@ -220,7 +220,7 @@ internal class TxHistoryListManagerTest {
         override fun getExpressHistory(
             userWalletId: UserWalletId,
             currency: CryptoCurrency,
-            fromCreatedAtMillis: Long,
+            fromOnChainTimestampMillis: Long,
         ) = emptyFlow<List<ExpressTx>>()
 
         override fun getIndexedExpressHistory(
@@ -228,6 +228,12 @@ internal class TxHistoryListManagerTest {
             currency: CryptoCurrency,
             limit: Int,
         ) = emptyFlow<ExpressHistoryPage>()
+
+        override fun getExpressTxById(
+            userWalletId: UserWalletId,
+            currency: CryptoCurrency,
+            txId: String,
+        ) = emptyFlow<ExpressTx>()
 
         fun loadedItemsCount(): Int = batchFlow.state.value.data.sumOf { batch -> batch.data.items.size }
 

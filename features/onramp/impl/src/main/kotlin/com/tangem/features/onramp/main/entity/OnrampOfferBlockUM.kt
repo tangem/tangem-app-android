@@ -40,7 +40,7 @@ internal sealed interface OnrampOfferAdvantagesUM {
     data object BestRate : OnrampOfferAdvantagesUM
     data object GreatRate : OnrampOfferAdvantagesUM
     data object Fastest : OnrampOfferAdvantagesUM
-
+    data object Restricted : OnrampOfferAdvantagesUM
     sealed interface Unavailable : OnrampOfferAdvantagesUM {
         data object MinAmount : Unavailable
         data object MaxAmount : Unavailable
@@ -65,6 +65,7 @@ internal sealed interface OnrampOfferAdvantagesUM {
             Default,
             BestRate,
             is Unavailable,
+            Restricted,
             -> null
         }
     }

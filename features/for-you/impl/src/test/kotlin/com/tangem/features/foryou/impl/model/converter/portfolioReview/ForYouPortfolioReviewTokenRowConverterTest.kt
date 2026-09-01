@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
@@ -13,7 +14,12 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.foryou.impl.createLoadedValue
+import com.tangem.features.foryou.impl.createMissedDerivationValue
+import com.tangem.features.foryou.impl.createStakedBalance
+import com.tangem.features.foryou.impl.createUnreachableValue
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.THREE_STARS
@@ -323,6 +329,121 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         }
     }
 
+    @Nested
+    inner class Staking {
+
+        @Test
+        fun `GIVEN staked balance WHEN convert THEN subtitle crypto amount includes the staked amount`() {
+            // Arrange — 2 held on the network plus 3 staked outside it
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(
+                    currency,
+                    loadedValue(
+                        amount = BigDecimal("2"),
+                        fiatAmount = BigDecimal("400"),
+                        fiatRate = BigDecimal("200"),
+                        staking = createStakedBalance(BigDecimal("3")),
+                    ),
+                ),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert
+            val subtitle = result.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
+            assertThat(subtitle.text).isEqualTo(BigDecimal("5").expectedSubtitleText(currency, "Ethereum"))
+        }
+
+        @Test
+        fun `GIVEN staked balance WHEN convert THEN fiat total and percent share include the staked fiat`() {
+            // Arrange — fiat 400 plus rate 200 x 3 staked = 1000, half of the 2000 portfolio
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(
+                    currency,
+                    loadedValue(
+                        amount = BigDecimal("2"),
+                        fiatAmount = BigDecimal("400"),
+                        fiatRate = BigDecimal("200"),
+                        staking = createStakedBalance(BigDecimal("3")),
+                    ),
+                ),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("2000"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert
+            val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            assertThat(topEnd.text).isEqualTo(BigDecimal("1000").expectedFiatText())
+            assertThat(bottomEnd.text).isEqualTo(BigDecimal("1000").expectedPercentText(BigDecimal("2000")))
+        }
+
+        @Test
+        fun `GIVEN several staked statuses WHEN convert THEN staked amounts are summed across them`() {
+            // Arrange — the same asset staked in two accounts on one network
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = List(size = 2) {
+                createStatus(
+                    currency,
+                    loadedValue(
+                        amount = BigDecimal.ONE,
+                        fiatAmount = BigDecimal("100"),
+                        fiatRate = BigDecimal("100"),
+                        staking = createStakedBalance(BigDecimal.ONE),
+                    ),
+                )
+            }
+            val converter = createConverter(totalFiatBalance = BigDecimal("400"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert — (1 + 1 staked) x 2 crypto, (100 + 100 staked fiat) x 2 fiat
+            val subtitle = result.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
+            val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            assertThat(subtitle.text).isEqualTo(BigDecimal("4").expectedSubtitleText(currency, "Ethereum"))
+            assertThat(topEnd.text).isEqualTo(BigDecimal("400").expectedFiatText())
+        }
+
+        @Test
+        fun `GIVEN staked balance on Cardano WHEN convert THEN only rewards are added on top`() {
+            // Arrange — Cardano keeps the staked principal inside the network balance, so it must not double
+            val currency = createCurrency(
+                id = "coin-ada",
+                symbol = "ADA",
+                networkName = "Cardano",
+                networkRawId = "cardano",
+            )
+            val statuses = listOf(
+                createStatus(
+                    currency,
+                    loadedValue(
+                        amount = BigDecimal("2"),
+                        fiatAmount = BigDecimal("400"),
+                        fiatRate = BigDecimal("200"),
+                        staking = createStakedBalance(BigDecimal("3")),
+                    ),
+                ),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert — the staked 3 carries no rewards, so the bare amounts are rendered
+            val subtitle = result.subtitleUM as TangemTokenRowUM.SubtitleUM.Content
+            val topEnd = result.topEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            assertThat(subtitle.text).isEqualTo(BigDecimal("2").expectedSubtitleText(currency, "Cardano"))
+            assertThat(topEnd.text).isEqualTo(BigDecimal("400").expectedFiatText())
+        }
+    }
+
     private fun createConverter(
         totalFiatBalance: BigDecimal,
         userWalletId: UserWalletId? = UserWalletId("01"),
@@ -343,6 +464,10 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         format { fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol) },
     )
 
+    /** Mirrors the production `network - amount` subtitle rendering for a resolved row. */
+    private fun BigDecimal.expectedSubtitleText(currency: CryptoCurrency, networkName: String): TextReference =
+        stringReference("$networkName ${StringsSigns.DOT} ${format { crypto(cryptoCurrency = currency) }}")
+
     /** Mirrors the production percent-share rendering of [ForYouPortfolioReviewTokenRowConverter]. */
     private fun BigDecimal.expectedPercentText(total: BigDecimal): TextReference = stringReference(
         toForYouPercent(total).format { percent() },
@@ -357,38 +482,31 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
         amount: BigDecimal,
         fiatAmount: BigDecimal,
         source: StatusSource = StatusSource.ACTUAL,
-    ): CryptoCurrencyStatus.Loaded = mockk {
-        every { this@mockk.amount } returns amount
-        every { this@mockk.fiatAmount } returns fiatAmount
-        every { isError } returns false
-        every { sources } returns CryptoCurrencyStatus.Sources(
-            networkSource = source,
-            quoteSource = source,
-            stakingBalanceSource = source,
-        )
-    }
+        fiatRate: BigDecimal = BigDecimal.ONE,
+        staking: StakingBalance? = null,
+    ): CryptoCurrencyStatus.Loaded = createLoadedValue(
+        amount = amount,
+        fiatAmount = fiatAmount,
+        fiatRate = fiatRate,
+        staking = staking,
+        source = source,
+    )
 
-    private fun missedDerivationValue(): CryptoCurrencyStatus.MissedDerivation = mockk {
-        every { amount } returns null
-        every { fiatAmount } returns null
-        every { isError } returns true
-    }
+    private fun missedDerivationValue(): CryptoCurrencyStatus.MissedDerivation = createMissedDerivationValue()
 
-    private fun unreachableValue(): CryptoCurrencyStatus.Unreachable = mockk {
-        every { amount } returns null
-        every { fiatAmount } returns null
-        every { isError } returns true
-    }
+    private fun unreachableValue(): CryptoCurrencyStatus.Unreachable = createUnreachableValue()
 
     private fun createCurrency(
         id: String,
         symbol: String,
         networkName: String = "Network",
+        networkRawId: String = "ethereum",
     ): CryptoCurrency {
         val network: Network = mockk {
             every { name } returns networkName
             every { isTestnet } returns false
             every { this@mockk.id } returns mockk { every { rawId } returns Network.RawID(id) }
+            every { this@mockk.rawId } returns networkRawId
         }
         val currencyId: CryptoCurrency.ID = mockk {
             every { value } returns id

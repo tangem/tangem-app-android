@@ -65,10 +65,11 @@ import dev.chrisbanes.haze.HazeTint
  * @param enabled Forwarded to the click handler.
 
  * @param shadowRadius Blur size of the material drop shadow, expressed as a Figma `box-shadow`
- *   blur. Ignored when [isMaterial] is `false`.
+ *   blur. Ignored when [isMaterial] is `false`. Provide [LocalMaterialShadowEnabled] as `false` to
+ *   suppress the shadow entirely (e.g. for blocks laid on an already-elevated container).
  * @param content Content rendered inside the clipped surface.
  */
-@Suppress("UnsafeCallOnNullableType", "")
+@Suppress("UnsafeCallOnNullableType", "LongParameterList")
 @Composable
 @NonRestartableComposable
 fun TangemSurface(
@@ -127,10 +128,13 @@ object TangemSurface {
      * - [Default] — material of the current theme (`colors3.material`).
      * - [Inverted] — material of the opposite theme (`colors3.materialInverted`): dark in light
      *   theme, light in dark theme.
+     * - [Modal] — heavier material used by modal containers (`colors3.materialModal`), e.g.
+     *   bottom sheets and the shtorka.
      */
     enum class MaterialStyle {
         Default,
         Inverted,
+        Modal,
     }
 }
 
@@ -238,6 +242,14 @@ private fun materialColors(style: TangemSurface.MaterialStyle): MaterialColors {
             borderStart = colors.materialInverted.border.start,
             borderEnd = colors.materialInverted.border.end,
         )
+        TangemSurface.MaterialStyle.Modal -> MaterialColors(
+            fillBlur = colors.materialModal.fill.blur,
+            fillSolid = colors.materialModal.fill.solid,
+            tintSolid = colors.materialModal.tint.solid,
+            borderStart = colors.materialModal.border.start,
+            borderMid = colors.materialModal.border.mid,
+            borderEnd = colors.materialModal.border.end,
+        )
     }
 }
 
@@ -247,6 +259,7 @@ private class MaterialColors(
     val tintSolid: Color,
     val borderStart: Color,
     val borderEnd: Color,
+    val borderMid: Color = Color.Transparent,
 )
 
 @Suppress("MagicNumber")
@@ -255,7 +268,7 @@ private class MaterialColors(
 private fun materialBorderBrush(style: TangemSurface.MaterialStyle): Brush {
     val material = materialColors(style)
     val startColor = material.borderStart
-    val midColor = Color.Transparent
+    val midColor = material.borderMid
     val endColor = material.borderEnd
     return object : ShaderBrush() {
         override fun createShader(size: Size): Shader {

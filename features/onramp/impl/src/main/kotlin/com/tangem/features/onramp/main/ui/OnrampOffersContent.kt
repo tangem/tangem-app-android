@@ -153,7 +153,8 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
                 size = TangemButtonSize.RoundedAction,
                 text = stringResourceSafe(R.string.common_buy),
                 onClick = onrampOfferUM.onBuyClicked,
-                enabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable,
+                enabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable &&
+                    onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted,
             )
         }
         SpacerH(10.dp)
@@ -177,7 +178,9 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
                 modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE),
             )
         }
-        OnrampOfferAdvantagesUM.Default -> {
+        OnrampOfferAdvantagesUM.Restricted,
+        OnrampOfferAdvantagesUM.Default,
+        -> {
             Text(
                 text = stringResourceSafe(R.string.onramp_title_you_get),
                 style = TangemTheme.typography.caption2,

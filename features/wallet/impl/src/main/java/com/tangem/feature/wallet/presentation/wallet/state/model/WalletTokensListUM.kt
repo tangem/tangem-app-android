@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.row.TangemRowUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.features.jointaccount.main.JointAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -95,15 +96,6 @@ internal sealed interface TokensListItemUM2 {
         override val tokenRowUM: TangemTokenRowUM,
     ) : TokensListItemUM2
 
-    /**
-     * Synthetic, feature-flag-gated entry-point row for the Polymarket prediction account.
-     * Rendered as a standalone rounded card above the real account rows. Not backed by a domain
-     * account yet — will become an [AccountStatus]-backed row once the external contract lands.
-     */
-    data class Prediction(
-        override val tokenRowUM: TangemTokenRowUM,
-    ) : TokensListItemUM2
-
     data class Portfolio(
         override val tokenRowUM: TangemTokenRowUM,
         val onEmptyClick: () -> Unit,
@@ -111,4 +103,17 @@ internal sealed interface TokensListItemUM2 {
         val isExpanded: Boolean,
         val isCollapsable: Boolean,
     ) : TokensListItemUM2
+
+    /**
+     * A joint account that is not yet activated (collecting members / loading / blocked / temporarily
+     * unavailable). Rendered as a single non-collapsible row by the joint-account feature component,
+     * keyed by [accountId] so multiple pending joint accounts can coexist in the list. Once activated,
+     * a joint account becomes a regular [Portfolio] instead.
+     */
+    data class JointPending(
+        val accountId: String,
+        val state: JointAccountMainUM,
+    ) : TokensListItemUM2 {
+        override val tokenRowUM: TangemRowUM = TangemTokenRowUM.Empty(id = accountId)
+    }
 }

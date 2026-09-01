@@ -1,8 +1,6 @@
 package com.tangem.features.hotwallet.addexistingwallet.im.port.model
 
-import com.tangem.utils.logging.TangemLogger
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -15,20 +13,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.domain.common.wallets.error.SaveWalletError
-import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
-import com.tangem.domain.wallets.builder.HotUserWalletBuilder
-import com.tangem.domain.wallets.models.WalletSyncResult
-import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
-import com.tangem.hot.sdk.TangemHotSdk
-import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -41,14 +29,9 @@ internal class AddExistingWalletImportModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val mnemonicRepository: MnemonicRepository,
-    private val tangemHotSdk: TangemHotSdk,
-    private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
-    private val saveUserWalletUseCase: SaveWalletUseCase,
-    private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase,
-    private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
+    private val hotWalletImporter: HotWalletImporter,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params: AddExistingWalletImportComponent.Params = paramsContainer.require()
@@ -92,61 +75,25 @@ internal class AddExistingWalletImportModel @Inject constructor(
     internal val uiState: StateFlow<AddExistingWalletImportUM>
         field = MutableStateFlow(importSeedPhraseUiStateBuilder.getState())
 
-    @Suppress("UnusedPrivateMember")
     private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {
         modelScope.launch {
             setImportProgress(true)
-
-            runCatching {
-                val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase?.toCharArray(), HotAuth.NoAuth)
-                val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
-                val userWallet = hotUserWalletBuilder.build()
-                saveUserWalletUseCase.invoke(userWallet.copy(backedUp = true))
-                    .onLeft { error ->
-                        setImportProgress(false)
-                        when (error) {
-                            is SaveWalletError.DataError -> TangemLogger.e("Unable to save user wallet: $error")
-                            is SaveWalletError.WalletAlreadySaved -> {
-                                uiMessageSender.send(
-                                    SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
-                                )
-                            }
-                        }
+            val result = hotWalletImporter.import(
+                scope = modelScope,
+                mnemonic = mnemonic,
+                passphrase = passphrase?.toCharArray(),
+            )
+            setImportProgress(false)
+            result.fold(
+                ifLeft = { error ->
+                    val message = when (error) {
+                        HotWalletImportError.AlreadySaved -> R.string.hw_import_seed_phrase_already_imported
+                        is HotWalletImportError.Unknown -> R.string.common_unknown_error
                     }
-                    .onRight {
-                        setImportProgress(false)
-
-                        launch(dispatchers.main + NonCancellable) {
-                            val syncResult = syncWalletWithRemoteUseCase(userWallet.walletId)
-                            if (syncResult == WalletSyncResult.Created) {
-                                startAssetsDiscoveryUseCase(userWallet.walletId)
-                            }
-                        }
-
-                        analyticsEventHandler.send(
-                            event = OnboardingAnalyticsEvent.Onboarding.Finished(
-                                source = AnalyticsParam.ScreensSources.ImportWallet,
-                            ),
-                        )
-                        analyticsEventHandler.send(
-                            event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                                source = AnalyticsParam.ScreensSources.ImportWallet,
-                                creationType = AnalyticsParam.WalletCreationType.SeedImport,
-                                seedPhraseLength = mnemonic.mnemonicComponents.size,
-                                passPhraseState = if (passphrase.isNullOrBlank()) {
-                                    AnalyticsParam.EmptyFull.Empty
-                                } else {
-                                    AnalyticsParam.EmptyFull.Full
-                                },
-                                referralId = appsFlyerStore.get()?.refcode,
-                            ),
-                        )
-                        params.callbacks.onWalletImported(userWallet.walletId)
-                    }
-            }.onFailure { throwable ->
-                TangemLogger.e("Error", throwable)
-                setImportProgress(false)
-            }
+                    uiMessageSender.send(SnackbarMessage(resourceReference(message)))
+                },
+                ifRight = { userWalletId -> params.callbacks.onWalletImported(userWalletId) },
+            )
         }
     }
 

@@ -7,10 +7,10 @@ import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.domain.blockaid.models.transaction.simultation.TokenInfo
 import com.tangem.blockchain.extensions.hexToBigDecimal
-import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionScanRequest
-import com.tangem.datasource.api.common.blockaid.models.request.RpcData
-import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
-import com.tangem.datasource.api.common.blockaid.models.response.*
+import com.tangem.store.datasource.blockaid.models.request.EvmTransactionScanRequest
+import com.tangem.store.datasource.blockaid.models.request.RpcData
+import com.tangem.store.datasource.blockaid.models.request.SolanaTransactionScanRequest
+import com.tangem.store.datasource.blockaid.models.response.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener

@@ -64,6 +64,18 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
     }
 
     /**
+     * Every currency the payment account holds — one per token per issued network. Collapses to the single
+     * legacy currency while the account is not multichain, so callers get the same shape either way.
+     */
+    suspend fun invokeSyncCurrencies(userWalletId: UserWalletId): List<CryptoCurrencyStatus> {
+        val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return emptyList()
+        return when (val statusValue = accountStatus.value) {
+            is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatuses
+            else -> emptyList()
+        }
+    }
+
+    /**
      * Currency status of the payment account: the account-level one when its balances are known, otherwise the
      * first of the per-network statuses. Without the fallback a multichain response that carries no
      * account-level balances would silently stop feeding swap / tx history, even though per-network data is
