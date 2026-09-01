@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.appsflyer
+package com.tangem.data.appsflyer.store
 
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.squareup.moshi.Json
