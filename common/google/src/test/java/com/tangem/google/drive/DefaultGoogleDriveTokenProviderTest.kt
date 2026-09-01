@@ -1,12 +1,15 @@
-package com.tangem.data.cloudbackup.datasource
+package com.tangem.google.drive
 
 import android.content.Context
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.connection.NetworkConnectionManager
-import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.google.GoogleServicesHelper
+import com.tangem.google.auth.GoogleAuthError
+import com.tangem.google.auth.GoogleAuthResult
+import com.tangem.google.auth.GoogleAuthScope
+import com.tangem.google.auth.GoogleAuthorizer
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -28,7 +31,7 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultGoogleDriveTokenProviderTest {
 
-    private val authorizer: GoogleDriveAuthorizer = mockk()
+    private val authorizer: GoogleAuthorizer = mockk()
     private val api: GoogleDriveApi = mockk(relaxed = true)
     private val context: Context = mockk()
     private val networkConnectionManager: NetworkConnectionManager = mockk()
@@ -55,7 +58,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
     }
 
     @Test
-    fun `GIVEN play services unavailable WHEN getAccessToken THEN CloudUnavailable and no authorize`() = runTest {
+    fun `GIVEN play services unavailable WHEN getAccessToken THEN Unavailable and no authorize`() = runTest {
         // Arrange
         every { GoogleServicesHelper.checkGoogleServicesAvailability(any()) } returns false
 
@@ -63,8 +66,8 @@ internal class DefaultGoogleDriveTokenProviderTest {
         val actual = provider.getAccessToken()
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupError.CloudUnavailable.left())
-        coVerify(exactly = 0) { authorizer.authorize() }
+        assertThat(actual).isEqualTo(GoogleAuthError.Unavailable.left())
+        coVerify(exactly = 0) { authorizer.authorize(any(), any()) }
     }
 
     @Test
@@ -76,14 +79,14 @@ internal class DefaultGoogleDriveTokenProviderTest {
         val actual = provider.getAccessToken()
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupError.NetworkError.left())
-        coVerify(exactly = 0) { authorizer.authorize() }
+        assertThat(actual).isEqualTo(GoogleAuthError.NetworkError.left())
+        coVerify(exactly = 0) { authorizer.authorize(any(), any()) }
     }
 
     @Test
     fun `GIVEN cached token AND device offline WHEN getAccessToken THEN cached token returned`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize() } returns GoogleDriveAuthResult(TOKEN).right()
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
         provider.getAccessToken()
         every { networkConnectionManager.isOnline } returns false
 
@@ -97,7 +100,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
     @Test
     fun `GIVEN authorized WHEN getAccessToken twice THEN authorized once AND second call returns cached`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize() } returns GoogleDriveAuthResult(TOKEN).right()
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
 
         // Act
         val first = provider.getAccessToken()
@@ -106,28 +109,40 @@ internal class DefaultGoogleDriveTokenProviderTest {
         // Assert
         assertThat(first).isEqualTo(TOKEN.right())
         assertThat(second).isEqualTo(TOKEN.right())
-        coVerify(exactly = 1) { authorizer.authorize() }
+        coVerify(exactly = 1) { authorizer.authorize(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN any request WHEN getAccessToken THEN only the drive file scope is requested`() = runTest {
+        // Arrange
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+
+        // Act
+        provider.getAccessToken()
+
+        // Assert
+        coVerify(exactly = 1) { authorizer.authorize(scopes = listOf(DRIVE_FILE_SCOPE), interactive = true) }
     }
 
     @Test
     fun `GIVEN silent request WHEN getAccessToken THEN authorize called non-interactively`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize(interactive = false) } returns CloudBackupError.AuthRequired.left()
+        coEvery { authorizer.authorize(any(), interactive = false) } returns GoogleAuthError.AuthRequired.left()
 
         // Act
         val actual = provider.getAccessToken(interactive = false)
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupError.AuthRequired.left())
-        coVerify(exactly = 1) { authorizer.authorize(interactive = false) }
+        assertThat(actual).isEqualTo(GoogleAuthError.AuthRequired.left())
+        coVerify(exactly = 1) { authorizer.authorize(any(), interactive = false) }
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN authorize fails WHEN getAccessToken THEN error propagated AND nothing cached`(error: CloudBackupError) =
+    fun `GIVEN authorize fails WHEN getAccessToken THEN error propagated AND nothing cached`(error: GoogleAuthError) =
         runTest {
             // Arrange
-            coEvery { authorizer.authorize() } returns error.left()
+            coEvery { authorizer.authorize(any(), any()) } returns error.left()
 
             // Act
             val actual = provider.getAccessToken()
@@ -135,13 +150,13 @@ internal class DefaultGoogleDriveTokenProviderTest {
 
             // Assert — a failed authorization is not cached, so the next call authorizes again
             assertThat(actual).isEqualTo(error.left())
-            coVerify(exactly = 2) { authorizer.authorize() }
+            coVerify(exactly = 2) { authorizer.authorize(any(), any()) }
         }
 
     @Test
     fun `GIVEN cached token WHEN invalidate THEN token dropped AND re-auth on next call`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize() } returns GoogleDriveAuthResult(TOKEN).right()
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
         coEvery { authorizer.clearToken(TOKEN) } just Runs
         every { authorizer.clearAuthorization() } just Runs
         provider.getAccessToken()
@@ -153,13 +168,13 @@ internal class DefaultGoogleDriveTokenProviderTest {
         // Assert
         coVerify(exactly = 1) { authorizer.clearToken(TOKEN) }
         verify(exactly = 1) { authorizer.clearAuthorization() }
-        coVerify(exactly = 2) { authorizer.authorize() }
+        coVerify(exactly = 2) { authorizer.authorize(any(), any()) }
     }
 
     @Test
     fun `GIVEN cached token WHEN signOut THEN token revoked AND dropped AND state cleared`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize() } returns GoogleDriveAuthResult(TOKEN).right()
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
         coEvery { authorizer.clearToken(TOKEN) } just Runs
         every { authorizer.clearAuthorization() } just Runs
         provider.getAccessToken()
@@ -187,15 +202,16 @@ internal class DefaultGoogleDriveTokenProviderTest {
     }
 
     private fun provideTestModels() = listOf(
-        CloudBackupError.AuthCanceled,
-        CloudBackupError.AuthRequired,
-        CloudBackupError.AuthPermissionsMissing,
-        CloudBackupError.NetworkError,
-        CloudBackupError.CloudUnavailable,
-        CloudBackupError.Unknown(),
+        GoogleAuthError.AuthCanceled,
+        GoogleAuthError.AuthRequired,
+        GoogleAuthError.PermissionsMissing,
+        GoogleAuthError.NetworkError,
+        GoogleAuthError.Unavailable,
+        GoogleAuthError.Unknown(),
     )
 
     private companion object {
         const val TOKEN = "ya29.access-token"
+        val DRIVE_FILE_SCOPE = GoogleAuthScope("https://www.googleapis.com/auth/drive.file")
     }
 }
