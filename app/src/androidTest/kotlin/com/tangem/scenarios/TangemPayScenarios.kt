@@ -58,6 +58,20 @@ fun BaseTestCase.openTangemPayTransactionDetails(name: String) {
     }
 }
 
+/** On the open transaction details sheet, asserts the Card field shows [cardNumber] with [cardName] under it. */
+fun BaseTestCase.assertTangemPayTransactionCardField(cardNumber: String, cardName: String) {
+    step("Assert 'Card' field shows '$cardNumber' and '$cardName'") {
+        // The Card row arrives with the separate single-transaction request, after the sheet opens.
+        awaitSuccess {
+            onTangemPayTransactionDetailsSheet {
+                cardFieldTitle.assertIsDisplayed()
+                cardFieldValue(cardNumber).assertIsDisplayed()
+                cardFieldValue(cardName).assertIsDisplayed()
+            }
+        }
+    }
+}
+
 /** Opens Tangem Pay and taps the card to reach the card management page. */
 fun BaseTestCase.openTangemPayCardPage() {
     openTangemPay()
