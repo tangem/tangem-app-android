@@ -45,7 +45,7 @@
     },
     {
         "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
-        "version": "6.3"
+        "version": "undefined"
     },
     {
         "name": "TWI_1749_XRP_TX_HISTORY_ENABLED",
@@ -141,7 +141,7 @@
     },
     {
         "name": "AND_16356_ACCOUNT_SWAP_FLOW",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED",
