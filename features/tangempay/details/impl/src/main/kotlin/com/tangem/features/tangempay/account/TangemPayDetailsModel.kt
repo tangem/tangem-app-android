@@ -226,11 +226,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             if (hasActiveWithdrawal) {
                 showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
             } else {
-                uiMessageSender.send(
-                    message = TangemPayMessagesFactory.createWithdrawWarning(
-                        onGotItClick = { onConfirmWithdrawal(cryptoCurrency) },
-                    ),
-                )
+                openWithdraw()
             }
         }
     }
@@ -254,7 +250,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
-    private fun onConfirmWithdrawal(currency: CryptoCurrency) {
+    private fun openWithdraw() {
         val balance = currentStatus.value.balanceOrNull()
         if (balance == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
@@ -262,7 +258,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         }
         router.push(
             AppRoute.Swap(
-                fromCryptoCurrency = currency,
+                fromCryptoCurrency = cryptoCurrency,
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
