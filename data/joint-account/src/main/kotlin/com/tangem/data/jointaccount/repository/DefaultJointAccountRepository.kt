@@ -88,7 +88,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
             try {
                 activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
             } catch (e: ApiResponseError.TimeoutException) {
-                logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", e)
+                logger.w(messageString = "Activation timed out, retrying once — the endpoint is idempotent", e)
                 activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
             }
         }
