@@ -118,8 +118,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
                             clickIntents = this@PortfolioListBlockDelegate,
                             searchQuery = searchQuery,
                             tokenFilter = tokenFilter,
-                            isShowPaymentAccount = featureSettings.isShowPaymentAccount,
-                            isPaymentAccountMultiTokenEnabled = featureSettings.isPaymentAccountMultiTokenEnabled,
+                            paymentAccountTokens = featureSettings.paymentAccountTokens,
                             balanceFilter = balanceFilter,
                         ),
                     ).convert()

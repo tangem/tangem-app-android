@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -63,6 +65,7 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         Children(
             modifier = modifier,
             stack = childStack,
+            animation = stackAnimation { fade() },
         ) { child ->
             child.instance.Content(modifier = Modifier.fillMaxSize())
         }
