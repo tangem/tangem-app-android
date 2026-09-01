@@ -332,11 +332,28 @@ internal class TangemPayDetailsStateFactoryTest {
 
         // Act
         val banner = factory.getLoadedState(status).balanceBlockState.cardsBlockState?.progressBanner
-        (banner as CardsProgressBannerUM.Delivering).onActivateClick()
+        (banner as CardsProgressBannerUM.Delivering).onActivateClick!!.invoke()
 
         // Assert
         verify(exactly = 1) { intents.onActivateCardClick("plastic") }
         verify(exactly = 0) { intents.onCardClick(any()) }
+    }
+
+    @Test
+    fun `GIVEN a single delivering placeholder WHEN state built THEN the banner has no activation action`() {
+        // Arrange
+        val status = loadedStatus(
+            statusCards = listOf(
+                activeUnfrozenCard,
+                tangemPayCard(id = "order_1", state = TangemPayCardState.Delivering, isPlaceholder = true),
+            ),
+        )
+
+        // Act
+        val banner = factory.getLoadedState(status).balanceBlockState.cardsBlockState?.progressBanner
+
+        // Assert
+        assertThat((banner as CardsProgressBannerUM.Delivering).onActivateClick).isNull()
     }
 
     @ParameterizedTest
@@ -559,9 +576,9 @@ internal class TangemPayDetailsStateFactoryTest {
                 expectedBanner = CardsProgressBannerUM.Delivering::class,
             ),
             ProgressBannerCase(
-                name = "two delivering cards -> no banner",
+                name = "two delivering cards -> multiple delivering banner",
                 cards = listOf(deliveringCard(id = "plastic_1"), deliveringCard(id = "plastic_2")),
-                expectedBanner = null,
+                expectedBanner = CardsProgressBannerUM.DeliveringMultiple::class,
             ),
             ProgressBannerCase(
                 name = "reissuing card wins over delivering",
