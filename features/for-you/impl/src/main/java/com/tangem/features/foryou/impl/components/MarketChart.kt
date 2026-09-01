@@ -237,7 +237,7 @@ private val DonutStartAngle = -90f
 private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: TextReference) {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = pluralStringResourceSafe(R.plurals.common_assets_count, assetCount, assetCount),
+        text = pluralStringResourceSafe(R.plurals.top_assets_count, assetCount, assetCount),
         color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography3.heading.small,
     )
