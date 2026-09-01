@@ -974,9 +974,6 @@
   <string name="manage_tokens_unavailable_description">所选代币目前无法在加密钱包中进行操作。不过别担心，您可以点赞来表达您的兴趣。</string>
   <string name="manage_tokens_unavailable_vote">点赞</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">该钱包不支持多个网络</string>
-  <plurals name="market_chart_assets_android" formatted="false">
-    <item quantity="other">%d资产\n%d资产</item>
-  </plurals>
   <string name="market_chart_top_holding">最大持有占比 %s</string>
   <string name="markets_about_coin_header">关于硬币</string>
   <string name="markets_add_to_my_portfolio_description">要购买、交换或接收此资产，请将其添加到您的投资组合中。</string>
@@ -2190,8 +2187,6 @@
   <string name="tangempay_va_banking_details_error_title">无法加载银行信息</string>
   <string name="tangempay_va_limit_resetting_everyday">限额每日重置</string>
   <string name="tangempay_visa_benefits">Visa 权益</string>
-  <string name="tangempay_withdrawal_note_description">您的Polygon链上 USDC  余额与您的卡片余额不同，并在购买后 2 个工作日内更新。购物退款的资金不会退还至您的链上余额，也不能提现，但会保留在您的卡片余额中用于购物。</string>
-  <string name="tangempay_withdrawal_note_title">请注意</string>
   <string name="tangempay_your_pin_code">您的PIN码</string>
   <string name="this_is_my_wallet_title">这是我的钱包</string>
   <string name="toast_balances_hidden">余额已隐藏</string>
@@ -2246,6 +2241,9 @@
   <string name="tokens_list_unavailable_to_sell_header">无法出售</string>
   <string name="tokens_list_unavailable_to_swap_header">无法从 %s兑换</string>
   <string name="tokens_list_unavailable_to_swap_source_header">无法兑换</string>
+  <plurals name="top_assets_count" formatted="false">
+    <item quantity="other">%d资产\n%d资产</item>
+  </plurals>
   <string name="transaction_history_claiming_reward">领取奖励</string>
   <string name="transaction_history_contract_address">合约： %s</string>
   <string name="transaction_history_disabling_yield_mode">禁用收益模式</string>
