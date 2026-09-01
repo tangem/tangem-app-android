@@ -139,6 +139,13 @@ interface WalletManagersFacade {
     @Deprecated("Will be removed in future")
     suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
 
+    @Deprecated("Will be removed in future")
+    suspend fun getStoredWalletManager(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): WalletManager?
+
     /**
      * Returns default network address for selected wallet in given network
      *
