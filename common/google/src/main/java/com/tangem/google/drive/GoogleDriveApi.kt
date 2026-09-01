@@ -1,4 +1,4 @@
-package com.tangem.data.cloudbackup.datasource
+package com.tangem.google.drive
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,7 +17,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /** [Google Drive API v3](https://developers.google.com/workspace/drive/api/reference/rest/v3) */
-internal interface GoogleDriveApi {
+interface GoogleDriveApi {
 
     @GET("drive/v3/files")
     suspend fun listFiles(
@@ -83,12 +83,12 @@ internal interface GoogleDriveApi {
 }
 
 @Serializable
-internal data class DriveFileListResponse(
+data class DriveFileListResponse(
     @SerialName("files") val files: List<DriveFile>? = null,
 )
 
 @Serializable
-internal data class DriveFile(
+data class DriveFile(
     @SerialName("id") val id: String,
     @SerialName("name") val name: String? = null,
     @SerialName("createdTime") val createdTime: String? = null,
@@ -96,7 +96,7 @@ internal data class DriveFile(
 )
 
 @Serializable
-internal data class DriveFileMetadata(
+data class DriveFileMetadata(
     @SerialName("name") val name: String,
     @SerialName("mimeType") val mimeType: String? = null,
     @SerialName("parents") val parents: List<String>? = null,
@@ -104,12 +104,12 @@ internal data class DriveFileMetadata(
 )
 
 @Serializable
-internal data class DriveAbout(
+data class DriveAbout(
     @SerialName("user") val user: DriveUser? = null,
 )
 
 @Serializable
-internal data class DriveUser(
+data class DriveUser(
     @SerialName("displayName") val displayName: String? = null,
     @SerialName("emailAddress") val emailAddress: String? = null,
     @SerialName("photoLink") val photoLink: String? = null,
