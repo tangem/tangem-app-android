@@ -2072,7 +2072,7 @@
   <string name="tangempay_cashback_refund_banner">Ми отримали повернення за покупку, за яку раніше було нараховано кешбек</string>
   <string name="tangempay_cashback_title">Кешбек</string>
   <string name="tangempay_cashback_total_earned">%1$s зароблено загалом</string>
-  <string name="tangempay_cashback_widget_title">%1$s кешбек в %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s кешбек за %2$s</string>
   <string name="tangempay_change_pin_code">Змінити PIN-код</string>
   <string name="tangempay_changing_plan">Зміна тарифу</string>
   <string name="tangempay_choose_network_fast_way">Швидкий спосіб</string>
@@ -2183,7 +2183,7 @@
   <string name="tangempay_onboarding_setup_wallet_title">Ми створимо новий гаманець</string>
   <string name="tangempay_onboarding_title">Отримайте картку Tangem Pay за лічені хвилини</string>
   <string name="tangempay_other_networks_header">Інші мережі</string>
-  <string name="tangempay_other_networks_subtitle">А потім обміняйте на платіжний рахунок за курсом 1:1 без комісії</string>
+  <string name="tangempay_other_networks_subtitle">А потім обміняйте на платіжний рахунок без комісії</string>
   <string name="tangempay_other_networks_title">Надішліть USDT / USDC у будь-якій мережі на ваш Tangem Wallet</string>
   <string name="tangempay_pay_support">Підтримка</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
@@ -2234,8 +2234,8 @@
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Отримуйте фіатні USD через ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Банківський переказ</string>
+  <string name="tangempay_topup_bank_transfer_body">Отримати USD з банківського рахунку через ACH</string>
+  <string name="tangempay_topup_bank_transfer_title">З банківського рахунку</string>
   <string name="tangempay_topup_receive_body">Надішліть USDC Polygon на адресу вашого акаунту</string>
   <string name="tangempay_topup_receive_body_multichain">Надішліть USDC або USDT на адресу вашого рахунку</string>
   <string name="tangempay_topup_receive_title">З іншого гаманця або біржі</string>

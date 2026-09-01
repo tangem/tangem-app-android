@@ -28,8 +28,6 @@ class Collectibles(
 
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
-            -> ApiEnvironment.MOCK
             DEBUG_BUILD_TYPE,
             INTERNAL_BUILD_TYPE,
             -> ApiEnvironment.DEV
