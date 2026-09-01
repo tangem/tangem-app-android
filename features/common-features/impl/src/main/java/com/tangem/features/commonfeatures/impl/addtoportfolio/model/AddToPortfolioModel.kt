@@ -21,7 +21,6 @@ import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.filterCryptoPortfolio
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -461,12 +460,11 @@ internal class AddToPortfolioModel @Inject constructor(
         network: TokenMarketInfo.Network,
         account: AvailableToAddAccount,
     ): CryptoCurrency? {
-        val accountIndex = account.account.account.derivationIndex ?: return null
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
             tokenMarketParams = addToPortfolioManager.token(),
             network = network,
-            accountIndex = accountIndex,
+            account = account.account.account,
         )
     }
 

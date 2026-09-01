@@ -22,6 +22,8 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import io.mockk.Called
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -416,6 +418,32 @@ class AddToPortfolioInitialSelectionResolverTest {
         }
 
     @Test
+    fun `GIVEN joint account WHEN resolve THEN derivation is not checked and first network is picked`() = runTest {
+        val walletId = UserWalletId(WALLET_ID_A)
+        val userWallet = userWallet(walletId)
+        val account = jointAvailableAccount(availableToAddNetworks = setOf(ETHEREUM, BITCOIN))
+
+        val data = availableData(
+            wallets = mapOf(
+                walletId to walletEntry(
+                    userWallet = userWallet,
+                    accounts = mapOf(AccountId.forMainCryptoPortfolio(walletId) to account),
+                ),
+            ),
+        )
+
+        val result = resolver.resolve(
+            availableToAddData = data,
+            orderedNetworks = listOf(ETHEREUM, BITCOIN),
+            selectedWallet = userWallet,
+            tokenParams = tokenParams,
+        )
+
+        Truth.assertThat(result?.network).isEqualTo(ETHEREUM)
+        verify { networkHasDerivationUseCase wasNot Called }
+    }
+
+    @Test
     fun `GIVEN first ordered network has derivation WHEN resolve THEN pick first`() = runTest {
         val walletId = UserWalletId(WALLET_ID_A)
         val userWallet = userWallet(walletId)
@@ -667,6 +695,16 @@ class AddToPortfolioInitialSelectionResolverTest {
             every { this@mockk.account } returns mockk<Account.Personal> {
                 every { this@mockk.derivationIndex } returns derivationIndex
             }
+        }
+    }
+
+    private fun jointAvailableAccount(
+        availableToAddNetworks: Set<TokenMarketInfo.Network>,
+    ): AvailableToAddAccount = mockk {
+        every { this@mockk.isAvailableToAdd } returns true
+        every { this@mockk.availableToAddNetworks } returns availableToAddNetworks
+        every { this@mockk.account } returns mockk<AccountStatus.Joint> {
+            every { this@mockk.account } returns mockk<Account.Joint>()
         }
     }
 
