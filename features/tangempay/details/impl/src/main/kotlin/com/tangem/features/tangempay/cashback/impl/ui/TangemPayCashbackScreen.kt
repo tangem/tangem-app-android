@@ -367,4 +367,5 @@ private fun previewAdditionalCashback() = TangemPayAdditionalCashbackUM(
             badge = TangemPayAdditionalCashbackUM.Badge.Until(stringReference("Until 09.26.2026")),
         ),
     ),
+    onLinkClick = {},
 )
