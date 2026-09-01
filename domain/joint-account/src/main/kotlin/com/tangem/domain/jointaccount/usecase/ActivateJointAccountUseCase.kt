@@ -1,6 +1,7 @@
 package com.tangem.domain.jointaccount.usecase
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
@@ -71,7 +72,7 @@ class ActivateJointAccountUseCase(
 
         // The account is active on the backend, so a failed refresh must not fail the activation: the list
         // catches up on the next fetch, and reporting an error here would push the user into a pointless retry
-        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId))
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
     }
 
     private suspend fun findJointAccount(
