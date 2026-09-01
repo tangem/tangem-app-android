@@ -19,6 +19,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensComponent
@@ -292,6 +293,7 @@ internal class ManageTokensModel @Inject constructor(
         modelScope.launch {
             val networks = currenciesToAdd.values
                 .flatten()
+                .filterNot { network -> network.derivationPath is Network.DerivationPath.Joint }
                 .toSet()
                 .associate { network -> network.rawId to network.derivationPath.value }
             val isNeedToInteractWithColdWallet = useCasesFacade.needColdWalletInteraction(networks)
