@@ -52,6 +52,26 @@ internal class PolymarketBridgeWireFormatTest {
     }
 
     @Test
+    fun `GIVEN the minimum arrives as a string WHEN decoded THEN it reads the same as a number`() {
+        // Arrange
+        val asNumber = """
+            {"supportedAssets":[{"chainId":137,"chainName":"Polygon",
+            "token":{"name":"USD Coin","symbol":"USDC","address":"0x3c49","decimals":6},
+            "minCheckoutUsd":2.50}]}
+        """.trimIndent()
+        val asString = asNumber.replace(""""minCheckoutUsd":2.50""", """"minCheckoutUsd":"2.50"""")
+        val adapter = moshi.adapter(PolymarketSupportedAssetsResponse::class.java)
+
+        // Act
+        val fromNumber = adapter.fromJson(asNumber)!!.supportedAssets.single().minCheckoutUsd
+        val fromString = adapter.fromJson(asString)!!.supportedAssets.single().minCheckoutUsd
+
+        // Assert
+        assertThat(fromNumber).isEqualTo(BigDecimal("2.50"))
+        assertThat(fromString).isEqualTo(BigDecimal("2.50"))
+    }
+
+    @Test
     fun `GIVEN an address payload naming Tron tvm WHEN decoded THEN evm survives and nothing throws`() {
         // Arrange
         val json = """{"evm":"0xabc","svm":"sol1","btc":"bc1","tvm":"T9y"}"""
