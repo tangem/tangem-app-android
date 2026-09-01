@@ -20,7 +20,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
@@ -29,7 +28,6 @@ import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.R
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
-import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.features.storiesv2.StoriesV2PendingAction
@@ -58,7 +56,7 @@ internal class IntroductionModel @Inject constructor(
     private val cardScanner: IntroductionCardScanner,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-) : Model(), IntroductionVideoPlayer.Listener {
+) : Model(), IntroductionVideoPlayer.Listener, HaveWalletSheetController.Host {
 
     private val params = paramsContainer.require<IntroductionComponent.Params>()
 
@@ -78,6 +76,14 @@ internal class IntroductionModel @Inject constructor(
         listener = this,
     )
 
+    private val haveWalletSheet = HaveWalletSheetController(
+        host = this,
+        router = router,
+        isHotWalletCreationSupported = isHotWalletCreationSupported,
+        trackingContextProxy = trackingContextProxy,
+        uiMessageSender = uiMessageSender,
+    )
+
     val uiState: StateFlow<IntroductionUM>
         field = MutableStateFlow(
             IntroductionUM(
@@ -91,6 +97,8 @@ internal class IntroductionModel @Inject constructor(
                 onPrivacyPolicyClick = ::onPrivacyPolicyClick,
             ),
         )
+
+    override val haveWalletSheetConfig: TangemBottomSheetConfig? get() = uiState.value.haveWalletBottomSheetConfig
 
     init {
         analyticsEventHandler.send(IntroductionProcess.ScreenOpened())
@@ -133,6 +141,7 @@ internal class IntroductionModel @Inject constructor(
 
     fun setVideoRunning(isRunning: Boolean) {
         isScreenResumed = isRunning
+        if (isRunning) haveWalletSheet.onScreenResumed()
         if (isRunning && isStoryDismissPendingResume) {
             // The viewer backed out of the flow that covered the ended story: welcome, without the sheet.
             isStoryDismissPendingResume = false
@@ -268,13 +277,17 @@ internal class IntroductionModel @Inject constructor(
 
     private fun startCardScan(action: StoriesV2PendingAction) {
         pendingScanStoryAction = action
+        scanCard(onNavigatedAway = ::onScanNavigatedAway, onFailed = ::onScanFailed)
+    }
+
+    private fun scanCard(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
         val analyticsSource = AnalyticsParam.ScreensSources.Intro
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(analyticsSource))
         modelScope.launch {
             cardScanner.scanAndOpenWallet(
                 analyticsSource = analyticsSource,
-                onNavigatedAway = ::onScanNavigatedAway,
-                onFailed = ::onScanFailed,
+                onNavigatedAway = onNavigatedAway,
+                onFailed = onFailed,
             )
         }
     }
@@ -323,7 +336,7 @@ internal class IntroductionModel @Inject constructor(
         //  "[Sign In] Button - Open Existing Account" and calls it an existing event, but the only event of
         //  that name lives in the "Settings / Wallet Settings" category and is about accounts, and the
         //  properties it is meant to keep are unknown.
-        showHaveWalletStep(::optionsStep)
+        haveWalletSheet.open()
     }
 
     private fun isAnySheetShown(): Boolean = isCreateWalletSheetShown() || isHaveWalletSheetShown()
@@ -334,86 +347,14 @@ internal class IntroductionModel @Inject constructor(
      */
     private fun isCreateWalletSheetShown(): Boolean = uiState.value.bottomSheetConfig?.isShown == true
 
-    private fun isHaveWalletSheetShown(): Boolean = uiState.value.haveWalletBottomSheetConfig?.isShown == true
+    private fun isHaveWalletSheetShown(): Boolean = haveWalletSheet.isShown
 
-    private fun optionsStep() = HaveWalletUM.Step.Options(
-        cardOrRing = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_tangem_card_24,
-            title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
-            description = resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description),
-            onClick = ::onSignInWithCardClick,
-        ),
-        signIn = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_user_24,
-            title = resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title),
-            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
-            // TODO TWI-1555: social login belongs to another team; the row stays inert until it lands.
-            onClick = {},
-        ),
-        importWallet = WalletOptionUM(
-            iconRes = CoreUiR.drawable.ic_arrow_down_24,
-            title = resourceReference(CoreResR.string.hw_import_existing_wallet),
-            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
-            onClick = ::onImportWalletClick,
-        ),
-    )
-
-    private fun onSignInWithCardClick() {
-        // TODO [REDACTED_TASK_KEY]: start the card scan here, once it has the states noted at the launch-mode branch.
+    override fun updateHaveWalletSheetConfig(transform: (TangemBottomSheetConfig?) -> TangemBottomSheetConfig?) {
+        uiState.update { it.copy(haveWalletBottomSheetConfig = transform(it.haveWalletBottomSheetConfig)) }
     }
 
-    // Picking a path inside a sheet is deliberately not reported; the import flow reports itself once it opens.
-    private fun onImportWalletClick() {
-        if (!isHaveWalletSheetShown()) return
-        if (currentHaveWalletStep() is HaveWalletUM.Step.Import) return
-        showHaveWalletStep(::importStep)
-    }
-
-    private fun currentHaveWalletStep(): HaveWalletUM.Step? =
-        (uiState.value.haveWalletBottomSheetConfig?.content as? HaveWalletUM)?.step
-
-    private fun importStep() = HaveWalletUM.Step.Import(
-        title = resourceReference(CoreResR.string.hw_import_existing_wallet),
-        description = resourceReference(CoreResR.string.hw_import_existing_wallet_description),
-        recoveryPhraseButtonText = resourceReference(CoreResR.string.hw_cloud_backup_restore_use_recovery_phrase),
-        cloudBackupButtonText = resourceReference(
-            id = CoreResR.string.hw_import_restore_cloud_backup,
-            formatArgs = wrappedList(resourceReference(CoreResR.string.hw_cloud_backup_service_name)),
-        ),
-        onRecoveryPhraseClick = ::onRecoveryPhraseClick,
-        onCloudBackupClick = ::onCloudBackupClick,
-        onBack = { showHaveWalletStep(::optionsStep) },
-    )
-
-    private fun onRecoveryPhraseClick() {
-        // TODO [REDACTED_TASK_KEY]: open AppRoute.AddExistingWallet(Mode.RecoveryPhrase) once navigation lands.
-    }
-
-    private fun onCloudBackupClick() {
-        // TODO [REDACTED_TASK_KEY]: the cloud button belongs behind HotWalletFeatureToggles.isGoogleDriveBackupEnabled,
-        //  and AppRoute.AddExistingWallet(Mode.CloudRestore) only works once the discovered backups have been
-        //  put into CloudRestoreResultHolder — arriving there with an empty holder silently pops straight back.
-    }
-
-    private fun showHaveWalletStep(step: () -> HaveWalletUM.Step) {
-        val content = HaveWalletUM(step = step())
-        uiState.update { state ->
-            val current = state.haveWalletBottomSheetConfig
-            state.copy(
-                haveWalletBottomSheetConfig = current?.copy(isShown = true, content = content)
-                    ?: TangemBottomSheetConfig(
-                        isShown = true,
-                        onDismissRequest = ::dismissHaveWalletSheet,
-                        content = content,
-                    ),
-            )
-        }
-    }
-
-    private fun dismissHaveWalletSheet() {
-        uiState.update {
-            it.copy(haveWalletBottomSheetConfig = it.haveWalletBottomSheetConfig?.copy(isShown = false))
-        }
+    override fun scanCardForExistingWallet() {
+        scanCard(onNavigatedAway = {}, onFailed = {})
     }
 
     private fun onTermsOfServiceClick() {
