@@ -19,7 +19,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -65,7 +65,7 @@ internal class CreateWalletStartModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val appsFlyerStore: AppsFlyerStore = mockk()
+    private val appsFlyerRepository: AppsFlyerRepository = mockk()
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles = mockk()
 
     private val testUserWalletId = UserWalletId("1234567890ABCDEF")
@@ -76,7 +76,7 @@ internal class CreateWalletStartModelTest {
 
     @BeforeEach
     fun setUp() {
-        coEvery { appsFlyerStore.get() } returns null
+        coEvery { appsFlyerRepository.getConversionData() } returns null
         coEvery { settingsRepository.shouldSaveAccessCodes() } returns false
         every { coldUserWalletBuilderFactory.create(any()) } returns coldUserWalletBuilder
         coEvery { coldUserWalletBuilder.build() } returns testColdWallet
@@ -541,7 +541,7 @@ internal class CreateWalletStartModelTest {
     @Test
     fun `WHEN model initialized THEN CreateWalletIntroScreenOpened event sent with referral id`() = runTest {
         val refcode = "referralCode"
-        coEvery { appsFlyerStore.get() } returns AppsFlyerConversionData(refcode = refcode, campaign = null)
+        coEvery { appsFlyerRepository.getConversionData() } returns AppsFlyerConversionData(refcode = refcode, campaign = null)
 
         createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
         advanceUntilIdle()
@@ -637,7 +637,7 @@ internal class CreateWalletStartModelTest {
             urlOpener = urlOpener,
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
-            appsFlyerStore = appsFlyerStore,
+            appsFlyerRepository = appsFlyerRepository,
             onboardingV2FeatureToggles = onboardingV2FeatureToggles,
         )
     }
