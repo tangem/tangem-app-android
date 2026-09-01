@@ -35,7 +35,7 @@
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_archiving">Archiving...</string>
-  <string name="account_details_joint_pending_description">The account is still being populated with members.</string>
+  <string name="account_details_joint_pending_description">The account is still being populated with members</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
   <string name="account_edit_success_message">Account saved</string>
@@ -296,8 +296,8 @@
   <string name="common_approved">Approved</string>
   <string name="common_approving">Approving</string>
   <plurals name="common_assets_count">
-    <item quantity="one">Top %d asset</item>
-    <item quantity="other">Top %d assets</item>
+    <item quantity="one">%d asset</item>
+    <item quantity="other">%d assets</item>
   </plurals>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
@@ -575,6 +575,7 @@
   <string name="custom_token_derivation_path">Derivation Path</string>
   <string name="custom_token_derivation_path_default">Default</string>
   <string name="custom_token_derivation_path_input_title">BIP44 coin type</string>
+  <string name="custom_token_derivation_path_reserved">This derivation path is reserved</string>
   <string name="custom_token_invalid_derivation_path">The derivation path you\'ve entered is not valid</string>
   <string name="custom_token_name_input_placeholder">E.g. USD Coin</string>
   <string name="custom_token_name_input_title">Name</string>
@@ -1020,9 +1021,9 @@
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_terms_of_service">Terms of service</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
-  <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval.</string>
+  <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
-  <string name="joint_account_invite_invalid_subtitle">Check that you opened the full link, or ask the account owner to send it again.</string>
+  <string name="joint_account_invite_invalid_subtitle">Check that you opened the full link, or ask the account owner to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
   <string name="joint_account_invite_members_creator">Creator</string>
@@ -1031,21 +1032,24 @@
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
   <string name="joint_account_invite_members_other_members">Other members</string>
-  <string name="joint_account_invite_members_safety_first_point_subtitle">Anyone who opens it can join and sign. Send it only to the right person — never post it publicly.</string>
+  <string name="joint_account_invite_members_safety_first_point_subtitle">Anyone who opens it can join and sign. Send it only to the right person — never post it publicly</string>
   <string name="joint_account_invite_members_safety_first_point_title">The link is like a key</string>
-  <string name="joint_account_invite_members_safety_second_point_subtitle">Every member can approve transactions with the others. Only invite people you trust.</string>
+  <string name="joint_account_invite_members_safety_second_point_subtitle">Every member can approve transactions with the others. Only invite people you trust</string>
   <string name="joint_account_invite_members_safety_second_point_title">Co-signers can move funds</string>
   <string name="joint_account_invite_members_safety_sheet_title">Sharing safely</string>
   <string name="joint_account_invite_members_safety_subtitle">Anyone with the link can join and sign. Only share it with people you trust</string>
-  <string name="joint_account_invite_members_safety_third_point_subtitle">When someone joins, check their address belongs to the right person — confirm it with them directly.</string>
+  <string name="joint_account_invite_members_safety_third_point_subtitle">When someone joins, check their address belongs to the right person — confirm it with them directly</string>
   <string name="joint_account_invite_members_safety_third_point_title">Check who joined</string>
   <string name="joint_account_invite_members_safety_title">Share invites safely</string>
   <string name="joint_account_invite_members_subtitle">%1$s of %2$s joined, including you</string>
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
-  <string name="joint_account_join_confirm_sheet_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval.</string>
+  <string name="joint_account_join_confirm_sheet_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
-  <string name="joint_account_join_subtitle">This is a joint account. Every transaction from this account will require %1$s to sign.</string>
+  <string name="joint_account_join_invalid_link_subtitle">Check that you opened the full link, or ask the account owner to send it again.</string>
+  <string name="joint_account_join_invalid_link_title">Invitation link isn\'t valid</string>
+  <string name="joint_account_join_load_failed">Failed to load invite page. Tap to reload</string>
+  <string name="joint_account_join_subtitle">This is a joint account. Every transaction from this account will require %1$s to sign</string>
   <string name="joint_account_join_subtitle_value">%1$s members of %2$s</string>
   <string name="joint_account_join_title">You’ve been invited to %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Join to account</string>
@@ -1058,18 +1062,18 @@
   <string name="joint_account_members_role_you">You</string>
   <string name="joint_account_members_signers_subtitle">To approve operations</string>
   <string name="joint_account_members_signers_title">Required to sign</string>
-  <string name="joint_account_members_subtitle">Set how many people share the account. Every transaction like send, swap or close waits for %1$s of %2$s to sign. This is locked once.</string>
+  <string name="joint_account_members_subtitle">Set how many people share the account. Every transaction like send, swap or close waits for %1$s of %2$s to sign. This is locked once</string>
   <string name="joint_account_members_subtitle_helper_part"> %1$s of %2$s to sign</string>
-  <string name="joint_account_members_subtitle_main_part">Set how many people share the account. Every transaction like send, swap or close waits for %1$s. This is locked once.</string>
+  <string name="joint_account_members_subtitle_main_part">Set how many people share the account. Every transaction like send, swap or close waits for %1$s. This is locked once</string>
   <string name="joint_account_members_title">Members</string>
   <string name="joint_account_members_total_subtitle">Max %1$s people, including you</string>
   <string name="joint_account_members_total_title">Total members</string>
   <string name="joint_account_name_display_name">Display name</string>
   <string name="joint_account_name_fill_validation_error">Unsupported characters</string>
-  <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you.</string>
+  <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you</string>
   <string name="joint_account_name_subtitle">Other members will see this name in the joint account</string>
   <string name="joint_account_name_title">What is your name?</string>
-  <string name="joint_account_onboarding_subtitle">A shared account that several people own together. Money moves only when enough members sign.</string>
+  <string name="joint_account_onboarding_subtitle">A shared account that several people own together. Money moves only when enough members sign</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
@@ -1114,10 +1118,6 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
-  <plurals name="market_chart_assets_android">
-    <item quantity="one">Top %d asset</item>
-    <item quantity="other">Top %d assets</item>
-  </plurals>
   <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
@@ -2321,6 +2321,7 @@
   <string name="tangempay_current_plan_awaiting_deposit_notification">We are in process of moving you to %s plan and awaiting payment for plan fee</string>
   <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_current_plan_fee_charged_notification">%1$s monthly fee will be charged on %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Full terms</string>
   <string name="tangempay_current_plan_section_card">Card related</string>
   <string name="tangempay_current_plan_section_plan">Plan related</string>
   <string name="tangempay_current_plan_stay_button">Stay on %1$s</string>
@@ -2537,8 +2538,6 @@
   <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
   <string name="tangempay_va_limit_resetting_everyday">Limit is resetting every day</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
-  <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
-  <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
@@ -2599,6 +2598,10 @@
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Unavailable for swap</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">Top %d asset</item>
+    <item quantity="other">Top %d assets</item>
+  </plurals>
   <string name="transaction_history_approve_high_risk_subtitle">You\'re connected. Funds may be at risk. Consider revoking access.</string>
   <string name="transaction_history_approve_high_risk_title">High Risk</string>
   <string name="transaction_history_approved_amount">Approved amount</string>
