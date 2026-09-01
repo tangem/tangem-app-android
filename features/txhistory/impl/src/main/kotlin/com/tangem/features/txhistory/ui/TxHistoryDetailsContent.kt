@@ -38,7 +38,7 @@ internal fun TxHistoryDetailsContent(
 @Composable
 private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
-        TxHistoryDetailsAmountBlock(amountBlock = state.amountBlock)
+        TxHistoryDetailsAmountBlock(amountBlock = state.amountBlock, isBalanceHidden = state.isBalanceHidden)
         state.counterparty?.let { counterparty ->
             TxHistoryDetailsCounterpartyRow(
                 counterparty = counterparty,
@@ -47,11 +47,23 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             )
         }
-        TxHistoryDetailsInfoRows(
-            rows = state.rows,
+        TxHistoryDetailsStatusBanner(
+            state = state.statusBanner,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                .padding(horizontal = 16.dp),
+        )
+        TxHistoryDetailsInfoRows(
+            rows = state.rows,
+            isBalanceHidden = state.isBalanceHidden,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = if (state.statusBanner != null) 16.dp else 0.dp,
+                    bottom = 16.dp,
+                ),
         )
     }
 }
@@ -69,6 +81,7 @@ private fun TwoAssetsContent(
             TxHistoryDetailsTwoAssetsBlock(
                 from = from,
                 to = to,
+                isBalanceHidden = state.isBalanceHidden,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp),
@@ -98,6 +111,7 @@ private fun TwoAssetsContent(
         // Network fee (and later rate) pulled from the matched on-chain leg; the block is skipped when [rows] is empty.
         TxHistoryDetailsInfoRows(
             rows = state.rows,
+            isBalanceHidden = state.isBalanceHidden,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp),

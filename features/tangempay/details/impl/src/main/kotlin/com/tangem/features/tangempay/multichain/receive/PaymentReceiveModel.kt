@@ -9,10 +9,11 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.multichain.receivableCurrencies
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,8 +55,8 @@ internal class PaymentReceiveModel @Inject constructor(
     init {
         paymentAccountStatusSupplier.invoke(params.walletId)
             .onEach { status ->
-                val loaded = status.value as? PaymentAccountStatusValue.Loaded ?: return@onEach
-                val available = loaded.networks
+                val available = status.networksOrNull()
+                    .orEmpty()
                     .filterIsInstance<PaymentNetworkStatus.Available>()
                     .firstOrNull { it.network.rawId == params.networkRawId }
                     ?: return@onEach
@@ -63,7 +64,7 @@ internal class PaymentReceiveModel @Inject constructor(
                     PaymentReceiveUMConverter.Input(
                         networkName = available.network.name,
                         address = available.depositAddress,
-                        currencies = available.cryptoCurrencyStatuses.map { it.currency },
+                        currencies = available.receivableCurrencies(),
                     ),
                 )
             }

@@ -7,12 +7,12 @@ import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntity
 import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.response.*
-import com.tangem.datasource.api.onramp.OnrampApi
-import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse
-import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
-import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.response.*
+import com.tangem.grow.datasource.onramp.OnrampApi
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
+import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.txhistory.db.TxHistoryDatabase
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
@@ -42,16 +42,11 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     private val appScope: AppCoroutineScope,
 ) : ExpressHistoryRepository {
 
-    suspend fun fetchExchangeHistory(
-        fromAddress: String,
-        userWalletId: UserWalletId,
-        limit: Int = DEFAULT_LIMIT,
-    ): ExchangeHistoryResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.EXCHANGE, fromAddress)
+    suspend fun fetchExchangeHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): ExchangeHistoryResponse {
+        val state = syncState(ExpressSyncStateEntity.Type.EXCHANGE, userWalletId)
 
         val response = exchangeApi.getHistory(
             userWalletId = userWalletId.stringValue,
-            fromAddress = fromAddress,
             cursor = state?.afterCursor,
             limit = limit,
         ).getOrThrow()
@@ -59,7 +54,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         storeExchanges(items = response.items)
         persistHistoryState(
             type = ExpressSyncStateEntity.Type.EXCHANGE,
-            address = fromAddress,
+            userWalletId = userWalletId,
             previous = state,
             pagination = response.pagination,
         )
@@ -67,15 +62,13 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     }
 
     suspend fun fetchExchangeHistoryDelta(
-        fromAddress: String,
         userWalletId: UserWalletId,
         limit: Int = DEFAULT_LIMIT,
     ): ExchangeHistoryDeltaResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.EXCHANGE, fromAddress)
+        val state = syncState(ExpressSyncStateEntity.Type.EXCHANGE, userWalletId)
 
         val response = exchangeApi.getHistoryDelta(
             userWalletId = userWalletId.stringValue,
-            fromAddress = fromAddress,
             cursor = state?.deltaCursor,
             limit = limit,
         ).getOrThrow()
@@ -83,22 +76,17 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         storeExchanges(items = response.items)
         persistDeltaState(
             type = ExpressSyncStateEntity.Type.EXCHANGE,
-            address = fromAddress,
+            userWalletId = userWalletId,
             pagination = response.pagination,
         )
         return response
     }
 
-    suspend fun fetchOnrampHistory(
-        payoutAddress: String,
-        userWalletId: UserWalletId,
-        limit: Int = DEFAULT_LIMIT,
-    ): OnrampHistoryResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.ONRAMP, payoutAddress)
+    suspend fun fetchOnrampHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): OnrampHistoryResponse {
+        val state = syncState(ExpressSyncStateEntity.Type.ONRAMP, userWalletId)
 
         val response = onrampApi.getHistory(
             userWalletId = userWalletId.stringValue,
-            payoutAddress = payoutAddress,
             afterCursor = state?.afterCursor,
             limit = limit,
         ).getOrThrow()
@@ -106,7 +94,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         storeOnramps(items = response.items)
         persistHistoryState(
             type = ExpressSyncStateEntity.Type.ONRAMP,
-            address = payoutAddress,
+            userWalletId = userWalletId,
             previous = state,
             pagination = response.pagination,
         )
@@ -114,15 +102,13 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     }
 
     suspend fun fetchOnrampHistoryDelta(
-        payoutAddress: String,
         userWalletId: UserWalletId,
         limit: Int = DEFAULT_LIMIT,
     ): OnrampHistoryDeltaResponse {
-        val state = syncState(ExpressSyncStateEntity.Type.ONRAMP, payoutAddress)
+        val state = syncState(ExpressSyncStateEntity.Type.ONRAMP, userWalletId)
 
         val response = onrampApi.getHistoryDelta(
             userWalletId = userWalletId.stringValue,
-            payoutAddress = payoutAddress,
             cursor = state?.deltaCursor,
             limit = limit,
         ).getOrThrow()
@@ -130,7 +116,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         storeOnramps(items = response.items)
         persistDeltaState(
             type = ExpressSyncStateEntity.Type.ONRAMP,
-            address = payoutAddress,
+            userWalletId = userWalletId,
             pagination = response.pagination,
         )
         return response
@@ -163,8 +149,8 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         fetchMissingTokenInfo(entities.mapTo(mutableSetOf()) { it.to.toAssetId() })
     }
 
-    suspend fun syncState(type: ExpressSyncStateEntity.Type, address: String): ExpressSyncStateEntity? {
-        return expressSyncStateDao.observe(type = type.name, address = address).first()
+    suspend fun syncState(type: ExpressSyncStateEntity.Type, userWalletId: UserWalletId): ExpressSyncStateEntity? {
+        return expressSyncStateDao.observe(type = type.name, userWalletId = userWalletId.stringValue).first()
     }
 
     private fun fetchMissingTokenInfo(assetIds: Set<ExpressAsset.ID>) {
@@ -173,7 +159,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
 
     private suspend fun persistHistoryState(
         type: ExpressSyncStateEntity.Type,
-        address: String,
+        userWalletId: UserWalletId,
         previous: ExpressSyncStateEntity?,
         pagination: ExpressPagination,
     ) {
@@ -181,7 +167,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
             expressSyncStateDao.upsert(
                 ExpressSyncStateEntity(
                     type = type.name,
-                    address = address,
+                    userWalletId = userWalletId.stringValue,
                     isInitialCompleted = !pagination.hasMore,
                     afterCursor = pagination.endCursor,
                     deltaCursor = pagination.startDeltaCursor,
@@ -190,7 +176,7 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         } else {
             expressSyncStateDao.updateHistoryCursor(
                 type = type.name,
-                address = address,
+                userWalletId = userWalletId.stringValue,
                 afterCursor = pagination.endCursor,
                 isInitialCompleted = !pagination.hasMore,
             )
@@ -199,11 +185,15 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
 
     private suspend fun persistDeltaState(
         type: ExpressSyncStateEntity.Type,
-        address: String,
+        userWalletId: UserWalletId,
         pagination: ExpressPaginationDelta,
     ) {
         val cursor = pagination.startCursor ?: return
-        expressSyncStateDao.updateDeltaCursor(type = type.name, address = address, deltaCursor = cursor)
+        expressSyncStateDao.updateDeltaCursor(
+            type = type.name,
+            userWalletId = userWalletId.stringValue,
+            deltaCursor = cursor,
+        )
     }
 
     private companion object {

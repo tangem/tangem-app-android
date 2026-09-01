@@ -1,7 +1,7 @@
 package com.tangem.data.staking.store
 
 import androidx.datastore.core.DataStore
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.token.converter.StakingBalanceConverter
 import com.tangem.utils.coroutines.AppCoroutineScope

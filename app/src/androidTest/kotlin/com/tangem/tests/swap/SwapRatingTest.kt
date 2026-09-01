@@ -8,7 +8,6 @@ import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.confirmSwapByHolding
 import com.tangem.scenarios.openSwapAmountScreen
@@ -50,15 +49,7 @@ class SwapRatingTest : BaseTestCase() {
         val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
 
         setupHooks(
-            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) },
-            additionalAfterSection = {
-                resetWireMockScenarioState(storiesScenario)
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(exchangeStatusScenario)
-                resetWireMockScenarioState(nativeBalanceScenario)
-            }
+            additionalBeforeAppLaunchSection = { setWireMockScenarioState(storiesScenario, storiesErrorState) }
         ).run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)

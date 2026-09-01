@@ -3,7 +3,7 @@ package com.tangem.data.express
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.express.converter.ExpressProviderConverter
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.preferences.AppPreferencesStore

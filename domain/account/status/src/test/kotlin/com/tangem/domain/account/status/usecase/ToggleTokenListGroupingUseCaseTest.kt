@@ -197,7 +197,7 @@ class ToggleTokenListGroupingUseCaseTest {
 
     private fun createAccountStatusList(tokenList: TokenList, groupType: TokensGroupType): AccountStatusList {
         val accountStatus = AccountStatus.CryptoPortfolio(
-            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            account = Account.Personal.createMainAccount(userWalletId),
             tokenList = tokenList,
             priceChangeLce = Unit.lceError(),
         )

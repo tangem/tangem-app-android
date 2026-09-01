@@ -15,9 +15,11 @@ import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.isAwaitingActivation
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.models.pay.thumbnailUrl
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
+import com.tangem.features.tangempay.common.canAddFunds
 import com.tangem.features.tangempay.common.hasWithdrawableAmount
 import com.tangem.features.tangempay.common.isFresh
 import com.tangem.features.tangempay.details.impl.R
@@ -32,10 +34,15 @@ internal class TangemPayDetailsStateFactory(
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
     private val isTiersPlusPlanEnabled: Boolean,
+    private val isMultichainEnabled: Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(
         intents = intents,
         isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
+    )
+
+    private val subtitle = resourceReference(
+        if (isMultichainEnabled) R.string.tangempay_multinetwork else R.string.tangempay_usdc_on_polygon_network,
     )
 
     fun getLoadingState(): TangemPayDetailsUM {
@@ -44,6 +51,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -59,7 +67,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             errorNotificationConfig = null,
-            accountDeactivatedNotificationConfig = null,
+            accountDeactivatedBannerState = null,
             cashbackBlockState = null,
         )
     }
@@ -72,6 +80,7 @@ internal class TangemPayDetailsStateFactory(
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         val balance = status.balance
         val hasWithdrawableBalance = balance?.hasWithdrawableAmount == true
+        val canAddFunds = status.canAddFunds(isMultichainEnabled)
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
         val tiersNotificationType = status.tariffPlan?.let { plan ->
@@ -84,12 +93,13 @@ internal class TangemPayDetailsStateFactory(
         val cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
             cards = status.cards
                 .map { cardItem ->
+                    val isAwaitingActivation = cardItem.state.isAwaitingActivation
                     TangemPayDetailsBalanceBlockState.Card(
-                        lastDigits = cardItem.lastDigits,
-                        imageUrl = cardItem.thumbnailUrl,
+                        lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
+                        imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
                         onClick = { intents.onCardClick(cardItem.id) },
                         isEnabled = status.error == null,
-                        isFrozen = cardItem.isFrozen,
+                        isFrozen = cardItem.isFrozen && !isAwaitingActivation,
                         state = cardItem.state.toUiState(),
                     )
                 }
@@ -103,6 +113,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = status.tariffPlan),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -112,12 +123,12 @@ internal class TangemPayDetailsStateFactory(
                 fiatBalance = balance?.fiatBalance,
                 cardsBlockState = cardsBlockState,
                 isMuted = !isFresh,
-                isAddFundsEnabled = areActionButtonsEnabled,
+                isAddFundsEnabled = areActionButtonsEnabled && canAddFunds,
                 isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
             errorNotificationConfig = errorNotification ?: tiersNotification,
-            accountDeactivatedNotificationConfig = null,
+            accountDeactivatedBannerState = null,
             cashbackBlockState = null,
         )
     }
@@ -154,22 +165,34 @@ internal class TangemPayDetailsStateFactory(
         )
     }
 
-    private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? = when {
-        any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
-        any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
-        else -> null
+    private fun List<TangemPayCard>.resolveProgressBanner(): CardsProgressBannerUM? {
+        val deliveringCards = filter { it.state == TangemPayCardState.Delivering }
+        return when {
+            any { it.state == TangemPayCardState.Reissuing } -> CardsProgressBannerUM.Reissuing
+            any { it.state == TangemPayCardState.Issuing } -> CardsProgressBannerUM.Issuing
+            any { it.state == TangemPayCardState.Activating } -> CardsProgressBannerUM.Activating
+            deliveringCards.size == 1 -> {
+                val card = deliveringCards.first()
+                CardsProgressBannerUM.Delivering(
+                    onActivateClick = { intents.onActivateCardClick(card.id) }.takeUnless { card.isPlaceholder },
+                )
+            }
+            deliveringCards.size > 1 -> CardsProgressBannerUM.DeliveringMultiple
+            else -> null
+        }
     }
 
     fun getDeactivatedState(status: PaymentAccountStatusValue.Deactivated): TangemPayDetailsUM {
         val balance = status.balance
         val hasWithdrawableBalance: Boolean = balance?.hasWithdrawableAmount == true
-        val accountDeactivatedNotification = notificationFactory.createAccountDeactivatedConfig()
+        val accountDeactivatedBanner = notificationFactory.createAccountDeactivatedBannerState()
         val fiatBalance = balance?.fiatBalance
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getDeactivatedMenuItems(),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -179,12 +202,12 @@ internal class TangemPayDetailsStateFactory(
                 fiatBalance = fiatBalance,
                 cardsBlockState = null,
                 isMuted = status.source != StatusSource.ACTUAL,
-                isAddFundsEnabled = true,
+                isAddFundsEnabled = status.canAddFunds(isMultichainEnabled),
                 isWithdrawEnabled = hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
             errorNotificationConfig = null,
-            accountDeactivatedNotificationConfig = accountDeactivatedNotification,
+            accountDeactivatedBannerState = accountDeactivatedBanner,
             cashbackBlockState = null,
         )
     }
@@ -196,6 +219,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(tariffPlan = null),
+                subtitle = subtitle,
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -228,7 +252,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             errorNotificationConfig = notification,
-            accountDeactivatedNotificationConfig = null,
+            accountDeactivatedBannerState = null,
             cashbackBlockState = null,
         )
     }

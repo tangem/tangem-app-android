@@ -1,9 +1,9 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
-import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
@@ -11,13 +11,11 @@ import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1Request
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
-import com.tangem.datasource.api.utils.ReadTimeout
-import com.tangem.datasource.local.config.providers.models.ProviderModel
 import retrofit2.http.*
-import java.util.concurrent.TimeUnit
 
 /**
  * Interface of Tangem Tech API
@@ -93,10 +91,6 @@ interface TangemTechApi {
     suspend fun createUserNetworkAccount(
         @Body body: CreateUserNetworkAccountBody,
     ): ApiResponse<CreateUserNetworkAccountResponse>
-
-    @ReadTimeout(duration = 5, unit = TimeUnit.SECONDS)
-    @GET("v1/networks/providers")
-    suspend fun getBlockchainProviders(): Map<String, List<ProviderModel>>
 
     @GET("v1/seedphrase-notification/{wallet_id}")
     suspend fun getSeedPhraseNotificationStatus(
@@ -194,21 +188,36 @@ interface TangemTechApi {
     // endregion
 
     // region account
-    @GET("/v1/wallets/{walletId}/accounts")
+    /**
+     * The accounts endpoints exist in two versions with the same document shape: legacy `v1` and `api/v2`, which
+     * carries the type of every record. [version] is that path prefix — `v1` or `api/v2` — chosen by the caller.
+     */
+    @GET("/{version}/wallets/{walletId}/accounts")
     suspend fun getWalletAccounts(
+        @Path(value = "version", encoded = true) version: String,
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletAccountsResponse>
 
-    @PUT("/v1/wallets/{walletId}/accounts")
+    @PUT("/{version}/wallets/{walletId}/accounts")
     suspend fun saveWalletAccounts(
+        @Path(value = "version", encoded = true) version: String,
         @Path("walletId") walletId: String,
         @Header("If-Match") eTag: String,
         @Body body: SaveWalletAccountsResponse,
     ): ApiResponse<GetWalletAccountsResponse>
 
-    @GET("/v1/wallets/{walletId}/accounts/archived")
+    /** `v1` accepts no record type, so its body is a separate shape; goes away with `v1` itself. */
+    @PUT("/v1/wallets/{walletId}/accounts")
+    suspend fun saveWalletAccountsV1(
+        @Path("walletId") walletId: String,
+        @Header("If-Match") eTag: String,
+        @Body body: SaveWalletAccountsV1Request,
+    ): ApiResponse<GetWalletAccountsResponse>
+
+    @GET("/{version}/wallets/{walletId}/accounts/archived")
     suspend fun getWalletArchivedAccounts(
+        @Path(value = "version", encoded = true) version: String,
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletArchivedAccountsResponse>
