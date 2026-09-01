@@ -16,9 +16,11 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -86,6 +88,27 @@ internal class TxHistoryInfoMergerTest {
             assertThat(result).hasSize(1)
             assertThat(result.single()).isInstanceOf(OnChainTx.BSDK::class.java)
         }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN hashes differing only in case WHEN merge THEN matched into one enriched row`(model: HashCaseModel) {
+            // Arrange
+            val onChain = listOf(createTxInfo(txHash = model.onChainHash, timestamp = 100))
+            val express = listOf(createSwap(matchHash = model.expressHash, status = ExpressExchangeStatus.Waiting))
+
+            // Act
+            val result = merge(onChain, express)
+
+            // Assert
+            assertThat(result).hasSize(1)
+            assertThat((result.single() as ExpressTx).txInfo).isEqualTo(OnChainTx.BSDK(onChain.single()))
+        }
+
+        private fun provideTestModels() = listOf(
+            HashCaseModel(onChainHash = HASH_LOWERCASE, expressHash = HASH_UPPERCASE),
+            HashCaseModel(onChainHash = HASH_UPPERCASE, expressHash = HASH_LOWERCASE),
+            HashCaseModel(onChainHash = HASH_LOWERCASE, expressHash = HASH_LOWERCASE),
+        )
 
         @Test
         fun `GIVEN rows of different timestamps WHEN merge THEN sorted by timestamp descending`() {
@@ -620,6 +643,70 @@ internal class TxHistoryInfoMergerTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SharedHashEvents {
+
+        @Test
+        fun `GIVEN swap and gasless fee under one hash WHEN merge THEN fee is a separate row below the merged one`() {
+            // Arrange: a gasless swap surfaces two events of the same hash — the swap leg and the fee charged for it.
+            val onChain = listOf(
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.GaslessFee),
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.Swap),
+            )
+            val express = listOf(createSwap(matchHash = "h1", status = ExpressExchangeStatus.Finished))
+
+            // Act
+            val result = merge(onChain, express)
+
+            // Assert
+            assertThat(result).hasSize(2)
+            val merged = result.first()
+            assertThat(merged).isInstanceOf(ExpressTx.Swap::class.java)
+            assertThat(((merged as ExpressTx).txInfo as OnChainTx.BSDK).txInfo.type)
+                .isEqualTo(TxInfo.TransactionType.Swap)
+            val fee = result.last()
+            assertThat(fee).isInstanceOf(OnChainTx.BSDK::class.java)
+            assertThat((fee as OnChainTx.BSDK).txInfo.type).isEqualTo(TxInfo.TransactionType.GaslessFee)
+        }
+
+        @Test
+        fun `GIVEN only gasless fee under the hash WHEN merge THEN it is claimed as the on-chain leg`() {
+            // Arrange: the payload tx is not part of the loaded page, so the fee event is all the deal can join to.
+            val onChain = listOf(
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.GaslessFee),
+            )
+            val express = listOf(createSwap(matchHash = "h1", status = ExpressExchangeStatus.Finished))
+
+            // Act
+            val result = merge(onChain, express)
+
+            // Assert
+            assertThat(result).hasSize(1)
+            val row = result.single()
+            assertThat(row).isInstanceOf(ExpressTx.Swap::class.java)
+            assertThat((row as ExpressTx).txInfo?.explorerHash).isEqualTo("h1")
+        }
+
+        @Test
+        fun `GIVEN two events of one hash unclaimed by express WHEN merge THEN both pass through`() {
+            // Arrange
+            val onChain = listOf(
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.GaslessFee),
+                createTxInfo(txHash = "h1", timestamp = 100, type = TxInfo.TransactionType.Transfer),
+            )
+
+            // Act
+            val result = merge(onChain, express = emptyList())
+
+            // Assert
+            assertThat(result.filterIsInstance<OnChainTx.BSDK>().map { it.txInfo.type })
+                .containsExactly(TxInfo.TransactionType.GaslessFee, TxInfo.TransactionType.Transfer)
+        }
+    }
+
+    internal data class HashCaseModel(val onChainHash: String, val expressHash: String)
+
     private fun merge(
         onChain: List<TxInfo>,
         express: List<ExpressTx>,
@@ -633,6 +720,7 @@ internal class TxHistoryInfoMergerTest {
         sourceAddress: String = "addr",
         destinationAddress: String = "addr",
         amount: BigDecimal = BigDecimal.ONE,
+        type: TxInfo.TransactionType = TxInfo.TransactionType.Transfer,
     ) = TxInfo(
         txHash = txHash,
         timestampInMillis = timestamp,
@@ -641,7 +729,7 @@ internal class TxHistoryInfoMergerTest {
         sourceType = TxInfo.SourceType.Single(sourceAddress),
         interactionAddressType = null,
         status = TxInfo.TransactionStatus.Confirmed,
-        type = TxInfo.TransactionType.Transfer,
+        type = type,
         amount = amount,
     )
 
@@ -722,7 +810,8 @@ internal class TxHistoryInfoMergerTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
-            country = null,
+            externalTxId = null,
+            fiatCurrency = null,
             toAmount = toAmount,
             toActualAmount = toActualAmount,
         ),
@@ -731,6 +820,9 @@ internal class TxHistoryInfoMergerTest {
 
     private companion object {
         const val DAY_MILLIS = 86_400_000L
+
+        const val HASH_LOWERCASE = "d859cc866dbb94f0f21d1fcd181112f7ba31cdde0f565d55ca74e3b0e5ca3d94"
+        val HASH_UPPERCASE = HASH_LOWERCASE.uppercase()
 
         private val currencyFactory = MockCryptoCurrencyFactory()
 

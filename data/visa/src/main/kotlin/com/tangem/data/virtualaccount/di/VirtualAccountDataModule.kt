@@ -1,8 +1,6 @@
 package com.tangem.data.virtualaccount.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
-import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.virtualaccount.converter.VirtualAccountStatusValueDMConverter
@@ -10,9 +8,10 @@ import com.tangem.data.virtualaccount.flow.DefaultVirtualAccountStatusFetcher
 import com.tangem.data.virtualaccount.flow.DefaultVirtualAccountStatusProducer
 import com.tangem.data.virtualaccount.repository.DefaultVirtualAccountActivationRepository
 import com.tangem.data.virtualaccount.store.VirtualAccountStatusesStore
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
@@ -63,16 +62,16 @@ internal interface VirtualAccountDataModule {
             @ApplicationContext context: Context,
             scope: AppCoroutineScope,
             converter: VirtualAccountStatusValueDMConverter,
+            dataStoreFactory: AppDataStoreFactory,
         ): VirtualAccountStatusesStore {
             return VirtualAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
-                persistenceDataStore = DataStoreFactory.create(
+                persistenceDataStore = dataStoreFactory.create(
                     serializer = MoshiDataStoreSerializer(
                         moshi = moshi,
                         types = mapWithStringKeyTypes<VirtualAccountStatusValueDM>(),
                         defaultValue = emptyMap(),
                     ),
-                    corruptionHandler = ReplaceFileCorruptionHandler { emptyMap() },
                     produceFile = { context.dataStoreFile(fileName = "virtual_account_statuses") },
                     scope = scope,
                 ),

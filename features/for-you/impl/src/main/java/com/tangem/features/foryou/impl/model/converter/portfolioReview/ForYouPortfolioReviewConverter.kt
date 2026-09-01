@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
@@ -71,7 +72,7 @@ internal class ForYouPortfolioReviewConverter(
         val loadedBalance = totalFiatBalance as? TotalFiatBalance.Loaded
         val totalFiatBalanceAmount = loadedBalance?.amount.orZero()
 
-        if (cryptoCurrencyStatus.all { it.status.value.fiatAmount?.isZero() == true }) {
+        if (cryptoCurrencyStatus.all { it.status.getTotalFiatAmount()?.isZero() == true }) {
             return PortfolioReviewUM.Content(
                 tokenList = cryptoCurrencyStatus
                     .groupBy { it.status.forYouGroupKey() }
@@ -100,9 +101,9 @@ internal class ForYouPortfolioReviewConverter(
         // Then aggregate the rest into assets (the same token across networks shares its forYouGroupKey)
         // and rank assets by their *summed* fiat balance.
         val rankedAssets = cryptoCurrencyStatus
-            .filterNot { it.status.value.fiatAmount?.isZero() == true }
+            .filterNot { it.status.getTotalFiatAmount()?.isZero() == true }
             .groupBy { it.status.forYouGroupKey() }
-            .map { (_, networks) -> networks to networks.sumOf { it.status.value.fiatAmount.orZero() } }
+            .map { (_, networks) -> networks to networks.sumOf { it.status.getTotalFiatAmount().orZero() } }
             .sortedByDescending { (_, assetBalance) -> assetBalance }
 
         // The top assets are shown individually (each flattened back to its networks so the converter can
@@ -119,7 +120,7 @@ internal class ForYouPortfolioReviewConverter(
                     assetId = assetId,
                     cryptoCurrencyStatus = group,
                     totalFiatBalance = totalFiatBalanceAmount,
-                    index = index,
+                    index = index.takeIf { totalFiatBalance is TotalFiatBalance.Loaded },
                 )
             }
 
@@ -162,7 +163,7 @@ internal class ForYouPortfolioReviewConverter(
                     .rawId
             }
             .values
-            .sortedByDescending { group -> group.sumOf { it.status.value.fiatAmount.orZero() } }
+            .sortedByDescending { group -> group.sumOf { it.status.getTotalFiatAmount().orZero() } }
 
         // The badge is per-asset (indicators are keyed by symbol), so it is computed once for the
         // selected timeframe and shared by the asset row and all its per-network child rows.
@@ -213,7 +214,7 @@ internal class ForYouPortfolioReviewConverter(
         }
 
         val asset = statuses.first()
-        val assetFiatBalance = statuses.sumOf { it.value.fiatAmount.orZero() }
+        val assetFiatBalance = statuses.sumOf { it.getTotalFiatAmount().orZero() }
 
         // The asset row itself only expands/collapses (no token click), so its wallet id is irrelevant —
         // pass the group's representative one to reuse the shared end-content formatting.
@@ -243,7 +244,7 @@ internal class ForYouPortfolioReviewConverter(
             id = assetId,
             headIconUM = TangemIconUM.Currency(iconConverter.convert(asset)),
             titleUM = TangemTokenRowUM.TitleUM.Content(
-                text = stringReference(asset.currency.name),
+                text = stringReference(asset.currency.symbol),
                 badge = badge,
             ),
             subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
@@ -277,7 +278,7 @@ internal class ForYouPortfolioReviewConverter(
                 titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.common_other)),
                 subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
                     text = pluralReference(
-                        id = R.plurals.market_chart_assets_android,
+                        id = R.plurals.common_assets_count,
                         count = otherAssets.count(),
                         formatArgs = wrappedList(otherAssets.count()),
                     ),

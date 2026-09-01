@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardState
 import kotlinx.collections.immutable.ImmutableList
@@ -14,7 +15,7 @@ internal data class TangemPayDetailsUM(
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val isBalanceHidden: Boolean,
     val errorNotificationConfig: NotificationConfig?,
-    val accountDeactivatedNotificationConfig: NotificationConfig?,
+    val accountDeactivatedBannerState: TangemMessageBanner.State?,
     val cashbackBlockState: CashbackBlockUM? = null,
 )
 
@@ -23,12 +24,18 @@ internal sealed interface CashbackBlockUM {
 
     data class Widget(
         val title: TextReference,
-        val subtitle: TextReference,
+        val subtitle: TextReference?,
+        val isNegative: Boolean,
         val onClick: () -> Unit,
     ) : CashbackBlockUM
 
     data class DeactivatedBanner(
         val onGotIt: () -> Unit,
+    ) : CashbackBlockUM
+
+    data class Error(
+        val onReload: () -> Unit,
+        val isReloading: Boolean,
     ) : CashbackBlockUM
 }
 
@@ -88,9 +95,18 @@ internal enum class TangemPayCardUiState {
     InProgress,
 }
 
-internal enum class CardsProgressBannerUM {
-    Issuing,
-    Reissuing,
+@Immutable
+internal sealed interface CardsProgressBannerUM {
+
+    data object Issuing : CardsProgressBannerUM
+
+    data object Reissuing : CardsProgressBannerUM
+
+    data object Activating : CardsProgressBannerUM
+
+    data class Delivering(val onActivateClick: (() -> Unit)?) : CardsProgressBannerUM
+
+    data object DeliveringMultiple : CardsProgressBannerUM
 }
 
 internal fun TangemPayCardState.toUiState(): TangemPayCardUiState = when (this) {
@@ -98,5 +114,7 @@ internal fun TangemPayCardState.toUiState(): TangemPayCardUiState = when (this) 
     TangemPayCardState.Issuing,
     TangemPayCardState.Reissuing,
     TangemPayCardState.Closing,
+    TangemPayCardState.Delivering,
+    TangemPayCardState.Activating,
     -> TangemPayCardUiState.InProgress
 }

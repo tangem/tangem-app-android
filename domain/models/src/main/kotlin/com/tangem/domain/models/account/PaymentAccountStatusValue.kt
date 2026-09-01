@@ -8,6 +8,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
@@ -203,6 +204,7 @@ sealed class PaymentAccountStatusValue {
     data class Loaded(
         override val source: StatusSource,
         val customerId: String,
+        @RemoveWithToggle("TWI_1684_ACCOUNT_MULTICHAIN_ENABLED")
         val depositAddress: String?,
         val balance: Balance?,
         val cryptoCurrency: CryptoCurrency.Token,

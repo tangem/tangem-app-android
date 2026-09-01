@@ -17,12 +17,13 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
-import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.toStakingTarget
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -78,23 +79,31 @@ internal open class TxDetailsConverterTestBase {
     protected fun onChainConverter(
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
         validators: List<Yield.Validator> = emptyList(),
+        vaults: List<P2PEthPoolVault> = emptyList(),
         lookup: TxHistoryLookupContext = lookupOf(),
+        isBalanceHidden: Boolean = false,
     ) = OnChainTxToDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
         menu = menu,
-        validatorsByAddress = validators.associateBy(Yield.Validator::address),
+        targetsByAddress = buildMap {
+            validators.forEach { put(it.address, it.toStakingTarget()) }
+            vaults.forEach { put(it.vaultAddress, it.toStakingTarget()) }
+        },
         onOpenValidator = openedUrls::add,
         lookup = lookup,
+        isBalanceHidden = isBalanceHidden,
     )
 
     protected fun expressConverter(
         lookup: TxHistoryLookupContext = lookupOf(),
         menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM> = persistentListOf(),
+        isBalanceHidden: Boolean = false,
     ) = ExpressTxToDetailsUMConverter(
         onGoToProvider = openedUrls::add,
         lookup = lookup,
         menu = menu,
+        isBalanceHidden = isBalanceHidden,
     )
 
     protected fun txInfo(
@@ -154,6 +163,24 @@ internal open class TxDetailsConverterTestBase {
         isStrategicPartner = false,
     )
 
+    protected fun vault(address: String = VAULT_ADDRESS, displayName: String = "P2P Vault"): P2PEthPoolVault =
+        P2PEthPoolVault(
+            vaultAddress = address,
+            displayName = displayName,
+            apy = BigDecimal("0.045"),
+            baseApy = BigDecimal("0.04"),
+            capacity = BigDecimal("1000"),
+            totalAssets = BigDecimal("100"),
+            feePercent = BigDecimal("10"),
+            isPrivate = false,
+            isGenesis = false,
+            isSmoothingPool = true,
+            isErc20 = false,
+            tokenName = null,
+            tokenSymbol = null,
+            createdAt = 0L,
+        )
+
     protected fun provider(name: String): ExpressProvider = ExpressProvider(
         providerId = "provider-1",
         name = name,
@@ -170,6 +197,7 @@ internal open class TxDetailsConverterTestBase {
         txInfo: OnChainTx? = null,
         provider: ExpressProvider? = null,
         externalTxUrl: String? = null,
+        externalTxId: String? = null,
         fromAddress: String = FROM_ADDRESS,
         payoutAddress: String = PAYOUT_ADDRESS,
         fromCurrency: CryptoCurrency? = null,
@@ -196,7 +224,7 @@ internal open class TxDetailsConverterTestBase {
                 cryptoCurrency = bitcoin,
             ),
             externalTxUrl = externalTxUrl,
-            externalTxId = null,
+            externalTxId = externalTxId,
             payinAddress = "payin-addr",
             updatedAtMillis = TIMESTAMP,
             refundAssetId = null,
@@ -213,8 +241,9 @@ internal open class TxDetailsConverterTestBase {
         status: ExpressOnrampStatus,
         txInfo: OnChainTx? = null,
         externalTxUrl: String? = null,
+        externalTxId: String? = null,
         payoutAddress: String = PAYOUT_ADDRESS,
-        country: OnrampCountry? = null,
+        fiatCurrency: OnrampCurrency? = null,
     ): ExpressTx.Onramp = ExpressTx.Onramp(
         tx = OnrampTransaction(
             txId = "onramp-1",
@@ -224,6 +253,7 @@ internal open class TxDetailsConverterTestBase {
             payoutHash = null,
             payoutAddress = payoutAddress,
             externalTxUrl = externalTxUrl,
+            externalTxId = externalTxId,
             fromFiat = Amount(
                 currencySymbol = "SEK",
                 value = BigDecimal("100"),
@@ -236,23 +266,20 @@ internal open class TxDetailsConverterTestBase {
                 decimals = 8,
                 cryptoCurrency = bitcoin,
             ),
-            country = country,
+            fiatCurrency = fiatCurrency,
             toAmount = BigDecimal("0.006"),
             toActualAmount = null,
         ),
         txInfo = txInfo,
     )
 
-    /** A resolved onramp country carrying [flagUrl] as its flag image (the "paid from" flag shown on the fiat leg). */
-    protected fun onrampCountry(flagUrl: String): OnrampCountry = OnrampCountry(
-        id = "SE",
-        name = "Sweden",
-        code = "SE",
-        image = flagUrl,
-        alpha3 = "SWE",
-        continent = "Europe",
-        defaultCurrency = OnrampCurrency(name = "Swedish Krona", code = "SEK", image = null, precision = 2, unit = "SEK"),
-        onrampAvailable = true,
+    /** A resolved onramp fiat currency carrying [imageUrl] as its icon (the "paid from" icon shown on the fiat leg). */
+    protected fun onrampCurrency(imageUrl: String): OnrampCurrency = OnrampCurrency(
+        name = "Swedish Krona",
+        code = "SEK",
+        image = imageUrl,
+        precision = 2,
+        unit = "SEK",
     )
 
     protected fun expressAsset(
@@ -300,6 +327,7 @@ internal open class TxDetailsConverterTestBase {
         const val USER_ADDRESS = "0x1234567890abcdef1234"
         const val VALIDATOR_ADDRESS = "0xvalidator"
         const val VALIDATOR_URL = "https://lido.fi"
+        const val VAULT_ADDRESS = "0xvault"
         const val EXTERNAL_URL = "https://provider.example/tx/swap-1"
         const val FROM_ADDRESS = "0xfromOwnAddress1234"
         const val PAYOUT_ADDRESS = "bc1qPayoutOwnAddress"

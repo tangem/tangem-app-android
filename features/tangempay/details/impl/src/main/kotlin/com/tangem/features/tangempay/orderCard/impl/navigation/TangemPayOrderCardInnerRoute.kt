@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.orderCard.impl.navigation
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,8 +11,14 @@ internal sealed class TangemPayOrderCardInnerRoute : Route {
     data object Type : TangemPayOrderCardInnerRoute()
 
     @Serializable
-    data object Data : TangemPayOrderCardInnerRoute()
+    data class Data(
+        val deliveryEtaMaxBusinessDays: Int,
+        val intent: TangemPayOrderCardIntent,
+    ) : TangemPayOrderCardInnerRoute()
 
     @Serializable
-    data object Success : TangemPayOrderCardInnerRoute()
+    data class Success(
+        val deliveryEtaMaxBusinessDays: Int,
+        val email: String,
+    ) : TangemPayOrderCardInnerRoute()
 }

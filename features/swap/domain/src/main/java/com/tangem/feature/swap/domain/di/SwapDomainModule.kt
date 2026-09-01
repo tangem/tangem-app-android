@@ -11,6 +11,8 @@ import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.*
+import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
+import com.tangem.feature.swap.domain.account.PaymentAccountUnderlyingCurrencies
 import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
@@ -119,4 +121,8 @@ internal interface SwapDomainBindModule {
     @Binds
     @Singleton
     fun provideSwapTransferInteractor(swapTransferInteractor: SwapTransferInteractorImpl): SwapTransferInteractor
+
+    @Binds
+    @Singleton
+    fun bindAccountUnderlyingCurrencies(impl: PaymentAccountUnderlyingCurrencies): AccountUnderlyingCurrencies
 }
