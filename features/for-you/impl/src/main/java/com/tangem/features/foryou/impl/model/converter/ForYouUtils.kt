@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter
 
+import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
@@ -36,9 +37,11 @@ internal val PERCENT_BASE = BigDecimal("100")
 
 /**
  * Cross-network grouping key for the portfolio review: the same asset on different networks (e.g. USDC
- * on Solana and Ethereum) shares its `symbol`, so they group under a single item.
+ * on Solana and Ethereum) shares its `rawCurrencyId`, so they group under a single item. Custom tokens
+ * have no raw id and fall back to their unique currency id, staying in their own group.
  */
-internal fun CryptoCurrencyStatus.forYouGroupKey(): String = currency.symbol
+internal fun CryptoCurrencyStatus.forYouGroupKey(): String =
+    getTokenIdIfL2Network(currency.id.rawCurrencyId?.value ?: currency.id.value)
 
 /**
  * Matching key between a portfolio currency and a top-earn suggestion: the same asset
