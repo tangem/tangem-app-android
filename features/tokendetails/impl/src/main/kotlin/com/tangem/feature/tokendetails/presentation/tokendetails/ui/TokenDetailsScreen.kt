@@ -143,27 +143,30 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
 ) {
     val density = LocalDensity.current
 
-    TangemFade(
-        variant = TangemFade.Variant.Hard,
-        position = TangemFade.Position.Bottom,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(174.dp)
             .align(Alignment.BottomCenter),
-    )
+    ) {
+        TangemFade(
+            variant = TangemFade.Variant.Hard,
+            position = TangemFade.Position.Bottom,
+            modifier = Modifier.matchParentSize(),
+        )
 
-    component.Content(
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .onSizeChanged { size ->
-                onHeightChange(with(density) { size.height.toDp() })
-            }
-            .navigationBarsPadding()
-            .padding(
-                horizontal = MarketBlockHorizontalPadding,
-                vertical = TangemTheme.dimens2.x1_5,
-            ),
-    )
+        component.Content(
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .onSizeChanged { size ->
+                    onHeightChange(with(density) { size.height.toDp() })
+                }
+                .navigationBarsPadding()
+                .padding(
+                    horizontal = MarketBlockHorizontalPadding,
+                    vertical = 6.dp,
+                ),
+        )
+    }
 }
 
 @Suppress("LongParameterList", "LongMethod")
