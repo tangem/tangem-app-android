@@ -1,8 +1,8 @@
-package com.tangem.datasource.local.nft.converter
+package com.tangem.data.nft.converter
 
 import android.content.res.Resources
 import com.tangem.core.res.getStringSafe
-import com.tangem.datasource.R
+import com.tangem.core.res.R
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.nft.models.NFTAsset
@@ -10,7 +10,7 @@ import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
-class NFTSdkCollectionConverter(
+internal class NFTSdkCollectionConverter(
     private val resources: Resources,
 ) : Converter<Pair<Network, SdkNFTCollection>, NFTCollection> {
     override fun convert(value: Pair<Network, SdkNFTCollection>): NFTCollection {

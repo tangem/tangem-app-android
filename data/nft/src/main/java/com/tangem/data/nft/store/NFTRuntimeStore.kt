@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.nft
+package com.tangem.data.nft.store
 
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
@@ -6,7 +6,7 @@ import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
 import kotlinx.coroutines.flow.Flow
 
-interface NFTRuntimeStore {
+internal interface NFTRuntimeStore {
 
     suspend fun initialize(collections: NFTCollections, prices: Map<NFTAsset.Identifier, NFTSalePrice>)
 

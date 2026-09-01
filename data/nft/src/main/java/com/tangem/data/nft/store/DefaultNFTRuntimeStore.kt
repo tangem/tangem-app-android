@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.nft
+package com.tangem.data.nft.store
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
