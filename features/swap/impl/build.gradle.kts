@@ -38,6 +38,7 @@ dependencies {
 
     /** Domain modules **/
     api(projects.domain.account.status)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.appCurrency)
     api(projects.domain.appCurrency.models)
     api(projects.domain.balanceHiding)
