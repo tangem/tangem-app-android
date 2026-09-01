@@ -270,7 +270,7 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUM, modifier
     Column(modifier = modifier) {
         when (val detail = state.detail) {
             null -> Unit
-            TransactionDetailUM.Loading -> DetailRowShimmer()
+            TransactionDetailUM.Loading -> DetailRowShimmer(resourceReference(R.string.tangempay_common_card))
             is TransactionDetailUM.Content -> DetailValueRow(
                 title = resourceReference(R.string.tangempay_common_card),
                 value = detail.cardNumber,
@@ -283,7 +283,7 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUM, modifier
         }
         when (val cashback = state.cashbackDetail) {
             null -> Unit
-            CashbackDetailUM.Loading -> DetailRowShimmer()
+            CashbackDetailUM.Loading -> DetailRowShimmer(resourceReference(R.string.tangempay_cashback_title))
             CashbackDetailUM.AwaitingCalculation -> CashbackRowPlaceholder()
             is CashbackDetailUM.Content -> DetailValueRow(
                 title = resourceReference(R.string.tangempay_cashback_title),
@@ -350,14 +350,14 @@ private fun DetailValueRow(
 }
 
 @Composable
-private fun DetailRowShimmer(modifier: Modifier = Modifier) {
+private fun DetailRowShimmer(title: TextReference, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier,
         divider = true,
         contentLead = TangemRowContentLead.End,
         titleSlot = {
             TangemRowText(
-                text = resourceReference(R.string.tangempay_common_card),
+                text = title,
                 role = TangemRowTextRole.Title,
             )
         },

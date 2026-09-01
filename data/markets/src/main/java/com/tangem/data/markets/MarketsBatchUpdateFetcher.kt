@@ -11,8 +11,8 @@ import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.catchApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.markets.TangemTechMarketsApi
-import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
+import com.tangem.store.datasource.markets.TangemTechMarketsApi
+import com.tangem.store.datasource.markets.models.response.TokenMarketChartListResponse
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.Batch

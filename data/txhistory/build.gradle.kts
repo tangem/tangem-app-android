@@ -11,7 +11,6 @@ android {
 
 dependencies {
 
-    implementation(projects.domain.legacy)
     implementation(projects.domain.common)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.models)
@@ -20,7 +19,6 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.express)
     implementation(projects.domain.express.models)
-    implementation(projects.domain.wallets.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
@@ -49,6 +47,7 @@ dependencies {
     // region Core modules
     api(projects.core.analytics)
     api(projects.core.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     // endregion
@@ -67,7 +66,7 @@ dependencies {
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     implementation(projects.domain.account.status)
-    implementation(projects.domain.legacy)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.visa)
     // endregion
 
@@ -77,16 +76,18 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.visa.models)
-    implementation(projects.domain.wallets.models)
+    implementation(projects.core.analytics.models)
     // endregion
 
     // region Libs
     api(projects.libs.blockchainSdk)
+    api(deps.kotlin.coroutines)
     // endregion
 
     // region Test
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
+    testImplementation(deps.kotlin.coroutines)
     // endregion
 }

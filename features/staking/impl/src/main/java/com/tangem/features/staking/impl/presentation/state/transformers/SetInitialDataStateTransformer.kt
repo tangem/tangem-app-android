@@ -24,6 +24,7 @@ import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.common.RewardClaiming
 import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.stakingSource
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
@@ -96,7 +97,7 @@ internal class SetInitialDataStateTransformer(
         val status = cryptoCurrencyStatus.value
         return StakingStates.InitialInfoState.Data(
             isPrimaryButtonEnabled = with(status) {
-                !amount.isNullOrZero() && sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
+                !amount.isNullOrZero() && sources.networkSource.isActual() && stakingSource.isActual()
             },
             isBannerVisible = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
             infoItems = getInfoItems(),

@@ -30,6 +30,7 @@ import com.tangem.pagination.BatchAction
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.notifications.NotificationIdGenerator
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import com.tangem.utils.transformer.update
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -125,6 +126,8 @@ internal class TestPushViewModel @Inject constructor(
 
         val channelId = "Test Tangem Channel"
 
+        val notificationId = NotificationIdGenerator.next()
+
         val intent = Intent(applicationContext, Class.forName("com.tangem.tap.MainActivity")).apply {
             value.data.forEach { (key, value) ->
                 putExtra(key.text, value.text)
@@ -133,9 +136,9 @@ internal class TestPushViewModel @Inject constructor(
         }
         val pendingIntent = PendingIntent.getActivity(
             /* context = */ applicationContext,
-            /* requestCode = */ 1,
+            /* requestCode = */ notificationId,
             /* intent = */ intent,
-            /* flags = */ PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
+            /* flags = */ PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
         val notificationBuilder =
@@ -161,11 +164,8 @@ internal class TestPushViewModel @Inject constructor(
             notificationManager.createNotificationChannel(notificationChannel)
         }
 
-        // Generating unique notification id
-        val uniqueId = (System.currentTimeMillis() % Integer.MAX_VALUE).toInt()
-
         notificationManager.notify(
-            /* id = */ uniqueId,
+            /* id = */ notificationId,
             /* notification = */ notificationBuilder.build(),
         )
     }

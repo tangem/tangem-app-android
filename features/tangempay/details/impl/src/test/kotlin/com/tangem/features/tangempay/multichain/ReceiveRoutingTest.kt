@@ -43,6 +43,7 @@ internal class ReceiveRoutingTest {
     private fun available() = PaymentNetworkStatus.Available(
         network = mockk(),
         depositAddress = "0xDEPOSIT",
+        chainId = 137L,
         cryptoCurrencyStatuses = emptyList(),
     )
 }

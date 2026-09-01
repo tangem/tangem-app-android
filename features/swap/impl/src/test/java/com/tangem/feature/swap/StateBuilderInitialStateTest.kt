@@ -594,7 +594,7 @@ internal fun buildSwapCurrencyStatus(
     userWallet: UserWallet,
 ): SwapCurrencyStatus {
     val userWalletId = userWallet.walletId
-    val account = Account.CryptoPortfolio.createMainAccount(userWalletId)
+    val account = Account.Personal.createMainAccount(userWalletId)
     val currency: CryptoCurrency = mockk(relaxed = true) {
         every { symbol } returns "ETH"
         every { decimals } returns 18
@@ -638,7 +638,7 @@ internal fun buildCoinSwapCurrencyStatus(
     userWallet: UserWallet,
     network: Network,
 ): SwapCurrencyStatus {
-    val account = Account.CryptoPortfolio.createMainAccount(userWallet.walletId)
+    val account = Account.Personal.createMainAccount(userWallet.walletId)
     val currency = mockk<CryptoCurrency.Coin>(relaxed = true) {
         every { symbol } returns "ETH"
         every { decimals } returns 18

@@ -344,20 +344,56 @@ class GetWalletAccountsResponseExtTest {
         }
     }
 
-    private fun createWalletAccountDTO(derivationIndex: Int, tokens: List<UserTokensResponse.Token> = emptyList()) =
-        WalletAccountDTO(
-            id = AccountId.forCryptoPortfolio(
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class JointRecords {
+
+        @Test
+        fun `GIVEN joint record with derivation 0 WHEN assignTokens THEN orphan tokens go to the crypto account`() {
+            // Arrange
+            val orphanToken = createUserToken(accountIndex = 3, accountId = null)
+            val mainAccount = createWalletAccountDTO(derivationIndex = 0)
+            val jointAccount = createWalletAccountDTO(
+                derivationIndex = 0,
+                type = WalletAccountDTO.Type.JOINT.value,
+                accountId = "aa".repeat(n = 32),
+            )
+
+            // Act
+            val actual = listOf(mainAccount, jointAccount).assignTokens(
                 userWalletId = userWalletId,
-                derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!,
-            ).value,
-            name = "Name #$derivationIndex",
-            derivationIndex = derivationIndex,
-            icon = "icon",
-            iconColor = "color",
-            tokens = tokens,
-            totalTokens = tokens.size,
-            totalNetworks = 1,
-        )
+                tokens = listOf(orphanToken),
+            )
+
+            // Assert
+            val expected = listOf(
+                mainAccount.copy(tokens = listOf(orphanToken.copy(accountId = mainAccount.id))),
+                jointAccount,
+            )
+
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+    }
+
+    private fun createWalletAccountDTO(
+        derivationIndex: Int,
+        tokens: List<UserTokensResponse.Token> = emptyList(),
+        type: String? = null,
+        accountId: String? = null,
+    ) = WalletAccountDTO(
+        id = accountId ?: AccountId.forCryptoPortfolio(
+            userWalletId = userWalletId,
+            derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!,
+        ).value,
+        name = "Name #$derivationIndex",
+        derivationIndex = derivationIndex,
+        icon = "icon",
+        iconColor = "color",
+        type = type,
+        tokens = tokens,
+        totalTokens = tokens.size,
+        totalNetworks = 1,
+    )
 
     companion object {
 

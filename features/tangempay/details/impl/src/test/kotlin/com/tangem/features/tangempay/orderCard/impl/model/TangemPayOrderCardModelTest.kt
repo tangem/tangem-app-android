@@ -89,6 +89,32 @@ internal class TangemPayOrderCardModelTest {
         verify(exactly = 1) { router.pop() }
     }
 
+    @Test
+    fun `GIVEN a successful order WHEN onShowOrderedCard THEN status refreshed and flow closed`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        model.onShowOrderedCard()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
+        verify(exactly = 1) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN a refresh already running WHEN onShowOrderedCard again THEN status fetched and popped once`() =
+        runTest {
+            // Act
+            val model = createModel(testScope = this)
+            model.onShowOrderedCard()
+            model.onShowOrderedCard()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
+            verify(exactly = 1) { router.pop() }
+        }
+
     private fun createModel(testScope: TestScope) = TangemPayOrderCardModel(
         paramsContainer = MutableParamsContainer(TangemPayOrderCardComponent.Params(userWalletId = WALLET_ID)),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),

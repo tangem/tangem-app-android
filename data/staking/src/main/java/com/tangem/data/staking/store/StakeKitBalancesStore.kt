@@ -1,6 +1,6 @@
 package com.tangem.data.staking.store
 
-import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
