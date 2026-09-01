@@ -3,6 +3,7 @@ package com.tangem.data.networks.store
 import android.content.Context
 import androidx.datastore.core.DataStore
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.data.networks.converters.NetworkDerivationPathConverter
 import com.tangem.data.networks.converters.NetworkStatusDataModelConverter
 import com.tangem.data.networks.converters.SimpleNetworkStatusConverter
 import com.tangem.data.networks.models.SimpleNetworkStatus
@@ -115,7 +116,7 @@ internal class DefaultNetworksStatusesStore(
                 val updatedValues = this[userWalletId.stringValue].orEmpty().filterNot {
                     networks.any { network ->
                         it.networkId.value == network.toBlockchain().id &&
-                            it.derivationPath.value == network.derivationPath.value
+                            it.derivationPath == NetworkDerivationPathConverter.convertBack(network.derivationPath)
                     }
                 }
 

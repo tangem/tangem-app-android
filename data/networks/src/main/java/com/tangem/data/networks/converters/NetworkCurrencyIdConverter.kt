@@ -98,6 +98,12 @@ internal class NetworkCurrencyIdConverter(
                     derivationPath = derivationPath.value,
                 )
             }
+            is Network.DerivationPath.Joint -> {
+                CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
+                    rawId = networkRawId,
+                    derivationPath = derivationPath.value,
+                )
+            }
             is Network.DerivationPath.None -> CryptoCurrency.ID.Body.NetworkId(networkRawId)
         }
     }
