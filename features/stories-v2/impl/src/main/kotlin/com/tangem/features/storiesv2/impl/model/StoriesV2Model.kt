@@ -1,11 +1,16 @@
 package com.tangem.features.storiesv2.impl.model
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.provider.Settings
 import android.view.SurfaceView
 import androidx.compose.runtime.LongState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -21,6 +26,7 @@ import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentRepository
+import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.content.StoryV2Slide
 import com.tangem.features.storiesv2.impl.engine.MAX_FRAME_STEP_NANOS
 import com.tangem.features.storiesv2.impl.engine.NANOS_PER_MS
@@ -82,6 +88,8 @@ internal class StoriesV2Model @Inject constructor(
 
     override val hasVideo: Boolean get() = videoPlayer != null
 
+    private val posterPainters = mutableStateMapOf<Int, Painter>()
+
     private var clock: SlideClock = WallSlideClock(durationMs = 0L)
     private var previousFrameNanos = NO_TIME
     private var elapsedRemainderNanos = 0L
@@ -94,6 +102,8 @@ internal class StoriesV2Model @Inject constructor(
     }
 
     override fun onDestroy() {
+        // A story suspended by an action and killed by navigation still owes its closing analytics.
+        controller?.onHostDestroyed()
         videoPlayer?.release()
         videoPlayer = null
         super.onDestroy()
@@ -149,6 +159,8 @@ internal class StoriesV2Model @Inject constructor(
         controller?.onPlaybackFailed()
     }
 
+    override fun posterPainter(id: Int): Painter? = posterPainters[id]
+
     private suspend fun open() {
         val composition = contentRepository.getComposition(params.type)
         if (composition == null) {
@@ -165,12 +177,14 @@ internal class StoriesV2Model @Inject constructor(
             return
         }
         this.composition = composition
+        prefetchPosters(composition)
 
         val controller = StoryPlaybackController(
             composition = composition,
             source = params.source,
             analytics = analytics,
             onHaptic = { hapticManager.performOneTime(TangemHapticEffect.OneTime.HeavyClick) },
+            onAction = params.onAction,
             onResult = params.onResult,
         )
         this.controller = controller
@@ -187,6 +201,17 @@ internal class StoriesV2Model @Inject constructor(
         controller.state
             .onEach(::applyState)
             .launchIn(modelScope)
+    }
+
+    private fun prefetchPosters(composition: StoryV2Composition) {
+        modelScope.launch(dispatchers.io) {
+            composition.slides.forEach { slide ->
+                val poster = slide.asset.poster as? StoryV2MediaRef.DrawableResource ?: return@forEach
+                if (posterPainters.containsKey(poster.id)) return@forEach
+                val bitmap = BitmapFactory.decodeResource(context.resources, poster.id) ?: return@forEach
+                posterPainters[poster.id] = BitmapPainter(bitmap.asImageBitmap())
+            }
+        }
     }
 
     private fun applyState(state: StoryPlaybackState) {
