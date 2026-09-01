@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.walletmanager
+package com.tangem.data.walletmanager.store
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
@@ -35,9 +35,9 @@ internal class DefaultWalletManagersStore(
 
     override suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager) {
         store.update(key = userWalletId, default = emptyList()) { walletManagers ->
-            walletManagers.addOrReplace(walletManager) {
-                it.wallet.blockchain == walletManager.wallet.blockchain &&
-                    it.wallet.publicKey.derivationPath == walletManager.wallet.publicKey.derivationPath
+            walletManagers.addOrReplace(walletManager) { existing ->
+                existing.wallet.blockchain == walletManager.wallet.blockchain &&
+                    existing.wallet.publicKey.derivationPath == walletManager.wallet.publicKey.derivationPath
             }
         }
     }
