@@ -1,7 +1,6 @@
 package com.tangem.data.quotes.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.quotes.multi.DefaultMultiQuoteUpdater
@@ -10,8 +9,9 @@ import com.tangem.data.quotes.store.DefaultQuotesStatusesStore
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
@@ -37,10 +37,11 @@ internal object QuotesDataModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): QuotesStatusesStore {
         return DefaultQuotesStatusesStore(
             runtimeStore = RuntimeSharedStore(),
-            persistenceDataStore = DataStoreFactory.create(
+            persistenceDataStore = dataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
                     types = mapWithStringKeyTypes<QuotesResponse.Quote>(),

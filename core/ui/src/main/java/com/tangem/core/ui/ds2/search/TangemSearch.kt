@@ -120,6 +120,7 @@ object TangemSearch {
         val isActive: Boolean,
         val onActiveChange: (Boolean) -> Unit,
         val onClearClick: () -> Unit = { },
+        val onSubmit: () -> Unit = { },
         val onCloseClick: (() -> Unit)? = null,
     )
 }
@@ -201,6 +202,7 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
             onSearch = {
                 keyboardController?.hide()
                 focusManager.clearFocus()
+                state.onSubmit()
             },
         ),
         decorationBox = { innerTextField ->

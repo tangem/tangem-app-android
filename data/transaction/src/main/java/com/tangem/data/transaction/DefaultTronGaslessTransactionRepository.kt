@@ -1,9 +1,9 @@
 package com.tangem.data.transaction
 
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.gasless.TronGaslessApi
-import com.tangem.datasource.api.gasless.models.tron.TronEstimateRequestBody
-import com.tangem.datasource.api.gasless.models.tron.TronSubmitRequestBody
+import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
+import com.tangem.grow.datasource.gasless.models.tron.TronSubmitRequestBody
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -47,7 +47,7 @@ internal class DefaultTronGaslessTransactionRepository(
                 fromAddress = params.fromAddress,
                 toAddress = params.toAddress,
                 tokenContract = params.tokenContract,
-                amount = params.amount,
+                amount = params.amount.toString(),
                 feeTokenContract = params.feeTokenContract,
             ),
         ).getOrThrow()
@@ -56,6 +56,7 @@ internal class DefaultTronGaslessTransactionRepository(
         val res = response.result
         TronGaslessQuote(
             quoteId = res.quoteId,
+            quotedAmountRaw = params.amount,
             feeRecipient = res.feeRecipient,
             compensationToken = res.compensationToken,
             compensationAmountRaw = BigInteger(res.compensationAmountRaw),

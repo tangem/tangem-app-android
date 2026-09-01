@@ -13,6 +13,7 @@ import com.tangem.domain.models.staking.StakingBalanceEntry
 import com.tangem.domain.models.staking.StakingEntryType
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegration
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.YieldReward
 import com.tangem.lib.crypto.BlockchainUtils
@@ -36,12 +37,12 @@ internal class YieldBalancesConverter(
     override fun convert(value: Unit): InnerYieldBalanceState {
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
+        val stakingBalance = cryptoCurrencyStatus.value.stakingBalanceData
         val balanceEntries = balancesToShowProvider()
-        val hasStakingData = stakingBalance is StakingBalance.Data
+        val hasStakingData = stakingBalance != null
 
         return if (hasStakingData || balanceEntries.any { it.isPending }) {
-            val cryptoRewardsValue = (stakingBalance as? StakingBalance.Data)?.totalRewards
+            val cryptoRewardsValue = stakingBalance?.totalRewards
 
             val fiatRate = cryptoCurrencyStatus.value.fiatRate
             val fiatRewardsValue = if (fiatRate != null && cryptoRewardsValue != null) {

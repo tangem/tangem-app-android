@@ -4,11 +4,7 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.styledResourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -111,6 +107,12 @@ internal object SwapNotificationUM {
         data object FCAWarningList : Error(
             title = resourceReference(R.string.warning_express_providers_fca_warning_title),
             subtitle = resourceReference(R.string.warning_express_providers_fca_warning_description),
+            iconResId = R.drawable.ic_alert_circle_24,
+        )
+
+        data object RegionalRestriction : Error(
+            title = resourceReference(R.string.express_swap_restrictions_title),
+            subtitle = resourceReference(R.string.express_swap_restrictions_text),
             iconResId = R.drawable.ic_alert_circle_24,
         )
     }

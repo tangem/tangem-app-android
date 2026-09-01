@@ -3,19 +3,18 @@ package com.tangem.domain.pay.model
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
-/** Cashback program configuration for the customer, from `GET v1/customer/cashback/promotions`. */
 data class CashbackPromotions(
-    val cardTiers: List<CardTier>,
-    val monthlyCap: MonthlyCap?,
+    val cards: List<CardPromotion>,
+    val accountMonthlyCap: MonthlyCap?,
     val additionalCashback: List<AdditionalCashback>,
 ) {
 
-    data class CardTier(
-        val tier: String,
-        val label: String,
-        val scope: String,
+    data class CardPromotion(
+        val cardType: String,
+        val title: String?,
+        val cashbackRate: BigDecimal,
         val minTransactionAmount: BigDecimal?,
-        val monthlyCapAmount: BigDecimal?,
+        val promotionId: String,
     )
 
     data class MonthlyCap(
@@ -25,9 +24,31 @@ data class CashbackPromotions(
 
     data class AdditionalCashback(
         val id: String,
+        val cardType: String?,
         val name: String,
-        val description: String,
-        val isPermanent: Boolean,
+        val description: String?,
         val endDate: DateTime?,
+        val promoCap: PromoCap?,
+        val minTransactionAmount: BigDecimal?,
+        val priority: Int,
     )
+
+    data class PromoCap(
+        val amount: BigDecimal,
+        val period: Period,
+        val currency: String?,
+    ) {
+        enum class Period {
+            MONTHLY,
+            UNKNOWN,
+            ;
+
+            companion object {
+                fun fromString(value: String?): Period = when (value?.lowercase()) {
+                    "monthly" -> MONTHLY
+                    else -> UNKNOWN
+                }
+            }
+        }
+    }
 }

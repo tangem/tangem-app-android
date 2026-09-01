@@ -2,8 +2,11 @@ package com.tangem.tap.domain.walletregistration
 
 import android.util.Base64
 import arrow.core.getOrElse
+import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.card.common.visa.VisaUtilities
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
@@ -47,17 +50,26 @@ class WalletRegistrationLauncher @Inject internal constructor(
     }
 
     /**
-     * COLD registration. Phase 1 ([WalletRegistrar.prepare]) runs inside the still-open [session]
-     * (the card is tapped here); phase 2 (the network POST) is dispatched on [appCoroutineScope]
-     * after this returns, so the user doesn't hold the card during the request. Call this BEFORE
-     * the scan completes its session callback.
+     * COLD registration from a [Card] read off an open [session] — applied to any card operation
+     * (scan, wallet creation/import, key derivation) so the card is bound to the device on the same
+     * NFC tap. Phase 1 ([WalletRegistrar.prepare]) runs inside the still-open [session] (the card is
+     * tapped here); phase 2 (the network POST) is dispatched on [appCoroutineScope] afterwards, so
+     * the user doesn't hold the card during the request.
+     *
+     * Twin and Visa cards are skipped: a twin's id is derived from both cards (can't be built here)
+     * and Visa cards are not a cold-registration target.
      */
-    suspend fun registerColdInSession(session: CardSession, scanResponse: ScanResponse) {
+    suspend fun registerColdInSession(session: CardSession, card: Card) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
+        val cardDto = CardDTO(card)
+        if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return
+        registerCold(session, cardDto, UserWalletIdBuilder.card(cardDto))
+    }
 
-        val walletId = UserWalletIdBuilder.scanResponse(scanResponse).build()?.toBase64() ?: return
+    private suspend fun registerCold(session: CardSession, card: CardDTO, walletIdBuilder: UserWalletIdBuilder) {
+        val walletId = walletIdBuilder.build()?.toBase64() ?: return
 
-        val prepared = walletRegistrar.prepare(walletId, coldSigner.signerFor(session, scanResponse))
+        val prepared = walletRegistrar.prepare(walletId, coldSigner.signerFor(session, card))
             .getOrElse { error ->
                 TangemLogger.e("Cold wallet registration prepare deferred: $error")
                 return
@@ -87,6 +99,18 @@ class WalletRegistrationLauncher @Inject internal constructor(
             .filterIsInstance<UserWallet.Hot>()
             .filter { it.hotWalletId.authType == HotWalletId.AuthType.NoPassword }
             .forEach { registerMobile(it) }
+    }
+
+    /**
+     * Unregisters a wallet from the auth service (e.g. on wallet deletion). Failures are surfaced
+     * through the registrar's total [Either] contract and logged here — no `runSuspendCatching`
+     * wrapper, because the registrar never throws (it routes every failure to a `Left`).
+     */
+    suspend fun unregister(userWalletId: UserWalletId) {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
+
+        walletRegistrar.unregister(userWalletId.toBase64())
+            .onLeft { TangemLogger.e("Wallet unregister deferred: $it") }
     }
 
     private fun UserWalletId.toBase64(): String = Base64.encodeToString(value, Base64.NO_WRAP)

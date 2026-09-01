@@ -4,7 +4,7 @@ import androidx.datastore.core.Serializer
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
-import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.blockchainsdk.providers.models.ProviderModel
 import java.io.InputStream
 import java.io.OutputStream
 

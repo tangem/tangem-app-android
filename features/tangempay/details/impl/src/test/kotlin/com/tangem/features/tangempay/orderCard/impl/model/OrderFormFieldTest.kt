@@ -2,7 +2,7 @@ package com.tangem.features.tangempay.orderCard.impl.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
-import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError.Invalid
+import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError.NonLatin
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError.Required
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
@@ -41,6 +41,19 @@ internal class OrderFormFieldTest {
         assertThat(actual).isEqualTo(expected)
     }
 
+    @Test
+    fun `GIVEN a blank read-only field WHEN validated THEN the form stays valid`() {
+        // Arrange
+        val form = validForm().updateField(OrderFormField.EmbossName) { copy(value = "", isEditable = false) }
+
+        // Act
+        val embossError = form.fieldError(OrderFormField.EmbossName)
+
+        // Assert
+        assertThat(embossError).isNull()
+        assertThat(form.isFormValid()).isTrue()
+    }
+
     internal data class FieldModel(
         val field: OrderFormField,
         val isRequired: Boolean,
@@ -49,6 +62,10 @@ internal class OrderFormFieldTest {
     )
 
     private fun Form.withValue(field: OrderFormField, value: String) = updateField(field) { copy(value = value) }
+
+    private fun validForm(): Form = OrderFormField.entries
+        .fold(emptyForm()) { form, field -> form.withValue(field, "Night City") }
+        .let { form -> form.copy(phone = form.phone.copy(value = "2345678901"), phoneMask = "##########") }
 
     private fun emptyForm() = Form(
         onBackClick = {},
@@ -66,6 +83,7 @@ internal class OrderFormFieldTest {
         postalCode = emptyField(),
         phone = emptyField(),
         isOrderEnabled = false,
+        isSubmitting = false,
         onOrderClick = {},
     )
 
@@ -85,7 +103,7 @@ internal class OrderFormFieldTest {
     ) = FieldModel(field, isRequired, blankError, accentedError)
 
     private fun fieldCases() = listOf(
-        case(OrderFormField.EmbossName, accentedError = Invalid),
+        case(OrderFormField.EmbossName, accentedError = NonLatin),
         case(OrderFormField.FirstName),
         case(OrderFormField.LastName),
         case(OrderFormField.Region),

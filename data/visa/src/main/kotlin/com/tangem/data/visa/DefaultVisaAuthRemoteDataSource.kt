@@ -8,7 +8,7 @@ import com.tangem.spend.datasource.pay.models.request.RefreshTokenByCardIdReques
 import com.tangem.spend.datasource.pay.models.response.TangemPayErrorResponse
 import com.tangem.spend.datasource.visa.VisaApi
 import com.tangem.spend.datasource.visa.models.request.*
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthChallenge

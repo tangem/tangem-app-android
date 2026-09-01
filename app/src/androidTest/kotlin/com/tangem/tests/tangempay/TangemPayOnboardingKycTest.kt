@@ -9,7 +9,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_SHORT
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
 import com.tangem.screens.onDetailsScreen
@@ -34,11 +33,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
     fun existingUserAuthorizationShowsTangemPayTileOnMainTest() {
         val paeraCustomerState = "PaeraCustomer"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$paeraCustomerState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, paeraCustomerState)
             }
@@ -60,12 +55,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
         val eligibilityStartedState = "Started"
         val channelsBannerState = "Banner"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
             }
@@ -90,12 +80,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
         val eligibilityStartedState = "Started"
         val channelsBannerAndDetailsState = "BannerAndDetails"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityStartedState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
             }
@@ -133,12 +118,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
         val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
         val viewStatusText = getResourceString(CoreResR.string.tangempay_kyc_in_progress_notification_button)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$paeraCustomerState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, paeraCustomerState)
             }
@@ -186,12 +166,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
         val rejectedSheetTitle = getResourceString(CoreResR.string.tangempay_kyc_rejected)
         val goToSupportText = getResourceString(CoreResR.string.tangempay_go_to_support)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO)
-            },
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$paeraCustomerState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, paeraCustomerState)
             }

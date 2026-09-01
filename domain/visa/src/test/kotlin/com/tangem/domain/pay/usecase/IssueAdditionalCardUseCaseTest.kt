@@ -72,6 +72,7 @@ internal class IssueAdditionalCardUseCaseTest {
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                    OrderType.CARD_ISSUE_PLASTIC_RAIN,
                 ),
                 statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )
@@ -96,6 +97,7 @@ internal class IssueAdditionalCardUseCaseTest {
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                    OrderType.CARD_ISSUE_PLASTIC_RAIN,
                 ),
                 statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )
@@ -124,6 +126,7 @@ internal class IssueAdditionalCardUseCaseTest {
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                    OrderType.CARD_ISSUE_PLASTIC_RAIN,
                 ),
                 statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )

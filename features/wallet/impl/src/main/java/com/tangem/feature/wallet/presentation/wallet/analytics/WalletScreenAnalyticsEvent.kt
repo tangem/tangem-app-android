@@ -13,6 +13,7 @@ sealed class WalletScreenAnalyticsEvent {
             private val hasMobileWallet: Boolean,
             private val accountsCount: Int?,
             private val isBackedUp: Boolean,
+            private val completedBackups: Set<AnalyticsParam.BackupType>,
             val theme: String,
             val isImported: Boolean,
             val referralId: String?,
@@ -31,6 +32,9 @@ sealed class WalletScreenAnalyticsEvent {
                 put("Wallet Type", seedPhrase)
                 put("App Currency", appCurrency)
                 put("Backuped", if (isBackedUp) "Yes" else "No")
+                if (completedBackups.isNotEmpty()) {
+                    put(AnalyticsParam.COMPLETED_BACKUPS, getCompletedBackupsValue(completedBackups))
+                }
                 putAll(getReferralParams(referralId))
             },
         ), AppsFlyerIncludedEvent

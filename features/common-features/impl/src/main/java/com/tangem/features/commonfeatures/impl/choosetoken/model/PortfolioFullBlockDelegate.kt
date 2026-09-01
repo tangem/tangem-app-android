@@ -13,6 +13,8 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
+import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
+import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilterUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.WalletListUM
 import com.tangem.features.commonfeatures.api.choosetoken.model.WalletTabUM
@@ -78,7 +80,8 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
             flow2 = portfolioListBlockDelegate.portfolioList,
             flow3 = selectedWalletFlow.map { wallet -> wallet.walletId }.distinctUntilChanged(),
             flow4 = settingContextUseCase.invoke(),
-            transform = { allWallets, portfolioList, selectedWalletId, settings ->
+            flow5 = portfolioListBlockDelegate.balanceFilter,
+            transform = { allWallets, portfolioList, selectedWalletId, settings, balanceFilter ->
                 val tokensListData = portfolioList[selectedWalletId] ?: return@combine null
                 val walletsUM = allWallets.entries
                     .map { (walletId, wallet) ->
@@ -104,10 +107,19 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
                     isBalanceHidden = settings.isBalanceHidden,
                     isSearching = isSearchingState,
                     tokensListData = tokensListData,
+                    balanceFilterUM = buildBalanceFilterUM(balanceFilter),
                 )
             },
         )
         emitAll(fullPortfolioBlockFlow)
+    }
+
+    private fun buildBalanceFilterUM(balanceFilter: BalanceFilter): BalanceFilterUM? {
+        if (!featureSettings.isHideZeroBalanceFilterEnabled) return null
+        return BalanceFilterUM(
+            selected = balanceFilter,
+            onOptionSelected = portfolioListBlockDelegate::onBalanceFilterSelected,
+        )
     }
 
     fun selectWalletTab(walletId: UserWalletId) {

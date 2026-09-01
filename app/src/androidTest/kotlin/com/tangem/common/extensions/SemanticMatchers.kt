@@ -1,6 +1,6 @@
 package com.tangem.common.extensions
 
-import android.support.annotation.PluralsRes
+import androidx.annotation.PluralsRes
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
