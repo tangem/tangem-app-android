@@ -13,6 +13,7 @@ android {
 dependencies {
     /** Project - API */
     implementation(projects.features.introduction.api)
+    implementation(projects.features.storiesV2.api)
 
     /** Core */
     implementation(projects.common.routing)
@@ -27,7 +28,10 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.card)
+    implementation(projects.domain.common)
     implementation(projects.domain.hotWallet)
+    implementation(projects.domain.settings)
+    implementation(projects.domain.wallets)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -46,6 +50,7 @@ dependencies {
     implementation(deps.androidx.annotation.experimental)
     implementation(deps.androidx.appCompat)
     implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.coroutines)
 
     /** DI */
