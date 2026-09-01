@@ -85,26 +85,6 @@ internal class NetworkCurrencyIdConverter(
     }
 
     private fun getCurrencyIdBody(): CryptoCurrency.ID.Body {
-        return when (derivationPath) {
-            is Network.DerivationPath.Card -> {
-                CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
-                    rawId = networkRawId,
-                    derivationPath = derivationPath.value,
-                )
-            }
-            is Network.DerivationPath.Custom -> {
-                CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
-                    rawId = networkRawId,
-                    derivationPath = derivationPath.value,
-                )
-            }
-            is Network.DerivationPath.Joint -> {
-                CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
-                    rawId = networkRawId,
-                    derivationPath = derivationPath.value,
-                )
-            }
-            is Network.DerivationPath.None -> CryptoCurrency.ID.Body.NetworkId(networkRawId)
-        }
+        return CryptoCurrency.ID.Body.create(rawId = networkRawId, derivationPath = derivationPath)
     }
 }
