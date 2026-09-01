@@ -817,7 +817,6 @@ internal class TangemPayDetailsModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
             router = router,
-            urlOpener = mockk(relaxed = true),
             getBalanceHidingSettingsUseCase = mockk(relaxed = true),
             uiMessageSender = uiMessageSender,
             txHistoryUpdateListener = mockk(relaxed = true),

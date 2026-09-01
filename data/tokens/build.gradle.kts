@@ -36,6 +36,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     // endregion
 
@@ -50,7 +51,9 @@ dependencies {
     api(projects.domain.transaction)
     api(projects.domain.walletManager)
     implementation(projects.domain.core)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
+    implementation(projects.features.jointAccount.api)
     runtimeOnly(projects.domain.account)
     runtimeOnly(projects.domain.card)
     runtimeOnly(projects.domain.staking)

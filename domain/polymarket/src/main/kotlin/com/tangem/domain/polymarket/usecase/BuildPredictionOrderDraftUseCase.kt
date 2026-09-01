@@ -34,13 +34,16 @@ class BuildPredictionOrderDraftUseCase {
 
         val collateral = quote.notional.toOnChainUnit().bind()
         val shares = quote.shares.toOnChainUnit().bind()
+        val isBuy = side == PredictionOrderSide.BUY
+        val quotedTakerAmount = if (isBuy) quote.shares else quote.notional
 
         PredictionOrderDraft(
             tokenId = assetId,
             isNegRisk = isNegRisk,
             side = side,
-            makerAmount = if (side == PredictionOrderSide.BUY) collateral else shares,
-            takerAmount = if (side == PredictionOrderSide.BUY) shares else collateral,
+            makerAmount = if (isBuy) collateral else shares,
+            takerAmount = if (isBuy) shares else collateral,
+            takerAmountQuantum = quotedTakerAmount.onChainQuantum(),
             worstCasePrice = quote.worstCasePrice,
             builderCode = quote.builderCode,
         )
@@ -55,6 +58,9 @@ class BuildPredictionOrderDraftUseCase {
             trimmed.movePointRight(ON_CHAIN_DECIMALS).toBigIntegerExact().right()
         }
     }
+
+    private fun BigDecimal.onChainQuantum(): BigInteger =
+        BigInteger.TEN.pow(ON_CHAIN_DECIMALS - scale().coerceIn(0, ON_CHAIN_DECIMALS))
 
     private companion object {
         const val ON_CHAIN_DECIMALS = 6

@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -337,6 +338,34 @@ enum class TangemRowTextRole { Title, Subtitle, Value, Subvalue }
 @Composable
 fun TangemRowText(
     text: String,
+    role: TangemRowTextRole,
+    modifier: Modifier = Modifier,
+    maxLines: Int = 1,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = rowTextColor(role),
+        style = rowTextStyle(role),
+        textAlign = rowTextAlign(role),
+        maxLines = maxLines,
+        overflow = overflow,
+    )
+}
+
+/**
+ * Default text styling for [TangemRow] label slots.
+ *
+ * @param text Label text.
+ * @param role Semantic role. See [TangemRowTextRole].
+ * @param modifier Modifier applied to the underlying [Text].
+ * @param maxLines Maximum number of visible lines before truncation.
+ * @param overflow Overflow behavior. Defaults to ellipsis.
+ */
+@Composable
+fun TangemRowText(
+    text: AnnotatedString,
     role: TangemRowTextRole,
     modifier: Modifier = Modifier,
     maxLines: Int = 1,

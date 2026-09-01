@@ -39,9 +39,11 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Other */
+    api(deps.compose.coil)
     implementation(deps.androidx.appCompat)
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
 
     /** DI */

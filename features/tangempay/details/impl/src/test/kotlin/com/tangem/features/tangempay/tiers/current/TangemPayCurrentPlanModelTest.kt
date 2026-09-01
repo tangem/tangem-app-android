@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -52,10 +53,11 @@ internal class TangemPayCurrentPlanModelTest {
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, cancelPendingTransition, cancelTariffTransition, uiMessageSender, analytics)
+        clearMocks(router, cancelPendingTransition, cancelTariffTransition, uiMessageSender, analytics, urlOpener)
         every { paymentAccountStatusSupplier(USER_WALLET_ID) } returns emptyFlow()
         // DateTimeFormatters.dateMMMd resolves the locale pattern through the Android framework,
         // which is unavailable on the JVM — pin it to a fixed joda pattern instead.
@@ -138,6 +140,18 @@ internal class TangemPayCurrentPlanModelTest {
 
         // THEN
         assertThat(model.state.value.onChangePlanClick).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN markdown link WHEN onLinkClick THEN url is opened in app`() {
+        // GIVEN
+        val model = createModel(planState = tariffPlanState())
+
+        // WHEN
+        model.state.value.onLinkClick("https://tangem.com/visa-benefits")
+
+        // THEN
+        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/visa-benefits") }
     }
 
     @Test
@@ -239,6 +253,7 @@ internal class TangemPayCurrentPlanModelTest {
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
+            urlOpener = urlOpener,
         )
     }
 

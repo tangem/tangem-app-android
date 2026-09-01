@@ -17,7 +17,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.navigation.EditReturnTracker
@@ -25,6 +24,7 @@ import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
+import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM

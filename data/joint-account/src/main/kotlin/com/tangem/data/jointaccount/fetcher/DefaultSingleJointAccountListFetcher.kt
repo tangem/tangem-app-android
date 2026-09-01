@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.jointaccount.JointAccountApi
+import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.models.StatusSource

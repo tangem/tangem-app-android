@@ -169,7 +169,7 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.swap.models)
+    implementation(projects.domain.feed.search)
     implementation(projects.domain.swap)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.yieldSupply)
