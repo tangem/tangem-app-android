@@ -2248,8 +2248,6 @@
   <string name="tangempay_va_banking_details_error_title">Не вдалося завантажити банківські реквізити</string>
   <string name="tangempay_va_limit_resetting_everyday">Ліміт оновлюється щодня</string>
   <string name="tangempay_visa_benefits">Переваги Visa</string>
-  <string name="tangempay_withdrawal_note_description">Кошти з повернених покупок не будуть повернуті на ваш ончейн-баланс Polygon і не будуть доступні для виведення, але залишаться на балансі картки для покупок.</string>
-  <string name="tangempay_withdrawal_note_title">Зверніть увагу</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>
   <string name="this_is_my_wallet_title">Це мій гаманець</string>
   <string name="toast_balances_hidden">Баланси приховано</string>
