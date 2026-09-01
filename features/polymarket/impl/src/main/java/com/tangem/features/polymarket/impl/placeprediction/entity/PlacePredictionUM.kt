@@ -95,7 +95,6 @@ internal data class PaymentSourceUM(
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
-/** A terminal failure of the empty-form price polling — see the notifications it becomes. */
 internal enum class PriceErrorUM { MarketClosed, Unknown }
 
 @Immutable
