@@ -53,6 +53,7 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization.core)

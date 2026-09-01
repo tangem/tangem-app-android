@@ -18,6 +18,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
+import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.impl.R
@@ -54,16 +55,17 @@ internal class ChooseTokenListItemConverterPaymentAccountTest {
     }
 
     @Test
-    fun `GIVEN multi token disabled WHEN convert THEN only the account currency is listed`() {
+    fun `GIVEN only the account currency is listed WHEN convert THEN issued networks are ignored`() {
         // Arrange
         val paymentAccount = createPaymentAccount(
             networks = listOf(availableNetwork(polygonToken), availableNetwork(tronToken)),
         )
 
         // Act
-        val paymentPortfolio = createConverter(paymentAccount, isMultiTokenEnabled = false)
-            .convert()
-            .paymentPortfolio()
+        val paymentPortfolio = createConverter(
+            paymentAccount = paymentAccount,
+            paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
+        ).convert().paymentPortfolio()
 
         // Assert
         assertThat(paymentPortfolio.tokensItemsList.map { it.state.id })
@@ -110,6 +112,22 @@ internal class ChooseTokenListItemConverterPaymentAccountTest {
         )
     }
 
+    @Test
+    fun `GIVEN the account section is hidden WHEN convert THEN the list is empty`() {
+        // Arrange
+        val paymentAccount = createPaymentAccount(networks = listOf(availableNetwork(polygonToken)))
+        val converter = createConverter(
+            paymentAccount = paymentAccount,
+            paymentAccountTokens = PaymentAccountTokens.Hidden,
+        )
+
+        // Act
+        val data = converter.convert()
+
+        // Assert
+        assertThat(data).isInstanceOf(TokenListUMData.EmptyList::class.java)
+    }
+
     private fun createPaymentAccount(networks: List<PaymentNetworkStatus>): AccountStatus.Payment =
         MockAccounts.createPaymentAccountStatus(cryptoCurrency = polygonToken, networks = networks)
 
@@ -141,7 +159,7 @@ internal class ChooseTokenListItemConverterPaymentAccountTest {
 
     private fun createConverter(
         paymentAccount: AccountStatus.Payment,
-        isMultiTokenEnabled: Boolean = true,
+        paymentAccountTokens: PaymentAccountTokens = PaymentAccountTokens.IssuedTokens,
         tokenFilter: (AccountStatus, CryptoCurrencyStatus) -> Boolean = { _, _ -> true },
     ) = ChooseTokenListItemConverter(
         appCurrency = AppCurrency.Default,
@@ -153,8 +171,7 @@ internal class ChooseTokenListItemConverterPaymentAccountTest {
             clickIntents = mockk(relaxed = true),
             searchQuery = SearchQuery.Empty,
             tokenFilter = tokenFilter,
-            isShowPaymentAccount = true,
-            isPaymentAccountMultiTokenEnabled = isMultiTokenEnabled,
+            paymentAccountTokens = paymentAccountTokens,
             balanceFilter = BalanceFilter.All,
         ),
     )
