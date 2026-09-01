@@ -73,13 +73,13 @@ internal class WalletTokensListUMConverter(
 
     override fun convert(value: AccountStatusList): WalletTokensListUM {
         val promoCryptoCurrency = yieldSupplyPromoBannerConverter.convert2(value = value)
-        return if (value.flattenCurrencies().isEmpty()) {
+        return if (value.flattenPersonalCurrencies().isEmpty()) {
             WalletTokensListUM.Empty(
                 onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
             )
         } else {
             val tokenListUM = value.accountStatuses
-                .filterIsInstance<AccountStatus.CryptoPortfolio>()
+                .filterIsInstance<AccountStatus.Personal>()
                 .asSequence()
                 .flatMap { accountStatus ->
                     if (isAccountsModeEnabled) {
