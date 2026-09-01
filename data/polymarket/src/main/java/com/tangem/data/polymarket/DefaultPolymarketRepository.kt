@@ -11,6 +11,7 @@ import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
 import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
+import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.builder.PolymarketPlaceOrderBodyBuilder
 import com.tangem.data.polymarket.converter.PredictionOrderQuoteConverter
 import com.tangem.data.polymarket.converter.PredictionPlaceOrderConverter
@@ -60,6 +61,7 @@ import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.toHexString
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -180,8 +182,19 @@ internal class DefaultPolymarketRepository @Inject constructor(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
         signedOrder: PredictionSignedOrder,
+        isNegRisk: Boolean,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> = withContext(dispatchers.io) {
-        val json = PolymarketPlaceOrderBodyBuilder.build(signedOrder = signedOrder, apiKey = credentials.apiKey)
+        if (!signedOrder.isSignedFor(isNegRisk = isNegRisk)) {
+            return@withContext PredictionPlaceOrderError.NotSent(
+                detail = "Order signed for the ${if (isNegRisk) "standard" else "neg-risk"} exchange",
+            ).left()
+        }
+
+        val json = Either
+            .catch { PolymarketPlaceOrderBodyBuilder.build(signedOrder = signedOrder, apiKey = credentials.apiKey) }
+            .mapLeft { PredictionPlaceOrderError.NotSent(detail = it.message) }
+            .getOrElse { return@withContext it.left() }
+
         val headers = Either
             .catch {
                 l2HeaderBuilder.build(
@@ -192,7 +205,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                     body = json,
                 )
             }
-            .mapLeft { PredictionPlaceOrderError.Unknown(httpCode = null, detail = it.message) }
+            .mapLeft { PredictionPlaceOrderError.NotSent(detail = it.message) }
             .getOrElse { return@withContext it.left() }
 
         safeApiCall(
@@ -406,8 +419,18 @@ internal class DefaultPolymarketRepository @Inject constructor(
             PredictionOrderQuoteError.Unknown(httpCode = null, detail = cause.message ?: message)
     }
 
-    private companion object {
+    private fun PredictionSignedOrder.isSignedFor(isNegRisk: Boolean): Boolean {
+        val expected = PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = isNegRisk)
+            .toHexString()
+            .lowercase()
+        val tail = signature.removePrefix(PolymarketContracts.HEX_PREFIX)
+            .lowercase()
+            .drop(n = PolymarketContracts.SIGNATURE_RSV_HEX_LENGTH)
 
+        return tail.startsWith(expected)
+    }
+
+    private companion object {
         const val DEFAULT_LIMIT = 20
         const val WALLET_NONCE_TYPE = "WALLET"
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"

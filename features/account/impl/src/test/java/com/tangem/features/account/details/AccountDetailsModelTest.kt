@@ -150,7 +150,7 @@ internal class AccountDetailsModelTest {
     fun `GIVEN personal account WHEN model loads THEN activation is not pending`() = runTest {
         // Arrange
         val account = MockAccounts.createAccount(derivationIndex = 1)
-        val status = AccountStatus.CryptoPortfolio(
+        val status = AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Empty,
             priceChangeLce = PriceChange(value = BigDecimal.ZERO, source = StatusSource.ACTUAL).lceContent(),
