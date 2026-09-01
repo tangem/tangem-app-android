@@ -100,7 +100,7 @@ fun TangemStatusScreen(
         TangemGlowRing(
             modifier = Modifier
                 .matchParentSize()
-                .graphicsLayer { alpha = entrance.segment(startMs = 1000, endMs = 1200, easing = SymmetricEase) },
+                .graphicsLayer { alpha = entrance.segment(startMs = 1000, endMs = 1300, easing = PulseEase) },
             variant = variant.glowVariant,
             cornerRadius = rememberScreenCornerRadius(),
         )
@@ -182,15 +182,7 @@ private fun Header(
         verticalArrangement = Arrangement.spacedBy(space = 20.dp),
     ) {
         if (asset != null) {
-            Box(
-                modifier = Modifier.graphicsLayer {
-                    alpha = entrance.segment(startMs = 300, endMs = 600, easing = SymmetricEase)
-                    translationY = 36.dp.toPx() *
-                        (1f - entrance.segment(startMs = 300, endMs = 600, easing = SpringEase))
-                },
-            ) {
-                asset()
-            }
+            asset()
         }
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -213,8 +205,8 @@ private fun Header(
                     modifier = Modifier
                         .fillMaxWidth()
                         .graphicsLayer {
-                            alpha = entrance.segment(startMs = 550, endMs = 850, easing = SymmetricEase)
-                            translationY = (-17).dp.toPx() *
+                            alpha = entrance.segment(startMs = 550, endMs = 850, easing = SpringEase)
+                            translationY = (-16).dp.toPx() *
                                 (1f - entrance.segment(startMs = 400, endMs = 700, easing = SpringEase))
                         },
                     text = description.resolveReference(),
