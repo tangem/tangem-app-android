@@ -6,16 +6,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.features.tangempay.common.TangemPaySuccessScreenWrapper
+import com.tangem.features.tangempay.common.TangemPayResultScreen
 import com.tangem.features.tangempay.details.impl.R
 
 @Composable
 internal fun TangemPayChangePinCodeSuccessScreen(onClose: () -> Unit, modifier: Modifier = Modifier) {
-    TangemPaySuccessScreenWrapper(
+    TangemPayResultScreen(
         modifier = modifier,
+        variant = TangemPayResultScreen.Variant.Success,
         title = resourceReference(R.string.tangempay_card_details_change_pin_success_title),
         subtitle = resourceReference(R.string.tangempay_card_details_change_pin_success_description),
-        buttonText = resourceReference(R.string.common_done),
+        buttonText = resourceReference(R.string.common_close),
         onButtonClick = onClose,
         titleTestTag = TangemPayTestTags.PIN_SUCCESS_TITLE,
         subtitleTestTag = TangemPayTestTags.PIN_SUCCESS_DESCRIPTION,
