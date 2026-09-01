@@ -103,8 +103,9 @@ internal class WalletSettingsModel @Inject constructor(
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
 
-    val isJointAccountCreationEnabled: Boolean
-        get() = jointAccountFeatureToggles.isJointAccountCreationEnabled
+    private val isJointAccountEnabled: Boolean
+        get() = jointAccountFeatureToggles.isJointAccountEnabled
+
     private val walletCardItemDelegate = walletCardItemDelegateFactory.create(
         dialogNavigation = dialogNavigation,
         onUpgradeHotWalletClick = ::onUpgradeWalletClick,
@@ -161,7 +162,9 @@ internal class WalletSettingsModel @Inject constructor(
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
-                        isDragEnabled = accountList.count { it is WalletSettingsAccountsUM.Account } > 1,
+                        isDragEnabled = accountList.count {
+                            it is WalletSettingsAccountsUM.Account || it is WalletSettingsAccountsUM.JointAccount
+                        } > 1,
                         onMove = ::onAccountReorder,
                         onDragStopped = ::onAccountDragStopped,
                     ),
@@ -443,7 +446,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onAddAccountClick() {
-        if (isJointAccountCreationEnabled) {
+        if (isJointAccountEnabled) {
             bottomSheetNavigation.activate(WalletSettingsBSConfig.AddAccountType)
         } else {
             openCreateCryptoAccount()
@@ -476,10 +479,15 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onAccountDragStopped() {
         val accountIds = state.value.items.mapNotNull { itemUM ->
-            val id = (itemUM as? WalletSettingsAccountsUM.Account)?.state?.id
-                ?: return@mapNotNull null
-
-            AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull()
+            when (itemUM) {
+                is WalletSettingsAccountsUM.Account ->
+                    AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                is WalletSettingsAccountsUM.JointAccount ->
+                    AccountId.forJointAccount(userWalletId = params.userWalletId, value = itemUM.state.id)
+                        .getOrNull()
+                else -> null
+            }
         }
 
         accountListSortingSaver.save(accountIds = accountIds)

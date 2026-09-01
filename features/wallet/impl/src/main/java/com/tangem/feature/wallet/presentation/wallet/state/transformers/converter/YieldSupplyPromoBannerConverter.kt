@@ -19,7 +19,7 @@ internal class YieldSupplyPromoBannerConverter(
 
         val currencies = when (value) {
             is TokenConverterParams.Wallet -> value.tokenList.flattenCurrencies()
-            is TokenConverterParams.Account -> value.accountList.flattenCurrencies()
+            is TokenConverterParams.Account -> value.accountList.flattenPersonalCurrencies()
         }.filter { status ->
             status.value is CryptoCurrencyStatus.Loaded
         }
@@ -49,7 +49,7 @@ internal class YieldSupplyPromoBannerConverter(
     fun convert2(value: AccountStatusList): CryptoCurrencyStatus? {
         if (!shouldShowMainPromo) return null
 
-        val currencies = value.flattenCurrencies().filter { status ->
+        val currencies = value.flattenPersonalCurrencies().filter { status ->
             status.value is CryptoCurrencyStatus.Loaded
         }
 

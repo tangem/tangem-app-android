@@ -8,7 +8,9 @@ import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
+import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
+import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
@@ -21,9 +23,11 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
+import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,6 +36,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 internal object PolymarketDomainModule {
 
     @Provides
@@ -143,6 +148,36 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideSyncBalanceAllowanceUseCase(polymarketRepository: PolymarketRepository): SyncBalanceAllowanceUseCase =
         SyncBalanceAllowanceUseCase(polymarketRepository = polymarketRepository)
+
+    @Provides
+    @Singleton
+    fun provideBuildPredictionOrderDraftUseCase(): BuildPredictionOrderDraftUseCase = BuildPredictionOrderDraftUseCase()
+
+    @Provides
+    @Singleton
+    fun provideValidatePredictionOrderUseCase(): ValidatePredictionOrderUseCase = ValidatePredictionOrderUseCase()
+
+    @Provides
+    @Singleton
+    fun provideSignPredictionOrderInteractor(
+        buildDraft: BuildPredictionOrderDraftUseCase,
+        validateOrder: ValidatePredictionOrderUseCase,
+        signer: PolymarketTypedDataSigner,
+    ): SignPredictionOrderInteractor = SignPredictionOrderInteractor(
+        buildDraft = buildDraft,
+        validateOrder = validateOrder,
+        signer = signer,
+    )
+
+    @Provides
+    @Singleton
+    fun providePlacePredictionOrderUseCase(
+        polymarketRepository: PolymarketRepository,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): PlacePredictionOrderUseCase = PlacePredictionOrderUseCase(
+        polymarketRepository = polymarketRepository,
+        getApiCredentials = getApiCredentials,
+    )
 
     @Provides
     @Singleton
