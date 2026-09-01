@@ -5,15 +5,12 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
-import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -93,111 +90,30 @@ internal class TangemPayOrderCardModelTest {
     }
 
     @Test
-    fun `GIVEN the ordered product instance WHEN onShowOrderedCard THEN opens the card page on that card`() =
-        runTest {
-            // Arrange
-            givenCards(
-                card(id = "virtual", state = TangemPayCardState.Active),
-                card(id = "plastic", state = TangemPayCardState.Delivering),
-            )
-
-            // Act
-            val model = createModel(testScope = this)
-            model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
-            advanceUntilIdle()
-
-            // Assert
-            coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
-            verify(exactly = 1) {
-                router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = "plastic"))
-            }
-            verify(exactly = 0) { router.pop() }
-        }
-
-    @Test
-    fun `GIVEN the order carries no product instance WHEN onShowOrderedCard THEN opens the delivering card`() =
-        runTest {
-            // Arrange
-            givenCards(
-                card(id = "virtual", state = TangemPayCardState.Active),
-                card(id = "plastic", state = TangemPayCardState.Delivering),
-            )
-
-            // Act
-            val model = createModel(testScope = this)
-            model.onShowOrderedCard(orderedProductInstanceId = null)
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 1) {
-                router.replaceCurrent(TangemPayAccountDetailsInnerRoute.CardDetails(cardId = "plastic"))
-            }
-        }
-
-    @Test
-    fun `GIVEN the ordered card is not provisioned yet WHEN onShowOrderedCard THEN closes the flow`() = runTest {
-        // Arrange
-        givenCards(card(id = "virtual", state = TangemPayCardState.Active))
-
+    fun `GIVEN a successful order WHEN onShowOrderedCard THEN status refreshed and flow closed`() = runTest {
         // Act
         val model = createModel(testScope = this)
-        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.pop() }
-        verify(exactly = 0) { router.replaceCurrent(any()) }
-    }
-
-    @Test
-    fun `GIVEN no cards at all WHEN onShowOrderedCard THEN closes the flow`() = runTest {
-        // Arrange
-        givenCards()
-
-        // Act
-        val model = createModel(testScope = this)
-        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
-        advanceUntilIdle()
-
-        // Assert
-        verify(exactly = 1) { router.pop() }
-        verify(exactly = 0) { router.replaceCurrent(any()) }
-    }
-
-    @Test
-    fun `GIVEN a lookup already running WHEN onShowOrderedCard again THEN the status is fetched once`() = runTest {
-        // Arrange
-        givenCards(card(id = "plastic", state = TangemPayCardState.Delivering))
-
-        // Act
-        val model = createModel(testScope = this)
-        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
-        model.onShowOrderedCard(orderedProductInstanceId = "pi-plastic")
+        model.onShowOrderedCard()
         advanceUntilIdle()
 
         // Assert
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
+        verify(exactly = 1) { router.pop() }
     }
 
-    private fun givenCards(vararg cards: TangemPayCard) {
-        val loaded: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
-            every { this@mockk.cards } returns cards.toList()
-        }
-        val loadedStatus: AccountStatus.Payment = mockk(relaxed = true) {
-            every { value } returns loaded
-        }
-        every { paymentAccountStatusSupplier(WALLET_ID) } returns flowOf(loadedStatus)
-    }
+    @Test
+    fun `GIVEN a refresh already running WHEN onShowOrderedCard again THEN status fetched and popped once`() =
+        runTest {
+            // Act
+            val model = createModel(testScope = this)
+            model.onShowOrderedCard()
+            model.onShowOrderedCard()
+            advanceUntilIdle()
 
-    private fun card(
-        id: String,
-        state: TangemPayCardState,
-        productInstanceId: String = "pi-$id",
-    ): TangemPayCard = mockk(relaxed = true) {
-        every { this@mockk.id } returns id
-        every { this@mockk.state } returns state
-        every { this@mockk.productInstanceId } returns productInstanceId
-    }
+            // Assert
+            coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
+            verify(exactly = 1) { router.pop() }
+        }
 
     private fun createModel(testScope: TestScope) = TangemPayOrderCardModel(
         paramsContainer = MutableParamsContainer(TangemPayOrderCardComponent.Params(userWalletId = WALLET_ID)),

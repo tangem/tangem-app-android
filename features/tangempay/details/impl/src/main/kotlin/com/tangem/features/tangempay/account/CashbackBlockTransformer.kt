@@ -5,6 +5,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.defaultAmount
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -32,9 +33,8 @@ import kotlinx.collections.immutable.toImmutableList
  *
  * Top bar menu entry:
  * - [CashbackSummary.Enabled] with [CashbackDisplayMode.ALT_BLOCK] (EU/EEA) -> "Cashback in %month%"
- *   item inserted below the "Current plan" entry (above "Terms and fees" while the plan entry is
- *   absent); otherwise the entry is removed. A menu with neither anchor (e.g. the deactivated
- *   account menu) never receives the entry.
+ *   item inserted below the "Current plan" entry (first in the menu while the plan entry is
+ *   absent); otherwise the entry is removed.
  */
 internal class CashbackBlockTransformer(
     private val summary: CashbackSummary,
@@ -77,16 +77,16 @@ internal class CashbackBlockTransformer(
     private fun buildWidget(enabled: CashbackSummary.Enabled): CashbackBlockUM.Widget {
         val cashback = enabled.cashback
         val currency = getJavaCurrencyByCode(cashback.currency)
+        val isZero = cashback.confirmedAmount.isZero()
         val amount = cashback.confirmedAmount.format {
-            fiat(currency.currencyCode, currency.symbol).defaultAmount()
+            val fiatFormat = fiat(currency.currencyCode, currency.symbol)
+            if (isZero) fiatFormat.anyDecimals(decimals = 0) else fiatFormat.defaultAmount()
         }
         val month = dateFormatter.formatMonth(cashback.period.year, cashback.period.month)
         val isNegative = cashback.confirmedAmount.isNegative()
         val subtitle = when {
-            isNegative -> resourceReference(R.string.tangempay_cashback_refund_banner)
-            cashback.confirmedAmount.isZero() -> resourceReference(
-                R.string.tangempay_cashback_widget_empty_description,
-            )
+            isNegative -> resourceReference(R.string.tangempay_cashback_widget_refund_description)
+            isZero -> resourceReference(R.string.tangempay_cashback_widget_empty_description)
             else -> {
                 val window = dateFormatter.formatWindow(cashback.period.payoutStart, cashback.period.payoutEnd)
                 window?.let { resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(it)) }
@@ -117,7 +117,7 @@ internal class CashbackBlockTransformer(
  * Removes any cashback entry (the regular "Cashback in %month%" one and the error/loading
  * "Cashback" one) and, when [menuItem] is not `null`, inserts it below the "Current plan" entry.
  * While the plan entry is absent (tariff plan not loaded or the toggle is off), the entry goes
- * above "Terms and fees" instead. A menu with neither anchor never receives the entry.
+ * first in the menu instead.
  */
 internal fun ImmutableList<TangemPayDropDownItemUM>.withCashbackMenuItem(
     menuItem: TangemPayDropDownItemUM?,
@@ -126,19 +126,13 @@ internal fun ImmutableList<TangemPayDropDownItemUM>.withCashbackMenuItem(
         item.isTitledWith(R.string.tangempay_cashback_menu_item_title) ||
             item.isTitledWith(R.string.tangempay_cashback_title)
     }
+    if (menuItem == null) return cleared.toImmutableList()
+
     val currentPlanIndex = cleared.indexOfFirst { it.isTitledWith(R.string.tangempay_current_plan_title) }
-    val insertionIndex = if (currentPlanIndex >= 0) {
-        currentPlanIndex + 1
-    } else {
-        cleared.indexOfFirst { it.isTitledWith(R.string.tangem_pay_terms_limits) }
-    }
-    return if (menuItem == null || insertionIndex < 0) {
-        cleared.toImmutableList()
-    } else {
-        cleared.toMutableList()
-            .apply { add(insertionIndex, menuItem) }
-            .toImmutableList()
-    }
+    val insertionIndex = if (currentPlanIndex >= 0) currentPlanIndex + 1 else 0
+    return cleared.toMutableList()
+        .apply { add(insertionIndex, menuItem) }
+        .toImmutableList()
 }
 
 internal fun TangemPayDropDownItemUM.isTitledWith(resId: Int): Boolean {

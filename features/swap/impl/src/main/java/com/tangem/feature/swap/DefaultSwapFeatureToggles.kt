@@ -11,7 +11,7 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
 
     override val isYieldDexTransferEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED,
+            toggle = FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED,
         )
 
     override val isTronDexSwapEnabled: Boolean
@@ -31,7 +31,7 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
 
     override val isSwapDeeplinkEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_16522_SWAP_DEEPLINK_ENABLED,
+            toggle = FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED,
         )
 
     override val isAccountSwapFlowEnabled: Boolean
