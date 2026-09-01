@@ -7,10 +7,12 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.jointaccount.converter.ActivateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
 import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
@@ -75,6 +77,37 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 },
             )
         }
+    }
+
+    override suspend fun activate(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ) {
+        withContext(dispatchers.io) {
+            try {
+                activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+            } catch (e: ApiResponseError.TimeoutException) {
+                logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", e)
+                activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+            }
+        }
+    }
+
+    private suspend fun activateOnce(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ) {
+        safeApiCall(
+            call = {
+                jointAccountApi.activateJointAccount(
+                    walletId = userWalletId.stringValue,
+                    body = ActivateJointAccountRequestConverter(signature = signature).convert(value = payload),
+                ).bind()
+            },
+            onError = { error -> throw error },
+        )
     }
 
     override suspend fun getInvitePreview(
