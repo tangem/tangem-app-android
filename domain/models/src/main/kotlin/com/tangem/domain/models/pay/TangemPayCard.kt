@@ -20,6 +20,8 @@ import kotlinx.serialization.Serializable
  * @property state current lifecycle state of the card (reissuing / closing / active).
  * @property embossName cardholder name embossed on the card
  * @property cardType whether the card is a digital (virtual) or a physical one.
+ * @property isPlaceholder `true` for a synthetic card built from a locally tracked in-flight order
+ *           (its [id] and [productInstanceId] carry the order id, not backend identifiers).
  */
 @Serializable
 data class TangemPayCard(
@@ -35,6 +37,7 @@ data class TangemPayCard(
     @SerialName("state") val state: TangemPayCardState,
     @SerialName("emboss_name") val embossName: String?,
     @SerialName("card_type") val cardType: TangemPayCardType,
+    @SerialName("is_placeholder") val isPlaceholder: Boolean = false,
 ) {
 
     @Serializable

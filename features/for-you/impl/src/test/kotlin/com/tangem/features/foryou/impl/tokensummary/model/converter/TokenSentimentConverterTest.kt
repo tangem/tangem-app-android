@@ -80,9 +80,10 @@ internal class TokenSentimentConverterTest {
 
         // Assert
         val content = actual as TokenSentimentUM.Content
-        assertThat(content.sentiment).isEqualTo(resourceReference(R.string.token_summary_positive_outlook_title))
+        // All five indicators loaded (POSITIVE/NEGATIVE/NEUTRAL), so the scale spans the full -5..5
+        // and the neutral band is 2 — a score of 2 is still inside it, however the bar plots it.
+        assertThat(content.sentiment).isEqualTo(resourceReference(R.string.token_summary_neutral_outlook_title))
         assertThat(content.totalScore).isEqualTo(2)
-        // All five indicators loaded (POSITIVE/NEGATIVE/NEUTRAL), so the scale spans the full -5..5.
         assertThat(content.scaleMax).isEqualTo(5)
         assertThat(content.lastUpdate).isEqualTo(expectedLastUpdate(DateTime(2026, 1, 20, 21, 24, DateTimeZone.UTC)))
         assertThat(content.indicators.map(::projection))
@@ -174,9 +175,16 @@ internal class TokenSentimentConverterTest {
             expectedScore = -5,
             expectedOutlook = R.string.token_summary_negative_outlook_title,
         ),
+        // 4 loaded (NOT_AVAILABLE drops out) -> band 2, and a score of 1 does not clear it
         ScoreModel(
             signals = listOf(Signal.POSITIVE, Signal.NEGATIVE, Signal.NEUTRAL, Signal.NOT_AVAILABLE, Signal.POSITIVE),
             expectedScore = 1,
+            expectedOutlook = R.string.token_summary_neutral_outlook_title,
+        ),
+        // Same 4-wide scale, but a score of 3 clears the band of 2
+        ScoreModel(
+            signals = listOf(Signal.POSITIVE, Signal.POSITIVE, Signal.NEUTRAL, Signal.NOT_AVAILABLE, Signal.POSITIVE),
+            expectedScore = 3,
             expectedOutlook = R.string.token_summary_positive_outlook_title,
         ),
         ScoreModel(

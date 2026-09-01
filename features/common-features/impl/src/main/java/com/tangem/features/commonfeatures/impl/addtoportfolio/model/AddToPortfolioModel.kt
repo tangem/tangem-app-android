@@ -21,6 +21,7 @@ import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -32,8 +33,8 @@ import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.AddTokenComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ChooseNetworkComponent
-import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.analytics.PortfolioAnalyticsEvent
+import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
 import com.tangem.features.commonfeatures.impl.userportfolio.state.UserPortfolioStateController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -279,6 +280,10 @@ internal class AddToPortfolioModel @Inject constructor(
             val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
             middleNavigationJob?.cancel()
             val selectedPortfolioSnapshot = selectedPortfolio.first()
+            analyticsEventHandler.send(eventBuilder.tokenAdded(addedToken.currency.network.name))
+            if (!selectedPortfolioSnapshot.account.account.account.isMainAccount) {
+                analyticsEventHandler.send(eventBuilder.addToNotMainAccount())
+            }
             val result = AddToPortfolioManager.Result(
                 wallet = selectedPortfolioSnapshot.userWallet,
                 account = selectedPortfolioSnapshot.account.account,

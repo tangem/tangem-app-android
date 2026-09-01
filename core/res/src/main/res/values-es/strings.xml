@@ -2202,8 +2202,6 @@
   <string name="tangempay_va_banking_details_error_title">No se pudieron cargar los datos bancarios</string>
   <string name="tangempay_va_limit_resetting_everyday">El límite se restablece a diario</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
-  <string name="tangempay_withdrawal_note_description">Los fondos de compras reembolsadas no se devolverán a tu saldo on-chain Polygon ni estarán disponibles para retiro, pero permanecerán en tu saldo de tarjeta para compras</string>
-  <string name="tangempay_withdrawal_note_title">Tenga en cuenta</string>
   <string name="tangempay_your_pin_code">Tu código PIN</string>
   <string name="this_is_my_wallet_title">Esta es mi billetera</string>
   <string name="toast_balances_hidden">Saldos ocultos</string>

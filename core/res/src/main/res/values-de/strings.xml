@@ -1101,10 +1101,6 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">Das Wallet unterstützt nicht mehr als ein Netzwerk</string>
   <string name="market_chart_ai_total">KI Gesamt:</string>
   <string name="market_chart_ask_for_ai_summary_button">Zusammenfassung der KI anfordern</string>
-  <plurals name="market_chart_assets_android">
-    <item quantity="one">Vermögenswert</item>
-    <item quantity="other">Vermögenswerte</item>
-  </plurals>
   <string name="market_chart_bubble_no_amount">Kein Betrag  auf Token</string>
   <string name="market_chart_bubble_no_data">Keine Daten</string>
   <string name="market_chart_bubble_total_value">Gesamtwert</string>
@@ -2512,8 +2508,6 @@
   <string name="tangempay_va_banking_details_error_title">Die Bankdaten konnten nicht geladen werden</string>
   <string name="tangempay_va_limit_resetting_everyday">Das Limit wird jeden Tag zurückgesetzt</string>
   <string name="tangempay_visa_benefits">Visavorteile</string>
-  <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
-  <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
   <string name="tangempay_your_pin_code">Ihr PIN-Code</string>
   <string name="this_is_my_wallet_title">Das ist meine Wallet</string>
   <string name="toast_balances_hidden">Guthaben versteckt</string>
@@ -2574,6 +2568,10 @@
   <string name="tokens_list_unavailable_to_sell_header">Nicht zum Verkauf verfügbar</string>
   <string name="tokens_list_unavailable_to_swap_header">Nicht verfügbar für Tausch von %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Nicht zum Tausch verfügbar</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">Vermögenswert</item>
+    <item quantity="other">Vermögenswerte</item>
+  </plurals>
   <string name="transaction_history_approve_high_risk_subtitle">Sie sind verbunden. Es besteht möglicherweise ein Risiko für Ihre Geldmittel. Erwägen Sie, den Zugriff zu widerrufen.</string>
   <string name="transaction_history_approve_high_risk_title">Hohes Risiko</string>
   <string name="transaction_history_approved_amount">Genehmigter Betrag</string>
