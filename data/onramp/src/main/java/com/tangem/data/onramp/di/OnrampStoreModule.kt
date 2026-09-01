@@ -1,4 +1,4 @@
-package com.tangem.datasource.di
+package com.tangem.data.onramp.di
 
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.core.local.datastore.RuntimeSharedStore
