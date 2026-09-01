@@ -2294,6 +2294,7 @@
   <string name="tangempay_current_plan_awaiting_deposit_notification">We are in process of moving you to %s plan and awaiting payment for plan fee</string>
   <string name="tangempay_current_plan_change">Change plan</string>
   <string name="tangempay_current_plan_fee_charged_notification">%1$s monthly fee will be charged on %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Full terms</string>
   <string name="tangempay_current_plan_section_card">Card related</string>
   <string name="tangempay_current_plan_section_plan">Plan related</string>
   <string name="tangempay_current_plan_stay_button">Stay on %1$s</string>
