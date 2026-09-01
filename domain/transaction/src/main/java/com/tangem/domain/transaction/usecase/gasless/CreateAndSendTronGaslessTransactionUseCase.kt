@@ -5,6 +5,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
@@ -16,6 +17,8 @@ import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
+import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.walletmanager.WalletManagersFacade
 
 /**
@@ -42,7 +45,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
     ): Either<SendTransactionError, String> = either {
         catch(
             block = {
-                val quote = fee.tronGaslessQuote ?: error("Tron gasless quote is missing")
+                val quotedFee = fee.tronGaslessQuote ?: error("Tron gasless quote is missing")
                 val original = transactionData.requireUncompiled()
                 if (original.amount.type !is AmountType.Token) error("Tron gasless requires a token transfer")
 
@@ -50,6 +53,8 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 // amount is denominated in it by [GetTronGaslessFeeUseCase].
                 val feeToken = (fee.transactionFee.normal.amount.type as? AmountType.Token)?.token
                     ?: error("Tron gasless fee must be denominated in a token")
+
+                val quote = quoteForFinalAmount(quotedFee = quotedFee, original = original, feeToken = feeToken)
 
                 // Fail loudly on a backend token mismatch so it cannot silently transfer
                 // the wrong asset to the fee recipient (base58 addresses, case-sensitive).
@@ -92,6 +97,31 @@ class CreateAndSendTronGaslessTransactionUseCase(
             },
             catch = { raise(SendTransactionError.DataError(it.message)) },
         )
+    }
+
+    private suspend fun quoteForFinalAmount(
+        quotedFee: TronGaslessQuote,
+        original: TransactionData.Uncompiled,
+        feeToken: Token,
+    ): TronGaslessQuote {
+        val amountRaw = original.amount.toTronGaslessBaseUnits()
+            ?: error("Tron gasless: transaction amount is null")
+        if (amountRaw == quotedFee.quotedAmountRaw) return quotedFee
+
+        val refreshed = tronGaslessTransactionRepository.estimate(
+            TronGaslessEstimateParams(
+                fromAddress = original.sourceAddress,
+                toAddress = original.destinationAddress,
+                tokenContract = original.contractAddress ?: feeToken.contractAddress,
+                amount = amountRaw,
+                feeTokenContract = feeToken.contractAddress,
+            ),
+        )
+        require(refreshed.compensationAmountRaw <= quotedFee.compensationAmountRaw) {
+            "Tron gasless compensation grew from ${quotedFee.compensationAmountRaw} to " +
+                "${refreshed.compensationAmountRaw} while re-quoting the reduced amount $amountRaw"
+        }
+        return refreshed
     }
 
     private fun getSigner(userWallet: UserWallet): TransactionSigner {

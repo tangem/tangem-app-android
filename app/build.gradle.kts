@@ -109,6 +109,10 @@ configurations.all {
 
 configurations.androidTestImplementation {
     exclude(module = "protobuf-lite")
+    // JUnit 4 (via kaspresso/espresso) drags in hamcrest-core 1.3, which ships the same
+    // org.hamcrest.CoreMatchers and Matcher classes as the hamcrest 2.2 declared below. Two copies on
+    // one classpath make matcher behaviour depend on classpath order; keep only 2.2.
+    exclude(group = "org.hamcrest", module = "hamcrest-core")
 }
 dependencies {
     implementation(projects.domain.legacy)
@@ -125,6 +129,7 @@ dependencies {
     implementation(projects.domain.demo.models)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.express)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
@@ -160,7 +165,6 @@ dependencies {
     implementation(projects.domain.stories)
     implementation(projects.domain.stories.models)
     implementation(projects.domain.marketing)
-    implementation(projects.domain.marketing.models)
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
@@ -168,7 +172,6 @@ dependencies {
     implementation(projects.domain.swap.models)
     implementation(projects.domain.swap)
     implementation(projects.domain.walletManager)
-    implementation(projects.domain.walletManager.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.polymarket)
     implementation(projects.domain.promo)
@@ -178,6 +181,8 @@ dependencies {
     implementation(projects.domain.earn)
     implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
+    implementation(projects.domain.feed.search)
+    implementation(projects.domain.cloudBackup)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -190,7 +195,10 @@ dependencies {
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.spend.datasource)
+    implementation(projects.store.datasource)
+    implementation(projects.grow.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
     implementation(projects.core.error.ext)
@@ -206,6 +214,7 @@ dependencies {
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
     implementation(projects.data.balanceHiding)
+    implementation(projects.data.jointAccount)
     implementation(projects.data.pushNotificationPreferences)
     implementation(projects.data.card)
     implementation(projects.data.common)
@@ -241,15 +250,19 @@ dependencies {
     implementation(projects.data.polymarket)
     implementation(projects.data.promo)
     implementation(projects.data.hotWallet)
+    implementation(projects.data.cloudBackup)
     implementation(projects.data.news)
     implementation(projects.data.earn)
     implementation(projects.data.search)
+    implementation(projects.data.feed.search)
 
     implementation(projects.common.ui)
 
     /** Features */
     implementation(projects.features.addressBook.api)
     implementation(projects.features.addressBook.impl)
+    implementation(projects.features.collectibles.api)
+    implementation(projects.features.collectibles.impl)
     implementation(projects.features.marketing.api)
     implementation(projects.features.marketing.impl)
     implementation(projects.features.rating.impl)
@@ -259,7 +272,6 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.swap.impl)
     implementation(projects.features.swap.domain)
-    implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.data)
     implementation(projects.features.swapV2.api)
     implementation(projects.features.swapV2.impl)
@@ -293,6 +305,11 @@ dependencies {
     implementation(projects.features.markets.impl)
     implementation(projects.features.feed.api)
     implementation(projects.features.feed.impl)
+    implementation(projects.features.feed.crypto.api)
+    implementation(projects.features.feed.crypto.impl)
+    implementation(projects.features.feed.earn.impl)
+    implementation(projects.features.feed.search.api)
+    implementation(projects.features.feed.search.impl)
     implementation(projects.features.promoBanners.api)
     implementation(projects.features.promoBanners.impl)
     implementation(projects.features.onramp.api)
@@ -301,6 +318,8 @@ dependencies {
     implementation(projects.features.onboardingV2.impl)
     implementation(projects.features.stories.api)
     implementation(projects.features.stories.impl)
+    implementation(projects.features.storiesV2.api)
+    implementation(projects.features.storiesV2.impl)
     implementation(projects.features.survey.api)
     implementation(projects.features.survey.impl)
     implementation(projects.features.txhistory.api)
@@ -331,6 +350,8 @@ dependencies {
     implementation(projects.features.createWalletStart.impl)
     implementation(projects.features.home.api)
     implementation(projects.features.home.impl)
+    implementation(projects.features.introduction.api)
+    implementation(projects.features.introduction.impl)
     implementation(projects.features.account.api)
     implementation(projects.features.account.impl)
     implementation(projects.features.tangempay.details.api)
@@ -339,6 +360,8 @@ dependencies {
     implementation(projects.features.tangempay.main.impl)
     implementation(projects.features.tangempay.onboarding.api)
     implementation(projects.features.tangempay.onboarding.impl)
+    implementation(projects.features.jointAccount.api)
+    implementation(projects.features.jointAccount.impl)
     implementation(projects.features.virtualAccounts.onboarding.impl)
     implementation(projects.features.virtualAccounts.onboarding.api)
     implementation(projects.features.virtualAccounts.main.impl)
@@ -355,19 +378,28 @@ dependencies {
     implementation(projects.features.approval.impl)
     implementation(projects.features.forYou.api)
     implementation(projects.features.forYou.impl)
+    implementation(projects.common.uiCharts)
+    implementation(projects.common.uiMarkets)
+    implementation(projects.core.error)
+    implementation(projects.domain.express.models)
+    implementation(projects.domain.manageTokens.models)
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.referral)
+    implementation(projects.domain.staking.models)
+    implementation(projects.domain.virtualAccount)
+    implementation(projects.domain.visa.models)
+    implementation(projects.features.rating.api)
+    implementation(projects.features.referral.api)
+    implementation(projects.core.biometricAuth.api)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.core.splashScreen)
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.datastore)
-    implementation(deps.androidx.fragment.ktx)
-    implementation(deps.androidx.constraintLayout)
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.browser)
-    implementation(deps.androidx.paging.runtime)
-    implementation(deps.androidx.swipeRefreshLayout)
-    implementation(deps.androidx.fragment.compose)
     implementation(deps.androidx.workmanager)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
@@ -376,17 +408,12 @@ dependencies {
     implementation(deps.hilt.work)
 
     /** Compose libraries */
-    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.coil)
-    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
-    implementation(deps.compose.navigation.hilt)
-    implementation(deps.compose.shimmer)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.paging)
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
@@ -418,31 +445,37 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.googlePlay.review)
-    implementation(deps.googlePlay.review.ktx)
     implementation(deps.googlePlay.services.wallet)
     implementation(deps.googlePlay.services)
     implementation(deps.googlePlay.advertising)
-    coreLibraryDesugaring(deps.desugar)
-    implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
     implementation(deps.amplitude)
     implementation(deps.appsflyer)
+    implementation(platform(deps.otel.bom))
+    implementation(deps.otel.api)
+    implementation(deps.otel.sdk.common)
+    implementation(deps.otel.sdk.metrics)
+    implementation(deps.otel.exporter.otlp) {
+        // OTel is compiled against OkHttp 5, whose okhttp-jvm artifact duplicates the OkHttp 4
+        // classes already on the classpath; the sender runs on the project-wide OkHttp 4.12.
+        exclude(group = "com.squareup.okhttp3", module = "okhttp-jvm")
+    }
+    implementation(deps.otel.disk.buffering)
     implementation(deps.appsflyer.oaid)
     implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
-    implementation("com.android.installreferrer:installreferrer:2.2")
-    implementation(deps.spongecastle.core)
-    implementation(deps.lottie)
-    implementation(deps.compose.accompanist.appCompatTheme)
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.xmlShimmer)
-    implementation(deps.viewBindingDelegate)
+    runtimeOnly("com.android.installreferrer:installreferrer:2.2")
+    runtimeOnly(deps.spongecastle.core)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
-    implementation(deps.reownCore)
-    implementation(deps.reownWeb3)
+    // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown artifacts, so
+    // these unexcluded declarations are the only thing putting that driver in the APK. Reown builds it
+    // inside its own Koin module, so nothing here references it and it looks unused — removing it
+    // crashes the app on start with NoClassDefFoundError for AndroidSqliteDriver.
+    runtimeOnly(deps.reownCore)
+    runtimeOnly(deps.reownWeb3)
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.kotlin)
@@ -453,6 +486,8 @@ dependencies {
     /** Testing libraries */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
+    testImplementation(deps.arrow.core)
+    testImplementation(deps.kotlin.coroutines)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)
@@ -462,7 +497,15 @@ dependencies {
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
     androidTestImplementation(deps.test.hilt)
+    androidTestImplementation(deps.arrow.core)
+    androidTestImplementation(deps.kotlin.coroutines)
+    androidTestImplementation(deps.kotlin.datetime)
+    androidTestImplementation(deps.okHttp)
+    androidTestImplementation(deps.jodatime)
+    // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
+    androidTestImplementation(deps.zxing.qrCore)
     kaptAndroidTest(deps.test.hilt.compiler)
+    kaptAndroidTest(deps.hilt.kapt)
 
     /** Chucker */
     debugImplementation(deps.chucker)
@@ -472,16 +515,27 @@ dependencies {
     releaseImplementation(deps.chuckerStub)
 
     /** Camera */
-    implementation(deps.camera.camera2)
+    runtimeOnly(deps.camera.camera2)
     implementation(deps.camera.lifecycle)
     implementation(deps.camera.view)
     implementation(deps.listenableFuture)
-    implementation(deps.mlKit.barcodeScanning)
+    implementation(deps.androidx.activity)
+    implementation(deps.androidx.annotation)
+    implementation(deps.androidx.core)
+    implementation(deps.androidx.fragment)
+    implementation(deps.androidx.savedState)
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.datetime)
+    implementation(deps.moshi)
+    implementation(deps.okHttp)
+    implementation(deps.haze)
+    runtimeOnly(deps.mlKit.barcodeScanning)
 
     androidTestUtil(deps.test.orchestrator)
 
     /** Leakcanary */
-    debugImplementation(deps.leakcanary)
+    debugRuntimeOnly(deps.leakcanary)
 
     /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
@@ -489,8 +543,12 @@ dependencies {
         exclude(group = "com.google.guava", module = "listenablefuture")
     }
 
+    /** Google flavor-specific dependencies */
+    "googleImplementation"(deps.googlePlay.integrity)
+
     /** Huawei flavor-specific dependencies */
     "huaweiImplementation"(deps.huawei.push)
     "huaweiImplementation"(deps.agconnect.agcp)
     "huaweiImplementation"(deps.agconnect.core)
+    "huaweiImplementation"(deps.huawei.base)
 }

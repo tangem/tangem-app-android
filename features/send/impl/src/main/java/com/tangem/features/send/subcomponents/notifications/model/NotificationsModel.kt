@@ -99,13 +99,15 @@ internal class NotificationsModel @Inject constructor(
 
     private var isAmountSubtractAvailable = false
 
+    private var tronFeeNotificationShowCount: Int? = null
+    private var isTronFeeNotificationCounted = false
+
     init {
         subscribeToNotificationUpdateTrigger()
         modelScope.launch {
             checkIfSubtractAvailable()
             buildNotifications()
         }
-        incrementNotificationsShowCount()
     }
 
     private fun subscribeToNotificationUpdateTrigger() {
@@ -126,12 +128,6 @@ internal class NotificationsModel @Inject constructor(
             currency = currency,
             maybeGaslessFee = fee?.let { feeCurrencyId to fee },
         ).getOrElse { false }
-    }
-
-    private fun incrementNotificationsShowCount() {
-        modelScope.launch {
-            incrementNotificationsShowCountUseCase(cryptoCurrencyStatus.currency)
-        }
     }
 
     private fun updateState(data: NotificationData) {
@@ -420,15 +416,29 @@ internal class NotificationsModel @Inject constructor(
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val isTronToken = cryptoCurrency is CryptoCurrency.Token &&
             isTron(cryptoCurrency.network.rawId)
+        // A gasless transaction pays the fee in the token itself, so staking TRX saves the user nothing.
+        val isGaslessFee = notificationData.fee?.amount?.type is AmountType.Token
 
-        if (isTronToken && getTronFeeNotificationShowCountUseCase() <= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT) {
-            add(
-                NotificationUM.Info(
-                    title = resourceReference(R.string.tron_will_be_send_token_fee_title),
-                    subtitle = resourceReference(R.string.tron_will_be_send_token_fee_description),
-                ),
-            )
-        }
+        if (!isTronToken || isGaslessFee) return
+
+        val showCount = tronFeeNotificationShowCount
+            ?: getTronFeeNotificationShowCountUseCase().also { tronFeeNotificationShowCount = it }
+
+        if (showCount >= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT) return
+
+        add(
+            NotificationUM.Info(
+                title = resourceReference(R.string.tron_will_be_send_token_fee_title),
+                subtitle = resourceReference(R.string.tron_will_be_send_token_fee_description),
+            ),
+        )
+        incrementTronFeeNotificationShowCount()
+    }
+
+    private suspend fun incrementTronFeeNotificationShowCount() {
+        if (isTronFeeNotificationCounted) return
+        isTronFeeNotificationCounted = true
+        incrementNotificationsShowCountUseCase(cryptoCurrencyStatus.currency)
     }
 
     private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {

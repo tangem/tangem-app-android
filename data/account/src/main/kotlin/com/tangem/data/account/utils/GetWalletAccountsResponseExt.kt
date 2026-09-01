@@ -4,6 +4,7 @@ import com.tangem.data.common.currency.UserTokensResponseAccountIdEnricher
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -37,7 +38,7 @@ internal fun List<WalletAccountDTO>.assignTokens(
 
     return map { accountDTO ->
         val accountTokens = enrichedTokensByAccountId[accountDTO.id].orEmpty()
-        val isMainAccount = accountDTO.derivationIndex == 0
+        val isMainAccount = !accountDTO.isJoint && accountDTO.derivationIndex == DerivationIndex.Main.value
 
         val tokens = if (isMainAccount) {
             val existingAccountIds = map(WalletAccountDTO::id).toSet()

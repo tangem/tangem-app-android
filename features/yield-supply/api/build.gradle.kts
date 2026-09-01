@@ -10,17 +10,13 @@ android {
 
 dependencies {
     /** Core */
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.analytics)
-    implementation(projects.core.analytics.models)
+    api(projects.core.decompose)
+    api(projects.core.ui)
+    api(projects.core.analytics.models)
 
     /** Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.appCurrency.models)
+    api(projects.domain.models)
+    api(projects.domain.tokens.models)
 
     /** Compose */
-    implementation(deps.compose.runtime)
 }
