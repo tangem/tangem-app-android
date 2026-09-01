@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package com.tangem.core.ui.ds2.statusscreen
 
 import android.content.res.Configuration
@@ -36,6 +38,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -82,7 +85,7 @@ fun TangemStatusScreen(
     footer: (@Composable () -> Unit)? = null,
     animated: Boolean = true,
 ) {
-    val entrance = rememberEntranceProgress(durationMs = ENTRANCE_DURATION_MS, animated = animated)
+    val entrance = rememberEntranceProgress(durationMs = 1400, animated = animated)
 
     Box(
         modifier = modifier
@@ -97,7 +100,7 @@ fun TangemStatusScreen(
         TangemGlowRing(
             modifier = Modifier
                 .matchParentSize()
-                .graphicsLayer { alpha = entrance.segment(GLOW_START_MS, GLOW_END_MS, SymmetricEase) },
+                .graphicsLayer { alpha = entrance.segment(startMs = 1000, endMs = 1200, easing = SymmetricEase) },
             variant = variant.glowVariant,
             cornerRadius = rememberScreenCornerRadius(),
         )
@@ -114,7 +117,7 @@ fun TangemStatusScreen(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .graphicsLayer {
-                        val settled = entrance.segment(REVEAL_START_MS, REVEAL_END_MS, DecelerateEase)
+                        val settled = entrance.segment(startMs = 1000, endMs = 1300, easing = DecelerateEase)
                         translationY = bottomBlockHeight / 2f * (1f - settled)
                     },
                 contentAlignment = Alignment.Center,
@@ -138,7 +141,7 @@ fun TangemStatusScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                             .graphicsLayer {
-                                alpha = entrance.segment(DETAILS_START_MS, DETAILS_END_MS, SymmetricEase)
+                                alpha = entrance.segment(startMs = 1000, endMs = 1200, easing = SymmetricEase)
                             },
                         verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                         content = details,
@@ -149,9 +152,9 @@ fun TangemStatusScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .graphicsLayer {
-                                alpha = entrance.segment(FOOTER_START_MS, FOOTER_FADE_END_MS, SymmetricEase)
-                                translationY = FooterEnterOffset.toPx() *
-                                    (1f - entrance.segment(FOOTER_START_MS, FOOTER_END_MS, DecelerateEase))
+                                alpha = entrance.segment(startMs = 1150, endMs = 1350, easing = SymmetricEase)
+                                translationY = 90.dp.toPx() *
+                                    (1f - entrance.segment(startMs = 1150, endMs = 1400, easing = DecelerateEase))
                             },
                     ) {
                         footer()
@@ -181,9 +184,9 @@ private fun Header(
         if (asset != null) {
             Box(
                 modifier = Modifier.graphicsLayer {
-                    alpha = entrance.segment(ASSET_START_MS, ASSET_END_MS, SymmetricEase)
-                    translationY = AssetEnterOffset.toPx() *
-                        (1f - entrance.segment(ASSET_START_MS, ASSET_END_MS, SpringEase))
+                    alpha = entrance.segment(startMs = 300, endMs = 600, easing = SymmetricEase)
+                    translationY = 36.dp.toPx() *
+                        (1f - entrance.segment(startMs = 300, endMs = 600, easing = SpringEase))
                 },
             ) {
                 asset()
@@ -197,8 +200,8 @@ private fun Header(
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer {
-                        translationY = TextEnterOffset.toPx() *
-                            (1f - entrance.segment(TEXT_START_MS, TEXT_END_MS, SpringEase))
+                        translationY = (-17).dp.toPx() *
+                            (1f - entrance.segment(startMs = 400, endMs = 700, easing = SpringEase))
                     },
                 text = title.resolveReference(),
                 style = TangemTheme.typography3.heading.medium,
@@ -210,9 +213,9 @@ private fun Header(
                     modifier = Modifier
                         .fillMaxWidth()
                         .graphicsLayer {
-                            alpha = entrance.segment(DESCRIPTION_START_MS, DESCRIPTION_END_MS, SymmetricEase)
-                            translationY = TextEnterOffset.toPx() *
-                                (1f - entrance.segment(TEXT_START_MS, TEXT_END_MS, SpringEase))
+                            alpha = entrance.segment(startMs = 550, endMs = 850, easing = SymmetricEase)
+                            translationY = (-17).dp.toPx() *
+                                (1f - entrance.segment(startMs = 400, endMs = 700, easing = SpringEase))
                         },
                     text = description.resolveReference(),
                     style = TangemTheme.typography3.caption.medium,
@@ -224,7 +227,7 @@ private fun Header(
         if (extraBottom != null) {
             Box(
                 modifier = Modifier.graphicsLayer {
-                    alpha = entrance.segment(DESCRIPTION_START_MS, DESCRIPTION_END_MS, SymmetricEase)
+                    alpha = entrance.segment(startMs = 550, endMs = 850, easing = SymmetricEase)
                 },
             ) {
                 extraBottom()
@@ -242,19 +245,19 @@ private fun AmbientBackground(
     Box(modifier = modifier) {
         AmbientCircle(
             color = variant.ambientFarColor,
-            maxAlpha = FAR_CIRCLE_ALPHA,
-            blurRadius = FarCircleBlur,
+            maxAlpha = 0.1f,
+            blurRadius = 256.dp,
             alignEnd = false,
-            center = FarCircleCenter,
+            center = DpOffset(x = 116.dp, y = 116.dp),
             entrance = entrance,
             modifier = Modifier.matchParentSize(),
         )
         AmbientCircle(
             color = variant.ambientNearColor,
-            maxAlpha = NEAR_CIRCLE_ALPHA,
-            blurRadius = NearCircleBlur,
+            maxAlpha = 0.4f,
+            blurRadius = 192.dp,
             alignEnd = true,
-            center = NearCircleCenter,
+            center = DpOffset(x = 32.dp, y = 32.dp),
             entrance = entrance,
             modifier = Modifier.matchParentSize(),
         )
@@ -274,9 +277,9 @@ private fun AmbientCircle(
 ) {
     Box(
         modifier = modifier.drawBehind {
-            val settled = entrance.segment(AMBIENT_START_MS, AMBIENT_END_MS, SymmetricEase)
-            val scale = AMBIENT_START_SCALE + (1f - AMBIENT_START_SCALE) * settled
-            val radius = (AmbientCircleSize.toPx() / 2f + blurRadius.toPx()) * scale
+            val settled = entrance.segment(startMs = 1000, endMs = 1400, easing = SymmetricEase)
+            val scale = lerp(start = 0.4f, stop = 1f, fraction = settled)
+            val radius = (360.dp.toPx() / 2f + blurRadius.toPx()) * scale
             val origin = Offset(
                 x = if (alignEnd) size.width + center.x.toPx() else center.x.toPx(),
                 y = center.y.toPx(),
@@ -332,39 +335,6 @@ object TangemStatusScreen {
         ),
     }
 }
-
-// Geometry and choreography from the DS figma (Status Screen page, 402dp reference frame).
-private val AssetEnterOffset = 36.dp
-private val TextEnterOffset = (-17).dp
-private val FooterEnterOffset = 90.dp
-
-private val AmbientCircleSize = 360.dp
-private const val AMBIENT_START_SCALE = 0.4f
-private val FarCircleCenter = DpOffset(x = 116.dp, y = 116.dp)
-private val FarCircleBlur = 256.dp
-private const val FAR_CIRCLE_ALPHA = 0.1f
-private val NearCircleCenter = DpOffset(x = 32.dp, y = 32.dp)
-private val NearCircleBlur = 192.dp
-private const val NEAR_CIRCLE_ALPHA = 0.4f
-
-private const val ENTRANCE_DURATION_MS = 1400
-private const val ASSET_START_MS = 300
-private const val ASSET_END_MS = 600
-private const val TEXT_START_MS = 400
-private const val TEXT_END_MS = 700
-private const val DESCRIPTION_START_MS = 550
-private const val DESCRIPTION_END_MS = 850
-private const val GLOW_START_MS = 1000
-private const val GLOW_END_MS = 1200
-private const val DETAILS_START_MS = 1000
-private const val DETAILS_END_MS = 1200
-private const val AMBIENT_START_MS = 1000
-private const val AMBIENT_END_MS = 1400
-private const val REVEAL_START_MS = 1000
-private const val REVEAL_END_MS = 1300
-private const val FOOTER_START_MS = 1150
-private const val FOOTER_FADE_END_MS = 1350
-private const val FOOTER_END_MS = 1400
 
 @Preview(showBackground = true, widthDp = 402, heightDp = 874)
 @Preview(showBackground = true, widthDp = 402, heightDp = 874, uiMode = Configuration.UI_MODE_NIGHT_YES)
