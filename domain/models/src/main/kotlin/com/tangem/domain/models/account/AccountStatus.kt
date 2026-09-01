@@ -92,6 +92,12 @@ sealed interface AccountStatus {
         override val account: Account.Prediction,
         val value: PredictionAccountStatusValue,
     ) : AccountStatus
+
+    @Serializable
+    data class Collectibles(
+        override val account: Account.Collectibles,
+        val value: CollectiblesAccountStatusValue,
+    ) : AccountStatus
 }
 
 fun Iterable<AccountStatus>.filterCryptoPortfolio(): List<AccountStatus.CryptoPortfolio> {
