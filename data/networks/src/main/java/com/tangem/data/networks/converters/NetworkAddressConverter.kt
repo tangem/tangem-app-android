@@ -1,6 +1,6 @@
 package com.tangem.data.networks.converters
 
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.utils.logging.TangemLogger

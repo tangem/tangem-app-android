@@ -16,6 +16,7 @@ dependencies {
 
     // region Other libraries
     api(deps.moshi)
+    implementation(deps.moshi.adapters.ext)
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
     // endregion
@@ -32,6 +33,7 @@ dependencies {
     // region Project - Core
     api(projects.core.utils)
     implementation(projects.core.local)
+    implementation(projects.core.remote)
     implementation(projects.core.datasource)
     // endregion
 
@@ -55,6 +57,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(deps.moshi.kotlin)
     testImplementation(projects.common.test)
     testImplementation(projects.domain.card)
     testImplementation(projects.test.core)
