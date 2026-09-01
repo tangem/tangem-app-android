@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.yieldsupply.promo
+package com.tangem.data.yield.supply.store
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.wallet.UserWalletId

@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.yieldsupply.promo
+package com.tangem.data.yield.supply.store
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
 
-interface YieldBoostStatusStore {
+internal interface YieldBoostStatusStore {
 
     suspend fun getSyncOrNull(userWalletId: UserWalletId): YieldBoostStatus?
 
