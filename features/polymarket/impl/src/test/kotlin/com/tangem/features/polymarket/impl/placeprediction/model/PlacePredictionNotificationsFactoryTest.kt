@@ -12,11 +12,12 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNoti
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
-import io.mockk.mockk
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -217,6 +218,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         quote = quote,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
+        slippagePicker = SlippagePickerUM.empty(),
         submit = submit,
         isPrimaryButtonEnabled = false,
     )
