@@ -4,8 +4,8 @@ import arrow.core.getOrElse
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddAccount
@@ -135,12 +135,14 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
         network: TokenMarketInfo.Network,
         tokenParams: RawMarketToken,
     ): Boolean {
-        val derivationIndex = account.account.account.derivationIndex ?: return false
+        val portfolio = account.account.account
+        if (portfolio is Account.Joint) return true
+
         val currency = getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
             tokenMarketParams = tokenParams,
             network = network,
-            accountIndex = derivationIndex,
+            account = portfolio,
         ) ?: return false
         return networkHasDerivationUseCase(userWallet, currency.network).getOrElse { false }
     }

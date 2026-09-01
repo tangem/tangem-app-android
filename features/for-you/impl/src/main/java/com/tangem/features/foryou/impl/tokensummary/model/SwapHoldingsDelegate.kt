@@ -5,7 +5,7 @@ import com.tangem.common.ui.markets.tokenselector.TokenSelectorEntry
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -68,7 +68,7 @@ internal class SwapHoldingsDelegate @AssistedInject constructor(
         return accountLists.flatMap { accountList ->
             val wallet = walletsById[accountList.userWalletId] ?: return@flatMap emptyList()
 
-            accountList.accountStatuses.filterCryptoPortfolio().flatMap { accountStatus ->
+            accountList.accountStatuses.filterIsInstance<AccountStatus.Personal>().flatMap { accountStatus ->
                 accountStatus.tokenList.flattenCurrencies()
                     .filter(::matchesSummaryToken)
                     .map { status ->

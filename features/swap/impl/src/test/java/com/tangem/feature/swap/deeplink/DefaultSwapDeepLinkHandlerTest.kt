@@ -166,8 +166,8 @@ internal class DefaultSwapDeepLinkHandlerTest {
 
     /** Stubs [singleAccountStatusListSupplier] to return a single crypto-portfolio account with [statuses]. */
     private fun givenPortfolio(id: AccountId = mainAccountId, statuses: List<CryptoCurrencyStatus>) {
-        val account: Account.CryptoPortfolio = mockk { every { accountId } returns id }
-        val portfolio: AccountStatus.CryptoPortfolio = mockk {
+        val account: Account.Personal = mockk { every { accountId } returns id }
+        val portfolio: AccountStatus.Personal = mockk {
             every { this@mockk.account } returns account
             every { flattenCurrencies() } returns statuses
         }
@@ -183,8 +183,8 @@ internal class DefaultSwapDeepLinkHandlerTest {
         accountAStatuses: List<CryptoCurrencyStatus>,
         accountBStatuses: List<CryptoCurrencyStatus>,
     ) {
-        fun portfolioOf(id: AccountId, statuses: List<CryptoCurrencyStatus>): AccountStatus.CryptoPortfolio {
-            val account: Account.CryptoPortfolio = mockk { every { accountId } returns id }
+        fun portfolioOf(id: AccountId, statuses: List<CryptoCurrencyStatus>): AccountStatus.Personal {
+            val account: Account.Personal = mockk { every { accountId } returns id }
             return mockk {
                 every { this@mockk.account } returns account
                 every { flattenCurrencies() } returns statuses
