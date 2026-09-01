@@ -46,6 +46,7 @@ import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -155,7 +156,7 @@ internal class PlacePredictionModelTest {
                     assetId = ASSET_ID,
                     side = PredictionOrderSide.BUY,
                     amount = BigDecimal("10"),
-                    slippagePercent = BigDecimal("3"),
+                    slippagePercent = DEFAULT_SLIPPAGE_PERCENT,
                 ),
             )
         }
@@ -201,7 +202,7 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN slippage selected WHEN applied THEN quote requested immediately with new slippage`() = runTest {
+    fun `GIVEN slippage confirmed in the sheet WHEN applied THEN quote uses it immediately`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -209,7 +210,9 @@ internal class PlacePredictionModelTest {
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
         // Act
-        model.onSlippageSelected(percent = BigDecimal("1.5"))
+        model.onSlippageClick()
+        model.onSlippageValueChange(value = "1.5")
+        model.onSlippageConfirmClick()
         advanceTimeBy(delayTimeMillis = 1)
 
         // Assert
