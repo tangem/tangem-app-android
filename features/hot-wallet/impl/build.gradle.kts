@@ -28,6 +28,7 @@ dependencies {
 
     /** Domain */
     api(projects.domain.assetsdiscovery)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.card)
     api(projects.domain.common)
     api(projects.domain.feedback)
