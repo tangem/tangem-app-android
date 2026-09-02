@@ -4,7 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.sociallogin.models.ProviderIdToken
+import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.repository.SocialBackupRepository
@@ -24,7 +24,7 @@ internal class RegisterSocialRecoveryUseCaseTest {
 
     private val useCase = RegisterSocialRecoveryUseCase(socialRecoveryRepository, socialBackupRepository)
 
-    private val idToken = ProviderIdToken(value = "id-token")
+    private val idToken = SocialProviderIdToken(value = "id-token")
     private val walletId = UserWalletId(stringValue = "0011")
     private val recoveryKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 1 })
 
