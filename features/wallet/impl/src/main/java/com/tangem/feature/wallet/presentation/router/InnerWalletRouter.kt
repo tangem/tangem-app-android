@@ -54,7 +54,7 @@ internal interface InnerWalletRouter {
     )
 
     /** Open the members screen of the wallet's joint account [accountId] */
-    fun openJointAccountMembers(userWalletId: UserWalletId, accountId: String)
+    fun openJointAccountMembers(userWalletId: UserWalletId, cryptoAccountId: String)
 
     /** Open add and manage tokens bottom sheet */
     fun openAddAndManageBottomSheet(userWalletId: UserWalletId)

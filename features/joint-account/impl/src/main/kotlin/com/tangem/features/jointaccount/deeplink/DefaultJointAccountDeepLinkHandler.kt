@@ -78,7 +78,7 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
                     appRouter.push(
                         route = AppRoute.JointAccountMembers(
                             userWalletId = userWallet.walletId,
-                            accountId = account.accountId.value,
+                            cryptoAccountId = account.accountId.value,
                         ),
                         onComplete = { walletDeepLinkActionTrigger.selectWallet(userWallet.walletId) },
                     )

@@ -84,7 +84,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             appRouter.push(
                 route = AppRoute.JointAccountMembers(
                     userWalletId = userWalletId,
-                    accountId = jointAccount.accountId.value,
+                    cryptoAccountId = jointAccount.accountId.value,
                 ),
                 onComplete = any(),
             )
