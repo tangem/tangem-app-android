@@ -16,12 +16,12 @@ interface JointAccountMembersComponent : ComposableContentComponent {
 
     /**
      * @property userWalletId wallet the joint account belongs to.
-     * @property accountId    backend id of the joint account's own row in the wallet's accounts.
+     * @property cryptoAccountId backend id of the joint account's own row in the wallet's accounts.
      * @property mode         [Mode.Invite] for the working invite view, [Mode.Reference] for the settings view.
      */
     data class Params(
         val userWalletId: UserWalletId,
-        val accountId: String?,
+        val cryptoAccountId: String?,
         val mode: Mode,
     )
 
