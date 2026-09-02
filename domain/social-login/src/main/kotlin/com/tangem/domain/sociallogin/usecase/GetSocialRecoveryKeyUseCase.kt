@@ -1,7 +1,7 @@
 package com.tangem.domain.sociallogin.usecase
 
 import arrow.core.Either
-import com.tangem.domain.sociallogin.models.ProviderIdToken
+import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.repository.SocialRecoveryRepository
@@ -15,7 +15,7 @@ class GetSocialRecoveryKeyUseCase @Inject constructor(
     private val socialRecoveryRepository: SocialRecoveryRepository,
 ) {
 
-    suspend operator fun invoke(idToken: ProviderIdToken): Either<SocialLoginError, RecoveryKey> {
+    suspend operator fun invoke(idToken: SocialProviderIdToken): Either<SocialLoginError, RecoveryKey> {
         return socialRecoveryRepository.getRecoveryKey(idToken)
     }
 }
