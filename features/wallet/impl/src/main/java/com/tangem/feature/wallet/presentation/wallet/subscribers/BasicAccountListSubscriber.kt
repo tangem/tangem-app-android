@@ -46,6 +46,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
         isHotBackedUp: Boolean? = null,
+        accountIdsWithInvites: Set<String> = emptySet(),
     ) {
         stateController.update(
             SetTokenListTransformer(
@@ -59,6 +60,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isAccountsModeEnabled = isAccountMode,
                 isMultipleCardsEnabled = isMultipleCardsEnabled,
                 isHotBackedUp = isHotBackedUp,
+                accountIdsWithInvites = accountIdsWithInvites,
             ),
         )
     }
