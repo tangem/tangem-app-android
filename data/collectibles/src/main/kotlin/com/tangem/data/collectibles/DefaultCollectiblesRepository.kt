@@ -9,6 +9,7 @@ import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchFlow
 import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.*
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
 import com.tangem.grow.datasource.collectibles.models.request.GenerateTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.SubmitTxRequestBody
@@ -42,24 +43,30 @@ internal class DefaultCollectiblesRepository(
         ).toBatchFlow()
     }
 
-    override suspend fun generateTx(params: GenerateTxParams): CollectibleTransaction = withContext(dispatchers.io) {
-        val response = collectiblesApi.generateTx(
-            body = GenerateTxRequestBody(
-                fromAddress = params.fromAddress,
-                collectibleType = params.collectibleType,
-                toAddress = params.toAddress,
-                turboMode = params.collectibleTurboMode?.let(TurboModeConverter::convertBack),
-            ),
-        ).getOrThrow()
+    override suspend fun generateTx(userWalletId: UserWalletId, params: GenerateTxParams): CollectibleTransaction =
+        withContext(dispatchers.io) {
+            val response = collectiblesApi.generateTx(
+                userWalletId = userWalletId.stringValue,
+                body = GenerateTxRequestBody(
+                    fromAddress = params.fromAddress,
+                    collectibleType = params.collectibleType,
+                    toAddress = params.toAddress,
+                    turboMode = params.collectibleTurboMode?.let(TurboModeConverter::convertBack),
+                ),
+            ).getOrThrow()
 
-        CollectibleTransaction(id = response.id, txData = response.txData)
-    }
+            CollectibleTransaction(id = response.id, txData = response.txData)
+        }
 
-    override suspend fun submitTx(signedTxData: String): SubmittedCollectibleTransaction = withContext(dispatchers.io) {
-        val response = collectiblesApi.submitTx(SubmitTxRequestBody(signedTxData = signedTxData)).getOrThrow()
+    override suspend fun submitTx(userWalletId: UserWalletId, signedTxData: String): SubmittedCollectibleTransaction =
+        withContext(dispatchers.io) {
+            val response = collectiblesApi.submitTx(
+                userWalletId = userWalletId.stringValue,
+                body = SubmitTxRequestBody(signedTxData = signedTxData),
+            ).getOrThrow()
 
-        SubmittedCollectibleTransaction(id = response.id)
-    }
+            SubmittedCollectibleTransaction(id = response.id)
+        }
 
     private suspend fun fetchMachinesPage(
         config: CollectibleGachaMachinesListConfig,
