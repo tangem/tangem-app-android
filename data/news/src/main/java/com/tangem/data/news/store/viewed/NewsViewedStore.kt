@@ -1,11 +1,11 @@
-package com.tangem.datasource.local.news.viewed
+package com.tangem.data.news.store.viewed
 
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Store for news viewed flags (runtime only).
  */
-interface NewsViewedStore {
+internal interface NewsViewedStore {
 
     /**
      * Observes all viewed flags.

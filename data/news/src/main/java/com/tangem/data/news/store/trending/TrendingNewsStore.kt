@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.news.trending
+package com.tangem.data.news.store.trending
 
 import com.tangem.domain.models.news.TrendingNews
 import kotlinx.coroutines.flow.Flow
 
-interface TrendingNewsStore {
+internal interface TrendingNewsStore {
 
     fun get(key: String): Flow<TrendingNews>
 
