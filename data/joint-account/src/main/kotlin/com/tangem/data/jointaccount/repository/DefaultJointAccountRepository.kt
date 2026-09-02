@@ -142,6 +142,22 @@ internal class DefaultJointAccountRepository @Inject constructor(
     }
 
     /**
+     * An unreadable store must not take the screen down with it: the members of the account are worth showing
+     * even when the invite actions cannot be offered. As in [storeInvites], the failure is logged without its
+     * content — an invite id is a secret.
+     */
+    override suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String> {
+        return withContext(dispatchers.io) {
+            runSuspendCatching {
+                invitesStore.get(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId).orEmpty()
+            }.getOrElse { throwable ->
+                logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
+                emptyList()
+            }
+        }
+    }
+
+    /**
      * A failure here must not fail the creation: the account already exists on the backend, and reporting an
      * error would send the user into a retry that can only end in a conflict. The invites are lost — the
      * backend returns them once — so the fact is logged, never their content: an invite id is a secret.
