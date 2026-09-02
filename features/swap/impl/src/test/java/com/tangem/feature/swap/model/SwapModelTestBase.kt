@@ -13,7 +13,7 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -105,7 +105,7 @@ internal abstract class SwapModelTestBase {
     protected val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
     protected val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     protected val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase = mockk(relaxed = true)
-    protected val appsFlyerStore: AppsFlyerStore = mockk(relaxed = true)
+    protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
     protected val messageSender: UiMessageSender = mockk(relaxed = true)
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
     protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
@@ -231,7 +231,7 @@ internal abstract class SwapModelTestBase {
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
         getTangemPayCustomerIdUseCase = getTangemPayCustomerIdUseCase,
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
         messageSender = messageSender,
         initialCurrenciesResolver = initialCurrenciesResolver,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
