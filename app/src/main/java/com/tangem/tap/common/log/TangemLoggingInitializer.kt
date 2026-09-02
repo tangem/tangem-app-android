@@ -10,8 +10,8 @@ import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker
-import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
-import com.tangem.datasource.utils.WireMockRedirectInterceptor
+import com.tangem.datasource.remote.interceptors.NetworkLogsSaveInterceptor
+import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import com.tangem.domain.common.LogConfig
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.utils.JsonStringValuesExtractor
