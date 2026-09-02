@@ -10,16 +10,20 @@ internal sealed class MarketChartUM(
     open val donutChart: DonutChartUM,
     open val aiInsight: AiInsightUM,
 ) {
+    /**
+     * @property assetCount number of assets the chart breaks down, for the "Top N assets" header. Not
+     * derivable from [donutChart]'s slice count: the producer may close the ring with a grey "Other"
+     * slice, which stands for the collapsed remainder rather than for one asset.
+     */
     data class Loaded(
         override val donutChart: DonutChartUM.Loaded,
+        val assetCount: Int,
         override val aiInsight: AiInsightUM = AiInsightUM.Hide,
         val topHoldingPercent: TextReference,
     ) : MarketChartUM(
         donutChart = donutChart,
         aiInsight = aiInsight,
-    ) {
-        val assetCount: Int = donutChart.donutSegmentList.size
-    }
+    )
 
     data class NoData(
         val title: TextReference,
