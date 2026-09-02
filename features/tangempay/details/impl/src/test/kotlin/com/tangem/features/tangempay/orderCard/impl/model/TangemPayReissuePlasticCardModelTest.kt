@@ -7,13 +7,11 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
@@ -21,6 +19,7 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePla
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -46,7 +45,6 @@ internal class TangemPayReissuePlasticCardModelTest {
 
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
-    private val reissueCardRepository: TangemPayReissueCardRepository = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private var isDismissed: Boolean = false
@@ -57,9 +55,10 @@ internal class TangemPayReissuePlasticCardModelTest {
     fun setUp() {
         isDismissed = false
         confirmedEta = null
-        clearMocks(getCustomerOffers, onboardingRepository, reissueCardRepository)
-        coEvery { getCustomerOffers(userWalletId) } returns listOf(plasticOffer()).right()
-        coEvery { reissueCardRepository.getPlasticReissueCardFee(userWalletId) } returns fee().right()
+        clearMocks(getCustomerOffers, onboardingRepository)
+        coEvery {
+            getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
+        } returns reissueOffer().right()
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns customerInfo().right()
     }
 
@@ -70,7 +69,7 @@ internal class TangemPayReissuePlasticCardModelTest {
     }
 
     @Test
-    fun `GIVEN offer fee and customer info load WHEN model created THEN content shows country fee and eta`() =
+    fun `GIVEN the reissue offer and customer info load WHEN model created THEN content shows country fee and eta`() =
         runTest {
             // Act
             val state = createLoadedModel().state.value
@@ -127,13 +126,26 @@ internal class TangemPayReissuePlasticCardModelTest {
     }
 
     @Test
+    fun `GIVEN the reissue offer WHEN model created THEN the plastic issue offer is never requested`() = runTest {
+        // Act
+        createLoadedModel()
+
+        // Assert
+        coVerify(exactly = 1) { getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID) }
+        coVerify(exactly = 0) { getCustomerOffers(any()) }
+    }
+
+    @Test
     fun `GIVEN an error state WHEN retry succeeds THEN content is shown`() = runTest {
         // Arrange
-        coEvery { reissueCardRepository.getPlasticReissueCardFee(userWalletId) } returns
-            VisaApiError.ServerUnavailable.left()
+        coEvery {
+            getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
+        } returns VisaApiError.ServerUnavailable.left()
         val model = createLoadedModel()
         val error = model.state.value as TangemPayReissuePlasticCardUM.Error
-        coEvery { reissueCardRepository.getPlasticReissueCardFee(userWalletId) } returns fee().right()
+        coEvery {
+            getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
+        } returns reissueOffer().right()
 
         // Act
         error.onRetry()
@@ -186,7 +198,6 @@ internal class TangemPayReissuePlasticCardModelTest {
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         getCustomerOffers = getCustomerOffers,
         onboardingRepository = onboardingRepository,
-        reissueCardRepository = reissueCardRepository,
         analytics = analytics,
     ).also { model = it }
 
@@ -201,19 +212,17 @@ internal class TangemPayReissuePlasticCardModelTest {
         )
     }
 
-    private fun plasticOffer(deliveryEtaMaxDays: Int? = DELIVERY_ETA_MAX_DAYS) = Offer(
-        type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
-        fee = Offer.Fee(amount = BigDecimal.ZERO, currency = Currency.getInstance("USD")),
+    private fun reissueOffer(deliveryEtaMaxDays: Int? = DELIVERY_ETA_MAX_DAYS) = Offer(
+        type = Offer.Type.CARD_REISSUE_PLASTIC_RAIN,
+        fee = Offer.Fee(amount = BigDecimal("10.00"), currency = Currency.getInstance("USD")),
         data = Offer.Data(
-            specificationName = "SP_000010",
-            orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN,
+            specificationName = null,
+            orderType = OrderType.CARD_REISSUE_PLASTIC_RAIN,
             deliveryEta = deliveryEtaMaxDays?.let {
                 Offer.DeliveryEta(minBusinessDays = null, maxBusinessDays = it)
             },
         ),
     )
-
-    private fun fee() = TangemPayReissueCardFee(amount = BigDecimal("10.00"), currencyCode = "USD")
 
     private fun customerInfo(
         country: String? = COUNTRY,
@@ -242,19 +251,20 @@ internal class TangemPayReissuePlasticCardModelTest {
     }
 
     private fun provideTestModels() = listOf(
-        LoadErrorModel(name = "fee request fails") {
-            coEvery { reissueCardRepository.getPlasticReissueCardFee(userWalletId) } returns
-                VisaApiError.ServerUnavailable.left()
-        },
         LoadErrorModel(name = "offers request fails") {
-            coEvery { getCustomerOffers(userWalletId) } returns VisaApiError.ServerUnavailable.left()
+            coEvery {
+                getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
+            } returns VisaApiError.ServerUnavailable.left()
         },
-        LoadErrorModel(name = "no plastic offer") {
-            coEvery { getCustomerOffers(userWalletId) } returns emptyList<Offer>().right()
+        LoadErrorModel(name = "no reissue offer for the product instance") {
+            coEvery {
+                getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
+            } returns null.right()
         },
-        LoadErrorModel(name = "plastic offer without delivery eta") {
-            coEvery { getCustomerOffers(userWalletId) } returns
-                listOf(plasticOffer(deliveryEtaMaxDays = null)).right()
+        LoadErrorModel(name = "reissue offer without delivery eta") {
+            coEvery {
+                getCustomerOffers.plasticReissueOffer(userWalletId, SOURCE_PRODUCT_INSTANCE_ID)
+            } returns reissueOffer(deliveryEtaMaxDays = null).right()
         },
         LoadErrorModel(name = "customer info request fails") {
             coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns

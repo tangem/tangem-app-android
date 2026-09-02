@@ -5,9 +5,8 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 /**
- * Response from `GET /v1/customer/offers` — list of offers available to the customer.
- *
- * Used to gate the issue-additional-card flow.
+ * Response from `GET /v1/customer/offers` and `GET /v1/product-instances/{id}/offers` — the offers
+ * available to the customer, respectively account-wide and for a single product instance.
  */
 @JsonClass(generateAdapter = true)
 data class CustomerOffersResponse(
@@ -30,7 +29,7 @@ data class CustomerOffersResponse(
 
     @JsonClass(generateAdapter = true)
     data class Data(
-        @Json(name = "specification_name") val specificationName: String,
+        @Json(name = "specification_name") val specificationName: String? = null,
         @Json(name = "order_type") val orderType: String,
         @Json(name = "delivery_eta_min_days") val deliveryEtaMinDays: Int? = null,
         @Json(name = "delivery_eta_max_days") val deliveryEtaMaxDays: Int? = null,

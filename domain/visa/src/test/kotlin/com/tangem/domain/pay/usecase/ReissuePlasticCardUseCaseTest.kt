@@ -12,6 +12,7 @@ import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOrderRepository
+import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
@@ -25,16 +26,47 @@ import org.junit.jupiter.api.Test
 internal class ReissuePlasticCardUseCaseTest {
 
     private val orderRepository: CustomerOrderRepository = mockk()
+    private val reissueCardRepository: TangemPayReissueCardRepository = mockk(relaxed = true)
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase = mockk(relaxed = true)
     private val useCase = ReissuePlasticCardUseCase(
         customerOrderRepository = orderRepository,
+        reissueCardRepository = reissueCardRepository,
         startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
         appCoroutineScope = TestAppCoroutineScope(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(orderRepository, startTangemPayOrderPollingUseCase)
+        clearMocks(orderRepository, reissueCardRepository, startTangemPayOrderPollingUseCase)
+    }
+
+    @Test
+    fun `GIVEN a created reissue order WHEN invoked THEN the source card is marked as reissuing`() = runTest {
+        // Arrange
+        givenNoActiveOrders()
+        val created = order(id = "created", status = OrderStatus.PROCESSING)
+        coEvery { orderRepository.createPlasticReissueOrder(any(), any(), any(), any()) } returns created.right()
+
+        // Act
+        invokeUseCase()
+
+        // Assert
+        coVerify(exactly = 1) { reissueCardRepository.storeReissueOrderId(SOURCE_CARD_ID, created.id) }
+    }
+
+    @Test
+    fun `GIVEN the order is not created WHEN invoked THEN the source card is not marked as reissuing`() = runTest {
+        // Arrange
+        givenNoActiveOrders()
+        coEvery {
+            orderRepository.createPlasticReissueOrder(any(), any(), any(), any())
+        } returns VisaApiError.CardReissuePlasticInvalidSourceCard.left()
+
+        // Act
+        invokeUseCase()
+
+        // Assert
+        coVerify(exactly = 0) { reissueCardRepository.storeReissueOrderId(any(), any()) }
     }
 
     @Test
@@ -60,6 +92,7 @@ internal class ReissuePlasticCardUseCaseTest {
             startTangemPayOrderPollingUseCase(
                 order = TangemPayOrderInfo.fromOrder(created),
                 userWalletId = USER_WALLET_ID,
+                onOrderStateChange = any(),
             )
         }
     }
@@ -226,6 +259,7 @@ internal class ReissuePlasticCardUseCaseTest {
     private suspend fun invokeUseCase() = useCase(
         userWalletId = USER_WALLET_ID,
         sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+        sourceCardId = SOURCE_CARD_ID,
         plasticCardOrder = plasticCardOrder(),
         idempotencyKey = IDEMPOTENCY_KEY,
     )
@@ -273,6 +307,7 @@ internal class ReissuePlasticCardUseCaseTest {
     private companion object {
         val USER_WALLET_ID = UserWalletId("1234567890ABCDEF")
         const val SOURCE_PRODUCT_INSTANCE_ID = "pi_source_0001"
+        const val SOURCE_CARD_ID = "card_source_0001"
         const val IDEMPOTENCY_KEY = "6f1c9e2a-0b3d-4c5e-8a7b-9d0e1f2a3b4d"
     }
 }
