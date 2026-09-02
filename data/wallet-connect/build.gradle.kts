@@ -20,6 +20,8 @@ dependencies {
     // region Other libraries
     api(deps.arrow.core)
     api(deps.moshi)
+    implementation(deps.androidx.datastore.base)
+    implementation(deps.androidx.datastore.core)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.jodatime)
     implementation(deps.okio)
