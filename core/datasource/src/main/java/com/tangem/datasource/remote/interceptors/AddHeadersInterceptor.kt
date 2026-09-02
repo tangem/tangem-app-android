@@ -1,4 +1,4 @@
-package com.tangem.datasource.utils
+package com.tangem.datasource.remote.interceptors
 
 import com.tangem.utils.ProviderSuspend
 import kotlinx.coroutines.runBlocking
