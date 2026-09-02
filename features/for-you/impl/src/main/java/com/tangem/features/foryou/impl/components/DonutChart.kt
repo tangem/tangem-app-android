@@ -50,8 +50,9 @@ import kotlin.math.min
  * ([content]) laid out on top — no manual text measuring inside the canvas.
  *
  * Paint order (bottom → top), all inside the canvas:
- * 1. The full-circle [trackColor] track (always drawn — it is the empty-state look when [segments] is empty),
- *    with its own inner shadow.
+ * 1. The [trackColor] track behind everything, with its own inner shadow — drawn only where the slices
+ *    don't reach. It is skipped entirely once the slices close the ring (see below), and it is the whole
+ *    look in the empty state ([segments] empty).
  * 2. Each slice (reverse list order, so slice 0 ends up on top — its round cap tucks over the next one):
  *    the solid stroke, then **its own** white inner shadow (Figma: X0 Y4 Blur8, white 24%) drawn right on
  *    top of it. Per-slice (not one shadow over the whole ring) is what gives each pill its glossy, raised
@@ -62,10 +63,11 @@ import kotlin.math.min
  *
  * Selection: when [selectedIndex] is non-null, everything except the chosen slice is dimmed with a
  * theme-adaptive overlay ([TangemTheme.colors3.border.inverse.tertiary]) — both the other slices and the
- * track (unfilled remainder) — so only the selected slice stays at full strength. Only one slice can be
- * selected at a time — selection is hoisted (the index is the slice's identity, as there are no segment ids
- * yet). Taps are hit-tested against the ring band only and reported via [onSegmentClick]; the chart is
- * interactive when [onSegmentClick] or [onTap] is set **and** [segments] is non-empty.
+ * track (unfilled remainder, when one is drawn) — so only the selected slice stays at full strength. Only
+ * one slice can be selected at a time — selection is hoisted (the index is the slice's identity, as there
+ * are no segment ids yet). Taps are hit-tested against the ring band only and reported via
+ * [onSegmentClick]; the chart is interactive when [onSegmentClick] or [onTap] is set **and** [segments] is
+ * non-empty.
  *
  * @param segments Slices, in priority order (index 0 is painted on top). See [DonutSegmentUM.weight].
  * @param modifier Modifier; should carry the overall size (e.g. `Modifier.size(240.dp)`).
@@ -79,11 +81,12 @@ import kotlin.math.min
  *   repeat taps on the selected slice and taps that miss the ring included. Fires on press, in step with
  *   [onSegmentClick].
  * @param strokeWidth Thickness of the ring.
- * @param trackColor Fill of the unfilled remainder of the circle (and the empty-state ring).
+ * @param trackColor Fill of the unfilled remainder of the circle (and the empty-state ring). Translucent,
+ *   so it is not painted at all when the slices close the ring.
  * @param startAngle Angle (degrees) where the first slice starts. `-90f` = 12 o'clock.
  * @param content Centered content (e.g. total value + caption, or the "No data" label).
  */
-@Suppress("MagicNumber", "LongParameterList", "LongMethod", "NamedArguments")
+@Suppress("MagicNumber", "LongParameterList")
 @Composable
 internal fun DonutChart(
     segments: ImmutableList<DonutSegmentUM>,
@@ -123,7 +126,13 @@ internal fun DonutChart(
             detectTapGestures(
                 onPress = { tap ->
                     latestOnTap?.invoke()
-                    val clickedIndex = segmentIndexAt(tap, size.toSize(), strokePx, segments, startAngle)
+                    val clickedIndex = segmentIndexAt(
+                        tap = tap,
+                        size = size.toSize(),
+                        strokePx = strokePx,
+                        segments = segments,
+                        startAngle = startAngle,
+                    )
                     if (latestSelectedIndex != clickedIndex) latestOnSegmentClick?.invoke(clickedIndex)
                 },
             )
@@ -136,95 +145,16 @@ internal fun DonutChart(
         modifier = modifier
             .then(clickModifier)
             .drawBehind {
-                val arc = arcRect(strokePx)
-                // Inner shadow params from Figma: X0 Y4 Blur8 Spread0, white 24%.
-                val innerDx = 0f
-                val innerDy = 4.dp.toPx()
-                val innerBlur = 8.dp.toPx()
-
-                // 1. Track — full circle behind everything, plus its inner shadow.
-                drawArc(
-                    color = trackColor,
-                    startAngle = 0f,
-                    sweepAngle = 360f,
-                    useCenter = false,
-                    topLeft = arc.topLeft,
-                    size = arc.size,
-                    style = Stroke(width = strokePx, cap = StrokeCap.Round),
+                drawDonut(
+                    segments = segments,
+                    segmentColors = segmentColors,
+                    highlightedIndex = highlightedIndex,
+                    dimProgress = dimProgress,
+                    dimOverlayColor = dimOverlayColor,
+                    strokePx = strokePx,
+                    trackColor = trackColor,
+                    startAngle = startAngle,
                 )
-                drawInnerShadowArc(arc, 0f, 360f, strokePx, InnerShadowColor, innerBlur, innerDx, innerDy)
-
-                // Dim intensity animates 0f..1f; scale the overlay's own alpha by it so the dim fades.
-                val dim = dimProgress.coerceIn(0f, 1f)
-                val dimColor = dimOverlayColor.copy(alpha = dimOverlayColor.alpha * dim)
-
-                // Once a selection exists, dim the whole track too, so the unfilled remainder fades
-                // along with the non-selected slices instead of staying bright. Drawn before the
-                // slices, so each slice (selected included) paints on top at full strength.
-                if (dim > 0f) {
-                    drawArc(
-                        color = dimColor,
-                        startAngle = 0f,
-                        sweepAngle = 360f,
-                        useCenter = false,
-                        topLeft = arc.topLeft,
-                        size = arc.size,
-                        style = Stroke(width = strokePx, cap = StrokeCap.Round),
-                    )
-                }
-
-                // Precompute each slice's [start, sweep] once. Sweeps are the *visual* angles: every
-                // non-zero slice is floored to a minimum share (see [visualSweepAngles]) so tiny holdings
-                // stay visible; larger slices shrink proportionally to make room. The grey gap (unfilled
-                // remainder) follows the same floor-or-nothing rule — it's either absent or at least the
-                // minimum share. On a full ring (no grey gap) the last slice's floor is bumped by the exact
-                // width its two lapped-over caps eat (see below).
-                val sweeps = visualSweepAngles(
-                    weights = segments.map { it.weight.toFloat() },
-                    capDeg = lastSegmentOverlapDeg(strokePx, arc.size.width),
-                )
-                val starts = sweeps.runningFold(startAngle) { acc, sweep -> acc + sweep }
-
-                // 2. Slices — reversed so slice 0 sits on top of its neighbor. Each slice gets its own
-                //    inner shadow right after its fill, so the glossy highlight follows every pill (and
-                //    every colour seam), not just the ring's outer/inner contour.
-                for (i in segments.indices.reversed()) {
-                    if (sweeps[i] <= 0f) continue
-                    drawArc(
-                        color = segmentColors[i],
-                        startAngle = starts[i],
-                        sweepAngle = sweeps[i],
-                        useCenter = false,
-                        topLeft = arc.topLeft,
-                        size = arc.size,
-                        style = Stroke(width = strokePx, cap = StrokeCap.Round),
-                    )
-                    drawInnerShadowArc(
-                        arc = arc,
-                        startAngle = starts[i],
-                        sweepAngle = sweeps[i],
-                        strokePx = strokePx,
-                        shadowColor = InnerShadowColor,
-                        blurPx = innerBlur,
-                        dx = innerDx,
-                        dy = innerDy,
-                    )
-
-                    // Dim every non-highlighted slice while a selection is active — the chosen one stays
-                    // bright. Uses the animated [dim] so it fades, and [highlightedIndex] (not selectedIndex)
-                    // so the right slice stays bright through the fade-out after deselection.
-                    if (dim > 0f && i != highlightedIndex) {
-                        drawArc(
-                            color = dimColor,
-                            startAngle = starts[i],
-                            sweepAngle = sweeps[i],
-                            useCenter = false,
-                            topLeft = arc.topLeft,
-                            size = arc.size,
-                            style = Stroke(width = strokePx, cap = StrokeCap.Round),
-                        )
-                    }
-                }
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -233,6 +163,122 @@ internal fun DonutChart(
             modifier = Modifier.padding(horizontal = 36.dp),
         ) {
             content()
+        }
+    }
+}
+
+/**
+ * Paints the ring: the track where the slices don't reach, then every slice with its own inner shadow and,
+ * while a selection is active, its dim. Split out of [DonutChart] so the composable stays about state and
+ * gestures — the paint order is documented there.
+ *
+ * @param highlightedIndex the slice kept at full strength; it survives the fade-out after a deselection,
+ *   unlike `selectedIndex`.
+ * @param dimProgress `0f..1f` dim intensity, scaling [dimOverlayColor]'s own alpha.
+ */
+@Suppress("MagicNumber", "LongParameterList", "LongMethod", "NamedArguments")
+private fun DrawScope.drawDonut(
+    segments: List<DonutSegmentUM>,
+    segmentColors: List<Color>,
+    highlightedIndex: Int?,
+    dimProgress: Float,
+    dimOverlayColor: Color,
+    strokePx: Float,
+    trackColor: Color,
+    startAngle: Float,
+) {
+    val arc = arcRect(strokePx)
+    // Inner shadow params from Figma: X0 Y4 Blur8 Spread0, white 24%.
+    val innerDx = 0f
+    val innerDy = 4.dp.toPx()
+    val innerBlur = 8.dp.toPx()
+
+    // Precompute each slice's [start, sweep] once. Sweeps are the *visual* angles: every
+    // non-zero slice is floored to a minimum share (see [visualSweepAngles]) so tiny holdings
+    // stay visible; larger slices shrink proportionally to make room. The grey gap (unfilled
+    // remainder) follows the same floor-or-nothing rule — it's either absent or at least the
+    // minimum share. On a full ring (no grey gap) the last slice's floor is bumped by the exact
+    // width its two lapped-over caps eat (see below).
+    val sweeps = visualSweepAngles(
+        weights = segments.map { it.weight.toFloat() },
+        capDeg = lastSegmentOverlapDeg(strokePx, arc.size.width),
+    )
+    val starts = sweeps.runningFold(startAngle) { acc, sweep -> acc + sweep }
+
+    // 1. Track — the circle behind everything, plus its inner shadow. Skipped once the slices
+    //    close the ring: [trackColor] is translucent, so painting it under a covering slice
+    //    would stack two coats and darken the remainder.
+    val isRingClosed = sweeps.sum() >= FULL_CIRCLE_DEG - CLOSED_RING_EPSILON_DEG
+    if (!isRingClosed) {
+        drawArc(
+            color = trackColor,
+            startAngle = 0f,
+            sweepAngle = 360f,
+            useCenter = false,
+            topLeft = arc.topLeft,
+            size = arc.size,
+            style = Stroke(width = strokePx, cap = StrokeCap.Round),
+        )
+        drawInnerShadowArc(arc, 0f, 360f, strokePx, InnerShadowColor, innerBlur, innerDx, innerDy)
+    }
+
+    // Dim intensity animates 0f..1f; scale the overlay's own alpha by it so the dim fades.
+    val dim = dimProgress.coerceIn(0f, 1f)
+    val dimColor = dimOverlayColor.copy(alpha = dimOverlayColor.alpha * dim)
+
+    // Once a selection exists, dim the whole track too, so the unfilled remainder fades
+    // along with the non-selected slices instead of staying bright. Drawn before the
+    // slices, so each slice (selected included) paints on top at full strength.
+    if (dim > 0f && !isRingClosed) {
+        drawArc(
+            color = dimColor,
+            startAngle = 0f,
+            sweepAngle = 360f,
+            useCenter = false,
+            topLeft = arc.topLeft,
+            size = arc.size,
+            style = Stroke(width = strokePx, cap = StrokeCap.Round),
+        )
+    }
+
+    // 2. Slices — reversed so slice 0 sits on top of its neighbor. Each slice gets its own
+    //    inner shadow right after its fill, so the glossy highlight follows every pill (and
+    //    every colour seam), not just the ring's outer/inner contour.
+    for (i in segments.indices.reversed()) {
+        if (sweeps[i] <= 0f) continue
+        drawArc(
+            color = segmentColors[i],
+            startAngle = starts[i],
+            sweepAngle = sweeps[i],
+            useCenter = false,
+            topLeft = arc.topLeft,
+            size = arc.size,
+            style = Stroke(width = strokePx, cap = StrokeCap.Round),
+        )
+        drawInnerShadowArc(
+            arc = arc,
+            startAngle = starts[i],
+            sweepAngle = sweeps[i],
+            strokePx = strokePx,
+            shadowColor = InnerShadowColor,
+            blurPx = innerBlur,
+            dx = innerDx,
+            dy = innerDy,
+        )
+
+        // Dim every non-highlighted slice while a selection is active — the chosen one stays
+        // bright. Uses the animated [dim] so it fades, and [highlightedIndex] (not selectedIndex)
+        // so the right slice stays bright through the fade-out after deselection.
+        if (dim > 0f && i != highlightedIndex) {
+            drawArc(
+                color = dimColor,
+                startAngle = starts[i],
+                sweepAngle = sweeps[i],
+                useCenter = false,
+                topLeft = arc.topLeft,
+                size = arc.size,
+                style = Stroke(width = strokePx, cap = StrokeCap.Round),
+            )
         }
     }
 }
@@ -350,6 +396,11 @@ private fun DrawScope.drawInnerShadowArc(
 /** Inner shadow — Figma #FFFFFF at 24% opacity (theme-independent). */
 private val InnerShadowColor = Color.White.copy(alpha = 0.24f)
 
+private const val FULL_CIRCLE_DEG = 360f
+
+/** Tolerance (deg) for calling the ring closed, so an exact-complement slice leaves no hairline of track. */
+private const val CLOSED_RING_EPSILON_DEG = 0.01f
+
 // Selection-dim spring, mirroring DonutSegmentTooltip's pop-in so the dim and the tooltip move together.
 private const val DIM_SPRING_DAMPING = 0.82f
 private const val DIM_SPRING_STIFFNESS = 1100f
@@ -398,6 +449,14 @@ private fun PreviewDonutChart() {
                         color = DonutSegmentColor.Green,
                         title = stringReference("Tether"),
                         fiatValue = stringReference("$520.18"),
+                    ),
+                    // Closes the ring at the exact complement, so the remainder is a selectable slice
+                    // rather than bare track — see [DonutChart]'s "Closing the ring".
+                    DonutSegmentUM(
+                        weight = BigDecimal(0.27),
+                        color = DonutSegmentColor.Grey,
+                        title = stringReference("Other"),
+                        fiatValue = stringReference("$2,407.17"),
                     ),
                 ),
             ) {

@@ -37,13 +37,21 @@ internal object ForYouPortfolioReviewPreviewData {
                     ),
                     DonutSegmentUM(
                         color = DonutSegmentColor.Green,
-                        weight = BigDecimal("0.45"),
+                        weight = BigDecimal("0.25"),
                         title = stringReference("Solana"),
                         fiatValue = stringReference("\$728.30"),
+                    ),
+                    // Closes the ring at the complement of the two assets — the collapsed "Other" bucket.
+                    DonutSegmentUM(
+                        color = DonutSegmentColor.Grey,
+                        weight = BigDecimal("0.20"),
+                        title = stringReference("Other"),
+                        fiatValue = stringReference("\$2,000.00"),
                     ),
                 ),
                 onSegmentTap = {},
             ),
+            assetCount = 2,
             topHoldingPercent = stringReference("Top holding 42%"),
         ),
         tokenList = persistentListOf(
