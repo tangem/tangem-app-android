@@ -14,13 +14,21 @@ import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.*
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
+/**
+ * @property topAssets the assets shown individually, in rank order — one donut slice each.
+ * @property otherAssetsBalance summed fiat balance of the assets collapsed into the "Other" row, or zero
+ * when nothing was collapsed. Non-zero means the donut closes its ring with a grey "Other" slice.
+ */
 internal class ForYouPortfolioReviewMarketChartConverter(
     private val appCurrency: AppCurrency,
     private val topAssets: List<Pair<List<CryptoCurrencyStatus>, BigDecimal>>,
+    private val otherAssetsBalance: BigDecimal,
     private val onSegmentTap: () -> Unit,
     private val isBalanceHidden: Boolean = false,
 ) : Converter<TotalFiatBalance?, MarketChartUM> {
@@ -29,28 +37,11 @@ internal class ForYouPortfolioReviewMarketChartConverter(
         return when (value) {
             is TotalFiatBalance.Loaded -> MarketChartUM.Loaded(
                 donutChart = DonutChartUM.Loaded(
-                    totalAmount = value.amount.format {
-                        fiat(
-                            fiatCurrencySymbol = appCurrency.symbol,
-                            fiatCurrencyCode = appCurrency.code,
-                        )
-                    }.orMaskWithStars(isBalanceHidden),
-                    donutSegmentList = topAssets.mapIndexed { index, (currencies, segmentBalance) ->
-                        val segmentWeight = segmentBalance.toForYouPercent(value.amount).orZero()
-                        DonutSegmentUM(
-                            color = DonutSegmentColor.entries.getOrNull(index) ?: DonutSegmentColor.Blue,
-                            weight = segmentWeight,
-                            title = stringReference(currencies.firstOrNull()?.currency?.symbol.orEmpty()),
-                            fiatValue = stringReference(segmentBalance.format {
-                                fiat(
-                                    fiatCurrencyCode = appCurrency.code,
-                                    fiatCurrencySymbol = appCurrency.symbol,
-                                )
-                            }.orMaskWithStars(isBalanceHidden)),
-                        )
-                    }.toPersistentList(),
+                    totalAmount = value.amount.toFiat(),
+                    donutSegmentList = createSegments(totalAmount = value.amount),
                     onSegmentTap = onSegmentTap,
                 ),
+                assetCount = topAssets.size,
                 aiInsight = AiInsightUM.Hide,
                 topHoldingPercent = resourceReference(
                     id = R.string.market_chart_top_holding,
@@ -66,4 +57,40 @@ internal class ForYouPortfolioReviewMarketChartConverter(
             )
         }
     }
+
+    /**
+     * The top assets in rank order, followed — once assets have been collapsed into "Other" — by a grey
+     * slice standing for that collapsed remainder, so it is selectable and carries a tooltip like any
+     * other slice.
+     *
+     * Its weight is the **exact complement** of the top slices, not `otherAssetsBalance / totalAmount`:
+     * that closes the ring precisely, which both keeps the drawn remainder identical to the bare track it
+     * replaces and stops `visualSweepAngles` reserving its minimum-share grey gap on top of it over a
+     * fraction of a degree of rounding drift.
+     */
+    private fun createSegments(totalAmount: BigDecimal): ImmutableList<DonutSegmentUM> {
+        val topSegments = topAssets.mapIndexed { index, (currencies, segmentBalance) ->
+            DonutSegmentUM(
+                color = DonutSegmentColor.entries.getOrNull(index) ?: DonutSegmentColor.Blue,
+                weight = segmentBalance.toForYouPercent(totalAmount).orZero(),
+                title = stringReference(currencies.firstOrNull()?.currency?.symbol.orEmpty()),
+                fiatValue = stringReference(segmentBalance.toFiat()),
+            )
+        }
+
+        val otherWeight = BigDecimal.ONE - topSegments.sumOf { it.weight }
+        if (!otherAssetsBalance.isPositive() || !otherWeight.isPositive()) return topSegments.toPersistentList()
+
+        val otherSegment = DonutSegmentUM(
+            color = DonutSegmentColor.Grey,
+            weight = otherWeight,
+            title = resourceReference(R.string.common_other),
+            fiatValue = stringReference(otherAssetsBalance.toFiat()),
+        )
+        return (topSegments + otherSegment).toPersistentList()
+    }
+
+    private fun BigDecimal.toFiat(): String = format {
+        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+    }.orMaskWithStars(isBalanceHidden)
 }
