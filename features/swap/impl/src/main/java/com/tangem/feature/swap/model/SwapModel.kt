@@ -46,7 +46,7 @@ import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -182,7 +182,7 @@ internal class SwapModel @Inject constructor(
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val messageSender: UiMessageSender,
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
@@ -1864,7 +1864,7 @@ internal class SwapModel @Inject constructor(
                 feeAssetType = feeAssetType,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
-                referralId = appsFlyerStore.get()?.refcode,
+                referralId = appsFlyerRepository.getConversionData()?.refcode,
             ),
         )
     }
