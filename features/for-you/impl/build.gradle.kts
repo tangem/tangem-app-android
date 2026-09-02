@@ -51,6 +51,7 @@ dependencies {
     api(projects.domain.wallets)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
+    implementation(projects.data.common)
 
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
