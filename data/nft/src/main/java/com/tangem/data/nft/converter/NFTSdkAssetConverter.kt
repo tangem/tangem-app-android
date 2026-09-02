@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.nft.converter
+package com.tangem.data.nft.converter
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network

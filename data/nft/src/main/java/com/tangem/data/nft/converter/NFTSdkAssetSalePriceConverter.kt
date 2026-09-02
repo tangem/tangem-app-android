@@ -1,11 +1,11 @@
-package com.tangem.datasource.local.nft.converter
+package com.tangem.data.nft.converter
 
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.blockchain.nft.models.NFTAsset.SalePrice as SDKSalePrice
 
-class NFTSdkAssetSalePriceConverter(
+internal class NFTSdkAssetSalePriceConverter(
     private val assetId: NFTAsset.Identifier,
 ) : TwoWayConverter<SDKSalePrice, NFTSalePrice.Value> {
     override fun convert(value: SDKSalePrice): NFTSalePrice.Value {

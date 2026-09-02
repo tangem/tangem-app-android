@@ -1,10 +1,10 @@
-package com.tangem.datasource.local.nft
+package com.tangem.data.nft.store
 
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import kotlinx.coroutines.flow.Flow
 
-interface NFTPersistenceStore {
+internal interface NFTPersistenceStore {
     fun getCollections(): Flow<List<NFTCollection>?>
 
     suspend fun getCollectionsSync(): List<NFTCollection>?

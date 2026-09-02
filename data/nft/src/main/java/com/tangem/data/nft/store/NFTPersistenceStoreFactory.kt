@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.nft
+package com.tangem.data.nft.store
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -6,7 +6,7 @@ import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.local.nft.custom.NFTPriceId
+import com.tangem.data.nft.custom.NFTPriceId
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
@@ -19,7 +19,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NFTPersistenceStoreFactory @Inject constructor(
+internal class NFTPersistenceStoreFactory @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
     @ApplicationContext private val context: Context,
     private val appScope: AppCoroutineScope,
