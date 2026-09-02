@@ -1,4 +1,4 @@
-package com.tangem.datasource.utils
+package com.tangem.datasource.remote.interceptors
 
 import com.tangem.utils.logging.TangemLogger
 import okhttp3.Interceptor
