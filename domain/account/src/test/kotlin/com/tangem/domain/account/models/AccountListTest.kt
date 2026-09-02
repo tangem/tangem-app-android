@@ -207,6 +207,28 @@ internal class AccountListTest {
     }
 
     @Test
+    fun `GIVEN collectibles account WHEN flattenCurrencies THEN it contributes no currencies`() {
+        // Arrange
+        val currency = mockk<CryptoCurrency>()
+        val accounts = listOf(
+            Account.Personal.createMainAccount(userWalletId, cryptoCurrencies = listOf(currency)),
+            Account.Collectibles(userWalletId),
+        )
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+        ).getOrNull()!!
+
+        // Act
+        val actual = accountList.flattenCurrencies()
+
+        // Assert
+        Truth.assertThat(actual).containsExactly(currency)
+    }
+
+    @Test
     fun `GIVEN joint account with currencies WHEN flattenMapCurrencies THEN joint currencies are keyed by its account`() {
         // Arrange
         val jointCurrency = mockk<CryptoCurrency> { every { id } returns mockk() }
@@ -312,6 +334,14 @@ internal class AccountListTest {
                     Account.Prediction(userWalletId),
                 ),
                 expected = AccountList.Error.ExceedsMaxPredictionAccountsCount.left(),
+            ),
+            CreateTestModel(
+                accounts = listOf(
+                    Account.Personal.createMainAccount(userWalletId),
+                    Account.Collectibles(userWalletId),
+                    Account.Collectibles(userWalletId),
+                ),
+                expected = AccountList.Error.ExceedsMaxCollectiblesAccountsCount.left(),
             ),
             CreateTestModel(
                 accounts = listOf(

@@ -25,7 +25,7 @@ internal class WalletJointAccountItemConverter(
     private val appCurrency: AppCurrency,
     private val userWalletId: UserWalletId,
     private val accountIdsWithInvites: Set<String>,
-    private val onAccountClick: (UserWalletId) -> Unit,
+    private val onAccountClick: (UserWalletId, String) -> Unit,
 ) {
 
     fun convert(value: AccountStatus.Joint): TokensListItemUM2.JointPending {
@@ -58,8 +58,8 @@ internal class WalletJointAccountItemConverter(
             balance = stringReference(zeroBalanceText()),
             priceChange = TangemPriceChange.State(value = zeroPriceChange(), direction = Neutral),
             canInvite = account.accountId.value in accountIdsWithInvites,
-            onClick = { onAccountClick(userWalletId) },
-            onInviteClick = { onAccountClick(userWalletId) },
+            onClick = { onAccountClick(userWalletId, account.accountId.value) },
+            onInviteClick = { onAccountClick(userWalletId, account.accountId.value) },
         )
     }
 
