@@ -64,15 +64,13 @@ internal class PolymarketMainModelTest {
     private val batchState = MutableStateFlow(
         BatchListState<Int, PolymarketEventsBatch>(data = emptyList(), status = PaginationStatus.InitialLoading),
     )
-    // One state per pagination the model creates. The first feed keeps [batchState] so the tests that drive a
-    // single category read the same flow the model does.
+    // One per pagination the model creates; the first feed reuses [batchState].
     private val statePerFeed = mutableListOf<MutableStateFlow<BatchListState<Int, PolymarketEventsBatch>>>()
 
     private val contextSlot = slot<PolymarketEventsBatchingContext>()
     private val dispatchedActions =
         mutableListOf<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>()
 
-    // One entry per pagination the model creates — a feed per category, in the order the categories were opened.
     private val actionsPerFeed =
         mutableListOf<MutableList<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>>()
 
@@ -529,7 +527,6 @@ internal class PolymarketMainModelTest {
                 PolymarketEventsUpdateRequest>>()
             actionsPerFeed += feedActions
 
-            // The model owns the actions flow; collecting it here is what makes the dispatched actions assertable.
             contextSlot.captured.actionsFlow
                 .onEach {
                     dispatchedActions += it
