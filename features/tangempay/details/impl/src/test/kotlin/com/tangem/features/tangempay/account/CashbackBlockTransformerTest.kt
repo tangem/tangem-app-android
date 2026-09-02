@@ -1,6 +1,5 @@
 package com.tangem.features.tangempay.account
 
-import android.text.format.DateFormat
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
@@ -16,9 +15,7 @@ import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
 import io.mockk.every
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkObject
-import io.mockk.unmockkStatic
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTime
@@ -43,17 +40,13 @@ internal class CashbackBlockTransformerTest {
 
     @BeforeEach
     fun setup() {
-        // TangemPayCashbackDateFormatter -> DateTimeFormatters.dateMMMM -> android.text.format.DateFormat
         Locale.setDefault(Locale.US)
-        mockkStatic(DateFormat::class)
-        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "July 1 – 5"
     }
 
     @AfterEach
     fun tearDown() {
-        unmockkStatic(DateFormat::class)
         unmockkObject(DateTimeFormatters)
         Locale.setDefault(defaultLocale)
     }
@@ -92,7 +85,9 @@ internal class CashbackBlockTransformerTest {
 
     @ParameterizedTest
     @MethodSource("provideAmountModels")
-    fun `GIVEN confirmed amount WHEN transform THEN widget negative state follows the sign`(model: AmountCase) {
+    fun `GIVEN confirmed amount WHEN transform THEN widget title and negative state follow the amount`(
+        model: AmountCase,
+    ) {
         // Arrange
         val transformer = createTransformer(summary = enabledSummary(confirmedAmount = model.amount))
 
@@ -100,6 +95,12 @@ internal class CashbackBlockTransformerTest {
         val widget = transformer.transform(contentState()).cashbackBlockState as CashbackBlockUM.Widget
 
         // Assert
+        assertThat(widget.title).isEqualTo(
+            resourceReference(
+                id = R.string.tangempay_cashback_widget_title,
+                formatArgs = wrappedList(model.expectedAmount, "June"),
+            ),
+        )
         assertThat(widget.isNegative).isEqualTo(model.expectedNegative)
         assertThat(widget.subtitle).isEqualTo(model.expectedSubtitle)
     }
@@ -127,7 +128,7 @@ internal class CashbackBlockTransformerTest {
     }
 
     @Test
-    fun `GIVEN menu without current plan WHEN transform THEN cashback menu item inserted above terms`() {
+    fun `GIVEN menu without current plan WHEN transform THEN cashback menu item inserted first`() {
         // Arrange
         val transformer = createTransformer(summary = enabledSummary(displayMode = CashbackDisplayMode.ALT_BLOCK))
         val stateWithoutPlan = contentState().let { state ->
@@ -147,9 +148,7 @@ internal class CashbackBlockTransformerTest {
         val cashbackIndex = items.indexOfFirst {
             (it.title as? TextReference.Res)?.id == R.string.tangempay_cashback_menu_item_title
         }
-        val termsIndex = items.indexOfFirst { it.title == resourceReference(R.string.tangem_pay_terms_limits) }
-        assertThat(cashbackIndex).isAtLeast(0)
-        assertThat(termsIndex).isEqualTo(cashbackIndex + 1)
+        assertThat(cashbackIndex).isEqualTo(0)
     }
 
     @Test
@@ -232,24 +231,28 @@ internal class CashbackBlockTransformerTest {
         AmountCase(
             description = "negative -> refund subtitle",
             amount = BigDecimal("-2.15"),
+            expectedAmount = "-$2.15",
             expectedNegative = true,
-            expectedSubtitle = resourceReference(R.string.tangempay_cashback_refund_banner),
+            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_refund_description),
         ),
         AmountCase(
-            description = "zero -> start spending subtitle",
+            description = "zero -> no decimals, start spending subtitle",
             amount = BigDecimal.ZERO,
+            expectedAmount = "$0",
             expectedNegative = false,
             expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
         ),
         AmountCase(
-            description = "zero with scale -> start spending subtitle",
+            description = "zero with scale -> no decimals, start spending subtitle",
             amount = BigDecimal("0.00"),
+            expectedAmount = "$0",
             expectedNegative = false,
             expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
         ),
         AmountCase(
-            description = "positive -> deposit window subtitle",
+            description = "positive -> two decimals, deposit window subtitle",
             amount = BigDecimal("32.15"),
+            expectedAmount = "$32.15",
             expectedNegative = false,
             expectedSubtitle = resourceReference(
                 id = R.string.tangempay_cashback_deposited_on,
@@ -301,8 +304,6 @@ internal class CashbackBlockTransformerTest {
             onOpenMenu = {},
             items = persistentListOf(
                 menuItem(R.string.tangempay_current_plan_title),
-                menuItem(R.string.tangempay_visa_benefits),
-                menuItem(R.string.tangem_pay_terms_limits),
                 menuItem(R.string.tangempay_pay_support),
             ),
             subtitle = TextReference.EMPTY,
@@ -318,7 +319,7 @@ internal class CashbackBlockTransformerTest {
         ),
         isBalanceHidden = false,
         errorNotificationConfig = null,
-        accountDeactivatedBannerState = null,
+        statusBannerState = null,
     )
 
     private fun menuItem(titleRes: Int): TangemPayDropDownItemUM = TangemPayDropDownItemUM(
@@ -329,6 +330,7 @@ internal class CashbackBlockTransformerTest {
 
     internal class AmountCase(
         val amount: BigDecimal,
+        val expectedAmount: String,
         val expectedNegative: Boolean,
         val expectedSubtitle: TextReference,
         private val description: String,
